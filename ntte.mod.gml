@@ -97,7 +97,7 @@
 		if(_wep != wep_none){
 			 // Take Ammo:
 			var _type = weapon_get_type(wep);
-			if(_type != 0){
+			if(_type != type_melee){
 				ammo[_type] = max(0, ammo[_type] - (typ_ammo[_type] * 3));
 			}
 			
@@ -106,7 +106,7 @@
 			
 			 // Give Ammo:
 			var _type = weapon_get_type(wep);
-			if(_type != 0){
+			if(_type != type_melee){
 				ammo[_type] += round(typ_ammo[_type] * ((wep_get(wep) == "merge") ? 1.25 : 3));
 			}
 		}
@@ -1246,14 +1246,14 @@
 				_chanceMax = 0;
 				
 			with(Player) with([wep, bwep]){
-				var t = weapon_get_type(self);
-				if(t != 0){
-					_chance += other.ammo[t];
-					_chanceMax += other.typ_amax[t] * 0.8;
+				var _type = weapon_get_type(self);
+				if(_type == type_melee){
+					_chance    += 200;
+					_chanceMax += 200;
 				}
 				else{
-					_chance += 200;
-					_chanceMax += 200;
+					_chance    += other.ammo[_type];
+					_chanceMax += other.typ_amax[_type] * 0.8;
 				}
 			}
 			
@@ -1733,7 +1733,7 @@
 								var	_type = weapon_get_type(_wep),
 									_cost = weapon_get_cost(_wep);
 									
-								if(ammo[_type] < _cost && _type != 0){
+								if(ammo[_type] < _cost && _type != type_melee){
 									var _blood = mod_script_call("weapon", _name, "weapon_blood", _wep);
 									if(_blood != 0){
 										ammo[_type] += _cost;
@@ -3944,6 +3944,12 @@
 	
 	
 /// SCRIPTS
+#macro  type_melee                                                                              0
+#macro  type_bullet                                                                             1
+#macro  type_shell                                                                              2
+#macro  type_bolt                                                                               3
+#macro  type_explosive                                                                          4
+#macro  type_energy                                                                             5
 #macro  area_campfire                                                                           0
 #macro  area_desert                                                                             1
 #macro  area_sewers                                                                             2
@@ -3996,6 +4002,9 @@
 #define obj_create(_x, _y, _obj)                                                        return  (is_undefined(_obj) ? [] : mod_script_call_nc('mod', 'telib', 'obj_create', _x, _y, _obj));
 #define top_create(_x, _y, _obj, _spawnDir, _spawnDis)                                  return  mod_script_call_nc('mod', 'telib', 'top_create', _x, _y, _obj, _spawnDir, _spawnDis);
 #define chest_create(_x, _y, _obj, _levelStart)                                         return  mod_script_call_nc('mod', 'telib', 'chest_create', _x, _y, _obj, _levelStart);
+#define prompt_create(_text)                                                            return  mod_script_call(   'mod', 'telib', 'prompt_create', _text);
+#define alert_create(_inst, _sprite)                                                    return  mod_script_call(   'mod', 'telib', 'alert_create', _inst, _sprite);
+#define door_create(_x, _y, _dir)                                                       return  mod_script_call_nc('mod', 'telib', 'door_create', _x, _y, _dir);
 #define trace_error(_error)                                                                     mod_script_call_nc('mod', 'telib', 'trace_error', _error);
 #define view_shift(_index, _dir, _pan)                                                          mod_script_call_nc('mod', 'telib', 'view_shift', _index, _dir, _pan);
 #define sleep_max(_milliseconds)                                                                mod_script_call_nc('mod', 'telib', 'sleep_max', _milliseconds);
@@ -4075,6 +4084,8 @@
 #define weapon_decide(_hardMin, _hardMax, _gold, _noWep)                                return  mod_script_call(   'mod', 'telib', 'weapon_decide', _hardMin, _hardMax, _gold, _noWep);
 #define weapon_get_red(_wep)                                                            return  mod_script_call(   'mod', 'telib', 'weapon_get_red', _wep);
 #define skill_get_icon(_skill)                                                          return  mod_script_call(   'mod', 'telib', 'skill_get_icon', _skill);
+#define skill_get_avail(_skill)                                                         return  mod_script_call(   'mod', 'telib', 'skill_get_avail', _skill);
+#define string_delete_nt(_string)                                                       return  mod_script_call_nc('mod', 'telib', 'string_delete_nt', _string);
 #define path_create(_xstart, _ystart, _xtarget, _ytarget, _wall)                        return  mod_script_call_nc('mod', 'telib', 'path_create', _xstart, _ystart, _xtarget, _ytarget, _wall);
 #define path_shrink(_path, _wall, _skipMax)                                             return  mod_script_call_nc('mod', 'telib', 'path_shrink', _path, _wall, _skipMax);
 #define path_reaches(_path, _xtarget, _ytarget, _wall)                                  return  mod_script_call_nc('mod', 'telib', 'path_reaches', _path, _xtarget, _ytarget, _wall);
@@ -4087,11 +4098,8 @@
 #define team_get_sprite(_team, _sprite)                                                 return  mod_script_call_nc('mod', 'telib', 'team_get_sprite', _team, _sprite);
 #define team_instance_sprite(_team, _inst)                                              return  mod_script_call_nc('mod', 'telib', 'team_instance_sprite', _team, _inst);
 #define sprite_get_team(_sprite)                                                        return  mod_script_call_nc('mod', 'telib', 'sprite_get_team', _sprite);
-#define prompt_create(_text)                                                            return  mod_script_call(   'mod', 'telib', 'prompt_create', _text);
-#define alert_create(_inst, _sprite)                                                    return  mod_script_call(   'mod', 'telib', 'alert_create', _inst, _sprite);
-#define door_create(_x, _y, _dir)                                                       return  mod_script_call_nc('mod', 'telib', 'door_create', _x, _y, _dir);
-#define charm_instance(_inst, _charm)                                                   return  mod_script_call_nc('mod', 'telib', 'charm_instance', _inst, _charm);
 #define lightning_connect(_x1, _y1, _x2, _y2, _arc, _enemy)                             return  mod_script_call(   'mod', 'telib', 'lightning_connect', _x1, _y1, _x2, _y2, _arc, _enemy);
+#define charm_instance(_inst, _charm)                                                   return  mod_script_call_nc('mod', 'telib', 'charm_instance', _inst, _charm);
 #define move_step(_mult)                                                                return  mod_script_call(   'mod', 'telib', 'move_step', _mult);
 #define pool(_pool)                                                                     return  mod_script_call_nc('mod', 'telib', 'pool', _pool);
 #define teevent_set_active(_name, _active)                                              return  mod_script_call_nc('mod', 'teevents', 'teevent_set_active', _name, _active);

@@ -1469,21 +1469,21 @@
 		col = c_red;
 		
 		 // Visual:
-		spr_bott = spr.PalankingBott;
-		spr_taun = spr.PalankingTaunt;
-		spr_call = spr.PalankingCall;
-		spr_idle = spr.PalankingIdle;
-		spr_walk = spr.PalankingWalk;
-		spr_hurt = spr.PalankingHurt;
-		spr_dead = spr.PalankingDead;
-		spr_burp = spr.PalankingBurp;
-		spr_fire = spr.PalankingFire;
-		spr_foam = spr.PalankingFoam;
+		spr_bott        = spr.PalankingBott;
+		spr_taun        = spr.PalankingTaunt;
+		spr_call        = spr.PalankingCall;
+		spr_idle        = spr.PalankingIdle;
+		spr_walk        = spr.PalankingWalk;
+		spr_hurt        = spr.PalankingHurt;
+		spr_dead        = spr.PalankingDead;
+		spr_burp        = spr.PalankingBurp;
+		spr_fire        = spr.PalankingFire;
+		spr_foam        = spr.PalankingFoam;
 		spr_shadow_hold = shd64B; // Actually a good use for this shadow hell yeah
-		spr_shadow = mskNone;
-		spr_shadow_y = 24;
-		hitid = [spr_idle, "SEAL KING"];
-		depth = -3;
+		spr_shadow      = mskNone;
+		spr_shadow_y    = 24;
+		hitid           = [spr_idle, "SEAL KING"];
+		depth           = -3;
 		
 		 // Sound:
 		snd_hurt = snd.PalankingHurt;
@@ -1493,7 +1493,7 @@
 		 // Vars:
 		mask_index = mskNone;
 		mask_hold = msk.Palanking;
-		maxhealth = boss_hp(300);
+		maxhealth = boss_hp(260);
 		raddrop = 120;
 		size = 4;
 		walk = 0;
@@ -1916,6 +1916,7 @@
 #define Palanking_alrm0
 	if(intro_pan <= 0){
 		alarm0 = 60;
+		alarm1 = 20;
 		
 		 // Enable Cinematic:
 		intro_pan = 10 + alarm0;
@@ -1924,17 +1925,6 @@
 		
 		 // "Safety":
 		with(Player) instance_create(x, y, PortalShock);
-		
-		 // Call for Seals:
-		if(fork()){
-			wait 20;
-			if(instance_exists(self) && sprite_index != spr_taun){
-				sprite_index = spr_call;
-				image_index = 0;
-				sound_play(snd.PalankingCall);
-			}
-			exit;
-		}
 	}
 	else{
 		switch(phase){
@@ -1970,7 +1960,7 @@
 					var	_ang   = random(360),
 						_odis  = 32,
 						_odir  = point_direction(10016, 10016, x, y),
-						_delay = 10;
+						_delay = 30;
 						
 					for(var _dir = _ang; _dir < _ang + 360; _dir += (360 / 3)){
 						var _dis = 64 + random(16);
@@ -2040,42 +2030,61 @@
 	}
 	
 #define Palanking_alrm1
-	alarm1 = 40 + random(20);
-	
-	if(enemy_target(x, y) && instance_seen(x, y, target)){
-		scrAim(point_direction(x, y, target.x, target.y));
-		scrWalk(gunangle + orandom(30), 60);
+	if(intro){
+		alarm1 = 40 + random(20);
 		
-		 // Kingly Slap:
-		if(
-			(instance_near(x, y, target, 80) && array_length(Seal) > 2)
-			||
-			(variable_instance_get(target, "reload", 0) > 0 && chance(1, 3))
-		){
-			alarm1 = 60 + random(20);
-			alarm3 = 6;
+		if(enemy_target(x, y) && instance_seen(x, y, target)){
+			scrAim(point_direction(x, y, target.x, target.y));
+			scrWalk(gunangle + orandom(30), 60);
 			
-			image_index = 0;
-			sprite_index = spr_fire;
-			sound_play(snd.PalankingSwipe);
-			instance_create(x, y - z, AssassinNotice);
+			 // Kingly Slap:
+			if(
+				(instance_near(x, y, target, 80) && array_length(Seal) > 2)
+				||
+				(variable_instance_get(target, "reload", 0) > 0 && chance(1, 3))
+			){
+				alarm1 = 60 + random(20);
+				alarm3 = 6;
+				
+				image_index = 0;
+				sprite_index = spr_fire;
+				sound_play(snd.PalankingSwipe);
+				instance_create(x, y - z, AssassinNotice);
+			}
+			
+			 // Call for Seals:
+			else if(
+				chance(1 + (z <= 0), 2)				&&
+				chance(1, array_length(Seal) / 2)	&&
+				array_length(Seal) <= seal_max * 4
+			){
+				alarm1 = 30 + random(10);
+				
+				image_index = 0;
+				sprite_index = spr_call;
+				sound_play(snd.PalankingCall);
+				
+				seal_wave(x, y, gunangle + orandom(30),       20 + random(20));
+				seal_wave(x, y, gunangle + 180 + orandom(60), 20 + random(20));
+			}
 		}
+	}
+	
+	 // Initial Call for Seals:
+	else{
+		alarm1 = -1;
 		
-		 // Call for Seals:
-		else if(
-			chance(1 + (z <= 0), 2)				&&
-			chance(1, array_length(Seal) / 2)	&&
-			array_length(Seal) <= seal_max * 4
-		){
-			alarm1 = 30 + random(10);
-			
+		 // Call:
+		if(sprite_index != spr_taun){
 			image_index = 0;
 			sprite_index = spr_call;
 			sound_play(snd.PalankingCall);
-			
-			repeat(2){
-				seal_wave(x, y, (gunangle + 90) + random(180), 20 + random(20));
-			}
+		}
+		
+		 // Music:
+		with(MusCont){
+			alarm_set(2, 1);
+			alarm_set(3, -1);
 		}
 	}
 	
@@ -2857,7 +2866,7 @@
 #macro seal_deadeye     5
 #macro seal_dasher      6
 #macro seal_chance_loop (GameCont.loops > 0)
-#macro seal_chance      [0, 7, 3, 5, 7*seal_chance_loop, 3*seal_chance_loop, 5*seal_chance_loop]
+#macro seal_chance      [0, 8, 3, 5, 8*seal_chance_loop, 3*seal_chance_loop, 5*seal_chance_loop]
 
 #define Seal_setup
 	setup = false;
@@ -3207,9 +3216,9 @@
 	
 	 // Reset Vars:
 	if(slide > 0){
-			image_angle = _lastAng;
-			y = _lastY;
-		}
+		image_angle = _lastAng;
+		y = _lastY;
+	}
 	
 #define Seal_alrm1
 	alarm1 = 30 + random(30);
@@ -4984,6 +4993,12 @@
 	
 	
 /// SCRIPTS
+#macro  type_melee                                                                              0
+#macro  type_bullet                                                                             1
+#macro  type_shell                                                                              2
+#macro  type_bolt                                                                               3
+#macro  type_explosive                                                                          4
+#macro  type_energy                                                                             5
 #macro  area_campfire                                                                           0
 #macro  area_desert                                                                             1
 #macro  area_sewers                                                                             2
@@ -5036,6 +5051,9 @@
 #define obj_create(_x, _y, _obj)                                                        return  (is_undefined(_obj) ? [] : mod_script_call_nc('mod', 'telib', 'obj_create', _x, _y, _obj));
 #define top_create(_x, _y, _obj, _spawnDir, _spawnDis)                                  return  mod_script_call_nc('mod', 'telib', 'top_create', _x, _y, _obj, _spawnDir, _spawnDis);
 #define chest_create(_x, _y, _obj, _levelStart)                                         return  mod_script_call_nc('mod', 'telib', 'chest_create', _x, _y, _obj, _levelStart);
+#define prompt_create(_text)                                                            return  mod_script_call(   'mod', 'telib', 'prompt_create', _text);
+#define alert_create(_inst, _sprite)                                                    return  mod_script_call(   'mod', 'telib', 'alert_create', _inst, _sprite);
+#define door_create(_x, _y, _dir)                                                       return  mod_script_call_nc('mod', 'telib', 'door_create', _x, _y, _dir);
 #define trace_error(_error)                                                                     mod_script_call_nc('mod', 'telib', 'trace_error', _error);
 #define view_shift(_index, _dir, _pan)                                                          mod_script_call_nc('mod', 'telib', 'view_shift', _index, _dir, _pan);
 #define sleep_max(_milliseconds)                                                                mod_script_call_nc('mod', 'telib', 'sleep_max', _milliseconds);
@@ -5115,6 +5133,8 @@
 #define weapon_decide(_hardMin, _hardMax, _gold, _noWep)                                return  mod_script_call(   'mod', 'telib', 'weapon_decide', _hardMin, _hardMax, _gold, _noWep);
 #define weapon_get_red(_wep)                                                            return  mod_script_call(   'mod', 'telib', 'weapon_get_red', _wep);
 #define skill_get_icon(_skill)                                                          return  mod_script_call(   'mod', 'telib', 'skill_get_icon', _skill);
+#define skill_get_avail(_skill)                                                         return  mod_script_call(   'mod', 'telib', 'skill_get_avail', _skill);
+#define string_delete_nt(_string)                                                       return  mod_script_call_nc('mod', 'telib', 'string_delete_nt', _string);
 #define path_create(_xstart, _ystart, _xtarget, _ytarget, _wall)                        return  mod_script_call_nc('mod', 'telib', 'path_create', _xstart, _ystart, _xtarget, _ytarget, _wall);
 #define path_shrink(_path, _wall, _skipMax)                                             return  mod_script_call_nc('mod', 'telib', 'path_shrink', _path, _wall, _skipMax);
 #define path_reaches(_path, _xtarget, _ytarget, _wall)                                  return  mod_script_call_nc('mod', 'telib', 'path_reaches', _path, _xtarget, _ytarget, _wall);
@@ -5127,10 +5147,7 @@
 #define team_get_sprite(_team, _sprite)                                                 return  mod_script_call_nc('mod', 'telib', 'team_get_sprite', _team, _sprite);
 #define team_instance_sprite(_team, _inst)                                              return  mod_script_call_nc('mod', 'telib', 'team_instance_sprite', _team, _inst);
 #define sprite_get_team(_sprite)                                                        return  mod_script_call_nc('mod', 'telib', 'sprite_get_team', _sprite);
-#define prompt_create(_text)                                                            return  mod_script_call(   'mod', 'telib', 'prompt_create', _text);
-#define alert_create(_inst, _sprite)                                                    return  mod_script_call(   'mod', 'telib', 'alert_create', _inst, _sprite);
-#define door_create(_x, _y, _dir)                                                       return  mod_script_call_nc('mod', 'telib', 'door_create', _x, _y, _dir);
-#define charm_instance(_inst, _charm)                                                   return  mod_script_call_nc('mod', 'telib', 'charm_instance', _inst, _charm);
 #define lightning_connect(_x1, _y1, _x2, _y2, _arc, _enemy)                             return  mod_script_call(   'mod', 'telib', 'lightning_connect', _x1, _y1, _x2, _y2, _arc, _enemy);
+#define charm_instance(_inst, _charm)                                                   return  mod_script_call_nc('mod', 'telib', 'charm_instance', _inst, _charm);
 #define move_step(_mult)                                                                return  mod_script_call(   'mod', 'telib', 'move_step', _mult);
 #define pool(_pool)                                                                     return  mod_script_call_nc('mod', 'telib', 'pool', _pool);

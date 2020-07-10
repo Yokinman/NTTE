@@ -112,12 +112,12 @@
 	
 	var a = string(GameCont.area);
 	if(lq_exists(spr.BigTopDecal, a)){
-		with(instance_create(floor(_x / 16) * 16, floor(_y / 16) * 16, CustomObject)){
+		with(instance_create(pfloor(_x, 16), pfloor(_y, 16), CustomObject)){
 			 // Visual:
 			sprite_index = lq_get(spr.BigTopDecal, a);
 			image_xscale = choose(-1, 1);
-			image_speed = 0.4;
-			depth = -6;
+			image_speed  = 0.4;
+			depth        = -6;
 			
 			 // Vars:
 			mask_index = msk.BigTopDecal;
@@ -125,8 +125,8 @@
 			
 			 // Avoid Bad Stuff:
 			var	_tries = 1000,
-				_dis = 24,
-				_dir = random(360);
+				_dis   = 24,
+				_dir   = random(360);
 				
 			with(instance_nearest_bbox(x, y, Floor)){
 				_dir = point_direction(bbox_center_x, bbox_center_y, other.x, other.y);
@@ -135,26 +135,25 @@
 			while(
 				_tries-- > 0 &&
 				(
-					place_meeting(x, y, Floor)           ||
-					place_meeting(x, y, Bones)           ||
-					place_meeting(x, y, TopPot)          ||
-					place_meeting(x, y, CustomObject)    ||
-					distance_to_object(PortalClear) < 32
+					place_meeting(x, y, Floor)
+					|| place_meeting(x, y, Bones)
+					|| place_meeting(x, y, TopPot)
+					|| place_meeting(x, y, CustomObject)
+					|| distance_to_object(PortalClear) < 32
 				)
 			){
-				x = floor((x + lengthdir_x(_dis, _dir)) / 16) * 16;
-				y = floor((y + lengthdir_y(_dis, _dir)) / 16) * 16;
+				x = pfloor((x + lengthdir_x(_dis, _dir)), 16);
+				y = pfloor((y + lengthdir_y(_dis, _dir)), 16);
 			}
 			depth -= ((y + 12) / 10000);
 			
 			 // TopSmalls:
-			var	_off = 16,
-				s = _off * 3;
-				
-			for(var _ox = -s; _ox <= s; _ox += _off){
-				for(var _oy = -s; _oy <= s; _oy += _off){
-					if(!position_meeting(x + _ox, y + _oy, Floor) && !position_meeting(x + _ox, y + _oy, Wall) && !position_meeting(x + _ox, y + _oy, TopSmall)){
-						if(chance(1, 2)) instance_create(x + _ox, y + _oy, TopSmall);
+			for(var _ox = -48; _ox < 48; _ox += 32){
+				for(var _oy = -32; _oy < 64; _oy += 32){
+					with(instances_matching_gt(TopSmall, "id", instance_create(x + _ox, y + _oy, Top))){
+						if(chance(1, 2)){
+							instance_delete(id);
+						}
 					}
 				}
 			}
@@ -174,7 +173,10 @@
 					
 					x = other.x + lengthdir_x(_dis * 1.5, _dir);
 					y = other.y + lengthdir_y(_dis, _dir) + 40;
-					if(place_meeting(x, y, Floor)) instance_destroy();
+					
+					if(place_meeting(x, y, Floor)){
+						instance_delete(id);
+					}
 				}
 			}
 			
@@ -210,6 +212,7 @@
 			return id;
 		}
 	}
+	
 	return noone;
 	
 #define BigDecal_step
@@ -270,10 +273,12 @@
 		
 		case area_desert: /// Bones
 		
-			repeat(irandom_range(2, 3)) with instance_create(_x, _y, WepPickup){
-				motion_set(irandom(359), random_range(3, 6));
-				wep = "crabbone";
-				repeat(3) scrFX(x, y, 2, Smoke);
+			repeat(irandom_range(2, 3)){
+				with(instance_create(_x, _y, WepPickup)){
+					motion_set(irandom(359), random_range(3, 6));
+					wep = "crabbone";
+					repeat(3) scrFX(x, y, 2, Smoke);
+				}
 			}
 			
 			 // Sound:
@@ -2531,11 +2536,10 @@
 					if(other.damage > 0){
 						draw_set_font(fntM);
 						
-						var	_scrt          = script_ref_create_ext("mod", "telib", "string_delete_nt"),
-							_name          = other.creator.pet,
-							_nameLength    = string_length(script_ref_call(_scrt, _name)),
-							_prenameLength = string_length(script_ref_call(_scrt, string_copy(_text, 1, string_pos(_name, _text) - 1))),
-							_reviveLength  = string_length(script_ref_call(_scrt, text));
+						var	_name          = other.creator.pet,
+							_nameLength    = string_length(string_delete_nt(_name)),
+							_prenameLength = string_length(string_delete_nt(string_copy(_text, 1, string_pos(_name, _text) - 1))),
+							_reviveLength  = string_length(string_delete_nt(text));
 							
 						_text += "#" + string_repeat(" ", _prenameLength + (_reviveLength - _nameLength)) + text;
 					}
@@ -3568,10 +3572,11 @@
 		
 		 // Vars:
 		mask_index = mskNone;
-		damage = 2;
-		force = 0;
-		typ = 1;
-		creator = noone;
+		damage     = 2;
+		force      = 0;
+		typ        = 1;
+		creator    = noone;
+		portal     = false;
 		
 		return id;
 	}
@@ -3636,6 +3641,15 @@
 	if(projectile_canhit(other) && !instance_is(other, prop) && other.team != 0){
 		projectile_hit_push(other, damage, force);
 		
+		 // Portal:
+		var _portal = (portal && instance_is(other, Player));
+		if(_portal){
+			with(creator){
+				speed     = 0;
+				my_health = 0;
+			}
+		}
+		
 		 // Swap Positions:
 		with(other){
 			if(!instance_is(self, prop) && team != 0 && size < 6){
@@ -3667,17 +3681,19 @@
 					image_yscale = other.image_yscale;
 					image_angle  = other.image_angle;
 				}
-				
-				 // Portal:
-				if("portal" in other.creator && other.creator.portal){
-					if(instance_is(self, Player)){
-						other.creator.my_health = 0;
-					}
-				}
 			}
 		}
 		
-		instance_destroy();
+		 // Portal:
+		if(_portal){
+			instance_destroy();
+			if(instance_exists(other)){
+				instance_create(other.x, other.y, Portal);
+			}
+		}
+		
+		 // Death:
+		else instance_destroy();
 	}
 	
 #define PortalBullet_destroy
@@ -3685,7 +3701,7 @@
 	sound_play_hit_ext(sndGuardianDisappear, 2, 2);
 	
 	 // Teleport:
-	if(instance_exists(creator) && ("my_health" not in creator || creator.my_health > 0)){
+	if(instance_exists(creator)){
 		with(creator){
 			 // Disappear:
 			if("spr_disappear" in self){
@@ -3705,29 +3721,7 @@
 			yprevious = y;
 			
 			 // Unwall:
-			if(place_meeting(x, y, Wall)){
-				var	_tx = x,
-					_ty = y,
-					_disMax = 16;
-					
-				with(instance_rectangle_bbox(x - _disMax, y - _disMax, x + _disMax, y + _disMax, Floor)){
-					for(var _x = bbox_left; _x <= bbox_right + 1; _x += 4){
-						for(var _y = bbox_top; _y <= bbox_bottom + 1; _y += 4){
-							var _dis = point_distance(_x, _y, _tx, _ty);
-							if(_dis < _disMax){
-								with(other) if(!place_meeting(_x, _y, Wall)){
-									_tx = _x;
-									_ty = _y;
-									_disMax = _dis;
-								}
-							}
-						}
-					}
-				}
-				
-				x = _tx;
-				y = _ty;
-			}
+			instance_budge(Wall, -1);
 			
 			 // Appear:
 			image_index = 0;
@@ -3900,7 +3894,9 @@
 		if(instance_seen(x, y, target)){
 			 // Attack:
 			if(chance(2, 3) && array_length(instances_matching(projectile, "creator", id)) <= 0){
-				enemy_shoot(x, y, "PortalBullet", gunangle, 10);
+				with(enemy_shoot(x, y, "PortalBullet", gunangle, 10)){
+					portal = other.portal;
+				}
 				
 				 // Sound:
 				sound_play_pitchvol(sndPortalOld, 2 + random(2), 1.5);
@@ -3938,12 +3934,6 @@
 	
 	 // Pickups:
 	pickup_drop(40, 10);
-	
-	 // Portal:
-	if(portal){
-		speed = 0;
-		instance_create(x, y, Portal);
-	}
 	
 	
 #define PortalPrevent_create(_x, _y)
@@ -5593,6 +5583,12 @@
 	
 	
 /// SCRIPTS
+#macro  type_melee                                                                              0
+#macro  type_bullet                                                                             1
+#macro  type_shell                                                                              2
+#macro  type_bolt                                                                               3
+#macro  type_explosive                                                                          4
+#macro  type_energy                                                                             5
 #macro  area_campfire                                                                           0
 #macro  area_desert                                                                             1
 #macro  area_sewers                                                                             2
@@ -5645,6 +5641,9 @@
 #define obj_create(_x, _y, _obj)                                                        return  (is_undefined(_obj) ? [] : mod_script_call_nc('mod', 'telib', 'obj_create', _x, _y, _obj));
 #define top_create(_x, _y, _obj, _spawnDir, _spawnDis)                                  return  mod_script_call_nc('mod', 'telib', 'top_create', _x, _y, _obj, _spawnDir, _spawnDis);
 #define chest_create(_x, _y, _obj, _levelStart)                                         return  mod_script_call_nc('mod', 'telib', 'chest_create', _x, _y, _obj, _levelStart);
+#define prompt_create(_text)                                                            return  mod_script_call(   'mod', 'telib', 'prompt_create', _text);
+#define alert_create(_inst, _sprite)                                                    return  mod_script_call(   'mod', 'telib', 'alert_create', _inst, _sprite);
+#define door_create(_x, _y, _dir)                                                       return  mod_script_call_nc('mod', 'telib', 'door_create', _x, _y, _dir);
 #define trace_error(_error)                                                                     mod_script_call_nc('mod', 'telib', 'trace_error', _error);
 #define view_shift(_index, _dir, _pan)                                                          mod_script_call_nc('mod', 'telib', 'view_shift', _index, _dir, _pan);
 #define sleep_max(_milliseconds)                                                                mod_script_call_nc('mod', 'telib', 'sleep_max', _milliseconds);
@@ -5724,6 +5723,8 @@
 #define weapon_decide(_hardMin, _hardMax, _gold, _noWep)                                return  mod_script_call(   'mod', 'telib', 'weapon_decide', _hardMin, _hardMax, _gold, _noWep);
 #define weapon_get_red(_wep)                                                            return  mod_script_call(   'mod', 'telib', 'weapon_get_red', _wep);
 #define skill_get_icon(_skill)                                                          return  mod_script_call(   'mod', 'telib', 'skill_get_icon', _skill);
+#define skill_get_avail(_skill)                                                         return  mod_script_call(   'mod', 'telib', 'skill_get_avail', _skill);
+#define string_delete_nt(_string)                                                       return  mod_script_call_nc('mod', 'telib', 'string_delete_nt', _string);
 #define path_create(_xstart, _ystart, _xtarget, _ytarget, _wall)                        return  mod_script_call_nc('mod', 'telib', 'path_create', _xstart, _ystart, _xtarget, _ytarget, _wall);
 #define path_shrink(_path, _wall, _skipMax)                                             return  mod_script_call_nc('mod', 'telib', 'path_shrink', _path, _wall, _skipMax);
 #define path_reaches(_path, _xtarget, _ytarget, _wall)                                  return  mod_script_call_nc('mod', 'telib', 'path_reaches', _path, _xtarget, _ytarget, _wall);
@@ -5736,10 +5737,7 @@
 #define team_get_sprite(_team, _sprite)                                                 return  mod_script_call_nc('mod', 'telib', 'team_get_sprite', _team, _sprite);
 #define team_instance_sprite(_team, _inst)                                              return  mod_script_call_nc('mod', 'telib', 'team_instance_sprite', _team, _inst);
 #define sprite_get_team(_sprite)                                                        return  mod_script_call_nc('mod', 'telib', 'sprite_get_team', _sprite);
-#define prompt_create(_text)                                                            return  mod_script_call(   'mod', 'telib', 'prompt_create', _text);
-#define alert_create(_inst, _sprite)                                                    return  mod_script_call(   'mod', 'telib', 'alert_create', _inst, _sprite);
-#define door_create(_x, _y, _dir)                                                       return  mod_script_call_nc('mod', 'telib', 'door_create', _x, _y, _dir);
-#define charm_instance(_inst, _charm)                                                   return  mod_script_call_nc('mod', 'telib', 'charm_instance', _inst, _charm);
 #define lightning_connect(_x1, _y1, _x2, _y2, _arc, _enemy)                             return  mod_script_call(   'mod', 'telib', 'lightning_connect', _x1, _y1, _x2, _y2, _arc, _enemy);
+#define charm_instance(_inst, _charm)                                                   return  mod_script_call_nc('mod', 'telib', 'charm_instance', _inst, _charm);
 #define move_step(_mult)                                                                return  mod_script_call(   'mod', 'telib', 'move_step', _mult);
 #define pool(_pool)                                                                     return  mod_script_call_nc('mod', 'telib', 'pool', _pool);

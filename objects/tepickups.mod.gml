@@ -105,10 +105,9 @@
 		if(_wep != wep_none){
 			repeat(_wepNum){
 				with(instance_create(x, y, WepPickup)){
-					wep = _wep;
+					wep   = _wep;
 					curse = other.curse;
-					ammo = true;
-					roll = true;
+					ammo  = true;
 				}
 			}
 		}
@@ -2026,7 +2025,7 @@
 								case "bone":
 									with(instance_create(_x, _y, WepPickup)){
 										motion_set(point_direction(x, y, p.x, p.y) + orandom(8), 4);
-										wep = "crabbone";
+										wep  = "crabbone";
 										ammo = true;
 									}
 									instance_create(_x, _y, Dust);
@@ -2043,7 +2042,7 @@
 								case "soda":
 									with(instance_create(_x, _y, WepPickup)){
 										motion_set(point_direction(x, y, p.x, p.y) + orandom(8), 5);
-										wep = other.soda;
+										wep  = other.soda;
 										ammo = true;
 									}
 									repeat(16) with(instance_create(_x, _y, Shell)){
@@ -2081,10 +2080,9 @@
 						case ChestShop_wep:
 							with(instance_create(_x, _y, WepPickup)){
 								motion_set(point_direction(x, y, p.x, p.y) + orandom(8), 5);
-								wep = other.drop;
+								wep   = other.drop;
 								curse = other.curse;
-								ammo = true;
-								roll = true;
+								ammo  = true;
 							}
 							
 							 // Effects:
@@ -2716,7 +2714,7 @@
 	return (speed <= 0);
 	
 #define HarpoonPickup_open
-	var	_type = 3,
+	var	_type = type_bolt,
 		_num  = num;
 		
 	 // +1 Bolt Ammo:
@@ -2954,49 +2952,6 @@
 	sound_play_pitchvol(sndWallBreakBrick,     1,                 0.6);
 	
 	
-#define OrchidSkill_decide
-	/*
-		Returns a random mutation that could currently appear on the mutation selection screen and isn't patience
-		If the player already has every available mutation then a random one is returned
-		Returns 'mut_none' if there were no available mutations
-	*/
-	
-	var _skillList = [],
-		_skillMods = mod_get_names("skill"),
-		_skillMax = 30,
-		_skillAll = true; // Already have every available skill
-		
-	for(var i = 1; i < _skillMax + array_length(_skillMods); i++){
-		var _skill = ((i < _skillMax) ? i : _skillMods[i - _skillMax]);
-		
-		if(skill_get_active(_skill)){
-			if(
-				_skill != mut_patience
-				&& (_skill != mut_last_wish || skill_get(_skill) <= 0)
-				&& (_skill != mut_heavy_heart || GameCont.wepmuts >= 3)
-			){
-				if(
-					!is_string(_skill)
-					|| !mod_script_exists("skill", _skill, "skill_avail")
-					|| mod_script_call("skill", _skill, "skill_avail")
-				){
-					array_push(_skillList, _skill);
-					if(skill_get(_skill) == 0) _skillAll = false;
-				}
-			}
-		}
-	}
-	
-	var _skillInst = instances_matching(CustomObject, "name", "OrchidSkill", "OrchidBall");
-	with(array_shuffle(_skillList)){
-		var _skill = self;
-		if(_skillAll || (skill_get(_skill) == 0 && array_length(instances_matching(_skillInst, "skill", _skill)) <= 0)){
-			return _skill;
-		}
-	}
-	
-	return mut_none;
-	
 #define OrchidSkill_create(_x, _y)
 	/*
 		Manages the pet Orchid's timed mutation
@@ -3029,6 +2984,42 @@
 		
 		return id;
 	}
+	
+#define OrchidSkill_decide
+	/*
+		Returns a random mutation that could currently appear on the mutation selection screen and isn't patience
+		If the player already has every available mutation then a random one is returned
+		Returns 'mut_none' if there were no available mutations
+	*/
+	
+	var _skillList = [],
+		_skillMods = mod_get_names("skill"),
+		_skillInst = instances_matching(CustomObject, "name", "OrchidSkill", "OrchidBall"),
+		_skillMax  = 30,
+		_skillAll  = true; // Already have every available skill
+		
+	for(var i = 1; i < _skillMax + array_length(_skillMods); i++){
+		var _skill = ((i < _skillMax) ? i : _skillMods[i - _skillMax]);
+		
+		if(
+			skill_get_avail(_skill)
+			&& (_skill != mut_patience)
+			&& (_skill != mut_last_wish || skill_get(_skill) <= 0)
+			&& (_skill != mut_heavy_heart || GameCont.wepmuts >= 3)
+		){
+			array_push(_skillList, _skill);
+			if(skill_get(_skill) == 0) _skillAll = false;
+		}
+	}
+	
+	with(array_shuffle(_skillList)){
+		var _skill = self;
+		if(_skillAll || (skill_get(_skill) == 0 && array_length(instances_matching(_skillInst, "skill", _skill)) <= 0)){
+			return _skill;
+		}
+	}
+	
+	return mut_none;
 	
 #define OrchidSkill_setup
 	setup = false;
@@ -3251,11 +3242,11 @@
 		snd_dead = sndGeneratorBreak;
 		
 		 // Vars:
-		maxhealth = 80;
-		raddrop = 6;
-		team = 1;
-		size = 3;
-		skill = mut_none;
+		maxhealth    = 80;
+		raddrop      = 6;
+		team         = 1;
+		size         = 3;
+		skill        = OrchidSkill_decide();
 		effect_color = make_color_rgb(72, 253, 8); // make_color_rgb(190, 253, 8);
 		
 		 // Prompt:
@@ -3296,22 +3287,23 @@
 		if(player_is_active(prompt.pick)){
 			 // Grant Blessing:
 			with(obj_create(0, 0, "OrchidSkill")){
-				color1 = make_color_rgb(72, 253,  8);
-				color2 = make_color_rgb( 3,  33, 18)
-				skill  = other.skill;
-				time   = 180 * 30; // 3 minutes
+				color1  = make_color_rgb(72, 253,  8);
+				color2  = make_color_rgb( 3,  33, 18)
+				skill   = other.skill;
+				time    = 180 * 30; // 3 minutes
+				creator = other;
 			}
 			
 			 // Effect:
 			with(instance_create(x, y, ImpactWrists)){
 				image_blend = other.effect_color;
-				depth = -7;
+				depth = -4;
 			}
 			
 			 // Disable All Altars:
 			with(instances_matching(object_index, "name", name)){
 				with(prompt) visible = false;
-				alarm0 = 10 + random(10);
+				alarm0 = irandom_range(10, 20);
 			}
 		}
 	}
@@ -3331,6 +3323,21 @@
 		}
 	}
 	
+	 // Alert:
+	if(array_length(instances_matching(instances_matching(CustomObject, "name", "OrchidSkill"), "creator", id)) > 0){
+		var _icon = skill_get_icon(skill);
+		with(alert_create(self, _icon[0])){
+			image_index = _icon[1];
+			image_speed = 0;
+			vspeed      = -2.5;
+			target_y    = 0;
+			alert       = { spr:sprEatRad, img:-0.25, x:6, y:6 };
+			blink       = 15;
+			alarm0      = 60;
+			snd_flash   = sndLevelUp;
+		}
+	}
+	
 	 // Effects:
 	instance_create(x, y, PortalClear);
 	repeat(4){
@@ -3346,20 +3353,20 @@
 		}
 	}
 	*/
-	with(instance_create(x, y - 8, EatRad)){
-		sprite_index = sprMutant6Dead;
-		image_speed  = 0.4;
-		image_index  = 9;
-		image_blend  = other.effect_color;
-		depth = -6
-	}
 	repeat(15){
 		with(scrFX([x, 16], [y, 16], [90, random(1)], EatRad)){
 			sprite_index = choose(sprEatRadPlut, sprEatBigRadPlut);
 			image_index  = random(2);
 			image_speed  = 0.4;
-			depth = -7;
+			depth        = -4;
 		}
+	}
+	with(instance_create(x, y - 8, EatRad)){
+		sprite_index = sprMutant6Dead;
+		image_speed  = 0.4;
+		image_index  = 9;
+		image_blend  = other.effect_color;
+		depth        = -4;
 	}
 	view_shake_max_at(x, y, 50);
 	sleep_max(50);
@@ -3874,7 +3881,7 @@
 		 // Create:
 		repeat(_num){
 			with(instance_create(x, y, WepPickup)){
-				wep = _wep;
+				wep  = _wep;
 				ammo = true;
 			}
 			if(is_object(_wep)) _wep = lq_clone(_wep);
@@ -4013,22 +4020,11 @@
 			if(skill_get(skill) == 0){
 				var _skillList = [];
 				for(var i = 0; !is_undefined(skill_get_at(i)); i++){
-					var s = skill_get_at(i);
-					if(s != mut_patience){
-						var a = true,
-							n = "skill_avail";
-							
-						 // Identify Available Skills:
-						if(is_string(s) && mod_script_exists("skill", s, n)){
-							a = mod_script_call("skill", s, n);
-						}
-						
-						if(a){
-							array_push(_skillList, s);
-						}
+					var _skill = skill_get_at(i);
+					if(_skill != mut_patience && skill_get_avail(_skill)){
+						array_push(_skillList, _skill);
 					}
 				}
-				
 				if(array_length(_skillList) > 0){
 					skill = _skillList[irandom(array_length(_skillList) - 1)];
 				}
@@ -4045,9 +4041,9 @@
 			prompt = prompt_create("  REROLL");
 			with(prompt){
 				mask_index = mskLast;
-				xoff = -8;
-				yoff = -10;
-				on_meet = script_ref_create(VaultFlower_prompt_meet);
+				xoff       = -8;
+				yoff       = -10;
+				on_meet    = script_ref_create(VaultFlower_prompt_meet);
 			}
 		}
 		
@@ -4295,9 +4291,9 @@
 		
 		 // Weapon:
 		with(target){
-			//wep = weapon_decide(0, GameCont.hard, false, null);
+			//wep      = weapon_decide(0, GameCont.hard, false, null);
 			rotation = 90 + (random_range(10, 20) * choose(-1, 1));
-			ammo = true;
+			ammo     = true;
 		}
 		
 		return id;
@@ -4402,9 +4398,9 @@
 	}
 	
 	/*with(instance_create(x, y, WepPickup)){
-		ammo = true;
-		wep = other.wep;
-		curse = other.curse;
+		ammo     = true;
+		wep      = other.wep;
+		curse    = other.curse;
 		rotation = other.rotation + other.image_angle + (90 + (90 * sign(other.image_xscale)));
 	}*/
 
@@ -4886,7 +4882,11 @@
 			var	_type = weapon_get_type(wep),
 				_ammo = ammo[_type];
 				
-			if(_type != 0 && _ammo <= 0 && _ammo + bonus_ammo > weapon_get_cost(wep)){
+			if(
+				_type != type_melee
+				&& _ammo <= 0
+				&& _ammo + bonus_ammo > weapon_get_cost(wep)
+			){
 				drawempty = 0;
 			}
 		}
@@ -4894,7 +4894,11 @@
 			var	_type = weapon_get_type(bwep),
 				_ammo = ammo[_type];
 				
-			if(_type != 0 && _ammo <= 0 && _ammo + bonus_ammo > weapon_get_cost(bwep)){
+			if(
+				_type != type_melee
+				&& _ammo <= 0
+				&& _ammo + bonus_ammo > weapon_get_cost(bwep)
+			){
 				drawemptyb = 0;
 			}
 		}
@@ -5357,18 +5361,18 @@
 									
 									 // Encourage Weapons Closer to Full Ammo:
 									_ammoMax++;
-									if(_type > 0){
-										_ammoMin += min(1, (((_type < array_length(_ammoPick)) ? _ammoPick[_type] : typ_ammo[_type]) * 3) / typ_amax[_type]);
-										_ammoNum += min(1, ammo[_type] / typ_amax[_type]);
-									}
-									else{
+									if(_type == type_melee){
 										_ammoMin += 1/3;
 										_ammoNum += 1/4;
+									}
+									else{
+										_ammoMin += min(1, (((_type < array_length(_ammoPick)) ? _ammoPick[_type] : typ_ammo[_type]) * 3) / typ_amax[_type]);
+										_ammoNum += min(1, ammo[_type] / typ_amax[_type]);
 									}
 									
 									 // Encourage Ammo Intensive Weapons:
 									if(_wep != wep_none){
-										var _cost = weapon_get_cost(_wep) / ((_type == 1) ? 3 : 1);
+										var _cost = weapon_get_cost(_wep) / ((_type == type_bullet) ? 3 : 1);
 										if(is_object(_wep) && "wep" in _wep && "ammo" in _wep && "cost" in _wep && is_string(_wep.wep)){
 											_cost += _wep.cost;
 										}
@@ -5435,6 +5439,12 @@
 	
 	
 /// SCRIPTS
+#macro  type_melee                                                                              0
+#macro  type_bullet                                                                             1
+#macro  type_shell                                                                              2
+#macro  type_bolt                                                                               3
+#macro  type_explosive                                                                          4
+#macro  type_energy                                                                             5
 #macro  area_campfire                                                                           0
 #macro  area_desert                                                                             1
 #macro  area_sewers                                                                             2
@@ -5487,6 +5497,9 @@
 #define obj_create(_x, _y, _obj)                                                        return  (is_undefined(_obj) ? [] : mod_script_call_nc('mod', 'telib', 'obj_create', _x, _y, _obj));
 #define top_create(_x, _y, _obj, _spawnDir, _spawnDis)                                  return  mod_script_call_nc('mod', 'telib', 'top_create', _x, _y, _obj, _spawnDir, _spawnDis);
 #define chest_create(_x, _y, _obj, _levelStart)                                         return  mod_script_call_nc('mod', 'telib', 'chest_create', _x, _y, _obj, _levelStart);
+#define prompt_create(_text)                                                            return  mod_script_call(   'mod', 'telib', 'prompt_create', _text);
+#define alert_create(_inst, _sprite)                                                    return  mod_script_call(   'mod', 'telib', 'alert_create', _inst, _sprite);
+#define door_create(_x, _y, _dir)                                                       return  mod_script_call_nc('mod', 'telib', 'door_create', _x, _y, _dir);
 #define trace_error(_error)                                                                     mod_script_call_nc('mod', 'telib', 'trace_error', _error);
 #define view_shift(_index, _dir, _pan)                                                          mod_script_call_nc('mod', 'telib', 'view_shift', _index, _dir, _pan);
 #define sleep_max(_milliseconds)                                                                mod_script_call_nc('mod', 'telib', 'sleep_max', _milliseconds);
@@ -5566,6 +5579,8 @@
 #define weapon_decide(_hardMin, _hardMax, _gold, _noWep)                                return  mod_script_call(   'mod', 'telib', 'weapon_decide', _hardMin, _hardMax, _gold, _noWep);
 #define weapon_get_red(_wep)                                                            return  mod_script_call(   'mod', 'telib', 'weapon_get_red', _wep);
 #define skill_get_icon(_skill)                                                          return  mod_script_call(   'mod', 'telib', 'skill_get_icon', _skill);
+#define skill_get_avail(_skill)                                                         return  mod_script_call(   'mod', 'telib', 'skill_get_avail', _skill);
+#define string_delete_nt(_string)                                                       return  mod_script_call_nc('mod', 'telib', 'string_delete_nt', _string);
 #define path_create(_xstart, _ystart, _xtarget, _ytarget, _wall)                        return  mod_script_call_nc('mod', 'telib', 'path_create', _xstart, _ystart, _xtarget, _ytarget, _wall);
 #define path_shrink(_path, _wall, _skipMax)                                             return  mod_script_call_nc('mod', 'telib', 'path_shrink', _path, _wall, _skipMax);
 #define path_reaches(_path, _xtarget, _ytarget, _wall)                                  return  mod_script_call_nc('mod', 'telib', 'path_reaches', _path, _xtarget, _ytarget, _wall);
@@ -5578,10 +5593,7 @@
 #define team_get_sprite(_team, _sprite)                                                 return  mod_script_call_nc('mod', 'telib', 'team_get_sprite', _team, _sprite);
 #define team_instance_sprite(_team, _inst)                                              return  mod_script_call_nc('mod', 'telib', 'team_instance_sprite', _team, _inst);
 #define sprite_get_team(_sprite)                                                        return  mod_script_call_nc('mod', 'telib', 'sprite_get_team', _sprite);
-#define prompt_create(_text)                                                            return  mod_script_call(   'mod', 'telib', 'prompt_create', _text);
-#define alert_create(_inst, _sprite)                                                    return  mod_script_call(   'mod', 'telib', 'alert_create', _inst, _sprite);
-#define door_create(_x, _y, _dir)                                                       return  mod_script_call_nc('mod', 'telib', 'door_create', _x, _y, _dir);
-#define charm_instance(_inst, _charm)                                                   return  mod_script_call_nc('mod', 'telib', 'charm_instance', _inst, _charm);
 #define lightning_connect(_x1, _y1, _x2, _y2, _arc, _enemy)                             return  mod_script_call(   'mod', 'telib', 'lightning_connect', _x1, _y1, _x2, _y2, _arc, _enemy);
+#define charm_instance(_inst, _charm)                                                   return  mod_script_call_nc('mod', 'telib', 'charm_instance', _inst, _charm);
 #define move_step(_mult)                                                                return  mod_script_call(   'mod', 'telib', 'move_step', _mult);
 #define pool(_pool)                                                                     return  mod_script_call_nc('mod', 'telib', 'pool', _pool);

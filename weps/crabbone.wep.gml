@@ -98,10 +98,9 @@
 	else if(weapon_ammo_fire(w)){
 		 // Throw Bone:
 		with(obj_create(x, y, "Bone")){
-			motion_add(other.gunangle, 16);
+			projectile_init(other.team, f.creator);
+			motion_add(other.gunangle, 16 + (4 * skill_get(mut_long_arms)));
 			rotation = direction;
-			creator = f.creator;
-			team = other.team;
 			curse = _curse;
 			
 			 // Death to Free Bones:

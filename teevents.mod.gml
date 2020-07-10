@@ -203,19 +203,13 @@
 	floor_set_align(null, null, 32, 32);
 	
 	 // Type Setup:
-	var _pool = {
+	type = pool({
 		"Chest"    : 2,
 		"Scorpion" : 1,
 		"Maggot"   : 1,
-		"Skull"    : 1
-	};
-	if(GameCont.loops <= 0){
-		
-		 // This mechanic is not suited for loop environments I think: 
-		lq_set(_pool, "Dummy", 1);
-	}
-	type = pool(_pool);
-	
+		"Skull"    : 1,
+		"Dummy"    : (GameCont.loops <= 0)
+	});
 	switch(type){
 		case "Chest":
 		case "Dummy":
@@ -1642,7 +1636,7 @@
 #define ButtonGame_area 	return area_labs;
 #define ButtonGame_chance	return 0; // 1/4;
 #define ButtonGame_create
-	var _spawnX     = x,
+	var	_spawnX     = x,
 		_spawnY     = y,
 		_spawnDis   = 32,
 		_spawnFloor = FloorNormal,
@@ -1702,7 +1696,7 @@
 	
 #define PalaceShrine_text    return choose(`${ttip}RAD MANIPULATION @wIS KINDA TRICKY`, `${ttip}FINAL PROVISIONS`);
 #define PalaceShrine_area    return area_palace;
-#define PalaceShrine_chance  return ((GameCont.subarea == 2 && array_length(PalaceShrine_skills()) > 0) ? 1 : 0);
+#define PalaceShrine_chance  return ((GameCont.subarea == 2 && array_length(PalaceShrine_skills()) > 0) ? (1 / (1 + max(0, GameCont.wepmuts))) : 0);
 
 #define PalaceShrine_create
 	/*
@@ -1724,7 +1718,7 @@
 	*/
 	
 	var	_minID      = GameObject.id,
-		_skillArray = PalaceShrine_skills(),
+		_skillArray = array_shuffle(PalaceShrine_skills()),
 		_skillCount = min(array_length(_skillArray), 2 + irandom(2)),
 		_w          = choose(3, 4),
 		_h          = choose(3, 4),
@@ -1791,57 +1785,127 @@
 	
 #define PalaceShrine_skills
 	/*
-		Compiles a list of weapon mutations based on a player's weapon loadout
-		and mutaton selection.
+		Compiles a list of weapon mutations based on the player's weapon loadout and mutation selection
 	*/
 	
-	var _skillArray = [],
-		_skillTypes = [mut_long_arms, mut_recycle_gland, mut_shotgun_shoulders, mut_bolt_marrow, mut_boiling_veins, mut_laser_brain];
-		
-	with(Player){
-		with(["wep", "bwep"]){
-			var	o = self,
-				w = variable_instance_get(other, o),
-				t = weapon_get_type(w),
-				s = _skillTypes[t];
+	var _list = [];
+	
+	 // Normal:
+	with(instances_matching([Player, Revive], "", null)){
+		with([wep, bwep]){
+			var	_wep = self,
+				_raw = wep_get(_wep);
 				
-			if(w != wep_none){
-				
-				 // Scythe Exception (Kinda Ugly):
-				if(wep_get(w) == "scythe"){
-					array_push(_skillArray, mut_long_arms);
-					array_push(_skillArray, mut_bolt_marrow);
-					array_push(_skillArray, mut_shotgun_shoulders);
-				}
-				else{
+			with(other){
+				switch(_raw){
 					
-					 // We Pushin':
-					if(skill_get(s) <= 0){
-						array_push(_skillArray, s);
-					}
-					
-					 // Ammo Consuming Melee Weapons:
-					if(skill_get(mut_long_arms) <= 0){
-						if(t != 0 && weapon_is_melee(w)){
-							array_push(_skillArray, mut_long_arms);
+					case wep_none:
+						
+						array_push(_list, mut_last_wish);
+						
+						break;
+						
+					case wep_jackhammer:
+						
+						array_push(_list, mut_long_arms);
+						
+						break;
+						
+					case wep_lightning_hammer:
+						
+						array_push(_list, mut_long_arms);
+						array_push(_list, mut_laser_brain);
+						
+						break;
+						
+					default:
+						
+						 // Custom:
+						var _scrt = "weapon_shrine";
+						if(is_string(_raw) && mod_script_exists("weapon", _raw, _scrt)){
+							var _shrine = mod_script_call("weapon", _raw, _scrt);
+							_list = array_combine(
+								_list,
+								(is_array(_shrine) ? _shrine : [_shrine])
+							);
 						}
-					}
+						
+						 // Normal:
+						else{
+							var	_type  = weapon_get_type(_wep),
+								_split = string_split(string_upper(string_delete_nt(weapon_get_name(_wep))), " ");
+								
+							 // Type-Specific:
+							switch(_type){
+								case type_melee     : array_push(_list, mut_long_arms);         break;
+								case type_bullet    : array_push(_list, mut_recycle_gland);     break;
+								case type_shell     : array_push(_list, mut_shotgun_shoulders); break;
+								case type_bolt      : array_push(_list, mut_bolt_marrow);       break;
+								case type_explosive : array_push(_list, mut_boiling_veins);     break;
+								case type_energy    : array_push(_list, mut_laser_brain);       break;
+							}
+							
+							 // Melee:
+							if(weapon_is_melee(_wep)){
+								array_push(_list, mut_long_arms);
+							}
+							
+							 // Ultra:
+							if(weapon_get_rads(_wep) > 0){
+								array_push(_list, mut_plutonium_hunger);
+							}
+							
+							 // Blood:
+							if(array_exists(_split, "BLOOD")){
+								array_push(_list, mut_bloodlust);
+							}
+							
+							 // Pop:
+							if(array_exists(_split, "POP") && _type == type_bullet){
+								array_push(_list, mut_shotgun_shoulders);
+							}
+						}
+						
 				}
 			}
 		}
 	}
 	
-	var _finalArray = [];
-	with(array_shuffle(_skillArray)){
-		var o = self;
-		if(!array_exists(_finalArray, o)){
-			array_push(_finalArray, o);
+	 // Modded:
+	var _scrt = "skill_wepspec";
+	with(array_shuffle(mod_get_names("skill"))){
+		var	_skill = self,
+			_break = false;
+			
+		with(other){
+			if(mod_script_exists("skill", _skill, _scrt)){
+				if(mod_script_call("skill", _skill, _scrt)){
+					array_push(_list, _skill);
+					_break = true;
+				}
+			}
+		}
+		
+		if(_break) break;
+	}
+	
+	 // Compile Skill Pool:
+	var _pool = [];
+	
+	with(_list){
+		var _skill = self;
+		with(other){
+			if(
+				skill_get(_skill) == 0
+				&& skill_get_avail(_skill)
+				&& !array_exists(_pool, _skill)
+			){
+				array_push(_pool, _skill);
+			}
 		}
 	}
 	
-	// trace(_skillArray, _finalArray);
-	
-	return _finalArray;
+	return _pool;
 	
 	
 #define PopoAmbush_text    return `${ttip}THE IDPD @wIS WAITING FOR YOU`;
@@ -2060,6 +2124,12 @@
 	
 	
 /// SCRIPTS
+#macro  type_melee                                                                              0
+#macro  type_bullet                                                                             1
+#macro  type_shell                                                                              2
+#macro  type_bolt                                                                               3
+#macro  type_explosive                                                                          4
+#macro  type_energy                                                                             5
 #macro  area_campfire                                                                           0
 #macro  area_desert                                                                             1
 #macro  area_sewers                                                                             2
@@ -2112,6 +2182,9 @@
 #define obj_create(_x, _y, _obj)                                                        return  (is_undefined(_obj) ? [] : mod_script_call_nc('mod', 'telib', 'obj_create', _x, _y, _obj));
 #define top_create(_x, _y, _obj, _spawnDir, _spawnDis)                                  return  mod_script_call_nc('mod', 'telib', 'top_create', _x, _y, _obj, _spawnDir, _spawnDis);
 #define chest_create(_x, _y, _obj, _levelStart)                                         return  mod_script_call_nc('mod', 'telib', 'chest_create', _x, _y, _obj, _levelStart);
+#define prompt_create(_text)                                                            return  mod_script_call(   'mod', 'telib', 'prompt_create', _text);
+#define alert_create(_inst, _sprite)                                                    return  mod_script_call(   'mod', 'telib', 'alert_create', _inst, _sprite);
+#define door_create(_x, _y, _dir)                                                       return  mod_script_call_nc('mod', 'telib', 'door_create', _x, _y, _dir);
 #define trace_error(_error)                                                                     mod_script_call_nc('mod', 'telib', 'trace_error', _error);
 #define view_shift(_index, _dir, _pan)                                                          mod_script_call_nc('mod', 'telib', 'view_shift', _index, _dir, _pan);
 #define sleep_max(_milliseconds)                                                                mod_script_call_nc('mod', 'telib', 'sleep_max', _milliseconds);
@@ -2191,6 +2264,8 @@
 #define weapon_decide(_hardMin, _hardMax, _gold, _noWep)                                return  mod_script_call(   'mod', 'telib', 'weapon_decide', _hardMin, _hardMax, _gold, _noWep);
 #define weapon_get_red(_wep)                                                            return  mod_script_call(   'mod', 'telib', 'weapon_get_red', _wep);
 #define skill_get_icon(_skill)                                                          return  mod_script_call(   'mod', 'telib', 'skill_get_icon', _skill);
+#define skill_get_avail(_skill)                                                         return  mod_script_call(   'mod', 'telib', 'skill_get_avail', _skill);
+#define string_delete_nt(_string)                                                       return  mod_script_call_nc('mod', 'telib', 'string_delete_nt', _string);
 #define path_create(_xstart, _ystart, _xtarget, _ytarget, _wall)                        return  mod_script_call_nc('mod', 'telib', 'path_create', _xstart, _ystart, _xtarget, _ytarget, _wall);
 #define path_shrink(_path, _wall, _skipMax)                                             return  mod_script_call_nc('mod', 'telib', 'path_shrink', _path, _wall, _skipMax);
 #define path_reaches(_path, _xtarget, _ytarget, _wall)                                  return  mod_script_call_nc('mod', 'telib', 'path_reaches', _path, _xtarget, _ytarget, _wall);
@@ -2203,10 +2278,7 @@
 #define team_get_sprite(_team, _sprite)                                                 return  mod_script_call_nc('mod', 'telib', 'team_get_sprite', _team, _sprite);
 #define team_instance_sprite(_team, _inst)                                              return  mod_script_call_nc('mod', 'telib', 'team_instance_sprite', _team, _inst);
 #define sprite_get_team(_sprite)                                                        return  mod_script_call_nc('mod', 'telib', 'sprite_get_team', _sprite);
-#define prompt_create(_text)                                                            return  mod_script_call(   'mod', 'telib', 'prompt_create', _text);
-#define alert_create(_inst, _sprite)                                                    return  mod_script_call(   'mod', 'telib', 'alert_create', _inst, _sprite);
-#define door_create(_x, _y, _dir)                                                       return  mod_script_call_nc('mod', 'telib', 'door_create', _x, _y, _dir);
-#define charm_instance(_inst, _charm)                                                   return  mod_script_call_nc('mod', 'telib', 'charm_instance', _inst, _charm);
 #define lightning_connect(_x1, _y1, _x2, _y2, _arc, _enemy)                             return  mod_script_call(   'mod', 'telib', 'lightning_connect', _x1, _y1, _x2, _y2, _arc, _enemy);
+#define charm_instance(_inst, _charm)                                                   return  mod_script_call_nc('mod', 'telib', 'charm_instance', _inst, _charm);
 #define move_step(_mult)                                                                return  mod_script_call(   'mod', 'telib', 'move_step', _mult);
 #define pool(_pool)                                                                     return  mod_script_call_nc('mod', 'telib', 'pool', _pool);

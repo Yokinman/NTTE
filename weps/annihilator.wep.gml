@@ -19,6 +19,7 @@
 #define weapon_load     return 24; // 0.8 Seconds
 #define weapon_melee(w) return lq_defget(w, "melee", true);//(!instance_is(self, Player) || variable_instance_get(self, "red_ammo", 0) < weapon_get_red(w));
 #define weapon_avail    return unlock_get("pack:red");
+#define weapon_shrine   return [mut_long_arms, mut_shotgun_shoulders];
 #define weapon_red      return 2;
 
 #define weapon_type

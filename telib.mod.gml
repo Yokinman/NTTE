@@ -710,16 +710,17 @@
 			string_width(string_delete_nt("@rHey")) == 3
 	*/
 	
-	var	_split = "@",
-		_stringSplit = string_split(_string, _split),
+	var	_split          = "@",
+		_stringSplit    = string_split(_string, _split),
 		_stringSplitMax = array_length(_stringSplit);
 		
 	for(var i = 1; i < _stringSplitMax; i++){
 		if(_stringSplit[i - 1] != _split){
 			var	_current = _stringSplit[i],
-				_char = string_upper(string_char_at(_current, 1));
+				_char    = string_upper(string_char_at(_current, 1));
 				
 			switch(_char){
+				
 				case "": // CANCEL : "@@rHey" -> "@rHey"
 					
 					if(i < _stringSplitMax - 1){
@@ -759,11 +760,11 @@
 						 // Offset if Drawing Sprite:
 						var _spr = string_split(string_copy(_current, 2, string_pos(")", _current) - 2), ":")[0];
 						if(
-							real(_spr) > 0                       ||
-							sprite_exists(asset_get_index(_spr)) ||
-							_spr == "sprKeySmall"                ||
-							_spr == "sprButSmall"                ||
-							_spr == "sprButBig"
+							real(_spr) > 0
+							|| sprite_exists(asset_get_index(_spr))
+							|| _spr == "sprKeySmall"
+							|| _spr == "sprButSmall"
+							|| _spr == "sprButBig"
 						){
 							// draw_text_nt uses width of "A" instead of " ", so this is slightly off on certain fonts
 							if(string_width(" ") > 0){
@@ -791,6 +792,7 @@
 				default: // NONE : "@Hey" -> "@Hey"
 					
 					_current = _split + _current;
+					
 			}
 			
 			_stringSplit[i] = _current;
@@ -2477,6 +2479,24 @@
 	}
 	
 	return [sprEGIconHUD, 2];
+	
+#define skill_get_avail(_skill)
+	/*
+		Returns 'true' if the given skill can appear on the mutation selection screen, 'false' otherwise
+		Doesn't consider Heavy Heart's special conditions
+	*/
+	
+	if(skill_get_active(_skill)){
+		if(
+			!is_string(_skill)
+			|| !mod_script_exists("skill", _skill, "skill_avail")
+			|| mod_script_call("skill", _skill, "skill_avail")
+		){
+			return true;
+		}
+	}
+	
+	return false;
 	
 #define game_activate()
 	/*

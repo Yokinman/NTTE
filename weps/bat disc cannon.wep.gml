@@ -25,6 +25,7 @@
 #define weapon_auto         return true;
 #define weapon_melee        return false;
 #define weapon_avail        return unlock_get("pack:lair");
+#define weapon_shrine       return mut_bolt_marrow;
 
 #define weapon_fire(w)
 	var f = weapon_fire_init(w);

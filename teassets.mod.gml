@@ -550,14 +550,11 @@
 				TentacleSpwn = sprite(p + "sprTentacleSpwn", 6, 20, 28);
 				TentacleTele = sprite(p + "sprTentacleTele", 6, 20, 28);
 				
-				SquidCharge 	 = sprite(p + "Particles/sprSquidCharge",      5,  24, 24);
-				SquidBloodStreak = sprite(p + "Particles/sprSquidBloodStreak", 7,  0,  8);
-				
 				 // Maw:
 				PitSquidMawBite = sprite(p + "sprPitsquidMawBite", 14, 19, 19);
 				PitSquidMawSpit = sprite(p + "sprPitsquidMawSpit", 10, 19, 19);
 				
-				 // Spark:
+				 // Particles:
 				p += "Particles/";
 				PitSpark = [
 					sprite(p + "sprPitSpark1", 5, 16, 16),
@@ -566,7 +563,9 @@
 					sprite(p + "sprPitSpark4", 5, 16, 16),
 					sprite(p + "sprPitSpark5", 5, 16, 16),
 				];
-				TentacleWheel = sprite(p + "sprTentacleWheel", 2, 40, 40);
+				TentacleWheel    = sprite(p + "sprTentacleWheel",    2, 40, 40);
+				SquidCharge      = sprite(p + "sprSquidCharge",      5, 24, 24);
+				SquidBloodStreak = sprite(p + "sprSquidBloodStreak", 7,  0,  8);
 				
 			 // Popo Security:
 			p = m + "PopoSecurity/";

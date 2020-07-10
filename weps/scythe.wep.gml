@@ -168,6 +168,7 @@
 #define weapon_melee(w)  return scythe_get(w, "melee");
 #define weapon_avail     return unlock_get("wep:" + mod_current);
 #define weapon_unlock    return "A PACKAGE DEAL";
+#define weapon_shrine    return [mut_long_arms, mut_shotgun_shoulders, mut_bolt_marrow];
 
 #define weapon_sprt_hud(w)
 	 // Custom Ammo HUD:
