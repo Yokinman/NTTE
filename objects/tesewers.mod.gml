@@ -1775,6 +1775,10 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 	}
 	
 #define BatDisc_destroy
+	 // Effects:
+	with(instance_create(x, y, DiscDisappear)){
+		sprite_index = (other.big ? spr.BigDiscTrail : sprDiscTrail);
+	}
 	with(scrFX(x, y, [direction, 3], Smoke)){
 		growspeed /= 2;
 	}
@@ -1807,13 +1811,13 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 		
 		 // Vars:
 		mask_index = msk.BatScreech;
-		typ = 0;
-		team = 1;
-		force = 1;
-		damage = 0;
-		creator = noone;
+		typ        = 0;
+		team       = 1;
+		force      = 1;
+		damage     = 0;
+		creator    = noone;
 		candeflect = false;
-		// can_effect = true;
+		//can_effect = true;
 		
 		/*
 		 // Effects:
@@ -1825,8 +1829,7 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 		return id;
 	}
 	
-#define BatScreech_step
-/*
+/*#define BatScreech_step
 	if(can_effect && chance(1, 3)){
 		var l = random(min((sprite_width * image_xscale), (sprite_height * image_yscale)) / 2),
 			d = random(360);
@@ -1834,32 +1837,69 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 			friction = 0.4;
 		}
 	}
-*/
+	*/
 	
 #define BatScreech_projectile
-	with(other){
-		 // Destroy toxic gas:
-		if(instance_is(id, ToxicGas)){
-			with(instance_create(x, y, BulletHit)){
-				sprite_index = sprExploderExplo;
-				image_index = 2;
-			}
-			instance_delete(id);
-		}
-
-		 // Destroy projectiles:
-		else if(team != other.team){
+	if(instance_exists(self)){
+		with(other){
 			if(typ == 1 || typ == 2){
-				 // Effects:
-				repeat(2) with(instance_create(x, y, Dust)){
-					motion_set(other.direction + orandom(8), irandom(min(8, other.speed)));
-					friction = 0.4;
+				 // Deflect:
+				if(other.candeflect){
+					deflected   = true;
+					team        = other.team;
+					direction   = point_direction(other.x, other.y, x, y);
+					image_angle = direction;
+					
+					 // Effects:
+					with(instance_create(x, y, Deflect)){
+						image_angle = other.image_angle;
+					}
 				}
-				instance_create(x, y, ThrowHit);
-
+				
 				 // Destroy:
-				instance_destroy();
+				else{
+					if(instance_is(self, ToxicGas)){
+						with(instance_create(x, y, BulletHit)){
+							sprite_index = sprExploderExplo;
+							image_index = 2;
+						}
+					}
+					else{
+						repeat(2) with(instance_create(x, y, Dust)){
+							motion_set(other.direction + orandom(8), irandom(min(8, other.speed)));
+							friction = 0.4;
+						}
+						instance_create(x, y, ThrowHit);
+					}
+					instance_destroy();
+				}
 			}
+		}
+	}
+	
+#define BatScreech_grenade
+	if(instance_exists(self)){
+		 // Deflect:
+		if(candeflect){
+			with(other){
+				deflected = true;
+				direction = point_direction(other.x, other.y, x, y);
+				speed     = 10;
+				friction  = 0.1;
+				alarm1    = 6;
+				
+				 // Effects:
+				with(instance_create(x, y, Deflect)){
+					image_angle = other.direction
+				}
+				view_shake_at(x, y, 3);
+				sleep(10);
+			}
+		}
+		
+		 // Destroy:
+		else if(team != other.team){
+			BatScreech_projectile();
 		}
 	}
 	

@@ -13,13 +13,13 @@
 #define weapon_avail  return unlock_get("pack:oasis");
 
 #define weapon_reloaded
-	var	l = 22,
-		d = gunangle;
+	var	_l = 22,
+		_d = gunangle;
 		
-	repeat(5) with(instance_create(x + lengthdir_x(l, d), y + lengthdir_y(l, d), Bubble)){
-		image_angle = random(360);
+	repeat(5) with(instance_create(x + lengthdir_x(_l, _d), y + lengthdir_y(_l, _d), Bubble)){
 		image_xscale = 0.75;
 		image_yscale = image_xscale;
+		image_angle  = random(360);
 	}
 	
 	sound_play_pitchvol(sndOasisExplosionSmall, 1.3, 0.4);
@@ -30,10 +30,9 @@
 	
 	 // Projectile:
 	with(obj_create(x, y, "BubbleBomb")){
-		move_contact_solid(other.gunangle, 7);
+		projectile_init(other.team, f.creator);
 		motion_add(other.gunangle + orandom(6 * other.accuracy), 9);
-		creator = f.creator;
-		team = other.team;
+		move_contact_solid(other.gunangle, 7);
 		big = true;
 	}
 	

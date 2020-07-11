@@ -19,7 +19,7 @@
 	 // Drops naturally if a player is already carrying bones:
 	with(Player){
 		if(wep_get(wep) == mod_current || wep_get(bwep) == mod_current){
-			return 4;
+			return 4; // 1-3
 		}
 	}
 	

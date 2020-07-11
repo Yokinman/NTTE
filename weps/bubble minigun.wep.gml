@@ -14,13 +14,13 @@
 #define weapon_avail  return unlock_get("pack:oasis");
 
 #define weapon_reloaded
-	var	l = 19,
-		d = gunangle;
+	var	_l = 19,
+		_d = gunangle;
 		
-	with(instance_create(x + lengthdir_x(l, d), y + lengthdir_y(l, d), BubblePop)){
+	with(instance_create(x + lengthdir_x(_l, _d), y + lengthdir_y(_l, _d), BubblePop)){
 		image_index = (other.wkick > 0);
 		image_angle = random(360);
-		depth = -1;
+		depth       = -1;
 	}
 	
 	sound_play_pitchvol(sndOasisExplosionSmall, 1.1, 0.4);

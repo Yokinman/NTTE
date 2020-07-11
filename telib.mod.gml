@@ -2255,13 +2255,13 @@
 		for(var i = 0; i < _listMax; i++){
 			var _name = lq_get_key(_list, i);
 			if(!variable_is_readonly(_inst, _name)){
-				if(_name in _inst || !is_undefined(lq_get_value(_list, i))){
-					if(_isCustom && string_pos("on_", _name) == 1){
+				if(_isCustom && string_pos("on_", _name) == 1){
+					if(variable_instance_get(_inst, _name) != lq_get_value(_list, i)){
 						try variable_instance_set(_inst, _name, lq_get_value(_list, i));
 						catch(_error){}
 					}
-					else variable_instance_set(_inst, _name, lq_get_value(_list, i));
 				}
+				else variable_instance_set(_inst, _name, lq_get_value(_list, i));
 			}
 		}
 	}
@@ -2483,16 +2483,17 @@
 #define skill_get_avail(_skill)
 	/*
 		Returns 'true' if the given skill can appear on the mutation selection screen, 'false' otherwise
-		Doesn't consider Heavy Heart's special conditions
 	*/
 	
 	if(skill_get_active(_skill)){
-		if(
-			!is_string(_skill)
-			|| !mod_script_exists("skill", _skill, "skill_avail")
-			|| mod_script_call("skill", _skill, "skill_avail")
-		){
-			return true;
+		if(_skill != mut_heavy_heart || GameCont.wepmuts >= 3){
+			if(
+				!is_string(_skill)
+				|| !mod_script_exists("skill", _skill, "skill_avail")
+				|| mod_script_call("skill", _skill, "skill_avail")
+			){
+				return true;
+			}
 		}
 	}
 	
@@ -5838,107 +5839,137 @@
 			if(_objIndex >= 0 && _objIndex < array_length(_objList)){
 				var _newObj = _objList[_objIndex];
 				if(_obj != _newObj){
-					with(obj_create(x, y, _newObj)){
-						array_push(_newInst, id);
-						variable_instance_set_list(self, variable_instance_get_list(other));
-						instance_delete(other);
-						
-						if(array_exists(["CustomBullet", "CustomFlak", "CustomShell", "CustomPlasma"], _newObj)){
-							var _sprAlly = team_get_sprite(2, sprite_index);
+					var _varList = variable_instance_get_list(self);
+					
+					 // Normal:
+					if(is_real(_newObj)){
+						if(object_exists(_newObj)){
+							instance_change(_newObj, false);
+							event_perform(ev_create, 0);
+							variable_instance_set_list(self, _varList);
 							
-							 // Destruction Sprite:
-							switch(_sprAlly){
-								case sprHeavyBullet        : spr_dead = sprHeavyBulletHit;   break;
-								case sprAllyBullet         : spr_dead = sprAllyBulletHit;    break;
-								case sprBullet2            :
-								case sprBullet2Disappear   : spr_dead = sprBullet2Disappear; break;
-								case sprSlugBullet         :
-								case sprSlugDisappear      :
-								case sprHyperSlug          :
-								case sprHyperSlugDisappear : spr_dead = sprSlugHit;          break;
-								case sprHeavySlug          :
-								case sprHeavySlugDisappear : spr_dead = sprHeavySlugHit;     break;
-								case sprFlakBullet         : spr_dead = sprFlakHit;          break;
-								case sprSuperFlakBullet    : spr_dead = sprSuperFlakHit;     break;
-								case sprPlasmaBall         : spr_dead = sprPlasmaImpact;     break;
-								default                    : spr_dead = sprBulletHit;
-							}
-							spr_dead = team_get_sprite(_team, spr_dead);
-							
-							 // Specifics:
-							switch(_newObj){
-								
-								case "CustomFlak":
-								
-									 // Specifics:
-									switch(_obj){
-										case SuperFlakBullet:
-											snd_dead     = sndSuperFlakExplode;
-											bonus_damage = 5;
-											flak         = array_create(5, FlakBullet);
-											super        = true;
-											break;
-											
-										case EFlakBullet:
-											bonus_damage = 0;
-											flak         = array_create(10);
-											for(var i = 0; i < array_length(flak); i++){
-												flak[i] = {
-													object_index : EnemyBullet3,
-													speed : random_range(9, 12)
-												};
-											}
-											break;
-									}
-									
+							 // Object-Specifics:
+							switch(_obj){
+								case EnemyBullet3:
+									bonus = false;
 									break;
-									
-								case "CustomShell":
+							}
+						}
+					}
+					
+					 // Custom:
+					else if(is_string(_newObj)){
+						with(obj_create(x, y, _newObj)){
+							with(variable_instance_get_names(self)){
+								if(self not in _varList){
+									lq_set(_varList, self, variable_instance_get(other, self));
+								}
+							}
+							with(other){
+								instance_change(other.object_index, false);
+								event_perform(ev_create, 0);
+								variable_instance_set_list(self, _varList);
 								
-									 // Disappear Sprite:
+								 // Object-Specifics:
+								if(array_exists(["CustomBullet", "CustomFlak", "CustomShell", "CustomPlasma"], _newObj)){
+									var _sprAlly = team_get_sprite(2, sprite_index);
+									
+									 // Destruction Sprite:
 									switch(_sprAlly){
-										case sprSlugBullet:
-										case sprSlugDisappear:
-											spr_dead = sprSlugDisappear;
-											break;
-											
-										case sprHeavySlug:
-										case sprHeavySlugDisappear:
-											spr_dead = sprHeavySlugDisappear;
-											break;
-											
-										default:
-											spr_dead = sprBullet2Disappear;
+										case sprHeavyBullet        : spr_dead = sprHeavyBulletHit;   break;
+										case sprAllyBullet         : spr_dead = sprAllyBulletHit;    break;
+										case sprBullet2            :
+										case sprBullet2Disappear   : spr_dead = sprBullet2Disappear; break;
+										case sprSlugBullet         :
+										case sprSlugDisappear      :
+										case sprHyperSlug          :
+										case sprHyperSlugDisappear : spr_dead = sprSlugHit;          break;
+										case sprHeavySlug          :
+										case sprHeavySlugDisappear : spr_dead = sprHeavySlugHit;     break;
+										case sprFlakBullet         : spr_dead = sprFlakHit;          break;
+										case sprSuperFlakBullet    : spr_dead = sprSuperFlakHit;     break;
+										case sprPlasmaBall         : spr_dead = sprPlasmaImpact;     break;
+										default                    : spr_dead = sprBulletHit;
 									}
-									spr_fade = team_get_sprite(_team, spr_dead);
+									spr_dead = team_get_sprite(_team, spr_dead);
 									
 									 // Specifics:
-									switch(_obj){
-										case Slug      : bonus_damage = 2;  break;
-										case HeavySlug : bonus_damage = 10; break;
-										case PopoSlug  : bonus_damage = 0;  break;
-									}
-									
-									break;
-									
-								case "CustomPlasma":
-									
-									 // Trail Sprite:
-									spr_trail = team_get_sprite(_team, sprPlasmaTrail);
-									
-									 // Specifics:
-									switch(_obj){
-										case PlasmaBig:
-										case PlasmaHuge:
-											snd_dead = sndPlasmaBigExplode;
-											minspeed = 6;
-											flak = ((_obj == PlasmaHuge) ? array_create(4, PlasmaBig) : array_create(10, PlasmaBall));
+									switch(_newObj){
+										
+										case "CustomFlak":
+										
+											 // Specifics:
+											switch(_obj){
+												case SuperFlakBullet:
+													snd_dead     = sndSuperFlakExplode;
+													bonus_damage = 5;
+													flak         = array_create(5, FlakBullet);
+													super        = true;
+													break;
+													
+												case EFlakBullet:
+													bonus_damage = 0;
+													flak         = array_create(10);
+													for(var i = 0; i < array_length(flak); i++){
+														flak[i] = {
+															object_index : EnemyBullet3,
+															speed : random_range(9, 12)
+														};
+													}
+													break;
+											}
+											
 											break;
+											
+										case "CustomShell":
+										
+											 // Disappear Sprite:
+											switch(_sprAlly){
+												case sprSlugBullet:
+												case sprSlugDisappear:
+													spr_dead = sprSlugDisappear;
+													break;
+													
+												case sprHeavySlug:
+												case sprHeavySlugDisappear:
+													spr_dead = sprHeavySlugDisappear;
+													break;
+													
+												default:
+													spr_dead = sprBullet2Disappear;
+											}
+											spr_fade = team_get_sprite(_team, spr_dead);
+											
+											 // Specifics:
+											switch(_obj){
+												case Slug      : bonus_damage = 2;  break;
+												case HeavySlug : bonus_damage = 10; break;
+												case PopoSlug  : bonus_damage = 0;  break;
+											}
+											
+											break;
+											
+										case "CustomPlasma":
+											
+											 // Trail Sprite:
+											spr_trail = team_get_sprite(_team, sprPlasmaTrail);
+											
+											 // Specifics:
+											switch(_obj){
+												case PlasmaBig:
+												case PlasmaHuge:
+													snd_dead = sndPlasmaBigExplode;
+													minspeed = 6;
+													flak     = ((_obj == PlasmaHuge) ? array_create(4, PlasmaBig) : array_create(10, PlasmaBall));
+													break;
+											}
+											
+											break;
+											
 									}
-									
-									break;
-									
+								}
 							}
+							instance_delete(id);
 						}
 					}
 				}

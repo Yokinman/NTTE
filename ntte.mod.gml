@@ -82,6 +82,15 @@
 	global.scythe_tip_index = 0;
 	with(instances_matching(CustomObject, "name", "UnlockCont")) instance_destroy();
 	
+	 // Projectile Team Spriterizer Controller:
+	if(array_length(instances_matching(CustomObject, "name", "DeflectTeamifier")) <= 0){
+		with(instance_create(0, 0, CustomObject)){
+			name        = "DeflectTeamifier";
+			on_end_step = DeflectTeamifier_end_step;
+			persistent  = true;
+		}
+	}
+	
 	 // Race Runs Stat:
 	for(var i = 0; i < maxp; i++){
 		var _race = player_get_race(i);
@@ -2080,20 +2089,6 @@
 	}
 	script_bind_draw(ntte_hud, _HUDDepth, _HUDVisible);
 	
-	 // Teamify Deflections:
-	with(instances_matching([Slash, GuitarSlash, BloodSlash, EnergySlash, EnergyHammerSlash, LightningSlash, CustomSlash, CrystalShield, PopoShield], "", null)){
-		if(place_meeting(x, y, projectile)){
-			with(instances_meeting(x, y, instances_matching(projectile, "team", team))){
-				if(place_meeting(x, y, other)){
-					if(sprite_get_team(sprite_index) != 3){
-						if(hitid == -1) hitid = variable_instance_get(other, "hitid", -1);
-						team_instance_sprite(((team == 3) ? 1 : team), self);
-					}
-				}
-			}
-		}
-	}
-	
 	 // Weapon Unlock Stuff:
 	with(Player){
 		with(["", "b"]){
@@ -3900,6 +3895,21 @@
 				var _snd = sound_play_pitchvol(0, 0, 0);
 				sound_stop(_snd);
 				global.amb_current = _snd - 1;
+			}
+		}
+	}
+	
+#define DeflectTeamifier_end_step
+	 // Teamify Deflections:
+	with(instances_matching([Slash, GuitarSlash, BloodSlash, EnergySlash, EnergyHammerSlash, LightningSlash, CustomSlash, CrystalShield, PopoShield], "", null)){
+		if(place_meeting(x, y, projectile)){
+			with(instances_meeting(x, y, instances_matching(projectile, "team", team))){
+				if(place_meeting(x, y, other)){
+					if(sprite_get_team(sprite_index) != 3){
+						if(hitid == -1) hitid = variable_instance_get(other, "hitid", -1);
+						team_instance_sprite(((team == 3) ? 1 : team), self);
+					}
+				}
 			}
 		}
 	}

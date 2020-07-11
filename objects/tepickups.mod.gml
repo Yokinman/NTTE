@@ -1461,7 +1461,8 @@
 			"rads"         : 1,
 			"bonus_ammo"   : 1   * (_hard >= 6),
 			"bonus_health" : 1   * (_hard >= 6),
-			"soda"         : 0.5 * (_hard >= 10 && mod_exists("mod", "defpack tools")),
+			"soda"         : 0.3 * (_hard >= 10 && mod_exists("mod", "defpack tools")),
+			"hammerhead"   : 0.3 * (_hard >= 10),
 			"spirit"       : 0.3 * (_hard >= 12),
 			"turret"       : 0.7 * (GameCont.loops > 0),
 			"rogue"        : 0,
@@ -1572,6 +1573,7 @@
 			switch(drop){
 				case "health"             :
 				case "rads"               :
+				case "hammerhead"         :
 				case "spirit"             : drop = "ammo";             break;
 				case "health_chest"       :
 				case "rads_chest"         :
@@ -1614,7 +1616,7 @@
 					
 					 // Visual:
 					sprite_index = sprAmmo;
-					image_blend = make_color_rgb(255, 255, 0);
+					image_blend  = make_color_rgb(255, 255, 0);
 					break;
 					
 				case "health":
@@ -1624,17 +1626,17 @@
 					
 					 // Visual:
 					sprite_index = sprHP;
-					image_blend = make_color_rgb(255, 255, 255);
+					image_blend  = make_color_rgb(255, 255, 255);
 					break;
 					
 				case "rads":
-					num = 25;
+					num  = 25;
 					text = "RADS";
 					desc = `${num} ${text}`;
 					
 					 // Visual:
 					sprite_index = sprBigRad;
-					image_blend = make_color_rgb(120, 230, 60);
+					image_blend  = make_color_rgb(120, 230, 60);
 					break;
 					
 				case "ammo_chest":
@@ -1643,7 +1645,7 @@
 					
 					 // Visual:
 					sprite_index = (ultra_get("steroids", 2) ? sprAmmoChestSteroids : sprAmmoChest);
-					image_blend = make_color_rgb(255, 255, 0);
+					image_blend  = make_color_rgb(255, 255, 0);
 					break;
 					
 				case "health_chest":
@@ -1652,7 +1654,7 @@
 					
 					 // Visual:
 					sprite_index = sprHealthChest;
-					image_blend = make_color_rgb(255, 255, 255);
+					image_blend  = make_color_rgb(255, 255, 255);
 					break;
 					
 				case "rads_chest":
@@ -1661,7 +1663,7 @@
 					
 					 // Visual:
 					sprite_index = sprRadChestBig;
-					image_blend = make_color_rgb(120, 230, 60);
+					image_blend  = make_color_rgb(120, 230, 60);
 					break;
 					
 				case "bonus_ammo":
@@ -1670,7 +1672,7 @@
 					
 					 // Visual:
 					sprite_index = spr.BonusAmmoPickup;
-					image_blend = make_color_rgb(100, 255, 255);
+					image_blend  = make_color_rgb(100, 255, 255);
 					break;
 					
 				case "bonus_ammo_chest":
@@ -1679,7 +1681,7 @@
 					
 					 // Visual:
 					sprite_index = (ultra_get("steroids", 2) ? spr.BonusAmmoChestSteroids : spr.BonusAmmoChest);
-					image_blend = make_color_rgb(100, 255, 255);
+					image_blend  = make_color_rgb(100, 255, 255);
 					break;
 					
 				case "bonus_health":
@@ -1688,7 +1690,7 @@
 					
 					 // Visual:
 					sprite_index = spr.BonusHealthPickup;
-					image_blend = make_color_rgb(200, 160, 255);
+					image_blend  = make_color_rgb(200, 160, 255);
 					break;
 					
 				case "bonus_health_chest":
@@ -1697,7 +1699,7 @@
 					
 					 // Visual:
 					sprite_index = spr.BonusHealthChest;
-					image_blend = make_color_rgb(200, 160, 255);
+					image_blend  = make_color_rgb(200, 160, 255);
 					break;
 					
 				case "rogue":
@@ -1706,7 +1708,7 @@
 					
 					 // Visual:
 					sprite_index = sprRogueAmmo;
-					image_blend = make_color_rgb(140, 180, 255);
+					image_blend  = make_color_rgb(140, 180, 255);
 					break;
 					
 				case "parrot":
@@ -1716,7 +1718,7 @@
 					
 					 // Visual:
 					sprite_index = spr.Race.parrot[0].Feather;
-					image_blend = make_color_rgb(255, 120, 120);
+					image_blend  = make_color_rgb(255, 120, 120);
 					image_xscale = -1.2;
 					image_yscale = 1.2;
 					
@@ -1739,13 +1741,22 @@
 					shine = 0;
 					break;
 					
+				case "hammerhead":
+					text = `BONUS @(color:${c_yellow})HAMMERHEAD`;
+					desc = `+${num * 10} TILES`;
+					
+					 // Visual:
+					sprite_index = spr.HammerHeadPickup;
+					image_blend  = make_color_rgb(180, 30, 255);
+					break;
+					
 				case "spirit":
 					text = "BONUS SPIRIT";
 					desc = "LIVE FOREVER";
 					
 					 // Visual:
 					sprite_index = spr.SpiritPickup;
-					image_blend = make_color_rgb(255, 200, 140);
+					image_blend  = make_color_rgb(255, 200, 140);
 					break;
 					
 				case "bone":
@@ -1754,17 +1765,17 @@
 					
 					 // Visual:
 					sprite_index = sprBone;
-					image_blend = make_color_rgb(220, 220, 60);
+					image_blend  = make_color_rgb(220, 220, 60);
 					break;
 					
 				case "bones":
-					num = 30;
+					num  = 30;
 					text = "BONES";
 					desc = `${num} ${text}`;
 					
 					 // Visual:
 					sprite_index = spr.BonePickupBig[0];
-					image_blend = make_color_rgb(220, 220, 60);
+					image_blend  = make_color_rgb(220, 220, 60);
 					break;
 					
 				case "soda":
@@ -1784,7 +1795,7 @@
 					
 					 // Visual:
 					sprite_index = weapon_get_sprt(soda);
-					image_blend = make_color_rgb(220, 220, 220);
+					image_blend  = make_color_rgb(220, 220, 220);
 					break;
 					
 				case "turret":
@@ -1793,7 +1804,7 @@
 					
 					 // Visual:
 					sprite_index = spr.LairTurretIdle;
-					image_blend = make_color_rgb(200, 160, 180);
+					image_blend  = make_color_rgb(200, 160, 180);
 					image_xscale = 0.9;
 					image_yscale = image_xscale;
 					break;
@@ -2015,6 +2026,11 @@
 										infammo = _num;
 										reload = max(reload, 1);
 									}
+									break;
+									
+								case "hammerhead":
+									obj_create(_x, _y, "HammerHeadPickup");
+									instance_create(_x, _y, Hammerhead);
 									break;
 									
 								case "spirit":
@@ -3003,9 +3019,8 @@
 		
 		if(
 			skill_get_avail(_skill)
-			&& (_skill != mut_patience)
+			&& _skill != mut_patience
 			&& (_skill != mut_last_wish || skill_get(_skill) <= 0)
-			&& (_skill != mut_heavy_heart || GameCont.wepmuts >= 3)
 		){
 			array_push(_skillList, _skill);
 			if(skill_get(_skill) == 0) _skillAll = false;
@@ -4792,8 +4807,8 @@
 								}
 								
 								 // HammerHead:
-								else if(chance(1 + GameCont.loops, 4)){
-									_obj = "HammerHeadPickup"
+								else if(chance(1 + GameCont.loops, 5 + GameCont.loops)){
+									_obj = "HammerHeadPickup";
 								}
 								
 								 // Create:

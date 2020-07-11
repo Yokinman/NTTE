@@ -86,7 +86,7 @@
 				instance_create(x + lengthdir_x(l, d), y + lengthdir_y(l, d), ThrowHit);
 				instance_create(x + lengthdir_x(l, d), y + lengthdir_y(l, d), ImpactWrists);
 				sound_play_pitch(sndCrystalRicochet, 3);
-				sound_play_pitch(sndSewerDrip,		 3);
+				sound_play_pitch(sndSewerDrip,       3);
 				sleep(5);
 			}
 		}

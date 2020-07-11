@@ -161,7 +161,7 @@
 #define weapon_text(w)   return scythe_get(w, "text");
 #define weapon_swap(w)   return scythe_get(w, "swap");
 #define weapon_sprt(w)   return (weapon_avail() ? scythe_get(w, "sprt") : global.sprWepLocked);
-#define weapon_area      return (weapon_avail() ? 18 : -1); // 1-2 L1
+#define weapon_area      return (weapon_avail() ? 19 : -1); // 1-2 L1
 #define weapon_type      return type_melee;
 #define weapon_load(w)   return scythe_get(w, "load");
 #define weapon_auto(w)   return scythe_get(w, "auto");

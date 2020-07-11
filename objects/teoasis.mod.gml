@@ -86,7 +86,7 @@
 			sndTurretFire,
 			sndUltraPistol,
 			sndWaveGun
-			],
+		],
 		"sndOasisMelee" : [
 			sndBlackSword,
 			sndBloodHammer,
@@ -110,7 +110,7 @@
 			sndShovel,
 			sndUltraShovel,
 			sndWrench
-			],
+		],
 		"sndOasisExplosion" : [
 			sndBloodCannonEnd,
 			sndBloodLauncherExplo,
@@ -134,7 +134,7 @@
 			sndPlasmaHugeUpg,
 			sndSuperFlakCannon,
 			sndSuperFlakExplode
-			],
+		],
 		"sndOasisExplosionSmall" : [
 			sndBloodCannon,
 			sndDoubleFireShotgun,
@@ -160,11 +160,11 @@
 			sndUltraLaser,
 			sndUltraLaserUpg,
 			sndWallBreakRock
-			],
+		],
 		"sndOasisPopo" : [
 			sndEliteIDPDPortalSpawn,
 			sndIDPDPortalSpawn
-			],
+		],
 		"sndOasisPortal" : [
 			sndGoldRocketFly,
 			sndPortalOpen,
@@ -172,7 +172,7 @@
 			sndLaserCannonCharge,
 			sndPlasmaReload,
 			sndPlasmaReloadUpg
-			],
+		],
 		"sndOasisChest" : [
 			sndAmmoChest,
 			sndBigCursedChest,
@@ -186,7 +186,7 @@
 			sndShotgunHitWall,
 			sndToxicBoltGas,
 			sndWeaponChest
-			],
+		],
 		"sndOasisHurt" : [
 			sndBoltHitWall,
 			sndMeleeWall,
@@ -206,7 +206,7 @@
 			sndMutant14Hurt,
 			sndMutant15Hurt,
 			sndMutant16Hurt
-			],
+		],
 		"sndOasisDeath" : [
 			sndEliteShielderFire,
 			sndGrenadeHitWall,
@@ -227,10 +227,10 @@
 			sndMutant15Dead,
 			sndMutant16Dead,
 			sndSuperSlugger
-			],
+		],
 		"sndOasisHorn" : [
 			sndVenuz
-			]
+		]
 	};
 	
 #macro spr global.spr
@@ -243,22 +243,21 @@
 	with(instance_create(_x, _y, CustomProjectile)){
 		 // Visual:
 		sprite_index = spr.BubbleBomb;
-		image_speed = 0.5;
-		depth = -3;
+		image_speed  = 0.5;
+		depth        = -4;
 		
 		 // Vars:
 		mask_index = mskSuperFlakBullet;
-		z = 0;
-		zspeed = -0.5;
-		zfriction = -0.02;
-		friction = 0.4;
-		damage = 0;
-		force = 2;
-		typ = 1;
-		big = 0;
-		held = [];
-		setup = true;
-		test = choose(0, 1);
+		friction   = 0.4;
+		damage     = 0;
+		force      = 2;
+		typ        = 1;
+		z          = 0;
+		zspeed     = -0.5;
+		zfriction  = -0.02;
+		big        = 0;
+		held       = [];
+		setup      = true;
 		
 		return id;
 	}
@@ -267,9 +266,9 @@
 	setup = false;
 	
 	 // Become Big:
-	if(big){
+	if(big > 0){
 		sprite_index = spr.BubbleBombBig;
-		mask_index = mskExploder;
+		mask_index   = mskExploder;
 	}
 	
 	 // Become Enemy Bubble:
@@ -279,90 +278,70 @@
 	
 #define BubbleBomb_step
 	 // Float Up:
-	z += zspeed * current_time_scale;
+	z      += zspeed * current_time_scale;
 	zspeed -= zfriction * current_time_scale;
-	image_angle += (sin(current_frame / 8) * 10) * current_time_scale;
-	depth = max(min(depth, -z), TopCont.depth + 1);
-	
-	 // Bubble Excrete:
-	if(big && z < 24 && image_index >= 6 && chance_ct(1, 5 + max(z, 0))){
-		with(obj_create(x + orandom(8), y - 8 - z + orandom(8), "BubbleBomb")){
-			team = other.team;
-			creator = other.creator;
-			hitid = other.hitid;
-			image_speed *= random_range(0.8, 1);
-		}
+	if(z > 8 && depth > -6){
+		depth = -8;
 	}
+	
+	 // Spin:
+	image_angle += (sin(current_frame / 8) * 10) * current_time_scale;
 	
 	 // Charge FX:
-	image_blend = c_white;
-	if(chance_ct(1, 8 + (image_number - image_index))){
-		image_blend = c_black;
-		var o = image_index / 3;
-		instance_create(x + orandom(o), y + orandom(o), PortalL);
-	}
 	if(speed <= 0 && chance_ct(1, 12)){
+		if(chance(1, 2)){
+			var _off = image_index / 3;
+			instance_create(x + orandom(_off), y + orandom(_off), PortalL);
+		}
 		with(instance_create(x, y - z, BulletHit)){
 			sprite_index = spr.BubbleCharge;
 		}
 	}
 	
-	 // Effects:
-	/*if(chance_ct(2, (3 + speed))){
-		var	l = random_range(24, 32),
-			d = random(360),
-			_bubbles = instances_matching_ne(instances_matching(CustomProjectile, "name", name), "id", id),
-			_canSpawn = true;
-			
-		with(_bubbles) if(_canSpawn && point_distance(x, y, other.x + lengthdir_x(l, d), other.y + lengthdir_y(l, d)) <= l){
-			_canSpawn = false;
+	 // Bubble Excrete:
+	if(big > 0 && z < 24 && image_index >= 6 && chance_ct(big, 5 + max(z, 0))){
+		with(obj_create(x + orandom(8), y - 8 - z + orandom(8), "BubbleBomb")){
+			projectile_init(other.team, other.creator);
+			image_speed *= random_range(0.8, 1);
+			hitid = other.hitid;
 		}
-			
-		if(_canSpawn){
-			with(scrFX([x + lengthdir_x(l, d), 2], [(y - z) + lengthdir_y(l, d), 2], [d + 90, random(1)], BulletHit)){
-				sprite_index = sprBubble;
-				image_blend = c_black;
-				depth = -3;
-			}
-		}
-	}*/
-	
-#define BubbleBomb_end_step
-	 // Setup:
-	if(setup) BubbleBomb_setup();
+	}
 	
 	 // Hold Projectile:
 	if(array_length(held) > 0){
-		var n = 0;
+		var	_x   = x,
+			_y   = y - z,
+			_num = 0;
+			
+		held = instances_matching(held, "", null);
+		
 		with(held){
-			if(instance_exists(self)){
-				//speed += friction * current_time_scale;
-				
-				 // Push Bubble:
-				if(instance_is(self, hitme)) with(other){
-					x += (other.hspeed_raw * other.size) / 6;
-					y += (other.vspeed_raw * other.size) / 6;
-				}
-				
-				 // Float in Bubble:
-				if(!other.big){
-					x = other.x;
-					y = other.y - other.z;
-				}
-				else{
-					var	l = 2 + ((n * 123) % 8),
-						d = (current_frame / (10 + speed)) + direction,
-						s = (instance_is(self, hitme) ? max(0.3 - (n * 0.05), 0.1) : 0.5);
-						
-					x += ((other.x + (l * cos(d))		   ) - x) * s;
-					y += ((other.y + (l * sin(d)) - other.z) - y) * s;
-				}
-				
-				n++;
+			 // Push Bubble:
+			if(instance_is(self, hitme)){
+				other.x += (hspeed_raw * size) / 6;
+				other.y += (vspeed_raw * size) / 6;
 			}
-			else other.held = array_delete_value(other.held, self);
+			
+			 // Float in Bubble:
+			if(other.big <= 0){
+				x = _x;
+				y = _y;
+			}
+			else{
+				var	_dis = 2 + ((_num * 123) % 8),
+					_dir = (current_frame / (10 + speed)) + direction,
+					_spd = (instance_is(self, hitme) ? max(0.3 - (_num * 0.05), 0.1) : 0.5);
+					
+				x += (_x + (_dis * cos(_dir)) - x) * _spd;
+				y += (_y + (_dis * sin(_dir)) - y) * _spd;
+				_num++;
+			}
+			move_step(-1);
 		}
 	}
+	
+#define BubbleBomb_end_step
+	if(setup) BubbleBomb_setup();
 	
 	 // Push:
 	if(place_meeting(x, y - z, Player)){
@@ -378,8 +357,8 @@
 		var _meeting = instances_meeting(x, y - z, [enemy, projectile]);
 		
 		 // Baseball:
-		var m = instances_matching(_meeting, "object_index", Slash, GuitarSlash, BloodSlash, EnergySlash, EnergyHammerSlash, CustomSlash);
-		if(m) with(m){
+		var _inst = instances_matching(_meeting, "object_index", Slash, GuitarSlash, BloodSlash, EnergySlash, EnergyHammerSlash, CustomSlash);
+		if(_inst) with(_inst){
 			if(place_meeting(x, y + other.z, other)){
 				with(other){
 					var	_lastAlrm = alarm1,
@@ -396,8 +375,8 @@
 					if(speed != _lastSpd){
 						speed = _lastSpd;
 						if(speed < 8){
-							speed = max(0, 10 - (4 * (array_length(held) - 1 + big)));
-							sound_play_pitchvol(sndBouncerBounce, (big ? 0.5 : 0.8) + random(0.1), 3);
+							speed = max(0, 10 - (4 * ((array_length(held) > 0) - 1 + big)));
+							sound_play_pitchvol(sndBouncerBounce, ((big > 0) ? 0.5 : 0.8) + random(0.1), 3);
 						}
 					}
 				}
@@ -405,16 +384,16 @@
 		}
 		
 		 // Bubble Collision:
-		var m = instances_matching_ge(instances_matching(_meeting, "name", name), "big", big);
-		if(m) with(m){
+		var _inst = instances_matching_ge(instances_matching(_meeting, "name", name), "big", big);
+		if(_inst) with(_inst){
 			if(place_meeting(x, y, other)){
 				with(other) motion_add_ct(point_direction(other.x, other.y, x, y) + orandom(4), 0.5);
 			}
 		}
 		
 		 // Poppable:
-		var m = instances_matching(instances_matching_ne(_meeting, "team", team), "object_index", Flame, Bolt, Splinter, HeavyBolt, UltraBolt);
-		if(m) with(m){
+		var _inst = instances_matching(instances_matching_ne(_meeting, "team", team), "object_index", Flame, Bolt, Splinter, HeavyBolt, UltraBolt);
+		if(_inst) with(_inst){
 			if(place_meeting(x, y + other.z, other)){
 				with(other) instance_destroy();
 				exit;
@@ -423,9 +402,12 @@
 		
 		 // Grabbing:
 		if(z < 24){
-			if(array_length(held) <= 0 || big){
-				var m = instances_matching_ne(instances_matching(_meeting, "bubble_bombed", null, false), "team", team);
-				if(m) with(m){
+			if(array_length(held) <= 0 || big > 0){
+				var _inst = instances_matching(_meeting, "bubble_bombed", null, false);
+				if(big > 0){
+					_inst = instances_matching_ne(_inst, "team", team);
+				}
+				if(_inst) with(_inst){
 					if(place_meeting(x, y + other.z, other)){
 						if("size" not in self || size - (object_index == DogGuardian) <= (3 * other.big)){
 							if(!instance_is(self, projectile) || (typ != 0 && variable_instance_get(id, "name") != other.name)){
@@ -434,7 +416,7 @@
 								array_push(other.held, id);
 								
 								with(other){
-									if(!big){
+									if(big <= 0){
 										x = lerp(x, other.x,	 0.5);
 										y = lerp(y, other.y + z, 0.5);
 										friction = max(0.3, friction);
@@ -460,7 +442,15 @@
 	}
 	
 #define BubbleBomb_draw
-	draw_sprite_ext(sprite_index, image_index, x, y - z, image_xscale, image_yscale, image_angle, image_blend, image_alpha);
+	var _col = image_blend;
+	
+	 // Flash:
+	if(chance_ct(1, 8 + (image_number - image_index))){
+		_col = c_black;
+	}
+	
+	 // Draw:
+	draw_sprite_ext(sprite_index, image_index, x, y - z, image_xscale, image_yscale, image_angle, _col, image_alpha);
 	
 #define BubbleBomb_hit
 	if(z < 24 && !instance_is(other, prop) && other.team != 0){
@@ -471,12 +461,13 @@
 		}
 		
 		 // Speed Up:
-		if(!big && team == 2){
+		if(big <= 0 && team == 2){
 			image_index += image_speed * 2;
 		}
 	}
 	
 #define BubbleBomb_wall
+	 // Bounce:
 	if(speed > 0){
 		sound_play(sndBouncerBounce);
 		move_bounce_solid(false);
@@ -484,51 +475,35 @@
 	}
 	
 #define BubbleBomb_anim
-	 // Explode:
-	var	_dis = 0,
-		_dir = direction,
-		_num = 1;
-		
-	if(big){
-		_dis = 16;
-		_num = 3;
+	 // Popo Nade Logic:
+	if(deflected){
+		team = (instance_is(creator, Player) ? creator.team : -1);
 	}
 	
-	for(var a = _dir; a < _dir + 360; a += (360 / _num)){
-		with(obj_create(x + lengthdir_x(_dis, a), y - z + lengthdir_y(_dis, a), "BubbleExplosion")){
-			team = other.team;
+	 // Explode:
+	var	_dis = 16 * big,
+		_ang = direction,
+		_num = lerp(1, 3, big);
+		
+	for(var _dir = _ang; _dir < _ang + 360; _dir += (360 / _num)){
+		with(obj_create(x + lengthdir_x(_dis, _dir), y - z + lengthdir_y(_dis, _dir), "BubbleExplosion")){
+			team  = other.team;
 			hitid = other.hitid;
-			
-			 // Popo nade logic:
-			if(instance_is(other.creator, Player)){
-				team = other.creator.team;
-			}
-			else if(team == 2){
-				team = -1;
-			}
 		}	
 	}
 	
-	 // Big Bombage:
-	if(big){
-		/*repeat(8){
-			with(obj_create(x + orandom(2), y - z + orandom(2), "BubbleBomb")){
-				team = other.team;
-				creator = other.creator;
-				hitid = other.hitid;
-				image_speed += random(0.1);
-			}
-		}*/
-		
-		 // Effects:
-		sleep(15);
-		view_shake_at(x, y, 60);
+	 // Big Bombage Effects:
+	sleep(15 * big);
+	view_shake_at(x, y, 60 * big);
+	if(big > 0){
 		sound_play_pitch(sndOasisExplosion, 0.8 + orandom(0.05));
 	}
 	
 	 // Make Sure Projectile Dies:
-	with(held) if(instance_is(self, projectile)){
-		instance_destroy();
+	with(instances_matching_ne(held, "creator", creator)){
+		if(instance_is(self, projectile)){
+			instance_destroy();
+		}
 	}
 	
 	instance_destroy();
@@ -620,92 +595,100 @@
 		
 		 // Vars:
 		mask_index = mskSlash;
-		damage = 8;
-		force = 12;
-		walled = false;
+		damage     = 8;
+		force      = 12;
+		walled     = false;
 		
 		return id;
 	}
 	
 #define BubbleSlash_projectile
-	with(other){
-		 // Enbubble:
-		if(typ == 1 && variable_instance_get(id, "bubble_bombed") != true && other.candeflect){
-			bubble_bombed = true;
-			var	_cannon = (damage > 3),
-				_slash = other;
-			
-			 // Deflect:
-			team		 = _slash.team;
-			deflected	 = true;
-			direction	 = _slash.direction;
-			image_angle  = _slash.direction;
-			sprite_index = team_get_sprite(team, sprite_index);
+	if(instance_exists(self)){
+		with(other){
+			if(typ == 1 || typ == 2){
+				var _slash = other;
 				
-			 // Bubble Bomb:
-			with(obj_create(x, y, "BubbleBomb")){
-				creator = _slash.creator;
-				team    = _slash.team;
-				big 	= _cannon;
-				array_push(held, other);
-				motion_set(_slash.direction + orandom(12), _slash.speed - 2);
-				move_contact_solid(direction, 6);
+				 // Deflect:
+				if(typ == 1 && _slash.candeflect){
+					deflected   = true;
+					team        = _slash.team;
+					direction   = _slash.direction;
+					image_angle = direction;
+					with(instance_create(x, y, Deflect)){
+						image_angle = other.image_angle;
+					}
+					
+					 // Enbubble:
+					if(variable_instance_get(self, "bubble_bombed", false) == false){
+						bubble_bombed = true;
+						
+						 // Bubble Bomb:
+						with(obj_create(x, y, "BubbleBomb")){
+							projectile_init(_slash.team, _slash.creator);
+							array_push(held, other);
+						}
+						
+						 // Effects:
+						with(instance_create(x, y, Bubble)){
+							image_angle  = random(360);
+							image_xscale = 0.75;
+							image_yscale = image_xscale;
+						}
+						with(instance_create(x, y, BubblePop)){
+							image_index  = 1;
+							image_angle  = random(360);
+							image_xscale = 0.8;
+							image_yscale = image_xscale;
+							depth        = other.depth - 1;
+						}
+					}
+				}
+				
+				 // Destroy:
+				else{
+					with(obj_create(x, y, ((damage < 6) ? "BubbleExplosionSmall" : "BubbleExplosion"))){
+						team = _slash.team;
+					}
+					instance_destroy();
+				}
 			}
-			if(_cannon){
-				sleep(50);
-			}
-			
-			 // Effects:
-			with(instance_create(x, y, Bubble)){
-				image_angle  = random(360);
-				image_xscale = 0.75;
-				image_yscale = image_xscale;
-			}
-			with(instance_create(x, y, BubblePop)){
-				image_index  = 1;
-				image_angle  = random(360);
-				image_xscale = 0.8;
-				image_yscale = image_xscale;
-				depth		 = other.depth - 1;
-			}
-		}
-		
-		 // Destroy:
-		else if(typ == 2){
-			instance_destroy();
 		}
 	}
 	
 #define BubbleSlash_hit
-	var o = other;
-	if(projectile_canhit_melee(o)){
-		projectile_hit(o, damage, force, direction);
+	if(projectile_canhit_melee(other)){
+		projectile_hit_push(other, damage, force);
 		
 		 // Game Feel Shit:
-		repeat(clamp((o.size * 2), 1, 6)){
-			with(instance_create(x, y, Bubble)){
-				image_angle = random(360);
-				image_xscale = 0.75;
-				image_yscale = image_xscale;
-				motion_add(o.direction + orandom(12), irandom(3) + 2)
-				friction = 0.1;
+		with(other){
+			repeat(clamp((size * 2), 1, 6)){
+				with(instance_create(other.x, other.y, Bubble)){
+					motion_add(
+						other.direction + orandom(12),
+						irandom(3) + 2
+					);
+					friction     = 0.1;
+					image_xscale = 0.75;
+					image_yscale = image_xscale;
+					image_angle  = random(360);
+				}
 			}
-		}
-		
-		with(instance_create(o.x, o.y, BubblePop)){
-			image_index  = 1;
-			image_angle  = random(360);
-			sprite_index = ((o.size >= 2) ? spr.BigBubblePop : sprPlayerBubblePop);
-			depth		 = o.depth - 1;
-			/*
-			image_xscale = min(0.75 + 0.25 * o.size, 3);
-			image_yscale = image_xscale;
-			*/
-		}
-		
-		if(o.my_health <= 0){
-			view_shake_at(x, y, min(1, o.size) * 5);
-			sleep(min(1, o.size) * 12);
+			if(size > 0){
+				with(instance_create(x, y, BubblePop)){
+					sprite_index = ((other.size < 2) ? sprPlayerBubblePop : spr.BigBubblePop);
+					image_index  = 1;
+					image_angle  = random(360);
+					depth        = other.depth - 1;
+					/*
+					image_xscale = min(0.75 + 0.25 * other.size, 3);
+					image_yscale = image_xscale;
+					*/
+				}
+				if(my_health <= 0){
+					view_shake_at(x, y, 5);
+					sleep(12);
+				}
+			}
 		}
 	}
 	
@@ -720,10 +703,12 @@
 		with(instance_is(other, Wall) ? instance_nearest_bbox(_x, _y, instances_meeting(_x, _y, Wall)) : other){
 			with(instance_create(bbox_center_x, bbox_center_y, MeleeHitWall)){
 				image_angle = point_direction(_x, _y, x, y);
+				sound_play_hit_ext(sndMeleeWall, 1.6 + random(0.3), 0.8);
 			}
 		}
 	}
-
+	
+	
 #define CrabTank_create(_x, _y)
 	with(instance_create(_x, _y, CustomEnemy)){
 		boss = true;

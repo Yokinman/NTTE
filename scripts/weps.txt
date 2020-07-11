@@ -1,5 +1,5 @@
 "path" : {
-	"weps/" : ["annihilator.wep", "bat disc cannon.wep", "bat disc launcher.wep", "bat tether.wep", "bubble cannon.wep", "bubble minigun.wep", "bubble rifle.wep", "bubble shotgun.wep", "clam shield.wep", "crabbone.wep", "dematerializer.wep", "electroplasma rifle.wep", "electroplasma shotgun.wep", "energy bat.wep", "entangler.wep", "harpoon launcher.wep", "hyper bubbler.wep", "lightring launcher.wep", "net launcher.wep", "quasar blaster.wep", "quasar cannon.wep", "quasar rifle.wep", "scythe.wep", "super lightring launcher.wep", "teleport gun.wep", "tesla coil.wep", "trident.wep"]
+	"weps/" : ["annihilator.wep", "bat disc cannon.wep", "bat disc launcher.wep", "bat tether.wep", "bubble bat.wep", "bubble cannon.wep", "bubble minigun.wep", "bubble rifle.wep", "bubble shotgun.wep", "clam shield.wep", "crabbone.wep", "dematerializer.wep", "electroplasma rifle.wep", "electroplasma shotgun.wep", "energy bat.wep", "entangler.wep", "harpoon launcher.wep", "hyper bubbler.wep", "lightring launcher.wep", "net launcher.wep", "quasar blaster.wep", "quasar cannon.wep", "quasar rifle.wep", "scythe.wep", "super lightring launcher.wep", "super teleport gun.wep", "teleport gun.wep", "tesla coil.wep", "trident.wep", "tunneller.wep", "venom rifle.wep"]
 },
 
 "script" : "

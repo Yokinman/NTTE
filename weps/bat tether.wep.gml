@@ -17,7 +17,7 @@
 #define weapon_swap         return sndSwapEnergy;
 #define weapon_sprt         return (weapon_avail() ? global.sprWep : global.sprWepLocked);
 #define weapon_sprt_hud(w)  return weapon_ammo_hud(w);
-#define weapon_area         return (weapon_avail() ? 10 : -1); // 5-2
+#define weapon_area         return (weapon_avail() ? 11 : -1); // 5-2
 #define weapon_type         return type_melee;
 #define weapon_load         return 5; // 0.16 Seconds
 #define weapon_auto(w)      return ((is_object(w) && w.ammo < w.cost) ? -1 : true);

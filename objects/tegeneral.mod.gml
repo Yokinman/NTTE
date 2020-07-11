@@ -1338,8 +1338,8 @@
 	 // Disappear:
 	if(speed < minspeed && sprite_index != spr_fade){
 		sprite_index = spr_fade;
-		image_index = 0;
-		image_speed = 0.4;
+		image_index  = 0;
+		image_speed  = 0.4;
 	}
 	
 #define CustomShell_anim
@@ -1380,8 +1380,8 @@
 	image_angle = direction;
 	speed = min((speed * 0.8) + wallbounce, maxspeed);
 	wallbounce *= 0.95;
-
-
+	
+	
 #define CustomPlasma_create(_x, _y)
 	/*
 		A PlasmaBall/PlasmaBig/PlasmaHuge-type projectile that allows for extra customization
@@ -4261,15 +4261,15 @@
 						if(jump_time == 0){
 							with(target){
 								if("walk" not in self || walk <= 0 || instance_is(self, Freak) || instance_is(self, ExploFreak)){
-									idle_time = 10 + random(20);
+									other.idle_time = 10 + random(20);
 									
 									var n = (instance_exists(Player) ? instance_nearest(other.x, other.y, Player) : instance_nearest(other.x - 16, other.y - 16, Floor));
 									direction = point_direction(other.x, other.y, n.x, n.y - 8);
 									speed += current_time_scale;
 									
-									if("walk" in self) walk = idle_time;
+									if("walk"     in self) walk = other.idle_time;
 									if("gunangle" in self) gunangle = direction;
-									if("right" in self) scrRight(direction);
+									if("right"    in self) scrRight(direction);
 								}
 							}
 						}
@@ -4320,13 +4320,14 @@
 						jump_time -= current_time_scale;
 						if(jump_time <= 0){
 							jump_time = 0;
+							canmove = true;
 							
 							 // Cmon Bros:
-							canmove = true;
 							with(instances_matching_gt(instances_matching(object_index, "name", name), "jump_time", 0)){
 								if(instance_exists(target) && target.object_index == other.target.object_index && instance_near(x, y, other, 64)){
 									jump_time = 0;
 									idle_time = random_range(10, 60);
+									canmove = true;
 								}
 							}
 						}

@@ -9,7 +9,7 @@
 #define weapon_text   return choose(`@wUNLOCK @sTHE @(color:${area_get_back_color("red")})CONTINUUM`, "FULL CIRCLE", `YET ANOTHER @(color:${area_get_back_color("red")})RED KEY`);
 #define weapon_swap   return sndSwapSword;
 #define weapon_sprt   return (weapon_avail() ? global.sprWep : global.sprWepLocked);
-#define weapon_area   return (weapon_avail() ? 12 : -1); // 6-1
+#define weapon_area   return (weapon_avail() ? 22 : -1); // L1 3-1
 #define weapon_load   return 24; // 0.8 Seconds
 #define weapon_auto   return true;
 #define weapon_melee  return false;
@@ -49,7 +49,7 @@
 		
 		 // Annihilator:
 		with(obj_create(x, y, "CrystalHeartBullet")){
-			projectile_init(other.team, other);
+			projectile_init(other.team, f.creator);
 			motion_add(other.gunangle + orandom(4 * other.accuracy), 4);
 			image_angle = direction;
 			damage      = 20;
@@ -73,15 +73,16 @@
 	
 	 // Normal:
 	else if(fork()){
-		for(var i = 0; i < 3; i++){
+		repeat(3){
 			 // Shank:
 			var	_skill = skill_get(mut_long_arms),
 				_dir   = gunangle + orandom(10 * accuracy),
-				_len   = 10 * _skill;
+				_dis   = 10 * _skill,
+				_spd   = lerp(3, 6, _skill);
 				
-			with(obj_create(x + lengthdir_x(_len, _dir), y + lengthdir_y(_len, _dir), "RedShank")){
-				projectile_init(other.team, other);
-				motion_add(_dir, lerp(3, 6, _skill));
+			with(obj_create(x + lengthdir_x(_dis, _dir), y + lengthdir_y(_dis, _dir), "RedShank")){
+				projectile_init(other.team, f.creator);
+				motion_add(_dir, _spd);
 				image_angle = direction;
 			}
 			
@@ -90,7 +91,7 @@
 			motion_add(gunangle, 3);
 			
 			 // Sounds:
-			sound_play(sndScrewdriver);
+			sound_play_gun(sndScrewdriver, 0.6);
 			
 			 // Hold Your Metaphorical Horses:
 			wait(4);

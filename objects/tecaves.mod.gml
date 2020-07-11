@@ -1251,8 +1251,8 @@
 		
 		 // Vars:
 		mask_index = mskSlash;
-		damage     = 22; 
-		force      = 8;
+		damage     = 18; 
+		force      = 12;
 		walled     = false;
 		
 		return id;
@@ -1302,8 +1302,8 @@
 		walled = true;
 		
 		 // Hit Wall FX:
-		var	_x = bbox_center_x + hspeed_raw,
-			_y = bbox_center_y + vspeed_raw,
+		var	_x   = bbox_center_x + hspeed_raw,
+			_y   = bbox_center_y + vspeed_raw,
 			_col = ((image_yscale > 0) ? c_lime : c_white);
 			
 		with(instance_is(other, Wall) ? instance_nearest_bbox(_x, _y, instances_meeting(_x, _y, Wall)) : other){
@@ -1316,49 +1316,69 @@
 	}
 	
 #define EnergyBatSlash_projectile
-	with(other){
-		 // Deflect:
-		if(typ == 1 && other.candeflect){
-			var	_cannon = (damage > 3),
-				_slash = other;
+	if(instance_exists(self)){
+		with(other){
+			var	_x       = x,
+				_y       = y,
+				_depth   = depth,
+				_damage  = damage,
+				_target  = creator,
+				_targetX = xstart,
+				_targetY = ystart,
+				_deflect = (typ == 1 && other.candeflect),
+				_minID   = GameObject.id;
 				
-			 // Vlasma:
-			with(obj_create(x, y, (_cannon ? "VlasmaCannon" : "VlasmaBullet"))){
-				motion_add(_slash.direction, _slash.speed + 2);
-				image_angle	= direction;
-				creator     = _slash.creator;
-				team        = _slash.team;
-				target      = other.creator;
-				target_x    = other.xstart;
-				target_y    = other.ystart;
-			}
-			with(obj_create(x, y, (_cannon ? PlasmaImpact : "PlasmaImpactSmall"))){
-				creator = _slash.creator;
-				team    = _slash.team;
-				depth   = other.depth;
-			}
-			if(_cannon){
-				sleep(50);
-			}
+			if(_deflect) deflected = true;
 			
-			 // Sounds:
-			var _snd = [
-				[sndPlasma,    sndPlasmaUpg], 
-				[sndPlasmaBig, sndPlasmaBigUpg]
-			];
-			sound_play_hit_ext(
-				_snd[_cannon][(instance_is(creator, Player) && skill_get(mut_laser_brain) > 0)],
-				random_range(0.7, 1.3),
-				0.6
-			);
-			
-			 // Goodbye:
-			instance_delete(id);
-		}
-		
-		 // Destroy:
-		else if(typ == 2){
 			instance_destroy();
+			
+			with(other){
+				var _cannon = false;
+				
+				 // Vlasma:
+				with(instances_matching_gt(projectile, "id", _minID)){
+					_cannon = true;
+					if(_deflect){
+						instance_delete(id);
+					}
+					else break;
+				}
+				if(_deflect){
+					with(obj_create(_x, _y, (_cannon ? "VlasmaCannon" : "VlasmaBullet"))){
+						projectile_init(other.team, other.creator);
+						motion_add(other.direction, other.speed + 2);
+						image_angle	= direction;
+						target      = _target;
+						target_x    = _targetX;
+						target_y    = _targetY;
+						
+						 // Cannon:
+						if(_cannon){
+							cannon = _damage * 1.5;
+						}
+					}
+				}
+				
+				 // Plasma Impact:
+				with(obj_create(_x, _y, (_cannon ? PlasmaImpact : "PlasmaImpactSmall"))){
+					projectile_init(other.team, other.creator);
+					depth = _depth;
+					
+					 // Sounds:
+					var _snd = [
+						[sndPlasma,    sndPlasmaUpg], 
+						[sndPlasmaBig, sndPlasmaBigUpg]
+					];
+					sound_play_hit_ext(
+						_snd[_cannon][(instance_is(creator, Player) && skill_get(mut_laser_brain) > 0)],
+						random_range(0.7, 1.3),
+						0.6
+					);
+				}
+				if(_cannon){
+					sleep_max(10 * _damage);
+				}
+			}
 		}
 	}
 	
@@ -1972,7 +1992,6 @@
 		friction   = 0.1;
 		damage     = 8;
 		force      = 12;
-		candeflect = true;
 		walled     = false;
 		
 		return id;
@@ -2001,6 +2020,7 @@
 		projectile_hit(other, damage, force, direction);
 	}
 	
+	
 #define RedSpider_create(_x, _y)
 	with(instance_create(_x, _y, CustomEnemy)){
 		 // Visual:
@@ -2019,14 +2039,14 @@
 		snd_mele = sndSpiderMelee;
 		
 		 // Vars:
-		mask_index = mskSpider;
-		maxhealth = 14;
-		raddrop = 4;
-		size = 1;
-		walk = 0;
-		walkspeed = 0.6;
-		maxspeed = 4;
-		canmelee = true;
+		mask_index  = mskSpider;
+		maxhealth   = 14;
+		raddrop     = 4;
+		size        = 1;
+		walk        = 0;
+		walkspeed   = 0.6;
+		maxspeed    = 4;
+		canmelee    = true;
 		meleedamage = 2;
 		target_seen = false;
 		
@@ -2291,9 +2311,9 @@
 			if(chance_ct(1, 20)){
 				with(scrFX([x, 8], [y, 8], [90, random_range(0.2, 0.5)], LaserCharge)){
 					sprite_index = sprSpiralStar;
-					image_index = choose(0, irandom(image_number - 1));
-					depth = other.depth - 1;
-					alarm0 = random_range(15, 30);
+					image_index  = choose(0, irandom(image_number - 1));
+					depth        = other.depth - 1;
+					alarm0       = random_range(15, 30);
 				}
 			}
 			if(chance_ct(1, 25)){
@@ -2301,7 +2321,7 @@
 					sprite_index = sprThrowHit;
 					image_xscale = 0.2 + random(0.3);
 					image_yscale = image_xscale;
-					depth = other.depth - 1;
+					depth        = other.depth - 1;
 				}
 			}
 		}
@@ -2412,8 +2432,8 @@
 		target_y   = y;
 		walled     = false;
 		my_sound   = -1;
-		setup = true;
-		cannon = false;
+		cannon     = 0;
+		setup      = true;
 		
 		return id;
 	}
@@ -2541,7 +2561,7 @@
 	
 	 // Cannon:
 	if(cannon > 0){
-		var	_num = 6 * cannon,
+		var	_num = cannon,
 			_ang = direction;
 			
 		for(var _dir = _ang; _dir < _ang + 360; _dir += (360 / _num)){
@@ -2568,7 +2588,7 @@
 	 // Explo:
 	with(team_instance_sprite(
 		sprite_get_team(sprite_index),
-		obj_create(x, y, (cannon ? PlasmaImpact : "PlasmaImpactSmall"))
+		obj_create(x, y, ((cannon > 0) ? PlasmaImpact : "PlasmaImpactSmall"))
 	)){
 		creator = other.creator;
 		hitid   = other.hitid;
@@ -2584,7 +2604,7 @@
 		
 		 // Vars:
 		damage = 4;
-		cannon = true;
+		cannon = 6;
 		
 		return id;	
 	}

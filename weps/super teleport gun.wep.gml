@@ -8,7 +8,7 @@
 	};
 	
 #macro lwoWep global.lwoWep
-	
+
 #define weapon_name   return (weapon_avail() ? "SUPER TELEPORT GUN" : "LOCKED");
 #define weapon_text   return "POSITION INDETERMINABLE";
 #define weapon_swap   return sndSwapEnergy;
@@ -16,14 +16,16 @@
 #define weapon_type   return type_melee;
 #define weapon_load   return 45; // 1.5 Seconds
 #define weapon_melee  return false;
-#define weapon_avail  return true; 
+#define weapon_avail  return true;
+
 #define weapon_area
 	 // Cursed Chest Exclusive:
 	if(weapon_avail() && (instance_is(other, WeaponChest) || instance_is(other, BigCursedChest)) && instance_is(self, WepPickup) && other.curse > 0){
 		return 8; // 3-3
 	}
+	
 	return -1;
-
+	
 #define weapon_fire(w)
 	var f = weapon_fire_init(w);
 	w = f.wep;

@@ -15,7 +15,7 @@
 #define weapon_text     return `@wBEND @sTHE @(color:${area_get_back_color("red")})CONTINUUM`;
 #define weapon_swap     return sndSwapHammer;
 #define weapon_sprt     return (weapon_avail() ? global.sprWep : global.sprWepLocked);
-#define weapon_area     return (weapon_avail() ? 21 : -1); // L1 3-1
+#define weapon_area     return (weapon_avail() ? 22 : -1); // L1 3-1
 #define weapon_load     return 24; // 0.8 Seconds
 #define weapon_melee(w) return lq_defget(w, "melee", true);//(!instance_is(self, Player) || variable_instance_get(self, "red_ammo", 0) < weapon_get_red(w));
 #define weapon_avail    return unlock_get("pack:red");

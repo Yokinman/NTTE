@@ -331,77 +331,80 @@
 	}
 	
 #define ClamShield_projectile
-	with(other){
-		if(speed > 0 && !instance_is(self, ToxicGas)){
-			var	_deflectDir = other.image_angle,
-				_batDisc = (team == other.team && instance_is(self, CustomProjectile) && variable_instance_get(self, "name") == "BatDisc"),
-				_typ = (_batDisc ? 1 : typ);
-				
-			if(_typ == 1 || _typ == 2){
-				if(
-					(instance_is(other.creator, Player) && team != other.team)
-					||
-					abs(angle_difference(direction + 180, _deflectDir)) < 90
-				){
-					var _b = ((other.wep == variable_instance_get(other.creator, "bwep")) ? "b" : "");
-					
-					 // Kick:
-					if((_b + "wkick") in other.creator){
-						var _kick = variable_instance_get(other.creator, _b + "wkick");
-						if(abs(_kick) < 4){
-							_kick += max(-8, (4 + (force / 2)) * ((_typ == 1) ? -1 : 1));
+	if(instance_exists(self)){
+		with(other){
+			if(typ == 1 || typ == 2){
+				if(speed > 0 && !instance_is(self, ToxicGas)){
+					var	_deflectDir = other.image_angle,
+						_batDisc    = (team == other.team && instance_is(self, CustomProjectile) && "name" in self && name == "BatDisc"),
+						_typ        = (other.candeflect ? (_batDisc ? 1 : typ) : 2);
+						
+					if(
+						(instance_is(other.creator, Player) && team != other.team)
+						||
+						abs(angle_difference(direction + 180, _deflectDir)) < 90
+					){
+						var _b = ((other.wep == variable_instance_get(other.creator, "bwep")) ? "b" : "");
+						
+						 // Kick:
+						if((_b + "wkick") in other.creator){
+							var _kick = variable_instance_get(other.creator, _b + "wkick");
+							if(abs(_kick) < 4){
+								_kick += max(-8, (4 + (force / 2)) * ((_typ == 1) ? -1 : 1));
+							}
+							variable_instance_set(other.creator, _b + "wkick", _kick);
 						}
-						variable_instance_set(other.creator, _b + "wkick", _kick);
-					}
-					
-					 // Knockback:
-					if(force > 3){
-						with(other.creator){
-							speed = max(speed, friction_raw);
-							motion_add(other.direction, other.force / ((_typ == 2) ? 3 : 6));
-						}
-					}
-					
-					 // Deflect:
-					if(_batDisc){
-						speed = max(speed, 16);
-						direction = _deflectDir;
-					}
-					else if(_typ == 1){
-						speed += friction * 3;
-						direction = _deflectDir - clamp(angle_difference(direction + 180, _deflectDir), -40, 40);
-						image_angle = direction;
-						if(instance_is(other.creator, Player)){
-							team = other.team;
-						}
-					}
-					
-					 // Effects:
-					sound_play_hit_ext(sndCrystalRicochet, 1 + random(0.2), 3);
-					with(instance_create(x, y, Deflect)) image_angle = _deflectDir;
-					if(chance(1, 2) && chance(force, 12)){
-						scrFX(x, y, [image_angle + orandom(10), random_range(1, 3)], Bubble);
-					}
-					else{
-						instance_create(x, y, Dust);
-					}
-					sleep(damage);
-					
-					 // Destroyables:
-					if(_typ == 2){
-						 // Bolts Stick:
-						if(array_exists([sprBolt, sprBoltGold, sprHeavyBolt, sprUltraBolt, sprSplinter, sprSeeker], sprite_index)){
-							var _target = other;
-							with(instance_create(x, y, BoltStick)){
-								sprite_index = other.sprite_index;
-								image_index = image_number - 1;
-								image_angle = other.image_angle;
-								target = _target;
+						
+						 // Knockback:
+						if(force > 3){
+							with(other.creator){
+								speed = max(speed, friction_raw);
+								motion_add(other.direction, other.force / ((_typ == 2) ? 3 : 6));
 							}
 						}
 						
-						 // Bye bro:
-						instance_destroy();
+						 // Deflect:
+						if(_batDisc){
+							speed = max(speed, 16);
+							direction = _deflectDir;
+						}
+						else if(_typ == 1){
+							speed += friction * 3;
+							direction = _deflectDir - clamp(angle_difference(direction + 180, _deflectDir), -40, 40);
+							image_angle = direction;
+							if(instance_is(other.creator, Player)){
+								deflected = true;
+								team = other.team;
+							}
+						}
+						
+						 // Effects:
+						sound_play_hit_ext(sndCrystalRicochet, 1 + random(0.2), 3);
+						with(instance_create(x, y, Deflect)) image_angle = _deflectDir;
+						if(chance(1, 2) && chance(force, 12)){
+							scrFX(x, y, [image_angle + orandom(10), random_range(1, 3)], Bubble);
+						}
+						else{
+							instance_create(x, y, Dust);
+						}
+						sleep(min(100, damage));
+						
+						 // Destroyables:
+						if(_typ == 2){
+							 // Bolts Stick:
+							if(array_exists([sprBolt, sprBoltGold, sprHeavyBolt, sprUltraBolt, sprSplinter, sprSeeker], sprite_index)){
+								var _target = other;
+								with(instance_create(x, y, BoltStick)){
+									sprite_index = other.sprite_index;
+									image_index = image_number - 1;
+									image_angle = other.image_angle;
+									target = _target;
+								}
+							}
+							
+							 // Bye bro:
+							instance_destroy();
+						}
 					}
 				}
 			}
@@ -410,25 +413,29 @@
 	
 #define ClamShield_grenade
 	 // Bat Disc Synergy:
-	if(team == other.team && instance_is(other, CustomProjectile) && variable_instance_get(other, "name") == "BatDisc"){
+	if(team == other.team && instance_is(other, CustomProjectile) && "name" in other && other.name == "BatDisc"){
 		ClamShield_projectile();
 	}
 	
 	 // Normal:
-	else event_perform(ev_collision, projectile);
+	else{
+		var _team = team;
+		event_perform(ev_collision, projectile);
+		team = _team;
+	}
 	
 	
 #define ClamShieldSlash_create(_x, _y)
 	with(instance_create(_x, _y, Slash)){
 		 // Visual:
 		sprite_index = spr.ClamShieldSlash;
-		depth = -3;
+		depth        = -3;
 		
 		 // Vars:
 		mask_index = msk.ClamShieldSlash;
-		friction = 0.2;
-		damage = 10;
-		force = 16;
+		friction   = 0.2;
+		damage     = 10;
+		force      = 16;
 		
 		return id;
 	}
@@ -2372,18 +2379,18 @@
 	with(instance_create(_x, _y, CustomSlash)){
 		 // Visual:
 		sprite_index = spr.PalankingSlash;
-		image_speed = 0.3;
-		depth = -4;
-
+		image_speed  = 0.3;
+		depth        = -4;
+		
 		 // Vars:
 		mask_index = mskSlash;
-		friction = 0.5;
-		damage = 3;
-		force = 8;
-
+		friction   = 0.5;
+		damage     = 3;
+		force      = 8;
+		
 		return id;
 	}
-
+	
 #define PalankingSlash_step
 	 // Launch Pickups:
 	if(place_meeting(x, y, Pickup)){
@@ -2391,11 +2398,11 @@
 			if(place_meeting(x, y, other)){
 				var s = other;
 				with(obj_create(x, y, "PalankingToss")){
-					direction = angle_lerp(s.direction, point_direction(s.x, s.y, x, y), 1/3);
-					speed = 4;
-					zspeed *= 2/3;
-					creator = other;
-					depth = other.depth;
+					direction  = angle_lerp(s.direction, point_direction(s.x, s.y, x, y), 1/3);
+					speed      = 4;
+					zspeed    *= 2/3;
+					creator    = other;
+					depth      = other.depth;
 					mask_index = other.mask_index;
 					if("spr_shadow_y" in other){
 						spr_shadow_y = other.spr_shadow_y;
@@ -2405,11 +2412,11 @@
 			}
 		}
 	}
-
+	
 #define PalankingSlash_hit
 	if(projectile_canhit_melee(other)){
 		projectile_hit_push(other, damage, force);
-
+		
 		 // Mega Smak:
 		if(instance_is(other, Player) || other.size <= 1){
 			var p = other;
@@ -2426,25 +2433,27 @@
 				mask_index = mskNone;
 			}
 		}
-
+		
 		sound_play_pitchvol(sndHammerHeadEnd, 0.8, 0.5);
 	}
 
 #define PalankingSlash_projectile
-	 // Deflect Projectile, No Team Change:
-	if(team != other.team){
+	if(instance_exists(self)){
 		with(other){
-			if(typ == 1){
-				direction = other.direction;
-				image_angle = direction;
-
-				 // Effects:
-				with(instance_create(x, y, Deflect)){
-					image_angle = other.image_angle;
+			if(typ == 1 || typ == 2){
+				 // Deflect (No Team Change):
+				if(typ == 1 && other.candeflect){
+					direction = other.direction;
+					image_angle = direction;
+					
+					 // Effects:
+					with(instance_create(x, y, Deflect)){
+						image_angle = other.image_angle;
+					}
 				}
-			}
-			else if(typ == 2){
-				instance_destroy();
+				
+				 // Destroy:
+				else instance_destroy();
 			}
 		}
 	}
@@ -3769,20 +3778,24 @@
 	}
 
 #define SealAnchor_projectile
-	 // Deflect Projectile, No Team Change:
-	if(instance_exists(self) && instance_exists(other) && team != other.team){
+	if(instance_exists(self)){
 		with(other){
-			if(typ == 1){
-				direction = other.direction;
-				image_angle = direction;
-				
-				 // Effects:
-				with(instance_create(x, y, Deflect)){
-					image_angle = other.image_angle;
+			if(typ == 1 || typ == 2){
+				 // Deflect (No Team Change):
+				if(typ == 1 && other.candeflect){
+					direction = other.direction;
+					image_angle = direction;
+					
+					 // Effects:
+					with(instance_create(x, y, Deflect)){
+						image_angle = other.image_angle;
+					}
 				}
-			}
-			else if(typ == 2){
-				instance_destroy();
+				
+				 // Destroy:
+				else if(typ == 2){
+					instance_destroy();
+				}
 			}
 		}
 	}

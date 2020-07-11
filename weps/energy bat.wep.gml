@@ -6,7 +6,7 @@
 #define weapon_text   return "LOST BUT NOT FORGOTTEN"; // Rest in Peace stevesteven98
 #define weapon_swap   return sndSwapEnergy;
 #define weapon_sprt   return global.sprWep;
-#define weapon_area   return 10; // 5-2
+#define weapon_area   return 11; // 5-2
 #define weapon_type   return type_energy;
 #define weapon_cost   return 2;
 #define weapon_load   return 12; // 0.4 Seconds
@@ -19,12 +19,13 @@
 	 // Fire:
 	var _skill = skill_get(mut_long_arms),
 		_flip  = sign(wepangle),
+		_dir   = gunangle,
 		_dis   = 20 * _skill,
-		_dir   = gunangle;
+		_spd   = lerp(2, 5, _skill);
 		
 	with(obj_create(x + lengthdir_x(_dis, _dir), y + lengthdir_y(_dis, _dir), "EnergyBatSlash")){
 		projectile_init(other.team, f.creator);
-		motion_add(_dir, lerp(2, 5, _skill));
+		motion_add(_dir, _spd);
 		image_angle = direction;
 		image_yscale *= _flip;
 	}
@@ -45,19 +46,6 @@
 	motion_add(_dir, 4);
 	move_contact_solid(_dir, 3);
 	instance_create(x, y, Dust);
-	/*
-	var _spr = weapon_sprt(),
-		_len = (sprite_get_width(_spr) - sprite_get_yoffset(_spr)) * 3/4,
-		_dir = gunangle + wepangle,
-		_x = x + lengthdir_x(_len, _dir),
-		_y = y + lengthdir_y(_len, _dir);
-		
-	repeat(3){
-		with(instance_create(_x + orandom(4), _y + orandom(4), PlasmaTrail)){
-			motion_set(_dir + (30 * sign(other.wepangle)), random(2));
-		}
-	}
-	*/
 	
 	
 /// SCRIPTS
