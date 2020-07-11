@@ -177,6 +177,11 @@
 			VlasmaCannon      = sprite(p + "sprVlasmaCannon",      5, 10, 10);
 			PopoVlasmaCannon  = sprite(p + "sprPopoVlasmaCannon",  5, 10, 10);
 			
+			 // Venom Pellets:
+			VenomPelletAppear	 = sprite(p + "sprVenomPelletAppear",	 1, 8, 8);
+			VenomPellet			 = sprite(p + "sprVenomPellet",			 2, 8, 8);
+			VenomPelletDisappear = sprite(p + "sprVenomPelletDisappear", 5, 8, 8);
+			
 			 // Variants:
 			EnemyBullet             = sprite(p + "sprEnemyBullet",             2,  7,  9);
 			EnemyHeavyBullet        = sprite(p + "sprEnemyHeavyBullet",        2, 12, 12);

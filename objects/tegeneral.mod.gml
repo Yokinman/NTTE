@@ -4868,7 +4868,11 @@
 	
 	with(instance_create(_x, _y, CustomProjectile)){
 		 // Visual:
-		sprite_index = sprScorpionBullet;
+		spr_spwn = spr.VenomPelletAppear;
+		spr_idle = spr.VenomPellet;
+		spr_dead = spr.VenomPelletDisappear;
+		sprite_index = spr_idle;
+		image_speed = 0.4;
 		depth = -3;
 		
 		 // Vars:
@@ -4877,27 +4881,54 @@
 		damage = 2;
 		force = 4;
 		typ = 2;
+		hit_list = [];
 		
 		return id;
 	}
 	
 #define VenomPellet_step
-	if(speed == 0) instance_destroy();
+	if(speed <= 4 && sprite_index != spr_dead){
+		sprite_index = spr_dead;
+	}
 	
 #define VenomPellet_anim
-	if(instance_exists(self)){
-		image_speed = 0;
-		image_index = image_number - 1;
+	if(sprite_index == spr_dead){
+		instance_destroy();
+	}
+	else{
+		if(sprite_index == spr_spwn){
+			image_speed = 0.4;
+			sprite_index = spr_idle;
+		}
 	}
 	
 #define VenomPellet_hit
-	if(projectile_canhit_melee(other)){
+	var _player = instance_is(other, Player);
+	if(
+		_player
+		? projectile_canhit_melee(other)
+		: !array_exists(hit_list, other)
+	){
 		projectile_hit_push(other, damage, force);
+		if(!_player){
+			array_push(hit_list, other);
+			
+			 // Catch on Enemy / Pseudo Freeze Frames:
+			if(other.my_health > 0){
+				x -= hspeed_raw;
+				y -= vspeed_raw;
+			}
+		}
+		
+		 // Effects:
+		instance_create(x, y, ScorpionBulletHit);
 	}
 	
 #define VenomPellet_destroy
-	instance_create(x, y, ScorpionBulletHit);
-	
+	if(speed > 0){
+		instance_create(x, y, ScorpionBulletHit);
+	}
+
 	
 #define WallDecal_create(_x, _y)
 	/*
