@@ -850,10 +850,28 @@
 		 // Euphoria:
 		if(
 			is_string(_obj)
-			&& instance_is(self, CustomProjectile)
+			&& skill_get(mut_euphoria) != 0
+			&& (instance_exists(_creator) ? instance_is(_creator, enemy) : (_team != 2))
+			&& !instance_is(self, EnemyBullet1)
+			&& !instance_is(self, EnemyBullet3)
+			&& !instance_is(self, EnemyBullet4)
+			&& !instance_is(self, HorrorBullet)
+			&& !instance_is(self, IDPDBullet)
+			&& !instance_is(self, PopoPlasmaBall)
+			&& !instance_is(self, LHBouncer)
+			&& !instance_is(self, FireBall)
+			&& !instance_is(self, ToxicGas)
+			&& !instance_is(self, Shank)
+			&& !instance_is(self, Slash)
+			&& !instance_is(self, EnemySlash)
+			&& !instance_is(self, GuitarSlash)
+			&& !instance_is(self, BloodSlash)
+			&& !instance_is(self, LightningSlash)
+			&& !instance_is(self, EnergyShank)
+			&& !instance_is(self, EnergySlash)
+			&& !instance_is(self, EnergyHammerSlash)
 			&& !instance_is(self, CustomSlash)
 			&& !instance_is(other, FireCont)
-			&& (instance_exists(creator) ? instance_is(creator, enemy) : (team != 2))
 		){
 			script_bind_begin_step(projectile_euphoria, 0, id);
 		}
