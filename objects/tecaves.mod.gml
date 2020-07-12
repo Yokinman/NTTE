@@ -903,7 +903,7 @@
 	instance_create(x, y, PortalClear);
 	var _chestTypes = [AmmoChest, WeaponChest, RadChest];
 	for(var i = 0; i < array_length(_chestTypes); i++){
-		with(enemy_shoot(
+		with(projectile_create(
 			x,
 			y,
 			"CrystalHeartBullet",
@@ -1086,9 +1086,11 @@
 	sound_play_hit_ext(sndGammaGutsKill,      0.8 + random(0.3), 3);
 	sound_play_hit_ext(sndNothing2Beam,       0.7 + random(0.2), 3);
 	sound_play_hit_ext(sndHyperCrystalSearch, 0.6 + random(0.3), 1.5);
+	with(instance_create(x, y, BulletHit)){
+		sprite_index = sprEFlakHit;
+	}
 	view_shake_max_at(x, y, 20);
 	sleep(50);
-	with(instance_create(x, y, BulletHit)) sprite_index = sprEFlakHit;
 	
 	 // Tunnel Time:
 	var	_scrt  = script_ref_create(CrystalHeartBullet_area_generate_setup, area_goal, direction, area_seed),
@@ -1263,14 +1265,8 @@
 		projectile_hit(other, damage, force, direction);
 		
 		/*
-		with(other){
-			if(my_health <= 0){
-				var o = other;
-				with(obj_create(x, y, (size >= 2) ? PlasmaImpact : "PlasmaImpactSmall")){
-					team	= o.team;
-					creator = o.creator;
-				}
-			}
+		if(instance_exists(other) && other.my_health <= 0){
+			projectile_create(other.x, other.y, ((other.size < 2) ? "PlasmaImpactSmall" : PlasmaImpact), 0, 0);
 		}
 		*/
 	}
@@ -1318,65 +1314,63 @@
 #define EnergyBatSlash_projectile
 	if(instance_exists(self)){
 		with(other){
-			var	_x       = x,
-				_y       = y,
-				_depth   = depth,
-				_damage  = damage,
-				_target  = creator,
-				_targetX = xstart,
-				_targetY = ystart,
-				_deflect = (typ == 1 && other.candeflect),
-				_minID   = GameObject.id;
+			if(typ == 1 || typ == 2){
+				var	_x       = x,
+					_y       = y,
+					_depth   = depth,
+					_damage  = damage,
+					_target  = creator,
+					_targetX = xstart,
+					_targetY = ystart,
+					_deflect = (typ == 1 && other.candeflect),
+					_minID   = GameObject.id;
+					
+				if(_deflect) deflected = true;
 				
-			if(_deflect) deflected = true;
-			
-			instance_destroy();
-			
-			with(other){
-				var _cannon = false;
+				instance_destroy();
 				
-				 // Vlasma:
-				with(instances_matching_gt(projectile, "id", _minID)){
-					_cannon = true;
-					if(_deflect){
-						instance_delete(id);
+				with(other){
+					var _cannon = false;
+					
+					 // Vlasma:
+					with(instances_matching_gt(projectile, "id", _minID)){
+						_cannon = true;
+						if(_deflect){
+							instance_delete(id);
+						}
+						else break;
 					}
-					else break;
-				}
-				if(_deflect){
-					with(obj_create(_x, _y, (_cannon ? "VlasmaCannon" : "VlasmaBullet"))){
-						projectile_init(other.team, other.creator);
-						motion_add(other.direction, other.speed + 2);
-						image_angle	= direction;
-						target      = _target;
-						target_x    = _targetX;
-						target_y    = _targetY;
-						
-						 // Cannon:
-						if(_cannon){
-							cannon = _damage * 1.5;
+					if(_deflect){
+						with(projectile_create(_x, _y, (_cannon ? "VlasmaCannon" : "VlasmaBullet"), direction, speed + 2)){
+							target   = _target;
+							target_x = _targetX;
+							target_y = _targetY;
+							
+							 // Cannon:
+							if(_cannon){
+								cannon = _damage * 1.5;
+							}
 						}
 					}
-				}
-				
-				 // Plasma Impact:
-				with(obj_create(_x, _y, (_cannon ? PlasmaImpact : "PlasmaImpactSmall"))){
-					projectile_init(other.team, other.creator);
-					depth = _depth;
 					
-					 // Sounds:
-					var _snd = [
-						[sndPlasma,    sndPlasmaUpg], 
-						[sndPlasmaBig, sndPlasmaBigUpg]
-					];
-					sound_play_hit_ext(
-						_snd[_cannon][(instance_is(creator, Player) && skill_get(mut_laser_brain) > 0)],
-						random_range(0.7, 1.3),
-						0.6
-					);
-				}
-				if(_cannon){
-					sleep_max(10 * _damage);
+					 // Plasma Impact:
+					with(projectile_create(_x, _y, (_cannon ? PlasmaImpact : "PlasmaImpactSmall"), 0, 0)){
+						depth = _depth;
+						
+						 // Sounds:
+						var _snd = [
+							[sndPlasma,    sndPlasmaUpg], 
+							[sndPlasmaBig, sndPlasmaBigUpg]
+						];
+						sound_play_hit_ext(
+							_snd[_cannon][(instance_is(creator, Player) && skill_get(mut_laser_brain) > 0)],
+							random_range(0.7, 1.3),
+							0.6
+						);
+					}
+					if(_cannon){
+						sleep_max(10 * _damage);
+					}
 				}
 			}
 		}
@@ -1387,7 +1381,7 @@
 	with(instance_create(_x, _y, CustomSlash)){
 		 // Visual:
 		sprite_index = spr.EntanglerSlash;
-		image_speed = 0.4;
+		image_speed  = 0.4;
 		
 		 // Vars:
 		mask_index = mskSlash;
@@ -1551,7 +1545,9 @@
 	
 	 // Curse Particles:
 	if(inv){
-		if(chance_ct(1, 3)) instance_create(x + orandom(8), y + orandom(8), Curse);
+		if(chance_ct(1, 3)){
+			instance_create(x + orandom(8), y + orandom(8), Curse);
+		}
 	}
 	
 #define Mortar_draw
@@ -1622,7 +1618,7 @@
 		sound_play(sndPlasma);
 		
 		 // Shoot Mortar:
-		with(enemy_shoot(x + (5 * right), y, "MortarPlasma", gunangle, 3)){
+		with(projectile_create(x + (5 * right), y, "MortarPlasma", gunangle, 3)){
 			z += 18;
 			var d = point_distance(x, y, _tx, _ty) / speed;
 			zspeed = (d * zfriction * 0.5) - (z / d);
@@ -1637,16 +1633,16 @@
 				
 			while(_z > 0){
 				with(instance_create(_x, _y - _z, BoltTrail)){
-					image_angle = point_direction(x, y, _x + other.hspeed, _y + other.vspeed - (_z + _zspd));
+					image_angle  = point_direction(x, y, _x + other.hspeed, _y + other.vspeed - (_z + _zspd));
 					image_xscale = point_distance(x, y, _x + other.hspeed, _y + other.vspeed - (_z + _zspd));
 					image_yscale = random(1.5);
-					image_blend = make_color_rgb(235, 0, 67);
-					depth = -9;
+					image_blend  = make_color_rgb(235, 0, 67);
+					depth        = -9;
 					if(chance(1, 6)){
 						with(instance_create(x + orandom(8), y + orandom(8), LaserCharge)){
 							motion_add(point_direction(x, y, _x, _y - _z), 1);
 							alarm0 = (point_distance(x, y, _x, _y - _z) / speed) + 1;
-							depth = -8;
+							depth  = -8;
 						}
 					}
 				}
@@ -1669,7 +1665,9 @@
 				}
 				i *= 3/4;
 			}
-			with(instance_create(_x, _y, CaveSparkle)) image_speed *= random_range(0.5, 1);
+			with(instance_create(_x, _y, CaveSparkle)){
+				image_speed *= random_range(0.5, 1);
+			}
 		}
 		
 		 // Aim After Target:
@@ -1709,8 +1707,16 @@
 					x = _x;
 					y = _y;
 					
-					 // Unstick from walls by annihilating them:
-					instance_create(x, y, PortalClear).mask_index = mask_index;
+					 // Unstick from walls:
+					if(!instance_budge(Wall, -1)){
+						with(instance_create(x, y, PortalClear)){
+							mask_index   = other.mask_index;
+							sprite_index = other.sprite_index;
+							image_xscale = other.image_xscale;
+							image_yscale = other.image_yscale;
+							image_angle  = other.image_angle;
+						}
+					}
 					
 					 // Effects:
 					nexthurt = current_frame + 6;
@@ -1718,9 +1724,17 @@
 					image_index = 0;
 				}
 				
-				 // Unstick from walls by annihilating them:
+				 // Unstick from walls:
 				if(place_meeting(x, y, Floor)){
-					instance_create(x, y, PortalClear).mask_index = mask_index;
+					if(!instance_budge(Wall, -1)){
+						with(instance_create(x, y, PortalClear)){
+							mask_index   = other.mask_index;
+							sprite_index = other.sprite_index;
+							image_xscale = other.image_xscale;
+							image_yscale = other.image_yscale;
+							image_angle  = other.image_angle;
+						}
+					}
 				}
 				else{
 					top_create(x, y, id, 0, 0);
@@ -1738,15 +1752,15 @@
 	with(instance_create(_x, _y, CustomProjectile)){
 		 // Visual:
 		sprite_index = spr.MortarPlasma;
-		mask_index = mskNone;
-		depth = -12;
+		depth        = -12;
 		
 		 // Vars:
-		z = 1;
-		zspeed = 0;
-		zfriction = 0.4; // 0.8
-		damage = 0;
-		force = 0;
+		mask_index = mskNone;
+		damage     = 0;
+		force      = 0;
+		z          = 1;
+		zspeed     = 0;
+		zfriction  = 0.4; // 0.8
 		
 		return id;
 	}
@@ -1795,11 +1809,9 @@
 	// nada
 	
 #define MortarPlasma_destroy
-	with(instance_create(x, y, PlasmaImpact)){
+	 // Impact:
+	with(projectile_create(x, y, PlasmaImpact, 0, 0)){
 		sprite_index = spr.EnemyPlasmaImpact;
-		team = other.team;
-		creator = other.creator;
-		hitid = other.hitid;
 		damage = 2;
 		
 		 // Over Wall:
@@ -1809,8 +1821,8 @@
 	}
 	
 	 // Effects:
-	view_shake_at(x, y, 2);
-	sound_play(sndPlasmaHit);
+	view_shake_at(x, y, 3);
+	sound_play_hit_ext(sndPlasmaHit, 1 + orandom(0.1), 1.5);
 	
 	
 #define NewCocoon_create(_x, _y)
@@ -1874,14 +1886,15 @@
 	UberCont.opt_freeze = 0;
 	
 	var _inst = instance_create(_x, _y, PlasmaImpact);
+	
 	with(_inst){
 		 // Visual:
 		sprite_index = spr.PlasmaImpactSmall;
 		
 		 // Vars:
 		mask_index = msk.PlasmaImpactSmall;
-		damage = 2;
-		force = 6;
+		damage     = 2;
+		force      = 6;
 	}
 	
 	UberCont.opt_shake = _lastShake;
@@ -1985,7 +1998,7 @@
 	with(instance_create(_x, _y, CustomSlash)){
 		 // Visual:
 		sprite_index = spr.RedSlash;
-		image_speed = 0.4;
+		image_speed  = 0.4;
 		
 		 // Vars:
 		mask_index = mskSlash;
@@ -2078,11 +2091,12 @@
 				var	l = 128,
 					d = (i * 90) + pround(_targetDir, 45) + orandom(2);
 					
-				with(enemy_shoot(x + lengthdir_x(l, d), y + lengthdir_y(l, d), "VlasmaBullet", d + 180, 1)){
+				with(projectile_create(x + lengthdir_x(l, d), y + lengthdir_y(l, d), "VlasmaBullet", d + 180, 1)){
 					sprite_index = spr.EnemyVlasmaBullet;
-					target = other;
-					target_x = other.x;
-					target_y = other.y;
+					target       = other;
+					target_x     = other.x;
+					target_y     = other.y;
+					
 					_last = id;
 				}
 			}
@@ -2116,16 +2130,14 @@
 	pickup_drop(20, 0);
 	
 	 // Plasma:
-	with(team_instance_sprite(1, enemy_shoot(x, y, PlasmaImpact, 0, 0))){
+	with(team_instance_sprite(1, projectile_create(x, y, PlasmaImpact, 0, 0))){
 		mask_index = mskPopoPlasmaImpact;
 		with(instance_create(x, y, PortalClear)){
 			mask_index   = other.mask_index;
 			sprite_index = other.sprite_index;
-			image_index  = other.image_index;
 			image_xscale = other.image_xscale;
 			image_yscale = other.image_yscale;
 			image_angle  = other.image_angle;
-			visible = false;
 		}
 	}
 	sound_play_hit_big(sndPlasmaHit, 0.2);
@@ -2210,9 +2222,9 @@
 	for(var a = direction; a < direction + 360; a += (360 / 3)){
 		with(obj_create(x, y, "CatDoorDebris")){
 			sprite_index = other.spr_hatch;
-			image_index = irandom(image_number - 1);
-			direction = a + orandom(30);
-			speed += 1 + random(4);
+			image_index  = irandom(image_number - 1);
+			direction    = a + orandom(30);
+			speed       += 1 + random(4);
 		}
 	}
 	sound_play_hit(sndHitRock, 0.3);
@@ -2255,10 +2267,10 @@
 		repeat(3 * max(1, _chance)){
 			with(obj_create(x, y, "Spiderling")){
 				sprite_index = spr_hurt;
-				alarm0 = ceil(other.alarm0 / 2);
-				curse = other.curse / 2;
-				kills = other.kills;
-				raddrop = 0;
+				alarm0       = ceil(other.alarm0 / 2);
+				curse        = other.curse / 2;
+				kills        = other.kills;
+				raddrop      = 0;
 			}
 		}
 	}
@@ -2571,16 +2583,11 @@
 				
 			with(team_instance_sprite(
 				sprite_get_team(sprite_index),
-				obj_create(_x, _y, "VlasmaBullet")
+				projectile_create(_x, _y, "VlasmaBullet", _dir + 180, 0)
 			)){
-				direction   = _dir + 180;
-				image_angle = direction;
-				creator     = other.creator;
-				hitid       = other.hitid;
-				team        = other.team;
-				target      = other.target;
-				target_x    = other.target_x;
-				target_y    = other.target_y;
+				target   = other.target;
+				target_x = other.target_x;
+				target_y = other.target_y;
 			}
 		}
 	}
@@ -2588,12 +2595,9 @@
 	 // Explo:
 	with(team_instance_sprite(
 		sprite_get_team(sprite_index),
-		obj_create(x, y, ((cannon > 0) ? PlasmaImpact : "PlasmaImpactSmall"))
+		projectile_create(x, y, ((cannon > 0) ? PlasmaImpact : "PlasmaImpactSmall"), 0, 0)
 	)){
-		creator = other.creator;
-		hitid   = other.hitid;
-		team    = other.team;
-		depth   = other.depth;
+		depth = other.depth;
 	}
 	
 	
@@ -2868,9 +2872,9 @@
 	 // Blip Out:
 	else with(instance_create(x, y, BulletHit)){
 		sprite_index = sprThrowHit;
-		image_angle  = other.image_angle;
 		image_xscale = other.image_xscale;
 		image_yscale = other.image_yscale;
+		image_angle  = other.image_angle;
 	}
 	
 	
@@ -3035,7 +3039,7 @@
 		cursedcavescramble_check = false;
 		
 		if(GameCont.area == area_cursed_caves){
-			if(roll && wep_get(wep) != "merge"){
+			if(roll && wep_raw(wep) != "merge"){
 				if(!position_meeting(xstart, ystart, ChestOpen) || chance(1, 3)){
 					cursedcavescramble_check = true;
 					
@@ -3626,6 +3630,7 @@
 #define shader_add(_name, _vertex, _fragment)                                           return  mod_script_call_nc('mod', 'teassets', 'shader_add', _name, _vertex, _fragment);
 #define obj_create(_x, _y, _obj)                                                        return  (is_undefined(_obj) ? [] : mod_script_call_nc('mod', 'telib', 'obj_create', _x, _y, _obj));
 #define top_create(_x, _y, _obj, _spawnDir, _spawnDis)                                  return  mod_script_call_nc('mod', 'telib', 'top_create', _x, _y, _obj, _spawnDir, _spawnDis);
+#define projectile_create(_x, _y, _obj, _dir, _spd)                                     return  mod_script_call(   'mod', 'telib', 'projectile_create', _x, _y, _obj, _dir, _spd);
 #define chest_create(_x, _y, _obj, _levelStart)                                         return  mod_script_call_nc('mod', 'telib', 'chest_create', _x, _y, _obj, _levelStart);
 #define prompt_create(_text)                                                            return  mod_script_call(   'mod', 'telib', 'prompt_create', _text);
 #define alert_create(_inst, _sprite)                                                    return  mod_script_call(   'mod', 'telib', 'alert_create', _inst, _sprite);
@@ -3666,7 +3671,6 @@
 #define scrAim(_dir)                                                                            mod_script_call(   'mod', 'telib', 'scrAim', _dir);
 #define enemy_walk(_spdAdd, _spdMax)                                                            mod_script_call(   'mod', 'telib', 'enemy_walk', _spdAdd, _spdMax);
 #define enemy_hurt(_hitdmg, _hitvel, _hitdir)                                                   mod_script_call(   'mod', 'telib', 'enemy_hurt', _hitdmg, _hitvel, _hitdir);
-#define enemy_shoot(_x, _y, _object, _dir, _spd)                                        return  mod_script_call(   'mod', 'telib', 'enemy_shoot', _x, _y, _object, _dir, _spd);
 #define enemy_target(_x, _y)                                                            return  mod_script_call(   'mod', 'telib', 'enemy_target', _x, _y);
 #define boss_hp(_hp)                                                                    return  mod_script_call_nc('mod', 'telib', 'boss_hp', _hp);
 #define boss_intro(_name)                                                               return  mod_script_call_nc('mod', 'telib', 'boss_intro', _name);
@@ -3703,7 +3707,7 @@
 #define race_get_title(_race)                                                           return  mod_script_call(   'mod', 'telib', 'race_get_title', _race);
 #define player_create(_x, _y, _index)                                                   return  mod_script_call_nc('mod', 'telib', 'player_create', _x, _y, _index);
 #define player_swap()                                                                   return  mod_script_call(   'mod', 'telib', 'player_swap');
-#define wep_get(_wep)                                                                   return  mod_script_call_nc('mod', 'telib', 'wep_get', _wep);
+#define wep_raw(_wep)                                                                   return  mod_script_call_nc('mod', 'telib', 'wep_raw', _wep);
 #define wep_merge(_stock, _front)                                                       return  mod_script_call_nc('mod', 'telib', 'wep_merge', _stock, _front);
 #define wep_merge_decide(_hardMin, _hardMax)                                            return  mod_script_call_nc('mod', 'telib', 'wep_merge_decide', _hardMin, _hardMax);
 #define weapon_decide(_hardMin, _hardMax, _gold, _noWep)                                return  mod_script_call(   'mod', 'telib', 'weapon_decide', _hardMin, _hardMax, _gold, _noWep);

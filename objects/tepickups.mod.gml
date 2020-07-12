@@ -230,14 +230,14 @@
 #define Backpacker_create(_x, _y)
 	with(instance_create(_x, _y, CustomProp)){
 		 // Visual:
-		spr_idle = spr.Backpacker;
-		spr_hurt = mskNone;
-		spr_dead = mskNone;
+		spr_idle     = spr.Backpacker;
+		spr_hurt     = mskNone;
+		spr_dead     = mskNone;
 		spr_shadow_y = -2;
 		sprite_index = spr_idle;
-		image_index = irandom(image_number - 1);
-		image_speed = 0;
-		depth = -1;
+		image_index  = irandom(image_number - 1);
+		image_speed  = 0;
+		depth        = -1;
 		
 		 // Sounds:
 		snd_dead = sndHitRock;
@@ -245,11 +245,11 @@
 		
 		 // Vars:
 		mask_index = mskBandit;
-		my_health = 1;
-		raddrop = 2;
-		size = 1;
-		team = 1;
-		weps = ["crabbone"];
+		my_health  = 1;
+		raddrop    = 2;
+		size       = 1;
+		team       = 1;
+		weps       = ["crabbone"];
 		
 		return id;
 	}
@@ -656,7 +656,7 @@
 	
 #define BonePickup_pull
 	if(speed <= 0){
-		if(wep_get(other.wep) == "scythe" || wep_get(other.bwep) == "scythe"){
+		if(wep_raw(other.wep) == "scythe" || wep_raw(other.bwep) == "scythe"){
 			return true;
 		}
 	}
@@ -667,7 +667,7 @@
 	
 	 // Only Players Holding Scythes:
 	if(instance_is(other, Player)){
-		if(wep_get(other.wep) != "scythe" && wep_get(other.bwep) != "scythe"){
+		if(wep_raw(other.wep) != "scythe" && wep_raw(other.bwep) != "scythe"){
 			return true;
 		}
 	}
@@ -675,7 +675,7 @@
 	 // Give Ammo:
 	with(instance_is(other, Player) ? other : Player){
 		with([wep, bwep]){
-			if(is_object(self) && wep_get(self) == "scythe"){
+			if(is_object(self) && wep_raw(self) == "scythe"){
 				if(ammo < amax){
 					ammo = min(ammo + _num, amax);
 					break;
@@ -696,8 +696,8 @@
 	with(obj_create(_x, _y, "CustomChest")){
 		 // Visual:
 		sprite_index = spr.BonusAmmoChest;
-		spr_dead = spr.BonusAmmoChestOpen;
-		spr_open = spr.BonusFXChestOpen;
+		spr_dead     = spr.BonusAmmoChestOpen;
+		spr_open     = spr.BonusFXChestOpen;
 		
 		 // Vars:
 		num  = 16;
@@ -767,13 +767,13 @@
 #define BonusAmmoMimic_create(_x, _y)
 	with(instance_create(_x, _y, CustomEnemy)){
 		 // Visual:
-		spr_idle = spr.BonusAmmoMimicIdle;
-		spr_walk = spr.BonusAmmoMimicFire;
-		spr_hurt = spr.BonusAmmoMimicHurt;
-		spr_dead = spr.BonusAmmoMimicDead;
-		spr_chrg = spr.BonusAmmoMimicTell;
+		spr_idle   = spr.BonusAmmoMimicIdle;
+		spr_walk   = spr.BonusAmmoMimicFire;
+		spr_hurt   = spr.BonusAmmoMimicHurt;
+		spr_dead   = spr.BonusAmmoMimicDead;
+		spr_chrg   = spr.BonusAmmoMimicTell;
 		spr_shadow = shd24;
-		hitid = [spr.BonusAmmoMimicFire, "OVERSTOCK MIMIC"];
+		hitid      = [spr.BonusAmmoMimicFire, "OVERSTOCK MIMIC"];
 		
 		 // Sound:
 		snd_hurt = sndMimicHurt;
@@ -981,13 +981,13 @@
 #define BonusHealthMimic_create(_x, _y)
 	with(instance_create(_x, _y, CustomEnemy)){
 		 // Visual:
-		spr_idle = spr.BonusHealthMimicIdle;
-		spr_walk = spr.BonusHealthMimicFire;
-		spr_hurt = spr.BonusHealthMimicHurt;
-		spr_dead = spr.BonusHealthMimicDead;
-		spr_chrg = spr.BonusHealthMimicTell;
+		spr_idle   = spr.BonusHealthMimicIdle;
+		spr_walk   = spr.BonusHealthMimicFire;
+		spr_hurt   = spr.BonusHealthMimicHurt;
+		spr_dead   = spr.BonusHealthMimicDead;
+		spr_chrg   = spr.BonusHealthMimicTell;
 		spr_shadow = shd24;
-		hitid = [spr.BonusHealthMimicFire, "OVERHEAL MIMIC"];
+		hitid      = [spr.BonusHealthMimicFire, "OVERHEAL MIMIC"];
 		
 		 // Sound:
 		snd_hurt = sndMimicHurt;
@@ -1161,11 +1161,11 @@
 	sound_play_pitch(sndStatueXP, 0.5 + orandom(0.1));
 	sound_play_pitchvol(sndExplosion, 1.4 + random(0.3), 0.8);
 	with(instance_create(x, y - 2, FXChestOpen)){
-		sprite_index = sprMutant6Dead;
-		image_index = 9;
+		sprite_index  = sprMutant6Dead;
+		image_index   = 9;
 		image_xscale *= 0.75;
-		image_yscale = image_xscale;
-		image_blend = make_color_rgb(random_range(120, 190), 255, 8);
+		image_yscale  = image_xscale;
+		image_blend   = make_color_rgb(random_range(120, 190), 255, 8);
 	}
 	with(obj_create(x, y - 2, "BuriedVaultChestDebris")){
 		direction = _ang + ((360 / other.num) * random_range(1/3, 2/3));
@@ -1266,12 +1266,12 @@
 	with(instance_create(_x, _y, (instance_exists(CrownPed) ? CustomObject : CrownPed))){
 		 // Visual:
 		sprite_index = spr.BuriedVaultChestBase;
-		image_speed = 0.4;
-		depth = 2;
+		image_speed  = 0.4;
+		depth        = 2;
 		
 		 // Vars:
 		mask_index = mskSalamander;
-		spawn = irandom_range(1, 2) + GameCont.vaults;
+		spawn      = irandom_range(1, 2) + GameCont.vaults;
 		spawn_time = 0;
 		spawn_inst = [];
 		
@@ -1480,11 +1480,11 @@
 		
 		 // Bones:
 		if(_hard >= 4){
-			if((wep_get(wep) == "crabbone" || wep_get(bwep) == "crabbone")){
+			if((wep_raw(wep) == "crabbone" || wep_raw(bwep) == "crabbone")){
 				_pool.bone = 0.5;
 			}
 		}
-		if(wep_get(wep) == "scythe" || wep_get(bwep) == "scythe"){
+		if(wep_raw(wep) == "scythe" || wep_raw(bwep) == "scythe"){
 			_pool.bones++;
 		}
 	}
@@ -1521,11 +1521,11 @@
 #define ChestShop_create(_x, _y)
 	with(instance_create(_x, _y, CustomObject)){
 		 // Visual:
-		sprite_index     = mskNone;
-		image_speed      = 0.4;
-		image_blend      = c_white;
-		image_alpha      = 0.7;
-		depth            = -8;
+		sprite_index = mskNone;
+		image_speed  = 0.4;
+		image_blend  = c_white;
+		image_alpha  = 0.7;
+		depth        = -8;
 		
 		 // Vars:
 		mask_index = mskWepPickup;
@@ -1812,7 +1812,7 @@
 			break;
 			
 		case ChestShop_wep:
-			var _merged = (wep_get(drop) == "merge");
+			var _merged = (wep_raw(drop) == "merge");
 			
 			text = (curse ? "CURSED " : "") + (_merged ? "MERGED " : "") + "WEAPON";
 			desc = weapon_get_name(drop);
@@ -1823,7 +1823,7 @@
 			var _hue = [0, 40, 120, 0, 160, 80];
 				
 			if(
-				wep_get(drop) == "merge"
+				wep_raw(drop) == "merge"
 				&& "stock" in lq_get(drop, "base")
 				&& "front" in lq_get(drop, "base")
 			){
@@ -2303,13 +2303,13 @@
 #define CursedMimic_create(_x, _y)
 	with(instance_create(_x, _y, CustomEnemy)){
 		 // Visual:
-		spr_idle = spr.CursedMimicIdle;
-		spr_walk = spr.CursedMimicFire;
-		spr_hurt = spr.CursedMimicHurt;
-		spr_dead = spr.CursedMimicDead;
-		spr_chrg = spr.CursedMimicTell;
+		spr_idle   = spr.CursedMimicIdle;
+		spr_walk   = spr.CursedMimicFire;
+		spr_hurt   = spr.CursedMimicHurt;
+		spr_dead   = spr.CursedMimicDead;
+		spr_chrg   = spr.CursedMimicTell;
 		spr_shadow = shd24;
-		hitid = [spr.CursedMimicFire, "CURSED MIMIC"];
+		hitid      = [spr.CursedMimicFire, "CURSED MIMIC"];
 		
 		 // Sound:
 		snd_hurt = sndMimicHurt;
@@ -2482,10 +2482,10 @@
 	with(instance_create(_x, _y, Pickup)){
 		 // Visual:
 		sprite_index = sprAmmo;
-		spr_open = sprSmallChestPickup;
-		spr_fade = sprSmallChestFade;
-		image_speed = 0.4;
-		shine = 0.04;
+		spr_open     = sprSmallChestPickup;
+		spr_fade     = sprSmallChestFade;
+		image_speed  = 0.4;
+		shine        = 0.04;
 		
 		 // Sound:
 		snd_open = sndAmmoPickup;
@@ -2905,15 +2905,15 @@
 	}
 	var _len = 16;
 	with(instance_create(x + lengthdir_x(_len, direction), y + lengthdir_y(_len, direction), BulletHit)){
-		speed = 1;
-		direction = other.direction;
+		speed        = 1;
+		direction    = other.direction;
 		sprite_index = sprMutant6Dead;
-		image_index = 11;
-		image_speed = 0.5;
+		image_index  = 11;
+		image_speed  = 0.5;
 		image_xscale = 0.75;
 		image_yscale = image_xscale;
-		image_angle = direction - 90;
-		depth = -4;
+		image_angle  = direction - 90;
+		depth        = -4;
 	}
 	sleep(20);
 	
@@ -3873,7 +3873,7 @@
 	}
 	
 	 // Trident Unlock:
-	var _wepRaw = wep_get(wep);
+	var _wepRaw = wep_raw(wep);
 	if(_wepRaw == "trident"){
 		if(mod_script_exists("weapon", _wepRaw, "weapon_avail") && !mod_script_call("weapon", _wepRaw, "weapon_avail", wep)){
 			unlock_set(`wep:${_wepRaw}`, true);
@@ -3915,9 +3915,9 @@
 		var _ang = random(360);
 		for(var d = _ang; d < _ang + 360; d += (360 / num)){
 			with(obj_create(x, y, "BackpackPickup")){
-				target = instance_create(x, y, AmmoPickup);
+				target    = instance_create(x, y, AmmoPickup);
 				direction = d;
-				speed = random_range(2, 3);
+				speed     = random_range(2, 3);
 				event_perform(ev_step, ev_step_end);
 			}
 		}
@@ -5511,6 +5511,7 @@
 #define shader_add(_name, _vertex, _fragment)                                           return  mod_script_call_nc('mod', 'teassets', 'shader_add', _name, _vertex, _fragment);
 #define obj_create(_x, _y, _obj)                                                        return  (is_undefined(_obj) ? [] : mod_script_call_nc('mod', 'telib', 'obj_create', _x, _y, _obj));
 #define top_create(_x, _y, _obj, _spawnDir, _spawnDis)                                  return  mod_script_call_nc('mod', 'telib', 'top_create', _x, _y, _obj, _spawnDir, _spawnDis);
+#define projectile_create(_x, _y, _obj, _dir, _spd)                                     return  mod_script_call(   'mod', 'telib', 'projectile_create', _x, _y, _obj, _dir, _spd);
 #define chest_create(_x, _y, _obj, _levelStart)                                         return  mod_script_call_nc('mod', 'telib', 'chest_create', _x, _y, _obj, _levelStart);
 #define prompt_create(_text)                                                            return  mod_script_call(   'mod', 'telib', 'prompt_create', _text);
 #define alert_create(_inst, _sprite)                                                    return  mod_script_call(   'mod', 'telib', 'alert_create', _inst, _sprite);
@@ -5551,7 +5552,6 @@
 #define scrAim(_dir)                                                                            mod_script_call(   'mod', 'telib', 'scrAim', _dir);
 #define enemy_walk(_spdAdd, _spdMax)                                                            mod_script_call(   'mod', 'telib', 'enemy_walk', _spdAdd, _spdMax);
 #define enemy_hurt(_hitdmg, _hitvel, _hitdir)                                                   mod_script_call(   'mod', 'telib', 'enemy_hurt', _hitdmg, _hitvel, _hitdir);
-#define enemy_shoot(_x, _y, _object, _dir, _spd)                                        return  mod_script_call(   'mod', 'telib', 'enemy_shoot', _x, _y, _object, _dir, _spd);
 #define enemy_target(_x, _y)                                                            return  mod_script_call(   'mod', 'telib', 'enemy_target', _x, _y);
 #define boss_hp(_hp)                                                                    return  mod_script_call_nc('mod', 'telib', 'boss_hp', _hp);
 #define boss_intro(_name)                                                               return  mod_script_call_nc('mod', 'telib', 'boss_intro', _name);
@@ -5588,7 +5588,7 @@
 #define race_get_title(_race)                                                           return  mod_script_call(   'mod', 'telib', 'race_get_title', _race);
 #define player_create(_x, _y, _index)                                                   return  mod_script_call_nc('mod', 'telib', 'player_create', _x, _y, _index);
 #define player_swap()                                                                   return  mod_script_call(   'mod', 'telib', 'player_swap');
-#define wep_get(_wep)                                                                   return  mod_script_call_nc('mod', 'telib', 'wep_get', _wep);
+#define wep_raw(_wep)                                                                   return  mod_script_call_nc('mod', 'telib', 'wep_raw', _wep);
 #define wep_merge(_stock, _front)                                                       return  mod_script_call_nc('mod', 'telib', 'wep_merge', _stock, _front);
 #define wep_merge_decide(_hardMin, _hardMax)                                            return  mod_script_call_nc('mod', 'telib', 'wep_merge_decide', _hardMin, _hardMax);
 #define weapon_decide(_hardMin, _hardMax, _gold, _noWep)                                return  mod_script_call(   'mod', 'telib', 'weapon_decide', _hardMin, _hardMax, _gold, _noWep);

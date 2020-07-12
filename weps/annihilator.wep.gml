@@ -11,16 +11,16 @@
 		melee : true
 	}
 	
-#define weapon_name     return (weapon_avail() ? "ANNIHILATOR" : "LOCKED");
-#define weapon_text     return `@wBEND @sTHE @(color:${area_get_back_color("red")})CONTINUUM`;
-#define weapon_swap     return sndSwapHammer;
-#define weapon_sprt     return (weapon_avail() ? global.sprWep : global.sprWepLocked);
-#define weapon_area     return (weapon_avail() ? 22 : -1); // L1 3-1
-#define weapon_load     return 24; // 0.8 Seconds
-#define weapon_melee(w) return lq_defget(w, "melee", true);//(!instance_is(self, Player) || variable_instance_get(self, "red_ammo", 0) < weapon_get_red(w));
-#define weapon_avail    return unlock_get("pack:red");
-#define weapon_shrine   return [mut_long_arms, mut_shotgun_shoulders];
-#define weapon_red      return 2;
+#define weapon_name      return (weapon_avail() ? "ANNIHILATOR" : "LOCKED");
+#define weapon_text      return `@wBEND @sTHE @(color:${area_get_back_color("red")})CONTINUUM`;
+#define weapon_swap      return sndSwapHammer;
+#define weapon_sprt      return (weapon_avail() ? global.sprWep : global.sprWepLocked);
+#define weapon_area      return (weapon_avail() ? 22 : -1); // L1 3-1
+#define weapon_load      return 24; // 0.8 Seconds
+#define weapon_melee(w)  return lq_defget(w, "melee", true);
+#define weapon_avail     return unlock_get("pack:red");
+#define weapon_shrine    return [mut_long_arms, mut_shotgun_shoulders];
+#define weapon_red       return 2;
 
 #define weapon_type
 	 // Weapon Pickup Ammo Outline:
@@ -56,83 +56,76 @@
 		red_ammo -= _cost;
 		
 		 // Annihilator:
-		with(obj_create(x, y, "RedBullet")){
-			projectile_init(other.team, f.creator);
-			motion_set(other.gunangle, 16);
-			image_angle = direction;
-		}
+		projectile_create(x, y, "RedBullet", gunangle, 16);
+		
+		 // Sounds:
+		sound_play_pitchvol(sndEnergyScrewdriver, 0.7 + random(0.2), 2);
+		sound_play_pitchvol(sndPlasmaReloadUpg,   1.2 + random(0.2), 0.8);
 		
 		 // Effects:
 		weapon_post(10, 8, 6);
 		motion_add(gunangle + 180, 3);
 		sleep(40);
-		
-		 // Sounds:
-		sound_play_pitchvol(sndEnergyScrewdriver, 0.7 + random(0.2), 2);
-		sound_play_pitchvol(sndPlasmaReloadUpg,   1.2 + random(0.2), 0.8);
 	}
 	
 	 // Normal:
 	else{
-		 // Slash:
 		var _skill = skill_get(mut_long_arms),
 			_flip  = sign(wepangle),
 			_dis   = 20 * _skill,
 			_dir   = gunangle;
 			
-		with(obj_create(x + lengthdir_x(_dis, _dir), y + lengthdir_y(_dis, _dir), "RedSlash")){
-			projectile_init(other.team, f.creator);
-			motion_add(_dir, lerp(2, 5, _skill));
-			image_angle = direction;
-		}
-		
-		 // Effects:
-		weapon_post(-4, 12, 1);
-		motion_add(gunangle, 6);
-		instance_create(x, y, Smoke);
-		sleep(10);
+		 // Slash:
+		projectile_create(
+			x + lengthdir_x(_dis, _dir),
+			y + lengthdir_y(_dis, _dir),
+			"RedSlash",
+			_dir,
+			lerp(2, 5, _skill)
+		);
 		
 		 // Sounds:
 		sound_play_gun(sndWrench, 0.2, 0.6);
+		
+		 // Effects:
+		instance_create(x, y, Smoke);
+		weapon_post(-4, 12, 1);
+		motion_add(_dir, 6);
+		sleep(10);
 	}
 	
 #define step(_primary)
-	var	b = (_primary ? "" : "b"),
-		w = variable_instance_get(self, b + "wep");
-		
+	var _wep = wep_get(_primary, "wep", mod_current);
+	
 	 // LWO Setup:
-	if(!is_object(w)){
-		w = lq_clone(global.lwoWep);
-		variable_instance_set(self, b + "wep", w);
+	if(!is_object(_wep)){
+		_wep = lq_clone(global.lwoWep);
+		wep_set(_primary, "wep", _wep);
 	}
 	
 	 // Transition Between Shooty/Melee:
-	var	_wepangle = variable_instance_get(self, b + "wepangle", 0),
-		_wkick    = variable_instance_get(self, b + "wkick",    0);
+	var	_wepangle = wep_get(_primary, "wepangle", 0),
+		_wkick    = wep_get(_primary, "wkick",    0);
 		
-	if("red_ammo" not in self || red_ammo < weapon_get_red(w)){
-		if(!w.melee){
-			w.melee   = true;
+	if("red_ammo" not in self || red_ammo < weapon_get_red(_wep)){
+		if(!_wep.melee){
+			_wep.melee   = true;
 			_wepangle = choose(-1, 1);
 			_wkick    = 4;
 		}
 		_wepangle = lerp(_wepangle, max(abs(_wepangle), 120) * sign(_wepangle), 0.4 * current_time_scale);
 	}
-	else if(w.melee){
+	else if(_wep.melee){
 		_wepangle -= _wepangle * 0.4 * current_time_scale;
 		
 		 // Done:
 		if(abs(_wepangle) < 1){
-			w.melee = false;
+			_wep.melee = false;
 			_wkick = 2;
 		}
 	}
-	if((b + "wepangle") in self){
-		variable_instance_set(self, b + "wepangle", _wepangle);
-	}
-	if((b + "wkick") in self){
-		variable_instance_set(self, b + "wkick", _wkick);
-	}
+	wep_set(_primary, "wepangle", _wepangle);
+	wep_set(_primary, "wkick",    _wkick);
 	
 	
 /// SCRIPTS
@@ -148,9 +141,12 @@
 #define chance_ct(_numer, _denom)                                                       return  random(_denom) < (_numer * current_time_scale);
 #define unlock_get(_unlock)                                                             return  mod_script_call_nc('mod', 'teassets', 'unlock_get', _unlock);
 #define obj_create(_x, _y, _obj)                                                        return  (is_undefined(_obj) ? [] : mod_script_call_nc('mod', 'telib', 'obj_create', _x, _y, _obj));
+#define projectile_create(_x, _y, _obj, _dir, _spd)                                     return  mod_script_call(   'mod', 'telib', 'projectile_create', _x, _y, _obj, _dir, _spd);
 #define weapon_fire_init(_wep)                                                          return  mod_script_call(   'mod', 'telib', 'weapon_fire_init', _wep);
 #define weapon_ammo_fire(_wep)                                                          return  mod_script_call(   'mod', 'telib', 'weapon_ammo_fire', _wep);
 #define weapon_ammo_hud(_wep)                                                           return  mod_script_call(   'mod', 'telib', 'weapon_ammo_hud', _wep);
 #define weapon_get_red(_wep)                                                            return  mod_script_call(   'mod', 'telib', 'weapon_get_red', _wep);
-#define wep_get(_wep)                                                                   return  mod_script_call_nc('mod', 'telib', 'wep_get', _wep);
+#define wep_raw(_wep)                                                                   return  mod_script_call_nc('mod', 'telib', 'wep_raw', _wep);
+#define wep_get(_primary, _name, _default)                                              return  variable_instance_get(id, (_primary ? '' : 'b') + _name, _default);
+#define wep_set(_primary, _name, _value)                                                        variable_instance_set(id, (_primary ? '' : 'b') + _name, _value);
 #define area_get_back_color(_area)                                                      return  mod_script_call_nc('mod', 'telib', 'area_get_back_color', _area);

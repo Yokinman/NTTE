@@ -1,21 +1,21 @@
 #define init
 	spr = mod_variable_get("mod", "teassets", "spr");
 	
+	 // Sprites:
 	global.sprWep       = spr.ClamShieldWep;
 	global.sprWepHUD    = sprite_add_weapon("../sprites/weps/sprClamShieldHUD.png", 0, 6);
 	global.sprWepLocked = mskNone;
 	
-	lwoWep = {
-		wep : mod_current,
+	 // LWO:
+	global.lwoWep = {
+		wep  : mod_current,
 		inst : noone
 	};
 	
-#macro lwoWep global.lwoWep
-
 #define weapon_name      return (weapon_avail() ? "CLAM SHIELD" : "LOCKED");
 #define weapon_text      return "ROYAL GUARD";
 #define weapon_swap      return sndSwapHammer;
-#define weapon_sprt(w)   return (weapon_avail() ? ((instance_is(self, Player) && instance_exists(lq_defget(w, "inst", noone))) ? mskNone : global.sprWep) : global.sprWepLocked);
+#define weapon_sprt(w)   return (weapon_avail() ? ((instance_is(self, hitme) && instance_exists(lq_defget(w, "inst", noone))) ? mskNone : global.sprWep) : global.sprWepLocked);
 #define weapon_sprt_hud  return global.sprWepHUD;
 #define weapon_area      return (weapon_avail() ? 6 : -1); // 3-1
 #define weapon_type      return type_melee;
@@ -30,15 +30,13 @@
 	
 	 // Create Shield:
 	if(!instance_exists(w.inst)){
-		w.inst = obj_create(x, y, "ClamShield");
+		w.inst = projectile_create(x, y, "ClamShield", gunangle, 0);
 		with(w.inst){
-			direction = other.gunangle;
-			image_angle = direction;
 			wep = w;
 		}
 	}
 	
-	 // Slash:
+	 // Shield Bash:
 	var	_ox = 0,
 		_oy = 0;
 		
@@ -48,67 +46,54 @@
 	}
 	
 	with(instances_matching(instances_matching(CustomSlash, "name", "ClamShield"), "wep", w)){
-		creator = f.creator;
-		team = other.team;
-		
-		var	l = 8 + (6 * skill_get(mut_long_arms)),
-			d = image_angle,
-			_x = x + _ox + lengthdir_x(l, d),
-			_y = y + _oy + lengthdir_y(l, d);
+		var	_l = lerp(8, 14, skill_get(mut_long_arms)),
+			_d = image_angle,
+			_x = x + _ox + lengthdir_x(_l, _d),
+			_y = y + _oy + lengthdir_y(_l, _d);
 			
-		with(obj_create(_x, _y, "ClamShieldSlash")){
-			projectile_init(other.team, other.creator);
-			motion_add(d, 2 + (2.5 * skill_get(mut_long_arms)));
-			image_angle = direction;
-		}
-		
-		 // Effects:
-		repeat(2){
-			with(instance_create(_x + orandom(2), _y + orandom(2), Dust)){
-				speed += 2;
-			}
-		}
 		with(other){
-			weapon_post(-(4 + l), 12, 0);
-			motion_add(d, 2);
+			 // Slash:
+			projectile_create(_x, _y, "ClamShieldSlash", _d, lerp(2, 4.5, skill_get(mut_long_arms)));
+			
+			 // Sounds:
+			var _pitch = 1 + orandom(0.2);
+			sound_play_pitchvol(sndCrystalJuggernaut,	_pitch * 0.7, 0.7);
+			sound_play_pitchvol(sndOasisExplosionSmall,	_pitch * 2.0, 0.7);
+			sound_play_pitchvol(sndOasisExplosion,		_pitch * 4.0, 0.7);
+			sound_play_pitch(sndOasisMelee,				_pitch);
+			sound_play_pitch(sndHammer,					_pitch);
+			
+			 // Effects:
+			repeat(2){
+				with(instance_create(_x + orandom(2), _y + orandom(2), Dust)){
+					speed += 2;
+				}
+			}
+			weapon_post(-(4 + _l), 12, 0);
+			motion_add(_d, 2);
 			sleep(40);
 		}
 	}
 	
-	 // Sound:
-	var _pit = 1 + orandom(0.2);
-	sound_play_pitchvol(sndCrystalJuggernaut,	_pit * 0.7, 0.7);
-	sound_play_pitchvol(sndOasisExplosionSmall,	_pit * 2,   0.7);
-	sound_play_pitchvol(sndOasisExplosion,		_pit * 4,   0.7);
-	sound_play_pitch(sndOasisMelee,				_pit);
-	sound_play_pitch(sndHammer,					_pit);
-	
 #define step(_primary)
-	var	b = (_primary ? "" : "b"),
-		w = variable_instance_get(self, b + "wep");
-		
+	var _wep = wep_get(_primary, "wep", mod_current);
+	
 	 // LWO Setup:
-	if(!is_object(w)){
-		w = lq_clone(lwoWep);
-		variable_instance_set(self, b + "wep", w);
+	if(!is_object(_wep)){
+		_wep = lq_clone(global.lwoWep);
+		wep_set(_primary, "wep", _wep);
 	}
 	
 	 // Create Shield:
 	if(_primary || race == "steroids"){
-		if(!instance_exists(w.inst)){
-			w.inst = obj_create(x, y, "ClamShield");
-			with(w.inst){
-				direction = other.gunangle;
-				image_angle = direction;
-				wep = w;
+		if(!instance_exists(_wep.inst)){
+			_wep.inst = projectile_create(x, y, "ClamShield", gunangle, 0);
+			with(_wep.inst){
+				wep = _wep;
 			}
 		}
-		with(instances_matching(instances_matching(CustomSlash, "name", "ClamShield"), "wep", w)){
-			team = other.team;
-			creator = other;
-		}
 	}
-	else with(instances_matching(instances_matching(CustomSlash, "name", "ClamShield"), "wep", w)){
+	else with(instances_matching(instances_matching(CustomSlash, "name", "ClamShield"), "wep", _wep)){
 		instance_destroy();
 	}
 	
@@ -126,8 +111,11 @@
 #define chance_ct(_numer, _denom)                                                       return  random(_denom) < (_numer * current_time_scale);
 #define unlock_get(_unlock)                                                             return  mod_script_call_nc('mod', 'teassets', 'unlock_get', _unlock);
 #define obj_create(_x, _y, _obj)                                                        return  (is_undefined(_obj) ? [] : mod_script_call_nc('mod', 'telib', 'obj_create', _x, _y, _obj));
+#define projectile_create(_x, _y, _obj, _dir, _spd)                                     return  mod_script_call(   'mod', 'telib', 'projectile_create', _x, _y, _obj, _dir, _spd);
 #define weapon_fire_init(_wep)                                                          return  mod_script_call(   'mod', 'telib', 'weapon_fire_init', _wep);
 #define weapon_ammo_fire(_wep)                                                          return  mod_script_call(   'mod', 'telib', 'weapon_ammo_fire', _wep);
 #define weapon_ammo_hud(_wep)                                                           return  mod_script_call(   'mod', 'telib', 'weapon_ammo_hud', _wep);
 #define weapon_get_red(_wep)                                                            return  mod_script_call(   'mod', 'telib', 'weapon_get_red', _wep);
-#define wep_get(_wep)                                                                   return  mod_script_call_nc('mod', 'telib', 'wep_get', _wep);
+#define wep_raw(_wep)                                                                   return  mod_script_call_nc('mod', 'telib', 'wep_raw', _wep);
+#define wep_get(_primary, _name, _default)                                              return  variable_instance_get(id, (_primary ? '' : 'b') + _name, _default);
+#define wep_set(_primary, _name, _value)                                                        variable_instance_set(id, (_primary ? '' : 'b') + _name, _value);

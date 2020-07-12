@@ -2350,15 +2350,17 @@
 	with(instance_create(_x, _y, CustomObject)){
 		name = "GunCont";
 		
-		wep = _wep;
-		creator = _creator;
+		 // Vars:
+		wep      = _wep;
+		creator  = _creator;
 		gunangle = _gunangle;
 		accuracy = _accuracy;
-		team = _team;
-		shot = 0;
-		time = lq_get(_wep, "wait");
-		bloom = true;
+		team     = _team;
+		shot     = 0;
+		time     = lq_get(_wep, "wait");
+		bloom    = true;
 		
+		 // Events:
 		on_step    = GunCont_step;
 		on_draw    = GunCont_draw;
 		on_destroy = GunCont_destroy;
@@ -2393,9 +2395,9 @@
 	return noone;
 	
 #define GunCont_step
-	var	_wep = wep,
-		_flag = _wep.flag,
-		_amnt = _wep.amnt,
+	var	_wep     = wep,
+		_flag    = _wep.flag,
+		_amnt    = _wep.amnt,
 		_shotMax = _wep.shot,
 		_timeMax = _wep.time;
 		
@@ -2420,15 +2422,15 @@
 		mod_script_call(_scr[0], _scr[1], _scr[2], contStep);
 		
 		 // Firing:
-		var	_x = x,
-			_y = y,
-			_angle = gunangle,
+		var	_x        = x,
+			_y        = y,
+			_angle    = gunangle,
 			_accuracy = accuracy,
-			_creator = creator,
-			_team = team,
-			_proj = _wep.proj,
-			_obj = _proj.object_index,
-			_isMelee = object_is_melee(_obj),
+			_creator  = creator,
+			_team     = team,
+			_proj     = _wep.proj,
+			_obj      = _proj.object_index,
+			_isMelee  = object_is_melee(_obj),
 			_flakBall = [],
 			_laserMov = 0,
 			_laserDir = [];
@@ -2470,17 +2472,11 @@
 					
 					 // Create Projectile:
 					var _dir = _angle + ((_fix + orandom(_wep.sprd)) * _accuracy);
-					with(instance_create(_x + lengthdir_x(_dis, _dir), _y + lengthdir_y(_dis, _dir), _obj)){
-						if(_spd <= 0) direction = _dir;
-						else motion_add(_dir, _spd);
-						image_angle += direction;
-						creator = _creator;
-						team = _team;
-						
+					with(projectile_create(_x + lengthdir_x(_dis, _dir), _y + lengthdir_y(_dis, _dir), _obj, _dir, _spd)){
 						 // Offset:
 						if(_wep.move != 0){
 							x += hspeed;
-							y += vspeed
+							y += vspeed;
 							move_contact_solid(direction, _wep.move);
 							x -= hspeed;
 							y -= vspeed;
@@ -2576,7 +2572,7 @@
 							
 							if("wep" in self){
 								var	_hardMin = 0,
-									_hardMax = GameCont.hard + 10 + (2 * variable_instance_get(_creator, "curse", 0));
+									_hardMax = GameCont.hard + 10 + (2 * variable_instance_get(creator, "curse", 0));
 									
 								 // Merged:
 								if(is_array(wep)){
@@ -2616,11 +2612,7 @@
 				
 				 // Flak Ball:
 				if(array_length(_flak) > 0){
-					with(obj_create(x, y, "MergeFlak")){
-						motion_add(_angle + orandom(_wep.sprd * _accuracy), 11 + random(2));
-						image_angle = direction;
-						creator = _creator;
-						team = _team;
+					with(projectile_create(x, y, "MergeFlak", _angle + orandom(_wep.sprd * _accuracy), random_range(11, 13))){
 						inst = _flak;
 						flag = _flag;
 						event_perform(ev_step, ev_step_normal);
@@ -2722,14 +2714,12 @@
 				image_angle = direction;
 			}
 		}
-		if(n > 1) with(obj_create(x, y, "MergeFlak")){
-			motion_add(_angle + orandom(_wep.sprd * _accuracy), 11 + random(2));
-			image_angle = direction;
-			creator = _creator;
-			team = _team;
-			inst = _flakBall;
-			flag = _flag;
-			event_perform(ev_step, ev_step_normal);
+		if(n > 1){
+			with(projectile_create(x, y, "MergeFlak", _angle + orandom(_wep.sprd * _accuracy), random_range(11, 13))){
+				inst = _flakBall;
+				flag = _flag;
+				event_perform(ev_step, ev_step_normal);
+			}
 		}
 		
 		time -= current_time_scale;
@@ -3092,7 +3082,7 @@
 			if(speed > 0){
 				 // Trail:
 				with(instance_create(x, y, DiscTrail)){
-					image_angle = other.image_angle;
+					image_angle  = other.image_angle;
 					image_xscale = other.sprite_height / 32;
 					image_yscale = image_xscale;
 				}
@@ -3117,7 +3107,9 @@
 						
 						 // Effects:
 						sound_play_hit(sndDiscBounce, 0.3);
-						instance_create(x, y, DiscBounce).image_angle = image_angle;
+						with(instance_create(x, y, DiscBounce)){
+							image_angle = other.image_angle;
+						}
 					}
 					
 					 // Movement:
@@ -3228,12 +3220,9 @@
 						image_angle += (direction - _oldDir);
 						
 						 // Lightning Trail:
-						/*with(instance_create(x, y, Lightning)){
+						/*with(projectile_create(x, y, Lightning, point_direction(x, y, o.lastx, o.lasty), 0)){
 							image_xscale = point_distance(x, y, o.lastx, o.lasty) / 2;
-							image_angle = point_direction(x, y, o.lastx, o.lasty);
 							image_speed *= 0.8;
-							creator = other.creator;
-							team = other.team;
 							o.lastx = x;
 							o.lasty = y;
 							if(instance_exists(o.last)){
@@ -3244,12 +3233,12 @@
 						}*/
 						with(instance_create(x + orandom(1), y + orandom(1), BulletHit)){
 							sprite_index = sprLightning;
-							image_angle = other.direction;
-							image_speed = max(0.4, other.speed / 12) + random(0.1);
+							image_angle  = other.direction;
+							image_speed  = max(0.4, other.speed / 12) + random(0.1);
 							image_xscale = (other.speed_raw / 2) * ceil(o.time / current_time_scale);
 							image_yscale = 0.2 + random(random(1));
-							image_alpha = random_range(3, 4);
-							depth = other.depth;
+							image_alpha  = random_range(3, 4);
+							depth        = other.depth;
 						}
 						
 						o.lastx = x;
@@ -3329,15 +3318,15 @@
 				 // Trail:
 				if(o.trail){
 					with(instance_create(x, y, BoltTrail)){
-						image_angle = other.direction;
+						image_angle  = other.direction;
 						image_xscale = other.speed;
 						if(o.trail_clone){
-							sprite_index = other.sprite_index;
-							image_index = other.image_index;
+							sprite_index  = other.sprite_index;
+							image_index   = other.image_index;
 							image_xscale /= (other.sprite_width / 2) + 1;
-							image_yscale = other.image_yscale / 2;
-							image_blend = other.image_blend;
-							image_speed = 0;
+							image_yscale  = other.image_yscale / 2;
+							image_blend   = other.image_blend;
+							image_speed   = 0;
 						}
 						else switch(other.object_index){
 							case BloodGrenade:
@@ -3971,24 +3960,14 @@
 					var d = image_angle + 180;
 					for(var l = 0; l < (image_xscale * 2); l += 8){
 						if(chance_ct(1, max(l / 16, 4))){
-							with(instance_create(x + lengthdir_x(l, d), y + lengthdir_y(l, d), Flame)){
-								motion_add(other.image_angle + orandom(20), random(3));
-								creator = other.creator;
-								hitid = other.hitid;
-								team = other.team;
-							}
+							projectile_create(x + lengthdir_x(l, d), y + lengthdir_y(l, d), Flame, image_angle + orandom(20), random(3));
 						}
 					}
 					break;
 					
 				case Lightning:
 					if(chance_ct(1, 5)){
-						with(instance_create(x, y, Flame)){
-							motion_add(other.image_angle + orandom(10), random(3));
-							creator = other.creator;
-							hitid = other.hitid;
-							team = other.team;
-						}
+						projectile_create(x, y, Flame, image_angle + orandom(10), random(3));
 					}
 					break;
 					
@@ -3996,12 +3975,7 @@
 					if(current_frame % damage >= 1){
 						var d = direction;
 						for(var l = 0; l < speed_raw; l += 8){
-							with(instance_create(x + lengthdir_x(l, d), y + lengthdir_y(l, d), Flame)){
-								motion_add(random(360), 1);
-								creator = other.creator;
-								hitid = other.hitid;
-								team = other.team;
-								
+							with(projectile_create(x + lengthdir_x(l, d), y + lengthdir_y(l, d), Flame, random(360), 1)){
 								 // Dissipate Faster:
 								image_index = max(0, (image_number - 1) - (1 + other.damage));
 								
@@ -4077,13 +4051,16 @@
 			with(o) if(amnt > 0){
 				 // Flame:
 				repeat(amnt){
-					with(instance_create(x + orandom(4), y + orandom(4), Flame)){
-						hspeed = other.hspeed / 6;
-						vspeed = other.vspeed / 6;
-						if(other.amnt > 3){
-							motion_add(random(360), 2 + random((other.amnt * 0.2) / max(1, other.amnt / 20)));
-						}
-						team = other.team;
+					var	_dir = random(360),
+						_spd = 0;
+						
+					if(amnt > 3){
+						_spd = 2 + random((amnt * 0.2) / max(1, amnt / 20));
+					}
+					
+					with(projectile_create(x + orandom(4), y + orandom(4), Flame, _dir, _spd)){
+						hspeed += other.hspeed / 6;
+						vspeed += other.vspeed / 6;
 						if(distance_to_object(Explosion) <= 0){
 							speed += random(4);
 						}
@@ -4227,12 +4204,12 @@
 		case proj_destroy:
 			 // Nades:
 			with(o) repeat(amnt){
-				with(instance_create(x, y, MiniNade)){
-					hspeed = o.hspeed / 2;
-					vspeed = o.vspeed / 2;
-					motion_add(random(360), random_range(1, 2 + (other.amnt / 2)));
-					image_angle = direction;
-					team = other.team;
+				var	_dir = random(360),
+					_spd = random_range(1, 2 + (amnt / 2));
+					
+				with(projectile_create(x, y, MiniNade, _dir, _spd)){
+					hspeed += other.hspeed / 2;
+					vspeed += other.vspeed / 2;
 					depth = -1.5;
 					x += hspeed;
 					y += vspeed;
@@ -4532,6 +4509,7 @@
 #define shader_add(_name, _vertex, _fragment)                                           return  mod_script_call_nc('mod', 'teassets', 'shader_add', _name, _vertex, _fragment);
 #define obj_create(_x, _y, _obj)                                                        return  (is_undefined(_obj) ? [] : mod_script_call_nc('mod', 'telib', 'obj_create', _x, _y, _obj));
 #define top_create(_x, _y, _obj, _spawnDir, _spawnDis)                                  return  mod_script_call_nc('mod', 'telib', 'top_create', _x, _y, _obj, _spawnDir, _spawnDis);
+#define projectile_create(_x, _y, _obj, _dir, _spd)                                     return  mod_script_call(   'mod', 'telib', 'projectile_create', _x, _y, _obj, _dir, _spd);
 #define chest_create(_x, _y, _obj, _levelStart)                                         return  mod_script_call_nc('mod', 'telib', 'chest_create', _x, _y, _obj, _levelStart);
 #define prompt_create(_text)                                                            return  mod_script_call(   'mod', 'telib', 'prompt_create', _text);
 #define alert_create(_inst, _sprite)                                                    return  mod_script_call(   'mod', 'telib', 'alert_create', _inst, _sprite);
@@ -4572,7 +4550,6 @@
 #define scrAim(_dir)                                                                            mod_script_call(   'mod', 'telib', 'scrAim', _dir);
 #define enemy_walk(_spdAdd, _spdMax)                                                            mod_script_call(   'mod', 'telib', 'enemy_walk', _spdAdd, _spdMax);
 #define enemy_hurt(_hitdmg, _hitvel, _hitdir)                                                   mod_script_call(   'mod', 'telib', 'enemy_hurt', _hitdmg, _hitvel, _hitdir);
-#define enemy_shoot(_x, _y, _object, _dir, _spd)                                        return  mod_script_call(   'mod', 'telib', 'enemy_shoot', _x, _y, _object, _dir, _spd);
 #define enemy_target(_x, _y)                                                            return  mod_script_call(   'mod', 'telib', 'enemy_target', _x, _y);
 #define boss_hp(_hp)                                                                    return  mod_script_call_nc('mod', 'telib', 'boss_hp', _hp);
 #define boss_intro(_name)                                                               return  mod_script_call_nc('mod', 'telib', 'boss_intro', _name);
@@ -4609,7 +4586,7 @@
 #define race_get_title(_race)                                                           return  mod_script_call(   'mod', 'telib', 'race_get_title', _race);
 #define player_create(_x, _y, _index)                                                   return  mod_script_call_nc('mod', 'telib', 'player_create', _x, _y, _index);
 #define player_swap()                                                                   return  mod_script_call(   'mod', 'telib', 'player_swap');
-#define wep_get(_wep)                                                                   return  mod_script_call_nc('mod', 'telib', 'wep_get', _wep);
+#define wep_raw(_wep)                                                                   return  mod_script_call_nc('mod', 'telib', 'wep_raw', _wep);
 #define wep_merge(_stock, _front)                                                       return  mod_script_call_nc('mod', 'telib', 'wep_merge', _stock, _front);
 #define wep_merge_decide(_hardMin, _hardMax)                                            return  mod_script_call_nc('mod', 'telib', 'wep_merge_decide', _hardMin, _hardMax);
 #define weapon_decide(_hardMin, _hardMax, _gold, _noWep)                                return  mod_script_call(   'mod', 'telib', 'weapon_decide', _hardMin, _hardMax, _gold, _noWep);

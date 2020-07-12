@@ -1137,8 +1137,8 @@
 	repeat(24){
 		with(instance_create(x, y, Shell)){
 			sprite_index = spr.MutantVatGlass;
-			image_index = irandom(image_number - 1);
-			image_speed = 0;
+			image_index  = irandom(image_number - 1);
+			image_speed  = 0;
 			motion_set(random(360), random_range(2, 6));
 			x += hspeed;
 			y += vspeed;
@@ -1146,11 +1146,11 @@
 	}
 	with(obj_create(x, y, "BuriedVaultChestDebris")){
 		sprite_index = spr.MutantVatLid;
-		mask_index = mskExploder;
-		zfriction /= 2;
-		zspeed *= 2/3;
-		bounce = irandom_range(1, 2);
-		snd_land = sndTechnomancerHurt;
+		mask_index   = mskExploder;
+		zfriction   /= 2;
+		zspeed      *= 2/3;
+		bounce       = irandom_range(1, 2);
+		snd_land     = sndTechnomancerHurt;
 	}
 	repeat(12){
 		with(instance_create(x + orandom(20), y - irandom(25), AcidStreak)){
@@ -1165,7 +1165,7 @@
 
 		with(instance_create(x + lengthdir_x(l, d), (y + 16) + lengthdir_y(l, d), SmokeOLD)){
 			sprite_index = sprExploderExplo;
-			image_index = 2 + (3 * (1 - c));
+			image_index  = 2 + (3 * (1 - c));
 			motion_set(d, 2);
 		}
 	}
@@ -1280,7 +1280,7 @@
 			
 			 // Effects:
 			repeat(8){
-			instance_create(x + orandom(20), y + orandom(25), PortalL);
+				instance_create(x + orandom(20), y + orandom(25), PortalL);
 			}
 		}
 	}
@@ -1318,11 +1318,11 @@
 				 // Casing:
 				for(var i = 0; i < sprite_get_number(_sprt); i++){
 					with(instance_create(x, y, Debris)){
-						sprite_index = _sprt;
-						image_index = i;
-						friction = 0.6;
-						depth = other.depth + 1;
 						motion_set(random(360), 4);
+						sprite_index = _sprt;
+						image_index  = i;
+						friction     = 0.6;
+						depth        = other.depth + 1;
 						
 						var l = (sprite_get_width(_sprt) + sprite_get_height(_sprt)) / 4;
 						x += lengthdir_x(l, direction);
@@ -1513,17 +1513,21 @@
 					var _len = sprite_get_width(spr_weap) - sprite_get_xoffset(spr_weap) + 4;
 					repeat(irandom_range(2, 3)){
 						team_instance_sprite(
-							team, 
+							3, 
 							scrFX(
 								x + lengthdir_x(_len, gunangle) + orandom(3), 
 								y + lengthdir_y(_len, gunangle) + orandom(3), 
 								[gunangle + 180, random(2)], 
 								PlasmaTrail
-						));
+							)
+						);
 					}
 					
 					 // Fire:
-					with(team_instance_sprite(team, enemy_shoot(aim_x, aim_y, "VlasmaBullet", (gunangle + 180), 0))){
+					with(team_instance_sprite(
+						3,
+						projectile_create(aim_x, aim_y, "VlasmaBullet", gunangle + 180, 0)
+					)){
 						target	 = other;
 						target_x = other.x;
 						target_y = other.y;
@@ -1542,17 +1546,21 @@
 					var _len = sprite_get_width(spr_weap) - sprite_get_xoffset(spr_weap) + 4;
 					repeat(irandom_range(4, 7)){
 						team_instance_sprite(
-							team, 
+							3, 
 							scrFX(
 								x + lengthdir_x(_len, gunangle) + orandom(5), 
 								y + lengthdir_y(_len, gunangle) + orandom(5), 
 								[gunangle + 180, random(2)], 
 								PlasmaTrail
-						));
+							)
+						);
 					}
 					
 					 // Fire:
-					with(team_instance_sprite(team, enemy_shoot(aim_x, aim_y, "VlasmaCannon", (gunangle + 180), 0))){
+					with(team_instance_sprite(
+						3,
+						projectile_create(aim_x, aim_y, "VlasmaCannon", gunangle + 180, 0)
+					)){
 						target	 = other;
 						target_x = other.x;
 						target_y = other.y;
@@ -1741,7 +1749,7 @@
 		if(place_meeting(x, y, WepPickup)){
 			with(instances_meeting(x, y, WepPickup)){
 				if(point_distance(x, y, other.x, other.y - 2) < (other.sprite_width * 0.4)){
-					if(weapon_get_area(wep) >= 0 && wep_get(wep) != "merge"){
+					if(weapon_get_area(wep) >= 0 && wep_raw(wep) != "merge"){
 						var _part = wep_merge_decide(0, GameCont.hard + (2 * curse));
 						if(array_length(_part) >= 2){
 							wep = wep_merge(_part[0], _part[1]);
@@ -1849,6 +1857,7 @@
 #define shader_add(_name, _vertex, _fragment)                                           return  mod_script_call_nc('mod', 'teassets', 'shader_add', _name, _vertex, _fragment);
 #define obj_create(_x, _y, _obj)                                                        return  (is_undefined(_obj) ? [] : mod_script_call_nc('mod', 'telib', 'obj_create', _x, _y, _obj));
 #define top_create(_x, _y, _obj, _spawnDir, _spawnDis)                                  return  mod_script_call_nc('mod', 'telib', 'top_create', _x, _y, _obj, _spawnDir, _spawnDis);
+#define projectile_create(_x, _y, _obj, _dir, _spd)                                     return  mod_script_call(   'mod', 'telib', 'projectile_create', _x, _y, _obj, _dir, _spd);
 #define chest_create(_x, _y, _obj, _levelStart)                                         return  mod_script_call_nc('mod', 'telib', 'chest_create', _x, _y, _obj, _levelStart);
 #define prompt_create(_text)                                                            return  mod_script_call(   'mod', 'telib', 'prompt_create', _text);
 #define alert_create(_inst, _sprite)                                                    return  mod_script_call(   'mod', 'telib', 'alert_create', _inst, _sprite);
@@ -1889,7 +1898,6 @@
 #define scrAim(_dir)                                                                            mod_script_call(   'mod', 'telib', 'scrAim', _dir);
 #define enemy_walk(_spdAdd, _spdMax)                                                            mod_script_call(   'mod', 'telib', 'enemy_walk', _spdAdd, _spdMax);
 #define enemy_hurt(_hitdmg, _hitvel, _hitdir)                                                   mod_script_call(   'mod', 'telib', 'enemy_hurt', _hitdmg, _hitvel, _hitdir);
-#define enemy_shoot(_x, _y, _object, _dir, _spd)                                        return  mod_script_call(   'mod', 'telib', 'enemy_shoot', _x, _y, _object, _dir, _spd);
 #define enemy_target(_x, _y)                                                            return  mod_script_call(   'mod', 'telib', 'enemy_target', _x, _y);
 #define boss_hp(_hp)                                                                    return  mod_script_call_nc('mod', 'telib', 'boss_hp', _hp);
 #define boss_intro(_name)                                                               return  mod_script_call_nc('mod', 'telib', 'boss_intro', _name);
@@ -1926,7 +1934,7 @@
 #define race_get_title(_race)                                                           return  mod_script_call(   'mod', 'telib', 'race_get_title', _race);
 #define player_create(_x, _y, _index)                                                   return  mod_script_call_nc('mod', 'telib', 'player_create', _x, _y, _index);
 #define player_swap()                                                                   return  mod_script_call(   'mod', 'telib', 'player_swap');
-#define wep_get(_wep)                                                                   return  mod_script_call_nc('mod', 'telib', 'wep_get', _wep);
+#define wep_raw(_wep)                                                                   return  mod_script_call_nc('mod', 'telib', 'wep_raw', _wep);
 #define wep_merge(_stock, _front)                                                       return  mod_script_call_nc('mod', 'telib', 'wep_merge', _stock, _front);
 #define wep_merge_decide(_hardMin, _hardMax)                                            return  mod_script_call_nc('mod', 'telib', 'wep_merge_decide', _hardMin, _hardMax);
 #define weapon_decide(_hardMin, _hardMax, _gold, _noWep)                                return  mod_script_call(   'mod', 'telib', 'weapon_decide', _hardMin, _hardMax, _gold, _noWep);

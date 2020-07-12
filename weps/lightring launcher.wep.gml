@@ -1,4 +1,5 @@
 #define init
+	 // Sprites:
 	global.sprWep = sprite_add_weapon("../sprites/weps/sprLightningRingLauncher.png", 6, 3);
 	global.sprWepLocked = mskNone;
 	
@@ -20,15 +21,12 @@
 	var f = weapon_fire_init(w);
 	w = f.wep;
 	
-	 // Projectile:
-	with(obj_create(x, y, "LightningDisc")){
-		motion_add(other.gunangle, 10);
-		creator = f.creator;
-		team = other.team;
+	 // Lightning Disc:
+	with(projectile_create(x, y, "LightningDisc", gunangle, 10)){
 		roids = f.roids;
 	}
 	
-	 // Effects:
+	 // Sounds:
 	sound_play_pitchvol(sndLightningCannonUpg, 0.5, 0.4);
 	
 	
@@ -45,8 +43,11 @@
 #define chance_ct(_numer, _denom)                                                       return  random(_denom) < (_numer * current_time_scale);
 #define unlock_get(_unlock)                                                             return  mod_script_call_nc('mod', 'teassets', 'unlock_get', _unlock);
 #define obj_create(_x, _y, _obj)                                                        return  (is_undefined(_obj) ? [] : mod_script_call_nc('mod', 'telib', 'obj_create', _x, _y, _obj));
+#define projectile_create(_x, _y, _obj, _dir, _spd)                                     return  mod_script_call(   'mod', 'telib', 'projectile_create', _x, _y, _obj, _dir, _spd);
 #define weapon_fire_init(_wep)                                                          return  mod_script_call(   'mod', 'telib', 'weapon_fire_init', _wep);
 #define weapon_ammo_fire(_wep)                                                          return  mod_script_call(   'mod', 'telib', 'weapon_ammo_fire', _wep);
 #define weapon_ammo_hud(_wep)                                                           return  mod_script_call(   'mod', 'telib', 'weapon_ammo_hud', _wep);
 #define weapon_get_red(_wep)                                                            return  mod_script_call(   'mod', 'telib', 'weapon_get_red', _wep);
-#define wep_get(_wep)                                                                   return  mod_script_call_nc('mod', 'telib', 'wep_get', _wep);
+#define wep_raw(_wep)                                                                   return  mod_script_call_nc('mod', 'telib', 'wep_raw', _wep);
+#define wep_get(_primary, _name, _default)                                              return  variable_instance_get(id, (_primary ? '' : 'b') + _name, _default);
+#define wep_set(_primary, _name, _value)                                                        variable_instance_set(id, (_primary ? '' : 'b') + _name, _value);

@@ -1,4 +1,5 @@
 #define init
+	 // Sprites:
 	global.sprWep = sprite_add_weapon("../sprites/weps/sprElectroPlasmaRifle.png", 1, 5);
 	global.sprWepLocked = mskNone;
 	
@@ -20,43 +21,46 @@
 	var f = weapon_fire_init(w);
 	w = f.wep;
 	
+	 // Burst Fire:
+	if(fork()){
+		repeat(3) if(instance_exists(self)){
+			var	_last = variable_instance_get(f.creator, "electroplasma_last", noone),
+				_side = variable_instance_get(f.creator, "electroplasma_side", 1);
+				
+			 // Electro Plasma:
+			with(projectile_create(
+				x,
+				y,
+				"ElectroPlasma",
+				gunangle + ((17 + orandom(7)) * accuracy * _side),
+				random_range(4, 4.4)
+			)){
+				 // Tether Together:
+				tether_inst = _last;
+				_last = id;
+			}
+			with(f.creator){
+				electroplasma_last = _last;
+				electroplasma_side = -_side;
+			}
+			
+			 // Sounds:
+			sound_play_pitch(sndEliteShielderFire, 0.9 + random(0.3));
+			sound_play_pitch(sndGammaGutsProc,     1.0 + random(0.2));
+			
+			 // Effects:
+			weapon_post(6, 3, 0);
+			motion_add(gunangle, -3);
+			
+			wait(3);
+		}
+		exit;
+	}
+	
 	 // Sounds:
 	var _brain = (skill_get(mut_laser_brain) > 0);
 	if(_brain) sound_play_gun(sndLightningPistolUpg, 0.4, 0.6);
 	else       sound_play_gun(sndLightningPistol,    0.3, 0.3);
-	
-	 // Burst Fire:
-	repeat(3) if(instance_exists(self)){
-		 // Projectile:
-		var	_last = variable_instance_get(f.creator, "electroplasma_last", noone),
-			_side = variable_instance_get(f.creator, "electroplasma_side", 1),
-			_dir = gunangle + (((17 * _side) + orandom(7)) * accuracy);
-			
-		with(obj_create(x, y, "ElectroPlasma")){
-			motion_set(_dir, 4 + random(0.4));
-			image_angle = direction;
-			creator = f.creator;
-			team = other.team;
-			
-			 // Tether Together:
-			tether_inst = _last;
-			_last = id;
-		}
-		with(f.creator){
-			electroplasma_last = _last;
-			electroplasma_side = -_side;
-		}
-		
-		 // Effects:
-		weapon_post(6, 3, 0);
-		motion_add(gunangle, -3);
-		
-		 // Sounds:
-		sound_play_pitch(sndEliteShielderFire, 0.9 + random(0.3));
-		sound_play_pitch(sndGammaGutsProc,     1.0 + random(0.2));
-		
-		wait(3);
-	}
 	
 	
 /// SCRIPTS
@@ -72,8 +76,11 @@
 #define chance_ct(_numer, _denom)                                                       return  random(_denom) < (_numer * current_time_scale);
 #define unlock_get(_unlock)                                                             return  mod_script_call_nc('mod', 'teassets', 'unlock_get', _unlock);
 #define obj_create(_x, _y, _obj)                                                        return  (is_undefined(_obj) ? [] : mod_script_call_nc('mod', 'telib', 'obj_create', _x, _y, _obj));
+#define projectile_create(_x, _y, _obj, _dir, _spd)                                     return  mod_script_call(   'mod', 'telib', 'projectile_create', _x, _y, _obj, _dir, _spd);
 #define weapon_fire_init(_wep)                                                          return  mod_script_call(   'mod', 'telib', 'weapon_fire_init', _wep);
 #define weapon_ammo_fire(_wep)                                                          return  mod_script_call(   'mod', 'telib', 'weapon_ammo_fire', _wep);
 #define weapon_ammo_hud(_wep)                                                           return  mod_script_call(   'mod', 'telib', 'weapon_ammo_hud', _wep);
 #define weapon_get_red(_wep)                                                            return  mod_script_call(   'mod', 'telib', 'weapon_get_red', _wep);
-#define wep_get(_wep)                                                                   return  mod_script_call_nc('mod', 'telib', 'wep_get', _wep);
+#define wep_raw(_wep)                                                                   return  mod_script_call_nc('mod', 'telib', 'wep_raw', _wep);
+#define wep_get(_primary, _name, _default)                                              return  variable_instance_get(id, (_primary ? '' : 'b') + _name, _default);
+#define wep_set(_primary, _name, _value)                                                        variable_instance_set(id, (_primary ? '' : 'b') + _name, _value);

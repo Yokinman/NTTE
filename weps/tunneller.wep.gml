@@ -47,15 +47,12 @@
 	if("red_ammo" in self && red_ammo >= _cost){
 		red_ammo -= _cost;
 		
-		 // Annihilator:
-		with(obj_create(x, y, "CrystalHeartBullet")){
-			projectile_init(other.team, f.creator);
-			motion_add(other.gunangle + orandom(4 * other.accuracy), 4);
-			image_angle = direction;
-			damage      = 20;
-			area_goal   = irandom_range(8, 12);
-			area_chaos  = true; 
-			area_chest  = pool([
+		 // Chaos Ball:
+		with(projectile_create(x, y, "CrystalHeartBullet", gunangle + orandom(4 * accuracy), 4)){
+			damage     = 20;
+			area_goal  = irandom_range(8, 12);
+			area_chaos = true; 
+			area_chest = pool([
 				[AmmoChest,          4],
 				[WeaponChest,        4],
 				["Backpack",         3],
@@ -74,24 +71,25 @@
 	 // Normal:
 	else if(fork()){
 		repeat(3){
-			 // Shank:
 			var	_skill = skill_get(mut_long_arms),
-				_dir   = gunangle + orandom(10 * accuracy),
 				_dis   = 10 * _skill,
-				_spd   = lerp(3, 6, _skill);
+				_dir   = gunangle;
 				
-			with(obj_create(x + lengthdir_x(_dis, _dir), y + lengthdir_y(_dis, _dir), "RedShank")){
-				projectile_init(other.team, f.creator);
-				motion_add(_dir, _spd);
-				image_angle = direction;
-			}
+			 // Shank:
+			projectile_create(
+				x + lengthdir_x(_dis, _dir),
+				y + lengthdir_y(_dis, _dir),
+				"RedShank",
+				_dir + orandom(10 * accuracy),
+				lerp(3, 6, _skill)
+			);
+			
+			 // Sounds:
+			sound_play_gun(sndScrewdriver, 0.2, 0.6);
 			
 			 // Effects:
 			weapon_post(-3, 8, 2);
-			motion_add(gunangle, 3);
-			
-			 // Sounds:
-			sound_play_gun(sndScrewdriver, 0.6);
+			motion_add(_dir, 3);
 			
 			 // Hold Your Metaphorical Horses:
 			wait(4);
@@ -101,19 +99,16 @@
 	}
 	
 #define step(_primary)
-	var	b = (_primary ? "" : "b"),
-		w = variable_instance_get(self, b + "wep");
-		
-	 // Empty Unextend:
-	if((b + "wkick") in self){
-		if("red_ammo" not in self || red_ammo < weapon_get_red(w)){
-			var	_goal = 6,
-				_kick = variable_instance_get(self, b + "wkick");
-				
-			if(_kick >= 0 && _kick < _goal){
-				_kick = min(_goal, _kick + (2 * current_time_scale));
-				variable_instance_set(self, b + "wkick", _kick);
-			}
+	var _wep = wep_get(_primary, "wep", mod_current);
+	
+	 // Unextend While Empty:
+	if("red_ammo" not in self || red_ammo < weapon_get_red(_wep)){
+		var	_goal = 6,
+			_kick = wep_get(_primary, "wkick", 0);
+			
+		if(_kick >= 0 && _kick < _goal){
+			_kick = min(_goal, _kick + (2 * current_time_scale));
+			wep_set(_primary, "wkick", _kick);
 		}
 	}
 	
@@ -131,10 +126,13 @@
 #define chance_ct(_numer, _denom)                                                       return  random(_denom) < (_numer * current_time_scale);
 #define unlock_get(_unlock)                                                             return  mod_script_call_nc('mod', 'teassets', 'unlock_get', _unlock);
 #define obj_create(_x, _y, _obj)                                                        return  (is_undefined(_obj) ? [] : mod_script_call_nc('mod', 'telib', 'obj_create', _x, _y, _obj));
+#define projectile_create(_x, _y, _obj, _dir, _spd)                                     return  mod_script_call(   'mod', 'telib', 'projectile_create', _x, _y, _obj, _dir, _spd);
 #define weapon_fire_init(_wep)                                                          return  mod_script_call(   'mod', 'telib', 'weapon_fire_init', _wep);
 #define weapon_ammo_fire(_wep)                                                          return  mod_script_call(   'mod', 'telib', 'weapon_ammo_fire', _wep);
 #define weapon_ammo_hud(_wep)                                                           return  mod_script_call(   'mod', 'telib', 'weapon_ammo_hud', _wep);
 #define weapon_get_red(_wep)                                                            return  mod_script_call(   'mod', 'telib', 'weapon_get_red', _wep);
-#define wep_get(_wep)                                                                   return  mod_script_call_nc('mod', 'telib', 'wep_get', _wep);
+#define wep_raw(_wep)                                                                   return  mod_script_call_nc('mod', 'telib', 'wep_raw', _wep);
+#define wep_get(_primary, _name, _default)                                              return  variable_instance_get(id, (_primary ? '' : 'b') + _name, _default);
+#define wep_set(_primary, _name, _value)                                                        variable_instance_set(id, (_primary ? '' : 'b') + _name, _value);
 #define area_get_back_color(_area)                                                      return  mod_script_call_nc('mod', 'telib', 'area_get_back_color', _area);
 #define pool(_pool)                                                                     return  mod_script_call_nc('mod', 'telib', 'pool', _pool);

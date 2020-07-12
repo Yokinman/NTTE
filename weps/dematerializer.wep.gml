@@ -1,4 +1,5 @@
 #define init
+	 // Sprites:
 	global.sprWep = sprite_add_weapon("../sprites/weps/sprDematerializer.png", 4, 5);
 	global.sprWepLocked = mskNone;
 	
@@ -20,56 +21,48 @@
 	var f = weapon_fire_init(w);
 	w = f.wep;
 	
-	 // Sounds:
-	var _brain = (skill_get(mut_laser_brain) > 0);
-	if(_brain) sound_play_gun(sndLightningPistolUpg, 0.4, 0.6);
-	else       sound_play_gun(sndLightningPistol,    0.3, 0.3);
-	
-	 // Projectile:
-	var	_last = variable_instance_get(f.creator, "electroplasma_last", noone),
-		_side = variable_instance_get(f.creator, "electroplasma_side", 1),
-		_dir = gunangle + (orandom(3) * accuracy),
-		_need_proj = true;
+	var	_last     = variable_instance_get(f.creator, "electroplasma_last", noone),
+		_side     = variable_instance_get(f.creator, "electroplasma_side", 1),
+		_dir      = gunangle + orandom(3 * accuracy),
+		_needProj = true;
 		
 	 // Retain Projectile if youre holding fire:
 	with(instances_matching(CustomProjectile, "name", "ElectroPlasma")){
-		_need_proj = false;
-		lifetime = weapon_get_load(mod_current) + 1
+		_needProj = false;
+		lifetime = weapon_get_load(w) + 1;
 	}
-
+	
 	 // Create new hyper Projectile if none exists:
-	if(_need_proj){
-		with(obj_create(x, y, "ElectroPlasma")){
-			hyper = "true"
+	if(_needProj){
+		with(projectile_create(x, y, "ElectroPlasma", _dir, 0)){
 			move_contact_solid(_dir, 480);
-			motion_set(_dir, 0);
-			image_angle = direction;
-			creator = f.creator;
-			team = other.team;
+			hyper        = "true";
 			tether_range = 1200;
-			wave = 0;
+			wave         = 0;
 			
 			// Tether Together:
 			tether_inst = creator;
 			_last = id;
 			
 			// Unique Weapon Mechanic:
-			lifetime = weapon_get_load(mod_current) + 1
+			lifetime = weapon_get_load(w) + 1;
 		}
 	}
-	
 	with(f.creator){
 		electroplasma_last = _last;
 		electroplasma_side = -_side;
 	}
 	
+	 // Sounds:
+	var _brain = (skill_get(mut_laser_brain) > 0);
+	if(_brain) sound_play_gun(sndLightningPistolUpg, 0.4, 0.6);
+	else       sound_play_gun(sndLightningPistol,    0.3, 0.3);
+	sound_play_pitch(sndEliteShielderFire, 0.9 + random(0.3));
+	sound_play_pitch(sndGammaGutsProc,     1.0 + random(0.2));
+	
 	 // Effects:
 	weapon_post(6, 3, 0);
-	motion_add(gunangle, -.5);
-	
-	// Sounds:
-	sound_play_pitch(sndEliteShielderFire, 0.9 + random(0.3));
-	sound_play_pitch(sndGammaGutsProc, 1.0 + random(0.2));
+	motion_add(gunangle + 180, 0.5);
 	
 #define step
 	with(instances_matching(CustomProjectile, "name", "ElectroPlasma")){
@@ -104,8 +97,11 @@
 #define chance_ct(_numer, _denom)                                                       return  random(_denom) < (_numer * current_time_scale);
 #define unlock_get(_unlock)                                                             return  mod_script_call_nc('mod', 'teassets', 'unlock_get', _unlock);
 #define obj_create(_x, _y, _obj)                                                        return  (is_undefined(_obj) ? [] : mod_script_call_nc('mod', 'telib', 'obj_create', _x, _y, _obj));
+#define projectile_create(_x, _y, _obj, _dir, _spd)                                     return  mod_script_call(   'mod', 'telib', 'projectile_create', _x, _y, _obj, _dir, _spd);
 #define weapon_fire_init(_wep)                                                          return  mod_script_call(   'mod', 'telib', 'weapon_fire_init', _wep);
 #define weapon_ammo_fire(_wep)                                                          return  mod_script_call(   'mod', 'telib', 'weapon_ammo_fire', _wep);
 #define weapon_ammo_hud(_wep)                                                           return  mod_script_call(   'mod', 'telib', 'weapon_ammo_hud', _wep);
 #define weapon_get_red(_wep)                                                            return  mod_script_call(   'mod', 'telib', 'weapon_get_red', _wep);
-#define wep_get(_wep)                                                                   return  mod_script_call_nc('mod', 'telib', 'wep_get', _wep);
+#define wep_raw(_wep)                                                                   return  mod_script_call_nc('mod', 'telib', 'wep_raw', _wep);
+#define wep_get(_primary, _name, _default)                                              return  variable_instance_get(id, (_primary ? '' : 'b') + _name, _default);
+#define wep_set(_primary, _name, _value)                                                        variable_instance_set(id, (_primary ? '' : 'b') + _name, _value);

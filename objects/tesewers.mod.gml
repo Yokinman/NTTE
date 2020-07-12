@@ -13,19 +13,19 @@
 	with(instance_create(_x, _y, CustomProjectile)){
 		 // Visual:
 		sprite_index = spr.AlbinoBolt;
-		depth = -2;
+		depth        = -2;
 		
 		 // Vars:
 		mask_index = mskBolt;
-		creator = noone;
-		target = noone;
-		damage = 6;
-		force = 12;
-		typ = 1;
-		ammo = 0;
-		ammo_max = 4;
-		setup = true;
-		small = false;
+		creator    = noone;
+		target     = noone;
+		damage     = 6;
+		force      = 12;
+		typ        = 1;
+		ammo       = 0;
+		ammo_max   = 4;
+		setup      = true;
+		small      = false;
 		
 		return id;
 	}
@@ -38,9 +38,9 @@
 		sprite_index = spr.AlbinoSplinter;
 		
 		 // Vars:
-		damage = 3;
-		force = 6;
-		blink = 0;
+		damage   = 3;
+		force    = 6;
+		blink    = 0;
 		ammo_max = 0;
 	}
 
@@ -50,11 +50,11 @@
 	
 	 // Stuck:
 	if(instance_exists(target)){
-		var	l = 12,
-			d = image_angle + 180;
+		var	_l = 12,
+			_d = image_angle + 180;
 			
-		x = target.x + lengthdir_x(l, d);
-		y = target.y + lengthdir_y(l, d);
+		x = target.x + lengthdir_x(_l, _d);
+		y = target.y + lengthdir_y(_l, _d);
 		speed = 0;
 		
 		 // Small:
@@ -124,7 +124,7 @@
 				}
 				with(instance_create(x, y, BulletHit)){
 					sprite_index = ((other.team == 2) ? sprFlakHit : sprEFlakHit);
-					image_index = 3 - image_speed;
+					image_index  = 3 - image_speed;
 					image_xscale = 0.9;
 					image_yscale = 0.9;
 				}
@@ -135,7 +135,7 @@
 			 // Splinters:
 			var d = 90 * (1 - (ammo / ammo_max));
 			for(var i = -sign(d); i <= sign(d); i += 2){
-				with(enemy_shoot(
+				with(projectile_create(
 					x,
 					y,
 					"AlbinoBolt",
@@ -201,17 +201,17 @@
 #define AlbinoGator_create(_x, _y)
 	with(instance_create(_x, _y, CustomEnemy)){
 		 // Visual:
-		spr_idle = spr.AlbinoGatorIdle;
-		spr_walk = spr.AlbinoGatorWalk;
-		spr_hurt = spr.AlbinoGatorHurt;
-		spr_dead = spr.AlbinoGatorDead;
-		spr_weap = spr.AlbinoGatorWeap;
+		spr_idle     = spr.AlbinoGatorIdle;
+		spr_walk     = spr.AlbinoGatorWalk;
+		spr_hurt     = spr.AlbinoGatorHurt;
+		spr_dead     = spr.AlbinoGatorDead;
+		spr_weap     = spr.AlbinoGatorWeap;
+		spr_halo     = sprStrongSpiritRefill;
+		halo_index   = 0;
 		sprite_index = spr_idle;
-		spr_halo = sprStrongSpiritRefill;
-		halo_index = 0;
-		hitid = [spr_idle, "ALBINO GATOR"];
-		spr_shadow = shd24;
-		depth = -2;
+		hitid        = [spr_idle, "ALBINO GATOR"];
+		spr_shadow   = shd24;
+		depth        = -2;
 		
 		 // Sounds:
 		snd_hurt = sndBuffGatorHit;
@@ -297,7 +297,7 @@
 		if(gonnafire <= 0){
 			alarm1 = 30;
 			
-			enemy_shoot(x, y, "AlbinoBolt", gunangle, 16);
+			projectile_create(x, y, "AlbinoBolt", gunangle, 16);
 			
 			sound_play_pitchvol(sndHeavyCrossbow, 1.2 + random(0.2), 0.8);
 			sound_play_pitchvol(sndTurretFire,    0.8 + random(0.2), 0.8);
@@ -344,7 +344,7 @@
 			}
 			
 			 // Throw Grenade:
-			enemy_shoot(x, y, "AlbinoGrenade", gunangle, random_range(8, 12));
+			projectile_create(x, y, "AlbinoGrenade", gunangle, random_range(8, 12));
 			motion_add(gunangle + 180, 2);
 			
 			 // Sound:
@@ -423,7 +423,9 @@
 			}
 			
 			 // Effects:
-			instance_create(x + (5 * right), y - 5, ThrowHit).depth = (depth - 1);
+			with(instance_create(x + (5 * right), y - 5, ThrowHit)){
+				depth = other.depth - 1;
+			}
 			motion_add(_hitdir, (_hitvel / 4));
 		}
 		
@@ -517,12 +519,12 @@
 #define AlbinoGrenade_destroy
 	 // Explosive:
 	with(instance_create(x, y, Explosion)){
-		team = -1;
-		hitid = 55;
-		depth = 0;
+		team         = -1;
+		hitid        = 55;
+		mask_index   = mskPopoExplo;
 		image_xscale = 0.9;
 		image_yscale = image_xscale;
-		mask_index = mskPopoExplo;
+		depth        = 0;
 	}
 	
 	 // Quasars:
@@ -530,13 +532,13 @@
 		_ang = pround(angle, 45);
 		
 	for(var _dir = _ang; _dir < _ang + 360; _dir += 90){
-		with(enemy_shoot(x + lengthdir_x(_dis, _dir), y + lengthdir_y(_dis, _dir), "QuasarBeam", _dir, 0)){
-			hold_x = x;
-			hold_y = y;
-			scale_goal = 0.8;
-			shrink_delay = 12;
-			line_dir_fric = 0;
-			line_dir_turn = other.turn;
+		with(projectile_create(x + lengthdir_x(_dis, _dir), y + lengthdir_y(_dis, _dir), "QuasarBeam", _dir, 0)){
+			hold_x         = x;
+			hold_y         = y;
+			scale_goal     = 0.8;
+			shrink_delay   = 12;
+			line_dir_fric  = 0;
+			line_dir_turn  = other.turn;
 			follow_creator = false;
 		}
 	}
@@ -658,13 +660,13 @@
 		if(chance(1, 2)){
 			wkick = 6;
 			
-			var	l = 8,
-				d = gunangle + orandom(12),
-				_x = x + lengthdir_x(l, d),
-				_y = y + lengthdir_y(l, d);
+			var	_l = 8,
+				_d = gunangle + orandom(12),
+				_x = x + lengthdir_x(_l, _d),
+				_y = y + lengthdir_y(_l, _d);
 				
-			enemy_shoot(_x, _y, LHBouncer, d, 3);
-			scrFX(_x, _y, [d, 2], Smoke);
+			projectile_create(_x, _y, LHBouncer, _d, 3);
+			scrFX(_x, _y, [_d, 2], Smoke);
 			
 			sound_play_hit(sndBouncerSmg, 0.2);
 			motion_add(gunangle + 180, 2);
@@ -787,12 +789,12 @@
 		sound_play_pitchvol(sndFrogEggHurt, 1 + random(0.4), 3.5);
 		
 		 // Bullets:
-		var	d = 4,
-			s = 2;
+		var	_dis = 4,
+			_spd = 2;
 			
-		for (var i = 0; i <= 5; i++){
-			with(enemy_shoot(x, y, "VenomPellet", gunangle + orandom(2 + i), s * i)){
-				move_contact_solid(direction, d + d * i);
+		for(var i = 0; i <= 5; i++){
+			with(projectile_create(x, y, "VenomPellet", gunangle + orandom(2 + i), _spd * i)){
+				move_contact_solid(direction, _dis + (_dis * i));
 				
 				 // Effects:
 				with(scrFX(x, y, [direction + orandom(4), speed * 0.8], AcidStreak)){
@@ -911,7 +913,7 @@
 	}
 	
 	 // Screech:
-	with(enemy_shoot(x, y, "BatScreech", 0, 0)){
+	with(projectile_create(x, y, "BatScreech", 0, 0)){
 		if(!is_undefined(_scale)){
 			image_xscale = _scale;
 			image_yscale = _scale;
@@ -1145,7 +1147,7 @@
 				 // Flak Time:
 				else{
 					wkick -= 4;
-					enemy_shoot(x, y, "VenomFlak", gunangle + orandom(10), 12);
+					projectile_create(x, y, "VenomFlak", gunangle + orandom(10), 12);
 				}
 			}
 			
@@ -1194,10 +1196,10 @@
 			 // Zoom Ovah:
 			else if(chance(1, 3)){
 				with(obj_create(x, y + 16, "BatCloud")){
-					target = other.target;
-					creator = other.creator;
-					direction = 90 + orandom(20);
+					target    = other.target;
+					creator   = other.creator;
 					my_health = other.my_health;
+					direction = 90 + orandom(20);
 				}
 				
 				 // Effects:
@@ -1226,10 +1228,10 @@
 		for(var d = _ang; d < _ang + 360; d += (360 / (3 + (2 * GameCont.loops)))){
 			var l = 8;
 			with(obj_create(x + lengthdir_x(l, d), y + lengthdir_y(l, d), "BatCloud")){
-				target = other.target;
+				target        = other.target;
 				target_offdir = d;
-				creator = other;
-				direction = d;
+				creator       = other;
+				direction     = d;
 			}
 		}
 		
@@ -1370,30 +1372,30 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 	}
 	
 	 // Screech:
-	enemy_shoot(x, y, "BatScreech", 0, 0);
+	projectile_create(x, y, "BatScreech", 0, 0);
 	if(_extraNum > 0){
-		var l = 56;
-		for(var d = gunangle; d < gunangle + 360; d += (360 / _extraNum)){
-			with enemy_shoot(x + lengthdir_x(l, d), y + lengthdir_y(l, d), "BatScreech", 0, 0){
+		var _l = 56;
+		for(var _d = gunangle; _d < gunangle + 360; _d += (360 / _extraNum)){
+			with(projectile_create(x + lengthdir_x(_l, _d), y + lengthdir_y(_l, _d), "BatScreech", 0, 0)){
 				image_xscale = _extraScale;
 				image_yscale = _extraScale;
 			}
 		}
 	}
 	sprite_index = spr_fire;
-	image_index = 0;
+	image_index  = 0;
 	
 	
 #define BatCloud_create(_x, _y)
 	with(instance_create(_x, _y, CustomObject)){
 		 // Vars:
-		target = noone;
+		friction      = 0.5;
+		direction     = random(360);
+		speed         = 16;
+		creator       = noone;
+		target        = noone;
 		target_offdis = 32;
 		target_offdir = random(360);
-		creator = noone;
-		friction = 0.5;
-		direction = random(360);
-		speed = 16;
 
 		return id;
 	}
@@ -1481,25 +1483,25 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 	with(instance_create(_x, _y, CustomProjectile)){
 		 // Visual:
 		sprite_index = spr.BatDisc;
-		mask_index = mskFlakBullet;
-		depth = -2;
+		mask_index   = mskFlakBullet;
+		depth        = -2;
 		
 		 // Vars:
-		friction = 0.4;
-		maxspeed = 12;
-		damage = 3;
-		typ = 2;
-		setup = true;
-		my_lwo = noone;
-		ammo = 1;
-		has_hit = false;
+		friction  = 0.4;
+		maxspeed  = 12;
+		damage    = 3;
+		typ       = 2;
+		setup     = true;
+		wep       = noone;
+		ammo      = 1;
+		has_hit   = false;
 		returning = false;
 		return_to = noone;
-		big = false;
-		key = "";
-		seek = 40;
-		in_wall = false;
-		speed = maxspeed;
+		big       = false;
+		key       = "";
+		seek      = 40;
+		in_wall   = false;
+		speed     = maxspeed;
 		
 		return id;
 	}
@@ -1530,7 +1532,7 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 		_wepVar = ["wep", "bwep"];
 		
 	for(var i = 0; i < array_length(_wepVar); i++){
-		with(instances_matching([Player, WepPickup, ThrownWep], _wepVar[i], my_lwo)){
+		with(instances_matching([Player, WepPickup, ThrownWep], _wepVar[i], wep)){
 			var _dis = point_distance(x, y, other.x, other.y);
 			if(_dis < _disMax){
 				_disMax = _dis;
@@ -1572,8 +1574,8 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 	else{
 		 // Baseball:
 		if(place_meeting(x, y, projectile)){
-			var m = instances_meeting(x, y, [Slash, GuitarSlash, BloodSlash, EnergySlash, EnergyHammerSlash, CustomSlash]);
-			if(m) with(m){
+			var _inst = instances_meeting(x, y, [Slash, GuitarSlash, BloodSlash, EnergySlash, EnergyHammerSlash, CustomSlash]);
+			if(array_length(_inst) > 0) with(_inst){
 				if(place_meeting(x, y, other)){
 					with(other){
 						var	_lastAlrm = alarm1,
@@ -1651,7 +1653,7 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 			
 			 // Returned:
 			else{
-				var	_wep = my_lwo,
+				var	_wep = wep,
 					_dir = direction;
 					
 				with(instance_exists(return_to) ? return_to : self){
@@ -1699,13 +1701,11 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 #define BatDisc_alrm0
 	 // Projectiles:
 	for(var _dir = direction; _dir < direction + 360; _dir += (360 / 7)){
-		with(obj_create(x, y, "BatDisc")){
-			projectile_init(other.team, other.creator);
-			direction = _dir;
+		with(projectile_create(x, y, "BatDisc", _dir, 0)){
 			visible = other.visible;
 			in_wall = other.in_wall;
-			my_lwo = other.my_lwo;
-			ammo *= sign(other.ammo);
+			wep     = other.wep;
+			ammo   *= sign(other.ammo);
 		}
 		
 		 // Effects:
@@ -1785,15 +1785,15 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 	
 #define BatDisc_cleanup
 	 // Hold up:
-	with(instances_matching(Player, "wep", my_lwo)){
+	with(instances_matching(Player, "wep", wep)){
 		can_shoot = false;
 	}
-	with(instances_matching(Player, "bwep", my_lwo)){
+	with(instances_matching(Player, "bwep", wep)){
 		bcan_shoot = false;
 	}
 	
 	 // Restore:
-	with(my_lwo){
+	with(wep){
 		ammo += other.ammo;
 		if("amax" in self){
 			ammo = min(ammo, amax);
@@ -1805,9 +1805,9 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 	with(instance_create(_x, _y, CustomSlash)){
 		 // Visual:
 		sprite_index = spr.BatScreech;
-		image_speed = 0.4;
-		hitid = [sprite_index, "SOUND"];
-		depth = -3;
+		image_speed  = 0.4;
+		depth        = -3;
+		hitid        = [sprite_index, "SOUND"];
 		
 		 // Vars:
 		mask_index = msk.BatScreech;
@@ -1890,7 +1890,7 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 				
 				 // Effects:
 				with(instance_create(x, y, Deflect)){
-					image_angle = other.direction
+					image_angle = other.direction;
 				}
 				view_shake_at(x, y, 3);
 				sleep(10);
@@ -1983,7 +1983,7 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 		if(ammo <= 0){
 			alarm1 = 20;
 			
-			with(enemy_shoot(_x, _y, Grenade, gunangle, 9)){
+			with(projectile_create(_x, _y, Grenade, gunangle, 9)){
 				alarm0 = 10 + random(10);
 			}
 			
@@ -1997,7 +1997,7 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 		
 		 // Mini Nade Shots:
 		else{
-			enemy_shoot(_x, _y, MiniNade, gunangle, 7 + random(2));
+			projectile_create(_x, _y, MiniNade, gunangle, 7 + random(2));
 			
 			 // Effects:
 			wkick = 6;
@@ -2007,7 +2007,7 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 		}
 		
 		 // Shared Effects:
-		with(enemy_shoot(_x, _y, TrapFire, gunangle, random(1))){
+		with(projectile_create(_x, _y, TrapFire, gunangle, random(1))){
 			image_speed = 0.4;
 		}
 		repeat(1 + irandom(2)) with(scrFlameSpark(_x, _y)) motion_set(other.gunangle + orandom(30), random(5));
@@ -2078,16 +2078,16 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 	instance_create(x, y, Explosion);
 	repeat(1 + irandom(2)) instance_create(x, y, SmallExplosion);
 	
-	var l = 12;
-	for(var d = 0; d < 360; d += (360 / 20)){
-		var	_x = x + lengthdir_x(l, d),
-			_y = y + lengthdir_y(l, d);
+	var _l = 12;
+	for(var _d = 0; _d < 360; _d += (360 / 20)){
+		var	_x = x + lengthdir_x(_l, _d),
+			_y = y + lengthdir_y(_l, _d);
 			
 		if(position_meeting(_x, _y, Floor)){
-			enemy_shoot(_x, _y, TrapFire, d + random_range(60, 90), random(2));
+			projectile_create(_x, _y, TrapFire, _d + random_range(60, 90), random(2));
 		}
 		with(scrFlameSpark(_x, _y)){
-			motion_add(d + random_range(30, 90), random(5));
+			motion_add(_d + random_range(30, 90), random(5));
 		}
 	}
 	view_shake_at(x, y, 20);
@@ -2220,8 +2220,9 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 	
 #define Cat_create(_x, _y)
 	with(instance_create(_x, _y, CustomEnemy)){
-		 // Visual:
 		var _snow = (GameCont.area == area_city);
+		
+		 // Visual:
 		spr_idle      = (_snow ?  spr.CatSnowIdle    : spr.CatIdle);
 		spr_walk      = (_snow ?  spr.CatSnowWalk    : spr.CatWalk);
 		spr_hurt      = (_snow ?  spr.CatSnowHurt    : spr.CatHurt);
@@ -2230,10 +2231,10 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 		spr_sit2      = (_snow ?  spr.CatSnowSit2[0] : spr.CatSit2[0]);
 		spr_sit1_side = (_snow ?  spr.CatSnowSit1[1] : spr.CatSit1[1]);
 		spr_sit2_side = (_snow ?  spr.CatSnowSit2[1] : spr.CatSit2[1]);
-		spr_weap = spr.CatWeap;
-		spr_shadow = shd24;
-		hitid = [spr_idle, "CAT"];
-		depth = -2;
+		spr_weap      = spr.CatWeap;
+		spr_shadow    = shd24;
+		hitid         = [spr_idle, "CAT"];
+		depth         = -2;
 		
 		 // Sound:
 		snd_hurt = sndGatorHit;
@@ -2242,20 +2243,20 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 		
 		 // Vars:
 		mask_index = mskRat;
-		maxhealth = 10;
-		raddrop = 6;
-		size = 1;
-		walk = 0;
-		walkspeed = 0.8;
-		maxspeed = 3;
-		hole = noone;
-		ammo = 0;
-		active = true;
-		cantravel = false;
-		gunangle = random(360);
-		direction = gunangle;
-		sit = false;
-		sit_side = 0;
+		maxhealth  = 10;
+		raddrop    = 6;
+		size       = 1;
+		walk       = 0;
+		walkspeed  = 0.8;
+		maxspeed   = 3;
+		hole       = noone;
+		ammo       = 0;
+		active     = true;
+		cantravel  = false;
+		gunangle   = random(360);
+		direction  = gunangle;
+		sit        = false;
+		sit_side   = 0;
 		
 		 // Alarms:
 		alarm1 = 40 + irandom(20);
@@ -2393,8 +2394,8 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 		
 		 // Toxic:
 		repeat(2){
-			with(enemy_shoot(_x, _y, ToxicGas, gunangle + orandom(6), 4)){
-				friction = 0.12;
+			with(projectile_create(_x, _y, ToxicGas, gunangle + orandom(6), 4)){
+				friction  = 0.12;
 				cat_toxic = true;
 				if(!instance_is(other.sit, enemy)) team = 0;
 			}
@@ -2725,7 +2726,9 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 			
 			 // Effects:
 			var l = 20;
-			instance_create(x + lengthdir_x(l, gunangle), y + lengthdir_y(l, gunangle), ThrowHit).depth = -3;
+			with(instance_create(x + lengthdir_x(l, gunangle), y + lengthdir_y(l, gunangle), ThrowHit)){
+				depth = -3;
+			}
 		}
 	}
 	else{
@@ -2754,7 +2757,7 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 					if(chance(3, 4) && instance_seen(x, y, target) && (instance_near(x, y, target, 80) || chance(1, 2))){
 						alarm1 = 10;
 						
-						with(enemy_shoot(x, y, "CatBossAttack", gunangle, 0)){
+						with(projectile_create(x, y, "CatBossAttack", gunangle, 0)){
 							target = other.target;
 							type = other.super;
 							other.alarm1 += alarm0;
@@ -2838,15 +2841,15 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 	
 	 // Gas:
 	repeat(2 + irandom(3)){
-		with(enemy_shoot(
+		with(projectile_create(
 			x,
 			y,
 			ToxicGas,
 			direction + 180 + orandom(15),
 			2 + random(1)
 		)){
-			friction = 0.16;
-			team = 0;
+			friction  = 0.16;
+			team      = 0;
 			cat_toxic = true;
 		}
 	}
@@ -2887,9 +2890,9 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 	 // Underground Cats:
 	if(chance(1, 1 + array_length(instances_matching(CustomEnemy, "name", "Cat")))){
 		with(obj_create(0, 0, "Cat")){
-			active = false;
+			active    = false;
 			cantravel = true;
-			alarm1 = random_range(60, 150);
+			alarm1    = random_range(60, 150);
 		}
 	}
 	
@@ -3004,19 +3007,19 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 	with(instance_create(_x, _y, CustomObject)){
 		 // Visual:
 		image_yscale = 1.5;
-		hitid = [spr.CatIdle, "BIG CAT"];
+		hitid        = [spr.CatIdle, "BIG CAT"];
 		
 		 // Vars:
-		type = 0;
-		team = 1;
-		force = 12;
-		damage = 8;
-		target = noone;
-		creator = noone;
+		type      = 0;
+		team      = 1;
+		force     = 12;
+		damage    = 8;
+		target    = noone;
+		creator   = noone;
 		fire_line = [];
 		
 		 // Alarms:
-		alarm0 = 30;
+		alarm0     = 30;
 		alarm0_max = alarm0;
 		
 		return id;
@@ -3071,26 +3074,26 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 			
 			 // Line Hitscan:
 			var	_dir = dir + other.direction,
-				_sx = other.x + x,
-				_sy = other.y + y,
-				_lx = _sx,
-				_ly = _ly,
-				_md = 1000,
-				d = _md,
-				m = 0; // Minor hitscan increment distance
+				_sx  = other.x + x,
+				_sy  = other.y + y,
+				_lx  = _sx,
+				_ly  = _ly,
+				_md  = 1000,
+				_d   = _md,
+				_m   = 0; // Minor hitscan increment distance
 				
-			with(other) while(d > 0){
+			with(other) while(_d > 0){
 				 // Major Hitscan Mode (Start at max, go back until no collision line):
-				if(m <= 0){
-					_lx = _sx + lengthdir_x(d, _dir);
-					_ly = _sy + lengthdir_y(d, _dir);
-					d -= sqrt(_md);
+				if(_m <= 0){
+					_lx = _sx + lengthdir_x(_d, _dir);
+					_ly = _sy + lengthdir_y(_d, _dir);
+					_d -= sqrt(_md);
 					
 					 // Enter minor hitscan mode:
 					if(!collision_line(_sx, _sy, _lx, _ly, Wall, false, false)){
 						if(position_meeting(_lx, _ly, Floor)){
-							m = 2;
-							d = sqrt(_md);
+							_m = 2;
+							_d = sqrt(_md);
 						}
 					}
 				}
@@ -3098,9 +3101,9 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 				 // Minor Hitscan Mode (Move until collision):
 				else{
 					if(position_meeting(_lx, _ly, Wall)) break;
-					_lx += lengthdir_x(m, _dir);
-					_ly += lengthdir_y(m, _dir);
-					d -= m;
+					_lx += lengthdir_x(_m, _dir);
+					_ly += lengthdir_y(_m, _dir);
+					_d -= _m;
 				}
 			}
 			
@@ -3108,10 +3111,14 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 			
 			 // Effects:
 			if(chance_ct(1, 10)){
-				var	l = random(dis),
-					d = _dir;
+				var	_l = random(dis),
+					_d = _dir;
 					
-				with(instance_create(_sx + lengthdir_x(l, d) + orandom(4), _sy + lengthdir_y(l, d) + orandom(4), EatRad)){
+				with(instance_create(
+					_sx + lengthdir_x(_l, _d) + orandom(4),
+					_sy + lengthdir_y(_l, _d) + orandom(4),
+					EatRad
+				)){
 					sprite_index = choose(sprEatRadPlut, sprEatBigRad);
 					motion_set(_dir + 180 + orandom(60), 2);
 				}
@@ -3164,7 +3171,7 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 		if(type){
 			var o = 24;
 			instance_create(_x + lengthdir_x(_dis - o, _dir), _y + lengthdir_y(_dis - o, _dir), PortalClear);
-			instance_create(_x + lengthdir_x(_dis, _dir), _y + lengthdir_y(_dis, _dir), ToxicDelay);
+			instance_create(_x + lengthdir_x(_dis,     _dir), _y + lengthdir_y(_dis,     _dir), ToxicDelay);
 		}
 		
 		 // Create Toxic Rails:
@@ -3185,12 +3192,10 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 			}
 			
 			 // Gas:
-			with(instance_create(_lx + orandom(o), _ly + orandom(o), ToxicGas)){
-				motion_add(_dir, 1 + random(1));
-				friction += random_range(0.1, 0.2);
+			with(projectile_create(_lx + orandom(o), _ly + orandom(o), ToxicGas, _dir, 1 + random(1))){
+				friction  += random_range(0.1, 0.2);
 				growspeed *= _dis / _line.dis;
-				creator = other.creator;
-				hitid = other.hitid;
+				team       = 0;
 				
 				 // Effects:
 				if(chance(1, 2)){
@@ -3205,12 +3210,10 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 		}
 		
 		 // Knockback gas:
-		with(instance_create(_x, _y, ToxicGas)){
-			motion_add(_dir + 180 + orandom(20), 3);
+		with(projectile_create(_x, _y, ToxicGas, _dir + 180 + orandom(20), 3)){
 			move_contact_solid(_dir + 180, 20);
 			friction = 0.1;
-			creator = other.creator;
-			hitid = other.hitid;
+			team = 0;
 		}
 	}
 	
@@ -3238,22 +3241,22 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 	with(instance_create(_x, _y, CustomHitme)){
 		 // Visual:
 		sprite_index = spr.CatDoor;
-		spr_shadow = mskNone;
-		image_speed = 0;
-		depth = -3 - (y / 20000);
+		spr_shadow   = mskNone;
+		image_speed  = 0;
+		depth        = -3 - (y / 20000);
 		
 		 // Sound:
 		snd_hurt = sndHitMetal;
 		snd_dead = sndWallBreakScrap;
 		
 		 // Vars:
-		mask_index = msk.CatDoor;
-		maxhealth = 15;
-		size = 2;
-		team = 0;
-		openang = 0;
-		my_wall = noone;
-		partner = noone;
+		mask_index   = msk.CatDoor;
+		maxhealth    = 15;
+		size         = 2;
+		team         = 0;
+		openang      = 0;
+		my_wall      = noone;
+		partner      = noone;
 		partner_wall = noone;
 		
 		 // Auto-Sprite:
@@ -3526,15 +3529,12 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 //	// nada
 //	
 //#define CatGrenade_destroy
-//	with(instance_create(x, y, Explosion)){
-//		team    = other.team;
-//		creator = other.creator;
-//		hitid   = other.hitid;
-//	}
+//	projectile_create(x, y, Explosion, 0, 0);
 //	
 //	repeat(18){
-//		with(enemy_shoot(x, y, ToxicGas, random(360), 4)) {
+//		with(projectile_create(x, y, ToxicGas, random(360), 4)) {
 //			friction = 0.2;
+//			team = 0;
 //		}
 //	}
 //	
@@ -3814,7 +3814,7 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 			for(var i = 0; i < array_length(_boss); i++){
 				with(obj_create(x, y - 4, _boss[i])){
 					sprite_index = spr_hurt;
-					image_index = image_speed * i;
+					image_index  = image_speed * i;
 				}
 			}
 			with(instance_create(x, y, PortalShock)){
@@ -4028,11 +4028,13 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 	
 #define CatLight_create(_x, _y)
 	with(instance_create(_x, _y, CustomObject)){
-		w1 = 12;
-		w2 = 32;
-		h1 = 32;
-		h2 = 8;
+		 // Vars:
+		w1     = 12;
+		w2     = 32;
+		h1     = 32;
+		h2     = 8;
 		offset = 0;
+		
 		return id;
 	}
 	
@@ -4079,7 +4081,7 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 		
 		 // Vars:
 		maxhealth = 4;
-		size = 1;
+		size      = 1;
 		
 		return id;
 	}
@@ -4137,8 +4139,9 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 		 // Vars:
 		mask_index = mskScorpion;
 		maxhealth  = 56;
-		raddrop    = 8
+		raddrop    = 8;
 		size       = 3;
+		team       = 1;
 		skill      = mut_shotgun_shoulders;
 		
 		 // Prompt:
@@ -4188,22 +4191,15 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 	
 	 // Revenge:
 	repeat(4){
-		with(obj_create(x, y, "GatorStatueFlak")){
-			projectile_init(1, other);
-			hitid = other.hitid;
-		}
+		projectile_create(x, y, "GatorStatueFlak", 0, 0);
 	}
 	if(instance_exists(prompt) && prompt.visible){
-		with(obj_create(x, y, "CustomFlak")){
-			projectile_init(1, other);
+		with(projectile_create(x, y, "CustomFlak", 90, 0.1)){
 			sprite_index = spr.EnemySuperFlak;
 			spr_dead     = spr.EnemySuperFlakHit;
 			depth        = -1;
-			hitid        = other.hitid;
 			snd_dead     = sndSuperFlakExplode;
 			mask_index   = mskSuperFlakBullet;
-			direction    = 90;
-			speed        = 0.1;
 			friction     = speed / 60;
 			damage       = 10;
 			bonus_damage = 0;
@@ -4324,13 +4320,10 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 	
 #define GatorStatueFlak_destroy
 	 // Blammo:
-	with(team_instance_sprite(
+	team_instance_sprite(
 		sprite_get_team(sprite_index),
-		instance_create(x, y, EFlakBullet)
-	)){
-		projectile_init(other.team, other.creator);
-		hitid = other.hitid;
-	}
+		projectile_create(x, y, EFlakBullet, 0, 0)
+	);
 	
 	
 #define Manhole_create(_x, _y)
@@ -4500,11 +4493,11 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 #define NewTable_create(_x, _y)
 	with(instance_create(_x, _y, CustomProp)){
 		 // Visual:
-		spr_idle = spr.TableIdle;
-		spr_hurt = spr.TableHurt;
-		spr_dead = spr.TableDead;
+		spr_idle   = spr.TableIdle;
+		spr_hurt   = spr.TableHurt;
+		spr_dead   = spr.TableDead;
 		spr_shadow = shd32;
-		depth = -1;
+		depth      = -1;
 		
 		 // Sounds:
 		snd_hurt = sndHitMetal;
@@ -4512,7 +4505,7 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 		
 		 // Vars:
 		maxhealth = 8;
-		size = 2;
+		size      = 2;
 		
 		return id;
 	}
@@ -4629,10 +4622,10 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 				with(instances_meeting(x, y, Wall)){
 					instance_create(x, y, InvisiWall);
 					sprite_index = area_get_sprite(GameCont.area, sprWall1Trans);
-					visible = true;
-					topspr = -1;
-					outspr = -1;
-					y -= 16;
+					visible      = true;
+					topspr       = -1;
+					outspr       = -1;
+					y           -= 16;
 				}
 			}
 		}
@@ -4817,9 +4810,9 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 	
 	with(instance_create(_x, _y, CustomObject)){
 		sprite_index = spr.Manhole;
-		image_angle = 180 + (irandom_range(-3, 3) * 10);
-		image_speed = 0;
-		depth = 6;
+		image_angle  = 180 + (irandom_range(-3, 3) * 10);
+		image_speed  = 0;
+		depth        = 6;
 		
 		x += orandom(8);
 		y += orandom(8);
@@ -4918,7 +4911,7 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 	 // Diggin FX:
 	if(chance(_hitvel, 8)){
 		repeat(irandom_range(1, ceil(sqrt(_hitdmg)))) if(chance(1, my_health / 10)){
-			with(instance_create(random_range(bbox_left, bbox_right), y + 8, Debris)){
+			with(instance_create(random_range(bbox_left, bbox_right + 1), y + 8, Debris)){
 				depth = 1;
 				direction = 90 + orandom(60);
 				sound_play_hit(sndWallBreak, 0.4);
@@ -5617,7 +5610,7 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 		 // Venom Lines:
 		if((d mod 90) == 0){
 			for(var i = 0; i <= 4; i++){
-				with(enemy_shoot(
+				with(projectile_create(
 					x,
 					y,
 					"VenomPellet",
@@ -5636,7 +5629,7 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 		}
 		
 		 // Individual:
-		else with(enemy_shoot(
+		else with(projectile_create(
 			x,
 			y,
 			"VenomPellet",
@@ -5685,7 +5678,7 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 		sound_play_hit(sndFrogEggSpawn3, 0.4);
 		
 		 // Replace bullet:
-		enemy_shoot(x, y, EnemyBullet2, direction, speed);
+		projectile_create(x, y, EnemyBullet2, direction, speed);
 		instance_delete(id);
 	}
 	
@@ -5829,6 +5822,7 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 #define shader_add(_name, _vertex, _fragment)                                           return  mod_script_call_nc('mod', 'teassets', 'shader_add', _name, _vertex, _fragment);
 #define obj_create(_x, _y, _obj)                                                        return  (is_undefined(_obj) ? [] : mod_script_call_nc('mod', 'telib', 'obj_create', _x, _y, _obj));
 #define top_create(_x, _y, _obj, _spawnDir, _spawnDis)                                  return  mod_script_call_nc('mod', 'telib', 'top_create', _x, _y, _obj, _spawnDir, _spawnDis);
+#define projectile_create(_x, _y, _obj, _dir, _spd)                                     return  mod_script_call(   'mod', 'telib', 'projectile_create', _x, _y, _obj, _dir, _spd);
 #define chest_create(_x, _y, _obj, _levelStart)                                         return  mod_script_call_nc('mod', 'telib', 'chest_create', _x, _y, _obj, _levelStart);
 #define prompt_create(_text)                                                            return  mod_script_call(   'mod', 'telib', 'prompt_create', _text);
 #define alert_create(_inst, _sprite)                                                    return  mod_script_call(   'mod', 'telib', 'alert_create', _inst, _sprite);
@@ -5869,7 +5863,6 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 #define scrAim(_dir)                                                                            mod_script_call(   'mod', 'telib', 'scrAim', _dir);
 #define enemy_walk(_spdAdd, _spdMax)                                                            mod_script_call(   'mod', 'telib', 'enemy_walk', _spdAdd, _spdMax);
 #define enemy_hurt(_hitdmg, _hitvel, _hitdir)                                                   mod_script_call(   'mod', 'telib', 'enemy_hurt', _hitdmg, _hitvel, _hitdir);
-#define enemy_shoot(_x, _y, _object, _dir, _spd)                                        return  mod_script_call(   'mod', 'telib', 'enemy_shoot', _x, _y, _object, _dir, _spd);
 #define enemy_target(_x, _y)                                                            return  mod_script_call(   'mod', 'telib', 'enemy_target', _x, _y);
 #define boss_hp(_hp)                                                                    return  mod_script_call_nc('mod', 'telib', 'boss_hp', _hp);
 #define boss_intro(_name)                                                               return  mod_script_call_nc('mod', 'telib', 'boss_intro', _name);
@@ -5906,7 +5899,7 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 #define race_get_title(_race)                                                           return  mod_script_call(   'mod', 'telib', 'race_get_title', _race);
 #define player_create(_x, _y, _index)                                                   return  mod_script_call_nc('mod', 'telib', 'player_create', _x, _y, _index);
 #define player_swap()                                                                   return  mod_script_call(   'mod', 'telib', 'player_swap');
-#define wep_get(_wep)                                                                   return  mod_script_call_nc('mod', 'telib', 'wep_get', _wep);
+#define wep_raw(_wep)                                                                   return  mod_script_call_nc('mod', 'telib', 'wep_raw', _wep);
 #define wep_merge(_stock, _front)                                                       return  mod_script_call_nc('mod', 'telib', 'wep_merge', _stock, _front);
 #define wep_merge_decide(_hardMin, _hardMax)                                            return  mod_script_call_nc('mod', 'telib', 'wep_merge_decide', _hardMin, _hardMax);
 #define weapon_decide(_hardMin, _hardMax, _gold, _noWep)                                return  mod_script_call(   'mod', 'telib', 'weapon_decide', _hardMin, _hardMax, _gold, _noWep);

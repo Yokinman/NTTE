@@ -552,18 +552,18 @@
 	with(instance_create(_x, _y, CustomObject)){
 		 // Visual:
 		sprite_index = msk.SludgePool;
-		spr_floor = spr.SludgePool;
-		depth = 4;
+		spr_floor    = spr.SludgePool;
+		depth        = 4;
 		
 		 // Vars:
 		mask_index = -1;
-		fx_color = make_color_rgb(130 - 40, 189, 5);
-		my_alert = noone;
-		right = choose(-1, 1);
-		detail = true;
-		active = false;
-		setup = true;
-		num = -1;
+		fx_color   = make_color_rgb(130 - 40, 189, 5);
+		my_alert   = noone;
+		right      = choose(-1, 1);
+		detail     = true;
+		active     = false;
+		setup      = true;
+		num        = -1;
 		
 		 // Alarms:
 		alarm0 = -1;
@@ -595,7 +595,7 @@
 		
 		 // Details:
 		if(other.detail){
-			instance_create(random_range(bbox_left, bbox_right), random_range(bbox_top, bbox_bottom), Detail);
+			instance_create(random_range(bbox_left, bbox_right + 1), random_range(bbox_top, bbox_bottom + 1), Detail);
 		}
 	}
 	
@@ -789,18 +789,18 @@
 #define TopRaven_create(_x, _y)
 	with(instance_create(_x, _y, CustomEnemy)){
 		 // Visual:
-		spr_idle = sprRavenIdle;
-		spr_walk = sprRavenWalk;
-		spr_hurt = sprRavenHurt;
-		spr_dead = sprRavenDead;
-		spr_lift = sprRavenLift;
-		spr_land = sprRavenLand;
-		spr_wing = sprRavenFly;
-		spr_shadow = shd24;
-		hitid = 15;
+		spr_idle     = sprRavenIdle;
+		spr_walk     = sprRavenWalk;
+		spr_hurt     = sprRavenHurt;
+		spr_dead     = sprRavenDead;
+		spr_lift     = sprRavenLift;
+		spr_land     = sprRavenLand;
+		spr_wing     = sprRavenFly;
+		spr_shadow   = shd24;
+		hitid        = 15;
 		sprite_index = spr_idle;
-		image_index = irandom(image_number - 1);
-		depth = object_get_depth(Raven);
+		image_index  = irandom(image_number - 1);
+		depth        = object_get_depth(Raven);
 		
 		 // Sound:
 		snd_hurt = sndRavenHit;
@@ -808,11 +808,11 @@
 		
 		 // Vars:
 		mask_index = object_get_mask(Raven);
-		maxhealth = 10;
-		raddrop = 4;
-		size = 1;
+		maxhealth  = 10;
+		raddrop    = 4;
+		size       = 1;
 		top_object = noone;
-		setup = true;
+		setup      = true;
 		
 		return id;
 	}
@@ -1009,7 +1009,7 @@
 			scrAim(point_direction(x, y, target.x, target.y));
 			
 			if(instance_seen(x, y, target) && chance(2, 3)) {
-				enemy_shoot(x, y, EnemyBullet1, gunangle, 6);
+				projectile_create(x, y, EnemyBullet1, gunangle, 6);
 			}
 			
 			else {
@@ -1208,6 +1208,7 @@
 #define shader_add(_name, _vertex, _fragment)                                           return  mod_script_call_nc('mod', 'teassets', 'shader_add', _name, _vertex, _fragment);
 #define obj_create(_x, _y, _obj)                                                        return  (is_undefined(_obj) ? [] : mod_script_call_nc('mod', 'telib', 'obj_create', _x, _y, _obj));
 #define top_create(_x, _y, _obj, _spawnDir, _spawnDis)                                  return  mod_script_call_nc('mod', 'telib', 'top_create', _x, _y, _obj, _spawnDir, _spawnDis);
+#define projectile_create(_x, _y, _obj, _dir, _spd)                                     return  mod_script_call(   'mod', 'telib', 'projectile_create', _x, _y, _obj, _dir, _spd);
 #define chest_create(_x, _y, _obj, _levelStart)                                         return  mod_script_call_nc('mod', 'telib', 'chest_create', _x, _y, _obj, _levelStart);
 #define prompt_create(_text)                                                            return  mod_script_call(   'mod', 'telib', 'prompt_create', _text);
 #define alert_create(_inst, _sprite)                                                    return  mod_script_call(   'mod', 'telib', 'alert_create', _inst, _sprite);
@@ -1248,7 +1249,6 @@
 #define scrAim(_dir)                                                                            mod_script_call(   'mod', 'telib', 'scrAim', _dir);
 #define enemy_walk(_spdAdd, _spdMax)                                                            mod_script_call(   'mod', 'telib', 'enemy_walk', _spdAdd, _spdMax);
 #define enemy_hurt(_hitdmg, _hitvel, _hitdir)                                                   mod_script_call(   'mod', 'telib', 'enemy_hurt', _hitdmg, _hitvel, _hitdir);
-#define enemy_shoot(_x, _y, _object, _dir, _spd)                                        return  mod_script_call(   'mod', 'telib', 'enemy_shoot', _x, _y, _object, _dir, _spd);
 #define enemy_target(_x, _y)                                                            return  mod_script_call(   'mod', 'telib', 'enemy_target', _x, _y);
 #define boss_hp(_hp)                                                                    return  mod_script_call_nc('mod', 'telib', 'boss_hp', _hp);
 #define boss_intro(_name)                                                               return  mod_script_call_nc('mod', 'telib', 'boss_intro', _name);
@@ -1285,7 +1285,7 @@
 #define race_get_title(_race)                                                           return  mod_script_call(   'mod', 'telib', 'race_get_title', _race);
 #define player_create(_x, _y, _index)                                                   return  mod_script_call_nc('mod', 'telib', 'player_create', _x, _y, _index);
 #define player_swap()                                                                   return  mod_script_call(   'mod', 'telib', 'player_swap');
-#define wep_get(_wep)                                                                   return  mod_script_call_nc('mod', 'telib', 'wep_get', _wep);
+#define wep_raw(_wep)                                                                   return  mod_script_call_nc('mod', 'telib', 'wep_raw', _wep);
 #define wep_merge(_stock, _front)                                                       return  mod_script_call_nc('mod', 'telib', 'wep_merge', _stock, _front);
 #define wep_merge_decide(_hardMin, _hardMax)                                            return  mod_script_call_nc('mod', 'telib', 'wep_merge_decide', _hardMin, _hardMax);
 #define weapon_decide(_hardMin, _hardMax, _gold, _noWep)                                return  mod_script_call(   'mod', 'telib', 'weapon_decide', _hardMin, _hardMax, _gold, _noWep);

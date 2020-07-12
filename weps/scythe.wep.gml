@@ -75,13 +75,12 @@
 		If not holding a scythe in the given slot, a scythe is set to that slot
 	*/
 	
-	var	_b   = (_primary ? "" : "b"),
-		_wep = variable_instance_get(self, _b + "wep");
-		
+	var _wep = wep_get(_primary, "wep", mod_current);
+	
 	 // Give Scythe:
-	if(wep_get(_wep) != mod_current){
+	if(wep_raw(_wep) != mod_current){
 		_wep = mod_current;
-		variable_instance_set(self, _b + "wep", _wep);
+		wep_set(_primary, "wep", _wep);
 		
 		 // Sound:
 		sound_play_pitch(weapon_get_swap(_wep), 0.5);
@@ -94,7 +93,7 @@
 		 // LWO Setup:
 		if(!is_object(_wep)){
 			_wep = lq_clone(global.lwoWep);
-			variable_instance_set(self, _b + "wep", _wep);
+			wep_set(_primary, "wep", _wep);
 		}
 		
 		 // Swap:
@@ -113,7 +112,7 @@
 	 // Effects:
 	swapmove = 1;
 	if(visible && !instance_exists(GenCont) && !instance_exists(LevCont)){
-		variable_instance_set(self, _b + "wkick", -3);
+		wep_set(_primary, "wkick", -3);
 		gunshine = 1;
 		
 		 // !
@@ -125,7 +124,7 @@
 		 // Bone Piece Effects:
 		var	_num = 8 - array_length(instances_matching(instances_matching(Shell, "name", "BoneFX"), "creator", id)),
 			_l   = 12,
-			_d   = gunangle + variable_instance_get(self, _b + "wepangle");
+			_d   = gunangle + wep_get(_primary, "wepangle", 0);
 			
 		if(_num > 0) repeat(_num){
 			with(scrFX(x + lengthdir_x(_l, _d), y + lengthdir_y(_l, _d), [_d, 1], "BoneFX")){
@@ -146,7 +145,7 @@
 	for(var i = 0; i < maxp; i++){
 		if(button_pressed(i, "pick")){
 			with(instances_matching(Player, "index", i)){
-				if(wep_get(wep) == mod_current && !instance_exists(nearwep)){
+				if(wep_raw(wep) == mod_current && nearwep == noone){
 					 // Swap:
 					scythe_swap(true);
 					
@@ -189,20 +188,20 @@
 			var	_skill = skill_get(mut_long_arms),
 				_heavy = ((++w.combo % 3) == 0),
 				_flip  = sign(wepangle),
-				_dis   = 10 + (10 * _skill),
+				_dis   = lerp(10, 20, _skill),
 				_dir   = gunangle + orandom(4 * accuracy);
 				
-			with(obj_create(x + hspeed + lengthdir_x(_dis, _dir), y + vspeed + lengthdir_y(_dis, _dir), "BoneSlash")){
-				motion_add(
-					_dir,
-					lerp(2.5, 4.5, _skill)
-				);
-				image_angle   = direction;
+			 // Slash:
+			with(projectile_create(
+				x + hspeed + lengthdir_x(_dis, _dir),
+				y + vspeed + lengthdir_y(_dis, _dir),
+				"BoneSlash",
+				_dir,
+				lerp(2.5, 4.5, _skill)
+			)){
 				image_yscale *= _flip;
 				rotspeed      = 3 * _flip;
 				heavy         = _heavy;
-				team          = other.team;
-				creator       = f.creator;
 			}
 			
 			 // Sounds:
@@ -222,19 +221,12 @@
 		case scythe_shotbow:
 			
 			if(weapon_ammo_fire(w)){
-				 // Projectile:
-				var	d = gunangle + (accuracy * orandom(12)),
-					o = 20 * accuracy;
+				var	_dir = gunangle + orandom(12 * accuracy),
+					_off = 20 * accuracy;
 					
+				 // Bone Arrows:
 				for(var i = -1; i <= 1; i++){
-					with(obj_create(x, y, "BoneArrow")){
-						creator = f.creator;
-						team	= other.team;
-						
-						direction	= d + (i * o);
-						speed		= 16;
-						image_angle = direction;
-					}
+					projectile_create(x, y, "BoneArrow", _dir + (i * _off), 16);
 				}
 				
 				 // Sounds:
@@ -251,16 +243,11 @@
 		case scythe_slugbow:
 			
 			if(weapon_ammo_fire(w)){
-				 // Projectile:
-				var d = gunangle + (accuracy * orandom(4));
-				with(obj_create(x, y, "BoneArrow")){
-					creator = f.creator;
-					team	= other.team;
+				var _dir = gunangle + orandom(4 * accuracy);
+				
+				 // Slug Bolt:
+				with(projectile_create(x, y, "BoneArrow", _dir, 20)){
 					big		= true;
-					
-					direction	= d;
-					speed		= 20;
-					image_angle = direction;
 				}
 				
 				 // Sounds:
@@ -278,17 +265,16 @@
 	}
 	
 #define step(_primary)
-	var	b = (_primary ? "" : "b"),
-		w = variable_instance_get(self, b + "wep");
-		
+	var _wep = wep_get(_primary, "wep", mod_current);
+	
 	 // LWO Setup:
-	if(!is_object(w)){
-		w = lq_clone(global.lwoWep);
-		variable_instance_set(self, b + "wep", w);
+	if(!is_object(_wep)){
+		_wep = lq_clone(global.lwoWep);
+		wep_set(_primary, "wep", _wep);
 	}
 	
 	 // Back Muscle:
-	with(w){
+	with(_wep){
 		var _muscle = skill_get(mut_back_muscle);
 		if(buff != _muscle){
 			var _amaxRaw = (amax / (1 + (0.8 * buff)));
@@ -300,11 +286,11 @@
 	
 	 // Big Ammo:
 	if(place_meeting(x, y, WepPickup)){
-		with(instances_meeting(x, y, instances_matching_le(instances_matching(WepPickup, "visible", true), "curse", variable_instance_get(self, b + "curse", 0)))){
+		with(instances_meeting(x, y, instances_matching_le(instances_matching(WepPickup, "visible", true), "curse", wep_get(_primary, "curse", 0)))){
 			if(place_meeting(x, y, other)){
-				if(wep_get(wep) == "crabbone"){
+				if(wep_raw(wep) == "crabbone"){
 					var _num = lq_defget(wep, "ammo", 1);
-					w.ammo = min(w.ammo + (20 * _num), w.amax);
+					_wep.ammo = min(_wep.ammo + (20 * _num), _wep.amax);
 					
 					 // Pickuped:
 					with(other){
@@ -349,11 +335,14 @@
 #define chance_ct(_numer, _denom)                                                       return  random(_denom) < (_numer * current_time_scale);
 #define unlock_get(_unlock)                                                             return  mod_script_call_nc('mod', 'teassets', 'unlock_get', _unlock);
 #define obj_create(_x, _y, _obj)                                                        return  (is_undefined(_obj) ? [] : mod_script_call_nc('mod', 'telib', 'obj_create', _x, _y, _obj));
+#define projectile_create(_x, _y, _obj, _dir, _spd)                                     return  mod_script_call(   'mod', 'telib', 'projectile_create', _x, _y, _obj, _dir, _spd);
 #define weapon_fire_init(_wep)                                                          return  mod_script_call(   'mod', 'telib', 'weapon_fire_init', _wep);
 #define weapon_ammo_fire(_wep)                                                          return  mod_script_call(   'mod', 'telib', 'weapon_ammo_fire', _wep);
 #define weapon_ammo_hud(_wep)                                                           return  mod_script_call(   'mod', 'telib', 'weapon_ammo_hud', _wep);
 #define weapon_get_red(_wep)                                                            return  mod_script_call(   'mod', 'telib', 'weapon_get_red', _wep);
-#define wep_get(_wep)                                                                   return  mod_script_call_nc('mod', 'telib', 'wep_get', _wep);
+#define wep_raw(_wep)                                                                   return  mod_script_call_nc('mod', 'telib', 'wep_raw', _wep);
+#define wep_get(_primary, _name, _default)                                              return  variable_instance_get(id, (_primary ? '' : 'b') + _name, _default);
+#define wep_set(_primary, _name, _value)                                                        variable_instance_set(id, (_primary ? '' : 'b') + _name, _value);
 #define instances_meeting(_x, _y, _obj)                                                 return  mod_script_call(   'mod', 'telib', 'instances_meeting', _x, _y, _obj);
 #define scrFX(_x, _y, _motion, _obj)                                                    return  mod_script_call_nc('mod', 'telib', 'scrFX', _x, _y, _motion, _obj);
 #define sound_play_hit_ext(_snd, _pit, _vol)											return  mod_script_call(   'mod', 'telib', 'sound_play_hit_ext', _snd, _pit, _vol);

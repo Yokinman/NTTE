@@ -818,29 +818,54 @@
 	}
 	scrRight(_dir);
 	
-#define enemy_shoot(_x, _y, _object, _dir, _spd)
-	var _inst = obj_create(_x, _y, _object);
+#define projectile_create(_x, _y, _obj, _dir, _spd)
+	/*
+		Creates a given projectile with the given motion applied
+		Automatically sets team, creator, and hitid based on the calling instance
+		Automatically applies Euphoria to NTTE's custom projectiles if the calling instance is an enemy
+		
+		Ex:
+			projectile_create(x, y, Bullet2, gunangle + orandom(30), 16)
+			projectile_create(x, y, "DiverHarpoon", gunangle, 7)
+	*/
+	
+	var _inst = obj_create(_x, _y, _obj);
 	
 	with(_inst){
-		speed += _spd;
-		direction = _dir;
-		image_angle = direction;
-		if("hitid" in self && "hitid" in other) hitid = other.hitid;
-		if("team"  in self && "team"  in other) team  = other.team;
+		 // Motion:
+		direction += _dir;
+		if(_spd > 0) motion_add(_dir, _spd);
+		image_angle += direction;
 		
-		 // Auto-Creator:
-		creator = other;
-		while("creator" in creator && !instance_is(creator, hitme)){
-			creator = creator.creator;
-		}
+		 // Auto Setup:
+		var	_team    = (("team" in other) ? other.team : (("team" in self) ? team : -1)),
+			_creator = (("creator" in other && !instance_is(other, hitme)) ? other.creator : other);
+			
+		projectile_init(_team, _creator);
+		
+		if("team"    in self) team    = _team;
+		if("creator" in self) creator = _creator;
+		if("hitid"   in self) hitid   = (("hitid" in other) ? other.hitid : hitid);
 		
 		 // Euphoria:
-		if(instance_is(self, CustomProjectile)){
-			speed *= power(0.8, skill_get(mut_euphoria));
+		if(
+			is_string(_obj)
+			&& instance_is(self, CustomProjectile)
+			&& !instance_is(self, CustomSlash)
+			&& !instance_is(other, FireCont)
+			&& (instance_exists(creator) ? instance_is(creator, enemy) : (team != 2))
+		){
+			script_bind_begin_step(projectile_euphoria, 0, id);
 		}
 	}
 	
 	return _inst;
+	
+#define projectile_euphoria(_inst)
+	with(_inst){
+		speed *= power(0.8, skill_get(mut_euphoria));
+	}
+	instance_destroy();
 	
 #define enemy_walk(_spdAdd, _spdMax)
 	if(walk > 0){
@@ -2316,34 +2341,35 @@
 	if(weapon_is_melee(_wep)){
 		wepangle *= -1;
 	}
-
+	
 	 // Creator:
 	_fire.creator = self;
-	if(variable_instance_get(self, "object_index") == FireCont){
+	if(instance_is(self, FireCont) && "creator" in self){
 		_fire.creator = creator;
 	}
-
+	
 	 // Weapon Held by Creator:
 	_fire.wepheld = (variable_instance_get(_fire.creator, "wep") == _wep);
-
+	
 	 // Secondary Firing:
 	_fire.spec = variable_instance_get(self, "specfiring", false);
-	if(_fire.spec && race == "steroids") _fire.roids = true;
+	if(race == "steroids" && _fire.spec){
+		_fire.roids = true;
+	}
 	
 	 // LWO Setup:
 	if(is_string(_fire.wep)){
 		var _lwo = mod_variable_get("weapon", _fire.wep, "lwoWep");
 		if(is_object(_lwo)){
 			_fire.wep = lq_clone(_lwo);
-			
 			if(_fire.wepheld){
 				_fire.creator.wep = _fire.wep;
 			}
 		}
 	}
-
+	
 	return _fire;
-
+	
 #define weapon_ammo_fire(_wep)
 	/*
 		Called from a 'weapon_fire' script to process LWO weapons with internal ammo
@@ -2363,7 +2389,7 @@
 	}
 	
 	 // Not Enough Ammo:
-	reload = reloadspeed * current_time_scale;
+	reload = variable_instance_get(self, "reloadspeed", 1) * current_time_scale;
 	if("anam" in _wep){
 		if(button_pressed(index, (specfiring ? "spec" : "fire"))){
 			wkick = -2;
@@ -3129,12 +3155,14 @@
 				 // Effects:
 				if(current_frame_active){
 					with(instances_matching_gt(_floor, "bbox_bottom", _y + cavein_dis)){
-						repeat(choose(1, choose(1, 2))) with(instance_create(random_range(bbox_left - 12, bbox_right + 12), bbox_bottom, Dust)){
-							image_xscale *= 2;
-							image_yscale *= 2;
-							depth = -8;
-							vspeed -= 5;
-							sound_play_hit(choose(sndWallBreak, sndWallBreakBrick), 0.3);
+						repeat(choose(1, choose(1, 2))){
+							with(instance_create(random_range(bbox_left - 12, bbox_right + 12), bbox_bottom, Dust)){
+								image_xscale *= 2;
+								image_yscale *= 2;
+								depth = -8;
+								vspeed -= 5;
+								sound_play_hit(choose(sndWallBreak, sndWallBreakBrick), 0.3);
+							}
 						}
 					}
 				}
@@ -4072,37 +4100,56 @@
 	}
 	
 	return false;
-
+	
 #define lightning_connect(_x1, _y1, _x2, _y2, _arc, _enemy)
-	var	_disMax	= point_distance(_x1, _y1, _x2, _y2),
-		_disAdd	= min(_disMax / 8, 10) + (_enemy ? (array_length(instances_matching_ge(instances_matching(CustomEnemy, "name", "Eel"), "arcing", 1)) - 1) : 0),
-		_dis	= _disMax,
-		_dir	= point_direction(_x1, _y1, _x2, _y2),
-		_x		= _x1,
-		_y		= _y1,
-		_lx		= _x,
-		_ly		= _y,
-		_ox		= lengthdir_x(_disAdd, _dir),
-		_oy		= lengthdir_y(_disAdd, _dir),
-		_obj	= (_enemy ? EnemyLightning : Lightning),
-		_inst	= [],
-		_team	= variable_instance_get(self, "team", -1),
-		_hitid	= variable_instance_get(self, "hitid", -1),
-		_imgInd	= -1,
-		_imgSpd	= 0.4,
-		a, _off, _wx, _wy;
+	/*
+		Creates a lightning arc between the two given points
+		Automatically sets team, creator, and hitid based on the calling instance
+		
+		Args:
+			x1/y1 - The starting position
+			x2/y2 - The ending position
+			arc   - How far the lightning can offset from its main travel line
+			enemy - If it's an enemy lightning arc or not, true/false
+			
+		Ex:
+			lightning_connect(x, y, mouse_x, mouse_y, 8 * sin(wave / 60), false)
+	*/
+	
+	var	_disMax  = point_distance(_x1, _y1, _x2, _y2),
+		_disAdd  = min(_disMax / 8, 10) + (_enemy ? (array_length(instances_matching_ge(instances_matching(CustomEnemy, "name", "Eel"), "arcing", 1)) - 1) : 0),
+		_dis     = _disMax,
+		_dir     = point_direction(_x1, _y1, _x2, _y2),
+		_x       = _x1,
+		_y       = _y1,
+		_lx      = _x,
+		_ly      = _y,
+		_wx      = _x,
+		_wy      = _y,
+		_ox      = lengthdir_x(_disAdd, _dir),
+		_oy      = lengthdir_y(_disAdd, _dir),
+		_obj     = (_enemy ? EnemyLightning : Lightning),
+		_inst    = [],
+		_creator = (("creator" in self && !instance_is(self, hitme)) ? creator : self),
+		_hitid   = variable_instance_get(self, "hitid", -1),
+		_team    = variable_instance_get(self, "team", -1),
+		_imgInd  = -1,
+		_imgSpd  = 0.4,
+		_wave    = 0,
+		_off     = 0;
 		
 	while(_dis > _disAdd){
 		_dis -= _disAdd;
+		
 		_x += _ox;
 		_y += _oy;
 		
 		 // Wavy Offset:
 		if(_dis > _disAdd){
-			a = (_dis / _disMax) * pi;
-			_off = 4 * sin((_dis / 8) + (current_frame / 6));
-			_wx = _x + lengthdir_x(_off, _dir - 90) + (_arc * sin(a));
-			_wy = _y + lengthdir_y(_off, _dir - 90) + (_arc * sin(a / 2));
+			_wave = (_dis / _disMax) * pi;
+			_off  = 4 * sin((_dis / 8) + (current_frame / 6));
+			_wx   = _x + lengthdir_x(_off, _dir - 90) + (_arc * sin(_wave));
+			_wy   = _y + lengthdir_y(_off, _dir - 90) + (_arc * sin(_wave / 2));
 		}
 		
 		 // End:
@@ -4113,13 +4160,13 @@
 		
 		 // Lightning:
 		with(instance_create(_wx, _wy, _obj)){
-			ammo = ceil(_dis / _disAdd);
+			ammo         = ceil(_dis / _disAdd);
 			image_xscale = -point_distance(_lx, _ly, x, y) / 2;
-			image_angle = point_direction(_lx, _ly, x, y);
-			direction = image_angle;
-			hitid = _hitid;
-			creator = other;
-			team = _team;
+			image_angle  = point_direction(_lx, _ly, x, y);
+			direction    = image_angle;
+			creator      = _creator;
+			hitid        = _hitid;
+			team         = _team;
 			
 			 // Exists 1 Frame - Manually Animate:
 			if(_imgInd < 0){
@@ -4149,16 +4196,16 @@
 	
 	return _inst;
 	
-#define wep_get(_wep)
+#define wep_raw(_wep)
 	/*
 		For use with LWO weapons
 		
 		Ex:
-			wep_get({ wep:{ wep:{ wep:123 }}}) == 123
+			wep_raw({ wep:{ wep:{ wep:123 }}}) == 123
 	*/
 	
 	if(is_object(_wep)){
-		return wep_get(lq_defget(_wep, "wep", wep_none));
+		return wep_raw(lq_defget(_wep, "wep", wep_none));
 	}
 	
 	return _wep;
@@ -4231,7 +4278,7 @@
 		Returns the loadout sprite associated with a given weapon
 	*/
 	
-	var _wepRaw = wep_get(_wep);
+	var _wepRaw = wep_raw(_wep);
 	
 	 // Custom:
 	if(is_string(_wepRaw)){
@@ -4270,7 +4317,7 @@
 	*/
 	
 	var	_type = "weapon",
-		_name = wep_get(_wep),
+		_name = wep_raw(_wep),
 		_scrt = "weapon_red";
 		
 	 // Custom:
@@ -4813,8 +4860,12 @@
 	return chr(ord("A") + max(0, array_find_index(_skinList, _skin))) + " SKIN";
 	
 #define pet_create(_x, _y, _name, _modType, _modName)
+	/*
+		Creates a given pet for a given mod, and sets up its stats, sprites, and other variables
+	*/
+	
 	with(obj_create(_x, _y, "Pet")){
-		pet = _name;
+		pet      = _name;
 		mod_name = _modName;
 		mod_type = _modType;
 		
@@ -4852,6 +4903,7 @@
 		
 		return self;
 	}
+	
 	return noone;
 	
 #define pet_spawn(_x, _y, _name)
@@ -5766,13 +5818,15 @@
 				with(_varsList) if(targ == _targ) n++;
 				if(n <= 0) with(_targ){
 					with(instance_create(x, y, FrogHeal)){
-						sprite_index = spr.BossHealFX;
-						depth = other.depth - 1;
+						sprite_index  = spr.BossHealFX;
+						depth         = other.depth - 1;
 						image_xscale *= 1.5;
 						image_yscale *= 1.5;
-						vspeed -= 1;
+						vspeed       -= 1;
 					}
-					with(instance_create(x, y, LevelUp)) creator = other;
+					with(instance_create(x, y, LevelUp)){
+						creator = other;
+					}
 					sound_play_hit_ext(sndLevelUltra, 2 + orandom(0.1), 1.7);
 				}
 			}

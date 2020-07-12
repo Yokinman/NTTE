@@ -1,13 +1,13 @@
 #define init
+	 // Sprites:
 	global.sprWep = sprite_add_weapon("../sprites/weps/sprTeleportGun.png", 4, 4);
 	global.sprWepLocked = mskNone;
 	
-	lwoWep = {
-		wep : mod_current,
-		inst : noone
+	 // LWO:
+	global.lwoWep = {
+		wep  : mod_current,
+		inst : []
 	};
-	
-#macro lwoWep global.lwoWep
 	
 #define weapon_name   return (weapon_avail() ? "TELEPORT GUN" : "LOCKED");
 #define weapon_text   return "DON'T BLINK";
@@ -25,39 +25,34 @@
 	var f = weapon_fire_init(w);
 	w = f.wep;
 	
-	 // Projectile:
-	with(obj_create(x, y, "PortalBullet")){
+	 // Portal Bullet:
+	with(projectile_create(x, y, "PortalBullet", gunangle, 26)){
 		image_speed = 2.5;
 		mask_index  = mskBullet1;
-		creator     = other;
-		team        = other.team;
 		damage      = 25;
 		
-		motion_add(creator.gunangle, 26);
-		image_angle = direction;
-		
 		 // Remember Me:
-		w.inst = id;
+		array_push(w.inst, id);
 	}
 	
 	 // Effects:
+	weapon_post(8, 16, 0);
 	motion_add(gunangle, 4);
 	move_contact_solid(gunangle, 12);
-	weapon_post(8, 16, 0);
 	
 #define step(_primary)
-	var	b = (_primary ? "" : "b"),
-		w = variable_instance_get(self, b + "wep");
-		
+	var _wep = wep_get(_primary, "wep", mod_current);
+	
 	 // LWO Setup:
-	if(!is_object(w)){
-		w = lq_clone(lwoWep);
-		variable_instance_set(self, b + "wep", w);
+	if(!is_object(_wep)){
+		_wep = lq_clone(global.lwoWep);
+		wep_set(_primary, "wep", _wep);
 	}
 	
 	 // Dynamic Reload:
-	if(instance_exists(w.inst)){
-		variable_instance_set(self, b + "reload", weapon_get_load(mod_current));
+	_wep.inst = instances_matching(_wep.inst, "", null);
+	if(array_length(_wep.inst) > 0){
+		wep_set(_primary, "reload", weapon_get_load(_wep));
 	}
 	
 	
@@ -74,8 +69,11 @@
 #define chance_ct(_numer, _denom)                                                       return  random(_denom) < (_numer * current_time_scale);
 #define unlock_get(_unlock)                                                             return  mod_script_call_nc('mod', 'teassets', 'unlock_get', _unlock);
 #define obj_create(_x, _y, _obj)                                                        return  (is_undefined(_obj) ? [] : mod_script_call_nc('mod', 'telib', 'obj_create', _x, _y, _obj));
+#define projectile_create(_x, _y, _obj, _dir, _spd)                                     return  mod_script_call(   'mod', 'telib', 'projectile_create', _x, _y, _obj, _dir, _spd);
 #define weapon_fire_init(_wep)                                                          return  mod_script_call(   'mod', 'telib', 'weapon_fire_init', _wep);
 #define weapon_ammo_fire(_wep)                                                          return  mod_script_call(   'mod', 'telib', 'weapon_ammo_fire', _wep);
 #define weapon_ammo_hud(_wep)                                                           return  mod_script_call(   'mod', 'telib', 'weapon_ammo_hud', _wep);
 #define weapon_get_red(_wep)                                                            return  mod_script_call(   'mod', 'telib', 'weapon_get_red', _wep);
-#define wep_get(_wep)                                                                   return  mod_script_call_nc('mod', 'telib', 'wep_get', _wep);
+#define wep_raw(_wep)                                                                   return  mod_script_call_nc('mod', 'telib', 'wep_raw', _wep);
+#define wep_get(_primary, _name, _default)                                              return  variable_instance_get(id, (_primary ? '' : 'b') + _name, _default);
+#define wep_set(_primary, _name, _value)                                                        variable_instance_set(id, (_primary ? '' : 'b') + _name, _value);

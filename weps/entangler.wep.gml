@@ -15,7 +15,6 @@
 #define weapon_sprt   return (weapon_avail() ? global.sprWep : global.sprWepLocked);
 #define weapon_area   return (weapon_avail() ? 22 : -1); // L1 3-1
 #define weapon_load   return 20; // 0.66 Seconds
-#define weapon_melee  return true;
 #define weapon_avail  return unlock_get("pack:red");
 #define weapon_red    return 1;
 
@@ -47,30 +46,33 @@
 	var f = weapon_fire_init(w);
 	w = f.wep;
 	
-	 // Fire:
+	 // Slash:
 	var _skill = skill_get(mut_long_arms),
 		_flip  = sign(wepangle),
 		_dis   = 20 * _skill,
 		_dir   = gunangle;
 		
-	with(obj_create(x + lengthdir_x(_dis, _dir), y + lengthdir_y(_dis, _dir), "RedSlash")){
-		projectile_init(other.team, f.creator);
-		motion_add(_dir, lerp(2, 5, _skill));
-		sprite_index  = spr.EntanglerSlash;
-		image_angle   = direction;
+	with(projectile_create(
+		x + lengthdir_x(_dis, _dir),
+		y + lengthdir_y(_dis, _dir),
+		"RedSlash",
+		_dir,
+		lerp(2, 5, _skill)
+	)){
+		sprite_index = spr.EntanglerSlash;
 		image_yscale *= _flip;
 		//red_ammo      = weapon_get_red(w);
 		//can_charm     = (red_ammo > 0);
 	}
 	
-	 // Effects:
-	weapon_post(-4, 15, 8);
-	motion_add(gunangle, 6);
-	instance_create(x, y, Smoke);
-	
-	 // Sound:
+	 // Sounds:
 	sound_play_gun(sndChickenSword, 0.2, 0.3);
 	sound_play_gun(sndHammer,       0.2, 0.3);
+	
+	 // Effects:
+	weapon_post(-4, 15, 8);
+	motion_add(_dir, 6);
+	instance_create(x, y, Smoke);
 	
 	
 /// SCRIPTS
@@ -86,9 +88,12 @@
 #define chance_ct(_numer, _denom)                                                       return  random(_denom) < (_numer * current_time_scale);
 #define unlock_get(_unlock)                                                             return  mod_script_call_nc('mod', 'teassets', 'unlock_get', _unlock);
 #define obj_create(_x, _y, _obj)                                                        return  (is_undefined(_obj) ? [] : mod_script_call_nc('mod', 'telib', 'obj_create', _x, _y, _obj));
+#define projectile_create(_x, _y, _obj, _dir, _spd)                                     return  mod_script_call(   'mod', 'telib', 'projectile_create', _x, _y, _obj, _dir, _spd);
 #define weapon_fire_init(_wep)                                                          return  mod_script_call(   'mod', 'telib', 'weapon_fire_init', _wep);
 #define weapon_ammo_fire(_wep)                                                          return  mod_script_call(   'mod', 'telib', 'weapon_ammo_fire', _wep);
 #define weapon_ammo_hud(_wep)                                                           return  mod_script_call(   'mod', 'telib', 'weapon_ammo_hud', _wep);
 #define weapon_get_red(_wep)                                                            return  mod_script_call(   'mod', 'telib', 'weapon_get_red', _wep);
-#define wep_get(_wep)                                                                   return  mod_script_call_nc('mod', 'telib', 'wep_get', _wep);
+#define wep_raw(_wep)                                                                   return  mod_script_call_nc('mod', 'telib', 'wep_raw', _wep);
+#define wep_get(_primary, _name, _default)                                              return  variable_instance_get(id, (_primary ? '' : 'b') + _name, _default);
+#define wep_set(_primary, _name, _value)                                                        variable_instance_set(id, (_primary ? '' : 'b') + _name, _value);
 #define area_get_back_color(_area)                                                      return  mod_script_call_nc('mod', 'telib', 'area_get_back_color', _area);

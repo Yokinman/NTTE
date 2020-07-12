@@ -411,8 +411,8 @@
 				if(wep != wep_none){
 					wep_inst = instance_create(x, y, WepPickup);
 					with(wep_inst){
-						wep = other.wep;
-						ammo = other.ammo;
+						wep   = other.wep;
+						ammo  = other.ammo;
 						curse = other.curse;
 					}
 					wep = wep_none;
@@ -457,8 +457,8 @@
 			
 			 // Weapon Collection Stat:
 			with(instance_nearest(x, y, WepPickup)){
-				if(!array_exists(other.stat.weapons, wep_get(wep))){
-					array_push(other.stat.weapons, wep_get(wep));
+				if(!array_exists(other.stat.weapons, wep_raw(wep))){
+					array_push(other.stat.weapons, wep_raw(wep));
 				}
 			}
 		}
@@ -482,8 +482,8 @@
 		}
 
 		 // Weapon Collection Stat:
-		if(!array_exists(stat.weapons, wep_get(wep))){
-			array_push(stat.weapons, wep_get(wep));
+		if(!array_exists(stat.weapons, wep_raw(wep))){
+			array_push(stat.weapons, wep_raw(wep));
 		}
 	}
 	if(hushtime <= 0) hush = max(hush - 0.1, 0);
@@ -950,16 +950,16 @@
 									&& !instance_is(self, prop)
 								){
 									with(obj_create(x, y, "PalankingToss")){
-										direction = other.direction;
-										speed = other.speed;
-										zspeed = 5;
-										zfriction = 2/3;
-										creator = other;
-										depth = other.depth;
-										mask_index = other.mask_index;
+										direction    = other.direction;
+										speed        = other.speed;
+										zspeed       = 5;
+										zfriction    = 2/3;
+										creator      = other;
+										depth        = other.depth;
+										mask_index   = other.mask_index;
 										spr_shadow_y = other.spr_shadow_y;
-										explo = skill_get(mut_throne_butt);
-										team = _team;
+										explo        = skill_get(mut_throne_butt);
+										team         = _team;
 										
 										 // Try not to go outside level:
 										with(other){
@@ -1048,11 +1048,8 @@
 					scrFX(x, y, [direction + orandom(30), 3], Smoke);
 				}
 				else{
-					with(instance_create(x, y, Flame)){
+					with(projectile_create(x, y, Flame, other.direction + orandom(20), random_range(3, 4))){
 						sprite_index = sprSalamanderBullet;
-						motion_add(other.direction + orandom(20), random_range(3, 4));
-						team = other.team;
-						creator = other;
 					}
 					if(chance(1, 5)){
 						with(instance_create(x + orandom(8), y + orandom(8), GroundFlame)){
@@ -1370,10 +1367,10 @@
 					if(instance_seen(x, y, target) && _leaderSeeTarget && _leaderDis <= 96){
 						if(chance(2, 3)){
 							sound_play_hit_ext(sndScorpionFireStart, 1.2, 3);
-
+							
 							 // Venom Ball:
 							var _targetDir = point_direction(x, y, target.x, target.y);
-							my_venom = enemy_shoot(x, y, "PetVenom", _targetDir, 0);
+							my_venom = projectile_create(x, y, "PetVenom", _targetDir, 0);
 							scrRight(_targetDir);
 						}
 					}
@@ -1420,7 +1417,7 @@
 	var a = random(360);
 	for(var d = a; d < a + 360; d += (360 / 5)){
 		repeat(irandom_range(8, 12)){
-			enemy_shoot(x, y, "VenomPellet", d + orandom(12), 8 + random(8));
+			projectile_create(x, y, "VenomPellet", d + orandom(12), 8 + random(8));
 		}
 		
 		 // Effects:
@@ -1537,7 +1534,7 @@
 			 // Attack:
 			if(instance_is(target, hitme)){
 				sound_play_hit_ext(sndExplosionS, 1.5, 1.2);
-				with(enemy_shoot(target.x, target.y, "BubbleExplosionSmall", point_direction(x, y, target.x, target.y), 5)){
+				with(projectile_create(target.x, target.y, "BubbleExplosionSmall", point_direction(x, y, target.x, target.y), 5)){
 					repeat(2) scrFX(x, y, [direction + orandom(30), 3], Smoke);
 					image_angle = 0;
 					friction = 1;
@@ -1668,7 +1665,7 @@
 						with(instances_matching(WepPickup, "visible", true)){
 							var _dis = point_distance(x, y, other.x, other.y);
 							if(_dis < _disMax){
-								if(wep_get(wep) == "crabbone" && instance_seen(x, y, other)){
+								if(wep_raw(wep) == "crabbone" && instance_seen(x, y, other)){
 									_disMax = _dis;
 									other.target = id;
 								}
@@ -1709,11 +1706,7 @@
 						l = 8;
 						
 					for(var d = _ang; d < _ang + 360; d += (360 / _num)){
-						with(obj_create(x + lengthdir_x(l, d), y + lengthdir_y(l, d), "BubbleExplosionSmall")){
-							creator = other;
-							team = other.team;
-							hitid = other.hitid;
-						}
+						projectile_create(x + lengthdir_x(l, d), y + lengthdir_y(l, d), "BubbleExplosionSmall", 0, 0);
 					}
 					
 					 // Sound:
@@ -2180,7 +2173,7 @@
 				
 				if(instance_exists(_nearest)){
 					arcing_attack = 30 + random(30);
-					with(enemy_shoot(x, y, "TeslaCoil", point_direction(x, y, _nearest.x, _nearest.y), 0)){
+					with(projectile_create(x, y, "TeslaCoil", point_direction(x, y, _nearest.x, _nearest.y), 0)){
 						dist_max = _disMax;
 						creator_offx = 9;
 						
@@ -2193,7 +2186,11 @@
 						 // Effects:
 						var _brain = skill_get(mut_laser_brain);
 						sound_play_hit_ext((_brain ? sndLightningPistolUpg : sndLightningPistol), 1.5 + orandom(0.2), 1.2);
-						if(_brain) instance_create(x, y, LaserBrain).creator = other;
+						if(_brain){
+							with(instance_create(x, y, LaserBrain)){
+								creator = other;
+							}
+						}
 					}
 				}
 			}
@@ -3040,7 +3037,7 @@
 									
 								case Bolt: // Bolt Marrow Fix
 									variable_instance_set_list(
-										obj_create(x, y, "DiverHarpoon"),
+										projectile_create(x, y, "DiverHarpoon", 0, 0),
 										variable_instance_get_list(self)
 									);
 									break;
@@ -3551,6 +3548,7 @@
 #define shader_add(_name, _vertex, _fragment)                                           return  mod_script_call_nc('mod', 'teassets', 'shader_add', _name, _vertex, _fragment);
 #define obj_create(_x, _y, _obj)                                                        return  (is_undefined(_obj) ? [] : mod_script_call_nc('mod', 'telib', 'obj_create', _x, _y, _obj));
 #define top_create(_x, _y, _obj, _spawnDir, _spawnDis)                                  return  mod_script_call_nc('mod', 'telib', 'top_create', _x, _y, _obj, _spawnDir, _spawnDis);
+#define projectile_create(_x, _y, _obj, _dir, _spd)                                     return  mod_script_call(   'mod', 'telib', 'projectile_create', _x, _y, _obj, _dir, _spd);
 #define chest_create(_x, _y, _obj, _levelStart)                                         return  mod_script_call_nc('mod', 'telib', 'chest_create', _x, _y, _obj, _levelStart);
 #define prompt_create(_text)                                                            return  mod_script_call(   'mod', 'telib', 'prompt_create', _text);
 #define alert_create(_inst, _sprite)                                                    return  mod_script_call(   'mod', 'telib', 'alert_create', _inst, _sprite);
@@ -3591,7 +3589,6 @@
 #define scrAim(_dir)                                                                            mod_script_call(   'mod', 'telib', 'scrAim', _dir);
 #define enemy_walk(_spdAdd, _spdMax)                                                            mod_script_call(   'mod', 'telib', 'enemy_walk', _spdAdd, _spdMax);
 #define enemy_hurt(_hitdmg, _hitvel, _hitdir)                                                   mod_script_call(   'mod', 'telib', 'enemy_hurt', _hitdmg, _hitvel, _hitdir);
-#define enemy_shoot(_x, _y, _object, _dir, _spd)                                        return  mod_script_call(   'mod', 'telib', 'enemy_shoot', _x, _y, _object, _dir, _spd);
 #define enemy_target(_x, _y)                                                            return  mod_script_call(   'mod', 'telib', 'enemy_target', _x, _y);
 #define boss_hp(_hp)                                                                    return  mod_script_call_nc('mod', 'telib', 'boss_hp', _hp);
 #define boss_intro(_name)                                                               return  mod_script_call_nc('mod', 'telib', 'boss_intro', _name);
@@ -3628,7 +3625,7 @@
 #define race_get_title(_race)                                                           return  mod_script_call(   'mod', 'telib', 'race_get_title', _race);
 #define player_create(_x, _y, _index)                                                   return  mod_script_call_nc('mod', 'telib', 'player_create', _x, _y, _index);
 #define player_swap()                                                                   return  mod_script_call(   'mod', 'telib', 'player_swap');
-#define wep_get(_wep)                                                                   return  mod_script_call_nc('mod', 'telib', 'wep_get', _wep);
+#define wep_raw(_wep)                                                                   return  mod_script_call_nc('mod', 'telib', 'wep_raw', _wep);
 #define wep_merge(_stock, _front)                                                       return  mod_script_call_nc('mod', 'telib', 'wep_merge', _stock, _front);
 #define wep_merge_decide(_hardMin, _hardMax)                                            return  mod_script_call_nc('mod', 'telib', 'wep_merge_decide', _hardMin, _hardMax);
 #define weapon_decide(_hardMin, _hardMax, _gold, _noWep)                                return  mod_script_call(   'mod', 'telib', 'weapon_decide', _hardMin, _hardMax, _gold, _noWep);

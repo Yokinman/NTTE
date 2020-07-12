@@ -30,17 +30,17 @@
 		yprevious = y;
 		
 		 // Visual:
-		spr_idle =      spr.AnglerIdle;
-		spr_walk =      spr.AnglerWalk;
-		spr_hurt =      spr.AnglerHurt;
-		spr_dead =      spr.AnglerDead;
-		spr_appear =    spr.AnglerAppear;
-		// spr_shadow = shd64;
-		// spr_shadow_y = 6;
-		hitid = [spr_idle, "ANGLER"];
-		sprite_index = spr_appear;
-		image_speed = 0.4;
-		depth = -2
+		spr_idle      = spr.AnglerIdle;
+		spr_walk      = spr.AnglerWalk;
+		spr_hurt      = spr.AnglerHurt;
+		spr_dead      = spr.AnglerDead;
+		spr_appear    = spr.AnglerAppear;
+		//spr_shadow    = shd64;
+		//spr_shadow_y  = 6;
+		hitid         = [spr_idle, "ANGLER"];
+		sprite_index  = spr_appear;
+		image_speed   = 0.4;
+		depth         = -2
 		
 		 // Sound:
 		var _water = area_get_underwater(GameCont.area);
@@ -48,16 +48,16 @@
 		snd_dead = (_water ? sndOasisDeath : choose(sndFrogEggDead, sndFrogEggOpen2));
 		
 		 // Vars:
-		//mask_index = mskFrogQueen;
-		maxhealth = 50;
-		raddrop = 25;
+		//mask_index  = mskFrogQueen;
+		maxhealth   = 50;
+		raddrop     = 25;
 		meleedamage = 4;
-		size = 3;
-		walk = 0;
-		walkspeed = 0.6;
-		maxspeed = 3;
-		hiding = true;
-		ammo = 0;
+		size        = 3;
+		walk        = 0;
+		walkspeed   = 0.6;
+		maxspeed    = 3;
+		hiding      = true;
+		ammo        = 0;
 		
 		 // Alarms:
 		alarm1 = 30 + irandom(30);
@@ -66,6 +66,7 @@
 		ntte_anim = false;
 		ntte_walk = false;
 		
+		 // Hide:
 		scrAnglerHide();
 		
 		return id;
@@ -424,7 +425,7 @@
 				var n = instance_nearest(x, y, Player);
 				_dir = point_direction(x, y, n.x, n.y);
 			}
-			with(enemy_shoot(x, y, EnemyLightning, _dir, 0)){
+			with(projectile_create(x, y, EnemyLightning, _dir, 0)){
 				ammo = 6 + random(2);
 				event_perform(ev_alarm, 0);
 			}
@@ -496,10 +497,11 @@
 		
 		 // Death Lightning:
 		repeat(2){
-			with(enemy_shoot(x, y, EnemyLightning, random(360), 0.5)){
-				alarm0 = 2 + random(4);
-				ammo = 1 + random(2);
+			with(projectile_create(x, y, EnemyLightning, random(360), 0.5)){
+				alarm0       = 2 + random(4);
+				ammo         = 1 + random(2);
 				image_speed *= random_range(0.75, 1);
+				
 				with(instance_create(x, y, LightningHit)){
 					motion_add(other.direction, random(2));
 				}
@@ -581,22 +583,22 @@
 	with(instance_create(_x, _y, CustomProjectile)){
 		 // Visuals:
 		sprite_index = spr.ElectroPlasma;
-		image_speed = 0.4;
-		image_index = 1 - image_speed;
-		depth = -4;
+		image_speed  = 0.4;
+		image_index  = 1 - image_speed;
+		depth        = -4;
 		
 		 // Vars:
-		mask_index = mskEnemyBullet1;
-		damage = 3;
-		force = 3;
-		typ = 2;
-		wave = irandom(90);
-		tether = 0;
-		tether_x = x;
-		tether_y = y;
-		tether_inst = noone;
+		mask_index   = mskEnemyBullet1;
+		damage       = 3;
+		force        = 3;
+		typ          = 2;
+		wave         = irandom(90);
+		tether       = 0;
+		tether_x     = x;
+		tether_y     = y;
+		tether_inst  = noone;
 		tether_range = 80;
-		setup = true;
+		setup        = true;
 		
 		return id;
 	}
@@ -742,19 +744,19 @@
 	image_yscale -= 0.03;
 
 #define ElectroPlasma_destroy
-	enemy_shoot(x, y, "ElectroPlasmaImpact", direction, 0);
+	projectile_create(x, y, "ElectroPlasmaImpact", direction, 0);
 	ElectroPlasma_untether();
 
 #define ElectroPlasma_untether
 	if(tether > 0){
 		tether = 0;
 		sound_play_pitchvol(sndLightningReload, 0.7 + random(0.2), 0.5);
-
+		
 		var	_x1 = x + hspeed_raw,
 			_y1 = y + vspeed_raw,
 			_x2 = tether_x,
 			_y2 = tether_y;
-
+			
 		with(lightning_connect(_x1, _y1, _x2, _y2, (point_distance(_x1, _y1, _x2, _y2) / 4) * sin(wave / 90), false)){
 			with(instance_create(x, y, BoltTrail)){
 				sprite_index = spr.ElectroPlasmaTether;
@@ -771,14 +773,15 @@
 					other.direction = direction;
 					other.speed = max(0, speed - 1);
 				}
+				
 				image_yscale -= random(0.4);
 				depth = -3;
 			}
 			instance_delete(id);
 		}
 	}
-
-
+	
+	
 #define ElectroPlasmaImpact_create(_x, _y)
 	/*
 		ElectroPlasma's plasma explosion
@@ -790,11 +793,13 @@
 		
 		 // Vars:
 		mask_index = mskBullet1;
-		damage = 2;
+		damage     = 2;
 		
 		 // Effects:
 		repeat(1 + irandom(1)){
-			instance_create(x + orandom(6), y + orandom(6), PortalL).depth = -6;
+			with(instance_create(x + orandom(6), y + orandom(6), PortalL)){
+				depth = -6;
+			}
 		}
 		
 		 // Sounds:
@@ -896,12 +901,12 @@
 			 // Shoot lightning disc:
 			if(type > 2){
 				for(var a = _targetDir; a < _targetDir + 360; a += (360 / 3)){
-					with(enemy_shoot(x, y, "LightningDiscEnemy", a, 8)){
+					with(projectile_create(x, y, "LightningDiscEnemy", a, 8)){
 						shrink /= 2; // Last twice as long
 					}
 				}
 			}
-			else enemy_shoot(x, y, "LightningDiscEnemy", _targetDir, 8);
+			else projectile_create(x, y, "LightningDiscEnemy", _targetDir, 8);
 			
 			 // Effects:
 			sound_play_hit(sndLightningHit, 0.25);
@@ -1223,18 +1228,13 @@
 		 // Electricity Field:
 		var	_tx = other.x,
 			_ty = other.y,
-			d = random(360),
-			r = radius,
-			_x = x + lengthdir_x(r * image_xscale, d),
-			_y = y + lengthdir_y(r * image_yscale, d);
+			_d  = random(360),
+			_r  = radius,
+			_x  = x + lengthdir_x(_r * image_xscale, _d),
+			_y  = y + lengthdir_y(_r * image_yscale, _d);
 			
-		with(instance_create(_x, _y, (is_enemy ? EnemyLightning : Lightning))){
+		with(projectile_create(_x, _y, (is_enemy ? EnemyLightning : Lightning), point_direction(_x, _y, _tx, _ty) + orandom(12), 0)){
 			ammo = min(30, other.image_xscale + random(other.image_xscale * 2));
-			direction = point_direction(x, y, _tx, _ty) + orandom(12);
-			image_angle = direction;
-			team = other.team;
-			hitid = other.hitid;
-			creator = other.creator;
 			event_perform(ev_alarm, 0);
 		}
 		
@@ -1287,17 +1287,13 @@
 		 // Disc Split:
 		var _ang = random(360);
 		for(var a = _ang; a < _ang + 360; a += (360 / 5)){
-			with(obj_create(x, y, "LightningDisc")){
-				motion_add(a, 10);
+			with(projectile_create(x, y, "LightningDisc", a, 10)){
 				charge = other.image_xscale / 1.2;
+				creator_follow = false;
 				
 				 // Insta-Charge:
 				image_xscale = charge * 0.9;
 				image_yscale = charge * 0.9;
-				
-				team = other.team;
-				creator = other.creator;
-				creator_follow = false;
 			}
 			
 			 // Clear Walls:
@@ -1355,27 +1351,27 @@
 	with(instance_create(_x, _y, CustomObject)){
 		 // Visual:
 		sprite_index = spr.PitSpark[irandom(array_length(spr.PitSpark) - 1)];
-		image_angle = random(360);
-		image_speed = 0.4;
-		depth = 5;
+		image_angle  = random(360);
+		image_speed  = 0.4;
+		depth        = 5;
 		
 		 // Vars:
-		mask_index = mskReviveArea;
-		dark = irandom(1);
-		tentacle = {};
+		mask_index       = mskReviveArea;
+		dark             = irandom(1);
+		tentacle         = {};
 		tentacle_visible = true;
 		with(tentacle){
-			scale = 1 + (0.1 * GameCont.loops);//random_range(1, 1.2);
-			right = choose(-1, 1);
-			rotation = irandom(359);
-			move_dir = irandom(359);
+			scale    = 1 + (0.1 * GameCont.loops);//random_range(1, 1.2);
+			right    = choose(-1, 1);
+			rotation = random(360);
+			move_dir = random(360);
 			move_spd = random(1.6);
 			distance = irandom_range(28, 12) * scale;
 		};
-
+		
 		 // Alarms:
 		alarm0 = 15 + random(5);
-
+		
 		return id;
 	}
 	
@@ -1439,7 +1435,7 @@
 		 // Visual:
 		spr_bite = spr.PitSquidMawBite;
 		spr_fire = spr.PitSquidMawSpit;
-		hitid = [spr_fire, "PIT SQUID"];
+		hitid    = [spr_fire, "PIT SQUID"];
 		
 		 // Sounds:
 		snd_hurt = sndBigDogHit;
@@ -1447,51 +1443,51 @@
 		snd_lowh = sndNothing2HalfHP;
 		
 		 // Vars:
-		posx = x;
-		posy = y;
-		x = 0;
-		y = 0;
-		friction = 0.01;
-		mask_index = mskNone;
-		meleedamage = 8;
-		maxhealth = boss_hp(400);
-		tauntdelay = 60;
-		intro = false;
-		intro_pitbreak = false;
-		raddrop = 50;
-		size = 5;
-		canfly = true;
-		target = noone;
-		bite = 0;
-		sink = false;
-		pit_height = 1;
-		spit = 0;
-		ammo = 0;
-		gunangle = random(360);
+		posx               = x;
+		posy               = y;
+		x                  = 0;
+		y                  = 0;
+		friction           = 0.01;
+		mask_index         = mskNone;
+		meleedamage        = 8;
+		maxhealth          = boss_hp(400);
+		tauntdelay         = 60;
+		intro              = false;
+		intro_pitbreak     = false;
+		raddrop            = 50;
+		size               = 5;
+		canfly             = true;
+		target             = noone;
+		bite               = 0;
+		sink               = false;
+		pit_height         = 1;
+		spit               = 0;
+		ammo               = 0;
+		gunangle           = random(360);
 		electroplasma_side = choose(-1, 1);
 		electroplasma_last = noone;
-		rise_delay = 0;
+		rise_delay         = 0;
 		
 		 // Eyes:
-		eye = [];
-		eye_dir = random(360);
-		eye_dir_speed = 0;
-		eye_dis = 0;
-		eye_laser = 0;
+		eye             = [];
+		eye_dir         = random(360);
+		eye_dir_speed   = 0;
+		eye_dis         = 0;
+		eye_laser       = 0;
 		eye_laser_delay = 0;
 		repeat(3){
 			array_push(eye, {
-				x : 0,
-				y : 0,
-				dis : 5,
-				dir : random(360),
-				blink : true,
+				x         : 0,
+				y         : 0,
+				dis       : 5,
+				dir       : random(360),
+				blink     : true,
 				blink_img : 0,
-				my_laser : noone
+				my_laser  : noone
 			});
 		}
 		
-		 // Loop
+		 // Loop:
 		image_xscale += (0.1 * GameCont.loops);
 		image_yscale = image_xscale;
 		
@@ -1702,7 +1698,7 @@
 					
 					if(!instance_exists(my_laser)){
 						with(other){
-							other.my_laser = enemy_shoot(other.x, other.y, "QuasarBeam", _dir, 0);
+							other.my_laser = projectile_create(other.x, other.y, "QuasarBeam", _dir, 0);
 						}
 						with(my_laser){
 							damage = 6;
@@ -2052,7 +2048,7 @@
 			var	_last = electroplasma_last,
 				_ang = (2000 / max(1, _targetDis)) * image_xscale;
 				
-			with(enemy_shoot(posx, posy, "ElectroPlasma", gunangle + (_ang * electroplasma_side), 5)){
+			with(projectile_create(posx, posy, "ElectroPlasma", gunangle + (_ang * electroplasma_side), 5)){
 				tether_inst = _last;
 				image_xscale *= other.image_xscale;
 				image_yscale *= other.image_yscale;
@@ -2187,14 +2183,14 @@
 
 	 // Death Time:
 	with(obj_create(x, y, "PitSquidDeath")){
-		eye = other.eye;
-		eye_dir = other.eye_dir;
+		eye           = other.eye;
+		eye_dir       = other.eye_dir;
 		eye_dir_speed = other.eye_dir_speed;
-		eye_dis = other.eye_dis;
-		pit_height = other.pit_height;
-		direction = other.direction;
-		speed = min(other.speed, 2);
-		raddrop = other.raddrop;
+		eye_dis       = other.eye_dis;
+		pit_height    = other.pit_height;
+		direction     = other.direction;
+		speed         = min(other.speed, 2);
+		raddrop       = other.raddrop;
 	}
 	raddrop = 0;
 
@@ -2363,7 +2359,7 @@
 			 // Effects:
 			sound_play_pitchvol(sndWallBreak, 0.6 + random(0.4), 1.5);
 			repeat(sprite_width / 16){
-				instance_create(random_range(bbox_left, bbox_right), random_range(bbox_top, bbox_bottom), Debris);
+				instance_create(random_range(bbox_left, bbox_right + 1), random_range(bbox_top, bbox_bottom + 1), Debris);
 			}
 		}
 	}
@@ -2453,9 +2449,11 @@
 				var	_depth = depth - 1,
 					_yoffset = 8;
 					
-				repeat(1 + irandom(1)) with(instance_create(irandom_range(bbox_left, bbox_right), irandom_range(bbox_top, bbox_bottom) - _yoffset, PlasmaTrail)){
-					depth = _depth;
-					sprite_index = spr.EnemyPlasmaTrail;
+				repeat(1 + irandom(1)){
+					with(instance_create(irandom_range(bbox_left, bbox_right + 1), irandom_range(bbox_top, bbox_bottom + 1) - _yoffset, PlasmaTrail)){
+						depth = _depth;
+						sprite_index = spr.EnemyPlasmaTrail;
+					}
 				}
 				
 				 // Full charge:
@@ -2466,10 +2464,12 @@
 						depth = _depth;
 						sprite_index = spr.SquidCharge;
 					}
-					repeat(2 + irandom(4)) with(instance_create(x, y - _yoffset, LaserCharge)){
-						depth = _depth;
-						alarm0 = 6 + irandom(6);
-						motion_set(irandom(359), 2 + random(2));
+					repeat(2 + irandom(4)){
+						with(instance_create(x, y - _yoffset, LaserCharge)){
+							depth = _depth;
+							alarm0 = 6 + irandom(6);
+							motion_set(irandom(359), 2 + random(2));
+						}
 					}
 					
 					 // Sounds:
@@ -2491,7 +2491,7 @@
 						
 					 // Bomb Attack:
 					if(bomb){
-						with(enemy_shoot(x, y, "PitSquidBomb", point_direction(x, y, target.x, target.y), 0)){
+						with(projectile_create(x, y, "PitSquidBomb", point_direction(x, y, target.x, target.y), 0)){
 							target = _target;
 							triple = false;
 							ammo = 4 + irandom(3);
@@ -2606,6 +2606,7 @@
 		}
 	}
 	
+	
 #define PitSquidBomb_create(_x, _y)
 	/*
 		Used by PitSquidArm to create a trail of plasma explosions
@@ -2614,7 +2615,7 @@
 	with(instance_create(_x, _y, CustomObject)){
 		 // Visual:
 		hitid = -1;
-
+		
 		 // Vars:
 		mask_index = mskBandit;
 		creator = noone;
@@ -2632,7 +2633,7 @@
 #define PitSquidBomb_alrm0
 	var	_len = 24,
 		_dir = direction;
-	
+		
 	 // Adjust Direction:
 	if(instance_exists(target) && instance_exists(creator)){
 		var _clamp = 45;
@@ -2641,7 +2642,7 @@
 	
 	var	_x = x + lengthdir_x(_len, _dir),
 		_y = y + lengthdir_y(_len, _dir);
-	
+		
 	if(pit_get(_x, _y) && !place_meeting(_x, _y, Wall)){
 		 // Relocate Creator:
 		with(creator){
@@ -2651,16 +2652,16 @@
 			alarm2 = other.alarm1 + 10;
 			alarm1 = max(alarm1, alarm2);
 		}
-	
+		
 		 // Spawn Next Bomb:
 		if(ammo > 0){
-			with(enemy_shoot(_x, _y, "PitSquidBomb", _dir, 0)){
+			with(projectile_create(_x, _y, "PitSquidBomb", _dir, 0)){
 				target = other.target;
-				ammo = other.ammo - 1;
+				ammo   = other.ammo - 1;
 			}
 		}
 	}
-
+	
 	 // Effects:
 	repeat(irandom_range(3, 7)){
 		with(instance_create(x + orandom(12), y + orandom(12), PlasmaTrail)){
@@ -2688,7 +2689,7 @@
 			var	_x = x + lengthdir_x(l, d + direction),
 				_y = y + lengthdir_y(l, d + direction);
 				
-			with(enemy_shoot(_x, _y, "PlasmaImpactSmall", direction, 0)){
+			with(projectile_create(_x, _y, "PlasmaImpactSmall", direction, 0)){
 				sprite_index = spr.EnemyPlasmaImpactSmall;
 				array_push(_explo, id);
 			}
@@ -2697,14 +2698,14 @@
 
 	 // Single Sucker:
 	else{
-		with(enemy_shoot(_x, _y, PlasmaImpact, direction, 0)){
+		with(projectile_create(_x, _y, PlasmaImpact, direction, 0)){
 			sprite_index = spr.EnemyPlasmaImpact;
 			array_push(_explo, id);
 		}
 		
 		 // Mortar Time:
 		if(instance_exists(target) && GameCont.loops > 0){
-			with(enemy_shoot(x, y, "MortarPlasma", point_direction(x, y, target.x, target.y), 3)){
+			with(projectile_create(x, y, "MortarPlasma", point_direction(x, y, target.x, target.y), 3)){
 				zspeed = (point_distance(x, y, other.target.x, other.target.y) * zfriction) / (speed * 2);
 			}
 		}
@@ -2731,16 +2732,17 @@
 		spr_bite = spr.PitSquidMawBite;
 		
 		 // Vars:
-		friction = 0.01;
-		eye = [];
-		eye_dir = random(360);
+		friction      = 0.01;
+		eye           = [];
+		eye_dir       = random(360);
 		eye_dir_speed = 0;
-		eye_dis = 0;
-		pit_height = 0;
-		raddrop = 0;
-		explo = true;
-		sink = false;
+		eye_dis       = 0;
+		pit_height    = 0;
+		raddrop       = 0;
+		explo         = true;
+		sink          = false;
 		
+		 // Alarms:
 		alarm0 = 30;
 		
 		return id;
@@ -2858,47 +2860,47 @@
 	with(instance_create(_x, _y, CustomProjectile)){
 		 // Visual:
 		sprite_index = spr.QuasarBeam;
-		spr_strt = spr.QuasarBeamStart;
-		spr_stop = spr.QuasarBeamEnd;
-		image_speed = 0.5;
-		depth = -1.5;
+		spr_strt     = spr.QuasarBeamStart;
+		spr_stop     = spr.QuasarBeamEnd;
+		image_speed  = 0.5;
+		depth        = -1.5;
 		
 		 // Vars:
-		friction = 0.02;
-		mask_index = msk.QuasarBeam;
-		image_xscale = 1;
-		image_yscale = image_xscale;
-		creator = noone;
-		roids = false;
-		damage = 12;
-		force = 4;
-		typ = 0;
-		loop_snd = -1;
-		hit_time = 0;
-		hit_list = {};
-		blast_hit = true;
-		flash_frame = current_frame + 2;
-		line_seg = [];
-		line_dis = 0;
-		line_dis_max = 300;
-		line_dir_turn = 0;
-		line_dir_fric = 1/4;
-		line_dir_goal = null;
-		turn_max = 8;
-		turn_factor = 1/8;
-		bend = 0;
-		bend_fric = 0.3;
-		shrink_delay = 0;
-		shrink = 0.05;
-		scale_goal = 1;
+		friction       = 0.02;
+		mask_index     = msk.QuasarBeam;
+		image_xscale   = 1;
+		image_yscale   = image_xscale;
+		creator        = noone;
+		roids          = false;
+		damage         = 12;
+		force          = 4;
+		typ            = 0;
+		loop_snd       = -1;
+		hit_time       = 0;
+		hit_list       = {};
+		blast_hit      = true;
+		flash_frame    = current_frame + 2;
+		line_seg       = [];
+		line_dis       = 0;
+		line_dis_max   = 300;
+		line_dir_turn  = 0;
+		line_dir_fric  = 1/4;
+		line_dir_goal  = null;
+		turn_max       = 8;
+		turn_factor    = 1/8;
+		bend           = 0;
+		bend_fric      = 0.3;
+		shrink_delay   = 0;
+		shrink         = 0.05;
+		scale_goal     = 1;
 		follow_creator = true;
-		offset_dis = 0;
-		hold_x = null;
-		hold_y = null;
-		ring = false;
-		ring_size = 1;
-		ring_lasers = [];
-		wave = random(100);
+		offset_dis     = 0;
+		hold_x         = null;
+		hold_y         = null;
+		ring           = false;
+		ring_size      = 1;
+		ring_lasers    = [];
+		wave           = random(100);
 		
 		on_end_step = QuasarBeam_quick_fix;
 		
@@ -3318,19 +3320,15 @@
 	alarm0 = random_range(4 + (8 * array_length(ring_lasers)), 16);
 	
 	 // Laser:
-	with(obj_create(x, y, "QuasarBeam")){
-		image_angle = random(360);
-		team = other.team;
-		creator = other.creator;
-		
-		spr_strt = -1;
+	with(projectile_create(x, y, "QuasarBeam", random(360), 0)){
+		spr_strt       = -1;
 		follow_creator = false;
-		line_dir_goal = image_angle + random(orandom(180));
-		shrink_delay = min(other.shrink_delay, random_range(10, 120));
-		scale_goal = other.scale_goal - random(0.6);
-		image_xscale = 0;
-		image_yscale = 0;
-		visible = false;
+		line_dir_goal  = image_angle + random(orandom(180));
+		shrink_delay   = min(other.shrink_delay, random_range(10, 120));
+		scale_goal     = other.scale_goal - random(0.6);
+		image_xscale   = 0;
+		image_yscale   = 0;
+		visible        = false;
 		
 		array_push(other.ring_lasers, id);
 	}
@@ -3438,7 +3436,7 @@
 #define QuasarBeam_wepangle
 	if(instance_exists(creator) && abs(angle) > 1){
 		with(creator){
-			if(string_pos("quasar", string(wep_get(other.roids ? bwep : wep))) == 1){
+			if(string_pos("quasar", string(wep_raw(other.roids ? bwep : wep))) == 1){
 				if(other.roids){
 					bwepangle = other.angle;
 				}
@@ -3488,24 +3486,24 @@
 	with(instance_create(_x, _y, CustomObject)){
 		 // Visual:
 		sprite_index = sprLightningBall;
-		image_speed = 0.4 + orandom(0.1);
+		image_speed  = 0.4 + orandom(0.1);
 		image_xscale = 0.4;
 		image_yscale = image_xscale;
 		
 		 // Vars:
-		team = -1;
-		creator = noone;
+		team         = -1;
+		creator      = noone;
 		creator_offx = 17;
 		creator_offy = 2;
-		num = 3;
-		wave = random(1000);
-		time = random_range(8, 16) * (1 + (0.5 * skill_get(mut_laser_brain)));
-		target = noone;
-		target_x = x;
-		target_y = y;
-		dist_max = 96;
-		roids = false;
-		bat = false;
+		num          = 3;
+		wave         = random(1000);
+		time         = random_range(8, 16) * (1 + (0.5 * skill_get(mut_laser_brain)));
+		target       = noone;
+		target_x     = x;
+		target_y     = y;
+		dist_max     = 96;
+		roids        = false;
+		bat          = false;
 		
 		 // Alarms:
 		alarm0 = 1;
@@ -3515,24 +3513,23 @@
 
 #define TeslaCoil_alrm0
 	 // Find Targetable Enemies:
-	var	_maxDist = dist_max,
-		_target = [],
-		_teamPriority = null; // Higher teams get priority (Always target IDPD first. Props are targeted only when no enemies are around)
+	var	_maxDis       = dist_max,
+		_target       = [],
+		_teamPriority = 0; // Higher teams get priority (Always target IDPD first. Props are targeted only when no enemies are around)
 		
 	with(instances_matching_ne(instances_matching_ne(hitme, "team", team), "mask_index", mskNone, sprVoid)){
-		if(distance_to_point(other.x, other.y) < _maxDist && instance_seen(x, y, other)){
-			if(_teamPriority == null || team > _teamPriority){
+		if(distance_to_point(other.x, other.y) < _maxDis && instance_seen(x, y, other)){
+			if(team > _teamPriority){
 				_teamPriority = team;
-				target = [];
+				_target = [];
 			}
-			
 			array_push(_target, id);
 		}
 	}
 	
 	 // Random Arc:
 	if(array_length(_target) <= 0){
-		var	_dis = _maxDist * random_range(0.2, 0.8),
+		var	_dis = _maxDis * random_range(0.2, 0.8),
 			_dir = random(360);
 			
 		do{
@@ -3545,10 +3542,10 @@
 	
 	 // Enemy Arc:
 	else{
-		target = instance_random(_target);
+		target   = instance_random(_target);
 		target_x = target.x;
 		target_y = target.y;
-		time *= 1.5;
+		time    *= 1.5;
 	}
 	
 #define TeslaCoil_step
@@ -3566,7 +3563,7 @@
 			y = creator.y + creator.vspeed_raw + lengthdir_y(_xdis, _xdir) + lengthdir_y(_ydis, _ydir);
 			if(roids) y -= 4;
 		}
-
+		
 		 // Targeting:
 		if(instance_exists(target)){
 			with(target){
@@ -3674,26 +3671,27 @@
 	with(instance_create(_x, _y, CustomObject)){
 		 // Visual:
 		sprite_index = spr.FloorTrenchBreak;
-		image_index = irandom(image_number - 1)
-		image_speed = 0;
-		image_alpha = 0;
-		depth = -9;
+		image_index  = irandom(image_number - 1)
+		image_speed  = 0;
+		image_alpha  = 0;
+		depth        = -9;
 
 		 // Vars:
-		z = 0;
-		zspeed = 6 + random(4);
-		zfriction = 0.3;
-		friction = 0.05;
+		z            = 0;
+		zspeed       = 6 + random(4);
+		zfriction    = 0.3;
+		friction     = 0.05;
 		image_angle += orandom(20);
-		rotspeed = random_range(1, 2) * choose(-1, 1);
-		rotfriction = 0;
+		rotspeed     = random_range(1, 2) * choose(-1, 1);
+		rotfriction  = 0;
 		if(chance(1, 3)){
 			rotspeed *= 8;
 			rotfriction = 1;
 		}
-
+		
+		 // Lets gOOO
 		motion_add(random(360), 2 + random(3));
-
+		
 		return id;
 	}
 
@@ -3727,15 +3725,13 @@
 	if(!place_meeting(x, y, Wall) && pit_get(x, y)){
 		with(instance_create(x, y, Debris)){
 			sprite_index = other.sprite_index;
-			image_index = other.image_index;
-			image_angle = other.image_angle;
-			direction = other.direction;
-			speed = other.speed;
+			image_index  = other.image_index;
+			image_angle  = other.image_angle;
+			direction    = other.direction;
+			speed        = other.speed;
 		}
 		if(!_debris) repeat(3){
-			with(instance_create(x, y, Smoke)){
-				motion_add(random(360), 2);
-			}
+			scrFX(x, y, 2, Smoke);
 		}
 	}
 
@@ -3770,11 +3766,11 @@
 	
 	with(instance_create(_x, _y, CustomProp)){
 		 // Visual:
-		spr_idle = spr.VentIdle;
-		spr_hurt = spr.VentHurt;
-		spr_dead = spr.VentDead;
+		spr_idle   = spr.VentIdle;
+		spr_hurt   = spr.VentHurt;
+		spr_dead   = spr.VentDead;
 		spr_shadow = mskNone;
-		depth = -2;
+		depth      = -2;
 		
 		 // Sounds
 		snd_hurt = sndOasisHurt;
@@ -3782,7 +3778,7 @@
 		
 		 // Vars:
 		maxhealth = 12;
-		size = 1;
+		size      = 1;
 		
 		return id;
 	}
@@ -3800,9 +3796,9 @@
 	}
 	
 #define Vent_death
-	if(!instance_exists(Spiral)) obj_create(x, y, "BubbleExplosion");
-
-
+	obj_create(x, y, "BubbleExplosion");
+	
+	
 #define WantEel_create(_x, _y)
 	/*
 		An Eel waiting to come out of the pit, he's waiting
@@ -3835,7 +3831,11 @@
 #define WantEel_step
 	if(active){
 		 // Effects:
-		if(chance_ct(1, 30)) with(obj_create(xpos + orandom(6), ypos + orandom(6), "PitSpark")) tentacle_visible = false;
+		if(chance_ct(1, 30)){
+			with(obj_create(xpos + orandom(6), ypos + orandom(6), "PitSpark")){
+				tentacle_visible = false;
+			}
+		}
 		
 		 // Bounce:
 		mask_index = mask;
@@ -4004,7 +4004,7 @@
 		draw_set_color_write_enable(true, false, false, true);
 		
 		with(instances_matching_gt(_players, "reload", 0)){
-			if(array_exists(["quasar blaster", "quasar rifle", "quasar cannon"], wep_get(wep))){
+			if(array_exists(["quasar blaster", "quasar rifle", "quasar cannon"], wep_raw(wep))){
 				var	l = -2,
 					d = gunangle - 90,
 					_alpha = image_alpha * (reload / weapon_get_load(wep)) * (1 + (0.2 * skill_get(mut_laser_brain)));
@@ -4013,7 +4013,7 @@
 			}
 		}
 		with(instances_matching_gt(instances_matching(_players, "race", "steroids"), "breload", 0)){ // hey JW why couldnt u make weapons arrays or objects why couldnt you pleas e
-			if(array_exists(["quasar blaster", "quasar rifle", "quasar cannon"], wep_get(bwep))){
+			if(array_exists(["quasar blaster", "quasar rifle", "quasar cannon"], wep_raw(bwep))){
 				var	l = -4,
 					d = gunangle - 90,
 					_alpha = image_alpha * (breload / weapon_get_load(bwep)) * (1 + (0.2 * skill_get(mut_laser_brain)));
@@ -4374,6 +4374,7 @@
 #define shader_add(_name, _vertex, _fragment)                                           return  mod_script_call_nc('mod', 'teassets', 'shader_add', _name, _vertex, _fragment);
 #define obj_create(_x, _y, _obj)                                                        return  (is_undefined(_obj) ? [] : mod_script_call_nc('mod', 'telib', 'obj_create', _x, _y, _obj));
 #define top_create(_x, _y, _obj, _spawnDir, _spawnDis)                                  return  mod_script_call_nc('mod', 'telib', 'top_create', _x, _y, _obj, _spawnDir, _spawnDis);
+#define projectile_create(_x, _y, _obj, _dir, _spd)                                     return  mod_script_call(   'mod', 'telib', 'projectile_create', _x, _y, _obj, _dir, _spd);
 #define chest_create(_x, _y, _obj, _levelStart)                                         return  mod_script_call_nc('mod', 'telib', 'chest_create', _x, _y, _obj, _levelStart);
 #define prompt_create(_text)                                                            return  mod_script_call(   'mod', 'telib', 'prompt_create', _text);
 #define alert_create(_inst, _sprite)                                                    return  mod_script_call(   'mod', 'telib', 'alert_create', _inst, _sprite);
@@ -4414,7 +4415,6 @@
 #define scrAim(_dir)                                                                            mod_script_call(   'mod', 'telib', 'scrAim', _dir);
 #define enemy_walk(_spdAdd, _spdMax)                                                            mod_script_call(   'mod', 'telib', 'enemy_walk', _spdAdd, _spdMax);
 #define enemy_hurt(_hitdmg, _hitvel, _hitdir)                                                   mod_script_call(   'mod', 'telib', 'enemy_hurt', _hitdmg, _hitvel, _hitdir);
-#define enemy_shoot(_x, _y, _object, _dir, _spd)                                        return  mod_script_call(   'mod', 'telib', 'enemy_shoot', _x, _y, _object, _dir, _spd);
 #define enemy_target(_x, _y)                                                            return  mod_script_call(   'mod', 'telib', 'enemy_target', _x, _y);
 #define boss_hp(_hp)                                                                    return  mod_script_call_nc('mod', 'telib', 'boss_hp', _hp);
 #define boss_intro(_name)                                                               return  mod_script_call_nc('mod', 'telib', 'boss_intro', _name);
@@ -4451,7 +4451,7 @@
 #define race_get_title(_race)                                                           return  mod_script_call(   'mod', 'telib', 'race_get_title', _race);
 #define player_create(_x, _y, _index)                                                   return  mod_script_call_nc('mod', 'telib', 'player_create', _x, _y, _index);
 #define player_swap()                                                                   return  mod_script_call(   'mod', 'telib', 'player_swap');
-#define wep_get(_wep)                                                                   return  mod_script_call_nc('mod', 'telib', 'wep_get', _wep);
+#define wep_raw(_wep)                                                                   return  mod_script_call_nc('mod', 'telib', 'wep_raw', _wep);
 #define wep_merge(_stock, _front)                                                       return  mod_script_call_nc('mod', 'telib', 'wep_merge', _stock, _front);
 #define wep_merge_decide(_hardMin, _hardMax)                                            return  mod_script_call_nc('mod', 'telib', 'wep_merge_decide', _hardMin, _hardMax);
 #define weapon_decide(_hardMin, _hardMax, _gold, _noWep)                                return  mod_script_call(   'mod', 'telib', 'weapon_decide', _hardMin, _hardMax, _gold, _noWep);

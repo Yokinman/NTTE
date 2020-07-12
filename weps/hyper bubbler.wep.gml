@@ -1,4 +1,5 @@
 #define init
+	 // Sprites:
 	global.sprWep = sprite_add_weapon("../sprites/weps/sprHyperBubbler.png", 8, 4);
 	global.sprWepLocked = mskNone;
 	
@@ -16,24 +17,20 @@
 	var f = weapon_fire_init(w);
 	w = f.wep;
 	
-	 // Projectile:
-	var	l = 20,
-		d = gunangle + (accuracy * orandom(3));
+	 // Hyper Bubble:
+	var	_l = 20,
+		_d = gunangle + orandom(3 * accuracy);
 		
-	with(obj_create(x + lengthdir_x(l, d), y + lengthdir_y(l, d), "HyperBubble")){
-		creator = f.creator;
-		team = other.team;
-		direction = d;
-	}
+	projectile_create(x + lengthdir_x(_l, _d), y + lengthdir_y(_l, _d), "HyperBubble", _d, 0);
+	
+	 // Sounds:
+	sound_play_pitchvol(sndPlasmaRifle,  0.9 + random(0.3), 1.0);
+	sound_play_pitchvol(sndHyperSlugger, 0.9 + random(0.3), 0.6);
 	
 	 // Effects:
 	weapon_post(10, 20, 5);
-	motion_add(d + 180, 4);
+	motion_add(_d + 180, 4);
 	sleep(35);
-	
-	 // Sounds:
-	sound_play_pitchvol(sndPlasmaRifle,     0.9 + random(0.3), 1.0);
-	sound_play_pitchvol(sndHyperSlugger,    0.9 + random(0.3), 0.6);
 	
 	
 /// SCRIPTS
@@ -49,8 +46,11 @@
 #define chance_ct(_numer, _denom)                                                       return  random(_denom) < (_numer * current_time_scale);
 #define unlock_get(_unlock)                                                             return  mod_script_call_nc('mod', 'teassets', 'unlock_get', _unlock);
 #define obj_create(_x, _y, _obj)                                                        return  (is_undefined(_obj) ? [] : mod_script_call_nc('mod', 'telib', 'obj_create', _x, _y, _obj));
+#define projectile_create(_x, _y, _obj, _dir, _spd)                                     return  mod_script_call(   'mod', 'telib', 'projectile_create', _x, _y, _obj, _dir, _spd);
 #define weapon_fire_init(_wep)                                                          return  mod_script_call(   'mod', 'telib', 'weapon_fire_init', _wep);
 #define weapon_ammo_fire(_wep)                                                          return  mod_script_call(   'mod', 'telib', 'weapon_ammo_fire', _wep);
 #define weapon_ammo_hud(_wep)                                                           return  mod_script_call(   'mod', 'telib', 'weapon_ammo_hud', _wep);
 #define weapon_get_red(_wep)                                                            return  mod_script_call(   'mod', 'telib', 'weapon_get_red', _wep);
-#define wep_get(_wep)                                                                   return  mod_script_call_nc('mod', 'telib', 'wep_get', _wep);
+#define wep_raw(_wep)                                                                   return  mod_script_call_nc('mod', 'telib', 'wep_raw', _wep);
+#define wep_get(_primary, _name, _default)                                              return  variable_instance_get(id, (_primary ? '' : 'b') + _name, _default);
+#define wep_set(_primary, _name, _value)                                                        variable_instance_set(id, (_primary ? '' : 'b') + _name, _value);

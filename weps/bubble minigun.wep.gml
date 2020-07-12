@@ -1,4 +1,5 @@
 #define init
+	 // Sprites:
 	global.sprWep = sprite_add_weapon("../sprites/weps/sprBubbleMinigun.png", 3, 3);
 	global.sprWepLocked = mskNone;
 	
@@ -30,26 +31,27 @@
 	w = f.wep;
 	
 	 // Burst Fire:
-	repeat(3) if(instance_exists(self)){
-		 // Projectile:
-		with(obj_create(x, y, "BubbleBomb")){
-			move_contact_solid(other.gunangle, 6);
-			motion_add(other.gunangle + orandom(6 * other.accuracy), 10 + random(2));
-			creator = f.creator;
-			team = other.team;
+	if(fork()){
+		repeat(3){
+			 // Bubble Bomb:
+			with(projectile_create(x, y, "BubbleBomb", gunangle + orandom(6 * accuracy), 10 + random(2))){
+				move_contact_solid(other.gunangle, 6);
+			}
+			
+			 // Sounds:
+			var _pitch = random_range(0.8, 1.2);
+			sound_play_pitch(sndOasisCrabAttack,     0.7 * _pitch);
+			sound_play_pitch(sndSuperSplinterGun,    1.4 * _pitch);
+			sound_play_pitch(sndOasisExplosionSmall, 0.7 * _pitch);
+			
+			 // Effects:
+			weapon_post(5, -5, 10);
+			motion_add(gunangle + 180, 0.5);
+			
+			wait 1;
+			if(!instance_exists(self)) break;
 		}
-		
-		 // Effects:
-		var _pitch = random_range(0.8, 1.2);
-		sound_play_pitch(sndOasisCrabAttack,     0.7 * _pitch);
-		sound_play_pitch(sndSuperSplinterGun,    1.4 * _pitch);
-		sound_play_pitch(sndOasisExplosionSmall, 0.7 * _pitch);
-		
-		 // Post:
-		weapon_post(5, -5, 10);
-		motion_add(gunangle + 180, 0.5);
-		
-		wait 1;
+		exit;
 	}
 	
 	
@@ -66,8 +68,11 @@
 #define chance_ct(_numer, _denom)                                                       return  random(_denom) < (_numer * current_time_scale);
 #define unlock_get(_unlock)                                                             return  mod_script_call_nc('mod', 'teassets', 'unlock_get', _unlock);
 #define obj_create(_x, _y, _obj)                                                        return  (is_undefined(_obj) ? [] : mod_script_call_nc('mod', 'telib', 'obj_create', _x, _y, _obj));
+#define projectile_create(_x, _y, _obj, _dir, _spd)                                     return  mod_script_call(   'mod', 'telib', 'projectile_create', _x, _y, _obj, _dir, _spd);
 #define weapon_fire_init(_wep)                                                          return  mod_script_call(   'mod', 'telib', 'weapon_fire_init', _wep);
 #define weapon_ammo_fire(_wep)                                                          return  mod_script_call(   'mod', 'telib', 'weapon_ammo_fire', _wep);
 #define weapon_ammo_hud(_wep)                                                           return  mod_script_call(   'mod', 'telib', 'weapon_ammo_hud', _wep);
 #define weapon_get_red(_wep)                                                            return  mod_script_call(   'mod', 'telib', 'weapon_get_red', _wep);
-#define wep_get(_wep)                                                                   return  mod_script_call_nc('mod', 'telib', 'wep_get', _wep);
+#define wep_raw(_wep)                                                                   return  mod_script_call_nc('mod', 'telib', 'wep_raw', _wep);
+#define wep_get(_primary, _name, _default)                                              return  variable_instance_get(id, (_primary ? '' : 'b') + _name, _default);
+#define wep_set(_primary, _name, _value)                                                        variable_instance_set(id, (_primary ? '' : 'b') + _name, _value);

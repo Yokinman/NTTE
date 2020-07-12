@@ -300,10 +300,8 @@
 	
 	 // Bubble Excrete:
 	if(big > 0 && z < 24 && image_index >= 6 && chance_ct(big, 5 + max(z, 0))){
-		with(obj_create(x + orandom(8), y - 8 - z + orandom(8), "BubbleBomb")){
-			projectile_init(other.team, other.creator);
+		with(projectile_create(x + orandom(8), y - z - 8 + orandom(8), "BubbleBomb", 0, 0)){
 			image_speed *= random_range(0.8, 1);
-			hitid = other.hitid;
 		}
 	}
 	
@@ -358,7 +356,7 @@
 		
 		 // Baseball:
 		var _inst = instances_matching(_meeting, "object_index", Slash, GuitarSlash, BloodSlash, EnergySlash, EnergyHammerSlash, CustomSlash);
-		if(_inst) with(_inst){
+		if(array_length(_inst) > 0) with(_inst){
 			if(place_meeting(x, y + other.z, other)){
 				with(other){
 					var	_lastAlrm = alarm1,
@@ -385,7 +383,7 @@
 		
 		 // Bubble Collision:
 		var _inst = instances_matching_ge(instances_matching(_meeting, "name", name), "big", big);
-		if(_inst) with(_inst){
+		if(array_length(_inst) > 0) with(_inst){
 			if(place_meeting(x, y, other)){
 				with(other) motion_add_ct(point_direction(other.x, other.y, x, y) + orandom(4), 0.5);
 			}
@@ -393,7 +391,7 @@
 		
 		 // Poppable:
 		var _inst = instances_matching(instances_matching_ne(_meeting, "team", team), "object_index", Flame, Bolt, Splinter, HeavyBolt, UltraBolt);
-		if(_inst) with(_inst){
+		if(array_length(_inst) > 0) with(_inst){
 			if(place_meeting(x, y + other.z, other)){
 				with(other) instance_destroy();
 				exit;
@@ -407,7 +405,7 @@
 				if(big > 0){
 					_inst = instances_matching_ne(_inst, "team", team);
 				}
-				if(_inst) with(_inst){
+				if(array_length(_inst) > 0) with(_inst){
 					if(place_meeting(x, y + other.z, other)){
 						if("size" not in self || size - (object_index == DogGuardian) <= (3 * other.big)){
 							if(!instance_is(self, projectile) || (typ != 0 && variable_instance_get(id, "name") != other.name)){
@@ -486,10 +484,7 @@
 		_num = lerp(1, 3, big);
 		
 	for(var _dir = _ang; _dir < _ang + 360; _dir += (360 / _num)){
-		with(obj_create(x + lengthdir_x(_dis, _dir), y - z + lengthdir_y(_dis, _dir), "BubbleExplosion")){
-			team  = other.team;
-			hitid = other.hitid;
-		}	
+		projectile_create(x + lengthdir_x(_dis, _dir), y - z + lengthdir_y(_dis, _dir), "BubbleExplosion", 0, 0);
 	}
 	
 	 // Big Bombage Effects:
@@ -527,14 +522,14 @@
 	with(instance_create(_x, _y, PopoExplosion)){
 		 // Visual:
 		sprite_index = spr.BubbleExplosion;
-		hitid = [sprite_index, "BUBBLE EXPLOSION"];
+		hitid        = [sprite_index, "BUBBLE EXPLOSION"];
 		
 		 // Vars:
 		mask_index = mskExplosion;
-		damage = 3;
-		force = 1;
-		alarm0 = -1; // No scorchmark
-		alarm1 = -1; // No CoDeath
+		damage     = 3;
+		force      = 1;
+		alarm0     = -1; // No scorchmark
+		alarm1     = -1; // No CoDeath
 		
 		 // Crown of Explosions:
 		if(crown_current == crwn_death){
@@ -564,12 +559,12 @@
 	with(instance_create(_x, _y, SmallExplosion)){
 		 // Visual:
 		sprite_index = spr.BubbleExplosionSmall;
-		hitid = [sprite_index, "SMALL BUBBLE#EXPLOSION"];
+		hitid        = [sprite_index, "SMALL BUBBLE#EXPLOSION"];
 		
 		 // Vars:
 		mask_index = mskSmallExplosion;
-		damage = 3;
-		force = 1;
+		damage     = 3;
+		force      = 1;
 		
 		 // FX:
 		sound_play_pitch(sndOasisExplosionSmall, 1 + random(2));
@@ -606,13 +601,11 @@
 	if(instance_exists(self)){
 		with(other){
 			if(typ == 1 || typ == 2){
-				var _slash = other;
-				
 				 // Deflect:
-				if(typ == 1 && _slash.candeflect){
+				if(typ == 1 && other.candeflect){
 					deflected   = true;
-					team        = _slash.team;
-					direction   = _slash.direction;
+					team        = other.team;
+					direction   = other.direction;
 					image_angle = direction;
 					with(instance_create(x, y, Deflect)){
 						image_angle = other.image_angle;
@@ -623,22 +616,24 @@
 						bubble_bombed = true;
 						
 						 // Bubble Bomb:
-						with(obj_create(x, y, "BubbleBomb")){
-							projectile_init(_slash.team, _slash.creator);
-							array_push(held, other);
+						var _inst = self;
+						with(other){
+							with(projectile_create(other.x, other.y, "BubbleBomb", 0, 0)){
+								array_push(held, _inst);
+							}
 						}
 						
 						 // Effects:
 						with(instance_create(x, y, Bubble)){
-							image_angle  = random(360);
 							image_xscale = 0.75;
 							image_yscale = image_xscale;
+							image_angle  = random(360);
 						}
 						with(instance_create(x, y, BubblePop)){
 							image_index  = 1;
-							image_angle  = random(360);
 							image_xscale = 0.8;
 							image_yscale = image_xscale;
+							image_angle  = random(360);
 							depth        = other.depth - 1;
 						}
 					}
@@ -646,8 +641,8 @@
 				
 				 // Destroy:
 				else{
-					with(obj_create(x, y, ((damage < 6) ? "BubbleExplosionSmall" : "BubbleExplosion"))){
-						team = _slash.team;
+					with(other){
+						projectile_create(other.x, other.y, ((other.damage < 6) ? "BubbleExplosionSmall" : "BubbleExplosion"), 0, 0);
 					}
 					instance_destroy();
 				}
@@ -829,8 +824,10 @@
 		if(place_meeting(x + hspeed, y + vspeed, Wall)){
 			with(Wall) if(place_meeting(x - other.hspeed, y - other.vspeed, other)){
 				 // Effects:
-				if(chance(1, 2)) with(instance_create(x + 8, y + 8, Hammerhead)){
-					motion_add(random(360), 1);
+				if(chance(1, 2)){
+					with(instance_create(bbox_center_x, bbox_center_y, Hammerhead)){
+						motion_add(random(360), 1);
+					}
 				}
 				instance_create(x, y, Smoke);
 				sound_play_pitchvol(sndHammerHeadProc, 0.75, 0.5);
@@ -922,16 +919,16 @@
 #define HyperBubble_end_step
 	mask_index = mskBullet1;
 	
-	var	_dist = 100,
-		_proj = [],
-		_dis = 16,
-		_dir = direction,
-		_mx = lengthdir_x(_dis, _dir),
-		_my = lengthdir_y(_dis, _dir),
+	var	_dist    = 100,
+		_proj    = [],
+		_dis     = 16,
+		_dir     = direction,
+		_mx      = lengthdir_x(_dis, _dir),
+		_my      = lengthdir_y(_dis, _dir),
 		_targets = instances_matching_ne(hitme, "team", team);
 		
 	 // Muzzle Explosion:
-	array_push(_proj, obj_create(x, y, "BubbleExplosionSmall"));
+	projectile_create(x, y, "BubbleExplosionSmall", 0, 0);
 	
 	 // Hitscan:
 	while(_dist-- > 0 && hits > 0 && !place_meeting(x, y, Wall)){
@@ -952,7 +949,7 @@
 						_hit = true;
 						with(other){
 							hits--;
-							array_push(_proj, obj_create(x, y, "BubbleExplosionSmall"));
+							projectile_create(x, y, "BubbleExplosionSmall", 0, 0);
 						}
 					}
 					
@@ -964,13 +961,9 @@
 	}
 	
 	 // End Explosion:
-	array_push(_proj, obj_create(x, y, "BubbleExplosion"));
-	if(hits > 0) repeat(hits) array_push(_proj, obj_create(x, y, "BubbleExplosionSmall"));
-	
-	 // Your Properties, Madam:
-	with(_proj){
-		creator = other.creator;
-		team	= other.team;
+	projectile_create(x, y, "BubbleExplosion", 0, 0);
+	if(hits > 0) repeat(hits){
+		projectile_create(x, y, "BubbleExplosionSmall", 0, 0);
 	}
 	
 	 // Goodbye:
@@ -1051,8 +1044,10 @@
 	
 #define OasisPetBecomeCorpse_create(_x, _y)
 	with(instance_create(_x, _y, CustomObject)){
+		 // Vars:
 		inst = noone;
 		time = 300;
+		
 		return id;
 	}
 	
@@ -1533,10 +1528,10 @@
 		 // Zap:
 		if(image_index > image_number - 1){
 			with(instance_create(x, y, EnemyLightning)){
-				image_speed = 0.3;
-				image_angle = other.image_angle;
+				image_speed  = 0.3;
 				image_xscale = other.image_xscale;
-				hitid = 88;
+				image_angle  = other.image_angle;
+				hitid        = 88;
 				
 				 // FX:
 				if(chance(1, 8)){
@@ -1558,24 +1553,24 @@
 		if(sprite_index != sprFishBoost){
 			if(image_index > 2){
 				sprite_index = sprFishBoost;
-				image_index = 0;
+				image_index  = 0;
 				
 				 // FX:
 				if(chance(1, 3)){
-					var	xx = x,
-						yy = y,
-						vol = 0.4;
+					var	_x = x,
+						_y = y,
+						_vol = 0.4;
 						
 					if(fork()){
 						repeat(1 + irandom(3)){
-							instance_create(xx, yy, Bubble);
+							instance_create(_x, _y, Bubble);
 							
-							view_shake_max_at(xx, yy, 3);
+							view_shake_max_at(_x, _y, 3);
 							sleep(6);
 							
-							sound_play_pitchvol(sndOasisPortal, 1.4 + random(0.4), vol);
+							sound_play_pitchvol(sndOasisPortal, 1.4 + random(0.4), _vol);
 							audio_sound_set_track_position(sndOasisPortal, 0.52 + random(0.04));
-							vol -= 0.1;
+							_vol -= 0.1;
 							
 							wait(10 + irandom(20));
 						}
@@ -1837,6 +1832,7 @@
 #define shader_add(_name, _vertex, _fragment)                                           return  mod_script_call_nc('mod', 'teassets', 'shader_add', _name, _vertex, _fragment);
 #define obj_create(_x, _y, _obj)                                                        return  (is_undefined(_obj) ? [] : mod_script_call_nc('mod', 'telib', 'obj_create', _x, _y, _obj));
 #define top_create(_x, _y, _obj, _spawnDir, _spawnDis)                                  return  mod_script_call_nc('mod', 'telib', 'top_create', _x, _y, _obj, _spawnDir, _spawnDis);
+#define projectile_create(_x, _y, _obj, _dir, _spd)                                     return  mod_script_call(   'mod', 'telib', 'projectile_create', _x, _y, _obj, _dir, _spd);
 #define chest_create(_x, _y, _obj, _levelStart)                                         return  mod_script_call_nc('mod', 'telib', 'chest_create', _x, _y, _obj, _levelStart);
 #define prompt_create(_text)                                                            return  mod_script_call(   'mod', 'telib', 'prompt_create', _text);
 #define alert_create(_inst, _sprite)                                                    return  mod_script_call(   'mod', 'telib', 'alert_create', _inst, _sprite);
@@ -1877,7 +1873,6 @@
 #define scrAim(_dir)                                                                            mod_script_call(   'mod', 'telib', 'scrAim', _dir);
 #define enemy_walk(_spdAdd, _spdMax)                                                            mod_script_call(   'mod', 'telib', 'enemy_walk', _spdAdd, _spdMax);
 #define enemy_hurt(_hitdmg, _hitvel, _hitdir)                                                   mod_script_call(   'mod', 'telib', 'enemy_hurt', _hitdmg, _hitvel, _hitdir);
-#define enemy_shoot(_x, _y, _object, _dir, _spd)                                        return  mod_script_call(   'mod', 'telib', 'enemy_shoot', _x, _y, _object, _dir, _spd);
 #define enemy_target(_x, _y)                                                            return  mod_script_call(   'mod', 'telib', 'enemy_target', _x, _y);
 #define boss_hp(_hp)                                                                    return  mod_script_call_nc('mod', 'telib', 'boss_hp', _hp);
 #define boss_intro(_name)                                                               return  mod_script_call_nc('mod', 'telib', 'boss_intro', _name);
@@ -1914,7 +1909,7 @@
 #define race_get_title(_race)                                                           return  mod_script_call(   'mod', 'telib', 'race_get_title', _race);
 #define player_create(_x, _y, _index)                                                   return  mod_script_call_nc('mod', 'telib', 'player_create', _x, _y, _index);
 #define player_swap()                                                                   return  mod_script_call(   'mod', 'telib', 'player_swap');
-#define wep_get(_wep)                                                                   return  mod_script_call_nc('mod', 'telib', 'wep_get', _wep);
+#define wep_raw(_wep)                                                                   return  mod_script_call_nc('mod', 'telib', 'wep_raw', _wep);
 #define wep_merge(_stock, _front)                                                       return  mod_script_call_nc('mod', 'telib', 'wep_merge', _stock, _front);
 #define wep_merge_decide(_hardMin, _hardMax)                                            return  mod_script_call_nc('mod', 'telib', 'wep_merge_decide', _hardMin, _hardMax);
 #define weapon_decide(_hardMin, _hardMax, _gold, _noWep)                                return  mod_script_call(   'mod', 'telib', 'weapon_decide', _hardMin, _hardMax, _gold, _noWep);

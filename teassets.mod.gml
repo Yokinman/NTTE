@@ -178,8 +178,8 @@
 			PopoVlasmaCannon  = sprite(p + "sprPopoVlasmaCannon",  5, 10, 10);
 			
 			 // Venom Pellets:
-			VenomPelletAppear	 = sprite(p + "sprVenomPelletAppear",	 1, 8, 8);
-			VenomPellet			 = sprite(p + "sprVenomPellet",			 2, 8, 8);
+			VenomPelletAppear    = sprite(p + "sprVenomPelletAppear",    1, 8, 8);
+			VenomPellet          = sprite(p + "sprVenomPellet",          2, 8, 8);
 			VenomPelletDisappear = sprite(p + "sprVenomPelletDisappear", 5, 8, 8);
 			
 			 // Variants:
