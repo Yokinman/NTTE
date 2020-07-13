@@ -829,8 +829,8 @@
 		if(!floor_get(x, y).styleb){
 			if(!instance_is(self, Bandit) || chance(1, 2)){
 				var	_scorp = [[Scorpion, "BabyScorpion"], [GoldScorpion, "BabyScorpionGold"]],
-					_gold = chance(size, 5),
-					_baby = (size <= 1);
+					_gold  = chance(size, 5),
+					_baby  = (size <= 1);
 					
 				obj_create(x, y, _scorp[_gold, _baby]);
 				instance_delete(id);
@@ -1457,10 +1457,11 @@
 	with(Wall) if(place_meeting(x, y, Floor) && !place_meeting(x, y, Trap)){
 		instance_create(x, y, Trap);
 	}
+	with(Trap) alarm0 = 150;
 	
-	 // Balance:
+	 // Assmans Bad:
 	with(instances_matching([MeleeBandit, MeleeFake], "", null)){
-		obj_create(x, y, "BanditCamper");
+		instance_create(x, y, Salamander);
 		instance_delete(id);
 	}
 	
@@ -1468,26 +1469,31 @@
 	with(FloorNormal) if(chance(1, 4)){
 		with(instance_create(random_range(bbox_left, bbox_right + 1), random_range(bbox_top, bbox_bottom + 1), Scorchmark)){
 			sprite_index = spr.FirePitScorch;
-			image_index = irandom(image_number - 1);
-			image_speed = 0;
-			image_angle = random(360);
+			image_index  = irandom(image_number - 1);
+			image_speed  = 0;
+			image_angle  = random(360);
 		}
 	}
 	
 #define FirePit_step
-	 // Fast Traps:
-	with(Trap){
-		fire   = min(fire,   10 + irandom(5));
-		alarm0 = min(alarm0, 35);
+	 // Arcing Traps:
+	with(instances_matching(TrapFire, "firepitevent_check", null)){
+		firepitevent_check = (instance_exists(creator) ? instance_is(creator, Trap) : 57);
+		
+		if(firepitevent_check){
+			with(instance_exists(creator) ? creator : instance_nearest(xstart, ystart, Trap)){
+				other.direction += 5 * dsin(360 * (fire / 45));
+			}
+		}
 	}
 	
 	 // Rain Turns to Steam:
-	with(instances_matching(RainSplash, "ntte_firepitevent_steam", null)){
-		ntte_firepitevent_steam = true;
+	with(instances_matching(RainSplash, "firepitevent_check", null)){
+		firepitevent_check = true;
 		
 		with(instance_create(x, y, Breath)){
-			image_angle  = random(90);
 			image_yscale = choose(-1, 1);
+			image_angle  = random(90);
 		}
 	}
 	

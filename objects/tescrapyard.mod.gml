@@ -518,12 +518,12 @@
 	
 #define SawTrap_destroy
 	 // Explo:
-	with(instance_create(x, y, Explosion)){
-		hitid = other.hitid;
+	with(projectile_create(x, y, Explosion, 0, 0)){
+		team = -1;
 	}
 	repeat(3){
-		with(instance_create(x, y, SmallExplosion)){
-			hitid = other.hitid;
+		with(projectile_create(x + orandom(6), y + orandom(6), SmallExplosion, 0, 0)){
+			team = -1;
 		}
 	}
 	

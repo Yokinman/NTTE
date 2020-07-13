@@ -49,7 +49,7 @@
 		sprite_index = spr.BanditAlert;
 		image_speed  = 0.4;
 		image_alpha  = -1; // CustomObject
-		alert = {
+		alert        = {
 			"spr" : spr.AlertIndicator,
 			"col" : make_color_rgb(252, 56, 0),
 			"x"   : -6,

@@ -865,12 +865,12 @@
 			&& !instance_is(self, Slash)
 			&& !instance_is(self, EnemySlash)
 			&& !instance_is(self, GuitarSlash)
+			&& !instance_is(self, CustomSlash)
 			&& !instance_is(self, BloodSlash)
 			&& !instance_is(self, LightningSlash)
 			&& !instance_is(self, EnergyShank)
 			&& !instance_is(self, EnergySlash)
 			&& !instance_is(self, EnergyHammerSlash)
-			&& !instance_is(self, CustomSlash)
 			&& !instance_is(other, FireCont)
 		){
 			script_bind_begin_step(projectile_euphoria, 0, id);
@@ -2127,15 +2127,15 @@
 			instance_nearest_rectangle_bbox(x - 16, y - 16, x + 16, y + 16, Floor)
 	*/
 	
-	var	_cx = (_x1 + _x2) / 2,
-		_cy = (_y1 + _y2) / 2,
+	var	_cx      = (_x1 + _x2) / 2,
+		_cy      = (_y1 + _y2) / 2,
 		_nearest = noone,
 		_disAMax = infinity,
 		_disBMax = infinity;
 		
 	with(instances_matching(_inst, "", null)){
-		var	_x = clamp(_cx, bbox_left, bbox_right + 1),
-			_y = clamp(_cy, bbox_top, bbox_bottom + 1),
+		var	_x    = clamp(_cx, bbox_left, bbox_right + 1),
+			_y    = clamp(_cy, bbox_top, bbox_bottom + 1),
 			_disA = point_distance(clamp(_x, _x1, _x2), clamp(_y, _y1, _y2), _x, _y),
 			_disB = point_distance(_cx, _cy, _x, _y);
 			
@@ -3557,27 +3557,24 @@
 		
 	if(_gridXAuto || _gridYAuto || _gridWAuto || _gridHAuto){
 		if(!instance_exists(FloorMaker)){
-			var	_fx = _gridX + floor_align_round(_x - _gridX, _gridW, _gridXBias),
-				_fy = _gridY + floor_align_round(_y - _gridY, _gridH, _gridYBias);
-				
 			 // Align to Nearest Floor:
 			if(_gridXAuto || _gridYAuto){
-				with(instance_nearest_rectangle_bbox(_fx, _fy, _fx + _w, _fy + _h, Floor)){
+				with(instance_nearest_rectangle_bbox(_x, _y, _x + _w, _y + _h, Floor)){
 					if(_gridXAuto){
-						_gridX = x;
+						_gridX     = x;
 						_gridXBias = bbox_center_x - (_x + (_w / 2));
-						_fx = _gridX + floor_align_round(_x - _gridX, _gridW, _gridXBias);
 					}
 					if(_gridYAuto){
-						_gridY = y;
+						_gridY     = y;
 						_gridYBias = bbox_center_y - (_y + (_h / 2));
-						_fy = _gridY + floor_align_round(_y - _gridY, _gridH, _gridYBias);
 					}
 				}
 			}
 			
 			 // Align to Largest Colliding Floor:
-			var	_fwMax = _gridW,
+			var	_fx    = _gridX + floor_align_round(_x - _gridX, _gridW, _gridXBias),
+				_fy    = _gridY + floor_align_round(_y - _gridY, _gridH, _gridYBias),
+				_fwMax = _gridW,
 				_fhMax = _gridH;
 				
 			with(instance_rectangle_bbox(_fx, _fy, _fx + _w - 1, _fy + _h - 1, Floor)){
@@ -3590,7 +3587,7 @@
 						_gridW = _fwMax;
 					}
 					if(_gridXAuto){
-						_gridX = x;
+						_gridX     = x;
 						_gridXBias = bbox_center_x - (_x + (_w / 2));
 					}
 				}
@@ -3600,7 +3597,7 @@
 						_gridH = _fhMax;
 					}
 					if(_gridYAuto){
-						_gridY = y;
+						_gridY     = y;
 						_gridYBias = bbox_center_y - (_y + (_h / 2));
 					}
 				}
@@ -3802,10 +3799,10 @@
 			_dir = point_direction(x, y, _x2, _y2);
 			
 		sprite_index = sprBoltTrail;
+		image_speed  = 16 / _dis;
 		image_xscale = _dis / bbox_width;
 		image_yscale = 32 / bbox_height;
-		image_angle = _dir;
-		image_speed = 16 / _dis;
+		image_angle  = _dir;
 		
 		 // Ensure Tunnel:
 		if(instance_exists(Wall) && !place_meeting(x, y, Wall) && !place_meeting(x, y, Floor)){
@@ -3857,10 +3854,10 @@
 			 // Success bro!
 			if(_spawnReached){
 				return {
-					"x" : _x,
-					"y" : _y,
+					"x"         : _x,
+					"y"         : _y,
 					"direction" : point_direction(_spawnX, _spawnY, _x, _y),
-					"id" : id
+					"id"        : id
 				};
 			}
 		}
@@ -3888,23 +3885,23 @@
 	*/
 	
 	 // Find Space:
-	var	_move = true,
+	var	_move       = true,
 		_floorAvoid = FloorNormal,
-		_dis = 16,
-		_dir = 0,
-		_ow = (_w * 32) / 2,
-		_oh = (_h * 32) / 2,
-		_sx = _x,
-		_sy = _y;
+		_dis        = 16,
+		_dir        = 0,
+		_ow         = (_w * 32) / 2,
+		_oh         = (_h * 32) / 2,
+		_sx         = _x,
+		_sy         = _y;
 		
 	if(!is_array(_dirOff)) _dirOff = [_dirOff];
 	while(array_length(_dirOff) < 2) array_push(_dirOff, 0);
 	
 	while(_move){
-		var	_x1 = _x - _ow,
-			_y1 = _y - _oh,
-			_x2 = _x + _ow,
-			_y2 = _y + _oh,
+		var	_x1   = _x - _ow,
+			_y1   = _y - _oh,
+			_x2   = _x + _ow,
+			_y2   = _y + _oh,
 			_inst = instance_rectangle_bbox(_x1 - _floorDis, _y1 - _floorDis, _x2 + _floorDis - 1, _y2 + _floorDis - 1, _floorAvoid);
 			
 		 // No Corner Floors:
@@ -3953,12 +3950,12 @@
 	
 	 // Create Room:
 	var	_floorNumLast = array_length(FloorNormal),
-		_floors = mod_script_call_nc(mod_type_current, mod_current, "floor_fill", _x, _y, _w, _h, _type),
-		_floorNum = array_length(FloorNormal),
-		_x1 = _x,
-		_y1 = _y,
-		_x2 = _x,
-		_y2 = _y;
+		_floors       = mod_script_call_nc(mod_type_current, mod_current, "floor_fill", _x, _y, _w, _h, _type),
+		_floorNum     = array_length(FloorNormal),
+		_x1           = _x,
+		_y1           = _y,
+		_x2           = _x,
+		_y2           = _y;
 		
 	if(array_length(_floors) > 0){
 		with(_floors[0]){

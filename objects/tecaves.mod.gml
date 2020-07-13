@@ -2482,7 +2482,7 @@
 	 // Movement:
 	if(image_speed == 0){
 		 // Acceleration:
-		var	_euphoria = (instance_is(creator, Player) ? 1 : power(0.8, skill_get(mut_euphoria))),
+		var	_euphoria = ((instance_exists(creator) ? instance_is(creator, enemy) : (team != 2)) ? power(0.8, skill_get(mut_euphoria)) : 1),
 			_speedMax = maxspeed * _euphoria,
 			_speedAdd = addspeed * _euphoria * current_time_scale;
 			
