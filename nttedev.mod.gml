@@ -52,6 +52,21 @@
 			
 			return true;
 			
+		case "teevent":
+			
+			var _active = !lq_defget(global.event, _arg, false);
+			
+			trace_color(
+				_arg + ' ' + (_active ? "ON" : "OFF"),
+				(_active ? c_lime : c_red)
+			);
+			
+			lq_set(global.event, _arg, _active);
+			
+			chat_comp_add_arg("teevent", 0, _arg, (_active ? "ON" : "OFF"));
+			
+			return true;
+			
 		case "loadblock":
 			
 			scriptblock_file_load("scripts/" + _arg + ".txt");
@@ -66,7 +81,7 @@
 			
 		case "top":
 			
-			mod_script_call_nc("mod", "telib", "top_create", mouse_x[_ind], mouse_y[_ind], (object_exists(asset_get_index(_arg)) ? asset_get_index(_arg) : _arg), 0, 0);
+			mod_script_call_nc("mod", "telib", "top_create", mouse_x[_ind], mouse_y[_ind], ((_arg == "Player") ? player_find(_ind) : (object_exists(asset_get_index(_arg)) ? asset_get_index(_arg) : _arg)), 0, 0);
 			
 			return true;
 			
@@ -138,7 +153,7 @@
 	 // Charm / Top Object Spawning:
 	chat_comp_add("charm", "(object)", "spawn a charmed object");
 	chat_comp_add("top", "(object)", "spawn a top object");
-	for(var i = 1; i < object_max; i++){
+	for(var i = 0; i < object_max; i++){
 		if(object_is_ancestor(i, hitme) || i == ReviveArea || i == NecroReviveArea || i == MaggotExplosion || i == RadMaggotExplosion){
 			chat_comp_add_arg("charm", 0, object_get_name(i));
 		}
@@ -148,6 +163,17 @@
 	 // Debug Lag:
 	global.debug_lag = false;
 	chat_comp_add("debuglag", "(mod)", "leave blank for global debugging");
+	
+	 // Events:
+	chat_comp_add("teevent", "(name)", "forces an event to consistently spawn");
+	global.event = {};
+	if(fork()){
+		while(!mod_exists("mod", "teevents")) wait 0;
+		with(mod_variable_get("mod", "teevents", "event_list")){
+			chat_comp_add_arg("teevent", 0, self[2], "OFF");
+		}
+		exit;
+	}
 	
 	 // Script Block Files:
 	chat_comp_add("loadblock", "(file)", "file in scripts folder");
@@ -167,6 +193,7 @@
 		"pack:oasis",
 		"pack:trench",
 		"pack:lair",
+		"pack:red",
 		
 		"race:parrot",
 		"race:bee",
@@ -179,6 +206,8 @@
 		"wep:trident",
 		
 		"crown:crime",
+		"crown:bonus",
+		"crown:red",
 		
 		"loadout:crown:crime",
 		"loadout:crown:bonus",
@@ -201,10 +230,24 @@
 	
 	 // Weapon Merging:
 	chat_comp_add("wepmerge", "(stock)", "/", "(front)", "spawn a merged weapon");
-	for(var i = 1; i <= 127; i++){
+	for(var i = 1; i < 128; i++){
 		var t = string_replace_all(string_lower(weapon_get_name(i)), " ", "_");
 		chat_comp_add_arg("wepmerge", 0, t);
 		chat_comp_add_arg("wepmerge", 2, t);
+	}
+	
+#define step
+	 // Activate Events:
+	with(instances_matching(GenCont, "nttedev_event_check", null)){
+		nttedev_event_check = true;
+		
+		var _list = mod_variable_get("mod", "teevents", "event_list");
+		
+		for(var i = 0; i < array_length(_list); i++){
+			if(lq_defget(global.event, _list[i, 2], false)){
+				mod_script_call_nc("mod", "teevents", "teevent_set_active", _list[i, 2], true);
+			}
+		}
 	}
 	
 #macro lnbreak chr(13) + chr(10)

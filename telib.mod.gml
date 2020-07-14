@@ -3540,7 +3540,7 @@
 	
 #define floor_align(_x, _y, _w, _h, _type)
 	/*
-		Aligns a given rectangle to the floor grid
+		Returns the given rectangle's position aligned to the floor grid
 		Has a bias towards nearby floors to help prevent the rectangle from being disconnected from the level
 	*/
 	

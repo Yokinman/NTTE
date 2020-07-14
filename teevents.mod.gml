@@ -4,7 +4,13 @@
 	lag = false;
 	
 	/*
+		0) Should X be an event?
+			Would X use the event tip system?
+			If a mutation made events more likely, should X be more likely?
+			If a crown made events ignore the area, should X spawn anywhere?
+			
 		1) Add an event using 'teevent_add(_event)'
+		
 		2) Define scripts:
 			Event_text    : Returns the event's loading tip, leave undefined or return a blank string for no loading tip
 			Event_area    : Returns the event's spawn area, leave undefined if it can spawn on any area
@@ -16,10 +22,10 @@
 	*/
 	
 	 // Event Tip Color:
-	ttip = `@(color:${make_color_rgb(175, 143, 106)})`;
+	event_tip = `@(color:${make_color_rgb(175, 143, 106)})`;
 	
 	 // Event Execution Order:
-	list = [];
+	event_list = [];
 	teevent_add("BlockedRoom");
 	teevent_add("MaggotPark");
 	teevent_add("ScorpionCity");
@@ -45,25 +51,25 @@
 #macro mus snd.mus
 #macro lag global.debug_lag
 
-#macro ttip global.event_tip
-#macro list global.event_list
+#macro event_tip  global.event_tip
+#macro event_list global.event_list
 
 #macro BuriedVault_spawn (variable_instance_get(GenCont, "safespawn", 1) > 0 && GameCont.area != "coast")
 
 #macro ScorpionCity_pet instances_matching_gt(instances_matching(instances_matching(CustomHitme, "name", "Pet"), "pet", "Scorpion"), "scorpion_city", 0)
 
-#define BuriedVault_text    return ((GameCont.area == area_vault) ? "" : choose(`${ttip}VAULT @wIN THE WALL`, `${ttip}DIG`, `ANCIENT ${ttip}STRUCTURES`));
+#define BuriedVault_text    return ((GameCont.area == area_vault) ? "" : choose(`${event_tip}VAULT @wIN THE WALL`, `${event_tip}DIG`, `ANCIENT ${event_tip}STRUCTURES`));
 #define BuriedVault_hard    return 5; // 3-1+
 #define BuriedVault_chance  return ((GameCont.area == area_vault) ? 1/2 : (BuriedVault_spawn / (12 + (2 * variable_instance_get(GameCont, "buried_vaults", 0)))));
 
 #define BuriedVault_create
-	if(instance_exists(enemy) || GameCont.area == area_vault){
+	if(instance_number(enemy) > instance_number(EnemyHorror) || GameCont.area == area_vault){
 		with(instance_random(Wall)){
 			obj_create(x, y, "BuriedVault");
 		}
 	}
 	
-#define BanditCamp_text    return `${ttip}BANDITS`;
+#define BanditCamp_text    return `${event_tip}BANDITS`;
 #define BanditCamp_area    return area_desert;
 #define BanditCamp_hard    return 3; // 1-3+
 #define BanditCamp_chance  return ((GameCont.subarea == 3) ? 1/10 : 1/20);
@@ -116,13 +122,16 @@
 		obj_create(x, y, "BanditHiker");
 		
 		 // Reduce Nearby Non-Bandits:
+		var	_park = instance_exists(teevent_get_active("MaggotPark")),
+			_city = instance_exists(teevent_get_active("ScorpionCity"));
+			
 		with(instances_matching([MaggotSpawn, BigMaggot], "", null)){
-			if(chance(1, point_distance(x, y, other.x, other.y) / (teevent_get_active("MaggotPark") ? 64 : 160))){
+			if(chance(1, point_distance(x, y, other.x, other.y) / (_park ? 64 : 160))){
 				instance_delete(id);
 			}
 		}
 		with(instances_matching([Scorpion, GoldScorpion], "", null)){
-			if(chance(1, point_distance(x, y, other.x, other.y) / (teevent_get_active("ScorpionCity") ? 32 : 160))){
+			if(chance(1, point_distance(x, y, other.x, other.y) / (_city ? 32 : 160))){
 				instance_delete(id);
 			}
 		}
@@ -168,12 +177,14 @@
 		}
 		
 		 // Riders:
-		if(teevent_get_active("ScorpionCity")){
+		with(teevent_get_active("ScorpionCity")){
 			var	_rideList = array_shuffle(instances_matching([Scorpion, GoldScorpion], "", null)),
-				_rideNum = 0;
+				_rideNum  = 0;
 				
 			with(instances_matching(Bandit, "name", "BanditCamper")){
-				if(_rideNum >= array_length(_rideList)) break;
+				if(_rideNum >= array_length(_rideList)){
+					break;
+				}
 				if(chance(1, 2)){
 					rider_target = _rideList[_rideNum++];
 				}
@@ -647,7 +658,7 @@
 	}
 	
 	
-#define MaggotPark_text    return `THE SOUND OF ${ttip}FLIES`;
+#define MaggotPark_text    return `THE SOUND OF ${event_tip}FLIES`;
 #define MaggotPark_area    return area_desert;
 #define MaggotPark_chance  return 1/50;
 
@@ -794,7 +805,7 @@
 	floor_reset_style();
 	
 	
-#define ScorpionCity_text    return choose(`THE AIR ${ttip}STINGS`, `${ttip}WHERE ARE WE GOING`);
+#define ScorpionCity_text    return choose(`THE AIR ${event_tip}STINGS`, `${event_tip}WHERE ARE WE GOING`);
 #define ScorpionCity_area    return area_desert;
 #define ScorpionCity_chance  return array_length(ScorpionCity_pet);
 
@@ -924,7 +935,7 @@
 	}
 	
 	
-#define SewerPool_text    return choose(`${ttip}RADIOACTIVE SEWAGE @wSMELLS#WORSE THAN YOU THINK`, `${ttip}ACID RAIN @wRUNOFF`);
+#define SewerPool_text    return choose(`${event_tip}RADIOACTIVE SEWAGE @wSMELLS#WORSE THAN YOU THINK`, `${event_tip}ACID RAIN @wRUNOFF`);
 #define SewerPool_area    return area_sewers;
 #define SewerPool_chance  return 1/5;
 
@@ -951,7 +962,7 @@
 			if(array_length(instances_matching_ge(instances_matching_le(instances_matching_lt(_floorNormal, "bbox_top", bbox_top), "bbox_left", bbox_right), "bbox_right", bbox_left)) <= 0){
 				 // Not Above Another Event:
 				var _notEvent = true;
-				/*with(instances_matching(CustomObject, "name", "NTTEEvent")){
+				/*with(teevent_get_active(all)){
 					if(array_exists(floors, other)){
 						_notEvent = false;
 						break;
@@ -991,7 +1002,7 @@
 	floor_reset_align();
 
 
-#define GatorDen_text    return `${ttip}DISTANT CHATTER`;
+#define GatorDen_text    return `${event_tip}DISTANT CHATTER`;
 #define GatorDen_area    return area_sewers;
 #define GatorDen_chance  return ((crown_current == "crime") ? 1 : (unlock_get("crown:crime") ? 1/5 : 0));
 
@@ -1290,7 +1301,7 @@
 	}
 	
 	
-#define RavenArena_text    return `ENTER ${ttip}THE RING`;
+#define RavenArena_text    return `ENTER ${event_tip}THE RING`;
 #define RavenArena_area    return area_scrapyards;
 #define RavenArena_chance  return ((GameCont.subarea != 3) ? 1/30 : 0);
 
@@ -1448,16 +1459,23 @@
 	}
 	
 	
-#define FirePit_text    return `${ttip}RAIN DROPS @wTURN TO ${ttip}STEAM`;
+#define FirePit_text    return `${event_tip}RAIN DROPS @wTURN TO ${event_tip}STEAM`;
 #define FirePit_area    return area_scrapyards;
 #define FirePit_chance  return ((GameCont.subarea != 3) ? 1/12 : 0);
 
 #define FirePit_create
 	 // More Traps:
-	with(Wall) if(place_meeting(x, y, Floor) && !place_meeting(x, y, Trap)){
-		instance_create(x, y, Trap);
+	with(Wall) if(place_meeting(x, y, Floor)){
+		if(array_length(instance_rectangle(bbox_left, bbox_top, bbox_right, bbox_bottom, Trap)) <= 0){
+			instance_create(x, y, Trap);
+		}
 	}
-	with(Trap) alarm0 = 150;
+	with(Trap){
+		alarm0 = 150;
+		with(instance_copy(false)){
+			side = !side;
+		}
+	}
 	
 	 // Assmans Bad:
 	with(instances_matching([MeleeBandit, MeleeFake], "", null)){
@@ -1476,6 +1494,7 @@
 	}
 	
 #define FirePit_step
+	/*
 	 // Arcing Traps:
 	with(instances_matching(TrapFire, "firepitevent_check", null)){
 		firepitevent_check = (instance_exists(creator) ? instance_is(creator, Trap) : 57);
@@ -1486,6 +1505,7 @@
 			}
 		}
 	}
+	*/
 	
 	 // Rain Turns to Steam:
 	with(instances_matching(RainSplash, "firepitevent_check", null)){
@@ -1494,11 +1514,14 @@
 		with(instance_create(x, y, Breath)){
 			image_yscale = choose(-1, 1);
 			image_angle  = random(90);
+			if(!place_meeting(x, y + 8, Floor)){
+				depth = -8;
+			}
 		}
 	}
 	
 	
-#define SealPlaza_text    return `${ttip}DISTANT RELATIVES`;
+#define SealPlaza_text    return `${event_tip}DISTANT RELATIVES`;
 #define SealPlaza_area    return area_city;
 #define SealPlaza_chance  return ((GameCont.subarea != 3 && unlock_get("pack:coast")) ? 1/7 : 0);
 
@@ -1517,14 +1540,14 @@
 	floor_set_align(null, null, 32, 32);
 	
 	with(floor_room(_spawnX, _spawnY, _spawnDis, _spawnFloor, _w, _h, _type, _dirOff, _floorDis)){
-		var	_iglooW = 3,
-			_iglooH = 3,
-			_iglooType = "",
-			_iglooDirOff = 0,
-			_iglooSpawnX = x,
-			_iglooSpawnY = y,
-			_iglooFloorDis = -32,
-			_iglooSpawnDis = 0,
+		var	_iglooW          = 3,
+			_iglooH          = 3,
+			_iglooType       = "",
+			_iglooDirOff     = 0,
+			_iglooSpawnX     = x,
+			_iglooSpawnY     = y,
+			_iglooFloorDis   = -32,
+			_iglooSpawnDis   = 0,
 			_iglooSpawnFloor = floors;
 			
 		 // Igloos:
@@ -1560,7 +1583,7 @@
 	}
 	
 	
-#define MutantVats_text    return `${ttip}SPECIMENS`;
+#define MutantVats_text    return `${event_tip}SPECIMENS`;
 #define MutantVats_area    return area_labs;
 #define MutantVats_chance  return lq_size(global.pastPets);
 #define MutantVats_create
@@ -1638,7 +1661,7 @@
 	floor_reset_style();
 	
 	
-#define ButtonGame_text		return `NEVER TOUCH THE ${ttip}RED BUTTON`;
+#define ButtonGame_text		return `NEVER TOUCH THE ${event_tip}RED BUTTON`;
 #define ButtonGame_area 	return area_labs;
 #define ButtonGame_chance	return 0; // 1/4;
 #define ButtonGame_create
@@ -1700,7 +1723,7 @@
 	*/
 	
 	
-#define PalaceShrine_text    return choose(`${ttip}RAD MANIPULATION @wIS KINDA TRICKY`, `${ttip}FINAL PROVISIONS`);
+#define PalaceShrine_text    return choose(`${event_tip}RAD MANIPULATION @wIS KINDA TRICKY`, `${event_tip}FINAL PROVISIONS`);
 #define PalaceShrine_area    return area_palace;
 #define PalaceShrine_chance  return ((GameCont.subarea == 2 && array_length(PalaceShrine_skills()) > 0) ? (1 / (1 + max(0, GameCont.wepmuts))) : 0);
 
@@ -1914,7 +1937,7 @@
 	return _pool;
 	
 	
-#define PopoAmbush_text    return `${ttip}THE IDPD @wIS WAITING FOR YOU`;
+#define PopoAmbush_text    return `${event_tip}THE IDPD @wIS WAITING FOR YOU`;
 #define PopoAmbush_area    return area_palace;
 #define PopoAmbush_chance  return ((GameCont.subarea != 3) ? clamp((GameCont.popolevel - 2), 0, 5) / 10 : 0);
 
@@ -1968,70 +1991,72 @@
 		: script_ref_create_ext(script_ref_create(0)[0], mod_current, _event)
 	);
 	
-	array_push(list, _scrt);
+	array_push(event_list, _scrt);
 	
 	return _scrt;
 	
-	
 #define teevent_set_active(_name, _active)
 	/*
-		Activates or deactivates a given event
+		Activates or deactivates a given event and returns its controller object
+		Use the 'all' keyword to activate every event and return all of their controller objects as an array, wtf
 	*/
-	
-	var _inst = instances_matching(instances_matching(CustomObject, "name", "NTTEEvent"), "event", _name);
 	
 	 // Activate:
 	if(_active){
-		if(array_length(_inst) > 0){
-			return _inst[0];
+		 // All:
+		if(_name == all){
+			with(event_list){
+				teevent_set_active(self[2], _active);
+			}
 		}
-		else{
-			var	_x = 10016,
-				_y = 10016;
-				
-			with(GenCont){
-				_x = spawn_x;
-				_y = spawn_y;
-			}
-			with(instance_nearest(_x, _y, Player)){
-				_x = x;
-				_y = y;
-			}
-			
-			with(instance_create(_x, _y, CustomObject)){
-				name = "NTTEEvent";
+		
+		 // Normal:
+		else if(!instance_exists(teevent_get_active(_name))){
+			with(instance_create(10016, 10016, CustomObject)){
+				name     = "NTTEEvent";
 				mod_type = script_ref_create(0)[0];
 				mod_name = mod_current;
-				event = _name;
-				floors = [];
+				event    = _name;
+				tip      = mod_script_call(mod_type, mod_name, event + "_text");
+				floors   = [];
 				
 				 // Tip:
-				tip = mod_script_call(mod_type, mod_name, event + "_text");
 				if(is_string(tip) && tip != ""){
 					with(instances_matching(GenCont, "tip_ntte_event", null)){
 						tip_ntte_event = "@w" + other.tip;
 						tip = tip_ntte_event;
 					}
 				}
-				
-				return id;
 			}
 		}
 	}
 	
 	 // Deactivate:
-	else with(_inst){
+	else with(teevent_get_active(_name)){
 		instance_destroy();
 	}
 	
-	return noone;
+	return teevent_get_active(_name);
 	
 #define teevent_get_active(_name)
 	/*
-		Returns if a given NTTE event is active or not
+		Returns a given event's controller object
+		Use the 'all' keyword to return an array of every active event's controller object
 	*/
 	
-	return (array_length(instances_matching(instances_matching(CustomObject, "name", "NTTEEvent"), "event", _name)) > 0);
+	var _inst = instances_matching(CustomObject, "name", "NTTEEvent");
+	
+	 // All:
+	if(_name == all){
+		return _inst;
+	}
+	
+	 // Normal:
+	with(instances_matching(_inst, "event", _name)){
+		return id;
+	}
+	
+	return noone;
 	
 	
 /// GENERAL

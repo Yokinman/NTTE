@@ -149,11 +149,6 @@
 		_topChance  = 1/100,
 		_topSpawn   = [];
 		
-	with(instance_nearest(_spawnX, _spawnY, Player)){
-		_spawnX = x;
-		_spawnY = y;
-	}
-	
 	 // Visibilize Pets:
 	with(instances_matching(CustomHitme, "name", "Pet")){
 		visible = true;
@@ -397,7 +392,7 @@
 			}
 			
 			 // Consistent Crab Skeletons:
-			if(!instance_exists(BonePile) && !teevent_get_active("ScorpionCity")){
+			if(!instance_exists(BonePile) && !instance_exists(teevent_get_active("ScorpionCity"))){
 				if(_propIndex >= 0) with(_propFloor[_propIndex--]){
 					obj_create(bbox_center_x, bbox_center_y, BonePile);
 				}
@@ -411,7 +406,7 @@
 			}
 			
 			 // Big Maggot Nests:
-			if(!teevent_get_active("MaggotPark")){
+			if(!instance_exists(teevent_get_active("MaggotPark"))){
 				with(MaggotSpawn) if(chance(1 + GameCont.loops, 12)){
 					obj_create(x, y, "BigMaggotSpawn");
 					instance_delete(id);
@@ -712,11 +707,11 @@
 			 // Vault Flower Room:
 			if(mod_variable_get("mod", "tepickups", "VaultFlower_spawn")){
 				with(CrownPed){
-					var	_w = 3,
-						_h = 3,
-						_type = "",
+					var	_w        = 3,
+						_h        = 3,
+						_type     = "",
 						_dirStart = random(360),
-						_dirOff = 90,
+						_dirOff   = 90,
 						_floorDis = 0;
 						
 					floor_set_align(null, null, 32, 32);
@@ -727,13 +722,15 @@
 						with(floors){
 							// love u yokin yeah im epic
 							sprite_index = spr.VaultFlowerFloor;
-							image_index = _img++;
-							depth = 7;
+							image_index  = _img++;
+							depth        = 7;
 						}
 						
 						 // The Star of the Show:
 						with(obj_create(x, y - 8, "VaultFlower")){
-							with(instance_create(x, y, LightBeam)) sprite_index = sprLightBeamVault;
+							with(instance_create(x, y, LightBeam)){
+								sprite_index = sprLightBeamVault;
+							}
 						}
 					}
 					
@@ -819,11 +816,11 @@
 	}
 	
 	 // Activate Events:
-	with(array_flip(instances_matching(CustomObject, "name", "NTTEEvent"))){
-		on_step = script_ref_create_ext(mod_type, mod_name, event + "_step");
+	with(array_flip(teevent_get_active(all))){
+		on_step    = script_ref_create_ext(mod_type, mod_name, event + "_step");
 		on_cleanup = script_ref_create_ext(mod_type, mod_name, event + "_cleanup");
 		
-		 // Event Generation:o
+		 // Event Generation:
 		var _minID = GameObject.id;
 		mod_script_call(mod_type, mod_name, event + "_create");
 		floors = array_combine(floors, instances_matching_gt(Floor, "id", _minID));
@@ -1286,19 +1283,19 @@
 	
 	 // Baby Scorpions:
 	if(instance_exists(Scorpion) || instance_exists(GoldScorpion)){
-		var _eventScorp = teevent_get_active("ScorpionCity");
-		with(Scorpion) if(chance(1 + _eventScorp, 4)){
+		var _city = instance_exists(teevent_get_active("ScorpionCity"));
+		with(Scorpion) if(chance(1 + _city, 4)){
 			repeat(irandom_range(1, 3)){
 				obj_create(x, y, "BabyScorpion");
 			}
 		}
-		with(GoldScorpion) if(chance(_eventScorp, 4)){
+		with(GoldScorpion) if(chance(_city, 4)){
 			repeat(irandom_range(1, 3)){
 				obj_create(x, y, "BabyScorpionGold");
 			}
 		}
 		with(MaggotSpawn){
-			babyscorp_drop = chance(1, 8) + _eventScorp;
+			babyscorp_drop = chance(1, 8) + _city;
 		}
 	}
 	
@@ -1402,6 +1399,11 @@
 				spr_floor = other.sprite_index;
 			}
 		}
+	}
+	
+	 // Trap Collision Fix:
+	with(Trap){
+		solid = false;
 	}
 	
 	 // Top Decal Fix:
@@ -2399,6 +2401,7 @@
 		ntte_event_check = true;
 		
 		var _list = mod_variable_get("mod", "teevents", "event_list");
+		
 		for(var i = 0; i < array_length(_list); i++){
 			var	_scrt    = _list[i],
 				_modType = _scrt[0],
@@ -2406,9 +2409,9 @@
 				_name    = _scrt[2],
 				_area    = mod_script_call(_modType, _modName, _name + "_area");
 				
-			if(_area == null || GameCont.area == _area){
+			if(is_undefined(_area) || GameCont.area == _area){
 				var _hard = mod_script_call(_modType, _modName, _name + "_hard");
-				if(GameCont.hard >= ((_hard == null) ? 2 : _hard)){
+				if(GameCont.hard >= (is_undefined(_hard) ? 2 : _hard)){
 					var _chance = 1;
 					if(mod_script_exists(_modType, _modName, _name + "_chance")){
 						_chance = mod_script_call(_modType, _modName, _name + "_chance");
@@ -2434,6 +2437,12 @@
 	with(instances_matching_gt([Bubble, RavenFly, LilHunterFly], "depth", object_get_depth(SubTopCont))){
 		depth = -8;
 		visible = true;
+	}
+	with(instances_matching(RainSplash, "walltop_fix", null)){
+		walltop_fix = !place_meeting(x, y + 8, Floor);
+		if(walltop_fix){
+			depth = -7;
+		}
 	}
 	with(instances_matching(instances_matching(Pillar, "spr_shadow_y", 0), "spr_shadow", shd24)){
 		spr_shadow_y = -3;

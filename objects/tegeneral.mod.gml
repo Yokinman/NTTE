@@ -23,7 +23,7 @@
 #macro mus snd.mus
 #macro lag global.debug_lag
 
-#macro TopObjectSearch [hitme, projectile, becomenemy, Pickup, chestprop, Corpse, Effect, Explosion, MeatExplosion, PlasmaImpact, BigDogExplo, NothingDeath, Nothing2Death, FrogQueenDie, PopoShield, CrystalShield, SharpTeeth, ReviveArea, NecroReviveArea, RevivePopoFreak]
+#macro TopObjectSearch    [hitme, projectile, becomenemy, Pickup, chestprop, Corpse, Effect, Explosion, MeatExplosion, PlasmaImpact, BigDogExplo, NothingDeath, Nothing2Death, FrogQueenDie, PopoShield, CrystalShield, SharpTeeth, ReviveArea, NecroReviveArea, RevivePopoFreak]
 #macro TopObjectSearchMap global.top_object_search_map
 
 #define AlertIndicator_create(_x, _y)
@@ -2311,22 +2311,22 @@
 	
 	with(instance_create(_x, _y, CustomHitme)){
 		 // Visual:
-		spr_idle = spr.PetParrotIdle;
-		spr_walk = spr.PetParrotWalk;
-		spr_hurt = spr.PetParrotHurt;
-		spr_dead = mskNone;
-		spr_icon = -1;
-		spr_shadow = shd24;
-		spr_shadow_x = 0;
-		spr_shadow_y = -1;
-		spr_bubble = sprPlayerBubble;
+		spr_idle       = spr.PetParrotIdle;
+		spr_walk       = spr.PetParrotWalk;
+		spr_hurt       = spr.PetParrotHurt;
+		spr_dead       = mskNone;
+		spr_icon       = -1;
+		spr_shadow     = shd24;
+		spr_shadow_x   = 0;
+		spr_shadow_y   = -1;
+		spr_bubble     = sprPlayerBubble;
 		spr_bubble_pop = sprPlayerBubblePop;
-		spr_bubble_x = 0;
-		spr_bubble_y = 0;
-		hitid = -1;
-		right = choose(1, -1);
-		image_speed = 0.4;
-		depth = -2;
+		spr_bubble_x   = 0;
+		spr_bubble_y   = 0;
+		hitid          = -1;
+		right          = choose(1, -1);
+		image_speed    = 0.4;
+		depth          = -2;
 		
 		 // Sound:
 		snd_hurt = sndAllyHurt;
@@ -2371,7 +2371,7 @@
 		}
 		
 		 // Scripts:
-		pet = "";
+		pet      = "";
 		mod_type = "";
 		mod_name = "";
 		
@@ -4032,38 +4032,39 @@
 		depth = -6 - (y / 10000);
 		
 		 // Vars:
-		mask_index = -1;
-		mask_x = 0;
-		mask_y = 8;
-		target = noone;
-		target_save = {};
-		z = 8;
-		zspeed = 0;
-		zfriction = 0;
-		maxspeed = 0;
-		grav = 0.8;
-		jump = random_range(3, 4);
-		jump_x = x;
-		jump_y = y;
-		jump_time = 0;
-		idle_time = 0;
-		idle_wait = [15, 90];
-		idle_walk = [5, 20];
+		mask_index       = -1;
+		mask_x           = 0;
+		mask_y           = 8;
+		target           = noone;
+		target_save      = {};
+		z                = 8;
+		zspeed           = 0;
+		zfriction        = 0;
+		maxspeed         = 0;
+		grav             = 0.8;
+		jump             = random_range(3, 4);
+		jump_x           = x;
+		jump_y           = y;
+		jump_time        = 0;
+		idle_time        = 0;
+		idle_wait        = [15, 90];
+		idle_walk        = [5, 20];
 		idle_walk_chance = 1/6;
-		canmove = true;
-		spawn_dis = 0;
-		spawn_dir = 0;
-		type = -1;
-		wobble = 0;
-		wobble_num = 0;
-		override_mask = true;
-		override_depth = true;
-		unstick = false;
-		search_x1 = x - 8;
-		search_x2 = x + 8;
-		search_y1 = y - 8;
-		search_y2 = y + 8;
+		canmove          = true;
+		spawn_dis        = 0;
+		spawn_dir        = 0;
+		type             = -1;
+		wobble           = 0;
+		wobble_num       = 0;
+		override_mask    = true;
+		override_depth   = true;
+		unstick          = false;
+		search_x1        = x - 8;
+		search_x2        = x + 8;
+		search_y1        = y - 8;
+		search_y2        = y + 8;
 		
+		 // Up up:
 		y += z;
 		
 		return id;
@@ -4220,6 +4221,7 @@
 		
 		 // Specific Stuff:
 		else switch(type){
+			
 			case enemy: // Idle, Then Run to Player + Jump Off Wall
 				
 				if(zfriction == 0){
@@ -4477,28 +4479,31 @@
 						}
 					}
 					
-					mask_index = _saveMask;
+					if(instance_exists(self)){
+						mask_index = _saveMask;
+					}
 				}
 				
 				break;
+				
 		}
 	}
 	
 	 // Target Destroyed:
 	else{
-		if(target != noone) target = noone; // basically just to give a 1 frame delay
+		if(target != noone) target = noone; // 1 frame delay for auto top object searching
 		else instance_destroy();
 	}
 	
 #define TopObject_destroy
 	with(target){
-		x = other.x;
-		y = other.y;
-		xprevious = x;
-		yprevious = y;
-		xstart = x;
-		ystart = y;
 		top_object = noone;
+		x          = other.x;
+		y          = other.y;
+		xprevious  = x;
+		yprevious  = y;
+		xstart     = x;
+		ystart     = y;
 		
 		 // Unwobble:
 		if(other.wobble_num != 0){
@@ -5223,8 +5228,8 @@
 					 // Vars:
 					with(my_feather_storage){
 						creator = other;
-						small = true;
-						num = ceil(2 * skill_get(mut_throne_butt));
+						small   = true;
+						num     = ceil(2 * skill_get(mut_throne_butt));
 					}
 				}
 			}
@@ -5251,70 +5256,54 @@
 			if(_object.id > _lastID){
 				TopObjectSearchMap[? _object] = _object.id;
 				
+				var _inst  = instances_matching(instances_matching_gt(_object, "id", _lastID), "z", null),
+					_break = false;
+				
 				if(_object == Effect){
-					_object = instances_matching_ne(_object, "object_index", Smoke, Bubble);
-					if(array_length(_object) <= 0) continue;
+					_inst = instances_matching_ne(_inst, "object_index", RainSplash, RainDrop, SnowFlake, Bubble);
+					if(instance_number(Smoke) >= 100){
+						_inst = instances_matching_ne(_inst, "object_index", Smoke);
+					}
+					if(instance_number(Dust) >= 100){
+						_inst = instances_matching_ne(_inst, "object_index", Dust);
+					}
 				}
 				
-				var _topObject = instances_matching(CustomObject, "name", "TopObject");
-				if(array_length(_topObject) > 0){
-					with(array_flip(instances_matching(instances_matching_gt(_object, "id", _lastID), "z", null))){
-						if(
-							!position_meeting(x, y, Floor)
-							||
-							(place_meeting(x, y, Wall) && (instance_is(self, hitme) || instance_is(self, chestprop) || instance_is(self, Corpse) || instance_is(self, ChestOpen)))
+				if(array_length(_inst) > 0){
+					with(instances_matching(CustomObject, "name", "TopObject")){
+						with(
+							instances_matching(
+							instances_matching_le(
+							instances_matching_ge(
+							instances_matching_le(
+							instances_matching_ge(
+							_inst,
+							"xstart", search_x1),
+							"xstart", search_x2),
+							"ystart", search_y1),
+							"ystart", search_y2),
+							"creator", null, noone, target)
 						){
-							with(
-								instances_matching_ge(
-								instances_matching_le(
-								instances_matching_ge(
-								instances_matching_le(
-								_topObject,
-								"search_x1", xstart),
-								"search_x2", xstart),
-								"search_y1", ystart),
-								"search_y2", ystart)
-							){
-								//if(array_length(instances_meeting(x, y, instances_matching_lt([PortalClear, PortalShock], "id", other))) <= 0){
-									if(
-										"creator" not in other
-										|| !instance_exists(other.creator)
-										|| other.creator == target
-										|| !instance_exists(target)
-										|| ("target" in other && other.target == target)
-									){
-										with(other){
-											 // Effects:
-											if(instance_is(self, Effect) && !instance_is(self, ChestOpen) && !instance_is(self, Debris) && !instance_is(self, Scorchmark)){
-												if(instance_is(self, MeltSplat)){
-													instance_destroy();
-												}
-												else depth = min(depth, -6.01);
-											}
-											else if(instance_is(self, SharpTeeth)){
-												depth = min(depth, -8);
-											}
-											
-											 // Epic Stuff:
-											else if(fork()){
-												if(instance_is(self, hitme) || instance_is(self, projectile)){
-													var _wall = instances_meeting(x, y, Wall);
-													wait 0;
-													if(!instance_exists(self) || array_length(instances_matching(_wall, "", null)) < array_length(_wall)){
-														exit;
-													}
-												}
-												top_create(x, y, id, 0, 0);
-												exit;
-											}
-										}
-										
-										break;
+							if(!position_meeting(x, y, Floor)){
+								 // Effects:
+								if(instance_is(self, Effect) && !instance_is(self, ChestOpen) && !instance_is(self, Debris) && !instance_is(self, Scorchmark)){
+									if(instance_is(self, MeltSplat)){
+										instance_destroy();
 									}
-									
-									if(!instance_exists(other)) break;
-								//}
+									else depth = min(depth, -6.01);
+								}
+								else if(instance_is(self, SharpTeeth)){
+									depth = min(depth, -8);
+								}
+								
+								 // Epic Stuff:
+								else top_create(x, y, id, 0, 0);
 							}
+							
+							_inst = array_delete_value(_inst, self);
+						}
+						if(array_length(_inst) <= 0){
+							break;
 						}
 					}
 				}
