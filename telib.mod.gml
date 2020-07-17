@@ -5,13 +5,13 @@
 	
 	 // Object List (Used for cheats mod, basically):
 	ntte_obj_list = {
-		"tegeneral"   : ["AlertIndicator", "BigDecal", "BoneArrow", "BoneSlash", "BoneFX", "BuriedVault", "CustomBullet", "CustomFlak", "CustomShell", "CustomPlasma", "GroundFlameGreen", "Igloo", "MergeFlak", "ParrotFeather", "ParrotChester", "Pet", "PetRevive", "PetWeaponBecome", "PetWeaponBoss", "PortalBullet", "PortalGuardian", "PortalPrevent", "ReviveNTTE", "TopDecal", "TopObject", "VenomPellet", "WallDecal", "WallEnemy"],
+		"tegeneral"   : ["AlertIndicator", "BigDecal", "BoneArrow", "BoneSlash", "BoneFX", "BuriedVault", "CustomBullet", "CustomFlak", "CustomShell", "CustomPlasma", "GroundFlameGreen", "Igloo", "MergeFlak", "ParrotFeather", "ParrotChester", "Pet", "PetRevive", "PetWeaponBecome", "PetWeaponBoss", "PortalBullet", "PortalGuardian", "PortalPrevent", "ReviveNTTE", "TopDecal", "TopObject", "WallDecal", "WallEnemy"],
 		"tepickups"   : ["Backpack", "Backpacker", "BackpackPickup", "BatChest", "BigIDPDSpawn", "BloodLustPickup", "BoneBigPickup", "BonePickup", "BonusAmmoChest", "BonusAmmoMimic", "BonusAmmoPickup", "BonusHealthChest", "BonusHealthMimic", "BonusHealthPickup", "BuriedVaultChest", "BuriedVaultChestDebris", "BuriedVaultPedestal", "CatChest", "ChestShop", "CursedAmmoChest", "CursedMimic", "CustomChest", "CustomPickup", "HammerHeadPickup", "HarpoonPickup", "OrchidBall", "OrchidChest", "OrchidSkill", "PalaceAltar", "PalankingStatue", "Pizza", "PizzaChest", "PizzaStack", "Prompt", "RedAmmoChest", "RedAmmoPickup", "SpiritPickup", "SunkenChest", "SunkenCoin", "VaultFlower", "VaultFlowerSparkle", "WepPickupGrounded", "WepPickupStick"],
-		"tedesert"    : ["BabyScorpion", "BabyScorpionGold", "BanditCamper", "BanditHiker", "BanditTent", "BigCactus", "BigMaggotSpawn", "Bone", "CoastBossBecome", "CoastBoss", "CowSkull", "FlySpin", "PetVenom", "ScorpionRock", "WantBigMaggot"],
+		"tedesert"    : ["BabyScorpion", "BabyScorpionGold", "BanditCamper", "BanditHiker", "BanditTent", "BigCactus", "BigMaggotSpawn", "Bone", "CoastBossBecome", "CoastBoss", "CowSkull", "FlySpin", "PetVenom", "ScorpionRock", "VenomFlak", "VenomPellet", "WantBigMaggot"],
 		"tecoast"     : ["BloomingAssassin", "BloomingAssassinHide", "BloomingBush", "BloomingCactus", "BuriedCar", "ClamShield", "ClamShieldSlash", "CoastBigDecal", "CoastDecal", "CoastDecalCorpse", "Creature", "Diver", "DiverHarpoon", "Gull", "Harpoon", "HarpoonStick", "NetNade", "Palanking", "PalankingDie", "PalankingSlash", "PalankingSlashGround", "PalankingToss", "Palm", "Pelican", "Seal", "SealAnchor", "SealDisc", "SealHeavy", "SealMine", "TrafficCrab", "Trident"],
 		"teoasis"     : ["BubbleBomb", "BubbleExplosion", "BubbleExplosionSmall", "BubbleSlash", "CrabTank", "HammerShark", "HyperBubble", "OasisPetBecome", "Puffer", "SunkenRoom", "SunkenSealSpawn", "WaterStreak"],
 		"tetrench"    : ["Angler", "Eel", "EelSkull", "ElectroPlasma", "ElectroPlasmaImpact", "Jelly", "JellyElite", "Kelp", "LightningDisc", "LightningDiscEnemy", "PitSpark", "PitSquid", "PitSquidArm", "PitSquidBomb", "PitSquidDeath", "QuasarBeam", "QuasarRing", "TeslaCoil", "TopDecalWaterMine", "TrenchFloorChunk", "Vent", "WantEel"],
-		"tesewers"    : ["AlbinoBolt", "AlbinoGator", "AlbinoGrenade", "BabyGator", "Bat", "BatBoss", "BatCloud", "BatDisc", "BatScreech", "BoneGator", /*"BossHealFX",*/ "Cabinet", "Cat", "CatBoss", "CatBossAttack", "CatDoor", "CatDoorDebris", "CatGrenade", "CatHole", "CatHoleBig", "CatHoleOpen", "CatLight", "ChairFront", "ChairSide", "Couch", "GatorStatue", "GatorStatueFlak", "Manhole", "NewTable", "Paper", "PizzaDrain", "PizzaManholeCover", "PizzaRubble", "PizzaTV", "SewerDrain", "SewerRug", "TurtleCool", "VenomFlak"],
+		"tesewers"    : ["AlbinoBolt", "AlbinoGator", "AlbinoGrenade", "BabyGator", "Bat", "BatBoss", "BatCloud", "BatDisc", "BatScreech", "BoneGator", /*"BossHealFX",*/ "Cabinet", "Cat", "CatBoss", "CatBossAttack", "CatDoor", "CatDoorDebris", "CatGrenade", "CatHole", "CatHoleBig", "CatHoleOpen", "CatLight", "ChairFront", "ChairSide", "Couch", "GatorStatue", "GatorStatueFlak", "Manhole", "NewTable", "Paper", "PizzaDrain", "PizzaManholeCover", "PizzaRubble", "PizzaTV", "SewerDrain", "SewerRug", "TurtleCool"],
 		"tescrapyard" : ["BoneRaven", "SawTrap", "SludgePool", "TopRaven", "Tunneler"],
 		"tecaves"     : ["ChaosHeart", "CrystalBrain", "CrystalClone", "CrystalHeart", "CrystalHeartBullet", "CrystalPropRed", "CrystalPropWhite", "EnergyBatSlash", "InvMortar", "Mortar", "MortarPlasma", "NewCocoon", "PlasmaImpactSmall", "RedBullet", "RedExplosion", "RedShank", "RedSlash", "RedSpider", "Spiderling", "TwinOrbital", "VlasmaBullet", "VlasmaCannon", "WallFake", "Warp", "WarpPortal"],
 		"telabs"      : ["Button", "ButtonChest", "ButtonOld", "ButtonPickup", "ButtonReviveArea", "FreakChamber", "MutantVat", "PickupReviveArea", "PopoSecurity", "WallSlide"]
@@ -213,7 +213,7 @@
 #macro FloorNormal instances_matching(Floor, "object_index", Floor)
 
 #macro ntte_alarm_min 0
-#macro ntte_alarm_max 11
+#macro ntte_alarm_max 10
 
 #macro ntte_obj_base  [CustomObject, CustomHitme, CustomEnemy, CustomProp, CustomProjectile];
 #macro ntte_obj_event global.object_event
@@ -257,8 +257,8 @@
 				name = _name;
 				
 				var	_isCustom = ds_map_exists(ntte_obj_event, object_index),
-					_modType = _scrt[0],
-					_modName = _scrt[1];
+					_modType  = _scrt[0],
+					_modName  = _scrt[1];
 					
 				 // Bind Events:
 				with(
@@ -364,29 +364,6 @@
 				if(_isCustom){
 					on_create = script_ref_create(obj_create, _x, _y, _name);
 					
-					 // Animation:
-					if("ntte_anim" not in self){
-						if(instance_is(self, CustomEnemy)){
-							ntte_anim = true;
-						}
-					}
-					if("ntte_anim" in self && ntte_anim){
-						if("spr_chrg" not in self){
-							spr_chrg = -1;
-						}
-					}
-					
-					 // Walking:
-					if("ntte_walk" not in self){
-						if("walk" in self){
-							ntte_walk = true;
-						}
-					}
-					if("ntte_walk" in self && ntte_walk){
-						if("walkspeed" not in self) walkspeed = 0.8;
-						if("maxspeed"  not in self) maxspeed = 3;
-					}
-					
 					 // hitmes:
 					if(instance_is(self, hitme)){
 						 // Fill HP:
@@ -420,158 +397,6 @@
 	}
 	
 	return noone;
-	
-#define obj_begin_step
-	/*
-		Performs alarms, movement, and animation code for NTTE's "Custom" objects
-		Called from ntte.mod's 'ntte_begin_step' event
-	*/
-	
-	var _obj = ntte_obj_base;
-	
-	 // Debugging Lag:
-	if(lag){
-		trace("");
-		
-		 // Override Events:
-		with(instances_matching_ne(_obj, "on_begin_step", null)){
-			if(array_length(on_begin_step) >= 3){
-				ntte_begin_step = on_begin_step;
-				on_begin_step = [];
-			}
-		}
-		with(instances_matching_ne(_obj, "on_step", null)){
-			if(array_length(on_step) >= 3){
-				ntte_step = on_step;
-				on_step = [];
-			}
-		}
-		with(instances_matching_ne(_obj, "on_end_step", null)){
-			if(array_length(on_end_step) >= 3){
-				ntte_end_step = on_end_step;
-				on_end_step = [];
-			}
-		}
-		
-		 // Bind Events:
-		if(array_length(instances_matching(CustomScript, "name", "obj_step")) <= 0){
-			with(script_bind_step(obj_step, 0)){
-				name = script[2];
-				persistent = true;
-			}
-		}
-		if(array_length(instances_matching(CustomScript, "name", "obj_end_step")) <= 0){
-			with(script_bind_end_step(obj_end_step, 0)){
-				name = script[2];
-				persistent = true;
-			}
-		}
-		
-		 // Manual Begin Step:
-		var _inst = instances_matching_ne(_obj, "ntte_begin_step", null);
-		trace_time();
-		with(_inst){
-			mod_script_call(ntte_begin_step[0], ntte_begin_step[1], ntte_begin_step[2]);
-		}
-		trace_time("obj_begin_step");
-	}
-	
-	 // Alarms:
-	for(var i = ntte_alarm_min; i < ntte_alarm_max; i++){
-		var	_alrm = `on_alrm${i}`,
-			_inst = instances_matching_ne(instances_matching_ge(_obj, `alarm${i}`, 0), _alrm, null);
-			
-		array_sort(_inst, true);
-		
-		with(_inst){
-			if(instance_exists(self)){
-				var _num = alarm_get(i) - 1;
-				alarm_set(i, _num);
-				
-				 // Call Event:
-				if(_num == 0){
-					var _scrt = variable_instance_get(self, _alrm);
-					if(array_length(_scrt) >= 3){
-						with(self) mod_script_call(_scrt[0], _scrt[1], _scrt[2]); // !!! Use 'script_ref_call()' once GMS2 version become stable
-					}
-				}
-			}
-		}
-	}
-	
-	 // Movement:
-	with(instances_matching(_obj, "ntte_walk", true)){
-		if(walk > 0){
-			motion_add(direction, walkspeed);
-			walk -= current_time_scale;
-		}
-		if(speed > maxspeed) speed = maxspeed; // Max Speed
-	}
-	
-	 // Animate:
-	with(instances_matching(_obj, "ntte_anim", true)){
-		if(sprite_index != spr_chrg){
-			if(sprite_index != spr_hurt || anim_end){
-				sprite_index = ((speed <= 0) ? spr_idle : spr_walk);
-			}
-		}
-	}
-	
-	if(lag) trace_time("obj_begin_step Misc");
-	
-#define obj_step
-	/*
-		Manually performs all "Custom" object step events (only when debugging lag)
-	*/
-	
-	var	_obj = ntte_obj_base,
-		_inst = instances_matching_ne(_obj, "ntte_step", null);
-		
-	if(lag) trace_time();
-	
-	with(_inst){
-		mod_script_call(ntte_step[0], ntte_step[1], ntte_step[2]);
-	}
-	
-	if(lag) trace_time("obj_step");
-	
-	 // Goodbye:
-	else instance_destroy();
-	
-#define obj_end_step
-	/*
-		Manually performs all "Custom" object end step events (only when debugging lag)
-	*/
-	
-	var	_obj = ntte_obj_base,
-		_inst = instances_matching_ne(_obj, "ntte_end_step", null);
-		
-	if(lag) trace_time();
-	
-	with(_inst){
-		mod_script_call(ntte_end_step[0], ntte_end_step[1], ntte_end_step[2]);
-	}
-	
-	if(lag) trace_time("obj_end_step");
-	
-	 // Goodbye:
-	else{
-		instance_destroy();
-		
-		 // Reset Events:
-		with(instances_matching_ne(_obj, "ntte_begin_step", null)){
-			on_begin_step = ntte_begin_step;
-			ntte_begin_step = null;
-		}
-		with(instances_matching_ne(_obj, "ntte_step", null)){
-			on_step = ntte_step;
-			ntte_step = null;
-		}
-		with(instances_matching_ne(_obj, "ntte_end_step", null)){
-			on_end_step = ntte_end_step;
-			ntte_end_step = null;
-		}
-	}
 	
 #define obj_bind
 	/*
@@ -629,11 +454,78 @@
 		instance_destroy();
 	}
 	
+#define obj_step
+	/*
+		Manually performs all "Custom" object step events (only when debugging lag)
+	*/
+	
+	var _scrt = "";
+	
+	switch(object_index){
+		case CustomBeginStep : _scrt = "begin_step"; break;
+		case CustomStep      : _scrt = "step";       break;
+		case CustomEndStep   : _scrt = "end_step";   break;
+	}
+	
+	if(lag){
+		 // Enable Events:
+		with(instances_matching_ne(ntte_obj_base, "ntte_" + _scrt, null)){
+			variable_instance_set(self, "on_" + _scrt, variable_instance_get(self, "ntte_" + _scrt));
+		}
+		
+		 // Call Events:
+		var _inst = instances_matching_ne(ntte_obj_base, "on_" + _scrt, null);
+		if(true || array_length(_inst) > 0){
+			trace_time();
+			switch(object_index){
+				case CustomBeginStep : with(_inst) event_perform(ev_step, ev_step_begin);  break;
+				case CustomStep      : with(_inst) event_perform(ev_step, ev_step_normal); break;	
+				case CustomEndStep   : with(_inst) event_perform(ev_step, ev_step_end);    break;
+			}
+			trace_time(`obj_${_scrt} (${array_length(_inst)})`);
+			
+			 // Disable Events:
+			with(instances_matching_ne(_inst, "", null)){
+				variable_instance_set(self, "ntte_" + _scrt, variable_instance_get(self, "on_" + _scrt));
+				variable_instance_set(self, "on_"   + _scrt, []);
+			}
+		}
+	}
+	
+	 // Goodbye:
+	else{
+		instance_destroy();
+		
+		 // Reset Events:
+		with(instances_matching_ne(ntte_obj_base, "ntte_" + _scrt, null)){
+			variable_instance_set(self, "on_"   + _scrt, variable_instance_get(self, "ntte_" + _scrt));
+			variable_instance_set(self, "ntte_" + _scrt, null);
+		}
+	}
+	
 #define step
 	 // sleep_max():
 	if(global.sleep_max > 0){
 		sleep(global.sleep_max);
 		global.sleep_max = 0;
+	}
+	
+	 // Lag Debugging:
+	if(lag){
+		with([CustomBeginStep, CustomStep, CustomEndStep]){
+			if(array_length(instances_matching(self, "name", "obj_step")) <= 0){
+				var _inst = noone;
+				switch(self){
+					case CustomBeginStep : _inst = script_bind_begin_step(obj_step, 0); break;
+					case CustomStep      : _inst = script_bind_step(obj_step, 0);       break;
+					case CustomEndStep   : _inst = script_bind_end_step(obj_step, 0);   break;
+				}
+				with(_inst){
+					name = script[2];
+					persistent = true;
+				}
+			}
+		}
 	}
 	
 	
@@ -885,18 +777,11 @@
 	}
 	instance_destroy();
 	
-#define enemy_walk(_spdAdd, _spdMax)
-	if(walk > 0){
-		motion_add(direction, _spdAdd);
-		walk -= current_time_scale;
-	}
-	if(speed > _spdMax) speed = _spdMax;
-
 #define enemy_hurt(_hitdmg, _hitvel, _hitdir)
-	my_health -= _hitdmg;			// Damage
-	motion_add(_hitdir, _hitvel);	// Knockback
-	nexthurt = current_frame + 6;	// I-Frames
-	sound_play_hit(snd_hurt, 0.3);	// Sound
+	my_health -= _hitdmg;          // Damage
+	motion_add(_hitdir, _hitvel);  // Knockback
+	nexthurt = current_frame + 6;  // I-Frames
+	sound_play_hit(snd_hurt, 0.3); // Sound
 
 	 // Hurt Sprite:
 	sprite_index = spr_hurt;
@@ -1428,18 +1313,19 @@
 	
 	 // Bind Script:
 	if(array_length(_bind) <= 0){
-		_bind = script_bind_end_step(0, 0);
+		_bind = script_bind_begin_step(0, 0);
 		with(_bind){
-			script = script_ref_create_ext("race", "parrot", "charm_step");
-			name   = script[2];
-			inst   = [];
-			vars   = [];
+			persistent = true;
+			script     = script_ref_create_ext("race", "parrot", "charm_step");
+			name       = script[2];
+			inst       = [];
+			vars       = [];
 		}
 	}
 	
 	 // Charm/Uncharm:
 	var _instVars = [];
-	with(_inst) if(instance_exists(self)){
+	with(instances_matching(_inst, "", null)){
 		if("ntte_charm" not in self){
 			ntte_charm = {
 				"charmed"    : false,
@@ -1449,7 +1335,6 @@
 				"team"       : -1,     // Original team before charming
 				"time"       : -1,     // Charm duration in frames
 				"time_speed" : 1,      // Charm duration decrement speed
-				"walk"       : 0,      // For overwriting movement on certain dudes (Assassin, big dog)
 				"boss"       : false,  // Instance is a boss
 				"kill"       : false,  // Kill when uncharmed (For dudes who were spawned by charmed dudes)
 				"feather"    : false   // Was charmed using feathers
@@ -1476,21 +1361,17 @@
 					with(instances_matching(instances_matching(projectile, "creator", id), "team", _vars.team)){
 						if(place_meeting(x, y, other)){
 							team = other.team;
-							team_instance_sprite(team, self);
+							if(sprite_get_team(sprite_index) != 3){
+								team_instance_sprite(team, self);
+							}
 						}
 					}
 				}
 				
-				 // Custom (Override Step Event):
-				if(string_pos("Custom", object_get_name(object_index)) == 1){
-					_vars.on_step = on_step;
-					on_step = [];
-				}
-				
-				 // Normal (Delay Alarms):
-				else for(var a = 0; a <= 10; a++){
-					if(alarm_get(a) > 0){
-						alarm_set(a, alarm_get(a) + ceil(current_time_scale));
+				 // Delay Alarms:
+				for(var i = 0; i <= 10; i++){
+					if(alarm_get(i) > 0){
+						alarm_set(i, alarm_get(i) + ceil(current_time_scale));
 					}
 				}
 				
@@ -1538,7 +1419,9 @@
 							with(instances_matching(instances_matching(projectile, "creator", self), "team", team)){
 								if(place_meeting(x, y, other)){
 									team = _vars.team;
-									team_instance_sprite(team, self);
+									if(sprite_get_team(sprite_index) != 3){
+										team_instance_sprite(team, self);
+									}
 								}
 							}
 							
@@ -1574,7 +1457,11 @@
 		array_push(_instVars, _vars);
 	}
 	
-	return ((array_length(_instVars) == 1) ? _instVars[0] : _instVars);
+	return (
+		(array_length(_instVars) == 1)
+		? _instVars[0]
+		: _instVars
+	);
 	
 #define boss_hp(_hp)
 	var n = 0;
@@ -1627,8 +1514,8 @@
 			
 			 // Call Big Bandit's Intro:
 			if(delay <= 0){
-				var	_lastSub = GameCont.subarea,
-					_lastLoop = GameCont.loops,
+				var	_lastSub   = GameCont.subarea,
+					_lastLoop  = GameCont.loops,
 					_lastIntro = UberCont.opt_bossintros;
 					
 				GameCont.loops = 0;
@@ -5920,6 +5807,7 @@
 							 // Object-Specifics:
 							switch(_obj){
 								case EnemyBullet3:
+								case PopoSlug:
 									bonus = false;
 									break;
 							}

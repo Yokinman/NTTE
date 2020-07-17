@@ -30,14 +30,14 @@
 #define BloomingAssassinHide_create(_x, _y)
 	with(instance_create(_x, _y, CustomEnemy)){
 		 // Visual:
-		spr_idle = spr.BloomingAssassinHide;
-		spr_walk = spr.BloomingAssassinHide;
-		spr_hurt = spr.BloomingAssassinHurt;
-		spr_dead = spr.BloomingAssassinDead;
-		spr_shadow = shd24;
-		hitid = [spr.BloomingAssassinIdle, "BLOOMING ASSASSIN"];
+		spr_idle    = spr.BloomingAssassinHide;
+		spr_walk    = spr.BloomingAssassinHide;
+		spr_hurt    = spr.BloomingAssassinHurt;
+		spr_dead    = spr.BloomingAssassinDead;
+		spr_shadow  = shd24;
+		hitid       = [spr.BloomingAssassinIdle, "BLOOMING ASSASSIN"];
 		image_speed = 0.4;
-		depth = 1;
+		depth       = 1;
 		
 		 // Sound:
 		snd_hurt = sndJungleAssassinHurt;
@@ -45,8 +45,8 @@
 		
 		 // Vars:
 		maxhealth = 12;
-		raddrop = 10;
-		size = 1;
+		raddrop   = 10;
+		size      = 1;
 		
 		 // Alarms:
 		alarm0 = 90 + random(90);
@@ -56,12 +56,22 @@
 	}
 	
 #define BloomingAssassinHide_step
+	 // Alarms:
+	if(alarm0_run) exit;
+	if(alarm1_run) exit;
+	
+	 // Stay Still:
 	x = xstart;
 	y = ystart;
 	speed = 0;
 	
+	 // Player is making bushman uncomfortable:
+	if(place_meeting(x, y, Player)){
+		alarm0 = min(alarm0, 1);
+	}
+	
 	 // Animate:
-	sprite_index = spr_idle;
+	sprite_index = enemy_sprite;
 	if(image_index < 1){
 		image_index += random(image_speed_raw * 0.05) - image_speed_raw;
 		
@@ -71,22 +81,14 @@
 		}
 	}
 	
-	 // Player is making bushman uncomfortable:
-	if(place_meeting(x, y, Player)){
-		BloomingAssassinHide_alrm0();
-	}
-	
-#define BloomingAssassinHide_hurt(_hitdmg, _hitvel, _hitdir)
-	enemy_hurt(_hitdmg, _hitvel / 2, _hitdir);
-	BloomingAssassinHide_alrm1();
-	
 #define BloomingAssassinHide_alrm0
 	alarm0 = 30 + random(60);
+	
 	enemy_target(x, y);
 	
 	 // Become Man:
 	if(instance_near(x, y, target, 32) || (chance(1, 2) && instance_near(x, y, target, 128))){
-		alarm1 = min(1, alarm1);
+		alarm1 = min(alarm1, 1);
 		
 		 // Intimidating:
 		motion_add(point_direction(x, y, target.x, target.y), 4);
@@ -108,6 +110,10 @@
 	}
 	
 	instance_delete(id);
+	
+#define BloomingAssassinHide_hurt(_hitdmg, _hitvel, _hitdir)
+	alarm1 = min(alarm1, 1);
+	enemy_hurt(_hitdmg, _hitvel / 2, _hitdir);
 	
 #define BloomingAssassinHide_death
 	 // Bonus Rads:
@@ -599,27 +605,27 @@
 		
 		 // Vars:
 		mask_index = spr_foam;
-		friction = 0.4;
-		maxhealth = 999999999;
-		size = 8;
-		team = 1;
-		right = choose(-1, 1);
-		walk = 0;
-		walkspeed = 1.2;
-		maxspeed = 2.6;
-		canwade = false;
-		scared = false;
+		friction   = 0.4;
+		maxhealth  = 999999999;
+		size       = 8;
+		team       = 1;
+		right      = choose(-1, 1);
+		walk       = 0;
+		walkspeed  = 1.2;
+		maxspeed   = 2.6;
+		canwade    = false;
+		scared     = false;
 		
 		 // Alarms:
 		alarm1 = 30;
-		
-		 // NTTE:
-		ntte_anim = true;
 		
 		return id;
 	}
 
 #define Creature_step
+	 // Alarms:
+	if(alarm1_run) exit;
+	
 	 // Run away when hurt:
 	if nexthurt > current_frame && !scared{
 		scared = true;
@@ -640,6 +646,12 @@
 			motion_add_ct(point_direction(other.x, other.y, x, y), 3);
 		}
 	}
+	
+	 // Movement:
+	enemy_walk(walkspeed, maxspeed);
+	
+	 // Animate:
+	sprite_index = enemy_sprite;
 
 #define Creature_draw
 	draw_self_enemy();
@@ -687,14 +699,14 @@
 #define Diver_create(_x, _y)
 	with(instance_create(_x, _y, CustomEnemy)){
 		 // Visual:
-		spr_idle = spr.DiverIdle;
-		spr_walk = spr.DiverWalk;
-		spr_hurt = spr.DiverHurt;
-		spr_dead = spr.DiverDead;
-		spr_weap = spr.HarpoonGun;
+		spr_idle   = spr.DiverIdle;
+		spr_walk   = spr.DiverWalk;
+		spr_hurt   = spr.DiverHurt;
+		spr_dead   = spr.DiverDead;
+		spr_weap   = spr.HarpoonGun;
 		spr_shadow = shd24;
-		hitid = [spr_idle, "DIVER"];
-		depth = -2;
+		hitid      = [spr_idle, "DIVER"];
+		depth      = -2;
 		
 		 // Sound:
 		var _water = area_get_underwater(GameCont.area);
@@ -703,17 +715,17 @@
 		
 		 // Vars:
 		mask_index = mskBandit;
-		maxhealth = 10;
-		raddrop = 4;
-		size = 1;
-		walk = 0;
-		walkspeed = 0.8;
-		maxspeed = 3;
-		gunangle = random(360);
-		direction = gunangle;
-		gonnafire = false;
-		reload = 0;
-		laser = 0;
+		maxhealth  = 10;
+		raddrop    = 4;
+		size       = 1;
+		walk       = 0;
+		walkspeed  = 0.8;
+		maxspeed   = 3;
+		gunangle   = random(360);
+		direction  = gunangle;
+		gonnafire  = false;
+		reload     = 0;
+		laser      = 0;
 		laser_draw = noone;
 		
 		 // Alarms:
@@ -723,6 +735,15 @@
 	}
 
 #define Diver_step
+	 // Alarms:
+	if(alarm1_run) exit;
+	
+	 // Movement:
+	enemy_walk(walkspeed, maxspeed);
+	
+	 // Animate:
+	sprite_index = enemy_sprite;
+	
 	 // Reloading Effects:
 	if(reload > 0){
 		reload -= current_time_scale;
@@ -908,6 +929,10 @@
 		return id;
 	}
 	
+#define DiverHarpoon_step
+	 // Alarms:
+	if(alarm0_run) exit;
+	
 #define DiverHarpoon_end_step
 	 // Trail:
 	var	_x1 = x,
@@ -987,6 +1012,17 @@
 		return id;
 	}
 	
+#define Gull_step
+	 // Alarms:
+	if(alarm1_run) exit;
+	if(alarm2_run) exit;
+	
+	 // Movement:
+	enemy_walk(walkspeed, maxspeed);
+	
+	 // Animate:
+	sprite_index = enemy_sprite;
+	
 #define Gull_draw
 	if(gunangle <= 180) draw_weapon(spr_weap, x, y, gunangle, wepangle, wkick, 1, image_blend, image_alpha);
 	draw_self_enemy();
@@ -1043,19 +1079,19 @@
 	with(instance_create(_x, _y, CustomProjectile)){
 		 // Visual:
 		sprite_index = spr.Harpoon;
-		image_speed = 0;
+		image_speed  = 0;
 		
 		 // Vars:
 		mask_index = mskBolt;
-		creator = noone;
-		target = noone;
-		setup = true;
-		damage = 8;
-		force = 8;
-		typ = 1;
-		rope = [];
-		corpses = [];
-		pickup = false;
+		creator    = noone;
+		target     = noone;
+		damage     = 8;
+		force      = 8;
+		typ        = 1;
+		rope       = [];
+		corpses    = [];
+		pickup     = false;
+		setup      = true;
 		
 		return id;
 	}
@@ -1064,22 +1100,24 @@
 	setup = false;
 	
 	 // Facing:
-	if(hspeed != 0) image_yscale *= sign(hspeed);
+	if(hspeed != 0){
+		image_yscale *= sign(hspeed);
+	}
 	
 #define Harpoon_step
 	 // Skewered Corpses:
 	with(corpses){
 		if(instance_exists(self) && speed > 0){
 			if(other.speed > 0){
-				x += (other.x - x) * 0.3 * current_time_scale;
-				y += (other.y - y) * 0.3 * current_time_scale;
-				hspeed = other.hspeed;
-				vspeed = other.vspeed;
-				xprevious = x + hspeed;
-				yprevious = y + vspeed;
-				depth = other.depth - 1;
+				x          += (other.x - x) * 0.3 * current_time_scale;
+				y          += (other.y - y) * 0.3 * current_time_scale;
+				hspeed      = other.hspeed;
+				vspeed      = other.vspeed;
+				xprevious   = x + hspeed_raw;
+				yprevious   = y + vspeed_raw;
 				image_speed = 0.4;
 				image_index = 1;
+				depth       = other.depth - 1;
 			}
 			else{
 				depth = 1;
@@ -1191,8 +1229,8 @@
 		with(instance_create(x, y, BoltTrail)){
 			image_yscale = 0.6;
 			image_xscale = point_distance(_x1, _y1, _x2, _y2);
-			image_angle = point_direction(_x1, _y1, _x2, _y2);
-			creator = other.creator;
+			image_angle  = point_direction(_x1, _y1, _x2, _y2);
+			creator      = other.creator;
 		}
 	}
 	
@@ -1378,6 +1416,9 @@
 	}
 	
 #define NetNade_step
+	 // Alarms:
+	if(alarm0_run) exit;
+	
 	 // Tryin a trail:
 	if(speed > 0){
 		with(instance_create(x, y, DiscTrail)){
@@ -1401,7 +1442,7 @@
 	}
 	
 #define NetNade_wall
-	if(alarm0 > 1) alarm0 = 1;
+	alarm0 = min(alarm0, 1);
 	
 #define NetNade_alrm0
 	instance_destroy();
@@ -1506,38 +1547,38 @@
 		snd_lowh = sndRocket;
 		
 		 // Vars:
-		mask_index = mskNone;
-		mask_hold = msk.Palanking;
-		maxhealth = boss_hp(260);
-		raddrop = 120;
-		size = 4;
-		walk = 0;
-		walkspeed = 0.8;
-		maxspeed = 2;
-		ammo = 0;
-		canmelee = 0;
-		meleedamage = 4;
+		mask_index   = mskNone;
+		mask_hold    = msk.Palanking;
+		maxhealth    = boss_hp(260);
+		raddrop      = 120;
+		size         = 4;
+		walk         = 0;
+		walkspeed    = 0.8;
+		maxspeed     = 2;
+		ammo         = 0;
+		canmelee     = 0;
+		meleedamage  = 4;
 		ground_smash = 0;
-		gunangle = random(360);
-		direction = gunangle;
-		canwade = false;
-		active = false;
-		intro = false;
-		intro_pan = 0;
-		intro_pan_x = x;
-		intro_pan_y = y;
-		seal = [];
-		seal_x = [];
-		seal_y = [];
-		seal_max = 4 + GameCont.loops;
-		seal_spawn = [];
-		tauntdelay = 40;
-		phase = -1;
-		z = 0;
-		zspeed = 0;
-		zfriction = 1;
-		zgoal = 0;
-		corpse = false;
+		gunangle     = random(360);
+		direction    = gunangle;
+		canwade      = false;
+		active       = false;
+		intro        = false;
+		intro_pan    = 0;
+		intro_pan_x  = x;
+		intro_pan_y  = y;
+		seal         = [];
+		seal_x       = [];
+		seal_y       = [];
+		seal_max     = 4 + GameCont.loops;
+		seal_spawn   = [];
+		tauntdelay   = 40;
+		phase        = -1;
+		z            = 0;
+		zspeed       = 0;
+		zfriction    = 1;
+		zgoal        = 0;
+		corpse       = false;
 		
 		 // Alarms:
 		alarm0 = -1;
@@ -1545,14 +1586,17 @@
 		alarm2 = -1;
 		alarm3 = -1;
 		
-		 // NTTE:
-		ntte_anim = false;
-		ntte_walk = false;
-		
 		return id;
 	}
 
 #define Palanking_step
+	 // Alarms:
+	if(alarm0_run) exit;
+	if(alarm1_run) exit;
+	if(alarm2_run) exit;
+	if(alarm3_run) exit;
+	
+	 // Movement:
 	if(z <= 0) walk = 0;
 	enemy_walk(walkspeed, maxspeed);
 	
@@ -2643,12 +2687,15 @@
 	}
 	
 #define Palm_step
+	 // Hold Bro:
 	with(creator){
-		x = other.x;
-		y = other.y - 44;
-		walk = 0;
-		speed = 0;
+		x            = other.x;
+		y            = other.y - 44;
+		walk         = 0;
+		speed        = 0;
 		sprite_index = spr_idle;
+		
+		 // Disable Hitbox:
 		if(mask_index != mskNone){
 			other.creator_mask = mask_index;
 			mask_index = mskNone;
@@ -2674,47 +2721,51 @@
 #define Pelican_create(_x, _y)
 	with(instance_create(_x, _y, CustomEnemy)) {
 		 // Visual:
-		spr_idle = spr.PelicanIdle;
-		spr_walk = spr.PelicanWalk;
-		spr_hurt = spr.PelicanHurt;
-		spr_dead = spr.PelicanDead;
-		spr_weap = spr.PelicanHammer;
-		spr_shadow = shd32;
+		spr_idle     = spr.PelicanIdle;
+		spr_walk     = spr.PelicanWalk;
+		spr_hurt     = spr.PelicanHurt;
+		spr_dead     = spr.PelicanDead;
+		spr_weap     = spr.PelicanHammer;
+		spr_shadow   = shd32;
 		spr_shadow_y = 6;
-		hitid = [spr_idle, "PELICAN"];
-		mask_index = mskRhinoFreak;
-		depth = -2;
-
+		hitid        = [spr_idle, "PELICAN"];
+		mask_index   = mskRhinoFreak;
+		depth        = -2;
+		
 		 // Sound:
 		snd_hurt = sndGatorHit;
 		snd_dead = sndGatorDie;
-
+		
 		 // Vars:
-		maxhealth = 45;
-		raddrop = 20;
-		size = 2;
-		walk = 0;
-		walkspeed = 0.6;
-		maxspeed = 3;
-		dash = 0;
+		maxhealth   = 45;
+		raddrop     = 20;
+		size        = 2;
+		walk        = 0;
+		walkspeed   = 0.6;
+		maxspeed    = 3;
+		dash        = 0;
 		dash_factor = 1.25;
-		chrg_time = 24; // 0.8 Seconds
-		gunangle = random(360);
-		direction = gunangle;
-		wepangle = choose(-140, 140);
-
+		chrg_time   = 24; // 0.8 Seconds
+		gunangle    = random(360);
+		direction   = gunangle;
+		wepangle    = choose(-140, 140);
+		
 		 // Alarms:
 		alarm1 = 30 + irandom(60);
-
+		
 		return id;
 	}
-
+	
 #define Pelican_step
+	 // Alarms:
+	if(alarm1_run) exit;
+	if(alarm2_run) exit;
+	
 	 // Dash:
 	if(dash > 0){
-		motion_add(direction, dash * dash_factor);
 		dash -= current_time_scale;
-
+		motion_add_ct(direction, dash * dash_factor);
+		
 		 // Dusty:
 		if(current_frame_active){
 			instance_create(x + orandom(3), y + random(6), Dust);
@@ -2723,7 +2774,13 @@
 			}
 		}
 	}
-
+	
+	 // Movement:
+	enemy_walk(walkspeed, maxspeed);
+	
+	 // Animate:
+	sprite_index = enemy_sprite;
+	
 #define Pelican_draw
 	var	_charge = max(alarm2, 0),
 		_angOff = sign(wepangle) * (60 * (_charge / chrg_time));
@@ -2828,16 +2885,16 @@
 #define Seal_create(_x, _y)
 	with(instance_create(_x, _y, CustomEnemy)){
 		 // Visual:
-		spr_spwn = spr.SealSpwn[0];
-		spr_idle = spr.SealIdle[0];
-		spr_walk = spr.SealWalk[0];
-		spr_hurt = spr.SealHurt[0];
-		spr_dead = spr.SealDead[0];
-		spr_weap = spr.SealWeap[0];
-		spr_shadow = shd24;
-		hitid = [spr_idle, "SEAL"];
+		spr_spwn     = spr.SealSpwn[0];
+		spr_idle     = spr.SealIdle[0];
+		spr_walk     = spr.SealWalk[0];
+		spr_hurt     = spr.SealHurt[0];
+		spr_dead     = spr.SealDead[0];
+		spr_weap     = spr.SealWeap[0];
+		spr_shadow   = shd24;
+		hitid        = [spr_idle, "SEAL"];
 		sprite_index = spr_spwn;
-		depth = -2;
+		depth        = -2;
 		
 		 // Sound:
 		var _male = irandom(1);
@@ -2845,40 +2902,37 @@
 		snd_dead = (_male ? sndFireballerDead : sndFreakDead);
 		
 		 // Vars:
-		mask_index = mskBandit;
-		maxhealth = 10;
-		raddrop = 1;
-		size = 1;
-		walk = 0;
-		walkspeed = 0.8;
-		maxspeed = 3.5;
-		type = 0;
-		hold = false;
-		hold_x = 0;
-		hold_y = 0;
-		creator = noone;
-		wepangle = 0;
-		gunangle = random(360);
-		direction = gunangle;
-		slide = 0;
-		scared = false;
-		shield = false;
-		shield_inst = noone;
-		toss = noone;
-		toss_speed = 0;
-		toss_time = 0;
-		toss_ammo = 2;
-		toss_spin = 0;
+		mask_index   = mskBandit;
+		maxhealth    = 10;
+		raddrop      = 1;
+		size         = 1;
+		walk         = 0;
+		walkspeed    = 0.8;
+		maxspeed     = 3.5;
+		type         = 0;
+		hold         = false;
+		hold_x       = 0;
+		hold_y       = 0;
+		creator      = noone;
+		wepangle     = 0;
+		gunangle     = random(360);
+		direction    = gunangle;
+		slide        = 0;
+		scared       = false;
+		shield       = false;
+		shield_inst  = noone;
+		toss         = noone;
+		toss_speed   = 0;
+		toss_time    = 0;
+		toss_ammo    = 2;
+		toss_spin    = 0;
 		attack_delay = 0;
-		skeal = false;
-		setup = true;
+		skeal        = false;
+		setup        = true;
 		
 		 // Alarms:
 		alarm1 = 20 + random(20);
 		alarm2 = -1;
-		
-		 // NTTE:
-		ntte_anim = false;
 		
 		return id;
 	}
@@ -2895,6 +2949,8 @@
 
 #define Seal_setup
 	setup = false;
+	
+	var _lastSpwn = spr_spwn;
 	
 	 // Skeleton Seal:
 	if(skeal){
@@ -2926,7 +2982,9 @@
 	
 	spr_weap = spr.SealWeap[type];
 	hitid = [spr_idle, name];
-	if(sprite_index == spr.SealSpwn[0]) sprite_index = spr_spwn;
+	if(sprite_index == _lastSpwn){
+		sprite_index = spr_spwn;
+	}
 	
 	 // Shield:
 	if(type == seal_shield){
@@ -2936,16 +2994,23 @@
 #define Seal_step
 	if(setup) Seal_setup();
 	
-	if(attack_delay > 0) attack_delay -= current_time_scale;
+	 // Alarms:
+	if(alarm1_run) exit;
+	if(alarm2_run) exit;
+	
+	 // Movement:
+	enemy_walk(walkspeed, maxspeed);
 	
 	 // Slide:
 	if(slide > 0){
-		speed += min(slide, 2) * current_time_scale;
+		slide -= current_time_scale;
+		motion_add_ct(direction, min(slide, 2));
 		
+		 // Turn:
 		var _turn = 5 * sin(current_frame / 10) * current_time_scale;
 		if(type == seal_dasher) _turn /= 3;
 		direction += _turn;
-		gunangle += _turn;
+		gunangle  += _turn;
 		
 		 // Effects:
 		if(chance_ct(1, (skeal ? 3 : 1))){
@@ -2953,12 +3018,16 @@
 				direction = other.direction;
 			}
 		}
-		
-		slide -= current_time_scale;
+	}
+	
+	 // Attack Delay:
+	if(attack_delay > 0){
+		attack_delay -= current_time_scale;
 	}
 	
 	 // Type Step:
 	switch(type){
+		
 		case seal_hookpole:
 			
 			 // About to Stab:
@@ -3849,62 +3918,67 @@
 #define SealHeavy_create(_x, _y)
 	with(instance_create(_x, _y, CustomEnemy)){
 		 // Visual:
-		spr_spwn = spr.SealHeavySpwn;
-		spr_idle = spr.SealHeavyIdle;
-		spr_walk = spr.SealHeavyWalk;
-		spr_hurt = spr.SealHeavyHurt;
-		spr_dead = spr.SealHeavyDead;
-		spr_chrg = spr.SealHeavyTell;
-		spr_weap = spr.SealAnchor;
-		spr_shadow = shd24;
-		hitid = [spr_idle, "HEAVY SEAL"];
+		spr_spwn     = spr.SealHeavySpwn;
+		spr_idle     = spr.SealHeavyIdle;
+		spr_walk     = spr.SealHeavyWalk;
+		spr_hurt     = spr.SealHeavyHurt;
+		spr_dead     = spr.SealHeavyDead;
+		spr_chrg     = spr.SealHeavyTell;
+		spr_weap     = spr.SealAnchor;
+		spr_shadow   = shd24;
+		hitid        = [spr_idle, "HEAVY SEAL"];
 		sprite_index = spr_spwn;
-		depth = -2;
-
+		depth        = -2;
+		
 		 // Sound:
 		snd_hurt = sndJockHurt;
 		snd_dead = sndJockDead;
-
+		
 		 // Vars:
-		mask_index = mskBandit;
-		maxhealth = 32;
-		raddrop = 12;
-		size = 2;
-		walk = 0;
-		walkspeed = 0.8;
-		maxspeed = 3;
-		wepangle = 0;
-		gunangle = random(360);
-		direction = gunangle;
-		my_mine = noone;
-		my_mine_ang = gunangle;
-		my_mine_spin = 0;
-		target_x = x;
-		target_y = y;
-		anchor = noone;
-		anchor_swap = false;
-		anchor_spin = 0;
-		anchor_throw = 0;
+		mask_index     = mskBandit;
+		maxhealth      = 32;
+		raddrop        = 12;
+		size           = 2;
+		walk           = 0;
+		walkspeed      = 0.8;
+		maxspeed       = 3;
+		wepangle       = 0;
+		gunangle       = random(360);
+		direction      = gunangle;
+		my_mine        = noone;
+		my_mine_ang    = gunangle;
+		my_mine_spin   = 0;
+		target_x       = x;
+		target_y       = y;
+		anchor         = noone;
+		anchor_swap    = false;
+		anchor_spin    = 0;
+		anchor_throw   = 0;
 		anchor_retract = 0;
-
+		
 		 // Alarms:
 		alarm1 = 40 + random(30);
-
-		 // NTTE:
-		ntte_anim = false;
-
+		
 		return id;
 	}
 
 #define SealHeavy_step
+	 // Alarms:
+	if(alarm1_run) exit;
+	
+	 // Movement:
+	enemy_walk(walkspeed, maxspeed);
+	
 	 // Animate:
-	if(sprite_index != spr_spwn){
-		sprite_index = enemy_sprite;
+	if(sprite_index == spr_spwn){
+		if(anim_end){
+			sprite_index = spr_idle;
+		}
+		if(image_index < 2){
+			y -= image_index * current_time_scale;
+		}
 	}
-	else{
-		if(anim_end) sprite_index = spr_idle;
-		if(image_index < 2) y -= image_index * current_time_scale;
-	}
+	else sprite_index = enemy_sprite;
 	
 	 // Anchor Flail:
 	if(anchor_spin != 0){
@@ -4031,20 +4105,19 @@
 						array_length(instances_matching(instances_matching(other.object_index, "name", other.name), "my_mine", id)) <= 0
 					){
 						with(other){
-							alarm1 = 20;
-							my_mine = other;
+							alarm1      = 20;
+							my_mine     = other;
 							my_mine_ang = point_direction(x, y, other.x, other.y);
+							
 							scrRight(my_mine_ang);
 						}
 						creator = other;
-						hitid = other.hitid;
+						hitid   = other.hitid;
 						
 						 // Effects:
 						sound_play_pitchvol(sndSwapHammer, 0.6 + orandom(0.1), 0.8);
-						for(var a = direction; a < direction + 360; a += (360 / 20)){
-							with(instance_create(x, y, Dust)){
-								motion_add(a, 4);
-							}
+						for(var _dir = direction; _dir < direction + 360; _dir += (360 / 20)){
+							scrFX(x, y, [_dir, 4], Dust);
 						}
 						
 						break;
@@ -4072,6 +4145,7 @@
 
 #define SealHeavy_alrm1
 	alarm1 = 90 + random(30);
+	
 	enemy_target(x, y);
 	
 	 // Lob Mine:
@@ -4333,89 +4407,84 @@
 #define TrafficCrab_create(_x, _y)
 	with(instance_create(_x, _y, CustomEnemy)){
 		 // Visual:
-		spr_idle = spr.CrabIdle;
-		spr_walk = spr.CrabWalk;
-		spr_hurt = spr.CrabHurt;
-		spr_dead = spr.CrabDead;
-		spr_fire = spr.CrabFire;
-		spr_hide = spr.CrabHide;
+		spr_idle   = spr.CrabIdle;
+		spr_walk   = spr.CrabWalk;
+		spr_hurt   = spr.CrabHurt;
+		spr_dead   = spr.CrabDead;
+		spr_fire   = spr.CrabFire;
+		spr_hide   = spr.CrabHide;
 		spr_shadow = shd48;
-		hitid = [spr_idle, "TRAFFIC CRAB"];
+		hitid      = [spr_idle, "TRAFFIC CRAB"];
 		mask_index = mskScorpion;
-		depth = -2;
-
+		depth      = -2;
+		
 		 // Sound:
 		snd_hurt = sndSpiderHurt;
 		snd_dead = sndPlantTBKill;
 		snd_mele = sndGoldScorpionMelee;
-
+		
 		 // Vars:
-		active = chance(1, 8);
-		maxhealth = 20;
-		raddrop = 10;
-		size = 2;
+		active      = chance(1, 8);
+		maxhealth   = 20;
+		raddrop     = 10;
+		size        = 2;
 		meleedamage = 4;
-		walk = 0;
-		walkspeed = 1;
-		maxspeed = 2.5;
-		gunangle = random(360);
-		direction = gunangle;
-		sweep_spd = 10;
-		sweep_dir = right;
-		ammo = 0;
-
+		walk        = 0;
+		walkspeed   = 1;
+		maxspeed    = 2.5;
+		gunangle    = random(360);
+		direction   = gunangle;
+		sweep_spd   = 10;
+		sweep_dir   = right;
+		ammo        = 0;
+		
 		 // Alarms:
 		alarm1 = 30 + random(90);
-
-		 // NTTE:
-		ntte_anim = false;
-
+		
 		return id;
 	}
 
 #define TrafficCrab_step
+	 // Alarms:
+	if(alarm1_run) exit;
+	
+	 // Movement:
+	enemy_walk(walkspeed, maxspeed);
+	
 	 // Inactive:
 	if(!active){
-		speed = 0;
 		x = xstart;
 		y = ystart;
+		speed = 0;
 		image_index = 0;
-
+		
 		 // Disable Melee:
 		canmelee = false;
-		alarm11 = 30;
+		alarm11  = 30;
 	}
-
+	
 	 // Animate:
 	if(ammo > 0){
 		sprite_index = spr_fire;
 		image_index = 0;
 	}
-
 	else if(sprite_index == spr_idle || anim_end){
-		if(!active)	sprite_index = spr_hide;
-
-		else{
-			if(speed > 0){
-				if(sprite_index != spr_walk){
-					sprite_index = spr_walk;
-					image_index = 0;
-				}
-			}
-			else if(sprite_index != spr_idle){
-				sprite_index = spr_idle;
-				image_index = 0;
-			}
+		var _spr = (active ? enemy_sprite : spr_hide);
+		if(sprite_index != _spr){
+			sprite_index = _spr;
+			image_index  = 0;
 		}
 	}
 	
 #define TrafficCrab_draw
-	var h = (sprite_index == spr_hide && nexthurt > current_frame + 3);
-	if(h) draw_set_fog(true, image_blend, 0, 0);
+	var _hurt = (sprite_index == spr_hide && nexthurt > current_frame + 3);
+	if(_hurt) draw_set_fog(true, image_blend, 0, 0);
 	draw_self_enemy();
-	if(h) draw_set_fog(false, 0, 0, 0);
+	if(_hurt) draw_set_fog(false, 0, 0, 0);
 
 #define TrafficCrab_alrm1
+	alarm1 = 30 + random(30);
+	
 	enemy_target(x, y);
 
 	if(active){
@@ -4480,27 +4549,24 @@
 		}
 	}
 	
-	 // Just be a prop bro:
-	else{
-		alarm1 = 30 + random(30);
-		target = instance_nearest(x, y, Player);
-		
-		 // Awaken:
-		if(instance_near(x, y, target, 80) || chance(1, instance_number(enemy))){
-			active = true;
-			
-			 // Effects:
-			sound_play_hit(sndPlantSnareTB, 0.2);
-			sound_play_hit(sndScorpionFire, 0.2);
-			instance_create(x + (6 * right), y, AssassinNotice);
+	 // Awaken:
+	else if(instance_near(x, y, target, 80) || chance(1, instance_number(enemy))){
+		active = true;
+		if(place_meeting(x, y, hitme)){
+			scrWalk(random(360), 4);
 		}
+		
+		 // Effects:
+		sound_play_hit(sndPlantSnareTB, 0.2);
+		sound_play_hit(sndScorpionFire, 0.2);
+		instance_create(x + (6 * right), y, AssassinNotice);
 	}
 	
 #define TrafficCrab_hurt(_hitdmg, _hitvel, _hitdir)
-	my_health -= _hitdmg;			// Damage
-	motion_add(_hitdir, _hitvel);	// Knockback
-	nexthurt = current_frame + 6;	// I-Frames
-	sound_play_hit(snd_hurt, 0.3);	// Sound
+	my_health -= _hitdmg;          // Damage
+	motion_add(_hitdir, _hitvel);  // Knockback
+	nexthurt = current_frame + 6;  // I-Frames
+	sound_play_hit(snd_hurt, 0.3); // Sound
 
 	 // Hurt Sprite:
 	if(sprite_index != spr_hide){
@@ -4553,6 +4619,10 @@
 	}
 	
 #define Trident_step
+	 // Alarms:
+	if(alarm0_run) exit;
+	
+	 // Custom I-Frames:
 	hit_time += current_time_scale;
 	
 	 // Cursed:
@@ -5065,7 +5135,17 @@
 #macro  bbox_center_x                                                                           (bbox_left + bbox_right + 1) / 2
 #macro  bbox_center_y                                                                           (bbox_top + bbox_bottom + 1) / 2
 #macro  FloorNormal                                                                             instances_matching(Floor, 'object_index', Floor)
-#define orandom(n)                                                                      return  random_range(-n, n);
+#macro  alarm0_run                                                                              alarm0 >= 0 && --alarm0 == 0 && (script_ref_call(on_alrm0) || !instance_exists(self))
+#macro  alarm1_run                                                                              alarm1 >= 0 && --alarm1 == 0 && (script_ref_call(on_alrm1) || !instance_exists(self))
+#macro  alarm2_run                                                                              alarm2 >= 0 && --alarm2 == 0 && (script_ref_call(on_alrm2) || !instance_exists(self))
+#macro  alarm3_run                                                                              alarm3 >= 0 && --alarm3 == 0 && (script_ref_call(on_alrm3) || !instance_exists(self))
+#macro  alarm4_run                                                                              alarm4 >= 0 && --alarm4 == 0 && (script_ref_call(on_alrm4) || !instance_exists(self))
+#macro  alarm5_run                                                                              alarm5 >= 0 && --alarm5 == 0 && (script_ref_call(on_alrm5) || !instance_exists(self))
+#macro  alarm6_run                                                                              alarm6 >= 0 && --alarm6 == 0 && (script_ref_call(on_alrm6) || !instance_exists(self))
+#macro  alarm7_run                                                                              alarm7 >= 0 && --alarm7 == 0 && (script_ref_call(on_alrm7) || !instance_exists(self))
+#macro  alarm8_run                                                                              alarm8 >= 0 && --alarm8 == 0 && (script_ref_call(on_alrm8) || !instance_exists(self))
+#macro  alarm9_run                                                                              alarm9 >= 0 && --alarm9 == 0 && (script_ref_call(on_alrm9) || !instance_exists(self))
+#define orandom(_num)                                                                   return  random_range(-_num, _num);
 #define chance(_numer, _denom)                                                          return  random(_denom) < _numer;
 #define chance_ct(_numer, _denom)                                                       return  random(_denom) < (_numer * current_time_scale);
 #define pround(_num, _precision)                                                        return  (_num == 0) ? _num : round(_num / _precision) * _precision;
@@ -5075,6 +5155,7 @@
 #define frame_active(_interval)                                                         return  (current_frame % _interval) < current_time_scale;
 #define angle_lerp(_ang1, _ang2, _num)                                                  return  _ang1 + (angle_difference(_ang2, _ang1) * _num);
 #define draw_self_enemy()                                                                       image_xscale *= right; draw_self(); image_xscale /= right;
+#define enemy_walk(_add, _max)                                                                  if(walk > 0){ walk -= current_time_scale; motion_add_ct(direction, _add); } if(speed > _max) speed = _max;
 #define save_get(_name, _default)                                                       return  mod_script_call_nc('mod', 'teassets', 'save_get', _name, _default);
 #define save_set(_name, _value)                                                                 mod_script_call_nc('mod', 'teassets', 'save_set', _name, _value);
 #define option_get(_name)                                                               return  mod_script_call_nc('mod', 'teassets', 'option_get', _name);
@@ -5127,7 +5208,6 @@
 #define scrRight(_dir)                                                                          mod_script_call(   'mod', 'telib', 'scrRight', _dir);
 #define scrWalk(_dir, _walk)                                                                    mod_script_call(   'mod', 'telib', 'scrWalk', _dir, _walk);
 #define scrAim(_dir)                                                                            mod_script_call(   'mod', 'telib', 'scrAim', _dir);
-#define enemy_walk(_spdAdd, _spdMax)                                                            mod_script_call(   'mod', 'telib', 'enemy_walk', _spdAdd, _spdMax);
 #define enemy_hurt(_hitdmg, _hitvel, _hitdir)                                                   mod_script_call(   'mod', 'telib', 'enemy_hurt', _hitdmg, _hitvel, _hitdir);
 #define enemy_target(_x, _y)                                                            return  mod_script_call(   'mod', 'telib', 'enemy_target', _x, _y);
 #define boss_hp(_hp)                                                                    return  mod_script_call_nc('mod', 'telib', 'boss_hp', _hp);

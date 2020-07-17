@@ -85,6 +85,10 @@
 		}
 	}
 	
+#define AlertIndicator_step
+	 // Alarms:
+	if(alarm0_run) exit;
+	
 #define AlertIndicator_end_step
 	 // Follow the Leader:
 	if(instance_exists(target)){
@@ -1234,6 +1238,9 @@
 	}
 	
 #define CustomFlak_step
+	 // Alarms:
+	if(alarm2_run) exit;
+	
 	 // Trail:
 	if(super || chance_ct(1, 3)){
 		var o = (3 * super);
@@ -1324,6 +1331,10 @@
 	}
 	
 #define CustomShell_step
+	 // Alarms:
+	if(alarm2_run) exit;
+	
+	 // Facing:
 	image_angle = direction;
 	
 	 // Disappear:
@@ -1593,6 +1604,9 @@
 	}
 	
 #define Igloo_step
+	 // Alarms:
+	if(alarm0_run) exit;
+	
 	 // Allow Portals:
 	if(num <= 0){
 		with(instances_matching(instances_matching(becomenemy, "name", "PortalPrevent"), "creator", id)){
@@ -2414,9 +2428,11 @@
 	}
 	
 #define Pet_step
-	wave += current_time_scale;
-	
-	if(path_delay > 0) path_delay -= current_time_scale;
+	 // Reset Hitbox:
+	if(mask_index == mskNone && mask_store != null){
+		mask_index = mask_store;
+		mask_store = null;
+	}
 	
 	 // Don't Persist to Menu:
 	if(instance_exists(Menu)){
@@ -2424,11 +2440,14 @@
 		exit;
 	}
 	
-	 // Reset Hitbox:
-	if(mask_index == mskNone && mask_store != null){
-		mask_index = mask_store;
-		mask_store = null;
-	}
+	 // Alarms:
+	if(alarm0_run) exit;
+	
+	 // Wave:
+	wave += current_time_scale;
+	
+	 // Pathfinding Delay:
+	if(path_delay > 0) path_delay -= current_time_scale;
 	
 	 // Loop HP Scaling:
 	if(loops != GameCont.loops){
@@ -2438,7 +2457,7 @@
 	}
 	
 	 // Loading/Level Up Screen:
-	if(instance_exists(GenCont)){
+	if(instance_exists(GenCont) || instance_exists(LevCont)){
 		visible = false;
 		portal_angle = 0;
 		
@@ -2457,6 +2476,9 @@
 	}
 	
 	if(visible){
+		 // Movement:
+		enemy_walk(walkspeed, maxspeed);
+		
 		 // Animate:
 		var _scrt = pet + "_anim";
 		if(mod_script_exists(mod_type, mod_name, _scrt)){ // Custom Animation Event
@@ -2466,18 +2488,19 @@
 		
 		 // Push:
 		if(instance_exists(leader) && place_meeting(x, y, Player)){
-			with(instances_meeting(x, y, Player)){
-				if(place_meeting(x, y, other) && speed > 0) with(other){
+			with(instances_meeting(x, y, instances_matching_gt(Player, "speed", 0))){
+				if(place_meeting(x, y, other)) with(other){
 					motion_add_ct(point_direction(other.x, other.y, x, y), push);
 				}
 			}
 		}
 		if(place_meeting(x, y, object_index)){
-			with(instances_meeting(x, y, instances_matching(object_index, "name", name))){
-				if(place_meeting(x, y, other) && visible && !instance_exists(revive)){
-					var _dir = point_direction(other.x, other.y, x, y);
-					motion_add(_dir, push);
-					with(other) motion_add(_dir + 180, push);
+			with(instances_meeting(x, y, instances_matching(instances_matching(object_index, "name", name), "visible", true))){
+				if(place_meeting(x, y, other) && !instance_exists(revive)){
+					motion_add(point_direction(other.x, other.y, x, y), push);
+					with(other){
+						motion_add(point_direction(other.x, other.y, x, y), push);
+					}
 				}
 			}
 		}
@@ -3098,7 +3121,7 @@
 		
 		 // For Sani's bosshudredux:
 		bossname = "WEAPON MIMIC";
-		col = c_red;
+		col      = c_red;
 		
 		 // HP:
 		maxhealth = boss_hp(120);
@@ -3115,29 +3138,29 @@
 		mod_script_call("mod", "petlib", "Weapon_create");
 		
 		 // Visual:
-		spr_idle = spr.PetWeaponIdle;
-		spr_walk = spr.PetWeaponWalk;
-		spr_hurt = spr.PetWeaponHurt;
-		spr_dead = spr.PetWeaponDead;
-		spr_icon = spr.PetWeaponIcon;
-		spr_shadow = shd24;
+		spr_idle     = spr.PetWeaponIdle;
+		spr_walk     = spr.PetWeaponWalk;
+		spr_hurt     = spr.PetWeaponHurt;
+		spr_dead     = spr.PetWeaponDead;
+		spr_icon     = spr.PetWeaponIcon;
+		spr_shadow   = shd24;
 		spr_shadow_y = -1;
-		depth = -2;
+		depth        = -2;
 		
 		 // Vars:
-		mask_index = mskFreak;
-		maxhealth = _hp;
-		size = 1;
-		walk = 0;
-		walkspeed = 2;
-		maxspeed = 3;
-		intro = false;
-		corpse = false;
-		path = [];
-		path_delay = 0;
-		cover_x = x;
-		cover_y = y;
-		cover_peek = false;
+		mask_index  = mskFreak;
+		maxhealth   = _hp;
+		size        = 1;
+		walk        = 0;
+		walkspeed   = 2;
+		maxspeed    = 3;
+		intro       = false;
+		corpse      = false;
+		path        = [];
+		path_delay  = 0;
+		cover_x     = x;
+		cover_y     = y;
+		cover_peek  = false;
 		cover_delay = 0;
 		stat_battle = true;
 		
@@ -3145,15 +3168,20 @@
 		alarm1 = 60;
 		alarm2 = reload;
 		
-		 // NTTE:
-		ntte_anim = false;
-		
 		return id;
 	}
 	
 #define PetWeaponBoss_step
-	if(path_delay > 0) path_delay -= current_time_scale;
+	 // Alarms:
+	if(alarm1_run) exit;
+	if(alarm2_run) exit;
+	
+	 // Timers:
+	if(path_delay  > 0) path_delay -= current_time_scale;
 	if(cover_delay > 0) cover_delay -= current_time_scale;
+	
+	 // Movement:
+	enemy_walk(walkspeed, maxspeed);
 	
 	 // Base Code:
 	mod_script_call("mod", "petlib", "Weapon_anim");
@@ -3786,9 +3814,9 @@
 		spr_dead      = spr.PortalGuardianDead;
 		spr_appear    = spr.PortalGuardianAppear;
 		spr_disappear = spr.PortalGuardianDisappear;
-		spr_shadow = shd24;
-		hitid = [spr_idle, "PORTAL GUARDIAN"];
-		depth = -2;
+		spr_shadow    = shd24;
+		hitid         = [spr_idle, "PORTAL GUARDIAN"];
+		depth         = -2;
 		
 		 // Sound:
 		snd_hurt = sndExploGuardianHurt;
@@ -3796,27 +3824,30 @@
 		snd_mele = sndGuardianFire;
 		
 		 // Vars:
-		mask_index = mskBandit;
-		maxhealth = 55; // 45
-		raddrop = 16;
+		mask_index  = mskBandit;
+		maxhealth   = 55; //45
+		raddrop     = 16;
 		meleedamage = 2;
-		size = 2;
-		walk = 0;
-		walkspeed = 0.8;
-		maxspeed = 4;
-		gunangle = random(360);
-		portal = false;
+		size        = 2;
+		walk        = 0;
+		walkspeed   = 0.8;
+		maxspeed    = 4;
+		gunangle    = random(360);
+		portal      = false;
 		
 		 // Alarms:
 		alarm1 = 40 + irandom(20);
-		
-		 // NTTE:
-		ntte_anim = false;
 		
 		return id;
 	}
 	
 #define PortalGuardian_step
+	 // Alarms:
+	if(alarm1_run) exit;
+	
+	 // Movement:
+	enemy_walk(walkspeed, maxspeed);
+	
 	 // Hovery:
 	if(!place_meeting(x, y, projectile) || array_length(instances_meeting(x, y, instances_matching(projectile, "creator", id))) <= 0){
 		speed = max(1, speed);
@@ -4064,7 +4095,7 @@
 		search_y1        = y - 8;
 		search_y2        = y + 8;
 		
-		 // Up up:
+		 // Up down:
 		y += z;
 		
 		return id;
@@ -4738,7 +4769,7 @@
 	
 #define UnlockCont_draw
 	draw_set_projection(0);
-
+	
 	 // Game Over Splash:
 	if(unlock_delay <= 0){
 		if(unlock_image > 0){
@@ -4830,89 +4861,9 @@
 			}
 		}
 	}
-
+	
 	draw_reset_projection();
-
-
-#define VenomPellet_create(_x, _y)
-	/*
-		A piercing shell variant of venom projectiles
-	*/
 	
-	with(instance_create(_x, _y, CustomProjectile)){
-		 // Visual:
-		spr_spwn     = spr.VenomPelletAppear;
-		spr_idle     = spr.VenomPellet;
-		spr_fade     = spr.VenomPelletDisappear;
-		spr_dead     = sprScorpionBulletHit;
-		sprite_index = spr_idle;
-		image_speed  = 0.4;
-		depth        = -3;
-		
-		 // Vars:
-		mask_index = mskEnemyBullet1;
-		friction   = 0.75;
-		damage     = 2;
-		force      = 4;
-		typ        = 2;
-		minspeed   = 4
-		hit_list   = [];
-		
-		return id;
-	}
-	
-#define VenomPellet_step
-	 // Disappear:
-	if(speed < minspeed && sprite_index != spr_fade){
-		sprite_index = spr_fade;
-		image_index  = 0;
-	}
-	
-#define VenomPellet_anim
-	if(sprite_index == spr_spwn){
-		image_speed = 0.4;
-		sprite_index = spr_idle;
-	}
-	
-	 // Goodbye:
-	else if(sprite_index == spr_fade){
-		instance_destroy();
-	} 
-	
-#define VenomPellet_hit
-	var _firstHit = !array_exists(hit_list, other);
-	if(projectile_canhit_melee(other) || (_firstHit && !instance_is(other, Player))){
-		projectile_hit_push(other, damage, force);
-		
-		if(_firstHit){
-			array_push(hit_list, other);
-			
-			 // Catch on Enemy / Pseudo Freeze Frames:
-			if(instance_exists(other) && other.my_health > 0){
-				x -= hspeed_raw;
-				y -= vspeed_raw;
-				speed -= friction;
-			}
-		}
-		
-		 // Effects:
-		with(instance_create(x, y, ScorpionBulletHit)){
-			sprite_index = other.spr_dead;
-		}
-	}
-	
-#define VenomPellet_wall
-	instance_create(x, y, Dust);
-	sound_play_hit(sndHitWall, 0.2);
-	instance_destroy()
-	
-#define VenomPellet_destroy
-	if(sprite_index != spr_fade){
-		with(instance_create(x, y, ScorpionBulletHit)){
-			sprite_index = other.spr_dead;
-		}
-	}
-
 	
 #define WallDecal_create(_x, _y)
 	/*
@@ -5617,7 +5568,17 @@
 #macro  bbox_center_x                                                                           (bbox_left + bbox_right + 1) / 2
 #macro  bbox_center_y                                                                           (bbox_top + bbox_bottom + 1) / 2
 #macro  FloorNormal                                                                             instances_matching(Floor, 'object_index', Floor)
-#define orandom(n)                                                                      return  random_range(-n, n);
+#macro  alarm0_run                                                                              alarm0 >= 0 && --alarm0 == 0 && (script_ref_call(on_alrm0) || !instance_exists(self))
+#macro  alarm1_run                                                                              alarm1 >= 0 && --alarm1 == 0 && (script_ref_call(on_alrm1) || !instance_exists(self))
+#macro  alarm2_run                                                                              alarm2 >= 0 && --alarm2 == 0 && (script_ref_call(on_alrm2) || !instance_exists(self))
+#macro  alarm3_run                                                                              alarm3 >= 0 && --alarm3 == 0 && (script_ref_call(on_alrm3) || !instance_exists(self))
+#macro  alarm4_run                                                                              alarm4 >= 0 && --alarm4 == 0 && (script_ref_call(on_alrm4) || !instance_exists(self))
+#macro  alarm5_run                                                                              alarm5 >= 0 && --alarm5 == 0 && (script_ref_call(on_alrm5) || !instance_exists(self))
+#macro  alarm6_run                                                                              alarm6 >= 0 && --alarm6 == 0 && (script_ref_call(on_alrm6) || !instance_exists(self))
+#macro  alarm7_run                                                                              alarm7 >= 0 && --alarm7 == 0 && (script_ref_call(on_alrm7) || !instance_exists(self))
+#macro  alarm8_run                                                                              alarm8 >= 0 && --alarm8 == 0 && (script_ref_call(on_alrm8) || !instance_exists(self))
+#macro  alarm9_run                                                                              alarm9 >= 0 && --alarm9 == 0 && (script_ref_call(on_alrm9) || !instance_exists(self))
+#define orandom(_num)                                                                   return  random_range(-_num, _num);
 #define chance(_numer, _denom)                                                          return  random(_denom) < _numer;
 #define chance_ct(_numer, _denom)                                                       return  random(_denom) < (_numer * current_time_scale);
 #define pround(_num, _precision)                                                        return  (_num == 0) ? _num : round(_num / _precision) * _precision;
@@ -5627,6 +5588,7 @@
 #define frame_active(_interval)                                                         return  (current_frame % _interval) < current_time_scale;
 #define angle_lerp(_ang1, _ang2, _num)                                                  return  _ang1 + (angle_difference(_ang2, _ang1) * _num);
 #define draw_self_enemy()                                                                       image_xscale *= right; draw_self(); image_xscale /= right;
+#define enemy_walk(_add, _max)                                                                  if(walk > 0){ walk -= current_time_scale; motion_add_ct(direction, _add); } if(speed > _max) speed = _max;
 #define save_get(_name, _default)                                                       return  mod_script_call_nc('mod', 'teassets', 'save_get', _name, _default);
 #define save_set(_name, _value)                                                                 mod_script_call_nc('mod', 'teassets', 'save_set', _name, _value);
 #define option_get(_name)                                                               return  mod_script_call_nc('mod', 'teassets', 'option_get', _name);
@@ -5679,7 +5641,6 @@
 #define scrRight(_dir)                                                                          mod_script_call(   'mod', 'telib', 'scrRight', _dir);
 #define scrWalk(_dir, _walk)                                                                    mod_script_call(   'mod', 'telib', 'scrWalk', _dir, _walk);
 #define scrAim(_dir)                                                                            mod_script_call(   'mod', 'telib', 'scrAim', _dir);
-#define enemy_walk(_spdAdd, _spdMax)                                                            mod_script_call(   'mod', 'telib', 'enemy_walk', _spdAdd, _spdMax);
 #define enemy_hurt(_hitdmg, _hitvel, _hitdir)                                                   mod_script_call(   'mod', 'telib', 'enemy_hurt', _hitdmg, _hitvel, _hitdir);
 #define enemy_target(_x, _y)                                                            return  mod_script_call(   'mod', 'telib', 'enemy_target', _x, _y);
 #define boss_hp(_hp)                                                                    return  mod_script_call_nc('mod', 'telib', 'boss_hp', _hp);

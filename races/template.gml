@@ -14,58 +14,64 @@
 #macro mus snd.mus
 #macro lag global.debug_lag
 
-#define race_name            return "???";
-#define race_text            return "PASSIVE#ACTIVE";
-#define race_lock            return "???";
-#define race_unlock          return "???";
-#define race_tb_text         return "???";
-#define race_portrait(p, b)  return race_sprite_raw("Portrait", b);
-#define race_mapicon(p, b)   return race_sprite_raw("Map",      b);
-#define race_avail           return unlock_get("race:" + mod_current);
+#define race_name              return "???";
+#define race_text              return "PASSIVE#ACTIVE";
+#define race_lock              return "???";
+#define race_unlock            return "???";
+#define race_tb_text           return "???";
+#define race_portrait(_p, _b)  return race_sprite_raw("Portrait", _b);
+#define race_mapicon(_p, _b)   return race_sprite_raw("Map",      _b);
+#define race_avail             return unlock_get("race:" + mod_current);
 
 #define race_ttip
 	 // Ultra:
 	if(GameCont.level >= 10 && chance(1, 5)){
-		return choose("ULTRA TIP");
+		return choose(
+			"ULTRA TIP A",
+			"ULTRA TIP B",
+			"ULTRA TIP C"
+		);
 	}
 	
 	 // Normal:
-	else{
-		return choose("BASIC TIP");
-	}
+	return choose(
+		"TIP A",
+		"TIP B",
+		"TIP C"
+	);
 	
 #define race_sprite(_spr)
-	var b = (("bskin" in self && is_real(bskin)) ? bskin : 0);
+	var _b = (("bskin" in self && is_real(bskin)) ? bskin : 0);
 	
 	switch(_spr){
-		case sprMutant1Idle:        return race_sprite_raw("Idle",  b);
-		case sprMutant1Walk:        return race_sprite_raw("Walk",  b);
-		case sprMutant1Hurt:        return race_sprite_raw("Hurt",  b);
-		case sprMutant1Dead:        return race_sprite_raw("Dead",  b);
-		case sprMutant1GoSit:       return race_sprite_raw("GoSit", b);
-		case sprMutant1Sit:         return race_sprite_raw("Sit",   b);
-		case sprFishMenu:           return race_sprite_raw("Idle",  b);
-		case sprFishMenuSelected:   return race_sprite_raw("Walk",  b);
-		case sprFishMenuSelect:     return race_sprite_raw("Idle",  b);
-		case sprFishMenuDeselect:   return race_sprite_raw("Idle",  b);
+		case sprMutant1Idle      : return race_sprite_raw("Idle",  _b);
+		case sprMutant1Walk      : return race_sprite_raw("Walk",  _b);
+		case sprMutant1Hurt      : return race_sprite_raw("Hurt",  _b);
+		case sprMutant1Dead      : return race_sprite_raw("Dead",  _b);
+		case sprMutant1GoSit     : return race_sprite_raw("GoSit", _b);
+		case sprMutant1Sit       : return race_sprite_raw("Sit",   _b);
+		case sprFishMenu         : return race_sprite_raw("Idle",  _b);
+		case sprFishMenuSelected : return race_sprite_raw("Walk",  _b);
+		case sprFishMenuSelect   : return race_sprite_raw("Idle",  _b);
+		case sprFishMenuDeselect : return race_sprite_raw("Idle",  _b);
 	}
 	
 	return -1;
 	
 #define race_sound(_snd)
 	switch(_snd){
-		case sndMutant1Wrld: return -1;
-		case sndMutant1Hurt: return -1;
-		case sndMutant1Dead: return -1;
-		case sndMutant1LowA: return -1;
-		case sndMutant1LowH: return -1;
-		case sndMutant1Chst: return -1;
-		case sndMutant1Valt: return -1;
-		case sndMutant1Crwn: return -1;
-		case sndMutant1Spch: return -1;
-		case sndMutant1IDPD: return -1;
-		case sndMutant1Cptn: return -1;
-		case sndMutant1Thrn: return -1;
+		case sndMutant1Wrld : return -1;
+		case sndMutant1Hurt : return -1;
+		case sndMutant1Dead : return -1;
+		case sndMutant1LowA : return -1;
+		case sndMutant1LowH : return -1;
+		case sndMutant1Chst : return -1;
+		case sndMutant1Valt : return -1;
+		case sndMutant1Crwn : return -1;
+		case sndMutant1Spch : return -1;
+		case sndMutant1IDPD : return -1;
+		case sndMutant1Cptn : return -1;
+		case sndMutant1Thrn : return -1;
 	}
 	
 	return -1;
@@ -95,28 +101,35 @@
 /// Skins
 #define race_skins
 	var _playersActive = 0;
-	for(var i = 0; i < maxp; i++) _playersActive += player_is_active(i);
+	for(var i = 0; i < maxp; i++){
+		_playersActive += player_is_active(i);
+	}
+	
+	 // Normal:
 	if(_playersActive <= 1){
 		return 2;
 	}
-	else{ // Fix co-op bugginess
-		var n = 1;
-		while(unlock_get(`skin:${mod_current}:${n}`)){
-			n++;
-		}
-		return n;
+	
+	 // Co-op Bugginess:
+	var _num = 0;
+	while(_num == 0 || unlock_get(`skin:${mod_current}:${_num}`)){
+		_num++;
 	}
+	return _num;
 	
 #define race_skin_avail(_skin)
 	var _playersActive = 0;
-	for(var i = 0; i < maxp; i++) _playersActive += player_is_active(i);
+	for(var i = 0; i < maxp; i++){
+		_playersActive += player_is_active(i);
+	}
+	
+	 // Normal:
 	if(_playersActive <= 1){
-		if(_skin == 0) return true;
-		return unlock_get(`skin:${mod_current}:${_skin}`);
+		return (_skin == 0 || unlock_get(`skin:${mod_current}:${_skin}`));
 	}
-	else{ // Fix co-op bugginess
-		return true;
-	}
+	
+	 // Co-op Bugginess:
+	return true;
 	
 #define race_skin_name(_skin)
 	if(race_skin_avail(_skin)){
@@ -265,7 +278,17 @@
 #macro  bbox_center_x                                                                           (bbox_left + bbox_right + 1) / 2
 #macro  bbox_center_y                                                                           (bbox_top + bbox_bottom + 1) / 2
 #macro  FloorNormal                                                                             instances_matching(Floor, 'object_index', Floor)
-#define orandom(n)                                                                      return  random_range(-n, n);
+#macro  alarm0_run                                                                              alarm0 >= 0 && --alarm0 == 0 && (script_ref_call(on_alrm0) || !instance_exists(self))
+#macro  alarm1_run                                                                              alarm1 >= 0 && --alarm1 == 0 && (script_ref_call(on_alrm1) || !instance_exists(self))
+#macro  alarm2_run                                                                              alarm2 >= 0 && --alarm2 == 0 && (script_ref_call(on_alrm2) || !instance_exists(self))
+#macro  alarm3_run                                                                              alarm3 >= 0 && --alarm3 == 0 && (script_ref_call(on_alrm3) || !instance_exists(self))
+#macro  alarm4_run                                                                              alarm4 >= 0 && --alarm4 == 0 && (script_ref_call(on_alrm4) || !instance_exists(self))
+#macro  alarm5_run                                                                              alarm5 >= 0 && --alarm5 == 0 && (script_ref_call(on_alrm5) || !instance_exists(self))
+#macro  alarm6_run                                                                              alarm6 >= 0 && --alarm6 == 0 && (script_ref_call(on_alrm6) || !instance_exists(self))
+#macro  alarm7_run                                                                              alarm7 >= 0 && --alarm7 == 0 && (script_ref_call(on_alrm7) || !instance_exists(self))
+#macro  alarm8_run                                                                              alarm8 >= 0 && --alarm8 == 0 && (script_ref_call(on_alrm8) || !instance_exists(self))
+#macro  alarm9_run                                                                              alarm9 >= 0 && --alarm9 == 0 && (script_ref_call(on_alrm9) || !instance_exists(self))
+#define orandom(_num)                                                                   return  random_range(-_num, _num);
 #define chance(_numer, _denom)                                                          return  random(_denom) < _numer;
 #define chance_ct(_numer, _denom)                                                       return  random(_denom) < (_numer * current_time_scale);
 #define pround(_num, _precision)                                                        return  (_num == 0) ? _num : round(_num / _precision) * _precision;
@@ -275,6 +298,7 @@
 #define frame_active(_interval)                                                         return  (current_frame % _interval) < current_time_scale;
 #define angle_lerp(_ang1, _ang2, _num)                                                  return  _ang1 + (angle_difference(_ang2, _ang1) * _num);
 #define draw_self_enemy()                                                                       image_xscale *= right; draw_self(); image_xscale /= right;
+#define enemy_walk(_add, _max)                                                                  if(walk > 0){ walk -= current_time_scale; motion_add_ct(direction, _add); } if(speed > _max) speed = _max;
 #define save_get(_name, _default)                                                       return  mod_script_call_nc('mod', 'teassets', 'save_get', _name, _default);
 #define save_set(_name, _value)                                                                 mod_script_call_nc('mod', 'teassets', 'save_set', _name, _value);
 #define option_get(_name)                                                               return  mod_script_call_nc('mod', 'teassets', 'option_get', _name);
@@ -327,7 +351,6 @@
 #define scrRight(_dir)                                                                          mod_script_call(   'mod', 'telib', 'scrRight', _dir);
 #define scrWalk(_dir, _walk)                                                                    mod_script_call(   'mod', 'telib', 'scrWalk', _dir, _walk);
 #define scrAim(_dir)                                                                            mod_script_call(   'mod', 'telib', 'scrAim', _dir);
-#define enemy_walk(_spdAdd, _spdMax)                                                            mod_script_call(   'mod', 'telib', 'enemy_walk', _spdAdd, _spdMax);
 #define enemy_hurt(_hitdmg, _hitvel, _hitdir)                                                   mod_script_call(   'mod', 'telib', 'enemy_hurt', _hitdmg, _hitvel, _hitdir);
 #define enemy_target(_x, _y)                                                            return  mod_script_call(   'mod', 'telib', 'enemy_target', _x, _y);
 #define boss_hp(_hp)                                                                    return  mod_script_call_nc('mod', 'telib', 'boss_hp', _hp);

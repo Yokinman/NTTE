@@ -125,13 +125,16 @@
 		 // Alarms:
 		alarm1 = 90;
 		
-		 // NTTE:
-		ntte_anim = false;
-		
 		return id;
 	}
 	
 #define CrystalBrain_step
+	 // Alarms:
+	if(alarm1_run) exit;
+	
+	 // Movement:
+	enemy_walk(walkspeed, maxspeed);
+	
 	 // Animate:
 	if(teleport){
 		if(anim_end){
@@ -397,6 +400,7 @@
 		if(enemy_target(x, y)){
 			var _floor = noone,
 				_enemy = instances_matching(CustomEnemy, "name", "RedSpider");
+				
 			if(my_health < maxhealth || array_length(_enemy) <= 0){
 				var _minDis = min_tele_dist,
 					_maxDis = max_tele_dist;
@@ -831,14 +835,23 @@
 	}
 	
 #define CrystalHeart_step
+	 // Alarms:
+	if(alarm1_run) exit;
+	
+	 // Movement:
+	enemy_walk(walkspeed, maxspeed);
+	
+	 // Animate:
+	sprite_index = enemy_sprite;
+	
 	 // Effects:
 	if(white){
 		if(chance_ct(1, 20)){
 			with(scrFX([x, 6], [y, 12], [90, random_range(0.2, 0.5)], LaserCharge)){
 				sprite_index = sprSpiralStar;
-				image_index = choose(0, irandom(image_number - 1));
-				depth = other.depth - 1;
-				alarm0 = random_range(15, 30);
+				image_index  = choose(0, irandom(image_number - 1));
+				depth        = other.depth - 1;
+				alarm0       = random_range(15, 30);
 			}
 		}
 		if(chance_ct(1, 25)){
@@ -846,15 +859,13 @@
 				sprite_index = sprThrowHit;
 				image_xscale = 0.2 + random(0.3);
 				image_yscale = image_xscale;
-				depth = other.depth - 1;
+				depth        = other.depth - 1;
 			}
 		}
 	}
-	else{
-		if(chance_ct(1, 10)){
-			with(scrFX([x, 6], [y, 12], random(1), LaserCharge)){
-				alarm0 = 10 + random(10);
-			}
+	else if(chance_ct(1, 10)){
+		with(scrFX([x, 6], [y, 12], random(1), LaserCharge)){
+			alarm0 = 10 + random(10);
 		}
 	}
 	
@@ -1011,6 +1022,9 @@
 	
 #define CrystalHeartBullet_step
 	if(setup) CrystalHeartBullet_setup();
+	
+	 // Alarms:
+	if(alarm0_run) exit;
 	
 	 // Movement:
 	if(friction_raw < 0 && speed_raw == 0){
@@ -1451,13 +1465,13 @@
 #define InvMortar_create(_x, _y)
 	with(obj_create(_x, _y, "Mortar")){
 		 // Visual:
-		spr_idle = spr.InvMortarIdle;
-		spr_walk = spr.InvMortarWalk;
-		spr_fire = spr.InvMortarFire;
-		spr_hurt = spr.InvMortarHurt;
-		spr_dead = spr.InvMortarDead;
+		spr_idle     = spr.InvMortarIdle;
+		spr_walk     = spr.InvMortarWalk;
+		spr_fire     = spr.InvMortarFire;
+		spr_hurt     = spr.InvMortarHurt;
+		spr_dead     = spr.InvMortarDead;
 		sprite_index = spr_idle;
-		hitid = [spr_idle, "@p@qC@qU@qR@qS@qE@qD @qM@qO@qR@qT@qA@qR"];
+		hitid        = [spr_idle, "@p@qC@qU@qR@qS@qE@qD @qM@qO@qR@qT@qA@qR"];
 		
 		 // Sounds:
 		snd_hurt = choose(sndBanditHit, sndBigMaggotHit, sndScorpionHit, sndRatHit, sndGatorHit, sndRavenHit, sndSalamanderHurt, sndSniperHit);
@@ -1473,17 +1487,17 @@
 #define Mortar_create(_x, _y)
 	with(instance_create(_x, _y, CustomEnemy)){
 		 // Visual:
-		spr_idle = spr.MortarIdle;
-		spr_walk = spr.MortarWalk;
-		spr_fire = spr.MortarFire;
-		spr_hurt = spr.MortarHurt;
-		spr_dead = spr.MortarDead;
-		spr_weap = mskNone;
-		spr_shadow = shd48;
+		spr_idle     = spr.MortarIdle;
+		spr_walk     = spr.MortarWalk;
+		spr_fire     = spr.MortarFire;
+		spr_hurt     = spr.MortarHurt;
+		spr_dead     = spr.MortarDead;
+		spr_weap     = mskNone;
+		spr_shadow   = shd48;
 		spr_shadow_y = 4;
-		mask_index = mskSpider;
-		hitid = [spr_idle, "MORTAR"];
-		depth = -3;
+		mask_index   = mskSpider;
+		hitid        = [spr_idle, "MORTAR"];
+		depth        = -3;
 		
 		 // Sound:
 		snd_hurt = sndLaserCrystalHit;
@@ -1491,42 +1505,36 @@
 		
 		 // Vars:
 		maxhealth = 75;
-		raddrop = 30;
-		size = 3;
-		walk = 0;
+		raddrop   = 30;
+		size      = 3;
+		walk      = 0;
 		walkspeed = 0.8;
-		maxspeed = 2;
-		ammo = 4;
-		target_x = x;
-		target_y = y;
-		gunangle = random(360);
+		maxspeed  = 2;
+		ammo      = 4;
+		target_x  = x;
+		target_y  = y;
+		gunangle  = random(360);
 		direction = gunangle;
-		inv = false;
+		inv       = false;
 		
 		 // Alarms:
 		alarm1 = 100 + irandom(40);
 		alarm2 = -1;
 		
-		 // NTTE:
-		ntte_anim = false;
-		
 		return id;
 	}
 	
 #define Mortar_step
+	 // Alarms:
+	if(alarm1_run) exit;
+	if(alarm2_run) exit;
+	
+	 // Movement:
+	enemy_walk(walkspeed, maxspeed);
+	
 	 // Animate:
-	if(sprite_index != spr_hurt && sprite_index != spr_fire){
-		if(speed <= 0) sprite_index = spr_idle;
-		else if(sprite_index == spr_idle) sprite_index = spr_walk;
-	}
-	else{
-		 // End Hurt Sprite:
-		if(sprite_index = spr_hurt && image_index > 2) sprite_index = spr_idle;
-		
-		 // End Fire Sprite:
-		if(sprite_index = spr_fire && (image_index > sprite_get_number(spr_fire) - 1)){
-			sprite_index = spr_idle;
-		}
+	if(sprite_index != spr_fire || anim_end){
+		sprite_index = enemy_sprite;
 	}
 	
 	 // Charging effect:
@@ -1766,7 +1774,7 @@
 	}
 	
 #define MortarPlasma_step
-	z += zspeed * current_time_scale;
+	z      += zspeed    * current_time_scale;
 	zspeed -= zfriction * current_time_scale;
 	
 	 // Facing:
@@ -2037,14 +2045,14 @@
 #define RedSpider_create(_x, _y)
 	with(instance_create(_x, _y, CustomEnemy)){
 		 // Visual:
-		spr_idle = spr.RedSpiderIdle;
-		spr_walk = spr.RedSpiderWalk;
-		spr_hurt = spr.RedSpiderHurt;
-		spr_dead = spr.RedSpiderDead;
+		spr_idle     = spr.RedSpiderIdle;
+		spr_walk     = spr.RedSpiderWalk;
+		spr_hurt     = spr.RedSpiderHurt;
+		spr_dead     = spr.RedSpiderDead;
 		sprite_index = spr_idle;
-		spr_shadow = shd24;
-		hitid = [spr_idle, `@(color:${area_get_back_color("red")})RED SPIDER`];
-		depth = -2;
+		spr_shadow   = shd24;
+		hitid        = [spr_idle, `@(color:${area_get_back_color("red")})RED SPIDER`];
+		depth        = -2;
 		
 		 // Sounds:
 		snd_hurt = sndSpiderHurt;
@@ -2068,6 +2076,16 @@
 		
 		return id;
 	}
+	
+#define RedSpider_step
+	 // Alarms:
+	if(alarm1_run) exit;
+	
+	 // Movement:
+	enemy_walk(walkspeed, maxspeed);
+	
+	 // Animate:
+	sprite_index = enemy_sprite;
 	
 #define RedSpider_alrm1
 	alarm1 = irandom_range(10, 30);
@@ -2146,52 +2164,66 @@
 #define Spiderling_create(_x, _y)
 	with(instance_create(_x, _y, CustomEnemy)){
 		 // Visual:
-		spr_idle = spr.SpiderlingIdle;
-		spr_walk = spr.SpiderlingWalk;
-		spr_hurt = spr.SpiderlingHurt;
-		spr_dead = spr.SpiderlingDead;
-		spr_hatch = spr.SpiderlingHatch;
-		spr_shadow = shd16;
+		spr_idle     = spr.SpiderlingIdle;
+		spr_walk     = spr.SpiderlingWalk;
+		spr_hurt     = spr.SpiderlingHurt;
+		spr_dead     = spr.SpiderlingDead;
+		spr_hatch    = spr.SpiderlingHatch;
+		spr_shadow   = shd16;
 		spr_shadow_y = 2;
-		mask_index = mskMaggot;
-		hitid = [spr_idle, "SPIDERLING"];
-		depth = -2;
+		hitid        = [spr_idle, "SPIDERLING"];
+		depth        = -2;
 		
 		 // Sound:
 		snd_hurt = sndSpiderHurt;
 		snd_dead = sndSpiderDead;
 		
 		 // Vars:
-		maxhealth = 4;
-		raddrop = 2;
-		size = 0;
-		walk = 0;
-		walkspeed = 0.8;
-		maxspeed = 3;
-		nexthurt = current_frame + 15;
-		direction = random(360);
+		mask_index = mskMaggot;
+		maxhealth  = 4;
+		raddrop    = 2;
+		size       = 0;
+		walk       = 0;
+		walkspeed  = 0.8;
+		maxspeed   = 3;
+		nexthurt   = current_frame + 15;
+		direction  = random(360);
 		
 		 // Cursed:
 		curse = (GameCont.area == area_cursed_caves);
 		if(curse > 0){
-			spr_idle = spr.InvSpiderlingIdle;
-			spr_walk = spr.InvSpiderlingWalk;
-			spr_hurt = spr.InvSpiderlingHurt;
-			spr_dead = spr.InvSpiderlingDead;
+			spr_idle  = spr.InvSpiderlingIdle;
+			spr_walk  = spr.InvSpiderlingWalk;
+			spr_hurt  = spr.InvSpiderlingHurt;
+			spr_dead  = spr.InvSpiderlingDead;
 			spr_hatch = spr.InvSpiderlingHatch;
-			snd_hurt = choose(sndHitFlesh, sndBanditHit, sndFastRatHit);
-			snd_dead = choose(sndEnemyDie, sndBanditDie, sndFastRatDie);
+			snd_hurt  = choose(sndHitFlesh, sndBanditHit, sndFastRatHit);
+			snd_dead  = choose(sndEnemyDie, sndBanditDie, sndFastRatDie);
 		}
 		
 		 // Alarms:
 		alarm0 = irandom_range(60, 150);
 		alarm1 = irandom_range(20, 40);
 		
+		 // Hatch Delay:
 		var n = instance_nearest(x, y, Player);
-		if(instance_exists(n)) alarm0 += point_distance(x, y, n.x, n.y);
+		if(instance_exists(n)){
+			alarm0 += point_distance(x, y, n.x, n.y);
+		}
 		
 		return id;
 	}
+	
+#define Spiderling_step
+	 // Alarms:
+	if(alarm0_run) exit;
+	if(alarm1_run) exit;
+	
+	 // Movement:
+	enemy_walk(walkspeed, maxspeed);
+	
+	 // Animate:
+	sprite_index = enemy_sprite;
 	
 #define Spiderling_alrm0
 	 // Shhh dont tell anybody
@@ -2715,14 +2747,16 @@
 	}
 	
 #define Warp_step
-	var _sparkle = 1;
+	 // Alarms:
+	if(alarm0_run) exit;
 	
 	 // Spin:
 	image_angle += current_time_scale;
 	
 	 // Open / Close:
-	var	_openScale = 3,
-		_scale = ((open || sprite_index == (open ? spr_open : spr_idle)) ? 1 : 1 / _openScale);
+	var	_sparkle   = 1,
+		_openScale = 3,
+		_scale     = ((open || sprite_index == (open ? spr_open : spr_idle)) ? 1 : 1 / _openScale);
 		
 	image_xscale += (_scale - image_xscale) * 0.2 * current_time_scale;
 	image_yscale += (_scale - image_yscale) * 0.2 * current_time_scale;
@@ -3179,7 +3213,7 @@
 			}
 			
 			clientDarknessCoeff[index] = clamp(_num, 0, 1);
-		}	
+		}
 		else{
 			clientDarknessCoeff[index] = 1;
 		}
@@ -3607,7 +3641,17 @@
 #macro  bbox_center_x                                                                           (bbox_left + bbox_right + 1) / 2
 #macro  bbox_center_y                                                                           (bbox_top + bbox_bottom + 1) / 2
 #macro  FloorNormal                                                                             instances_matching(Floor, 'object_index', Floor)
-#define orandom(n)                                                                      return  random_range(-n, n);
+#macro  alarm0_run                                                                              alarm0 >= 0 && --alarm0 == 0 && (script_ref_call(on_alrm0) || !instance_exists(self))
+#macro  alarm1_run                                                                              alarm1 >= 0 && --alarm1 == 0 && (script_ref_call(on_alrm1) || !instance_exists(self))
+#macro  alarm2_run                                                                              alarm2 >= 0 && --alarm2 == 0 && (script_ref_call(on_alrm2) || !instance_exists(self))
+#macro  alarm3_run                                                                              alarm3 >= 0 && --alarm3 == 0 && (script_ref_call(on_alrm3) || !instance_exists(self))
+#macro  alarm4_run                                                                              alarm4 >= 0 && --alarm4 == 0 && (script_ref_call(on_alrm4) || !instance_exists(self))
+#macro  alarm5_run                                                                              alarm5 >= 0 && --alarm5 == 0 && (script_ref_call(on_alrm5) || !instance_exists(self))
+#macro  alarm6_run                                                                              alarm6 >= 0 && --alarm6 == 0 && (script_ref_call(on_alrm6) || !instance_exists(self))
+#macro  alarm7_run                                                                              alarm7 >= 0 && --alarm7 == 0 && (script_ref_call(on_alrm7) || !instance_exists(self))
+#macro  alarm8_run                                                                              alarm8 >= 0 && --alarm8 == 0 && (script_ref_call(on_alrm8) || !instance_exists(self))
+#macro  alarm9_run                                                                              alarm9 >= 0 && --alarm9 == 0 && (script_ref_call(on_alrm9) || !instance_exists(self))
+#define orandom(_num)                                                                   return  random_range(-_num, _num);
 #define chance(_numer, _denom)                                                          return  random(_denom) < _numer;
 #define chance_ct(_numer, _denom)                                                       return  random(_denom) < (_numer * current_time_scale);
 #define pround(_num, _precision)                                                        return  (_num == 0) ? _num : round(_num / _precision) * _precision;
@@ -3617,6 +3661,7 @@
 #define frame_active(_interval)                                                         return  (current_frame % _interval) < current_time_scale;
 #define angle_lerp(_ang1, _ang2, _num)                                                  return  _ang1 + (angle_difference(_ang2, _ang1) * _num);
 #define draw_self_enemy()                                                                       image_xscale *= right; draw_self(); image_xscale /= right;
+#define enemy_walk(_add, _max)                                                                  if(walk > 0){ walk -= current_time_scale; motion_add_ct(direction, _add); } if(speed > _max) speed = _max;
 #define save_get(_name, _default)                                                       return  mod_script_call_nc('mod', 'teassets', 'save_get', _name, _default);
 #define save_set(_name, _value)                                                                 mod_script_call_nc('mod', 'teassets', 'save_set', _name, _value);
 #define option_get(_name)                                                               return  mod_script_call_nc('mod', 'teassets', 'option_get', _name);
@@ -3669,7 +3714,6 @@
 #define scrRight(_dir)                                                                          mod_script_call(   'mod', 'telib', 'scrRight', _dir);
 #define scrWalk(_dir, _walk)                                                                    mod_script_call(   'mod', 'telib', 'scrWalk', _dir, _walk);
 #define scrAim(_dir)                                                                            mod_script_call(   'mod', 'telib', 'scrAim', _dir);
-#define enemy_walk(_spdAdd, _spdMax)                                                            mod_script_call(   'mod', 'telib', 'enemy_walk', _spdAdd, _spdMax);
 #define enemy_hurt(_hitdmg, _hitvel, _hitdir)                                                   mod_script_call(   'mod', 'telib', 'enemy_hurt', _hitdmg, _hitvel, _hitdir);
 #define enemy_target(_x, _y)                                                            return  mod_script_call(   'mod', 'telib', 'enemy_target', _x, _y);
 #define boss_hp(_hp)                                                                    return  mod_script_call_nc('mod', 'telib', 'boss_hp', _hp);

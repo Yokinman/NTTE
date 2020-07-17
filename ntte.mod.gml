@@ -1501,12 +1501,10 @@
 	}
 	
 #define ntte_begin_step
-	if(lag) trace("");
-	
-	 // NTTE Object Code:
-	mod_script_call("mod", "telib", "obj_begin_step");
-	
-	if(lag) trace_time();
+	if(lag){
+		trace("");
+		trace_time();
+	}
 	
 	 // Manually Recreating Pause/Loading/GameOver Map:
 	if(global.area_update){
@@ -1859,6 +1857,41 @@
 	
 #define ntte_step
 	if(lag) trace_time();
+	
+	 // Allied Crystal Fixes:
+	with(instances_matching(LaserCharge, "charmally_check", null)){
+		charmally_check = false;
+		
+		with(instances_matching_ne([LaserCrystal, InvLaserCrystal], "ntte_charm", null)){
+			if(ntte_charm.charmed){
+				var	_x1  = other.xstart,
+					_y1  = other.ystart,
+					_x2  = x,
+					_y2  = y,
+					_dis = point_distance(_x1, _y1, _x2, _y2),
+					_dir = point_direction(_x1, _y1, _x2, _y2);
+					
+				if(_dis < 5 || (other.alarm0 == round(1 + (_dis / other.speed)) && abs(angle_difference(other.direction, _dir)) < 0.1)){
+					other.charmally_check = true;
+					team_instance_sprite(team, other);
+					break;
+				}
+			}
+		}
+	}
+	with(instances_matching(EnemyLightning, "charmally_check", null)){
+		charmally_check = false;
+		
+		if(sprite_index == sprEnemyLightning){
+			with(instances_matching_ne((instance_exists(creator) ? creator : instances_matching(LightningCrystal, "team", team)), "ntte_charm", null)){
+				if(ntte_charm.charmed && distance_to_object(other) < 56){
+					other.charmally_check = true;
+					other.sprite_index = sprLightning;
+					break;
+				}
+			}
+		}
+	}
 	
 	 // Level Start:
 	if(instance_exists(GenCont) || instance_exists(Menu)){
@@ -3997,7 +4030,17 @@
 #macro  bbox_center_x                                                                           (bbox_left + bbox_right + 1) / 2
 #macro  bbox_center_y                                                                           (bbox_top + bbox_bottom + 1) / 2
 #macro  FloorNormal                                                                             instances_matching(Floor, 'object_index', Floor)
-#define orandom(n)                                                                      return  random_range(-n, n);
+#macro  alarm0_run                                                                              alarm0 >= 0 && --alarm0 == 0 && (script_ref_call(on_alrm0) || !instance_exists(self))
+#macro  alarm1_run                                                                              alarm1 >= 0 && --alarm1 == 0 && (script_ref_call(on_alrm1) || !instance_exists(self))
+#macro  alarm2_run                                                                              alarm2 >= 0 && --alarm2 == 0 && (script_ref_call(on_alrm2) || !instance_exists(self))
+#macro  alarm3_run                                                                              alarm3 >= 0 && --alarm3 == 0 && (script_ref_call(on_alrm3) || !instance_exists(self))
+#macro  alarm4_run                                                                              alarm4 >= 0 && --alarm4 == 0 && (script_ref_call(on_alrm4) || !instance_exists(self))
+#macro  alarm5_run                                                                              alarm5 >= 0 && --alarm5 == 0 && (script_ref_call(on_alrm5) || !instance_exists(self))
+#macro  alarm6_run                                                                              alarm6 >= 0 && --alarm6 == 0 && (script_ref_call(on_alrm6) || !instance_exists(self))
+#macro  alarm7_run                                                                              alarm7 >= 0 && --alarm7 == 0 && (script_ref_call(on_alrm7) || !instance_exists(self))
+#macro  alarm8_run                                                                              alarm8 >= 0 && --alarm8 == 0 && (script_ref_call(on_alrm8) || !instance_exists(self))
+#macro  alarm9_run                                                                              alarm9 >= 0 && --alarm9 == 0 && (script_ref_call(on_alrm9) || !instance_exists(self))
+#define orandom(_num)                                                                   return  random_range(-_num, _num);
 #define chance(_numer, _denom)                                                          return  random(_denom) < _numer;
 #define chance_ct(_numer, _denom)                                                       return  random(_denom) < (_numer * current_time_scale);
 #define pround(_num, _precision)                                                        return  (_num == 0) ? _num : round(_num / _precision) * _precision;
@@ -4007,6 +4050,7 @@
 #define frame_active(_interval)                                                         return  (current_frame % _interval) < current_time_scale;
 #define angle_lerp(_ang1, _ang2, _num)                                                  return  _ang1 + (angle_difference(_ang2, _ang1) * _num);
 #define draw_self_enemy()                                                                       image_xscale *= right; draw_self(); image_xscale /= right;
+#define enemy_walk(_add, _max)                                                                  if(walk > 0){ walk -= current_time_scale; motion_add_ct(direction, _add); } if(speed > _max) speed = _max;
 #define save_get(_name, _default)                                                       return  mod_script_call_nc('mod', 'teassets', 'save_get', _name, _default);
 #define save_set(_name, _value)                                                                 mod_script_call_nc('mod', 'teassets', 'save_set', _name, _value);
 #define option_get(_name)                                                               return  mod_script_call_nc('mod', 'teassets', 'option_get', _name);
@@ -4059,7 +4103,6 @@
 #define scrRight(_dir)                                                                          mod_script_call(   'mod', 'telib', 'scrRight', _dir);
 #define scrWalk(_dir, _walk)                                                                    mod_script_call(   'mod', 'telib', 'scrWalk', _dir, _walk);
 #define scrAim(_dir)                                                                            mod_script_call(   'mod', 'telib', 'scrAim', _dir);
-#define enemy_walk(_spdAdd, _spdMax)                                                            mod_script_call(   'mod', 'telib', 'enemy_walk', _spdAdd, _spdMax);
 #define enemy_hurt(_hitdmg, _hitvel, _hitdir)                                                   mod_script_call(   'mod', 'telib', 'enemy_hurt', _hitdmg, _hitvel, _hitdir);
 #define enemy_target(_x, _y)                                                            return  mod_script_call(   'mod', 'telib', 'enemy_target', _x, _y);
 #define boss_hp(_hp)                                                                    return  mod_script_call_nc('mod', 'telib', 'boss_hp', _hp);
