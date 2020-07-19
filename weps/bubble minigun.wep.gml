@@ -48,8 +48,11 @@
 			weapon_post(5, -5, 10);
 			motion_add(gunangle + 180, 0.5);
 			
+			 // Delay:
 			wait 1;
-			if(!instance_exists(self)) break;
+			if(!instance_exists(self)){
+				break;
+			}
 		}
 		exit;
 	}
@@ -63,7 +66,7 @@
 #macro  type_explosive                                                                          4
 #macro  type_energy                                                                             5
 #macro  current_frame_active                                                                    (current_frame % 1) < current_time_scale
-#define orandom(n)                                                                      return  random_range(-n, n);
+#define orandom(_num)                                                                   return  random_range(-_num, _num);
 #define chance(_numer, _denom)                                                          return  random(_denom) < _numer;
 #define chance_ct(_numer, _denom)                                                       return  random(_denom) < (_numer * current_time_scale);
 #define unlock_get(_unlock)                                                             return  mod_script_call_nc('mod', 'teassets', 'unlock_get', _unlock);
@@ -74,5 +77,5 @@
 #define weapon_ammo_hud(_wep)                                                           return  mod_script_call(   'mod', 'telib', 'weapon_ammo_hud', _wep);
 #define weapon_get_red(_wep)                                                            return  mod_script_call(   'mod', 'telib', 'weapon_get_red', _wep);
 #define wep_raw(_wep)                                                                   return  mod_script_call_nc('mod', 'telib', 'wep_raw', _wep);
-#define wep_get(_primary, _name, _default)                                              return  variable_instance_get(id, (_primary ? '' : 'b') + _name, _default);
-#define wep_set(_primary, _name, _value)                                                        variable_instance_set(id, (_primary ? '' : 'b') + _name, _value);
+#define wep_get(_primary, _name, _default)                                              return  variable_instance_get(self, (_primary ? '' : 'b') + _name, _default);
+#define wep_set(_primary, _name, _value)                                                        variable_instance_set(self, (_primary ? '' : 'b') + _name, _value);

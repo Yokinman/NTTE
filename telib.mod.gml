@@ -12,7 +12,7 @@
 		"teoasis"     : ["BubbleBomb", "BubbleExplosion", "BubbleExplosionSmall", "BubbleSlash", "CrabTank", "HammerShark", "HyperBubble", "OasisPetBecome", "Puffer", "SunkenRoom", "SunkenSealSpawn", "WaterStreak"],
 		"tetrench"    : ["Angler", "Eel", "EelSkull", "ElectroPlasma", "ElectroPlasmaImpact", "Jelly", "JellyElite", "Kelp", "LightningDisc", "LightningDiscEnemy", "PitSpark", "PitSquid", "PitSquidArm", "PitSquidBomb", "PitSquidDeath", "QuasarBeam", "QuasarRing", "TeslaCoil", "TopDecalWaterMine", "TrenchFloorChunk", "Vent", "WantEel"],
 		"tesewers"    : ["AlbinoBolt", "AlbinoGator", "AlbinoGrenade", "BabyGator", "Bat", "BatBoss", "BatCloud", "BatDisc", "BatScreech", "BoneGator", /*"BossHealFX",*/ "Cabinet", "Cat", "CatBoss", "CatBossAttack", "CatDoor", "CatDoorDebris", "CatGrenade", "CatHole", "CatHoleBig", "CatHoleOpen", "CatLight", "ChairFront", "ChairSide", "Couch", "GatorStatue", "GatorStatueFlak", "Manhole", "NewTable", "Paper", "PizzaDrain", "PizzaManholeCover", "PizzaRubble", "PizzaTV", "SewerDrain", "SewerRug", "TurtleCool"],
-		"tescrapyard" : ["BoneRaven", "SawTrap", "SludgePool", "TopRaven", "Tunneler"],
+		"tescrapyard" : ["BoneRaven", "SawTrap", "SludgePool", "TopRaven", "TrapSpin", "Tunneler"],
 		"tecaves"     : ["ChaosHeart", "CrystalBrain", "CrystalClone", "CrystalHeart", "CrystalHeartBullet", "CrystalPropRed", "CrystalPropWhite", "EnergyBatSlash", "InvMortar", "Mortar", "MortarPlasma", "NewCocoon", "PlasmaImpactSmall", "RedBullet", "RedExplosion", "RedShank", "RedSlash", "RedSpider", "Spiderling", "TwinOrbital", "VlasmaBullet", "VlasmaCannon", "WallFake", "Warp", "WarpPortal"],
 		"telabs"      : ["Button", "ButtonChest", "ButtonOld", "ButtonPickup", "ButtonReviveArea", "FreakChamber", "MutantVat", "PickupReviveArea", "PopoSecurity", "WallSlide"]
 	};
@@ -468,6 +468,10 @@
 	}
 	
 	if(lag){
+		if(instance_is(self, CustomBeginStep)){
+			trace("");
+		}
+		
 		 // Enable Events:
 		with(instances_matching_ne(ntte_obj_base, "ntte_" + _scrt, null)){
 			variable_instance_set(self, "on_" + _scrt, variable_instance_get(self, "ntte_" + _scrt));
@@ -475,7 +479,7 @@
 		
 		 // Call Events:
 		var _inst = instances_matching_ne(ntte_obj_base, "on_" + _scrt, null);
-		if(true || array_length(_inst) > 0){
+		if(array_length(_inst) > 0){
 			trace_time();
 			switch(object_index){
 				case CustomBeginStep : with(_inst) event_perform(ev_step, ev_step_begin);  break;
@@ -2036,32 +2040,58 @@
 	return _nearest;
 	
 #define instance_rectangle(_x1, _y1, _x2, _y2, _obj)
+	/*
+		Returns all given instances with their coordinates touching a given rectangle
+		Much better performance than manually performing 'point_in_rectangle()' on every instance
+	*/
+	
 	return instances_matching_le(instances_matching_ge(instances_matching_le(instances_matching_ge(_obj, "x", _x1), "x", _x2), "y", _y1), "y", _y2);
-
+	
 #define instance_rectangle_bbox(_x1, _y1, _x2, _y2, _obj)
+	/*
+		Returns all given instances with their bounding box touching a given rectangle
+		Much better performance than manually performing 'place_meeting()' on every instance
+	*/
+	
 	return instances_matching_le(instances_matching_ge(instances_matching_le(instances_matching_ge(_obj, "bbox_right", _x1), "bbox_left", _x2), "bbox_bottom", _y1), "bbox_top", _y2);
-
+	
 #define instances_seen_nonsync(_obj, _bx, _by)
+	/*
+		Returns all given instances currently on the local player's screen
+		Much better performance than manually performing 'point_seen()' or 'point_seen_ext()' on every instance
+		!!! Beware of DESYNCS
+	*/
+	
 	var	_vx = view_xview_nonsync,
 		_vy = view_yview_nonsync;
-
+		
 	return instances_matching_le(instances_matching_ge(instances_matching_le(instances_matching_ge(_obj, "bbox_right", _vx - _bx), "bbox_left", _vx + game_width + _bx), "bbox_bottom", _vy - _by), "bbox_top", _vy + game_height + _by);
-
+	
 #define instances_meeting(_x, _y, _obj)
+	/*
+		Returns all given instances that would be touching the calling instance at a given position
+		Much better performance than manually performing 'place_meeting(x, y, other)' on every instance
+	*/
+	
 	var	_tx = x,
 		_ty = y;
-
+		
 	x = _x;
 	y = _y;
-	var r = instances_matching_ne(instances_matching_le(instances_matching_ge(instances_matching_le(instances_matching_ge(_obj, "bbox_right", bbox_left), "bbox_left", bbox_right), "bbox_bottom", bbox_top), "bbox_top", bbox_bottom), "id", id);
+	var _inst = instances_matching_ne(instances_matching_le(instances_matching_ge(instances_matching_le(instances_matching_ge(_obj, "bbox_right", bbox_left), "bbox_left", bbox_right), "bbox_bottom", bbox_top), "bbox_top", bbox_bottom), "id", id);
 	x = _tx;
 	y = _ty;
-
-	return r;
-
+	
+	return _inst;
+	
 #define instances_at(_x, _y, _obj)
+	/*
+		Returns all given instances with their bounding boxes touching a given position
+		Much better performance than manually performing 'position_meeting()' on every instance
+	*/
+	
 	return instances_matching_le(instances_matching_ge(instances_matching_le(instances_matching_ge(_obj, "bbox_right", _x), "bbox_left", _x), "bbox_bottom", _y), "bbox_top", _y);
-
+	
 #define instance_random(_obj)
 	/*
 		Returns a random instance of the given object
@@ -2160,6 +2190,20 @@
 	
 	return _new;
 	
+#define surface_clone(_surf)
+	/*
+		Returns an exact copy of the given surface
+	*/
+	
+	var _new = surface_create(surface_get_width(_surf), surface_get_height(_surf));
+	
+	surface_set_target(_new);
+	draw_clear_alpha(0, 0);
+	draw_surface(_surf, 0, 0);
+	surface_reset_target();
+	
+	return _new;
+	
 #define variable_instance_get_list(_inst)
 	/*
 		Returns all of a given instance's variable names and values as a LWO
@@ -2195,20 +2239,6 @@
 			}
 		}
 	}
-	
-#define surface_clone(_surf)
-	/*
-		Returns an exact copy of the given surface
-	*/
-	
-	var _new = surface_create(surface_get_width(_surf), surface_get_height(_surf));
-	
-	surface_set_target(_new);
-	draw_clear_alpha(0, 0);
-	draw_surface(_surf, 0, 0);
-	surface_reset_target();
-	
-	return _new;
 	
 #define variable_is_readonly(_inst, _varName)
 	if(array_exists(["id", "object_index", "bbox_bottom", "bbox_top", "bbox_right", "bbox_left", "image_number", "sprite_yoffset", "sprite_xoffset", "sprite_height", "sprite_width"], _varName)){
@@ -3915,6 +3945,11 @@
 	
 #define wall_clear(_x1, _y1, _x2, _y2)
 	with(instance_rectangle_bbox(_x1, _y1, _x2, _y2, [Wall, TopSmall, TopPot, Bones, InvisiWall])){
+		if(instance_is(self, Wall)){
+			with(instances_matching(instances_matching(TrapScorchMark, "x", x), "y", y)){
+				instance_delete(id);
+			}
+		}
 		instance_delete(id);
 	}
 	
@@ -5517,16 +5552,31 @@
 		Performs an instance's basic movement code, scaled by a given number
 	*/
 	
-	if(friction_raw != 0 && speed_raw != 0){
-		speed_raw -= min(abs(speed_raw), friction_raw * _mult) * sign(speed_raw);
+	if(_mult > 0){
+		if(friction_raw != 0 && speed_raw != 0){
+			speed_raw -= min(abs(speed_raw), friction_raw * _mult) * sign(speed_raw);
+		}
+		if(gravity_raw != 0){
+			hspeed_raw += lengthdir_x(gravity_raw, gravity_direction) * _mult;
+			vspeed_raw += lengthdir_y(gravity_raw, gravity_direction) * _mult;
+		}
+		if(speed_raw != 0){
+			x += hspeed_raw * _mult;
+			y += vspeed_raw * _mult;
+		}
 	}
-	if(gravity_raw != 0){
-		hspeed_raw += lengthdir_x(gravity_raw, gravity_direction) * _mult;
-		vspeed_raw += lengthdir_y(gravity_raw, gravity_direction) * _mult;
-	}
-	if(speed_raw != 0){
-		x += hspeed_raw * _mult;
-		y += vspeed_raw * _mult;
+	else{
+		if(speed_raw != 0){
+			x += hspeed_raw * _mult;
+			y += vspeed_raw * _mult;
+		}
+		if(gravity_raw != 0){
+			hspeed_raw += lengthdir_x(gravity_raw, gravity_direction) * _mult;
+			vspeed_raw += lengthdir_y(gravity_raw, gravity_direction) * _mult;
+		}
+		if(friction_raw != 0 && speed_raw != 0){
+			speed_raw -= min(abs(speed_raw), friction_raw * _mult) * sign(speed_raw);
+		}
 	}
 	
 #define sound_play_hit_ext(_sound, _pitch, _volume)

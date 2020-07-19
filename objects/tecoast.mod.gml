@@ -2761,6 +2761,9 @@
 	if(alarm1_run) exit;
 	if(alarm2_run) exit;
 	
+	 // Movement:
+	enemy_walk(walkspeed, maxspeed);
+	
 	 // Dash:
 	if(dash > 0){
 		dash -= current_time_scale;
@@ -2774,9 +2777,6 @@
 			}
 		}
 	}
-	
-	 // Movement:
-	enemy_walk(walkspeed, maxspeed);
 	
 	 // Animate:
 	sprite_index = enemy_sprite;

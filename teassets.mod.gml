@@ -765,8 +765,9 @@
 			msk.SludgePool      = sprite(p + "mskSludgePool",      1, 32, 32);
 			msk.SludgePoolSmall = sprite(p + "mskSludgePoolSmall", 1, 16, 16);
 			
-			 // Fire Pit Scorch Details:
+			 // Fire Pit Event:
 			FirePitScorch = sprite(p + "sprFirePitScorch", 3, 16, 16);
+			TrapSpin      = sprite(p + "sprTrapSpin",      8, 12, 12);
 			
 		//#endregion
 		

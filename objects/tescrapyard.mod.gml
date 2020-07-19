@@ -317,6 +317,7 @@
 		snd_hurt = sndHitMetal;
 		snd_dead = sndHydrantBreak;
 		snd_mele = sndDiscHit;
+		loop_snd = -1;
 		
 		 // Vars:
 		mask_index  = mskShield;
@@ -333,7 +334,6 @@
 		spd         = 0;
 		dir         = random(360);
 		active      = false;
-		loop_snd    = -1;
 		sawtrap_hit = false;
 		
 		 // Move Towards Nearest Wall:
@@ -568,10 +568,10 @@
 		
 		 // Vars:
 		mask_index = -1;
+		floors     = [];
 		fx_color   = make_color_rgb(130 - 40, 189, 5);
 		my_alert   = noone;
 		right      = choose(-1, 1);
-		detail     = true;
 		active     = false;
 		setup      = true;
 		num        = -1;
@@ -586,33 +586,43 @@
 	setup = false;
 	
 	 // Floorerize:
-	var	_w = ceil(abs(sprite_width) / 32),
-		_h = ceil(abs(sprite_height) / 32),
-		_cx = 0,
-		_cy = 0,
-		_num = 0;
+	if(array_length(floors) <= 0){
+		floors = floor_fill(
+			x,
+			y,
+			ceil(abs(sprite_width)  / 32),
+			ceil(abs(sprite_height) / 32),
+			""
+		);
 		
-	with(floor_fill(x, y, _w, _h, "")){
-		sprite_index = other.spr_floor;
-		image_index = ((sprite_index = sprFloor3) ? 3 : _num);
-		_cx += bbox_center_x;
-		_cy += bbox_center_y;
-		_num++;
-		
-		 // Slimy Material:
-		if(material > 0 && material < 4){
-			material += 3;
-		}
-		
-		 // Details:
-		if(other.detail){
-			instance_create(random_range(bbox_left, bbox_right + 1), random_range(bbox_top, bbox_bottom + 1), Detail);
+		 // Center Position:
+		var _num = array_length(floors);
+		if(_num > 0){
+			x = 0;
+			y = 0;
+			with(floors){
+				other.x += bbox_center_x;
+				other.y += bbox_center_y;
+			}
+			x /= _num;
+			y /= _num;
 		}
 	}
 	
-	 // Center Position:
-	x = (_cx / _num);
-	y = (_cy / _num);
+	 // Floor Setup:
+	var _img = 0;
+	with(floors){
+		if(instance_exists(self)){
+			sprite_index = other.spr_floor;
+			image_index  = ((sprite_index = sprFloor3) ? 3 : _img);
+			
+			 // Slimy Material:
+			if(material > 0 && material < 4){
+				material += 3;
+			}
+		}
+		_img++;
+	}
 	
 	 // Ravens:
 	if(num > 0){
@@ -710,6 +720,11 @@
 		}
 	}
 	
+	 // Goodbye:
+	if(array_length(instances_matching(floors, "", null)) <= 0){
+		instance_destroy();
+	}
+	
 #define SludgePool_end_step
 	 // Sticky Sludge:
 	with(instance_rectangle_bbox(bbox_left, bbox_top, bbox_right, bbox_bottom, instances_matching_lt(instances_matching_gt(hitme, "speed", 0), "size", 6))){
@@ -737,10 +752,10 @@
 	
 	 // Effects:
 	with(instances_matching(instances_meeting(x, y, RainSplash), "image_blend", c_white)){
-		var	l = 4,
-			d = point_direction(other.x, other.y, x, y);
+		var	_l = 4,
+			_d = point_direction(other.x, other.y, x, y);
 			
-		if(position_meeting(x + lengthdir_x(l, d), y + lengthdir_y(l * 2/3, d), other)){
+		if(position_meeting(x + lengthdir_x(_l, _d), y + lengthdir_y(_l * 2/3, _d), other)){
 			image_blend = other.fx_color;
 		}
 	}
@@ -928,6 +943,120 @@
 	}
 	
 	
+#define TrapSpin_create(_x, _y)
+	with(instance_create(_x, _y, CustomObject)){
+		 // Visual:
+		sprite_index = spr.TrapSpin;
+		hitid        = 57;
+		
+		 // Sound:
+		loop_snd = -1;
+		
+		 // Vars:
+		mask_index = mskExploder;
+		friction   = 0.4;
+		my_health  = 1000000000000000;
+		rotspeed   = 1.5 * choose(-1, 1);
+		size       = 3;
+		team       = 1;
+		fire       = false;
+		
+		 // Alarms:
+		alarm0 = 300;
+		
+		 // Wall:
+		with(instance_create(x - 8, y - 8, Wall)){
+			image_alpha = 0;
+			visible     = false;
+			topspr      = -1;
+			outspr      = -1;
+			
+			 // Scorch:
+			instance_create(x, y, TrapScorchMark);
+		}
+		
+		return id;
+	}
+	
+#define TrapSpin_step
+	 // Alarms:
+	if(alarm0_run) exit;
+	
+	 // Level Over:
+	if(instance_exists(Portal)){
+		fire   = false;
+		alarm0 = 30;
+	}
+	
+	 // Active:
+	if(fire != false){
+		 // Spin:
+		image_angle += rotspeed * current_time_scale;
+		
+		 // Flames:
+		if((current_frame % (1 / fire)) < current_time_scale){
+			repeat(ceil(fire * current_time_scale)){
+				var	_dis = 12,
+					_spd = 6;
+					
+				for(var _dir = image_angle; _dir < image_angle + 360; _dir += 90){
+					projectile_create(x + lengthdir_x(_dis, _dir), y + lengthdir_y(_dis, _dir), TrapFire, _dir, _spd);
+				}
+			}
+		}
+		
+		 // Sound:
+		if(!audio_is_playing(loop_snd)){
+			loop_snd = sound_play_hit_ext(sndFlamerLoop, 1 + orandom(0.1), 3);
+		}
+	}
+	else sound_stop(loop_snd);
+	
+	 // Die:
+	if(!position_meeting(x, y, Wall)){
+		instance_destroy();
+	}
+	
+#define TrapSpin_draw
+	 // CustomObject:
+	image_alpha = -abs(image_alpha);
+	
+	 // 3D Trap:
+	for(var i = 0; i < image_number; i++){
+		draw_sprite_ext(sprite_index, i, x, y - i, image_xscale, image_yscale, image_angle, image_blend, abs(image_alpha));
+	}
+	
+#define TrapSpin_alrm0
+	 // Activate:
+	if(fire <= 0){
+		fire = true;
+		sound_play_hit_big(sndFiretrap, 0.2);
+	}
+	
+#define TrapSpin_destroy
+	 // Shh:
+	sound_stop(loop_snd);
+	
+	 // FloorExplo Fix:
+	with(instances_matching(instances_matching(FloorExplo, "x", x - 8), "y", y - 8)){
+		var	_ox  = -8,
+			_oy  = -8,
+			_ang = other.image_angle;
+			
+		x = other.x + lengthdir_x(_ox, _ang) + lengthdir_x(_oy, _ang - 90);
+		y = other.y + lengthdir_y(_ox, _ang) + lengthdir_y(_oy, _ang - 90);
+		image_angle = _ang;
+		
+		break;
+	}
+	
+	 // More Debris:
+	repeat(3){
+		instance_create(x, y, Debris);
+		scrFX(x, y, 2, Dust);
+	}
+	
+	
 #define Tunneler_create(_x, _y)
 	with(instance_create(_x, _y, CustomEnemy)){
 		 // Visual:
@@ -1079,6 +1208,9 @@
 	if(array_length(instances_matching(CustomObject, "name", "SludgePool")) > 0){
 		script_bind_draw(draw_sludge, -4);
 	}
+	if(array_length(instances_matching(CustomObject, "name", "TrapSpin")) > 0){
+		script_bind_draw(draw_trapspin_top, object_get_depth(SubTopCont));
+	}
 	
 	 // Variant Car Decal:
 	with(instances_matching(TopDecalScrapyard, "verticalcar_check", null)){
@@ -1092,13 +1224,20 @@
 		draw_sprite_ext(sprite_index, image_index, x, y + 6, image_xscale * 0.9, image_yscale * 0.9, image_angle, image_blend, image_alpha);
 	}
 	
+	 // Spinny Fire Trap:
+	with(instances_matching(instances_matching(CustomObject, "name", "TrapSpin"), "visible", true)){
+		for(var i = 0; i < image_number; i++){
+			draw_sprite_ext(sprite_index, i, x, y + i, image_xscale, image_yscale, image_angle, image_blend, abs(image_alpha));
+		}
+	}
+	
 #define draw_sludge
 	if(lag) trace_time();
 	
-	var	_surfX = view_xview_nonsync,
-		_surfY = view_yview_nonsync,
-		_surfW = game_width,
-		_surfH = game_height,
+	var	_surfX     = view_xview_nonsync,
+		_surfY     = view_yview_nonsync,
+		_surfW     = game_width,
+		_surfH     = game_height,
 		_surfScale = option_get("quality:minor");
 		
 	if(_surfScale >= 2/3){
@@ -1106,9 +1245,9 @@
 			x = _surfX;
 			y = _surfY;
 			
-			var	_surf = surf,
-				_canShader = (shadSludgePool.shad != -1),
-				_inst = instances_seen_nonsync([hitme, Corpse, chestprop, ChestOpen, Crown], 24, 24);
+			var	_surf      = surf,
+				_inst      = instances_seen_nonsync([hitme, Corpse, chestprop, ChestOpen, Crown], 24, 24),
+				_canShader = (shadSludgePool.shad != -1);
 				
 			if(_canShader){
 				_inst = array_combine(_inst, instances_matching(Pickup, "mask_index", mskPickup));
@@ -1161,6 +1300,18 @@
 				shader_reset();
 			}
 		}
+	}
+	
+	if(lag) trace_time(script[2]);
+	
+	instance_destroy();
+	
+#define draw_trapspin_top
+	if(lag) trace_time();
+	
+	 // Tops of Spinny Fire Traps:
+	with(instances_matching(instances_matching(CustomObject, "name", "TrapSpin"), "visible", true)){
+		draw_sprite_ext(sprite_index, image_number - 1, x, y - (image_number - 1), image_xscale, image_yscale, image_angle, image_blend, abs(image_alpha));
 	}
 	
 	if(lag) trace_time(script[2]);

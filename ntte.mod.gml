@@ -1033,7 +1033,8 @@
 							_cactusNum = irandom_range(2, _num);
 							with(top_create(_x, _y - 16, "WepPickupGrounded", 0, 0)){
 								with(target) with(target){
-									wep = weapon_decide(3, GameCont.hard + 2, false, null);
+									wep  = weapon_decide(3, GameCont.hard + 2, false, null);
+									roll = true;
 								}
 							}
 							break;
@@ -1396,7 +1397,8 @@
 		if(array_length(instances_meeting(CustomObject, "name", "SludgePool")) <= 0){
 			with(obj_create(bbox_center_x, bbox_center_y, "SludgePool")){
 				sprite_index = msk.SludgePoolSmall;
-				spr_floor = other.sprite_index;
+				spr_floor    = other.sprite_index;
+				floors       = [other];
 			}
 		}
 	}
@@ -1501,10 +1503,7 @@
 	}
 	
 #define ntte_begin_step
-	if(lag){
-		trace("");
-		trace_time();
-	}
+	if(lag) trace_time();
 	
 	 // Manually Recreating Pause/Loading/GameOver Map:
 	if(global.area_update){
@@ -2458,15 +2457,6 @@
 	}
 	
 	 // This is it:
-	with(instances_matching(Breath, "depth", -2)){
-		depth = -3;
-	}
-	with(instances_matching([MeltSplat, Scorchmark], "depth", 1)){
-		depth = 7;
-	}
-	with(instances_matching([VenuzCarpet, FloorMiddle], "depth", 7)){
-		depth = 8;
-	}
 	with(instances_matching_gt([Bubble, RavenFly, LilHunterFly], "depth", object_get_depth(SubTopCont))){
 		depth = -8;
 		visible = true;
@@ -2476,6 +2466,18 @@
 		if(walltop_fix){
 			depth = -7;
 		}
+	}
+	with(instances_matching(Breath, "depth", -2)){
+		depth = -3;
+	}
+	with(instances_matching([MeltSplat, Scorchmark], "depth", 1)){
+		depth = 7;
+	}
+	with(instances_matching([VenuzCarpet, FloorMiddle], "depth", 7)){
+		depth = 8;
+	}
+	with(instances_matching(TrapScorchMark, "depth", 8)){
+		depth = 9;
 	}
 	with(instances_matching(instances_matching(Pillar, "spr_shadow_y", 0), "spr_shadow", shd24)){
 		spr_shadow_y = -3;
@@ -2780,6 +2782,8 @@
 	}
 	
 #define draw_gui_end
+	if(lag) trace_time();
+	
 	 // NTTE Music / Ambience:
 	ntte_music();
 	
@@ -2797,6 +2801,12 @@
 	
 	 // Reset Mod Calling List:
 	ntte_mods_call = [];
+	
+	 // Debug Log Spacing:
+	if(lag){
+		trace_time("draw_gui_end");
+		trace("");
+	}
 	
 #define draw_pet_mapicons(_mapObj)
 	if(instance_is(self, CustomScript) && script[2] == "draw_pet_mapicons"){

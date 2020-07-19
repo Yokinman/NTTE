@@ -4312,12 +4312,12 @@
 #define WepPickupGrounded_create(_x, _y)
 	with(instance_create(_x, _y, CustomObject)){
 		 // Visual:
-		spr_shadow = shd24;
+		spr_shadow   = shd24;
 		spr_shadow_x = 0;
 		spr_shadow_y = -9;
 		image_xscale = -1;
 		image_yscale = choose(-1, 1);
-		depth = -1;
+		depth        = -1;
 		
 		 // Vars:
 		mask_index = mskWepPickup;

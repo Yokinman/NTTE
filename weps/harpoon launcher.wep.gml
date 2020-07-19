@@ -3,12 +3,6 @@
 	global.sprWep = sprite_add_weapon("../sprites/weps/sprHarpoonLauncher.png", 3, 4);
 	global.sprWepLocked = mskNone;
 	
-	 // LWO:
-	global.lwoWep = {
-		wep  : mod_current,
-		rope : noone
-	};
-	
 #define weapon_name   return (weapon_avail() ? "HARPOON LAUNCHER" : "LOCKED");
 #define weapon_text   return "REEL IT IN";
 #define weapon_swap   return sndSwapBow;
@@ -25,16 +19,20 @@
 	
 	 // Linked Harpoons:
 	with(projectile_create(x, y, "Harpoon", gunangle + orandom(3 * accuracy), 22)){
-		if(f.wepheld){
-			if(!instance_exists(lq_defget(w.rope, "link1", noone)) || lq_defget(w.rope, "broken", true)){
-				w.rope = Harpoon_rope(id, f.creator);
+		if(instance_exists(creator)){
+			var _rope = variable_instance_get(creator, "harpoon_rope", noone);
+			
+			if(!instance_exists(lq_defget(_rope, "link1", noone)) || lq_defget(_rope, "broken", true)){
+				_rope = Harpoon_rope(id, creator);
 			}
 			else{
-				array_push(rope, w.rope);
-				w.rope.break_timer = 60;
-				w.rope.link2 = id;
-				w.rope = noone;
+				array_push(rope, _rope);
+				_rope.break_timer = 60;
+				_rope.link2 = id;
+				_rope = noone;
 			}
+			
+			variable_instance_set(creator, "harpoon_rope", _rope);
 		}
 	}
 	
@@ -54,7 +52,7 @@
 #macro  type_explosive                                                                          4
 #macro  type_energy                                                                             5
 #macro  current_frame_active                                                                    (current_frame % 1) < current_time_scale
-#define orandom(n)                                                                      return  random_range(-n, n);
+#define orandom(_num)                                                                   return  random_range(-_num, _num);
 #define chance(_numer, _denom)                                                          return  random(_denom) < _numer;
 #define chance_ct(_numer, _denom)                                                       return  random(_denom) < (_numer * current_time_scale);
 #define unlock_get(_unlock)                                                             return  mod_script_call_nc('mod', 'teassets', 'unlock_get', _unlock);
@@ -65,6 +63,6 @@
 #define weapon_ammo_hud(_wep)                                                           return  mod_script_call(   'mod', 'telib', 'weapon_ammo_hud', _wep);
 #define weapon_get_red(_wep)                                                            return  mod_script_call(   'mod', 'telib', 'weapon_get_red', _wep);
 #define wep_raw(_wep)                                                                   return  mod_script_call_nc('mod', 'telib', 'wep_raw', _wep);
-#define wep_get(_primary, _name, _default)                                              return  variable_instance_get(id, (_primary ? '' : 'b') + _name, _default);
-#define wep_set(_primary, _name, _value)                                                        variable_instance_set(id, (_primary ? '' : 'b') + _name, _value);
+#define wep_get(_primary, _name, _default)                                              return  variable_instance_get(self, (_primary ? '' : 'b') + _name, _default);
+#define wep_set(_primary, _name, _value)                                                        variable_instance_set(self, (_primary ? '' : 'b') + _name, _value);
 #define Harpoon_rope(_link1, _link2)                                                    return  mod_script_call(   'mod', 'tecoast', 'Harpoon_rope', _link1, _link2);

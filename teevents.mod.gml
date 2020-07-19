@@ -4,10 +4,10 @@
 	lag = false;
 	
 	/*
-		0) Should X be an event?
+		0) Determine if X should be an event:
 			Would X use the event tip system?
 			If a mutation made events more likely, should X be more likely?
-			If a crown made events ignore the area, should X spawn anywhere?
+			If a crown made events spawn in any area, should X spawn anywhere?
 			
 		1) Add an event using 'teevent_add(_event)'
 		
@@ -514,10 +514,10 @@
 					 // Extra:
 					var _canTent = true;
 					with(array_shuffle(floors)){
-						var	_fx = bbox_center_x,
-							_fy = bbox_center_y,
-							_fw = bbox_width,
-							_fh = bbox_height,
+						var	_fx   = bbox_center_x,
+							_fy   = bbox_center_y,
+							_fw   = bbox_width,
+							_fh   = bbox_height,
 							_side = sign(_fx - other.x);
 							
 						if(_side == 0) _side = choose(-1, 1);
@@ -826,8 +826,8 @@
 	 // Delete Lone Walls:
 	with(Wall) if(place_meeting(x, y, Floor)){
 		var _delete = true;
-		for(var d = 0; d < 360; d += 90){
-			if(place_meeting(x + lengthdir_x(16, d), y + lengthdir_y(16, d), Wall)){
+		for(var _dir = 0; _dir < 360; _dir += 90){
+			if(place_meeting(x + lengthdir_x(16, _dir), y + lengthdir_y(16, _dir), Wall)){
 				_delete = false;
 				break;
 			}
@@ -903,14 +903,14 @@
 	
 	 // Nest Corner Walls:
 	with(instances_matching_gt(Floor, "id", _minID)){
-		var	_x1 = bbox_left,
-			_y1 = bbox_top,
-			_x2 = bbox_right + 1,
-			_y2 = bbox_bottom + 1,
-			_cx = bbox_center_x,
-			_cy = bbox_center_y,
-			_w = _x2 - _x1,
-			_h = _y2 - _y1,
+		var	_x1    = bbox_left,
+			_y1    = bbox_top,
+			_x2    = bbox_right + 1,
+			_y2    = bbox_bottom + 1,
+			_cx    = bbox_center_x,
+			_cy    = bbox_center_y,
+			_w     = _x2 - _x1,
+			_h     = _y2 - _y1,
 			_break = false;
 			
 		for(var	_x = _x1; _x < _x2; _x += _w - 16){
@@ -981,9 +981,7 @@
 			 // The Bath:
 			with(obj_create(x, y, "SludgePool")){
 				sprite_index = msk.SewerPool;
-				spr_floor = spr.SewerPool;
-				detail = false;
-				
+				spr_floor    = spr.SewerPool;
 				obj_create(x + 16, y - 64, "SewerDrain");
 			}
 			
@@ -992,7 +990,7 @@
 				repeat(2 + irandom(1)){
 					with(obj_create(x - irandom(16), y + orandom(24), "Cat")){
 						right = choose(-1, 1);
-						sit = true;
+						sit   = true;
 					}
 				}
 			}
@@ -1303,20 +1301,22 @@
 	
 #define RavenArena_text    return `ENTER ${event_tip}THE RING`;
 #define RavenArena_area    return area_scrapyards;
-#define RavenArena_chance  return ((GameCont.subarea != 3) ? 1/30 : 0);
+#define RavenArena_chance  return 1/40;
 
 #define RavenArena_create
 	var	_w          = 6 + ceil(GameCont.loops / 2.5),
 		_h          = _w,
 		_type       = "round",
 		_dirOff     = 60,
-		_floorDis   = 0,
+		_floorDis   = ((GameCont.subarea == 3) ? -16 : 0),
 		_spawnX     = x,
 		_spawnY     = y,
 		_spawnDis   = 32,
 		_spawnFloor = FloorNormal,
 		_instTop    = [],
-		_instIdle   = [];
+		_instIdle   = [],
+		_wepDis     = random(12),
+		_wepDir     = random(360);
 		
 	floor_set_align(null, null, 32, 32);
 	
@@ -1388,42 +1388,63 @@
 			}
 		}
 		
-		 // Generic Enemies:
-		var	_obj = [choose(Raven, Salamander, Exploder), choose(Sniper, MeleeFake)],
-			_ang = random(360),
-			_num = 4 * (1 + GameCont.loops);
-			
-		if(GameCont.loops > 0){
-			array_push(_obj, choose("Pelican", BuffGator));
+		 // Fire Pit:
+		if(instance_exists(teevent_get_active("FirePit"))){
+			obj_create(x, y, "TrapSpin");
+			_wepDis += 32;
 		}
 		
-		for(var _dir = _ang; _dir < _ang + 360; _dir += (360 / _num)){
-			var _objNum = array_length(_instIdle);
-			if(_objNum >= array_length(_obj)){
-				_objNum = irandom(array_length(_obj) - 1);
+		 // Enemies:
+		else{
+			 // Big Dog:
+			if(instance_exists(BecomeScrapBoss)){
+				with(instance_nearest(x, y, BecomeScrapBoss)){
+					x = other.x;
+					y = other.y;
+				}
+				_wepDis += 48;
 			}
-			with(obj_create(x, y, _obj[_objNum])){
-				move_contact_solid(_dir + orandom(20), random_range(16, 64));
-				array_push(_instIdle, id);
+			
+			 // Generic Enemies:
+			if(!instance_exists(BecomeScrapBoss) || GameCont.loops > 0){
+				var	_obj = [choose(Raven, Salamander, Exploder), choose(Sniper, MeleeFake)],
+					_ang = random(360),
+					_num = 4 * (1 + GameCont.loops);
+					
+				if(GameCont.loops > 0){
+					array_push(_obj, choose("Pelican", BuffGator));
+				}
 				
-				 // Loop Groups:
-				if(chance(GameCont.loops, 60)){
-					repeat(3 + GameCont.loops){
-						array_push(_instIdle, instance_copy(false));
+				for(var _dir = _ang; _dir < _ang + 360; _dir += (360 / _num)){
+					var _objNum = array_length(_instIdle);
+					if(_objNum >= array_length(_obj)){
+						_objNum = irandom(array_length(_obj) - 1);
+					}
+					with(obj_create(x, y, _obj[_objNum])){
+						move_contact_solid(_dir + orandom(20), random_range(16, 64));
+						array_push(_instIdle, id);
+						
+						 // Loop Groups:
+						if(chance(GameCont.loops, 60)){
+							repeat(3 + GameCont.loops){
+								array_push(_instIdle, instance_copy(false));
+							}
+						}
 					}
 				}
 			}
 		}
 		
 		 // Weapon:
-		with(obj_create(x + orandom(8), y + orandom(8), "WepPickupGrounded")){
+		with(obj_create(x + lengthdir_x(_wepDis, _wepDir), y + lengthdir_y(_wepDis, _wepDir), "WepPickupGrounded")){
 			with(target){
 				var _noWep = [];
 				with(Player){
 					array_push(_noWep, wep);
 					array_push(_noWep, bwep);
 				}
-				wep = weapon_decide(2, GameCont.hard, false, _noWep);
+				wep  = weapon_decide(2, GameCont.hard, false, _noWep);
+				roll = true;
 			}
 		}
 	}
@@ -1467,20 +1488,48 @@
 	 // More Traps:
 	with(Wall) if(place_meeting(x, y, Floor)){
 		if(array_length(instance_rectangle(bbox_left, bbox_top, bbox_right, bbox_bottom, Trap)) <= 0){
-			instance_create(x, y, Trap);
+			var _spawn = true;
+			with(teevent_get_active("RavenArena")){
+				var _wall = other;
+				with(instances_matching(floors, "", null)){
+					if(place_meeting(x, y, _wall)){
+						_spawn = false;
+						break;
+					}
+				}
+			}
+			if(_spawn){
+				instance_create(x, y, Trap);
+			}
 		}
 	}
-	with(Trap){
+	/*with(Trap){
 		alarm0 = 150;
 		with(instance_copy(false)){
 			side = !side;
 		}
-	}
+	}*/
 	
-	 // Assmans Bad:
-	with(instances_matching([MeleeBandit, MeleeFake], "", null)){
-		instance_create(x, y, Salamander);
-		instance_delete(id);
+	 // Spinny Trap Room:
+	if(!instance_exists(teevent_get_active("RavenArena"))){
+		var _cx  = 0,
+			_cy  = 0,
+			_num = 0;
+			
+		with(FloorNormal){
+			_cx += bbox_center_x;
+			_cy += bbox_center_y;
+			_num++;
+		}
+		if(_num > 0){
+			_cx /= _num;
+			_cy /= _num;
+			floor_set_align(null, null, 32, 32);
+			with(floor_room_create(_cx, _cy, 4, 4, "", point_direction(x, y, _cx, _cy), 30, -32)){
+				obj_create(x, y, "TrapSpin");
+			}
+			floor_reset_align();
+		}
 	}
 	
 	 // Baby Scorches:
