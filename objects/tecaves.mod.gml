@@ -888,13 +888,7 @@
 					sound_play_hit(snd_mele, 0.1);
 					
 					 // Red:
-					if(!area_get_secret(GameCont.area)){
-						GameCont.lastarea    = GameCont.area;
-						GameCont.lastsubarea = GameCont.subarea;
-					}
-					GameCont.area    = area;
-					GameCont.subarea = subarea;
-					GameCont.loops   = loops;
+					area_set(area, subarea, loops);
 					with(obj_create(x, y, "WarpPortal")){
 						event_perform(ev_step, ev_step_normal);
 					}
@@ -933,10 +927,12 @@
 #define CrystalHeartBullet_create(_x, _y)
 	with(instance_create(_x, _y, CustomProjectile)){
 		 // Visual:
-		spr_bot      = spr.CrystalHeartBulletMid;
-		spr_top      = spr.CrystalHeartBulletOut;
-		sprite_index = spr_top;
+		sprite_index = spr.CrystalHeartBullet;
+		spr_dead     = spr.CrystalHeartBulletHit;
+		spr_ring     = spr.CrystalHeartBulletRing;
+		spr_trail    = spr.CrystalHeartBulletTrail;
 		image_speed  = 0.4;
+		area_color   = c_white;
 		
 		 // Vars:
 		mask_index = mskFlakBullet;
@@ -945,7 +941,6 @@
 		force      = 12;
 		typ        = 0;
 		maxspeed   = 12;
-		wall_break = 3;
 		area       = "red";
 		subarea    = 1;
 		loops      = GameCont.loops;
@@ -966,35 +961,30 @@
 	
 	 // Determine Area:
 	if(area_chaos){
-		var _area = [GameCont.area, area],
+		var _area  = [GameCont.area, area],
 			_loops = GameCont.loops;
-					
-		if(chance(1, 2)){
-			var a = [GameCont.area];
+			
+		 // Secret:
+		if(area_get_secret(GameCont.area)){
+			_area = [GameCont.lastarea, area];
+		}
+		
+		 // Normal:
+		else if(chance(1, 2)){
+			var _pick = [GameCont.area];
 			
 			while(true){
-				switch(a[irandom(array_length(a) - 1)]){
-					case area_campfire     :                                     break;
-					case area_desert       : a = [area_sewers, area_scrapyards]; break;
-					case "coast"           : a = [area_scrapyards, area_jungle]; break;
-					case area_oasis        :
-					case "oasis"           : a = [area_sewers, area_labs];       break;
-					case "trench"          : a = [area_sewers, area_caves];      break;
-					case area_sewers       : a = [area_caves];                   break;
-					case area_pizza_sewers :
-					case "pizza"           :                                     break;
-					case "lair"            :                                     break;
-					case area_scrapyards   : a = [area_sewers, area_city];       break;
-					case area_mansion      :                                     break;
-					case area_crib         :                                     break;
-					case area_caves        : a = [area_labs];                    break;
-					case area_cursed_caves :                                     break;
-					case area_city         : a = [area_labs, area_palace];       break;
-					case area_jungle       :                                     break;
-					case area_labs         : a = [area_sewers, area_caves];      break;
-					case area_palace       : a = [area_scrapyards, area_labs];   break;
-					case area_hq           :                                     break;
-					case "red"             :                                     break;
+				switch(_pick[irandom(array_length(_pick) - 1)]){
+					case area_desert     : _pick = [area_sewers, area_scrapyards]; break;
+					case area_sewers     : _pick = [area_caves];                   break;
+					case area_scrapyards : _pick = [area_sewers, area_city];       break;
+					case area_caves      : _pick = [area_labs];                    break;
+					case area_city       : _pick = [area_labs, area_palace];       break;
+					case area_labs       : _pick = [area_sewers, area_caves];      break;
+					case area_palace     : _pick = [area_scrapyards, area_labs];   break;
+					case "coast"         : _pick = [area_scrapyards, area_jungle]; break;
+					case "oasis"         : _pick = [area_sewers, area_labs];       break;
+					case "trench"        : _pick = [area_sewers, area_caves];      break;
 				}
 				
 				 // Decrement Loop:
@@ -1005,7 +995,7 @@
 			}
 			
 			 // Woah:
-			_area = a;
+			_area = _pick;
 		}
 		
 		area  = _area[irandom(array_length(_area) - 1)];
@@ -1014,7 +1004,7 @@
 	
 	 // Colorize:
 	var _col = area_get_back_color(area);
-	image_blend = make_color_hsv(
+	area_color =  make_color_hsv(
 		color_get_hue(_col),
 		color_get_saturation(_col),
 		lerp(color_get_value(_col), 255, 0.5)
@@ -1040,10 +1030,11 @@
 	}
 	if(current_frame_active){
 		with(instance_create(x, y, DiscTrail)){
-			sprite_index = spr.CrystalHeartBulletTrail;
-			image_blend  = other.image_blend;
-			image_angle  = random(360);
-			depth        = other.depth + 1;
+			sprite_index = other.spr_trail;
+			image_blend  = other.area_color;
+			image_angle  = other.image_angle + orandom(120);
+			image_xscale = other.image_xscale;
+			image_yscale = other.image_yscale;
 		}
 	}
 	
@@ -1053,8 +1044,8 @@
 	}
 	
 #define CrystalHeartBullet_draw
-	draw_sprite_ext(spr_bot, image_index, x, y, image_xscale, image_yscale, image_angle, c_white, image_alpha);
 	draw_self();
+	draw_sprite_ext(spr_ring, image_index, x, y, image_xscale, image_yscale, image_angle, area_color, image_alpha);
 	
 #define CrystalHeartBullet_alrm0
 	 // Accelerate:
@@ -1080,28 +1071,38 @@
 	
 #define CrystalHeartBullet_wall
 	 // Melt Through a Few Walls:
-	if(wall_break > 0 && instance_is(other, Wall)){
-		wall_break--;
+	if(min(image_xscale, image_yscale) > 0.85){
+		image_xscale -= 0.05;
+		image_yscale -= 0.05;
+		
+		 // Sound:
+		var _snd = sound_play_hit_ext(sndGammaGutsProc, 0.8 + random(0.4), 1.5);
+		
+		 // Break:
 		with(other){
 			instance_create(x, y, FloorExplo);
+			sound_stop(_snd + 1); // stops the wall break sound bro i didnt like how it sounded
 			instance_destroy();
 		}
-		
-		 // Sounds:
-		var _snd = sound_play_hit_ext(sndGammaGutsProc, 0.8 + random(0.4), 1.5);
-		sound_stop(_snd - 1); // stops the wall break sound bro i didnt like how it sounded
 	}
 	
 	 // Tunnel Time:
 	else instance_destroy();
 	
 #define CrystalHeartBullet_destroy
-	 // Effects:
+	 // Sounds:
 	sound_play_hit_ext(sndGammaGutsKill,      0.8 + random(0.3), 3);
 	sound_play_hit_ext(sndNothing2Beam,       0.7 + random(0.2), 3);
 	sound_play_hit_ext(sndHyperCrystalSearch, 0.6 + random(0.3), 1.5);
+	
+	 // Effects:
 	with(instance_create(x, y, BulletHit)){
-		sprite_index = sprEFlakHit;
+		sprite_index = other.spr_dead;
+	}
+	with(instance_create(x, y, ThrowHit)){
+		image_blend = other.area_color;
+		image_speed = 0.5;
+		depth       = 0;
 	}
 	view_shake_max_at(x, y, 20);
 	sleep(50);
@@ -2897,9 +2898,7 @@
 		}
 		
 		 // Warp:
-		GameCont.area    = area;
-		GameCont.subarea = subarea;
-		GameCont.loops   = loops;
+		area_set(area, subarea, loops);
 		obj_create(x, y, "WarpPortal");
 	}
 	
@@ -3042,8 +3041,7 @@
 	 // Warpin Help:
 	with(portal) if(anim_end){
 		if(array_exists(instance_is(self, BigPortal) ? [sprBigPortalDisappear] : [sprPortalDisappear, sprProtoPortalDisappear, sprPopoPortalDisappear], sprite_index)){
-			GameCont.area = "red";
-			GameCont.subarea = 0;
+			area_set("red", 0, GameCont.loops);
 			event_perform(ev_other, ev_animation_end);
 		}
 	}
@@ -3721,6 +3719,7 @@
 #define corpse_drop(_dir, _spd)                                                         return  mod_script_call(   'mod', 'telib', 'corpse_drop', _dir, _spd);
 #define rad_drop(_x, _y, _raddrop, _dir, _spd)                                          return  mod_script_call_nc('mod', 'telib', 'rad_drop', _x, _y, _raddrop, _dir, _spd);
 #define rad_path(_inst, _target)                                                        return  mod_script_call_nc('mod', 'telib', 'rad_path', _inst, _target);
+#define area_set(_area, _subarea, _loops)                                               return  mod_script_call_nc('mod', 'telib', 'area_set', _area, _subarea, _loops);
 #define area_get_name(_area, _subarea, _loops)                                          return  mod_script_call_nc('mod', 'telib', 'area_get_name', _area, _subarea, _loops);
 #define area_get_sprite(_area, _spr)                                                    return  mod_script_call(   'mod', 'telib', 'area_get_sprite', _area, _spr);
 #define area_get_subarea(_area)                                                         return  mod_script_call_nc('mod', 'telib', 'area_get_subarea', _area);

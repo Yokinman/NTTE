@@ -17,15 +17,15 @@
 #define weapon_reloaded
 	sound_play(sndLightningReload);
 	
-#define weapon_fire(w)
-	var f = weapon_fire_init(w);
-	w = f.wep;
+#define weapon_fire(_wep)
+	var _fire = weapon_fire_init(_wep);
+	_wep = _fire.wep;
 	
 	 // Burst Fire:
 	if(fork()){
 		repeat(3){
-			var	_last = variable_instance_get(f.creator, "electroplasma_last", noone),
-				_side = variable_instance_get(f.creator, "electroplasma_side", 1);
+			var	_last = variable_instance_get(_fire.creator, "electroplasma_last", noone),
+				_side = variable_instance_get(_fire.creator, "electroplasma_side", 1);
 				
 			 // Electro Plasma:
 			with(projectile_create(
@@ -39,7 +39,7 @@
 				tether_inst = _last;
 				_last = id;
 			}
-			with(f.creator){
+			with(_fire.creator){
 				electroplasma_last = _last;
 				electroplasma_side = -_side;
 			}

@@ -726,25 +726,9 @@
 	if(broken){
 		sound_play_hit_ext(sndHitRock, 1.4 + random(0.2), 2.5);
 		
-		 // For u yokin:
-		var _pickup = false;
-		with(Player){
-			if(wep_raw(wep) == "scythe" || wep_raw(bwep) == "scythe"){
-				_pickup = true;
-				break;
-			}
-		}
-		if(_pickup){
-			repeat(2) with(obj_create(x, y, "BonePickup")){
-				sprite_index = spr.BoneShard;
-				motion_add(random(360), 2);
-			}
-		}
-		
-		 // Shard Time:
-		else repeat(2) with(instance_create(x, y, Shell)){
+		 // for u yokin:
+		repeat(2) with(obj_create(x, y, "BonePickup")){
 			sprite_index = spr.BoneShard;
-			image_speed = 0;
 			motion_add(random(360), 2);
 		}
 	}
@@ -1549,12 +1533,9 @@
 	
 #define CoastBoss_death
 	 // Coast Entrance:
+	GameCont.killenemies = true;
+	area_set("coast", 0, GameCont.loops);
 	instance_create(x, y, Portal);
-	with(GameCont){
-		area = "coast";
-		subarea = 0;
-		killenemies = true;
-	}
 	
 	 // Boss Win Music:
 	with(MusCont) alarm_set(1, 1);
@@ -2328,6 +2309,7 @@
 #define corpse_drop(_dir, _spd)                                                         return  mod_script_call(   'mod', 'telib', 'corpse_drop', _dir, _spd);
 #define rad_drop(_x, _y, _raddrop, _dir, _spd)                                          return  mod_script_call_nc('mod', 'telib', 'rad_drop', _x, _y, _raddrop, _dir, _spd);
 #define rad_path(_inst, _target)                                                        return  mod_script_call_nc('mod', 'telib', 'rad_path', _inst, _target);
+#define area_set(_area, _subarea, _loops)                                               return  mod_script_call_nc('mod', 'telib', 'area_set', _area, _subarea, _loops);
 #define area_get_name(_area, _subarea, _loops)                                          return  mod_script_call_nc('mod', 'telib', 'area_get_name', _area, _subarea, _loops);
 #define area_get_sprite(_area, _spr)                                                    return  mod_script_call(   'mod', 'telib', 'area_get_sprite', _area, _spr);
 #define area_get_subarea(_area)                                                         return  mod_script_call_nc('mod', 'telib', 'area_get_subarea', _area);

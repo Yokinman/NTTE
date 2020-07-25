@@ -13,9 +13,9 @@
 #define weapon_load   return 7; // 0.43 Seconds
 #define weapon_avail  return unlock_get("pack:oasis");
 
-#define weapon_fire(w)
-	var f = weapon_fire_init(w);
-	w = f.wep;
+#define weapon_fire(_wep)
+	var _fire = weapon_fire_init(_wep);
+	_wep = _fire.wep;
 	
 	 // Hyper Bubble:
 	var	_l = 20,

@@ -31,10 +31,14 @@
 	 // Type:
 	return type_melee;
 	
-#define weapon_sprt_hud(w)
+#define weapon_sprt_hud(_wep)
 	 // Normal Outline:
 	if(instance_is(self, Player)){
-		if((wep == w && curse) || (bwep == w && bcurse) || weapon_get_rads(w) > 0){
+		if(
+			weapon_get_rads(_wep) > 0
+			|| (wep  == _wep && curse  > 0)
+			|| (bwep == _wep && bcurse > 0)
+		){
 			return global.sprWepHUD;
 		}
 	}
@@ -42,9 +46,9 @@
 	 // Red Outline:
 	return global.sprWepHUDRed;
 	
-#define weapon_fire(w)
-	var f = weapon_fire_init(w);
-	w = f.wep;
+#define weapon_fire(_wep)
+	var _fire = weapon_fire_init(_wep);
+	_wep = _fire.wep;
 	
 	 // Slash:
 	var _skill = skill_get(mut_long_arms),
@@ -61,7 +65,7 @@
 	)){
 		sprite_index = spr.EntanglerSlash;
 		image_yscale *= _flip;
-		//red_ammo      = weapon_get_red(w);
+		//red_ammo      = weapon_get_red(_wep);
 		//can_charm     = (red_ammo > 0);
 	}
 	

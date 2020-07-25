@@ -2814,6 +2814,33 @@
 	
 	return null;
 	
+#define area_set(_area, _subarea, _loops)
+	/*
+		Sets the area and remembers the last non-secret area
+		Also turns Crystal Caves into Cursed Crystal Caves if a Player has a cursed weapon
+	*/
+	
+	with(GameCont){
+		 // Remember:
+		if(!area_get_secret(area)){
+			lastarea    = area;
+			lastsubarea = subarea;
+		}
+		
+		 // Set Area:
+		area    = _area;
+		subarea = _subarea;
+		loops   = _loops;
+		
+		 // Cursed:
+		if(area == area_caves){
+			with(Player) if(curse > 0 || bcurse > 0){
+				other.area = area_cursed_caves;
+				break;
+			}
+		}
+	}
+	
 #define area_get_name(_area, _subarea, _loops)
 	/*
 		Returns the current area's name as it would appear on the map
@@ -3602,7 +3629,7 @@
 			_lastArea = GameCont.area;
 			
 		if(!is_undefined(global.floor_style)){
-			GameCont.area = 0;
+			GameCont.area = area_campfire;
 			with(instance_create(_x, _y, FloorMaker)){
 				with(instances_matching_gt(Floor, "id", id)) instance_delete(id);
 				styleb = global.floor_style;
@@ -5584,11 +5611,12 @@
 		'sound_play_hit()' distance-based sound, but with pitch and volume arguments
 	*/
 	
-	var _s = sound_play_hit(_sound, 0);
-	sound_pitch(_s, _pitch);
-	sound_volume(_s, audio_sound_get_gain(_s) * _volume);
+	var _snd = sound_play_hit(_sound, 0);
 	
-	return _s;
+	sound_pitch(_snd, _pitch);
+	sound_volume(_snd, audio_sound_get_gain(_snd) * _volume);
+	
+	return _snd;
 
 #define rad_drop(_x, _y, _raddrop, _dir, _spd)
 	/*

@@ -19,65 +19,56 @@
 		stab_dis : 14,
 		wepangle : 0,
 		primary  : true,
-		visible  : true
+		visible  : true,
+		last     : 0
 	};
 	
 #macro spr global.spr
 
-#define weapon_name(w)   return (weapon_avail(w) ? ((weapon_gold(w) != 0) ? "GOLDEN " : "") + "TRIDENT" : "LOCKED");
-#define weapon_text(w)   return ((weapon_get_gold(w) != 0) ? "SHINE THROUGH THE SKY" : "SCEPTER OF THE @bSEA");
-#define weapon_swap(w)   return (lq_defget(w, "visible", true) ? sndSwapSword : sndSwapCursed);
-#define weapon_sprt(w)   return (lq_defget(w, "visible", true) ? (weapon_avail() ? ((weapon_get_gold(w) != 0) ? global.sprWepGold : global.sprWep) : global.sprWepLocked) : mskNone);
-#define weapon_loadout   return ((argument_count > 0 && weapon_get_gold(argument0) != 0) ? global.sprWepGoldLoadout : global.sprWepLoadout);
-#define weapon_area(w)   return ((argument_count > 0 && weapon_avail(w) && weapon_get_gold(w) == 0) ? 7 : -1); // 3-2
-#define weapon_gold(w)   return (lq_defget(w, "gold", false) ? -1 : 0);
-#define weapon_type(w)   return type_melee;
-#define weapon_auto(w)   return true;
-#define weapon_melee(w)  return false;
-#define weapon_avail     return (unlock_get("pack:coast") || unlock_get("wep:" + mod_current));
-#define weapon_chrg      return true; // Defpack 4
+#define weapon_name(_wep)   return (weapon_avail(_wep) ? ((weapon_gold(_wep) != 0) ? "GOLDEN " : "") + "TRIDENT" : "LOCKED");
+#define weapon_text(_wep)   return ((weapon_get_gold(_wep) != 0) ? "SHINE THROUGH THE SKY" : "SCEPTER OF THE @bSEA");
+#define weapon_swap(_wep)   return (lq_defget(_wep, "visible", true) ? sndSwapSword : sndSwapCursed);
+#define weapon_sprt(_wep)   return (lq_defget(_wep, "visible", true) ? (weapon_avail() ? ((weapon_get_gold(_wep) != 0) ? global.sprWepGold : global.sprWep) : global.sprWepLocked) : mskNone);
+#define weapon_loadout      return ((argument_count > 0 && weapon_get_gold(argument0) != 0) ? global.sprWepGoldLoadout : global.sprWepLoadout);
+#define weapon_area(_wep)   return ((argument_count > 0 && weapon_avail(_wep) && weapon_get_gold(_wep) == 0) ? 7 : -1); // 3-2
+#define weapon_gold(_wep)   return (lq_defget(_wep, "gold", false) ? -1 : 0);
+#define weapon_type(_wep)   return type_melee;
+#define weapon_auto(_wep)   return true;
+#define weapon_melee(_wep)  return false;
+#define weapon_avail        return (unlock_get("pack:coast") || unlock_get("wep:" + mod_current));
+#define weapon_shrine       return [mut_long_arms, mut_bolt_marrow];
+#define weapon_chrg         return true; // Defpack 4
 
-#define weapon_load(w)
+#define weapon_load(_wep)
 	 // Stab Reload:
-	if(is_object(w) && instance_is(self, Player)){
-		if((wep == w && reload > 0 && !can_shoot) || (bwep == w && breload > 0 && !bcan_shoot)){
-			return w.stab_dis;
+	if(is_object(_wep) && instance_is(self, Player)){
+		if((wep == _wep && reload > 0 && !can_shoot) || (bwep == _wep && breload > 0 && !bcan_shoot)){
+			return _wep.stab_dis;
 		}
 	}
 	
 	 // Normal:
 	return current_time_scale;
 	
-#define weapon_fire(w)
-	var f = weapon_fire_init(w);
-	w = f.wep;
+#define weapon_fire(_wep)
+	var _fire = weapon_fire_init(_wep);
+	_wep = _fire.wep;
 	
 	 // Charge Trident:
-	if(w.visible){
-		w.chrg = true;
-		w.primary = !(f.spec && f.roids);
+	if(_wep.visible){
+		_wep.chrg = true;
+		_wep.primary = !(_fire.spec && _fire.roids);
 		
 		 // Charging:
-		if(w.chrg_num < w.chrg_max){
-			 // Determine Charge Speed:
-			var s = 1;
-			if(race == "venuz"){
-				s *= 1.2 + (0.4 * ultra_get(race, 2));
-			}
-			with(f.creator) if(instance_is(self, Player)){
-				s *= 1 + (skill_get(mut_stress) * (1 - (my_health / maxhealth)));
-				s *= reloadspeed;
-			}
-			
-			 // Charge:
-			w.chrg_num += s * current_time_scale;
+		if(_wep.chrg_num < _wep.chrg_max){
+			_wep.chrg_num += current_time_scale;
 			
 			 // Charging FX:
-			sound_play_pitch(sndOasisMelee, 1 / (1 - ((w.chrg_num / w.chrg_max) * 0.25)));
+			sound_play_pitch(sndOasisMelee, 1 / (1 - ((_wep.chrg_num / _wep.chrg_max) * 0.25)));
 			
 			 // Full Charge:
-			if(w.chrg_num >= w.chrg_max){
-				w.chrg_num = w.chrg_max;
+			if(_wep.chrg_num >= _wep.chrg_max){
+				_wep.chrg_num = _wep.chrg_max;
 				
 				 // FX:
 				var	_l = 16,
@@ -93,30 +84,33 @@
 		
 		 // Fully Charged - Blink:
 		else if(frame_active(12)){
-			with(f.creator) if(instance_is(self, Player)){
+			with(_fire.creator) if(instance_is(self, Player)){
 				gunshine = 2;
 			}
 		}
 		
 		 // Pullback:
-		var n = (w.chrg_num / w.chrg_max);
-		weapon_post(9 * n, 8 * n * current_time_scale, 0);
+		if(_wep.last < current_frame){
+			_wep.last = current_frame;
+			var _num = (_wep.chrg_num / _wep.chrg_max);
+			weapon_post(9 * _num, 8 * _num * current_time_scale, 0);
+		}
 		
 		 // Pop Pop, Blood Gamble:
-		if(f.spec && !f.roids){
-			w.chrg_num = w.chrg_max;
+		if(_fire.spec && !_fire.roids){
+			_wep.chrg_num = _wep.chrg_max;
 		}
 		
 		 // Charge Controller:
-		if(!instance_exists(w.chrg_obj)){
-			w.chrg_obj = script_bind_step(trident_chrg, 0, w);
+		if(!instance_exists(_wep.chrg_obj)){
+			_wep.chrg_obj = script_bind_step(trident_chrg, 0, _wep);
 		}
-		with(w.chrg_obj){
+		with(_wep.chrg_obj){
 			x         = other.x;
 			y         = other.y;
 			direction = other.gunangle;
 			team      = other.team;
-			creator   = f.creator;
+			creator   = _fire.creator;
 		}
 	}
 	
@@ -137,7 +131,7 @@
 								wep          = _wep;
 							}
 						}
-						if(instance_is(self, Player)){
+						if(instance_is(self, Player) || instance_is(self, FireCont)){
 							weapon_post(wkick, 50, 5);
 						}
 						wep_set(_wep.primary, "wkick", -4);

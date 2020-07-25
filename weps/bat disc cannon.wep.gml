@@ -14,29 +14,29 @@
 		canload : true
 	};
 	
-#define weapon_name         return (weapon_avail() ? "SAWBLADE CANNON" : "LOCKED");
-#define weapon_text         return "THEY STAND NO CHANCE";
-#define weapon_swap         return sndSwapShotgun;
-#define weapon_sprt         return (weapon_avail() ? global.sprWep : global.sprWepLocked);
-#define weapon_sprt_hud(w)  return weapon_ammo_hud(w);
-#define weapon_area         return (weapon_avail() ? 11 : -1); // 5-2
-#define weapon_type         return type_melee;
-#define weapon_load         return 20; // 0.66 Seconds
-#define weapon_auto         return true;
-#define weapon_melee        return false;
-#define weapon_avail        return unlock_get("pack:lair");
-#define weapon_shrine       return mut_bolt_marrow;
+#define weapon_name            return (weapon_avail() ? "SAWBLADE CANNON" : "LOCKED");
+#define weapon_text            return "THEY STAND NO CHANCE";
+#define weapon_swap            return sndSwapShotgun;
+#define weapon_sprt            return (weapon_avail() ? global.sprWep : global.sprWepLocked);
+#define weapon_sprt_hud(_wep)  return weapon_ammo_hud(_wep);
+#define weapon_area            return (weapon_avail() ? 11 : -1); // 5-2
+#define weapon_type            return type_melee;
+#define weapon_load            return 20; // 0.66 Seconds
+#define weapon_auto            return true;
+#define weapon_melee           return false;
+#define weapon_avail           return unlock_get("pack:lair");
+#define weapon_shrine          return mut_bolt_marrow;
 
-#define weapon_fire(w)
-	var f = weapon_fire_init(w);
-	w = f.wep;
+#define weapon_fire(_wep)
+	var _fire = weapon_fire_init(_wep);
+	_wep = _fire.wep;
 	
 	 // Fire:
-	if(weapon_ammo_fire(w)){
+	if(weapon_ammo_fire(_wep)){
 		 // Disc:
 		with(projectile_create(x, y, "BatDisc", gunangle + orandom(4 * accuracy), 0)){
-			ammo = ((other.infammo == 0) ? w.cost : 0);
-			wep  = w;
+			ammo = ((other.infammo == 0) ? _wep.cost : 0);
+			wep  = _wep;
 			big  = true;
 		}
 		

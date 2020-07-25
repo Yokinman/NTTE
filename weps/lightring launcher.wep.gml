@@ -17,13 +17,13 @@
 #define weapon_reloaded
 	sound_play(sndLightningReload);
 	
-#define weapon_fire(w)
-	var f = weapon_fire_init(w);
-	w = f.wep;
+#define weapon_fire(_wep)
+	var _fire = weapon_fire_init(_wep);
+	_wep = _fire.wep;
 	
 	 // Lightning Disc:
 	with(projectile_create(x, y, "LightningDisc", gunangle, 10)){
-		roids = f.roids;
+		roids = _fire.roids;
 	}
 	
 	 // Sounds:

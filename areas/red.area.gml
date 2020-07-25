@@ -172,7 +172,7 @@
 	 // Next Area:
 	else{
 		var _next = area_next();
-		area = _next[0];
+		area    = _next[0];
 		subarea = _next[1];
 	}
 	
@@ -182,21 +182,7 @@
 	 // Warping:
 	with(instances_matching(CustomObject, "name", "WarpPortal")){
 		if(!instance_exists(portal)){
-			GameCont.area    = area;
-			GameCont.subarea = subarea;
-			GameCont.loops   = loops;
-			if(!area_get_secret(GameCont.area)){
-				GameCont.lastarea    = GameCont.area;
-				GameCont.lastsubarea = GameCont.subarea;
-			}
-			
-			 // Cursed:
-			if(GameCont.area == area_caves){
-				with(Player) if(curse > 0 || bcurse > 0){
-					GameCont.area = area_cursed_caves;
-					break;
-				}
-			}
+			area_set(area, subarea, loops);
 		}
 	}
 	
@@ -596,6 +582,7 @@
 #define corpse_drop(_dir, _spd)                                                         return  mod_script_call(   'mod', 'telib', 'corpse_drop', _dir, _spd);
 #define rad_drop(_x, _y, _raddrop, _dir, _spd)                                          return  mod_script_call_nc('mod', 'telib', 'rad_drop', _x, _y, _raddrop, _dir, _spd);
 #define rad_path(_inst, _target)                                                        return  mod_script_call_nc('mod', 'telib', 'rad_path', _inst, _target);
+#define area_set(_area, _subarea, _loops)                                               return  mod_script_call_nc('mod', 'telib', 'area_set', _area, _subarea, _loops);
 #define area_get_name(_area, _subarea, _loops)                                          return  mod_script_call_nc('mod', 'telib', 'area_get_name', _area, _subarea, _loops);
 #define area_get_sprite(_area, _spr)                                                    return  mod_script_call(   'mod', 'telib', 'area_get_sprite', _area, _spr);
 #define area_get_subarea(_area)                                                         return  mod_script_call_nc('mod', 'telib', 'area_get_subarea', _area);

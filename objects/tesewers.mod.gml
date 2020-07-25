@@ -4435,6 +4435,7 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 		contact    = false;
 		area       = "pizza";
 		subarea    = 0;
+		loops      = GameCont.loops;
 		
 		 // Floor:
 		with(instances_at(x, y, FloorNormal)){
@@ -4524,13 +4525,10 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 						}
 						
 						 // Area:
-						with(GameCont){
-							area        = other.area;
-							subarea     = other.subarea;
-							killenemies = true;
-						}
+						area_set(area, subarea, loops);
 						
 						 // Portal:
+						GameCont.killenemies = true;
 						with(instance_create(x, y, Portal)){
 							image_alpha = 0;
 							mask_index = mskExploder;
@@ -4639,16 +4637,16 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 		snd_dead = sndStatueDead;
 		
 		 // Vars:
-		mask_index = msk.PizzaDrain;
-		maxhealth = 40;
-		team = 0;
-		size = 3;
-		area = "lair";
-		subarea = 1;
-		loops = GameCont.loops;
-		styleb = 1;
+		mask_index   = msk.PizzaDrain;
+		maxhealth    = 40;
+		team         = 0;
+		size         = 3;
+		area         = "lair";
+		subarea      = 1;
+		loops        = GameCont.loops;
+		styleb       = 1;
 		hallway_size = 320;
-		my_floor = noone;
+		my_floor     = noone;
 		
 		 // Cool Floor:
 		with(instance_nearest_bbox(_x - 16, _y, Floor)){
@@ -5098,8 +5096,8 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 		sprite_index = spr_idle;
 		
 		 // Vars:
-		area = area_sewers;
-		styleb = 0;
+		area         = area_sewers;
+		styleb       = 0;
 		hallway_size = 160;
 		
 		 // Room Type:
@@ -5782,6 +5780,7 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 #define corpse_drop(_dir, _spd)                                                         return  mod_script_call(   'mod', 'telib', 'corpse_drop', _dir, _spd);
 #define rad_drop(_x, _y, _raddrop, _dir, _spd)                                          return  mod_script_call_nc('mod', 'telib', 'rad_drop', _x, _y, _raddrop, _dir, _spd);
 #define rad_path(_inst, _target)                                                        return  mod_script_call_nc('mod', 'telib', 'rad_path', _inst, _target);
+#define area_set(_area, _subarea, _loops)                                               return  mod_script_call_nc('mod', 'telib', 'area_set', _area, _subarea, _loops);
 #define area_get_name(_area, _subarea, _loops)                                          return  mod_script_call_nc('mod', 'telib', 'area_get_name', _area, _subarea, _loops);
 #define area_get_sprite(_area, _spr)                                                    return  mod_script_call(   'mod', 'telib', 'area_get_sprite', _area, _spr);
 #define area_get_subarea(_area)                                                         return  mod_script_call_nc('mod', 'telib', 'area_get_subarea', _area);

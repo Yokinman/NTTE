@@ -12,42 +12,44 @@
 		buff : false
 	};
 	
-#define weapon_name         return (weapon_avail() ? "VAMPIRE" : "LOCKED");
-#define weapon_text         return "HEMOELECTRICITY";
-#define weapon_swap         return sndSwapEnergy;
-#define weapon_sprt         return (weapon_avail() ? global.sprWep : global.sprWepLocked);
-#define weapon_sprt_hud(w)  return weapon_ammo_hud(w);
-#define weapon_area         return (weapon_avail() ? 11 : -1); // 5-2
-#define weapon_type         return type_melee;
-#define weapon_load         return 5; // 0.16 Seconds
-#define weapon_auto(w)      return ((is_object(w) && w.ammo < w.cost) ? -1 : true);
-#define weapon_melee        return false;
-#define weapon_avail        return unlock_get("pack:lair");
+#define weapon_name            return (weapon_avail() ? "VAMPIRE" : "LOCKED");
+#define weapon_text            return "HEMOELECTRICITY";
+#define weapon_swap            return sndSwapEnergy;
+#define weapon_sprt            return (weapon_avail() ? global.sprWep : global.sprWepLocked);
+#define weapon_sprt_hud(_wep)  return weapon_ammo_hud(_wep);
+#define weapon_area            return (weapon_avail() ? 11 : -1); // 5-2
+#define weapon_type            return type_melee;
+#define weapon_load            return 5; // 0.16 Seconds
+#define weapon_auto(_wep)      return true;
+#define weapon_melee           return false;
+#define weapon_avail           return unlock_get("pack:lair");
 
-#define weapon_fire(w)
-	var f = weapon_fire_init(w);
-	w = f.wep;
+#define weapon_fire(_wep)
+	var _fire = weapon_fire_init(_wep);
+	_wep = _fire.wep;
 	
 	 // Fire:
-	if(weapon_ammo_fire(w)){
+	if(weapon_ammo_fire(_wep)){
 		 // Bat Coil:
 		with(projectile_create(x, y, "TeslaCoil", gunangle, 0)){
 			dist_max = 64;
 			time     = 7 * (1 + skill_get(mut_laser_brain));
 			bat      = true;
-			roids    = f.roids;
+			roids    = _fire.roids;
+			
+			 // Steroids Offset:
 			if(roids){
 				creator_offy -= 4;
 			}
 		}
 		
 		 // Refill:
-		if(w.ammo <= 0 && instance_is(self, Player)){
-			w.ammo = w.amax * (1 + skill_get(mut_back_muscle));
+		if(_wep.ammo <= 0 && instance_is(self, Player)){
+			_wep.ammo = _wep.amax * (1 + skill_get(mut_back_muscle));
 			
 			 // Hurt:
-			projectile_hit_raw(f.creator, 1, false);
-			lasthit = [weapon_get_sprt(w), "PLAYING GOD"];
+			projectile_hit_raw(_fire.creator, 1, false);
+			lasthit = [weapon_get_sprt(_wep), "PLAYING GOD"];
 			
 			 // Hurt FX:
 			if(my_health > 0){
@@ -73,7 +75,7 @@
 		}
 		
 		 // Effects:
-		if(array_length(instances_matching(instances_matching(instances_matching(instances_matching(CustomObject, "name", "TeslaCoil"), "bat", true), "creator", f.creator), "roids", f.roids)) <= 1){
+		if(array_length(instances_matching(instances_matching(instances_matching(instances_matching(CustomObject, "name", "TeslaCoil"), "bat", true), "creator", _fire.creator), "roids", _fire.roids)) <= 1){
 			weapon_post(8, -10, 10);
 			
 			 // Sounds:
@@ -88,7 +90,7 @@
 		}
 		if(skill_get(mut_laser_brain)){
 			with(instance_create(x, y, LaserBrain)){
-				creator = f.creator; // Upgrade FX
+				creator = _fire.creator; // Upgrade FX
 			}
 		}
 	}

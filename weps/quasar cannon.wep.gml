@@ -13,9 +13,9 @@
 #define weapon_load   return 159; // 5.3 Seconds
 #define weapon_avail  return unlock_get("pack:trench");
 
-#define weapon_fire(w)
-	var f = weapon_fire_init(w);
-	w = f.wep;
+#define weapon_fire(_wep)
+	var _fire = weapon_fire_init(_wep);
+	_wep = _fire.wep;
 	
 	 // Quasar Ring:
 	var _brain = skill_get(mut_laser_brain);

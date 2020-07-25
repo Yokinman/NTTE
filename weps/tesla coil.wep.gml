@@ -17,30 +17,30 @@
 #define weapon_reloaded
 	sound_play_pitchvol(sndLightningReload, 0.5 + random(0.5), 0.8);
 	
-#define weapon_fire(w)
-	var f = weapon_fire_init(w);
-	w = f.wep;
+#define weapon_fire(_wep)
+	var _fire = weapon_fire_init(_wep);
+	_wep = _fire.wep;
 	
 	 // Tesla Coil Ball:
 	var	_xdis = 0,
 		_ydis = 0;
 		
 	with(projectile_create(x, y, "TeslaCoil", gunangle, 0)){
-		roids = f.roids;
+		roids = _fire.roids;
 		if(roids) creator_offy -= 4;
 		_xdis = creator_offx;
 		_ydis = creator_offy;
 	}
 	
 	 // Effects:
-	if(array_length(instances_matching(instances_matching(instances_matching(instances_matching(CustomObject, "name", "TeslaCoil"), "bat", false), "creator", f.creator), "roids", f.roids)) <= 1){
+	if(array_length(instances_matching(instances_matching(instances_matching(instances_matching(CustomObject, "name", "TeslaCoil"), "bat", false), "creator", _fire.creator), "roids", _fire.roids)) <= 1){
 		weapon_post(8, -10, 10);
 		
 		 // Ball Appear FX:
-		_ydis *= variable_instance_get(f.creator, "right", 1);
+		_ydis *= variable_instance_get(_fire.creator, "right", 1);
 		with(instance_create(
 			x + lengthdir_x(_xdis, gunangle) + lengthdir_x(_ydis, gunangle - 90),
-			y + lengthdir_y(_xdis, gunangle) + lengthdir_y(_ydis, gunangle - 90) - (4 * f.roids),
+			y + lengthdir_y(_xdis, gunangle) + lengthdir_y(_ydis, gunangle - 90) - (4 * _fire.roids),
 			LightningHit
 		)){
 			motion_add(other.gunangle, 0.5);

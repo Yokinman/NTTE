@@ -26,9 +26,9 @@
 	
 	sound_play_pitchvol(sndOasisExplosionSmall, 1.3, 0.4);
 	
-#define weapon_fire(w)
-	var f = weapon_fire_init(w);
-	w = f.wep;
+#define weapon_fire(_wep)
+	var _fire = weapon_fire_init(_wep);
+	_wep = _fire.wep;
 	
 	 // Slash:
 	var _skill = skill_get(mut_long_arms),

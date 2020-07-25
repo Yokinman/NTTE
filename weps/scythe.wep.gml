@@ -156,37 +156,37 @@
 		}
 	}
 	
-#define weapon_name(w)   return (weapon_avail() ? scythe_get(w, "name") : "LOCKED");
-#define weapon_text(w)   return scythe_get(w, "text");
-#define weapon_swap(w)   return scythe_get(w, "swap");
-#define weapon_sprt(w)   return (weapon_avail() ? scythe_get(w, "sprt") : global.sprWepLocked);
-#define weapon_area      return (weapon_avail() ? 19 : -1); // 1-2 L1
-#define weapon_type      return type_melee;
-#define weapon_load(w)   return scythe_get(w, "load");
-#define weapon_auto(w)   return scythe_get(w, "auto");
-#define weapon_melee(w)  return scythe_get(w, "melee");
-#define weapon_avail     return unlock_get("wep:" + mod_current);
-#define weapon_unlock    return "A PACKAGE DEAL";
-#define weapon_shrine    return [mut_long_arms, mut_shotgun_shoulders, mut_bolt_marrow];
+#define weapon_name(_wep)   return (weapon_avail() ? scythe_get(_wep, "name") : "LOCKED");
+#define weapon_text(_wep)   return scythe_get(_wep, "text");
+#define weapon_swap(_wep)   return scythe_get(_wep, "swap");
+#define weapon_sprt(_wep)   return (weapon_avail() ? scythe_get(_wep, "sprt") : global.sprWepLocked);
+#define weapon_area         return (weapon_avail() ? 19 : -1); // 1-2 L1
+#define weapon_type         return type_melee;
+#define weapon_load(_wep)   return scythe_get(_wep, "load");
+#define weapon_auto(_wep)   return scythe_get(_wep, "auto");
+#define weapon_melee(_wep)  return scythe_get(_wep, "melee");
+#define weapon_avail        return unlock_get("wep:" + mod_current);
+#define weapon_unlock       return "A PACKAGE DEAL";
+#define weapon_shrine       return [mut_long_arms, mut_shotgun_shoulders, mut_bolt_marrow];
 
-#define weapon_sprt_hud(w)
+#define weapon_sprt_hud(_wep)
 	 // Custom Ammo HUD:
-	weapon_ammo_hud(w);
+	weapon_ammo_hud(_wep);
 	
 	 // HUD Sprite:
-	return scythe_get(w, "sprt_hud");
+	return scythe_get(_wep, "sprt_hud");
 	
-#define weapon_fire(w)
-	var f = weapon_fire_init(w);
-	w = f.wep;
+#define weapon_fire(_wep)
+	var _fire = weapon_fire_init(_wep);
+	_wep = _fire.wep;
 	
 	 // Mode Specific:
-	switch(w.mode){
+	switch(_wep.mode){
 		
 		case scythe_basic:
 			
 			var	_skill = skill_get(mut_long_arms),
-				_heavy = ((++w.combo % 3) == 0),
+				_heavy = ((++_wep.combo % 3) == 0),
 				_flip  = sign(wepangle),
 				_dis   = lerp(10, 20, _skill),
 				_dir   = gunangle + orandom(4 * accuracy);
@@ -220,7 +220,7 @@
 			
 		case scythe_shotbow:
 			
-			if(weapon_ammo_fire(w)){
+			if(weapon_ammo_fire(_wep)){
 				var	_dir = gunangle + orandom(12 * accuracy),
 					_off = 20 * accuracy;
 					
@@ -242,7 +242,7 @@
 			
 		case scythe_slugbow:
 			
-			if(weapon_ammo_fire(w)){
+			if(weapon_ammo_fire(_wep)){
 				var _dir = gunangle + orandom(4 * accuracy);
 				
 				 // Slug Bolt:

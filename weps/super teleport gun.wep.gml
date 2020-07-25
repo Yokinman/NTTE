@@ -26,9 +26,9 @@
 	
 	return -1;
 	
-#define weapon_fire(w)
-	var f = weapon_fire_init(w);
-	w = f.wep;
+#define weapon_fire(_wep)
+	var _fire = weapon_fire_init(_wep);
+	_wep = _fire.wep;
 	
 	 // Portal Bullets:
 	var _off = (10 * accuracy);
@@ -39,7 +39,7 @@
 			damage      = 25;
 			
 			 // Remember Me:
-			array_push(w.inst, id);
+			array_push(_wep.inst, id);
 		}
 	}
 	

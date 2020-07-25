@@ -26,33 +26,33 @@
 	 // If not, it don't:
 	return -1;
 	
-#define weapon_type(w)
+#define weapon_type(_wep)
 	 // Return Other Weapon's Ammo Type:
 	if(instance_is(self, AmmoPickup) && instance_is(other, Player)){
 		with(other){
-			return weapon_get_type((w == wep) ? bwep : wep);
+			return weapon_get_type((_wep == wep) ? bwep : wep);
 		}
 	}
 	
 	 // Normal:
 	return type_melee;
 	
-#define weapon_sprt_hud(w)
+#define weapon_sprt_hud(_wep)
 	 // Custom Ammo Drawing:
-	if(lq_defget(w, "ammo", 0) > 1){
-		return weapon_ammo_hud(w);
+	if(lq_defget(_wep, "ammo", 0) > 1){
+		return weapon_ammo_hud(_wep);
 	}
 	
 	 // Normal:
-	return weapon_get_sprt(w);
+	return weapon_get_sprt(_wep);
 	
-#define weapon_fire(w)
-	var f = weapon_fire_init(w);
-	w = f.wep;
+#define weapon_fire(_wep)
+	var _fire = weapon_fire_init(_wep);
+	_wep = _fire.wep;
 	
 	 // Cursed:
 	var _curse = 0;
-	with(f.creator){
+	with(_fire.creator){
 		_curse = max(_curse, wep_get(true, "curse", 0));
 	}
 	if(_curse > 0){
@@ -63,7 +63,7 @@
 		
 		 // Slash:
 		var	_skill = skill_get(mut_long_arms),
-			_heavy = ((++w.combo % 2) == 0),
+			_heavy = ((++_wep.combo % 2) == 0),
 			_flip  = sign(wepangle),
 			_dis   = lerp(10, 20, _skill),
 			_dir   = gunangle;
@@ -97,7 +97,7 @@
 	}
 	
 	 // Fire:
-	else if(weapon_ammo_fire(w)){
+	else if(weapon_ammo_fire(_wep)){
 		 // Throw Bone:
 		with(projectile_create(x, y, "Bone", gunangle, lerp(16, 20, skill_get(mut_long_arms)))){
 			curse = _curse;
@@ -119,8 +119,10 @@
 	}
 	
 	 // Gone:
-	if(w.ammo <= 0 && f.wepheld && !f.roids){
-		with(f.creator) step(true);
+	if(_wep.ammo <= 0 && _fire.wepheld && !_fire.roids){
+		with(_fire.creator){
+			step(true);
+		}
 	}
 	
 #define step(_primary)

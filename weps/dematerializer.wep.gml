@@ -17,19 +17,19 @@
 #define weapon_reloaded
 	sound_play(sndLightningReload);
 	
-#define weapon_fire(w)
-	var f = weapon_fire_init(w);
-	w = f.wep;
+#define weapon_fire(_wep)
+	var _fire = weapon_fire_init(_wep);
+	_wep = _fire.wep;
 	
-	var	_last     = variable_instance_get(f.creator, "electroplasma_last", noone),
-		_side     = variable_instance_get(f.creator, "electroplasma_side", 1),
+	var	_last     = variable_instance_get(_fire.creator, "electroplasma_last", noone),
+		_side     = variable_instance_get(_fire.creator, "electroplasma_side", 1),
 		_dir      = gunangle + orandom(3 * accuracy),
 		_needProj = true;
 		
 	 // Retain Projectile if youre holding fire:
 	with(instances_matching(CustomProjectile, "name", "ElectroPlasma")){
 		_needProj = false;
-		lifetime = weapon_get_load(w) + 1;
+		lifetime = weapon_get_load(_wep) + 1;
 	}
 	
 	 // Create new hyper Projectile if none exists:
@@ -45,10 +45,10 @@
 			_last = id;
 			
 			// Unique Weapon Mechanic:
-			lifetime = weapon_get_load(w) + 1;
+			lifetime = weapon_get_load(_wep) + 1;
 		}
 	}
-	with(f.creator){
+	with(_fire.creator){
 		electroplasma_last = _last;
 		electroplasma_side = -_side;
 	}

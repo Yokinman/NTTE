@@ -12,27 +12,27 @@
 		inst : noone
 	};
 	
-#define weapon_name      return (weapon_avail() ? "CLAM SHIELD" : "LOCKED");
-#define weapon_text      return "ROYAL GUARD";
-#define weapon_swap      return sndSwapHammer;
-#define weapon_sprt(w)   return (weapon_avail() ? ((instance_is(self, hitme) && instance_exists(lq_defget(w, "inst", noone))) ? mskNone : global.sprWep) : global.sprWepLocked);
-#define weapon_sprt_hud  return global.sprWepHUD;
-#define weapon_area      return (weapon_avail() ? 6 : -1); // 3-1
-#define weapon_type      return type_melee;
-#define weapon_load      return 30; // 1 Second
-#define weapon_auto      return false;
-#define weapon_melee     return true;
-#define weapon_avail     return unlock_get("pack:coast");
+#define weapon_name        return (weapon_avail() ? "CLAM SHIELD" : "LOCKED");
+#define weapon_text        return "ROYAL GUARD";
+#define weapon_swap        return sndSwapHammer;
+#define weapon_sprt(_wep)  return (weapon_avail() ? ((instance_is(self, hitme) && instance_exists(lq_defget(_wep, "inst", noone))) ? mskNone : global.sprWep) : global.sprWepLocked);
+#define weapon_sprt_hud    return global.sprWepHUD;
+#define weapon_area        return (weapon_avail() ? 6 : -1); // 3-1
+#define weapon_type        return type_melee;
+#define weapon_load        return 30; // 1 Second
+#define weapon_auto        return false;
+#define weapon_melee       return true;
+#define weapon_avail       return unlock_get("pack:coast");
 
-#define weapon_fire(w)
-	var f = weapon_fire_init(w);
-	w = f.wep;
+#define weapon_fire(_wep)
+	var _fire = weapon_fire_init(_wep);
+	_wep = _fire.wep;
 	
 	 // Create Shield:
-	if(!instance_exists(w.inst)){
-		w.inst = projectile_create(x, y, "ClamShield", gunangle, 0);
-		with(w.inst){
-			wep = w;
+	if(!instance_exists(_wep.inst)){
+		_wep.inst = projectile_create(x, y, "ClamShield", gunangle, 0);
+		with(_wep.inst){
+			wep = _wep;
 		}
 	}
 	
@@ -40,12 +40,12 @@
 	var	_ox = 0,
 		_oy = 0;
 		
-	if(instance_exists(f.creator)){
-		_ox = f.creator.hspeed_raw;
-		_oy = f.creator.vspeed_raw;
+	if(instance_exists(_fire.creator)){
+		_ox = _fire.creator.hspeed_raw;
+		_oy = _fire.creator.vspeed_raw;
 	}
 	
-	with(instances_matching(instances_matching(CustomSlash, "name", "ClamShield"), "wep", w)){
+	with(instances_matching(instances_matching(CustomSlash, "name", "ClamShield"), "wep", _wep)){
 		var	_l = lerp(8, 14, skill_get(mut_long_arms)),
 			_d = image_angle,
 			_x = x + _ox + lengthdir_x(_l, _d),

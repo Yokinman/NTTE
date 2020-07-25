@@ -13,9 +13,9 @@
 #define weapon_load   return 5; // 0.17 Seconds
 #define weapon_avail  return unlock_get("pack:coast");
 
-#define weapon_fire(w)
-	var f = weapon_fire_init(w);
-	w = f.wep;
+#define weapon_fire(_wep)
+	var _fire = weapon_fire_init(_wep);
+	_wep = _fire.wep;
 	
 	 // Linked Harpoons:
 	with(projectile_create(x, y, "Harpoon", gunangle + orandom(3 * accuracy), 22)){

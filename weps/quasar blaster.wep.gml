@@ -13,13 +13,13 @@
 #define weapon_load   return 15; // 0.5 Seconds
 #define weapon_avail  return unlock_get("pack:trench");
 
-#define weapon_fire(w)
-	var f = weapon_fire_init(w);
-	w = f.wep;
+#define weapon_fire(_wep)
+	var _fire = weapon_fire_init(_wep);
+	_wep = _fire.wep;
 	
 	 // Quasar Beam:
 	with(projectile_create(x, y, "QuasarBeam", gunangle + orandom(4 * accuracy), 0)){
-		roids         = f.roids;
+		roids         = _fire.roids;
 		turn_factor   = 1/10;
 		shrink_delay  = 8;
 		scale_goal    = 0.5;

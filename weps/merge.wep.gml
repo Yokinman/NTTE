@@ -2294,30 +2294,30 @@
 #define flagprojcont_get(_flag)
 	return lq_get(flagProjCont, _flag);
 	
-#define wep_stat(w, _stat)
-	return lq_defget(lq_defget(w, "base", wepDefault), _stat, lq_defget(wepDefault, _stat, -1));
+#define wep_stat(_wep, _stat)
+	return lq_defget(lq_defget(_wep, "base", wepDefault), _stat, lq_defget(wepDefault, _stat, -1));
 	
-#define weapon_name(w)         return wep_stat(w, "name");
-#define weapon_text(w)         return wep_stat(w, "text");
-#define weapon_swap(w)         return wep_stat(w, "swap");
-#define weapon_area(w)         return -1;
-#define weapon_gold(w)         return ((wep_stat(w, "gold") != 0) ? -1 : 0);
-#define weapon_type(w)         return wep_stat(w, "type");
-#define weapon_cost(w)         return wep_stat(w, "cost");
-#define weapon_rads(w)         return wep_stat(w, "rads");
-#define weapon_load(w)         return wep_stat(w, "load");
-#define weapon_auto(w)         return wep_stat(w, "auto");
-#define weapon_melee(w)        return wep_stat(w, "mele");
-#define weapon_laser_sight(w)  return wep_stat(w, "lasr");
-#define weapon_blood(w)        return (wep_stat(w, "blod") ? max(floor(weapon_get_cost(w) / 2), 1) : 0);
+#define weapon_name(_wep)         return wep_stat(_wep, "name");
+#define weapon_text(_wep)         return wep_stat(_wep, "text");
+#define weapon_swap(_wep)         return wep_stat(_wep, "swap");
+#define weapon_area(_wep)         return -1;
+#define weapon_gold(_wep)         return ((wep_stat(_wep, "gold") != 0) ? -1 : 0);
+#define weapon_type(_wep)         return wep_stat(_wep, "type");
+#define weapon_cost(_wep)         return wep_stat(_wep, "cost");
+#define weapon_rads(_wep)         return wep_stat(_wep, "rads");
+#define weapon_load(_wep)         return wep_stat(_wep, "load");
+#define weapon_auto(_wep)         return wep_stat(_wep, "auto");
+#define weapon_melee(_wep)        return wep_stat(_wep, "mele");
+#define weapon_laser_sight(_wep)  return wep_stat(_wep, "lasr");
+#define weapon_blood(_wep)        return (wep_stat(_wep, "blod") ? max(floor(weapon_get_cost(_wep) / 2), 1) : 0);
 
-#define weapon_sprt(w)
-	var _spr = wep_stat(w, "sprt");
+#define weapon_sprt(_wep)
+	var _spr = wep_stat(_wep, "sprt");
 	
 	 // Setup Sprite:
 	if(!sprite_exists(_spr)){
-		var	_stock = weapon_get_sprt(wep_stat(w, "stock")),
-			_front = weapon_get_sprt(wep_stat(w, "front"));
+		var	_stock = weapon_get_sprt(wep_stat(_wep, "stock")),
+			_front = weapon_get_sprt(wep_stat(_wep, "front"));
 			
 		_spr = mod_script_call("mod", "teassets", "weapon_merge_sprite", _stock, _front);
 	}
@@ -2325,25 +2325,25 @@
 	return (sprite_exists(_spr) ? _spr : mskNone);
 	
 #define weapon_loadout
-	var	w = ((argument_count > 0) ? argument0 : mod_current),
-		_spr = wep_stat(w, "icon");
+	var	_wep = ((argument_count > 0) ? argument0 : mod_current),
+		_spr = wep_stat(_wep, "icon");
 		
 	 // Setup Loadout Sprite:
 	if(!sprite_exists(_spr)){
-		var	_stock = mod_script_call("mod", "telib", "weapon_get_loadout", wep_stat(w, "stock")),
-			_front = mod_script_call("mod", "telib", "weapon_get_loadout", wep_stat(w, "front"));
+		var	_stock = mod_script_call("mod", "telib", "weapon_get_loadout", wep_stat(_wep, "stock")),
+			_front = mod_script_call("mod", "telib", "weapon_get_loadout", wep_stat(_wep, "front"));
 			
 		_spr = mod_script_call("mod", "teassets", "weapon_merge_sprite_loadout", _stock, _front);
 	}
 	
 	return (sprite_exists(_spr) ? _spr : 0);
 	
-#define weapon_fire(w)
-	if(is_object(w)){
-		var f = mod_script_call("mod", "telib", "weapon_fire_init", w);
-		w = f.wep;
+#define weapon_fire(_wep)
+	if(is_object(_wep)){
+		var _fire = mod_script_call("mod", "telib", "weapon_fire_init", _wep);
+		_wep = _fire.wep;
 		
-		GunCont(lq_defget(w, "base", wepDefault), x, y, team, f.creator, gunangle, accuracy);
+		GunCont(lq_defget(_wep, "base", wepDefault), x, y, team, _fire.creator, gunangle, accuracy);
 	}
 	
 #define GunCont(_wep, _x, _y, _team, _creator, _gunangle, _accuracy)
@@ -4566,6 +4566,7 @@
 #define corpse_drop(_dir, _spd)                                                         return  mod_script_call(   'mod', 'telib', 'corpse_drop', _dir, _spd);
 #define rad_drop(_x, _y, _raddrop, _dir, _spd)                                          return  mod_script_call_nc('mod', 'telib', 'rad_drop', _x, _y, _raddrop, _dir, _spd);
 #define rad_path(_inst, _target)                                                        return  mod_script_call_nc('mod', 'telib', 'rad_path', _inst, _target);
+#define area_set(_area, _subarea, _loops)                                               return  mod_script_call_nc('mod', 'telib', 'area_set', _area, _subarea, _loops);
 #define area_get_name(_area, _subarea, _loops)                                          return  mod_script_call_nc('mod', 'telib', 'area_get_name', _area, _subarea, _loops);
 #define area_get_sprite(_area, _spr)                                                    return  mod_script_call(   'mod', 'telib', 'area_get_sprite', _area, _spr);
 #define area_get_subarea(_area)                                                         return  mod_script_call_nc('mod', 'telib', 'area_get_subarea', _area);

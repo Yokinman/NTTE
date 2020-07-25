@@ -11,30 +11,32 @@
 		
 		 // Shine:
 		p = "sprites/chests/";
-		Shine8  = sprite_add(p + "sprShine8.png",  7,  4,  4); // Rads
-		Shine10 = sprite_add(p + "sprShine10.png", 7,  5,  5); // Pickups
-		Shine12 = sprite_add(p + "sprShine12.png", 7,  6,  6); // Big Rads
-		Shine16 = sprite_add(p + "sprShine16.png", 7,  8,  8); // Normal Chests
-		Shine20 = sprite_add(p + "sprShine20.png", 7, 10, 10); // Heavy Chests (Steroids)
-		Shine24 = sprite_add(p + "sprShine24.png", 7, 12, 12); // Big Chests
-		Shine64 = sprite_add(p + "sprShine64.png", 7, 32, 32); // Giant Chests (YV)
+		Shine8    = sprite_add(p + "sprShine8.png",    7,  4,  4); // Rads
+		Shine10   = sprite_add(p + "sprShine10.png",   7,  5,  5); // Pickups
+		Shine12   = sprite_add(p + "sprShine12.png",   7,  6,  6); // Big Rads
+		Shine16   = sprite_add(p + "sprShine16.png",   7,  8,  8); // Normal Chests
+		Shine20   = sprite_add(p + "sprShine20.png",   7, 10, 10); // Heavy Chests (Steroids)
+		Shine24   = sprite_add(p + "sprShine24.png",   7, 12, 12); // Big Chests
+		Shine64   = sprite_add(p + "sprShine64.png",   7, 32, 32); // Giant Chests (YV)
+		ShineHurt = sprite_add(p + "sprShineHurt.png", 3,  0,  0); // Hurt Flash
 		
 		 // Big Decals:
+		p = "areas/";
 		BigTopDecal = {
-			"1"     : sprite("areas/Desert/sprDesertBigTopDecal",       1, 32, 24),
-			"2"     : sprite("areas/Sewers/sprSewersBigTopDecal",       8, 32, 24),
-			"3"     : sprite("areas/Scrapyard/sprScrapyardBigTopDecal", 1, 32, 24),
-			"4"     : sprite("areas/Caves/sprCavesBigTopDecal",         1, 32, 24),
-			"7"     : sprite("areas/Palace/sprPalaceBigTopDecal",       1, 32, 24),
-			"104"   : sprite("areas/Caves/sprCursedCavesBigTopDecal",   1, 32, 24),
-			"pizza" : sprite("areas/Pizza/sprPizzaBigTopDecal",         1, 32, 24),
-			"oasis" : sprite("areas/Oasis/sprOasisBigTopDecal",         1, 32, 24),
-			"trench": sprite("areas/Trench/sprTrenchBigTopDecal",       1, 32, 24)
+			"1"     : sprite(p + "Desert/sprDesertBigTopDecal",       1, 32, 24),
+			"2"     : sprite(p + "Sewers/sprSewersBigTopDecal",       8, 32, 24),
+			"3"     : sprite(p + "Scrapyard/sprScrapyardBigTopDecal", 1, 32, 24),
+			"4"     : sprite(p + "Caves/sprCavesBigTopDecal",         1, 32, 24),
+			"7"     : sprite(p + "Palace/sprPalaceBigTopDecal",       1, 32, 24),
+			"104"   : sprite(p + "Caves/sprCursedCavesBigTopDecal",   1, 32, 24),
+			"pizza" : sprite(p + "Pizza/sprPizzaBigTopDecal",         1, 32, 24),
+			"oasis" : sprite(p + "Oasis/sprOasisBigTopDecal",         1, 32, 24),
+			"trench": sprite(p + "Trench/sprTrenchBigTopDecal",       1, 32, 24)
 		};
-		NestDebris        = sprite("areas/Scrapyard/sprNestDebris", 16,     4,  4);
-		msk.BigTopDecal   = sprite("areas/Desert/mskBigTopDecal",    1,    32, 24);
-		shd.BigGenerator  = sprite("areas/Palace/shdBigGenerator",   1, 48-16, 32);
-		shd.BigGeneratorR = sprite("areas/Palace/shdBigGeneratorR",  1, 48+16, 32);
+		NestDebris        = sprite(p + "Scrapyard/sprNestDebris", 16,     4,  4);
+		msk.BigTopDecal   = sprite(p + "Desert/mskBigTopDecal",    1,    32, 24);
+		shd.BigGenerator  = sprite(p + "Palace/shdBigGenerator",   1, 48-16, 32);
+		shd.BigGeneratorR = sprite(p + "Palace/shdBigGeneratorR",  1, 48+16, 32);
 		
 		//#region MENU / HUD
 			
@@ -112,6 +114,12 @@
 			ClamShieldWep       = sprite(p + "sprClamShieldWep",    1,  8,  8, shn16);
 			ClamShieldSlash     = sprite(p + "sprClamShieldSlash",  4, 12, 12);
 			msk.ClamShieldSlash = sprite(p + "mskClamShieldSlash",  4, 12, 12);
+			
+			 // Crystal Heart:
+			CrystalHeartBullet      = sprite(p + "sprCrystalHeartBullet",      2, 10, 10);
+			CrystalHeartBulletHit   = sprite(p + "sprCrystalHeartBulletHit",   8, 16, 16);
+			CrystalHeartBulletRing  = sprite(p + "sprCrystalHeartBulletRing",  2, 10, 10);
+			CrystalHeartBulletTrail = sprite(p + "sprCrystalHeartBulletTrail", 4, 10, 10);
 			
 			 // Electroplasma:
 			ElectroPlasma       = sprite(p + "sprElectroPlasma",       7, 12, 12);
@@ -414,15 +422,12 @@
 			
 			 // Crystal Heart:
 			p = m + "CrystalHeart/";
-			CrystalHeartIdle        = sprite(p + "sprCrystalHeartIdle",       10, 24, 24);
-			CrystalHeartHurt        = sprite(p + "sprCrystalHeartHurt",        3, 24, 24);
-			CrystalHeartDead        = sprite(p + "sprCrystalHeartDead",       22, 24, 24);
-			ChaosHeartIdle          = sprite(p + "sprChaosHeartIdle",         10, 24, 24);
-			ChaosHeartHurt          = sprite(p + "sprChaosHeartHurt",          3, 24, 24);
-			ChaosHeartDead          = sprite(p + "sprChaosHeartDead",         22, 24, 24);
-			CrystalHeartBulletOut   = sprite(p + "sprCrystalHeartBulletOut",   2, 10, 10);
-			CrystalHeartBulletMid   = sprite(p + "sprCrystalHeartBulletMid",   2, 10, 10);
-			CrystalHeartBulletTrail = sprite(p + "sprCrystalHeartBulletTrail", 4, 10, 10);
+			CrystalHeartIdle = sprite(p + "sprCrystalHeartIdle", 10, 24, 24);
+			CrystalHeartHurt = sprite(p + "sprCrystalHeartHurt",  3, 24, 24);
+			CrystalHeartDead = sprite(p + "sprCrystalHeartDead", 22, 24, 24);
+			ChaosHeartIdle   = sprite(p + "sprChaosHeartIdle",   10, 24, 24);
+			ChaosHeartHurt   = sprite(p + "sprChaosHeartHurt",    3, 24, 24);
+			ChaosHeartDead   = sprite(p + "sprChaosHeartDead",   22, 24, 24);
 			
 			 // Diver:
 			p = m + "Diver/";
@@ -698,8 +703,8 @@
 			p = m + "Props/";
 				
 				 // Big Cactus:
-				BigNightCactusIdle = sprite(p + "sprBigNightCactusIdle", 1, 16, 16);
-				BigNightCactusHurt = sprite(p + "sprBigNightCactusHurt", 3, 16, 16);
+				BigNightCactus     = sprite(p + "sprBigNightCactus",     1, 16, 16);
+				BigNightCactusHurt = sprite(p + "sprBigNightCactus",     1, 16, 16, shnHurt);
 				BigNightCactusDead = sprite(p + "sprBigNightCactusDead", 4, 16, 16);
 				
 			//#endregion
@@ -726,28 +731,28 @@
 				
 				 // Camp:
 				BanditCampfire     = sprite(p + "sprBanditCampfire",     1, 26, 26);
-				BanditTentIdle     = sprite(p + "sprBanditTentIdle",     1, 24, 24);
+				BanditTentIdle     = sprite(p + "sprBanditTent",         1, 24, 24);
 				BanditTentHurt     = sprite(p + "sprBanditTentHurt",     3, 24, 24);
 				BanditTentDead     = sprite(p + "sprBanditTentDead",     3, 24, 24);
-				BanditTentWallIdle = sprite(p + "sprBanditTentWallIdle", 1, 24, 24);
+				BanditTentWallIdle = sprite(p + "sprBanditTentWall",     1, 24, 24);
 				BanditTentWallHurt = sprite(p + "sprBanditTentWallHurt", 3, 24, 24);
 				BanditTentWallDead = sprite(p + "sprBanditTentWallDead", 3, 24, 24);
 				
 				 // Big Cactus:
-				BigCactusIdle = sprite(p + "sprBigCactusIdle", 1, 16, 16);
-				BigCactusHurt = sprite(p + "sprBigCactusHurt", 3, 16, 16);
+				BigCactusIdle = sprite(p + "sprBigCactus",     1, 16, 16);
+				BigCactusHurt = sprite(p + "sprBigCactus",     1, 16, 16, shnHurt);
 				BigCactusDead = sprite(p + "sprBigCactusDead", 4, 16, 16);
 				
 				 // Return of a Legend:
-				CowSkullIdle = sprite(p + "sprCowSkullIdle", 1, 24, 24);
-				CowSkullHurt = sprite(p + "sprCowSkullHurt", 3, 24, 24);
+				CowSkullIdle = sprite(p + "sprCowSkull",     1, 24, 24);
+				CowSkullHurt = sprite(p + "sprCowSkull",     1, 24, 24, shnHurt);
 				CowSkullDead = sprite(p + "sprCowSkullDead", 3, 24, 24);
 				
 				 // Scorpion Rock:
-				ScorpionRockEnemy   = sprite(p + "sprScorpionRockEnemy",  6, 16, 16);
-				ScorpionRockFriend  = sprite(p + "sprScorpionRockFriend", 6, 16, 16);
-				ScorpionRockHurt    = sprite(p + "sprScorpionRockHurt",   3, 16, 16);
-				ScorpionRockDead    = sprite(p + "sprScorpionRockDead",   3, 16, 16);
+				ScorpionRockEnemy   = sprite(p + "sprScorpionRock",     6, 16, 16);
+				ScorpionRockFriend  = sprite(p + "sprScorpionRockAlly", 6, 16, 16);
+				ScorpionRockHurt    = sprite(p + "sprScorpionRock",     6, 16, 16, shnHurt);
+				ScorpionRockDead    = sprite(p + "sprScorpionRockDead", 3, 16, 16);
 				
 			//#endregion
 			
@@ -791,22 +796,22 @@
 			p = m + "Props/";
 				
 				 // Igloos:
-				IglooFrontIdle = sprite(p + "sprIglooFrontIdle", 1, 24, 24);
+				IglooFrontIdle = sprite(p + "sprIglooFront",     1, 24, 24);
 				IglooFrontHurt = sprite(p + "sprIglooFrontHurt", 3, 24, 24);
 				IglooFrontDead = sprite(p + "sprIglooFrontDead", 3, 24, 24);
-				IglooSideIdle  = sprite(p + "sprIglooSideIdle",  1, 24, 24);
+				IglooSideIdle  = sprite(p + "sprIglooSide",      1, 24, 24);
 				IglooSideHurt  = sprite(p + "sprIglooSideHurt",  3, 24, 24);
 				IglooSideDead  = sprite(p + "sprIglooSideDead",  3, 24, 24);
 				
 				 // Palanking Statue:
-				PalankingStatueIdle  =[sprite(p + "sprPalankingStatue1Idle", 1, 32, 32),
-				                       sprite(p + "sprPalankingStatue2Idle", 1, 32, 32),
-				                       sprite(p + "sprPalankingStatue3Idle", 1, 32, 32),
-				                       sprite(p + "sprPalankingStatue4Idle", 1, 32, 32)];
-				PalankingStatueHurt  =[sprite(p + "sprPalankingStatue1Hurt", 3, 32, 32),
-				                       sprite(p + "sprPalankingStatue2Hurt", 3, 32, 32),
-				                       sprite(p + "sprPalankingStatue3Hurt", 3, 32, 32),
-				                       sprite(p + "sprPalankingStatue4Hurt", 3, 32, 32)];
+				PalankingStatueIdle  =[sprite(p + "sprPalankingStatue1",     1, 32, 32),
+				                       sprite(p + "sprPalankingStatue2",     1, 32, 32),
+				                       sprite(p + "sprPalankingStatue3",     1, 32, 32),
+				                       sprite(p + "sprPalankingStatue4",     1, 32, 32)];
+				PalankingStatueHurt  =[sprite(p + "sprPalankingStatue1",     1, 32, 32, shnHurt),
+				                       sprite(p + "sprPalankingStatue2",     1, 32, 32, shnHurt),
+				                       sprite(p + "sprPalankingStatue3",     1, 32, 32, shnHurt),
+				                       sprite(p + "sprPalankingStatue4",     1, 32, 32, shnHurt)];
 				PalankingStatueDead  = sprite(p + "sprPalankingStatueDead",  3, 32, 32);
 				PalankingStatueChunk = sprite(p + "sprPalankingStatueChunk", 5, 16, 16);
 				
@@ -826,7 +831,7 @@
 			p = m + "Props/";
 				
 				 // Mutant Vat:
-				MutantVatIdle  = sprite(p + "sprMutantVatIdle",  1, 32, 32);
+				MutantVatIdle  = sprite(p + "sprMutantVat",      1, 32, 32);
 				MutantVatHurt  = sprite(p + "sprMutantVatHurt",  3, 32, 32);
 				MutantVatDead  = sprite(p + "sprMutantVatDead",  3, 32, 32);
 				MutantVatBack  = sprite(p + "sprMutantVatBack",  6, 32, 32);
@@ -868,7 +873,7 @@
 			p = m + "Props/";
 				
 				 // Palace Altar:
-				PalaceAltarIdle   = sprite(p + "sprPalaceAltarIdle",   1, 24, 24);
+				PalaceAltarIdle   = sprite(p + "sprPalaceAltar",       1, 24, 24);
 				PalaceAltarHurt   = sprite(p + "sprPalaceAltarHurt",   3, 24, 24);
 				PalaceAltarDead   = sprite(p + "sprPalaceAltarDead",   4, 24, 24);
 				PalaceAltarDebris = sprite(p + "sprPalaceAltarDebris", 5,  8,  8);
@@ -898,10 +903,10 @@
 			p = m + "Props/";
 				
 				 // Vault Flower:
-				VaultFlowerIdle         = sprite(p + "sprVaultFlowerIdle",          4, 24, 24);
+				VaultFlowerIdle         = sprite(p + "sprVaultFlower",              4, 24, 24);
 				VaultFlowerHurt         = sprite(p + "sprVaultFlowerHurt",          3, 24, 24);
 				VaultFlowerDead         = sprite(p + "sprVaultFlowerDead",          3, 24, 24);
-				VaultFlowerWiltedIdle   = sprite(p + "sprVaultFlowerWiltedIdle",    1, 24, 24);
+				VaultFlowerWiltedIdle   = sprite(p + "sprVaultFlowerWilted",        1, 24, 24);
 				VaultFlowerWiltedHurt   = sprite(p + "sprVaultFlowerWiltedHurt",    3, 24, 24);
 				VaultFlowerWiltedDead   = sprite(p + "sprVaultFlowerWiltedDead",    3, 24, 24);
 				VaultFlowerDebris       = sprite(p + "sprVaultFlowerDebris",       10,  4,  4);
@@ -932,24 +937,24 @@
 				BloomingCactusIdle =[sprite(p + "sprBloomingCactus",      1, 12, 12),
 				                     sprite(p + "sprBloomingCactus2",     1, 12, 12),
 				                     sprite(p + "sprBloomingCactus3",     1, 12, 12)];
-				BloomingCactusHurt =[sprite(p + "sprBloomingCactusHurt",  3, 12, 12),
-				                     sprite(p + "sprBloomingCactus2Hurt", 3, 12, 12),
-				                     sprite(p + "sprBloomingCactus3Hurt", 3, 12, 12)];
+				BloomingCactusHurt =[sprite(p + "sprBloomingCactus",      1, 12, 12, shnHurt),
+				                     sprite(p + "sprBloomingCactus2",     1, 12, 12, shnHurt),
+				                     sprite(p + "sprBloomingCactus3",     1, 12, 12, shnHurt)];
 				BloomingCactusDead =[sprite(p + "sprBloomingCactusDead",  4, 12, 12),
 				                     sprite(p + "sprBloomingCactus2Dead", 4, 12, 12),
 				                     sprite(p + "sprBloomingCactus3Dead", 4, 12, 12)];
 				
 				 // Big Blooming Cactus:
-				BigBloomingCactusIdle = sprite(p + "sprBigBloomingCactusIdle", 1, 16, 16);
-				BigBloomingCactusHurt = sprite(p + "sprBigBloomingCactusHurt", 3, 16, 16);
+				BigBloomingCactusIdle = sprite(p + "sprBigBloomingCactus",     1, 16, 16);
+				BigBloomingCactusHurt = sprite(p + "sprBigBloomingCactus",     1, 16, 16, shnHurt);
 				BigBloomingCactusDead = sprite(p + "sprBigBloomingCactusDead", 4, 16, 16);
 				
 				 // Buried Car:
-				BuriedCarIdle = sprite(p + "sprBuriedCarIdle", 1, 16, 16);
+				BuriedCarIdle = sprite(p + "sprBuriedCar",     1, 16, 16);
 				BuriedCarHurt = sprite(p + "sprBuriedCarHurt", 3, 16, 16);
 				
 				 // Bush:
-				BloomingBushIdle = sprite(p + "sprBloomingBushIdle", 1, 12, 12);
+				BloomingBushIdle = sprite(p + "sprBloomingBush",     1, 12, 12);
 				BloomingBushHurt = sprite(p + "sprBloomingBushHurt", 3, 12, 12);
 				BloomingBushDead = sprite(p + "sprBloomingBushDead", 3, 12, 12);
 				
@@ -957,20 +962,20 @@
 				PalmIdle     = sprite(p + "sprPalm",         1, 24, 40);
 				PalmHurt     = sprite(p + "sprPalmHurt",     3, 24, 40);
 				PalmDead     = sprite(p + "sprPalmDead",     4, 24, 40);
-				PalmFortIdle = sprite(p + "sprPalmFortIdle", 1, 32, 56);
+				PalmFortIdle = sprite(p + "sprPalmFort",     1, 32, 56);
 				PalmFortHurt = sprite(p + "sprPalmFortHurt", 3, 32, 56);
 				
 				 // Sea/Seal Mine:
-				SealMine     = sprite(p + "sprSeaMine",     1, 12, 12);
-				SealMineHurt = sprite(p + "sprSeaMineHurt", 3, 12, 12);
+				SealMine     = sprite(p + "sprSeaMine", 1, 12, 12);
+				SealMineHurt = sprite(p + "sprSeaMine", 1, 12, 12, shnHurt);
 				
 			p = m + "Decals/";
 				
 				 // Decal Water Rock Props:
 				RockIdle  =[sprite(p + "sprRock1Idle", 1, 16, 16),
 				            sprite(p + "sprRock2Idle", 1, 16, 16)];
-				RockHurt  =[sprite(p + "sprRock1Hurt", 3, 16, 16),
-				            sprite(p + "sprRock2Hurt", 3, 16, 16)];
+				RockHurt  =[sprite(p + "sprRock1Idle", 1, 16, 16, shnHurt),
+				            sprite(p + "sprRock2Idle", 1, 16, 16, shnHurt)];
 				RockDead  =[sprite(p + "sprRock1Dead", 1, 16, 16),
 				            sprite(p + "sprRock2Dead", 1, 16, 16)];
 				RockBott  =[sprite(p + "sprRock1Bott", 1, 16, 16),
@@ -978,7 +983,7 @@
 				RockFoam  =[sprite(p + "sprRock1Foam", 1, 16, 16),
 				            sprite(p + "sprRock2Foam", 1, 16, 16)];
 				ShellIdle = sprite(p + "sprShellIdle", 1, 32, 32);
-				ShellHurt = sprite(p + "sprShellHurt", 3, 32, 32);
+				ShellHurt = sprite(p + "sprShellIdle", 1, 32, 32, shnHurt);
 				ShellDead = sprite(p + "sprShellDead", 6, 32, 32);
 				ShellBott = sprite(p + "sprShellBott", 1, 32, 32);
 				ShellFoam = sprite(p + "sprShellFoam", 1, 32, 32);
@@ -1058,17 +1063,17 @@
 			p = m + "Props/";
 				
 				 // Eel Skeleton (big fat eel edition):
-				EelSkullIdle = sprite(p + "sprEelSkeletonIdle", 1, 24, 24);
+				EelSkullIdle = sprite(p + "sprEelSkeleton",     1, 24, 24);
 				EelSkullHurt = sprite(p + "sprEelSkeletonHurt", 3, 24, 24);
 				EelSkullDead = sprite(p + "sprEelSkeletonDead", 3, 24, 24);
 				
 				 // Kelp:
-				KelpIdle = sprite(p + "sprKelpIdle", 6, 16, 22);
+				KelpIdle = sprite(p + "sprKelp",     6, 16, 22);
 				KelpHurt = sprite(p + "sprKelpHurt", 3, 16, 22);
 				KelpDead = sprite(p + "sprKelpDead", 8, 16, 22);
 				
 				 // Vent:
-				VentIdle = sprite(p + "sprVentIdle", 1, 12, 14);
+				VentIdle = sprite(p + "sprVent",     1, 12, 14);
 				VentHurt = sprite(p + "sprVentHurt", 3, 12, 14);
 				VentDead = sprite(p + "sprVentDead", 3, 12, 14);
 				
@@ -1099,13 +1104,13 @@
 			p = m + "Props/"
 				
 				 // Sewer Drain:
-				SewerDrainIdle = sprite(p + "sprSewerDrainIdle", 8, 32, 38);
+				SewerDrainIdle = sprite(p + "sprSewerDrain",     8, 32, 38);
 				SewerDrainHurt = sprite(p + "sprSewerDrainHurt", 3, 32, 38);
 				SewerDrainDead = sprite(p + "sprSewerDrainDead", 5, 32, 38);
 				
 				 // Homage:
-				GatorStatueIdle = sprite(p + "sprGatorStatueIdle", 1, 16, 16);
-				GatorStatueHurt = sprite(p + "sprGatorStatueHurt", 3, 16, 16);
+				GatorStatueIdle = sprite(p + "sprGatorStatue",     1, 16, 16);
+				GatorStatueHurt = sprite(p + "sprGatorStatue",     1, 16, 16, shnHurt);
 				GatorStatueDead = sprite(p + "sprGatorStatueDead", 4, 16, 16);
 				
 			//#endregion
@@ -1178,26 +1183,26 @@
 			p = m + "Props/";
 				
 				 // Cabinet:
-				CabinetIdle = sprite(p + "sprCabinetIdle", 1, 12, 12);
-				CabinetHurt = sprite(p + "sprCabinetHurt", 3, 12, 12);
+				CabinetIdle = sprite(p + "sprCabinet",     1, 12, 12);
+				CabinetHurt = sprite(p + "sprCabinet",     1, 12, 12, shnHurt);
 				CabinetDead = sprite(p + "sprCabinetDead", 3, 12, 12);
 				Paper       = sprite(p + "sprPaper",       3,  5,  6);
 				
 				/// Chairs:
 					
 					 // Side:
-					ChairSideIdle  = sprite(p + "sprChairSideIdle",  1, 12, 12);
-					ChairSideHurt  = sprite(p + "sprChairSideHurt",  3, 12, 12);
-					ChairSideDead  = sprite(p + "sprChairSideDead",  3, 12, 12);
+					ChairSideIdle  = sprite(p + "sprChairSide",     1, 12, 12);
+					ChairSideHurt  = sprite(p + "sprChairSide",     1, 12, 12, shnHurt);
+					ChairSideDead  = sprite(p + "sprChairSideDead", 3, 12, 12);
 					
 					 // Front:
-					ChairFrontIdle = sprite(p + "sprChairFrontIdle", 1, 12, 12);
-					ChairFrontHurt = sprite(p + "sprChairFrontHurt", 3, 12, 12);
+					ChairFrontIdle = sprite(p + "sprChairFront",     1, 12, 12);
+					ChairFrontHurt = sprite(p + "sprChairFront",     1, 12, 12, shnHurt);
 					ChairFrontDead = sprite(p + "sprChairFrontDead", 3, 12, 12);
 					
 				 // Couch:
-				CouchIdle = sprite(p + "sprCouchIdle", 1, 32, 32);
-				CouchHurt = sprite(p + "sprCouchHurt", 3, 32, 32);
+				CouchIdle = sprite(p + "sprCouch",     1, 32, 32);
+				CouchHurt = sprite(p + "sprCouch",     1, 32, 32, shnHurt);
 				CouchDead = sprite(p + "sprCouchDead", 3, 32, 32);
 				
 				 // Door:
@@ -1213,13 +1218,13 @@
 				Rug = sprite(p + "sprRug", 1, 26, 26);
 				
 				 // Soda Machine:
-				SodaMachineIdle = sprite(p + "sprSodaMachineIdle", 1, 16, 16);
-				SodaMachineHurt = sprite(p + "sprSodaMachineHurt", 3, 16, 16);
+				SodaMachineIdle = sprite(p + "sprSodaMachine",     1, 16, 16);
+				SodaMachineHurt = sprite(p + "sprSodaMachine",     1, 16, 16, shnHurt);
 				SodaMachineDead = sprite(p + "sprSodaMachineDead", 3, 16, 16);
 				
 				 // Table:
-				TableIdle = sprite(p + "sprTableIdle", 1, 16, 16);
-				TableHurt = sprite(p + "sprTableHurt", 3, 16, 16);
+				TableIdle = sprite(p + "sprTable",     1, 16, 16);
+				TableHurt = sprite(p + "sprTable",     1, 16, 16, shnHurt);
 				TableDead = sprite(p + "sprTableDead", 3, 16, 16);
 				
 			//#endregion
@@ -1269,12 +1274,12 @@
 			p = m + "Props/";
 				
 				 // Red Crystals:
-				CrystalPropRedIdle = sprite(p + "sprCrystalPropRedIdle", 1, 12, 12);
-				CrystalPropRedHurt = sprite(p + "sprCrystalPropRedHurt", 3, 12, 12);
+				CrystalPropRedIdle = sprite(p + "sprCrystalPropRed",     1, 12, 12);
+				CrystalPropRedHurt = sprite(p + "sprCrystalPropRed",     1, 12, 12, shnHurt);
 				CrystalPropRedDead = sprite(p + "sprCrystalPropRedDead", 4, 12, 12);
 				
 				 // White Crystals:
-				CrystalPropWhiteIdle = sprite(p + "sprCrystalPropWhiteIdle", 1, 12, 12);
+				CrystalPropWhiteIdle = sprite(p + "sprCrystalPropWhite",     1, 12, 12);
 				CrystalPropWhiteHurt = sprite(p + "sprCrystalPropWhiteHurt", 3, 12, 12);
 				CrystalPropWhiteDead = sprite(p + "sprCrystalPropWhiteDead", 4, 12, 12);
 				
@@ -1318,7 +1323,12 @@
 			BackpackCursedOpen = sprite(p + "sprBackpackCursedOpen", 1, 8, 8);
 			
 			 // Deceased Backpacker:
-			Backpacker = sprite(p + "sprBackpacker", 3, 12, 12);
+			BackpackerIdle = [sprite(p + "sprBackpacker0", 1, 12, 12),
+			                  sprite(p + "sprBackpacker1", 1, 12, 12),
+			                  sprite(p + "sprBackpacker2", 1, 12, 12)];
+			BackpackerHurt = [sprite(p + "sprBackpacker0", 1, 12, 12, shnHurt),
+			                  sprite(p + "sprBackpacker1", 1, 12, 12, shnHurt),
+			                  sprite(p + "sprBackpacker2", 1, 12, 12, shnHurt)];
 			
 			 // Bat/Cat Chests:
 			BatChest              = sprite(p + "sprBatChest",              1, 10, 10, shn20);
@@ -1333,12 +1343,12 @@
 			CatChestOpen          = sprite(p + "sprCatChestOpen",          1, 10, 10);
 			
 			 // Bone:
-			BonePickup    =[sprite(p + "sprBonePickup0",    1, 4, 4, shn8),
-			                sprite(p + "sprBonePickup1",    1, 4, 4, shn8),
-			                sprite(p + "sprBonePickup2",    1, 4, 4, shn8),
-			                sprite(p + "sprBonePickup3",    1, 4, 4, shn8)];
-			BonePickupBig =[sprite(p + "sprBoneBigPickup0", 1, 8, 8, shn16),
-			                sprite(p + "sprBoneBigPickup1", 1, 8, 8, shn16)];
+			BonePickup    = [sprite(p + "sprBonePickup0",    1, 4, 4, shn8),
+			                 sprite(p + "sprBonePickup1",    1, 4, 4, shn8),
+			                 sprite(p + "sprBonePickup2",    1, 4, 4, shn8),
+			                 sprite(p + "sprBonePickup3",    1, 4, 4, shn8)];
+			BonePickupBig = [sprite(p + "sprBoneBigPickup0", 1, 8, 8, shn16),
+			                 sprite(p + "sprBoneBigPickup1", 1, 8, 8, shn16)];
 			
 			 // Bonus Pickups:
 			BonusFX                    = sprite(p + "sprBonusFX",                    13,  4, 12);
@@ -1852,14 +1862,16 @@
 
 #macro spr_load global.spr_load
 
-#macro shnWep true
-#macro shn8   spr.Shine8
-#macro shn10  spr.Shine10
-#macro shn12  spr.Shine12
-#macro shn16  spr.Shine16
-#macro shn20  spr.Shine20
-#macro shn24  spr.Shine24
-#macro shn64  spr.Shine64
+#macro shnNone false
+#macro shnWep  true
+#macro shn8    spr.Shine8
+#macro shn10   spr.Shine10
+#macro shn12   spr.Shine12
+#macro shn16   spr.Shine16
+#macro shn20   spr.Shine20
+#macro shn24   spr.Shine24
+#macro shn64   spr.Shine64
+#macro shnHurt spr.ShineHurt
 
 #macro save      global.save
 #macro save_auto global.save_auto
@@ -2388,9 +2400,9 @@
 	
 	return _shad;
 	
-#define sprite /// sprite(_path, _img, _x, _y, _shine = false)
+#define sprite /// sprite(_path, _img, _x, _y, _shine = shnNone)
 	var _path = argument[0], _img = argument[1], _x = argument[2], _y = argument[3];
-var _shine = argument_count > 4 ? argument[4] : false;
+var _shine = argument_count > 4 ? argument[4] : shnNone;
 	
 	spr_load = [[spr, 0]];
 	
@@ -2409,82 +2421,81 @@ var _shine = argument_count > 4 ? argument[4] : false;
 	if(array_length(spr_load) > 0){
 		repeat(20){
 			while(array_length(spr_load) > 0){
-				var	m = array_length(spr_load) - 1,
-					_list = spr_load[m, 0],
-					_index = spr_load[m, 1];
+				var	_num   = array_length(spr_load) - 1,
+					_list  = spr_load[_num, 0],
+					_index = spr_load[_num, 1];
 					
 				if(_index < lq_size(_list) || _index < array_length(_list)){
-					spr_load[m, 1]++;
+					spr_load[_num, 1]++;
 					
-					var _spr = null;
+					var _load = null;
 					if(is_object(_list)){
-						_spr = lq_get_value(_list, _index);
+						_load = lq_get_value(_list, _index);
 					}
 					else if(is_array(_list)){
-						_spr = _list[_index];
+						_load = _list[_index];
 					}
 					
 					 // Load Sprite:
-					if(is_object(_spr) && "path" in _spr){
-						var	_img	= lq_defget(_spr, "img",	1),
-							_x		= lq_defget(_spr, "x",		0),
-							_y		= lq_defget(_spr, "y",		0),
-							_ext	= lq_defget(_spr, "ext",	"png"),
-							_mask	= lq_defget(_spr, "mask",	[]),
-							_shine	= lq_defget(_spr, "shine",	false),
-							_path	= _spr.path + "." + _ext,
-							s;
+					if(is_object(_load) && "path" in _load){
+						var	_spr    = mskNone,
+							_img	= lq_defget(_load, "img",	1),
+							_x		= lq_defget(_load, "x",		0),
+							_y		= lq_defget(_load, "y",		0),
+							_ext	= lq_defget(_load, "ext",	"png"),
+							_mask	= lq_defget(_load, "mask",	[]),
+							_shine	= lq_defget(_load, "shine",	shnNone),
+							_path	= _load.path + "." + _ext;
 							
 						if(fork()){
-							if(!_shine){
-								s = sprite_add(_path, _img, _x, _y);
-							}
-							
-							 // Add Shine:
-							else{
-								 // Normal:
-								if(!sprite_exists(_shine) || _shine == true){
-									s = sprite_add_weapon(_path, _x, _y);
-								}
-								
-								 // Semi-Manual Shine (sprite_add_weapon is wack with taller sprites):
-								else{
-									 // Wait for Sprite to Load:
-									var	_base    = sprite_add(_path, _img, _x, _y),
-										_waitMax = 90,
-										_waitBox = [sprite_get_bbox_left(_base), sprite_get_bbox_top(_base), sprite_get_bbox_right(_base), sprite_get_bbox_bottom(_base)];
-										
-									while(_waitMax-- > 0 && array_equals(_waitBox, [sprite_get_bbox_left(_base), sprite_get_bbox_top(_base), sprite_get_bbox_right(_base), sprite_get_bbox_bottom(_base)])){
-										wait 0;
-									}
+							switch(_shine){
+								case shnWep: // Basic Shine
+									_spr = sprite_add_weapon(_path, _x, _y);
+									break;
 									
-									 // Add Shine:
-									s = sprite_shine(_base, _shine);
-									sprite_delete(_base);
-								}
+								default:
+									_spr = sprite_add(_path, _img, _x, _y);
+									
+									 // Semi-Manual Shine (sprite_add_weapon is wack with taller sprites)
+									if(_shine != shnNone && sprite_exists(_shine)){
+										 // Wait for Sprite to Load:
+										var	_waitMax = 90,
+											_waitBox = [sprite_get_bbox_left(_spr), sprite_get_bbox_top(_spr), sprite_get_bbox_right(_spr), sprite_get_bbox_bottom(_spr)];
+											
+										while(_waitMax-- > 0 && array_equals(_waitBox, [sprite_get_bbox_left(_spr), sprite_get_bbox_top(_spr), sprite_get_bbox_right(_spr), sprite_get_bbox_bottom(_spr)])){
+											wait 0;
+										}
+										
+										 // Add Shine:
+										var _lastSpr = _spr;
+										_spr = sprite_shine(_spr, _shine);
+										sprite_delete(_lastSpr);
+									}
 							}
 							
 							 // Store Sprite:
 							if(is_object(_list)){
-								lq_set(_list, lq_get_key(_list, _index), s);
+								lq_set(_list, lq_get_key(_list, _index), _spr);
 							}
 							else{
-								_list[_index] = s;
+								_list[_index] = _spr;
 							}
 							
 							 // Precise Hitboxes:
 							if(array_length(_mask) > 0){
 								 // Wait for Sprite to Load:
-								var	_waitTex = sprite_get_texture(s, 0),
-									_waitMax = 150;
+								var	_waitMax = 90,
+									_waitBox = [sprite_get_bbox_left(_spr), sprite_get_bbox_top(_spr), sprite_get_bbox_right(_spr), sprite_get_bbox_bottom(_spr)];
 									
-								while(_waitMax-- > 0 && sprite_get_texture(s, 0) == _waitTex){
+								while(_waitMax-- > 0 && array_equals(_waitBox, [sprite_get_bbox_left(_spr), sprite_get_bbox_top(_spr), sprite_get_bbox_right(_spr), sprite_get_bbox_bottom(_spr)])){
 									wait 0;
 								}
 								
 								 // Collision Time:
-								while(array_length(_mask) < 9) array_push(_mask, 0);
-								sprite_collision_mask(s, _mask[0], _mask[1], _mask[2], _mask[3], _mask[4], _mask[5], _mask[7], _mask[8]);
+								while(array_length(_mask) < 9){
+									array_push(_mask, 0);
+								}
+								sprite_collision_mask(_spr, _mask[0], _mask[1], _mask[2], _mask[3], _mask[4], _mask[5], _mask[7], _mask[8]);
 							}
 							
 							exit;
@@ -2494,13 +2505,13 @@ var _shine = argument_count > 4 ? argument[4] : false;
 					}
 					
 					 // Search Deeper:
-					else if(is_object(_spr) || is_array(_spr)){
-						array_push(spr_load, [_spr, 0]);
+					else if(is_object(_load) || is_array(_load)){
+						array_push(spr_load, [_load, 0]);
 					}
 				}
 				
 				 // Go Back:
-				else spr_load = array_slice(spr_load, 0, m);
+				else spr_load = array_slice(spr_load, 0, _num);
 			}
 		}
 	}
@@ -2606,44 +2617,40 @@ var _shine = argument_count > 4 ? argument[4] : false;
 	
 	draw_reset_projection();
 	
-#define sprite_shine(_spr, _sprShine)
+#define sprite_shine(_spr, _shine)
 	/*
 		Returns a new sprite made by overlaying the given shine sprite on top of the other given normal sprite
 	*/
 	
-	var	_sprX = sprite_get_xoffset(_spr),
-		_sprY = sprite_get_yoffset(_spr),
-		_sprW = sprite_get_width(_spr),
-		_sprH = sprite_get_height(_spr),
-		_img  = sprite_get_number(_spr);
+	var	_sprX   = sprite_get_xoffset(_spr),
+		_sprY   = sprite_get_yoffset(_spr),
+		_sprW   = sprite_get_width(_spr),
+		_sprH   = sprite_get_height(_spr),
+		_sprImg = sprite_get_number(_shine),
+		_shineW = sprite_get_width(_shine),
+		_shineH = sprite_get_height(_shine);
 		
-	if(_img <= 1){
-		_img = sprite_get_number(_sprShine);
-	}
+	_sprX += max(0, floor((_shineW - _sprW) / 2));
+	_sprY += max(0, floor((_shineH - _sprH) / 2));
 	
-	with(surface_setup("sprShine", _sprW * _img, _sprH, 1)){
+	_sprW = max(_sprW, _shineW);
+	_sprH = max(_sprH, _shineH);
+	
+	with(surface_setup("sprShine", _sprW * _sprImg, _sprH, 1)){
 		surface_set_target(surf);
 		draw_clear_alpha(0, 0);
 		
 		with(UberCont){
-			for(var i = 0; i < _img; i++){
-				var	_x = _sprW * i,
+			for(var _img = 0; _img < _sprImg; _img++){
+				var	_x = _sprW * _img,
 					_y = 0;
 					
 				 // Normal Sprite:
-				draw_sprite(_spr, i, _x + _sprX, _y + _sprY);
+				draw_sprite(_spr, 0, _x + _sprX, _y + _sprY);
 				
 				 // Overlay Shine:
-				var	_shineSize = max(_sprW, _sprH),
-					_shineImg = i,
-					s = 2;
-					
-				if(i >= s){
-					_shineImg = lerp(s, sprite_get_number(_sprShine), (i - s) / (_img - s));
-				}
-				
 				draw_set_color_write_enable(true, true, true, false);
-				draw_sprite_stretched(_sprShine, _shineImg, _x, _y, _shineSize, _shineSize);
+				draw_sprite_stretched(_shine, _img, _x, _y, _sprW, _sprH);
 				draw_set_color_write_enable(true, true, true, true);
 			}
 		}
@@ -2654,7 +2661,7 @@ var _shine = argument_count > 4 ? argument[4] : false;
 		
 		 // Add Sprite:
 		surface_save(surf, name + ".png");
-		return sprite_add(name + ".png", _img, _sprX, _sprY);
+		return sprite_add(name + ".png", _sprImg, _sprX, _sprY);
 	}
 	
 #define weapon_merge_sprite(_stock, _front)

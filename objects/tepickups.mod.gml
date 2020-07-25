@@ -229,44 +229,49 @@
 	
 #define Backpacker_create(_x, _y)
 	with(instance_create(_x, _y, CustomProp)){
+		var _type = irandom(array_length(spr.BackpackerIdle) - 1);
+		
 		 // Visual:
-		spr_idle     = spr.Backpacker;
-		spr_hurt     = mskNone;
+		spr_idle     = spr.BackpackerIdle[_type];
+		spr_hurt     = spr.BackpackerHurt[_type];
 		spr_dead     = mskNone;
 		spr_shadow_y = -2;
 		sprite_index = spr_idle;
-		image_index  = irandom(image_number - 1);
-		image_speed  = 0;
 		depth        = -1;
 		
 		 // Sounds:
-		snd_dead = sndHitRock;
+		snd_hurt = sndHitRock;
 		snd_dead = sndHitRock;
 		
 		 // Vars:
 		mask_index = mskBandit;
-		my_health  = 1;
+		my_health  = 5;
 		raddrop    = 2;
 		size       = 1;
 		team       = 1;
-		weps       = ["crabbone"];
+		wep        = "crabbone";
 		
 		return id;
 	}
 	
 #define Backpacker_death
-	repeat(8) scrFX([x, 4], [y, 4], [random(360), random(4)], Dust);
-	repeat(6) with(scrFX(x, y, [random(360), 2 + random(3)], Shell)){
-		sprite_index = spr.BonePickup[irandom(array_length(spr.BonePickup) - 1)];
-		image_index = 0;
-		image_speed = 0;
+	 // BONE!!!
+	if(wep != wep_none){
+		with(instance_create(x, y, WepPickup)){
+			wep = other.wep;
+		}
 	}
 	
-	 // with(weps) was erroring :(
-	for(var i = 0; i < array_length(weps); i++){
-		var w = weps[i];
-		with(instance_create(x, y, WepPickup)) wep = w;
+	 // Effects:
+	repeat(8){
+		scrFX([x, 4], [y, 4], random(4), Dust);
 	}
+	repeat(6){
+		with(obj_create(x, y, "BonePickup")){
+			motion_add(random(360), 2 + random(3));
+		}
+	}
+	
 
 #define BackpackPickup_create(_x, _y)
 	with(instance_create(_x, _y, CustomObject)){
@@ -631,10 +636,9 @@
 	with(obj_create(_x, _y, "CustomPickup")){
 		 // Visual:
 		sprite_index = spr.BonePickup[irandom(array_length(spr.BonePickup) - 1)];
-		image_index = random(image_number - 1);
-		image_angle = random(360);
-		spr_open = -1;
-		spr_fade = -1;
+		image_angle  = random(360);
+		spr_open     = -1;
+		spr_fade     = -1;
 		
 		 // Sound:
 		snd_open = sndRadPickup;
@@ -650,6 +654,24 @@
 		on_pull = script_ref_create(BonePickup_pull);
 		on_open = script_ref_create(BonePickup_open);
 		on_fade = script_ref_create(BonePickup_fade);
+		
+		 // Undercover:
+		var _active = false;
+		with(Player){
+			with(other){
+				if(BonePickup_pull()){
+					_active = true;
+				}
+			}
+			if(_active) break;
+		}
+		if(_active){
+			image_index = random(image_number);
+		}
+		else{
+			shine = 0;
+			blink = 0;
+		}
 		
 		return id;
 	}
@@ -1750,7 +1772,7 @@
 					
 					 // Visual:
 					sprite_index = sprFishA;
-					shine = 0;
+					shine = 1;
 					break;
 					
 				case "hammerhead":
@@ -1886,7 +1908,7 @@
 	if(setup) ChestShop_setup();
 	
 	 // Shine Delay:
-	if(image_index < 1 && shine > 0){
+	if(image_index < 1 && shine < 1){
 		image_index += random(shine * current_time_scale) - image_speed_raw;
 	}
 	
@@ -2622,7 +2644,7 @@
 	}
 	
 	 // Animate:
-	if(image_index < 1 && shine > 0){
+	if(image_index < 1 && shine < 1){
 		image_index += random(shine * current_time_scale) - image_speed_raw;
 	}
 	
@@ -4005,10 +4027,10 @@
 	with(obj_create(_x, _y, "CustomPickup")){
 		 // Visual:
 		sprite_index = (chance(1, 3) ? spr.SunkenCoinBig : spr.SunkenCoin);
-		image_angle = random(360);
-		spr_open = sprCaveSparkle;
-		spr_fade = sprCaveSparkle;
-		shine = 0.03;
+		image_angle  = random(360);
+		spr_open     = sprCaveSparkle;
+		spr_fade     = sprCaveSparkle;
+		shine        = 0.03;
 		
 		 // Sound:
 		snd_open = sndRadPickup;
@@ -5590,6 +5612,7 @@
 #define corpse_drop(_dir, _spd)                                                         return  mod_script_call(   'mod', 'telib', 'corpse_drop', _dir, _spd);
 #define rad_drop(_x, _y, _raddrop, _dir, _spd)                                          return  mod_script_call_nc('mod', 'telib', 'rad_drop', _x, _y, _raddrop, _dir, _spd);
 #define rad_path(_inst, _target)                                                        return  mod_script_call_nc('mod', 'telib', 'rad_path', _inst, _target);
+#define area_set(_area, _subarea, _loops)                                               return  mod_script_call_nc('mod', 'telib', 'area_set', _area, _subarea, _loops);
 #define area_get_name(_area, _subarea, _loops)                                          return  mod_script_call_nc('mod', 'telib', 'area_get_name', _area, _subarea, _loops);
 #define area_get_sprite(_area, _spr)                                                    return  mod_script_call(   'mod', 'telib', 'area_get_sprite', _area, _spr);
 #define area_get_subarea(_area)                                                         return  mod_script_call_nc('mod', 'telib', 'area_get_subarea', _area);

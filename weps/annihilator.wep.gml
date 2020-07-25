@@ -9,18 +9,18 @@
 	global.lwoWep = {
 		wep   : mod_current,
 		melee : true
-	}
+	};
 	
-#define weapon_name      return (weapon_avail() ? "ANNIHILATOR" : "LOCKED");
-#define weapon_text      return `@wBEND @sTHE @(color:${area_get_back_color("red")})CONTINUUM`;
-#define weapon_swap      return sndSwapHammer;
-#define weapon_sprt      return (weapon_avail() ? global.sprWep : global.sprWepLocked);
-#define weapon_area      return (weapon_avail() ? 22 : -1); // L1 3-1
-#define weapon_load      return 24; // 0.8 Seconds
-#define weapon_melee(w)  return lq_defget(w, "melee", true);
-#define weapon_avail     return unlock_get("pack:red");
-#define weapon_shrine    return [mut_long_arms, mut_shotgun_shoulders];
-#define weapon_red       return 2;
+#define weapon_name         return (weapon_avail() ? "ANNIHILATOR" : "LOCKED");
+#define weapon_text         return `@wBEND @sTHE @(color:${area_get_back_color("red")})CONTINUUM`;
+#define weapon_swap         return sndSwapHammer;
+#define weapon_sprt         return (weapon_avail() ? global.sprWep : global.sprWepLocked);
+#define weapon_area         return (weapon_avail() ? 22 : -1); // L1 3-1
+#define weapon_load         return 24; // 0.8 Seconds
+#define weapon_melee(_wep)  return lq_defget(_wep, "melee", true);
+#define weapon_avail        return unlock_get("pack:red");
+#define weapon_shrine       return [mut_long_arms, mut_shotgun_shoulders];
+#define weapon_red          return 2;
 
 #define weapon_type
 	 // Weapon Pickup Ammo Outline:
@@ -35,10 +35,14 @@
 	 // Type:
 	return type_melee;
 	
-#define weapon_sprt_hud(w)
+#define weapon_sprt_hud(_wep)
 	 // Normal Outline:
 	if(instance_is(self, Player)){
-		if((wep == w && curse) || (bwep == w && bcurse) || weapon_get_rads(w) > 0){
+		if(
+			weapon_get_rads(_wep) > 0
+			|| (wep  == _wep && curse  > 0)
+			|| (bwep == _wep && bcurse > 0)
+		){
 			return global.sprWepHUD;
 		}
 	}
@@ -46,12 +50,12 @@
 	 // Red Outline:
 	return global.sprWepHUDRed;
 	
-#define weapon_fire(w)
-	var f = weapon_fire_init(w);
-	w = f.wep;
+#define weapon_fire(_wep)
+	var _fire = weapon_fire_init(_wep);
+	_wep = _fire.wep;
 	
 	 // Red:
-	var _cost = weapon_get_red(w);
+	var _cost = weapon_get_red(_wep);
 	if("red_ammo" in self && red_ammo >= _cost){
 		red_ammo -= _cost;
 		

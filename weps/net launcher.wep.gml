@@ -14,9 +14,9 @@
 #define weapon_laser_sight  return false;
 #define weapon_avail        return unlock_get("pack:coast");
 
-#define weapon_fire(w)
-	var f = weapon_fire_init(w);
-	w = f.wep;
+#define weapon_fire(_wep)
+	var _fire = weapon_fire_init(_wep);
+	_wep = _fire.wep;
 	
 	 // Net Nade:
 	projectile_create(x, y, "NetNade", gunangle + orandom(5 * accuracy), 16);

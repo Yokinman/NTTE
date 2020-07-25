@@ -883,14 +883,14 @@
 		y = floor((y / 16) - (_h / 2)) * 16;
 		
 		 // Vars:
-		mask_index = mskWall;
+		mask_index   = mskWall;
 		image_xscale = _w;
 		image_yscale = _h;
-		floor_num = 0;
-		floor_min = 0;
-		layout = [];
+		floor_num    = 0;
+		floor_min    = 0;
+		layout       = [];
 		layout_delay = 6;
-		area = area_vault;
+		area         = area_vault;
 		
 		return id;
 	}
@@ -1394,21 +1394,21 @@
 	with(instance_create(_x, _y, CustomProjectile)){
 		 // Visual:
 		sprite_index = sprPlasmaBall;
-		spr_dead = sprPlasmaImpact;
-		spr_trail = sprPlasmaTrail;
-		image_speed = 0.5;
+		spr_dead     = sprPlasmaImpact;
+		spr_trail    = sprPlasmaTrail;
+		image_speed  = 0.5;
 		
 		 // Sound:
 		snd_dead = sndPlasmaHit;
 		
 		 // Vars:
 		mask_index = mskPlasma;
-		damage = 4;
-		force = 4;
-		typ = 2;
-		minspeed = 7;
-		minscale = 0.5;
-		flak = [];
+		damage     = 4;
+		force      = 4;
+		typ        = 2;
+		minspeed   = 7;
+		minscale   = 0.5;
+		flak       = [];
 		
 		return id;
 	}
@@ -1721,14 +1721,14 @@
 		
 		 // Vars:
 		mask_index = mskFlakBullet;
-		friction = 0.4;
-		damage = 0;
-		force = 6;
-		rotation = 0;
-		rotspeed = random_range(12, 16) * choose(-1, 1);
-		inst = [];
-		inst_vars = {};
-		flag = [];
+		friction   = 0.4;
+		damage     = 0;
+		force      = 6;
+		rotation   = 0;
+		rotspeed   = random_range(12, 16) * choose(-1, 1);
+		inst       = [];
+		inst_vars  = {};
+		flag       = [];
 		
 		return id;
 	}
@@ -4926,10 +4926,10 @@
 	if(sprite_exists(_spr)){
 		with(instance_create(_x, _y, CustomObject)){
 			 // Vars:
-			area = _area;
-			special = false;
+			area     = _area;
+			special  = false;
 			eyeblink = random(10000);
-			eyedir = 90;
+			eyedir   = 90;
 			
 			 // Top Decal:
 			target = instance_create(x, y, TopPot);
@@ -5648,6 +5648,7 @@
 #define corpse_drop(_dir, _spd)                                                         return  mod_script_call(   'mod', 'telib', 'corpse_drop', _dir, _spd);
 #define rad_drop(_x, _y, _raddrop, _dir, _spd)                                          return  mod_script_call_nc('mod', 'telib', 'rad_drop', _x, _y, _raddrop, _dir, _spd);
 #define rad_path(_inst, _target)                                                        return  mod_script_call_nc('mod', 'telib', 'rad_path', _inst, _target);
+#define area_set(_area, _subarea, _loops)                                               return  mod_script_call_nc('mod', 'telib', 'area_set', _area, _subarea, _loops);
 #define area_get_name(_area, _subarea, _loops)                                          return  mod_script_call_nc('mod', 'telib', 'area_get_name', _area, _subarea, _loops);
 #define area_get_sprite(_area, _spr)                                                    return  mod_script_call(   'mod', 'telib', 'area_get_sprite', _area, _spr);
 #define area_get_subarea(_area)                                                         return  mod_script_call_nc('mod', 'telib', 'area_get_subarea', _area);

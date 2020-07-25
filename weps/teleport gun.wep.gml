@@ -21,9 +21,9 @@
 #define weapon_melee  return false;
 #define weapon_avail  return true; // unlock_get("pack:oasis"); // wtf
 
-#define weapon_fire(w)
-	var f = weapon_fire_init(w);
-	w = f.wep;
+#define weapon_fire(_wep)
+	var _fire = weapon_fire_init(_wep);
+	_wep = _fire.wep;
 	
 	 // Portal Bullet:
 	with(projectile_create(x, y, "PortalBullet", gunangle, 26)){
@@ -32,7 +32,7 @@
 		damage      = 25;
 		
 		 // Remember Me:
-		array_push(w.inst, id);
+		array_push(_wep.inst, id);
 	}
 	
 	 // Effects:

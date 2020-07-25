@@ -20,18 +20,18 @@
 #define weapon_auto   return true;
 #define weapon_avail  return unlock_get("pack:trench");
 
-#define weapon_fire(w)
-	var	f = weapon_fire_init(w);
-	w = f.wep;
+#define weapon_fire(_wep)
+	var	_fire = weapon_fire_init(_wep);
+	_wep = _fire.wep;
 	
 	 // New Beam:
-	if(!instance_exists(w.beam) || (f.spec && !f.roids)){
+	if(!instance_exists(_wep.beam) || (_fire.spec && !_fire.roids)){
 		 // Quasar Beam:
 		with(projectile_create(x, y, "QuasarBeam", gunangle + orandom(6 * accuracy), 0)){
 			image_yscale = 0.6;
 			turn_factor  = 1/100;
 			offset_dis   = 16;
-			w.beam       = id;
+			_wep.beam    = id;
 		}
 		
 		 // Sound:
@@ -46,7 +46,7 @@
 	}
 	
 	 // Charge Beam:
-	else with(w.beam){
+	else with(_wep.beam){
 		if(image_yscale < 1) scale_goal = 1;
 		else{
 			var	a = 0.25,
@@ -66,9 +66,9 @@
 	}
 	
 	 // Keep Setting:
-	with(w.beam){
-		shrink_delay = weapon_get_load(w) + 1;
-		roids = f.roids;
+	with(_wep.beam){
+		shrink_delay = weapon_get_load(_wep) + 1;
+		roids = _fire.roids;
 	}
 	
 	

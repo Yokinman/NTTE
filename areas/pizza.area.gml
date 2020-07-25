@@ -90,9 +90,9 @@
 			}
 			
 			 // Set Area to Pizza Sewers & Call room_start:
-			area = area_pizza_sewers;
+			area    = area_pizza_sewers;
 			subarea = 1;
-			loops = 0;
+			loops   = 0;
 			with(self) event_perform(ev_other, ev_room_start);
 			
 			 // Restore Vars & Seed:
@@ -226,7 +226,7 @@
 	 // Next Area:
 	else{
 		var _next = area_next();
-		area = _next[0];
+		area    = _next[0];
 		subarea = _next[1];
 	}
 	
@@ -449,6 +449,7 @@
 #define corpse_drop(_dir, _spd)                                                         return  mod_script_call(   'mod', 'telib', 'corpse_drop', _dir, _spd);
 #define rad_drop(_x, _y, _raddrop, _dir, _spd)                                          return  mod_script_call_nc('mod', 'telib', 'rad_drop', _x, _y, _raddrop, _dir, _spd);
 #define rad_path(_inst, _target)                                                        return  mod_script_call_nc('mod', 'telib', 'rad_path', _inst, _target);
+#define area_set(_area, _subarea, _loops)                                               return  mod_script_call_nc('mod', 'telib', 'area_set', _area, _subarea, _loops);
 #define area_get_name(_area, _subarea, _loops)                                          return  mod_script_call_nc('mod', 'telib', 'area_get_name', _area, _subarea, _loops);
 #define area_get_sprite(_area, _spr)                                                    return  mod_script_call(   'mod', 'telib', 'area_get_sprite', _area, _spr);
 #define area_get_subarea(_area)                                                         return  mod_script_call_nc('mod', 'telib', 'area_get_subarea', _area);

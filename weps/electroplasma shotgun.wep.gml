@@ -16,12 +16,12 @@
 #define weapon_reloaded
 	sound_play(sndLightningReload);
 	
-#define weapon_fire(w)
-	var f = weapon_fire_init(w);
-	w = f.wep;
+#define weapon_fire(_wep)
+	var _fire = weapon_fire_init(_wep);
+	_wep = _fire.wep;
 	
 	 // Spread Fire:
-	var _last = variable_instance_get(f.creator, "electroplasma_last", noone);
+	var _last = variable_instance_get(_fire.creator, "electroplasma_last", noone);
 	for(var i = -2; i <= 2; i++){
 		with(projectile_create(
 			x,
@@ -35,7 +35,7 @@
 			_last = id;
 		}
 	}
-	with(f.creator){
+	with(_fire.creator){
 		electroplasma_last = _last;
 	}
 	

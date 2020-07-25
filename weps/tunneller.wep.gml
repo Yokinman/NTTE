@@ -5,16 +5,17 @@
 	global.sprWepHUDRed = sprite_add(       "../sprites/weps/sprTunnellerHUDRed.png", 1, 0, 3);
 	global.sprWepLocked = mskNone;
 	
-#define weapon_name   return (weapon_avail() ? "TUNNELLER" : "LOCKED");
-#define weapon_text   return choose(`@wUNLOCK @sTHE @(color:${area_get_back_color("red")})CONTINUUM`, "FULL CIRCLE", `YET ANOTHER @(color:${area_get_back_color("red")})RED KEY`);
-#define weapon_swap   return sndSwapSword;
-#define weapon_sprt   return (weapon_avail() ? global.sprWep : global.sprWepLocked);
-#define weapon_area   return (weapon_avail() ? 22 : -1); // L1 3-1
-#define weapon_load   return 24; // 0.8 Seconds
-#define weapon_auto   return true;
-#define weapon_melee  return false;
-#define weapon_avail  return unlock_get("pack:red");
-#define weapon_red    return 1;
+#define weapon_name    return (weapon_avail() ? "TUNNELLER" : "LOCKED");
+#define weapon_text    return choose(`@wUNLOCK @sTHE @(color:${area_get_back_color("red")})CONTINUUM`, "FULL CIRCLE", `YET ANOTHER @(color:${area_get_back_color("red")})RED KEY`);
+#define weapon_swap    return sndSwapSword;
+#define weapon_sprt    return (weapon_avail() ? global.sprWep : global.sprWepLocked);
+#define weapon_area    return (weapon_avail() ? 22 : -1); // L1 3-1
+#define weapon_load    return 24; // 0.8 Seconds
+#define weapon_auto    return true;
+#define weapon_melee   return false;
+#define weapon_avail   return unlock_get("pack:red");
+#define weapon_shrine  return [mut_long_arms, mut_laser_brain];
+#define weapon_red     return 1;
 
 #define weapon_type
 	 // Weapon Pickup Ammo Outline:
@@ -29,29 +30,41 @@
 	 // Type:
 	return type_melee;
 	
-#define weapon_sprt_hud(w)
-	 // Curse Outline:
-	if(instance_is(self, Player) && ((wep == w && curse) || (bwep == w && bcurse))){
-		return global.sprWepHUD;
+#define weapon_sprt_hud(_wep)
+	 // Normal Outline:
+	if(instance_is(self, Player)){
+		if(
+			weapon_get_rads(_wep) > 0
+			|| (wep  == _wep && curse  > 0)
+			|| (bwep == _wep && bcurse > 0)
+		){
+			return global.sprWepHUD;
+		}
 	}
 	
 	 // Red Outline:
 	return global.sprWepHUDRed;
 	
-#define weapon_fire(w)
-	var f = weapon_fire_init(w);
-	w = f.wep;
+#define weapon_fire(_wep)
+	var _fire = weapon_fire_init(_wep);
+	_wep = _fire.wep;
 	
 	 // Red:
 	var _cost = weapon_red();
 	if("red_ammo" in self && red_ammo >= _cost){
 		red_ammo -= _cost;
 		
+		var _skill = skill_get(mut_laser_brain);
+		
 		 // Chaos Ball:
 		with(projectile_create(x, y, "CrystalHeartBullet", gunangle + orandom(4 * accuracy), 4)){
-			damage     = 20;
+			damage = lerp(20, 30, _skill);
+			image_xscale += 0.15 * _skill;
+			image_yscale += 0.15 * _skill;
+			
+			 // Area:
 			area_goal  = irandom_range(8, 12);
-			area_chaos = true; 
+			area_chaos = chance(1, 2); 
 			area_chest = pool([
 				[AmmoChest,          4],
 				[WeaponChest,        4],
@@ -60,12 +73,26 @@
 				["BonusHealthChest", 2],
 				["RedAmmoChest",     1]
 			]);
+			with(instance_create(x, y, ThrowHit)){
+				image_blend = area_get_back_color(other.area);
+			}
 		}
+		
+		 // Sounds:
+		sound_play_gun(sndShotgunHitWall,                            0.4,  0.6);
+		sound_play_gun(((_skill > 0) ? sndPlasmaBig : sndPlasmaUpg), 0.2, -0.5);
 		
 		 // Effects:
 		weapon_post(18, 24, 12);
 		motion_add(gunangle + 180, 4);
 		move_contact_solid(gunangle + 180, 4);
+		if(_skill > 0 && _cost > 0){
+			repeat(_cost){
+				with(instance_create(x, y, LaserBrain)){
+					creator = other;
+				}
+			}
+		}
 	}
 	
 	 // Normal:
