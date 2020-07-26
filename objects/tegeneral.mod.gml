@@ -910,11 +910,11 @@
 			}
 			
 			var	_move = 32,
-				_dis = random_range(40, 80);
+				_dis  = random_range(40, 80);
 				
 			while(distance_to_object(Floor) < _dis){
-				x = floor((x + lengthdir_x(_move, direction)) / 16) * 16;
-				y = floor((y + lengthdir_y(_move, direction)) / 16) * 16;
+				x = pfloor(x + lengthdir_x(_move, direction), 16);
+				y = pfloor(y + lengthdir_y(_move, direction), 16);
 			}
 			
 			 // Create TopSmalls/Decals:
@@ -998,15 +998,15 @@
 						_ped = false;
 						
 						var _img = 0;
-						for(var _ox = -32; _ox <= 32; _ox += 32){
-							for(var _oy = -32; _oy <= 32; _oy += 32){
+						for(var _oy = -32; _oy <= 32; _oy += 32){
+							for(var _ox = -32; _ox <= 32; _ox += 32){
 								array_push(layout, {
 									x	 : _fx + _ox,
 									y	 : _fy + _oy,
 									obj	 : Floor,
 									vars : {
 										sprite_index : spr.VaultFlowerFloor,
-										image_index : _img++
+										image_index  : _img++
 									}
 								})
 							}

@@ -2912,7 +2912,7 @@
 		with(script_bind_step(flagprojcont_step, 0)){
 			name = script[2];
 			list = flagProjCont;
-			flagprojcont_step();
+			event_perform(ev_step, ev_step_normal);
 		}
 	}
 	
@@ -2921,9 +2921,9 @@
 		var	_scrtTyp = scrt[0],
 			_scrtMod = scrt[1],
 			_scrtNam = scrt[2],
-			_flag = flag,
-			_inst = inst,
-			_vars = vars;
+			_flag    = flag,
+			_inst    = inst,
+			_vars    = vars;
 			
 		 // Add New:
 		with(instances_matching_ne(projectile, _flag, null)){
@@ -4048,19 +4048,20 @@
 			break;
 			
 		case proj_destroy:
-			with(o) if(amnt > 0){
+			if(o.amnt > 0){
 				 // Flame:
-				repeat(amnt){
+				repeat(o.amnt){
 					var	_dir = random(360),
 						_spd = 0;
 						
-					if(amnt > 3){
-						_spd = 2 + random((amnt * 0.2) / max(1, amnt / 20));
+					if(o.amnt > 3){
+						_spd = 2 + random((o.amnt * 0.2) / max(1, o.amnt / 20));
 					}
 					
-					with(projectile_create(x + orandom(4), y + orandom(4), Flame, _dir, _spd)){
-						hspeed += other.hspeed / 6;
-						vspeed += other.vspeed / 6;
+					with(projectile_create(o.x + orandom(4), o.y + orandom(4), Flame, _dir, _spd)){
+						team = o.team;
+						hspeed += o.hspeed / 6;
+						vspeed += o.vspeed / 6;
 						if(distance_to_object(Explosion) <= 0){
 							speed += random(4);
 						}
@@ -4068,15 +4069,15 @@
 				}
 				
 				 // Smoke:
-				repeat(amnt / 2){
-					with(instance_create(x, y, Smoke)){
-						motion_add(random(360), random(sqrt(other.amnt)));
+				repeat(o.amnt / 2){
+					with(instance_create(o.x, o.y, Smoke)){
+						motion_add(random(360), random(sqrt(o.amnt)));
 					}
 				}
 				
 				 // Sound:
-				if(amnt > 3){
-					with(instance_create(x, y, GameObject)){
+				if(o.amnt > 3){
+					with(instance_create(o.x, o.y, GameObject)){
 						sound_play_hit(sndFlareExplode, 0.4);
 						instance_destroy();
 					}
@@ -4203,13 +4204,14 @@
 			
 		case proj_destroy:
 			 // Nades:
-			with(o) repeat(amnt){
+			repeat(o.amnt){
 				var	_dir = random(360),
-					_spd = random_range(1, 2 + (amnt / 2));
+					_spd = 2 + random(min(8, o.amnt / 2));
 					
-				with(projectile_create(x, y, MiniNade, _dir, _spd)){
-					hspeed += other.hspeed / 2;
-					vspeed += other.vspeed / 2;
+				with(projectile_create(o.x, o.y, MiniNade, _dir, _spd)){
+					team = o.team;
+					hspeed += o.hspeed / 2;
+					vspeed += o.vspeed / 2;
 					depth = -1.5;
 					x += hspeed;
 					y += vspeed;
