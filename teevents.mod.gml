@@ -1059,12 +1059,12 @@
 							other.x = _cx + lengthdir_x(12, _dir + 180);
 							other.y = _cy + lengthdir_y(12, _dir + 180);
 							with(instance_create(other.x, other.y, Table)){
-								spr_idle = sprTable1;
-								spr_hurt = sprTable1Hurt;
-								spr_dead = sprTable1Dead;
+								spr_idle   = sprTable1;
+								spr_hurt   = sprTable1Hurt;
+								spr_dead   = sprTable1Dead;
 								spr_shadow = shd32;
-								maxhealth = 5;
-								my_health = maxhealth;
+								maxhealth  = 5;
+								my_health  = maxhealth;
 								
 								 // Furnishment:
 								obj_create(x, y, "SewerRug");
@@ -1443,7 +1443,7 @@
 					array_push(_noWep, wep);
 					array_push(_noWep, bwep);
 				}
-				wep  = weapon_decide(2, GameCont.hard, false, _noWep);
+				wep  = weapon_decide(2, 1 + GameCont.hard, false, _noWep);
 				roll = true;
 			}
 		}

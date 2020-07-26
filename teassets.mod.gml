@@ -1215,7 +1215,7 @@
 				}
 				
 				 // Rug:
-				Rug = sprite(p + "sprRug", 1, 26, 26);
+				Rug = sprite(p + "sprRug", 2, 26, 26);
 				
 				 // Soda Machine:
 				SodaMachineIdle = sprite(p + "sprSodaMachine",     1, 16, 16);

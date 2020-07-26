@@ -1539,12 +1539,14 @@
 #define ntte_step
 	 // Underwater Sounds:
 	if(global.waterSoundActive){
-		if(!area_get_underwater(GameCont.area) && GameCont.area != area_oasis){
+		if(!area_get_underwater(GameCont.area)){
 			underwater_sound(false);
 		}
 	}
 	else if(area_get_underwater(GameCont.area)){
-		underwater_sound(true);
+		if(array_exists(mod_variable_get("mod", "ntte", "mods").area, GameCont.area)){
+			underwater_sound(true);
+		}
 	}
 	
 	 // Reset Bubbles:

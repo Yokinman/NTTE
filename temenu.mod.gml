@@ -6,6 +6,21 @@
 	 // Mod Lists:
 	ntte_mods = mod_variable_get("mod", "teassets", "mods");
 	
+	 // Bind Events:
+	ntte_bind = {
+		"menu"            : script_bind_draw(draw_menu,            object_get_depth(Menu) - 1),
+		"loadout_crown"   : script_bind_draw(draw_loadout_crown,   object_get_depth(LoadoutCrown) - 1),
+		"loadout_weapon"  : script_bind_draw(draw_loadout_weapon,  object_get_depth(LoadoutWep) - 1),
+		"loadout_tooltip" : script_bind_draw(draw_loadout_tooltip, -100000),
+		"loadout_behind"  : script_bind_draw(draw_loadout_behind,  object_get_depth(Loadout) + 1),
+		"loadout_above"   : script_bind_draw(draw_loadout_above,   object_get_depth(Loadout) - 1)
+	};
+	for(var i = 0; i < lq_size(ntte_bind); i++){
+		with(lq_get_value(ntte_bind, i)){
+			persistent = true;
+		}
+	}
+	
 	 // Menu Layout:
 	NTTEMenu = {
 		"open"			: false,
@@ -277,13 +292,6 @@
 		{ name: "main", inst: noone, hover: false, alarm0: -1, addy: 0, overy: 0, dix: -1,       diy: 0 }
 	];
 	
-	 // Loadout Tooltip: 
-	loadoutTip = {
-		x : 0,
-		y : 0,
-		text : ""
-	};
-	
 	 // Mouse:
 	global.mouse_x_previous = array_create(maxp, 0);
 	global.mouse_y_previous = array_create(maxp, 0);
@@ -295,6 +303,8 @@
 #macro lag global.debug_lag
 
 #macro ntte_mods global.mods
+
+#macro ntte_bind global.bind
 
 #macro NTTEMenu         global.menu
 #macro MenuOpen         NTTEMenu.open
@@ -328,7 +338,6 @@
 #macro cred_yellow     "@y"
 
 #macro loadoutPlayer (player_is_active(player_find_local_nonsync()) ? player_find_local_nonsync() : 0)
-#macro loadoutTip    global.loadout_tooltip
 
 #macro crownLoadout global.loadout_crown
 #macro crownCompare crownLoadout.compare
@@ -410,165 +419,175 @@
 	}
 	GameCont.crownpoints = _crownPoints;
 	
-#define ntte_begin_step
-	 // Bind Events:
-	script_bind_draw(draw_menu, (instance_exists(Menu) ? Menu.depth : object_get_depth(Menu)) - 1);
+#define ntte_end_step
+	var _visible = false;
 	
-	 // Loadout Crowns/Weapons:
+	 // NTTE Character Selection Stuff:
 	if(instance_exists(Menu)){
-		var _players = 0;
-		for(var i = 0; i < maxp; i++){
-			_players += player_is_active(i);
-		}
-		if(_players <= 1){
-			with(Menu){
-				with(Loadout) if(selected == false && openanim > 0){
-					openanim = 0; // Bro they actually forgot to reset this when the loadout is closed (<= v9940)
-				}
-				
-				 // Bind Drawing:
-				script_bind_draw(draw_loadout_crown,  object_get_depth(LoadoutCrown) - 1);
-				script_bind_draw(draw_loadout_weapon, object_get_depth(LoadoutWep) - 1);
-				script_bind_draw(draw_loadout_tooltip, -100000);
-				if(instance_exists(Loadout)){
-					script_bind_draw(draw_loadout_behind, Loadout.depth + 1);
-					script_bind_draw(draw_loadout_above,  Loadout.depth - 1);
-				}
-				
-				 // LoadoutSkin Offset:
-				with(instances_matching(LoadoutSkin, "ntte_crown_xoffset", null)){
-					ntte_crown_xoffset = -22;
-					xstart += ntte_crown_xoffset;
-				}
-				
-				 // Crown Thing:
-				if("NTTE_crown_check" not in self){
-					NTTE_crown_check = true;
-					if(crownCamp != crwn_none){
-						var _inst = instance_create(0, 0, Crown);
-						with(_inst){
-							alarm0 = -1;
-							event_perform(ev_alarm, 0);
-							
-							 // Place by Last Played Character:
-							with(array_combine(instances_matching(CampChar, "num", player_get_race_id(0)), instances_matching(CampChar, "race", player_get_race(0)))){
+		 // Campfire Crown Boy:
+		with(instances_matching(Menu, "ntte_campcrown_check", null)){
+			ntte_campcrown_check = (crownCamp != crwn_none);
+			if(ntte_campcrown_check){
+				var _inst = instance_create(0, 0, Crown);
+				with(_inst){
+					alarm0 = -1;
+					event_perform(ev_alarm, 0);
+					
+					 // Place by Last Played Character:
+					for(var i = 0; i < maxp; i++){
+						if(player_is_active(i)){
+							with(array_combine(
+								instances_matching(CampChar, "num", player_get_race_id(i)),
+								instances_matching(CampChar, "race", player_get_race(i))
+							)){
 								other.x = x + (random_range(12, 24) * choose(-1, 1));
 								other.y = y + orandom(8);
 							}
-							
-							 // Visual Setup:
-							var c = crownCamp;
-							if(is_string(c)){
-								mod_script_call("crown", c, "crown_object");
-							}
-							else if(is_real(c)){
-								spr_idle = asset_get_index(`sprCrown${c}Idle`);
-								spr_walk = asset_get_index(`sprCrown${c}Walk`);
-							}
-							depth = -2;
-						}
-						
-						 // Delete:
-						if(fork()){
-							wait 5;
-							with(instances_matching_ne(Crown, "id", _inst)){
-								instance_destroy();
-							}
-							exit;
-						}
-					}
-				}
-				
-				 // Initialize Crown Selection:
-				var _mods = mod_get_names("race");
-				for(var i = 0; i <= 16 + array_length(_mods); i++){
-					var _race = ((i <= 16) ? race_get_name(i) : _mods[i - 17]);
-					if(_race not in crownRace){
-						lq_set(crownRace, _race, {
-							icon : [],
-							slct : crwn_none,
-							custom : {
-								icon : [],
-								slct : -1
-							}
-						});
-					}
-				}
-				
-				 // Custom Loadout Weapons:
-				if(instance_exists(LoadoutWep)){
-					 // Create Inactive LoadoutWeps:
-					with(wepLoadout){
-						if(!instance_exists(inst)){
-							if(name == "" || unlock_get(`loadout:wep:${player_get_race_fix(loadoutPlayer)}:${name}`) != wep_none){
-								inst = instance_create(0, 0, FloorMaker);
-								alarm0 = 2;
-								overy = 0;
-								addy = 2;
-								
-								 // Destroy FloorMaker Things:
-								with(instances_matching_gt(GameObject, "id", inst)){
-									instance_delete(id);
-								}
-								
-								 // Become LoadoutWep:
-								with(inst){
-									dix = other.dix;
-									instance_change(LoadoutWep, true);
-									other.alarm0 = alarm_get(0);
-									alarm_set(0, -1);
-								}
-							}
+							break;
 						}
 					}
 					
-					 // Loadout Wep Selection:
-					with(wepLoadout){
-						hover = false;
-						with(other){
-							for(var i = 0; i < maxp; i++){
-								if(player_is_active(i) && position_meeting(mouse_x[i], mouse_y[i], other.inst)){
-									other.hover = true;
-									break;
-								}
-							}
+					 // Visual Setup:
+					var _crown = crownCamp;
+					if(is_string(_crown)){
+						mod_script_call("crown", _crown, "crown_object");
+					}
+					else if(is_real(_crown)){
+						spr_idle = asset_get_index(`sprCrown${_crown}Idle`);
+						spr_walk = asset_get_index(`sprCrown${_crown}Walk`);
+					}
+					depth = -2;
+				}
+				
+				 // Delete:
+				if(fork()){
+					wait 5;
+					with(instances_matching_ne(Crown, "id", _inst)){
+						instance_destroy();
+					}
+					exit;
+				}
+			}
+		}
+		
+		 // LoadoutSkin Offset:
+		with(instances_matching(LoadoutSkin, "ntte_crown_xoffset", null)){
+			ntte_crown_xoffset = -22;
+			xstart += ntte_crown_xoffset;
+		}
+		
+		 // Custom Loadout Weapons:
+		if(instance_exists(LoadoutWep)){
+			 // Create Inactive LoadoutWeps:
+			with(wepLoadout){
+				if(!instance_exists(inst)){
+					if(name == "" || unlock_get(`loadout:wep:${player_get_race_fix(loadoutPlayer)}:${name}`) != wep_none){
+						inst   = instance_create(0, 0, FloorMaker);
+						alarm0 = 2;
+						overy  = 0;
+						addy   = 2;
+						
+						 // Destroy FloorMaker Things:
+						with(instances_matching_gt(GameObject, "id", inst)){
+							instance_delete(id);
+						}
+						
+						 // Become LoadoutWep:
+						with(inst){
+							dix = other.dix;
+							instance_change(LoadoutWep, true);
+							other.alarm0 = alarm_get(0);
+							alarm_set(0, -1);
 						}
 					}
+				}
+			}
+			
+			 // Loadout Wep Selection:
+			with(wepLoadout){
+				hover = false;
+				with(other){
 					for(var i = 0; i < maxp; i++){
-						if(player_is_active(i) && button_pressed(i, "fire")){
-							if(position_meeting(mouse_x[i], mouse_y[i], LoadoutWep)){
-								var	_race     = player_get_race_fix(i),
-									_slctPath = `loadout:wep:${_race}`,
-									_slctSnd  = sndMenuGoldwep,
-									_slct     = "";
-									
-								with(wepLoadout) if(hover){
-									_slct = name;
-									if(_slct == ""){
-										switch(_race){
-											case "venuz"   : _slctSnd = sndMenuGoldwep;  break;
-											case "chicken" : _slctSnd = sndMenuSword;    break;
-											default        : _slctSnd = sndMenuRevolver; break;
-										}
-									}
-									break;
-								}
-								
-								 // Selected:
-								if(_slct != save_get(_slctPath, "")){
-									save_set(_slctPath, _slct);
-									sound_play(_slctSnd);
+						if(player_is_active(i) && position_meeting(mouse_x[i], mouse_y[i], other.inst)){
+							other.hover = true;
+							break;
+						}
+					}
+				}
+			}
+			for(var i = 0; i < maxp; i++){
+				if(player_is_active(i) && button_pressed(i, "fire")){
+					if(position_meeting(mouse_x[i], mouse_y[i], LoadoutWep)){
+						var	_race     = player_get_race_fix(i),
+							_slctPath = `loadout:wep:${_race}`,
+							_slctSnd  = sndMenuGoldwep,
+							_slct     = "";
+							
+						with(wepLoadout) if(hover){
+							_slct = name;
+							if(_slct == ""){
+								switch(_race){
+									case "venuz"   : _slctSnd = sndMenuGoldwep;  break;
+									case "chicken" : _slctSnd = sndMenuSword;    break;
+									default        : _slctSnd = sndMenuRevolver; break;
 								}
 							}
+							break;
+						}
+						
+						 // Selected:
+						if(_slct != save_get(_slctPath, "")){
+							save_set(_slctPath, _slct);
+							sound_play(_slctSnd);
 						}
 					}
 				}
 			}
 		}
+		
+		 // Initialize Crown Selection:
+		var _mods = mod_get_names("race");
+		for(var i = 0; i <= 16 + array_length(_mods); i++){
+			var _race = ((i <= 16) ? race_get_name(i) : _mods[i - 17]);
+			if(_race not in crownRace){
+				lq_set(crownRace, _race, {
+					icon   : [],
+					slct   : crwn_none,
+					custom : {
+						icon : [],
+						slct : -1
+					}
+				});
+			}
+		}
+		
+		 // Loadout Visibility:
+		var _players = 0;
+		for(var i = 0; i < maxp; i++){
+			_players += player_is_active(i);
+		}
+		if(_players <= 1){
+			_visible = true;
+		}
 	}
-	else{
-		 // For CharSelection Crown Boy:
-		crownCamp = crown_current;
+	
+	 // Remember Last Crown:
+	else crownCamp = crown_current;
+	
+	 // Menu Drawing Visibility:
+	with(ntte_bind){
+		with(menu){
+			depth = (instance_exists(Menu) ? Menu.depth : object_get_depth(Menu)) - 1;
+		}
+		with([loadout_crown, loadout_weapon, loadout_tooltip, loadout_behind, loadout_above]){
+			if(instance_exists(self)){
+				visible = _visible;
+			}
+		}
+		if(instance_exists(Loadout)){
+			with(loadout_behind) depth = Loadout.depth + 1;
+			with(loadout_above ) depth = Loadout.depth - 1;
+		}
 	}
 	
 #define draw_gui_end
@@ -639,9 +658,10 @@
 	ntte_menu();
 	
 #define draw_menu
-	 // Campfire Menu:
-	MenuSplat += current_time_scale * (mod_exists("mod", "teloader") ? -1 : 1);
-	MenuSplat = clamp(MenuSplat, 0, sprite_get_number(sprBossNameSplat) - 1);
+	var _add = ((mod_exists("mod", "teloader") || (!MenuOpen && array_length(instances_matching_ge(Menu, "charsplat", 3)) <= 0)) ? -1 : 1);
+	MenuSplat = clamp(MenuSplat + (_add * current_time_scale), 0, sprite_get_number(sprBossNameSplat) - 1);
+	
+	 // Campfire Menu Button:
 	if(instance_exists(Menu)){
 		draw_set_projection(0);
 		
@@ -650,7 +670,9 @@
 			with(Menu){
 				mode = 0;
 				charsplat = 1;
-				for(var i = 0; i < array_length(charx); i++) charx[i] = 0;
+				for(var i = 0; i < array_length(charx); i++){
+					charx[i] = 0;
+				}
 				sound_volume(sndMenuCharSelect, 0);
 			}
 			with(Loadout) instance_destroy();
@@ -694,36 +716,35 @@
 				}
 				with(Loadout) selected = 0;
 				
-				 // Tiny Fix:
-				with(instance_create(0, 0, CustomDraw)){
-					mod_script_call("mod", mod_current, "draw_loadout_behind");
-				}
+				 // Tiny Partial Fix:
+				draw_loadout_behind();
 			}
 		}
 		
 		 // Open:
-		else{
-			var	_hover = false,
-				_x1 = game_width - 40,
-				_y1 = 40,
-				_max = 0;
+		else if(MenuSplat > 0){
+			var	_x = game_width - 40,
+				_y = 40,
+				_w = 40,
+				_h = 24;
 				
-			 // Offset for Co-op:
+			 // Co-op Offset:
+			var _max = 0;
 			for(var i = 0; i < array_length(Menu.charx); i++){
-				if(Menu.charx[i] != 0) _max = i;
+				if(Menu.charx[i] != 0){
+					_max = i;
+				}
 			}
 			if(_max >= 2){
-				_x1 = (game_width / 2) - 20;
-				_y1 += 2;
+				_x = (game_width / 2) - 20;
+				_y += 2;
 			}
 			
-			var	_x2 = _x1 + 40,
-				_y2 = _y1 + 24;
-				
 			 // Player Clicky:
+			var _hover = false;
 			if(!instance_exists(Loadout) || !Loadout.selected){
 				for(var i = 0; i < maxp; i++){
-					if(point_in_rectangle(mouse_x[i] - view_xview[i], mouse_y[i] - view_yview[i], _x1, _y1 - 8, _x2, _y2)){
+					if(point_in_rectangle(mouse_x[i] - view_xview[i], mouse_y[i] - view_yview[i], _x, _y - 8, _x + _w, _y + _h)){
 						_hover = true;
 						if(button_pressed(i, "fire")){
 							sound_play_pitch(sndMenuCredits, 1 + orandom(0.1));
@@ -736,14 +757,18 @@
 			}
 			
 			 // Button Visual:
-			draw_sprite_ext(sprBossNameSplat, MenuSplat, _x1 + 17, _y1 + 12 + MenuSplat, 1, 1, 90, c_white, 1);
-			if(!MenuOpen && MenuSplat > 0){
-				var w = (MenuSplatBlink % 300) - 120;
-				draw_sprite_ext(spr.MenuNTTE, 0, (_x1 + _x2) / 2, _y1 + 8 + _hover, 1, 1, 0, ((_hover || in_range(w, 0, 5) || in_range(w, 8, 10)) ? c_white : c_silver), 1);
+			draw_sprite_ext(sprBossNameSplat, MenuSplat, _x + 17, _y + 12 + MenuSplat, 1, 1, 90, c_white, 1);
+			if(!MenuOpen){
+				var _wave = (MenuSplatBlink % 300) - 120,
+					_col  = ((_hover || in_range(_wave, 0, 5) || in_range(_wave, 8, 10)) ? c_white : c_silver);
+					
+				draw_sprite_ext(spr.MenuNTTE, 0, _x + (_w / 2), _y + 8 + _hover, 1, 1, 0, _col, 1);
 			}
 			if(MenuSplatBlink >= 0){
 				MenuSplatBlink += current_time_scale;
-				if(_hover || !option_get("reminders")) MenuSplatBlink = -1;
+				if(_hover || !option_get("reminders")){
+					MenuSplatBlink = -1;
+				}
 			}
 		}
 		
@@ -752,8 +777,6 @@
 	
 	 // Main Code:
 	ntte_menu();
-	
-	instance_destroy();
 	
 #define draw_loadout_crown
 	var	_p     = loadoutPlayer,
@@ -1094,15 +1117,15 @@
 			
 			 // Custom Crown Tooltip:
 			with(_crown.custom.icon) if(visible && hover){
-				loadoutTip.x = x;
-				loadoutTip.y = y - 5 - hover;
-				loadoutTip.text = (locked ? "LOCKED" : crown_get_name(crwn) + "#@s" + crown_get_text(crwn));
+				with(ntte_bind.loadout_tooltip){
+					x    = other.x;
+					y    = other.y - 5 - other.hover;
+					text = (other.locked ? "LOCKED" : (crown_get_name(other.crwn) + "#@s" + crown_get_text(other.crwn)));
+				}
 			}
 		}
 		else crownCompare = [];
 	}
-	
-	instance_destroy();
 	
 #define draw_loadout_weapon
 	for(var i = 0; i < array_length(wepLoadout); i++){
@@ -1139,24 +1162,24 @@
 						draw_loadoutwep(_wep, 0, _x, _y - (_slct ? 2 : other.hover), 1, 1, 0, merge_color(c_white, c_black, (_slct ? 0 : (other.hover ? 0.2 : 0.5))), 1);
 						
 						 // Tooltip:
-						if(other.hover){
-							loadoutTip.x = _x;
-							loadoutTip.y = _y - 7 + other.overy;
-							loadoutTip.text = weapon_get_name(_wep);
-							if(other.overy > 0) other.overy--;
+						with(other){
+							if(hover){
+								with(ntte_bind.loadout_tooltip){
+									x    = _x;
+									y    = _y - 7 + other.overy;
+									text = weapon_get_name(_wep);
+								}
+								if(overy > 0) overy--;
+							}
+							else overy = 1;
 						}
-						else other.overy = 1;
 					}
 				}
 			}
 		}
 	}
 	
-	instance_destroy();
-	
 #define draw_loadout_behind
-	instance_destroy();
-	
 	 // Fix Haste Hands:
 	if(global.clock_fix){
 		with(Loadout) if(selected == false){
@@ -1189,14 +1212,14 @@
 		
 	with(surface_setup("LoadoutHide", 64, 64, game_scale_nonsync)){
 		with(Loadout){
-			var	_x = view_xview_nonsync + game_width,
-				_y = view_yview_nonsync + game_height - 36 + (introsettle - (introsettle > 0)),
-				_surf = other.surf,
-				_surfW = other.w,
-				_surfH = other.h,
+			var	_x         = view_xview_nonsync + game_width,
+				_y         = view_yview_nonsync + game_height - 36 + introsettle,
+				_surf      = other.surf,
+				_surfW     = other.w,
+				_surfH     = other.h,
 				_surfScale = other.scale,
-				_surfX = _x - 32 - _surfW,
-				_surfY = _y +  4 - _surfH;
+				_surfX     = _x - 32 - _surfW,
+				_surfY     = _y +  4 - _surfH;
 				
 			with(surface_setup("LoadoutHideScreen", game_width, game_height, _surfScale)){
 				x = view_xview_nonsync;
@@ -1264,6 +1287,8 @@
 						draw_surface_scale(surf, (x - _surfX) * _surfScale, (y - _surfY) * _surfScale, _surfScale / scale);
 					}
 					
+					_y -= introsettle;
+					
 					draw_sprite_ext(sprLoadoutSplat, image_index, (_x - _surfX) * _surfScale, (_y - _surfY) * _surfScale, _surfScale, _surfScale, 0, c_white, 1);
 					if(selected == true){
 						draw_sprite_ext(sprLoadoutOpen, openanim, (_x - _surfX) * _surfScale, (_y - _surfY) * _surfScale, _surfScale, _surfScale, 0, c_white, 1);
@@ -1284,8 +1309,6 @@
 	}
 	
 #define draw_loadout_above
-	instance_destroy();
-	
 	 // Drawing Custom Loadout Icons (Collapsed Loadout):
 	var	_p     = loadoutPlayer,
 		_race  = player_get_race_fix(_p),
@@ -1294,7 +1317,7 @@
 	with(surface_setup("LoadoutHide", null, null, null)){
 		with(Loadout) if(visible && (selected == false || openanim <= 2)){
 			var	_x = view_xview_nonsync + game_width,
-				_y = view_yview_nonsync + game_height - 36;
+				_y = view_yview_nonsync + game_height - 36 + introsettle;
 				
 			 // Hide Normal Icons:
 			with(other){
@@ -1351,12 +1374,11 @@
 	draw_sprite_ext(_spr, _img, _x, _y, _xsc, _ysc, _ang, _col, _alp);
 	
 #define draw_loadout_tooltip
-	if(loadoutTip.text != ""){
+	if("text" in self && text != ""){
 		draw_set_font(fntM);
-		draw_tooltip(loadoutTip.x, loadoutTip.y, loadoutTip.text);
-		loadoutTip.text = "";
+		draw_tooltip(x, y, text);
+		text = "";
 	}
-	instance_destroy();
 	
 #define player_get_race_fix(_player)
 	/*
@@ -2596,6 +2618,13 @@
 	}
 	
 #define cleanup
+	 // Clear Event Bindings:
+	for(var i = 0; i < lq_size(ntte_bind); i++){
+		with(lq_get_value(ntte_bind, i)){
+			instance_destroy();
+		}
+	}
+	
 	 // Fix Options:
 	if(MenuOpen){
 		with(Menu) mode = 0;

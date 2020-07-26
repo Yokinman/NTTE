@@ -95,7 +95,7 @@
 		
 		 // Merged Weapon:
 		else{
-			var _part = wep_merge_decide(0, GameCont.hard + (2 * curse));
+			var _part = wep_merge_decide(0, (2 * curse) + GameCont.hard);
 			if(array_length(_part) >= 2){
 				_wep = wep_merge(_part[0], _part[1]);
 			}
@@ -475,7 +475,7 @@
 	
 	 // Determine Weapons:
 	var	_hardMin = 0,
-		_hardMax = GameCont.hard + (2 * curse),
+		_hardMax = (2 * curse) + GameCont.hard,
 		_part = wep_merge_decide(_hardMin, _hardMax);
 		
 	for(var i = 0; i < array_length(_shop); i += 2){
@@ -1333,7 +1333,7 @@
 					 // Cool Wep:
 					if(wep == wep_rusty_revolver){
 						sprite_index = spr.ProtoChestMerge;
-						var _part = wep_merge_decide(0, GameCont.hard + 4);
+						var _part = wep_merge_decide(0, 4 + GameCont.hard);
 						wep = wep_merge(_part[0], _part[1]);
 					}
 					break;
@@ -4350,7 +4350,7 @@
 		
 		 // Weapon:
 		with(target){
-			//wep      = weapon_decide(0, GameCont.hard, false, null);
+			//wep      = weapon_decide(0, 1 + GameCont.hard, false, null);
 			rotation = 90 + (random_range(10, 20) * choose(-1, 1));
 			ammo     = true;
 		}

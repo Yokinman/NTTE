@@ -5372,7 +5372,7 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 	with(instance_create(_x, _y, Carpet)){
 		 // Visual:
 		sprite_index = spr.Rug;
-		image_index = irandom(image_number - 1);
+		image_index = (array_exists([area_pizza_sewers, "pizza"], GameCont.area) ? 1 : 0);
 		image_speed = 0;
 		
 		return id;

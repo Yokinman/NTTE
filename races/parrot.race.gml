@@ -452,19 +452,20 @@
 	}
 	
 	 // Feather Related:
-	feather_num = 12;
-	feather_num_mult = 1;
-	feather_ammo = 0;
-	feather_ammo_max = 5 * feather_num;
-	feather_ammo_hud = [];
+	feather_num            = 12;
+	feather_num_mult       = 1;
+	feather_ammo           = 0;
+	feather_ammo_max       = 5 * feather_num;
+	feather_ammo_get       = 0;
+	feather_ammo_hud       = [];
 	//feather_ammo_hud_flash = 0;
-	feather_targ_radius = 24;
-	feather_targ_delay = 0;
+	feather_targ_radius    = 24;
+	feather_targ_delay     = 0;
 	
 	 // Ultra B:
-	charm_hplink_lock = my_health;
-	charm_hplink_hud = 0;
-	charm_hplink_hud_hp = array_create(2, 0);
+	charm_hplink_lock       = my_health;
+	charm_hplink_hud        = 0;
+	charm_hplink_hud_hp     = array_create(2, 0);
 	charm_hplink_hud_hp_lst = 0;
 
 	 // Extra Pet Slot:
@@ -479,58 +480,53 @@
 	
 #define game_start
 	with(instances_matching(Player, "race", mod_current)){
-		if(fork()){
-			while(instance_exists(self) && "ntte_pet" not in self) wait 0;
+		 // Starting Ammo:
+		feather_ammo_get += feather_num;
+		
+		 // Starter Pet:
+		if("ntte_pet" not in self){
+			ntte_pet = [];
+		}
+		with(pet_spawn(x, y, "Parrot")){
+			leader     = other;
+			visible    = false;
+			persistent = true;
+			stat_found = false;
+			array_push(other.ntte_pet, id);
 			
-			 // Parrot Pet:
-			if(instance_exists(self) && array_length(ntte_pet) > 0){
-				with(pet_spawn(x, y, "Parrot")){
-					leader = other;
-					visible = false;
-					other.ntte_pet[array_length(other.ntte_pet) - 1] = id;
-					stat_found = false;
-					
-					 // Special:
-					bskin = other.bskin;
-					if(bskin == 1){
-						spr_idle = spr.PetParrotBIdle;
-						spr_walk = spr.PetParrotBWalk;
-						spr_hurt = spr.PetParrotBHurt;
-						spr_icon = spr.PetParrotBIcon;
-					}
-				}
+			 // Special:
+			bskin = other.bskin;
+			if(bskin == 1){
+				spr_idle = spr.PetParrotBIdle;
+				spr_walk = spr.PetParrotBWalk;
+				spr_hurt = spr.PetParrotBHurt;
+				spr_icon = spr.PetParrotBIcon;
 			}
-			
-			 // Wait Until Level is Generated:
-			while(instance_exists(self) && !visible) wait 0;
-			
-			 // Starting Feather Ammo:
-			if(instance_exists(self)){
-				repeat(feather_num){
-					with(obj_create(x + orandom(16), y + orandom(16), "ParrotFeather")){
-						bskin = other.bskin;
-						index = other.index;
-						creator = other;
-						target = other;
-						speed *= 3;
-						sprite_index = race_get_sprite(other.race, sprite_index);
-					}
-				}
-			}
-			
-			exit;
 		}
 	}
 	
 #define step
 	if(lag) trace_time();
 	
+	 // Starting Feather Ammo:
+	while(feather_ammo_get > 0){
+		feather_ammo_get--;
+		with(obj_create(x + orandom(16), y + orandom(16), "ParrotFeather")){
+			bskin        = other.bskin;
+			index        = other.index;
+			creator      = other;
+			target       = other;
+			speed       *= 3;
+			sprite_index = race_get_sprite(other.race, sprite_index);
+		}
+	}
+	
 	 /// ACTIVE : Charm
-	if(player_active && canspec){
+	if(canspec && player_active){
 		if(button_check(index, "spec") || usespec > 0){
-			var	_feathers = instances_matching(instances_matching(CustomObject, "name", "ParrotFeather"), "index", index),
+			var	_feathers          = instances_matching(instances_matching(CustomObject, "name", "ParrotFeather"), "index", index),
 				_feathersTargeting = instances_matching(instances_matching(_feathers, "canhold", true), "creator", id),
-				_featherNum = ceil(feather_num * feather_num_mult);
+				_featherNum        = ceil(feather_num * feather_num_mult);
 				
 			if(array_length(_feathersTargeting) < _featherNum){
 				 // Retrieve Feathers:
@@ -567,10 +563,10 @@
 					
 					 // Feathers:
 					with(obj_create(x + orandom(4), y + orandom(4), "ParrotFeather")){
-						bskin = other.bskin;
-						index = other.index;
-						creator = other;
-						target = other;
+						bskin        = other.bskin;
+						index        = other.index;
+						creator      = other;
+						target       = other;
 						sprite_index = race_get_sprite(other.race, sprite_index);
 						array_push(_feathersTargeting, self);
 					}

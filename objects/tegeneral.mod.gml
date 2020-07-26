@@ -2097,25 +2097,25 @@
 	
 	with(instance_create(_x, _y, CustomObject)){
 		 // Visual:
-		sprite_index = sprChickenFeather;
+		sprite_index     = sprChickenFeather;
 		image_blend_fade = c_gray;
-		depth = -8;
+		depth            = -8;
 		
 		 // Vars:
-		mask_index = mskLaser;
-		creator = noone;
-		target = noone;
-		index = -1;
-		bskin = 0;
-		stick = false;
-		stickx = 0;
-		sticky = 0;
+		mask_index     = mskLaser;
+		creator        = noone;
+		target         = noone;
+		index          = -1;
+		bskin          = 0;
+		stick          = false;
+		stickx         = 0;
+		sticky         = 0;
 		stick_time_max = 60;// * (1 + ultra_get("parrot", 3));
-		stick_time = stick_time_max;
-		stick_list = [];
-		stick_wait = 0;
-		canhold = false;
-		move_factor = 0;
+		stick_time     = stick_time_max;
+		stick_list     = [];
+		stick_wait     = 0;
+		canhold        = false;
+		move_factor    = 0;
 		
 		 // Push:
 		motion_add(random(360), 4 + random(2));
@@ -2132,17 +2132,19 @@
 		 // Generate Queue:
 		if(stick){
 			if(array_length(stick_list) <= 0){
-				var n = instances_matching(instances_matching(instances_matching(object_index, "name", name), "target", target), "creator", creator);
-				with(n) stick_list = n;
+				var _list = instances_matching(instances_matching(instances_matching(object_index, "name", name), "target", target), "creator", creator);
+				with(_list){
+					stick_list = _list;
+				}
 			}
 		}
 		else stick_list = [];
 		
 		 // Decrement When First in Queue:
 		if(
-			(stick && array_find_index(stick_list, id) == 0)
-			||
-			(!stick && stick_time < stick_time_max)
+			stick
+			? (array_find_index(stick_list, id) == 0)
+			: (stick_time < stick_time_max)
 		){
 			stick_time -= lq_defget(variable_instance_get(target, "ntte_charm", 0), "time_speed", 1) * current_time_scale;
 		}
@@ -2152,8 +2154,10 @@
 		if(!stick){
 			stick_list = [];
 			
-			 // Reach Target Faster:
+			var _hold = false;
+			
 			if(canhold){
+				 // Reach Target Faster:
 				if(
 					distance_to_object(target) > 48 &&
 					abs(angle_difference(direction, point_direction(x, y, target.x, target.y))) < 30
@@ -2166,11 +2170,35 @@
 				move_factor = max(0, move_factor);
 				x += hspeed_raw * move_factor;
 				y += vspeed_raw * move_factor;
+				
+				 // Active Held:
+				if(instance_is(creator, Player)){
+					with(creator){
+						if(canspec && player_active){
+							if(button_check(index, "spec") || usespec > 0){
+								_hold = true;
+							}
+						}
+					}
+				}
 			}
 			else move_factor = 0;
 			
-			 // Reaching Target:
-			if(stick_wait == 0 && (!canhold || !instance_exists(creator) || !creator.visible || (!button_check(index, "spec") && creator.usespec <= 0))){
+			 // Orbit Target:
+			if(_hold || stick_wait != 0){
+				var	_l = 16,
+					_d = point_direction(target.x, target.y, x, y);
+					
+				_d += 5 * sign(angle_difference(direction, _d));
+				
+				var	_x = target.x + lengthdir_x(_l, _d),
+					_y = target.y + lengthdir_y(_l, _d);
+					
+				motion_add_ct(point_direction(x, y, _x, _y) + orandom(60), 1);
+			}
+			
+			 // Reach Target:
+			else{
 				canhold = false;
 				
 				 // Fly Towards Enemy:
@@ -2185,11 +2213,11 @@
 					
 					 // Stick to & Charm Enemy:
 					if(target != creator){
-						stick = true;
-						stickx = random(x - target.x) * (("right" in target) ? target.right : 1);
-						sticky = random(y - target.y);
+						stick       = true;
+						stickx      = random(x - target.x) * (("right" in target) ? target.right : 1);
+						sticky      = random(y - target.y);
 						image_angle = random(360);
-						speed = 0;
+						speed       = 0;
 						
 						 // Parrot's Special Stat:
 						if("ntte_charm" not in target){
@@ -2214,29 +2242,17 @@
 					 // Player Pickup:
 					else{
 						with(creator){
-							if("feather_ammo" not in self){
-								feather_ammo = 0;
-								feather_ammo_max = 60;
+							if("feather_ammo" in self){
+								feather_ammo++;
+								if("feather_ammo_max" in self && feather_ammo > feather_ammo_max){
+									feather_ammo = feather_ammo_max;
+								}
 							}
-							feather_ammo = min(feather_ammo + 1, feather_ammo_max * (1 + skill_get(mut_back_muscle)));
 						}
 						instance_delete(id);
 						exit;
 					}
 				}
-			}
-			
-			 // Orbit Enemy:
-			else{
-				var	l = 16,
-					d = point_direction(target.x, target.y, x, y);
-					
-				d += 5 * sign(angle_difference(direction, d));
-				
-				var	_x = target.x + lengthdir_x(l, d),
-					_y = target.y + lengthdir_y(l, d);
-					
-				motion_add_ct(point_direction(x, y, _x, _y) + orandom(60), 1);
 			}
 			
 			 // Stick Delay:
@@ -2262,10 +2278,10 @@
 	
 #define ParrotFeather_end_step
 	if(stick && instance_exists(target)){
-		x = target.x + (stickx * image_xscale * (("right" in target) ? target.right : 1));
-		y = target.y + (sticky * image_yscale);
+		x       = target.x + (stickx * image_xscale * (("right" in target) ? target.right : 1));
+		y       = target.y + (sticky * image_yscale);
 		visible = target.visible;
-		depth = target.depth - 1;
+		depth   = target.depth - 1;
 		
 		 // Target In Water:
 		if("wading" in target && target.wading != 0){
@@ -2276,7 +2292,6 @@
 		if("z" in target){
 			if(target.object_index == RavenFly || target.object_index == LilHunterFly){
 				y += target.z;
-				depth = -8;
 			}
 			else y -= target.z;
 		}
@@ -2296,9 +2311,9 @@
 	 // Fall to Ground:
 	with(instance_create(x, y, Feather)){
 		sprite_index = other.sprite_index;
-		image_angle = other.image_angle;
-		image_blend = other.image_blend_fade;
-		depth = ((!position_meeting(x, y, Floor) && !instance_seen(x, y, other.creator)) ? -6.01 : 0);
+		image_angle  = other.image_angle;
+		image_blend  = other.image_blend_fade;
+		depth        = ((!position_meeting(x, y, Floor) && !instance_seen(x, y, other.creator)) ? -6.01 : 0);
 	}
 	
 	 // Sound:
@@ -5142,8 +5157,9 @@
 /// GENERAL
 #define game_start
 	 // Delete:
-	with(instances_matching(CustomHitme, "name", "Pet")) instance_delete(id);
-	with(instances_matching(CustomObject, "name", "ReviveNTTE")) instance_delete(id);
+	with(instances_matching_lt(instances_matching(CustomHitme,  "name", "Pet"       ), "id", GameCont.id)) instance_delete(id);
+	with(instances_matching_lt(instances_matching(CustomObject, "name", "ReviveNTTE"), "id", GameCont.id)) instance_delete(id);
+	with(instances_matching_lt(instances_matching(CustomObject, "name", "UnlockCont"), "id", GameCont.id)) instance_destroy();
 	
 #define ntte_step
 	 // Chests Give Feathers:

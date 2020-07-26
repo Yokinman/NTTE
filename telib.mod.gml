@@ -1486,8 +1486,8 @@
 	 // Bind begin_step to fix TopCont.darkness flash
 	if(_name != ""){
 		with(script_bind_begin_step(boss_intro_step, 0)){
-			boss = _name;
-			loops = 0;
+			boss     = _name;
+			loops    = 0;
 			replaced = false;
 			
 			 // Co-op Delay:
@@ -3070,10 +3070,10 @@
 	
 #define area_border(_y, _area, _color)
 	with(script_bind_draw(area_border_step, infinity, _y, _area, _color)){
-		cavein = false;
-		cavein_dis = 800;
+		cavein      = false;
+		cavein_dis  = 800;
 		cavein_inst = [];
-		cavein_pan = 0;
+		cavein_pan  = 0;
 		
 		type = [
 			[Wall,		 0, [area_get_sprite(_area, sprWall1Bot), area_get_sprite(_area, sprWall1Top), area_get_sprite(_area, sprWall1Out)]],
@@ -3338,7 +3338,7 @@
 	return _inst;
 
 #define floor_reveal(_x1, _y1, _x2, _y2, _time)
-	var	_bind = instances_matching(CustomScript, "name", "floor_reveal_draw"),
+	var	_bind   = instances_matching(CustomScript, "name", "floor_reveal_draw"),
 		_reveal = {
 			creator     : noone,
 			x1          : _x1,
@@ -4181,9 +4181,31 @@
 	return mod_script_call_nc("weapon", "merge", "weapon_merge_decide", _hardMin, _hardMax);
 
 #define weapon_decide(_hardMin, _hardMax, _gold, _noWep)
+	/*
+		Returns a random weapon that spawns within the given difficulties
+		Takes standard weapon chest spawning conditions into account
+		
+		Args:
+			hardMin - The minimum weapon spawning difficulty
+			hardMax - The maximum weapon spawning difficulty
+			gold    - Spawn golden weapons like a mansion chest, true/false
+			          Use -1 to completely exclude golden weapons
+			noWep   - A weapon or array of weapons to exclude from spawning
+			
+		Ex:
+			wep = weapon_decide(0, GameCont.hard, false, [wep, bwep]);
+	*/
+	
+	 // Hardmode:
+	_hardMax += ceil((GameCont.hard - (UberCont.hardmode * 13)) / (1 + (UberCont.hardmode * 2))) - GameCont.hard;
+	
 	 // Robot:
-	for(var i = 0; i < maxp; i++) if(player_get_race(i) == "robot") _hardMax++;
-	_hardMin += (5 * ultra_get("robot", 1));
+	for(var i = 0; i < maxp; i++){
+		if(player_get_race(i) == "robot"){
+			_hardMax++;
+		}
+	}
+	_hardMin += 5 * ultra_get("robot", 1);
 	
 	 // Just in Case:
 	_hardMax = max(0, _hardMax);
@@ -4191,7 +4213,10 @@
 	
 	 // Default:
 	var _wepDecide = wep_screwdriver;
-	if(_gold != 0){
+	if("wep" in self){
+		_wepDecide = wep;
+	}
+	else if(_gold > 0){
 		_wepDecide = choose(wep_golden_wrench, wep_golden_machinegun, wep_golden_shotgun, wep_golden_crossbow, wep_golden_grenade_launcher, wep_golden_laser_pistol);
 		if(GameCont.loops > 0 && random(2) < 1){
 			_wepDecide = choose(wep_golden_screwdriver, wep_golden_assault_rifle, wep_golden_slugger, wep_golden_splinter_gun, wep_golden_bazooka, wep_golden_plasma_gun);
@@ -4199,13 +4224,13 @@
 	}
 	
 	 // Decide:
-	var	_list = ds_list_create(),
+	var	_list    = ds_list_create(),
 		_listMax = weapon_get_list(_list, _hardMin, _hardMax);
 		
 	ds_list_shuffle(_list);
 	
 	for(var i = 0; i < _listMax; i++){
-		var	_wep = ds_list_find_value(_list, i),
+		var	_wep    = ds_list_find_value(_list, i),
 			_canWep = true;
 			
 		 // Weapon Exceptions:
@@ -4220,10 +4245,10 @@
 		
 		 // Specific Spawn Conditions:
 		else switch(_wep){
-			case wep_super_disc_gun:       if("curse" not in self || curse <= 0) _canWep = false; break;
-			case wep_golden_nuke_launcher: if(!UberCont.hardmode)                _canWep = false; break;
-			case wep_golden_disc_gun:      if(!UberCont.hardmode)                _canWep = false; break;
-			case wep_gun_gun:              if(crown_current != crwn_guns)        _canWep = false; break;
+			case wep_super_disc_gun       : if("curse" not in self || curse <= 0) _canWep = false; break;
+			case wep_golden_nuke_launcher : if(!UberCont.hardmode)                _canWep = false; break;
+			case wep_golden_disc_gun      : if(!UberCont.hardmode)                _canWep = false; break;
+			case wep_gun_gun              : if(crown_current != crwn_guns)        _canWep = false; break;
 		}
 		
 		 // Success:
