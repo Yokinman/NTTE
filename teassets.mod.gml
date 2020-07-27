@@ -703,7 +703,7 @@
 			p = m + "Props/";
 				
 				 // Big Cactus:
-				BigNightCactus     = sprite(p + "sprBigNightCactus",     1, 16, 16);
+				BigNightCactusIdle = sprite(p + "sprBigNightCactus",     1, 16, 16);
 				BigNightCactusHurt = sprite(p + "sprBigNightCactus",     1, 16, 16, shnHurt);
 				BigNightCactusDead = sprite(p + "sprBigNightCactusDead", 4, 16, 16);
 				
@@ -2060,11 +2060,11 @@
 		if(mod_exists("mod", "telib")){
 			var _unlockName = mod_script_call("mod", "telib", "unlock_get_name", _name);
 			if(_unlockName != ""){
-				var	_unlocked = (!is_real(_value) || _value),
-					_unlockText = (_unlocked ? mod_script_call("mod", "telib", "unlock_get_text", _name) : "LOCKED"),
+				var	_unlocked     = (!is_real(_value) || _value),
+					_unlockText   = (_unlocked ? mod_script_call("mod", "telib", "unlock_get_text", _name) : "LOCKED"),
 					_unlockSprite = -1,
-					_unlockSound = -1,
-					_split = string_split(_name, ":");
+					_unlockSound  = -1,
+					_split        = string_split(_name, ":");
 					
 				 // Type-Specifics:
 				if(array_length(_split) >= 2){
@@ -2098,14 +2098,14 @@
 								
 								 // Race Mod:
 								if(array_length(_split) > 2){
-									_race = _skin;
-									_skin = real(_split[2]);
+									_race         = _skin;
+									_skin         = real(_split[2]);
 									_unlockSprite = mod_script_call("race", _race, "race_portrait", 0, _skin);
 								}
 								
 								 // Skin Mod:
 								else if(mod_exists("skin", _skin)){
-									_race = mod_script_call("skin", _skin, "skin_race");
+									_race         = mod_script_call("skin", _skin, "skin_race");
 									_unlockSprite = mod_script_call("skin", _skin, "skin_portrait", 0);
 								}
 								
@@ -2678,17 +2678,17 @@ var _shine = argument_count > 4 ? argument[4] : shnNone;
 	
 	 // Initial Setup:
 	else if(sprite_exists(_stock) && sprite_exists(_front)){
-		var	_spr = [_stock, _front],
-			_sprW = array_create(array_length(_spr), 0),
-			_sprH = array_create(array_length(_spr), 0),
+		var	_spr   = [_stock, _front],
+			_sprW  = array_create(array_length(_spr), 0),
+			_sprH  = array_create(array_length(_spr), 0),
 			_surfW = 0,
 			_surfH = 0;
 			
 		for(var i = 0; i < array_length(_spr); i++){
 			_sprW[i] = sprite_get_width(_spr[i]);
 			_sprH[i] = sprite_get_height(_spr[i]);
-			_surfW = max(_surfW, _sprW[i]);
-			_surfH = max(_surfH, _sprH[i]);
+			_surfW   = max(_surfW, _sprW[i]);
+			_surfH   = max(_surfH, _sprH[i]);
 		}
 		
 		with(surface_setup("sprMerge", _surfW, _surfH, 1)){
@@ -2696,18 +2696,18 @@ var _shine = argument_count > 4 ? argument[4] : shnNone;
 			draw_clear_alpha(0, 0);
 			
 			with(UberCont){
-				for(var b = 0; b <= 1; b++){
+				for(var _b = 0; _b <= 1; _b++){
 					var	_dx = 0,
 						_dy = other.h / 3;
 						
 					for(var i = 0; i <= 1; i++){
 						var	_cut = (ceil(_sprW[i] / 2) + 2) - ceil(_sprW[i] / 8),
-							_l = _cut * i,
-							_w = (i ? _sprW[i] - _cut : _cut),
-							_t = 0,
-							_h = _sprH[i],
-							_x = _dx,
-							_y = _dy - sprite_get_yoffset(_spr[i]);
+							_l   = _cut * i,
+							_w   = (i ? _sprW[i] - _cut : _cut),
+							_t   = 0,
+							_h   = _sprH[i],
+							_x   = _dx,
+							_y   = _dy - sprite_get_yoffset(_spr[i]);
 							
 						switch(_spr[i]){
 							case sprAutoShotgun:
@@ -2725,7 +2725,7 @@ var _shine = argument_count > 4 ? argument[4] : shnNone;
 								break;
 						}
 						
-						if(b == 0){
+						if(_b == 0){
 							draw_sprite_part_ext(_spr[i], 0, _cut - !i, _t, 1, _h, _x + (_cut - _l) - i, _y, 1, 1, c_black, 1);
 						}
 						else{
@@ -2765,17 +2765,17 @@ var _shine = argument_count > 4 ? argument[4] : shnNone;
 	
 	 // Initial Setup:
 	else if(sprite_exists(_stock) && sprite_exists(_front) && _stock > 0 && _front > 0){
-		var	_spr = [_stock, _front],
-			_sprW = array_create(array_length(_spr), 0),
-			_sprH = array_create(array_length(_spr), 0),
+		var	_spr   = [_stock, _front],
+			_sprW  = array_create(array_length(_spr), 0),
+			_sprH  = array_create(array_length(_spr), 0),
 			_surfW = 0,
 			_surfH = 0;
 			
 		for(var i = 0; i < array_length(_spr); i++){
 			_sprW[i] = sprite_get_width(_spr[i]);
 			_sprH[i] = sprite_get_height(_spr[i]);
-			_surfW = max(_surfW, _sprW[i]);
-			_surfH = max(_surfH, _sprH[i]);
+			_surfW   = max(_surfW, _sprW[i]);
+			_surfH   = max(_surfH, _sprH[i]);
 		}
 		
 		with(surface_setup("sprMergeLoadout", _surfW, _surfH, 1)){
@@ -2786,15 +2786,15 @@ var _shine = argument_count > 4 ? argument[4] : shnNone;
 			
 			 // Draw Sprite Halves:
 			for(var i = 0; i < array_length(_spr); i++){
-				var	_uvs = sprite_get_uvs(_spr[i], 0),
+				var	_uvs       = sprite_get_uvs(_spr[i], 0),
 					_uvsExists = (_uvs[0] != 0 || _uvs[1] != 0 || _uvs[2] != 1 || _uvs[3] != 1),
-					_x = floor(w / 2) - sprite_get_xoffset(_spr[i]) + (_uvsExists ? _uvs[4] : sprite_get_bbox_left(_spr[i])),
-					_y = floor(h / 2) - sprite_get_yoffset(_spr[i]) + (_uvsExists ? _uvs[5] : sprite_get_bbox_top(_spr[i])),
-					_w = (_uvsExists ? (_sprW[i] * _uvs[6]) : (sprite_get_bbox_right(_spr[i]) - sprite_get_bbox_left(_spr[i]))),
-					_h = (_uvsExists ? (_sprH[i] * _uvs[7]) : (sprite_get_bbox_bottom(_spr[i]) - sprite_get_bbox_top(_spr[i]))),
-					_cutDis = _w / 3,
-					_cutDir = 20,
-					_ox = (_h / 2) * dtan(_cutDir);
+					_x         = floor(w / 2) - sprite_get_xoffset(_spr[i]) + (_uvsExists ? _uvs[4] : sprite_get_bbox_left(_spr[i])),
+					_y         = floor(h / 2) - sprite_get_yoffset(_spr[i]) + (_uvsExists ? _uvs[5] : sprite_get_bbox_top(_spr[i])),
+					_w         = (_uvsExists ? (_sprW[i] * _uvs[6]) : (sprite_get_bbox_right(_spr[i]) - sprite_get_bbox_left(_spr[i]))),
+					_h         = (_uvsExists ? (_sprH[i] * _uvs[7]) : (sprite_get_bbox_bottom(_spr[i]) - sprite_get_bbox_top(_spr[i]))),
+					_cutDis    = _w / 3,
+					_cutDir    = 20,
+					_ox        = (_h / 2) * dtan(_cutDir);
 					
 				if(i == 1){
 					_cutDis = _w - _cutDis;

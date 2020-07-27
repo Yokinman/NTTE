@@ -998,28 +998,28 @@
 	return _inst;
 	
 #define save_get(_name, _default)
-	return mod_script_call("mod", "teassets", "save_get", _name, _default);
+	return mod_script_call_nc("mod", "teassets", "save_get", _name, _default);
 	
 #define save_set(_name, _value)
-	mod_script_call("mod", "teassets", "save_set", _name, _value);
+	mod_script_call_nc("mod", "teassets", "save_set", _name, _value);
 	
 #define option_get(_name)
-	return mod_script_call("mod", "teassets", "option_get", _name);
+	return mod_script_call_nc("mod", "teassets", "option_get", _name);
 	
 #define option_set(_name, _value)
-	mod_script_call("mod", "teassets", "option_set", _name, _value);
+	mod_script_call_nc("mod", "teassets", "option_set", _name, _value);
 	
 #define stat_get(_name)
-	return mod_script_call("mod", "teassets", "stat_get", _name);
+	return mod_script_call_nc("mod", "teassets", "stat_get", _name);
 	
 #define stat_set(_name, _value)
-	mod_script_call("mod", "teassets", "stat_set", _name, _value);
+	mod_script_call_nc("mod", "teassets", "stat_set", _name, _value);
 	
 #define unlock_get(_name)
-	return mod_script_call("mod", "teassets", "unlock_get", _name);
+	return mod_script_call_nc("mod", "teassets", "unlock_get", _name);
 	
 #define unlock_set(_name, _value)
-	return mod_script_call("mod", "teassets", "unlock_set", _name, _value);
+	return mod_script_call_nc("mod", "teassets", "unlock_set", _name, _value);
 	
 #define unlock_get_name(_name)
 	/*
@@ -1180,7 +1180,7 @@
 				
 			case "wep": // WEAPON
 				
-				var	_wep = _split[1],
+				var	_wep  = _split[1],
 					_text = mod_script_call("weapon", _wep, "weapon_unlock", _wep);
 					
 				 // Loading Tip:
@@ -1197,7 +1197,7 @@
 			case "crown": // CROWN
 				
 				var	_crown = _split[1],
-					_text = mod_script_call("crown", _crown, "crown_unlock");
+					_text  = mod_script_call("crown", _crown, "crown_unlock");
 				
 				 // Loading Tip:
 				if(!is_string(_text)){
@@ -1375,7 +1375,7 @@
 				 // Delay Alarms:
 				for(var i = 0; i <= 10; i++){
 					if(alarm_get(i) > 0){
-						alarm_set(i, alarm_get(i) + ceil(current_time_scale));
+						alarm_set(i, alarm_get(i) + 1);
 					}
 				}
 				
@@ -1575,11 +1575,11 @@
 	*/
 	
 	with(instance_create(x, y, Corpse)){
-		size = other.size;
+		size         = other.size;
 		sprite_index = other.spr_dead;
 		image_xscale = variable_instance_get(other, "right", other.image_xscale);
-		direction = _dir;
-		speed = _spd;
+		direction    = _dir;
+		speed        = _spd;
 		
 		 // Non-Props:
 		if(!instance_is(other, prop) && instance_is(other, hitme)){
@@ -1609,8 +1609,8 @@
 	
 	can_shoot = (reload <= 0);
 	drawempty = 30;
-	swapmove = true;
-	clicked = false;
+	swapmove  = true;
+	clicked   = false;
 	
 #define portal_poof()
 	/*
@@ -2078,7 +2078,9 @@
 		
 	x = _x;
 	y = _y;
+	
 	var _inst = instances_matching_ne(instances_matching_le(instances_matching_ge(instances_matching_le(instances_matching_ge(_obj, "bbox_right", bbox_left), "bbox_left", bbox_right), "bbox_bottom", bbox_top), "bbox_top", bbox_bottom), "id", id);
+	
 	x = _tx;
 	y = _ty;
 	
@@ -3281,10 +3283,10 @@
 	instance_destroy();
 	
 #define floor_walls()
-	var	_x1 = bbox_left - 16,
-		_y1 = bbox_top - 16,
-		_x2 = bbox_right + 16 + 1,
-		_y2 = bbox_bottom + 16 + 1,
+	var	_x1    = bbox_left   - 16,
+		_y1    = bbox_top    - 16,
+		_x2    = bbox_right  + 16 + 1,
+		_y2    = bbox_bottom + 16 + 1,
 		_minID = GameObject.id;
 		
 	for(var _x = _x1; _x < _x2; _x += 16){
@@ -4193,7 +4195,8 @@
 			noWep   - A weapon or array of weapons to exclude from spawning
 			
 		Ex:
-			wep = weapon_decide(0, GameCont.hard, false, [wep, bwep]);
+			wep = weapon_decide(0, 1 + (2 * curse) + GameCont.hard, false, null);
+			wep = weapon_decide(2, GameCont.hard, false, [p.wep, p.bwep]);
 	*/
 	
 	 // Hardmode:
@@ -4234,7 +4237,7 @@
 			_canWep = true;
 			
 		 // Weapon Exceptions:
-		if(_wep == _noWep || (is_array(_noWep) && array_exists(_noWep, _wep))){
+		if(_wep == _noWep || (is_array(_noWep) && array_find_index(_noWep, _wep) >= 0)){
 			_canWep = false;
 		}
 		
@@ -4567,7 +4570,7 @@
 	
 	 // Normal:
 	else{
-		var	_id = race_get_id(_race),
+		var	_id   = race_get_id(_race),
 			_name = race_get_name(_race);
 			
 		if(_id >= 17) _id = 1;
@@ -4630,7 +4633,7 @@
 		
 	 // Custom:
 	if(is_string(_race) && _id == 17){
-		var	_scrt = "race_name",
+		var	_scrt  = "race_name",
 			_title = mod_script_call("race", _race, _scrt);
 			
 		if(is_string(_title)){
@@ -4687,7 +4690,7 @@
 	
 	 // Add Skin Mods to List:
 	with(mod_get_names("skin")){
-		if(race_get_id(mod_script_call("skin", self, "skin_race")) == race_get_id(_race)){
+		if(race_get_id(mod_script_call_nc("skin", self, "skin_race")) == race_get_id(_race)){
 			array_push(_list, self);
 		}
 	}

@@ -198,5 +198,5 @@
 	if(_dir > 90 && _dir < 270) right = -1;
 	
 #define pet_create(_x, _y, _pet)
-	return mod_script_call("mod", "telib", "pet_create", _x, _y, _pet, "mod", mod_current);
+	return mod_script_call_nc("mod", "telib", "pet_create", _x, _y, _pet, "mod", mod_current);
 	
