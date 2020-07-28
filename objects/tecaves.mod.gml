@@ -188,6 +188,7 @@
 			maxspeed = 8;
 			
 			 // Parts:
+			parts = [];
 			repeat(sprite_get_number(spr_part)){
 				array_push(parts, {
 					angle : 0,

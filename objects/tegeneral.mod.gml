@@ -275,18 +275,28 @@
 		
 	switch(area){
 		
-		case area_desert: /// Bones
-		
-			repeat(irandom_range(2, 3)){
-				with(instance_create(_x, _y, WepPickup)){
-					motion_set(random(360), random_range(3, 6));
-					wep = "crabbone";
-					repeat(3) scrFX(x, y, 2, Smoke);
-				}
+		case area_desert: /// Bones and Scorps
+			 
+			 // Scorpion Mode:
+			if(sprite_index == spr.BigTopDecalScorpion){
+				 
+				 // Dunno What This Do:
+				chest_create(x, y, "Backpack", false);
 			}
-			
-			 // Sound:
-			sound_play_hit_ext(sndWallBreakBrick, 0.5 + random(0.2), 2.5);
+			else{
+				
+				 // Bonage:
+				repeat(irandom_range(2, 3)){
+					with(instance_create(_x, _y, WepPickup)){
+						motion_set(random(360), random_range(3, 6));
+						wep = "crabbone";
+						repeat(3) scrFX(x, y, 2, Smoke);
+					}
+				}
+				
+				 // Sound:
+				sound_play_hit_ext(sndWallBreakBrick, 0.5 + random(0.2), 2.5);
+			}
 			
 			break;
 			
@@ -882,6 +892,13 @@
 		x = floor((x / 16) - (_w / 2)) * 16;
 		y = floor((y / 16) - (_h / 2)) * 16;
 		
+		 // Visual:
+		spr_floor_hall = sprFloor100;
+		spr_floor_room = spr.VaultFlowerFloor;
+		spr_top_tiny = spr.BuriedVaultTopTiny;
+		obj_deco = Torch;
+		obj_loot = "BuriedVaultPedestal";
+		
 		 // Vars:
 		mask_index   = mskWall;
 		image_xscale = _w;
@@ -940,7 +957,8 @@
 			var	_x1 = random_range(bbox_left, bbox_right + 1),
 				_y1 = random_range(bbox_top, bbox_bottom + 1),
 				_x2 = random_range(bbox_left + 16, bbox_right - 15),
-				_y2 = random_range(bbox_top + 16, bbox_bottom - 15);
+				_y2 = random_range(bbox_top + 16, bbox_bottom - 15),
+				_sprTiny = spr_top_tiny;
 				
 			with(array_shuffle(_tiles)){
 				var _vault = collision_line(_x1, _y1, _x2, _y2, id, false, false);
@@ -960,7 +978,7 @@
 								with(instance_create(_ox, _oy, TopPot)){ // TopPot is so epic
 									x = xstart;
 									y = ystart;
-									sprite_index = spr.BuriedVaultTopTiny;
+									sprite_index = _sprTiny;
 									image_index = irandom(image_number - 1);
 									image_speed = 0;
 								}
@@ -1005,7 +1023,7 @@
 									y	 : _fy + _oy,
 									obj	 : Floor,
 									vars : {
-										sprite_index : spr.VaultFlowerFloor,
+										sprite_index : spr_floor_room,
 										image_index  : _img++
 									}
 								})
@@ -1015,7 +1033,7 @@
 						array_push(layout, {
 							x	: _fx + 16,
 							y	: _fy + 8,
-							obj	: "BuriedVaultPedestal"
+							obj	: obj_loot
 						});
 						
 						_fx += lengthdir_x(_moveDis, _moveDir);
@@ -1025,9 +1043,12 @@
 					 // Floor:
 					else{
 						array_push(layout, {
-							x	: _fx,
-							y	: _fy,
-							obj	: Floor
+							x	 : _fx,
+							y	 : _fy,
+							obj	 : Floor,
+							vars : {
+								sprite_index : spr_floor_hall
+							}
 						});
 						
 						 // Torch:
@@ -1035,7 +1056,7 @@
 							array_push(layout, {
 								x	: _fx + 16,
 								y	: _fy + 16,
-								obj	: Torch
+								obj	: obj_deco
 							});
 						}
 					}
@@ -1172,6 +1193,21 @@
 		}
 	}
 	
+	
+#define BuriedShrine_create(_x, _y)
+	with(obj_create(_x, _y, "BuriedVault")){
+		 // Visual:
+		spr_floor_room = spr.FloorPalaceShrineRoomLarge;
+		spr_floor_hall = spr.FloorPalaceShrine;
+		spr_top_tiny = spr.BuriedShrineTopTiny;
+		obj_loot = "PalaceAltar";
+		obj_deco = Pillar;
+		
+		 // Vars:
+		area = area_palace;
+		
+		return id;
+	}
 	
 #define CustomBullet_create(_x, _y)
 	/*

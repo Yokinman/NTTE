@@ -33,10 +33,11 @@
 			"oasis" : sprite(p + "Oasis/sprOasisBigTopDecal",         1, 32, 24),
 			"trench": sprite(p + "Trench/sprTrenchBigTopDecal",       1, 32, 24)
 		};
-		NestDebris        = sprite(p + "Scrapyard/sprNestDebris", 16,     4,  4);
-		msk.BigTopDecal   = sprite(p + "Desert/mskBigTopDecal",    1,    32, 24);
-		shd.BigGenerator  = sprite(p + "Palace/shdBigGenerator",   1, 48-16, 32);
-		shd.BigGeneratorR = sprite(p + "Palace/shdBigGeneratorR",  1, 48+16, 32);
+		NestDebris      	= sprite(p + "Scrapyard/sprNestDebris", 	  16,    4,  4);
+		BigTopDecalScorpion = sprite(p + "Desert/sprBigTopDecalScorpion", 1,	32, 24);
+		msk.BigTopDecal 	= sprite(p + "Desert/mskBigTopDecal",   	  1,    32, 24);
+		shd.BigGenerator	= sprite(p + "Palace/shdBigGenerator",  	  1, 48-16, 32);
+		shd.BigGeneratorR	= sprite(p + "Palace/shdBigGeneratorR", 	  1, 48+16, 32);
 		
 		//#region MENU / HUD
 			
@@ -186,9 +187,11 @@
 			PopoVlasmaCannon  = sprite(p + "sprPopoVlasmaCannon",  5, 10, 10);
 			
 			 // Venom Pellets:
-			VenomPelletAppear    = sprite(p + "sprVenomPelletAppear",    1, 8, 8);
-			VenomPellet          = sprite(p + "sprVenomPellet",          2, 8, 8);
-			VenomPelletDisappear = sprite(p + "sprVenomPelletDisappear", 5, 8, 8);
+			VenomPelletAppear   	 = sprite(p + "sprVenomPelletAppear",   	 1, 8, 8);
+			VenomPellet         	 = sprite(p + "sprVenomPellet",         	 2, 8, 8);
+			VenomPelletDisappear	 = sprite(p + "sprVenomPelletDisappear",	 5, 8, 8);
+			VenomPelletBack			 = sprite(p + "sprVenomPelletBack",			 2, 8, 8);
+			VenomPelletBackDisappear = sprite(p + "sprVenomPelletBackDisappear", 5, 8, 8);
 			
 			 // Variants:
 			EnemyBullet             = sprite(p + "sprEnemyBullet",             2,  7,  9);
@@ -662,6 +665,15 @@
 			SealHeavyTell = sprite(p + "sprHeavySealTell",    2, 16, 17);
 			SealAnchor    = sprite(p + "sprHeavySealAnchor",  1,  0, 12);
 			SealChain     = sprite(p + "sprChainSegment",     1,  0,  0);
+			
+			 // Silver Scorpion:
+			p = m + "SilverScorpion/";
+			SilverScorpionIdle = sprite(p + "sprSilverScorpionIdle", 14, 24, 24);
+			SilverScorpionWalk = sprite(p + "sprSilverScorpionWalk", 6,  24, 24);
+			SilverScorpionHurt = sprite(p + "sprSilverScorpionHurt", 3,  24, 24);
+			SilverScorpionDead = sprite(p + "sprSilverScorpionDead", 6,  24, 24);
+			SilverScorpionFire = sprite(p + "sprSilverScorpionFire", 2,  24, 24);
+			SilverScorpionFlak = sprite(p + "sprSilverScorpionFlak", 4,  10, 10);
 			
 			 // Spiderling:
 			p = m + "Spiderling/";
@@ -1386,6 +1398,8 @@
 			BuriedVaultChestDebris = sprite(p + "sprVaultChestDebris",  8, 12, 12);
 			BuriedVaultChestBase   = sprite(p + "sprVaultChestBase",    3, 16, 12);
 			ProtoChestMerge        = sprite(p + "sprProtoChestMerge",   6, 12, 12);
+			
+			BuriedShrineTopTiny    = sprite(p + "sprPalaceTopTiny", 	8, 0, 0);
 			
 			 // Button Chests:
 			ButtonChest        = sprite(p + "sprButtonChest",        1, 9, 9, shn20);

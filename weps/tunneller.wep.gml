@@ -7,7 +7,15 @@
 	
 #define weapon_name    return (weapon_avail() ? "TUNNELLER" : "LOCKED");
 #define weapon_text    return choose(`@wUNLOCK @sTHE @(color:${area_get_back_color("red")})CONTINUUM`, "FULL CIRCLE", `YET ANOTHER @(color:${area_get_back_color("red")})RED KEY`);
-#define weapon_swap    return sndSwapSword;
+#define weapon_swap    
+	sound_play_gun(sndScrewdriver, 0.2, 0.6);
+	
+	sound_set_track_position(sndHyperCrystalChargeExplo, 1.6);
+	sound_play_pitchvol(sndHyperCrystalChargeExplo, 0.6, 0.8);
+	sound_set_track_position(sndHyperCrystalChargeExplo, 0);
+	
+	return sndSwapSword;
+
 #define weapon_sprt    return (weapon_avail() ? global.sprWep : global.sprWepLocked);
 #define weapon_area    return (weapon_avail() ? 22 : -1); // L1 3-1
 #define weapon_load    return 24; // 0.8 Seconds
@@ -79,8 +87,21 @@
 		}
 		
 		 // Sounds:
+		var _pitch = random_range(0.8, 1.2);
+		
+		sound_play_pitch(sndHyperCrystalSearch,	1.4 * _pitch);
+		sound_play_pitch(sndUltraGrenade,		1.0 * _pitch);
+		sound_play_pitch(sndGammaGutsKill,		1.4 * _pitch);
+		
+		sound_set_track_position(sndDevastatorUpg, 0.6);
+		sound_play_pitch(sndDevastatorUpg, 0.6 * _pitch);
+		
+		sound_set_track_position(sndDevastatorUpg, 0);
+
+		/*
 		sound_play_gun(sndShotgunHitWall,                            0.4,  0.6);
 		sound_play_gun(((_skill > 0) ? sndPlasmaBig : sndPlasmaUpg), 0.2, -0.5);
+		*/
 		
 		 // Effects:
 		weapon_post(18, 24, 12);
@@ -92,6 +113,11 @@
 					creator = other;
 				}
 			}
+		}
+		if fork(){
+			wait(3);
+			sleep(20);
+			exit;
 		}
 	}
 	
@@ -113,6 +139,14 @@
 			
 			 // Sounds:
 			sound_play_gun(sndScrewdriver, 0.2, 0.6);
+			
+			sound_set_track_position(sndHyperCrystalChargeExplo, 1.5);
+			sound_play_pitchvol(sndHyperCrystalChargeExplo, 1.3 * random_range(0.8, 1.2), 0.4);
+			
+			sound_set_track_position(sndHyperCrystalChargeExplo, 0);
+			/*
+			sound_play_gun(sndScrewdriver, 0.2, 0.6);
+			*/
 			
 			 // Effects:
 			weapon_post(-3, 8, 2);

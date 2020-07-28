@@ -39,6 +39,7 @@
 	teevent_add("ButtonGame");
 	teevent_add("PopoAmbush");
 	teevent_add("PalaceShrine");
+	teevent_add("EelGrave");
 	teevent_add("BuriedVault");
 	
 	 // Pet History:
@@ -58,14 +59,14 @@
 
 #macro ScorpionCity_pet instances_matching_gt(instances_matching(instances_matching(CustomHitme, "name", "Pet"), "pet", "Scorpion"), "scorpion_city", 0)
 
-#define BuriedVault_text    return ((GameCont.area == area_vault) ? "" : choose(`${event_tip}VAULT @wIN THE WALL`, `${event_tip}DIG`, `ANCIENT ${event_tip}STRUCTURES`));
+#define BuriedVault_text    return ((GameCont.area == area_vault) ? "" : choose(`SECRETS IN THE ${event_tip}WALLS`, `${event_tip}ARCHAEOLOGY`, `ANCIENT ${event_tip}STRUCTURES`));
 #define BuriedVault_hard    return 5; // 3-1+
 #define BuriedVault_chance  return ((GameCont.area == area_vault) ? 1/2 : (BuriedVault_spawn / (12 + (2 * variable_instance_get(GameCont, "buried_vaults", 0)))));
 
 #define BuriedVault_create
 	if(instance_number(enemy) > instance_number(EnemyHorror) || GameCont.area == area_vault){
 		with(instance_random(Wall)){
-			obj_create(x, y, "BuriedVault");
+			obj_create(x, y, ((GameCont.endcount > 0 && chance(1, 3)) ? "BuriedShrine" : "BuriedVault"));
 		}
 	}
 	
@@ -869,24 +870,28 @@
 	var	_minID      = GameObject.id,
 		_spawnX     = x,
 		_spawnY     = y,
-		_spawnFloor = FloorNormal;
+		_spawnFloor = FloorNormal,
+		_nestList	= [];
 		
 	repeat(3){
-		var	_w        = irandom_range(3, 5),
-			_h        = _w,
-			_type     = ((min(_w, _h) > 3) ? "round" : ""),
+		var	_s        = irandom_range(3, 5),
+			_type     = ((_s > 3) ? "round" : ""),
 			_dirOff   = 90,
 			_floorDis = 0,
-			_spawnDis = 64 + (_w * 16);
+			_spawnDis = 64 + (_s * 16);
 			
 		floor_set_align(null, null, 32, 32);
+		floor_set_style(1, null);
 		
-		with(floor_room(_spawnX, _spawnY, _spawnDis, _spawnFloor, _w, _h, _type, _dirOff, _floorDis)){
+		with(floor_room(_spawnX, _spawnY, _spawnDis, _spawnFloor, _s, _s, _type, _dirOff, _floorDis)){
+			array_push(_nestList, self);
+			
 			 // Family:
-			repeat(max(1, ((_w + _h) / 2) - 2)){
+			repeat(max(1, _s - 2)){
 				instance_create(x, y, ((chance(1, 5) || !instance_exists(GoldScorpion)) ? GoldScorpion : Scorpion));
 			}
 			
+			/*
 			 // Props:
 			var	_boneNum = round(((_w * _h) / 16) + orandom(1)),
 				_ang = random(360);
@@ -909,9 +914,11 @@
 					}
 				}
 			}
+			*/
 		}
 		
 		floor_reset_align();
+		floor_reset_style();
 	}
 	
 	 // Nest Corner Walls:
@@ -945,6 +952,22 @@
 			}
 			if(_break) break;
 		}
+	}
+	
+	 // The Alpha:
+	with(instance_furthest(_spawnX, _spawnY, Scorpion)){
+		obj_create(x, y, "SilverScorpion");
+		instance_delete(id);
+	}
+	
+	 // An Ancestor:
+	if(array_length(instances_matching(CustomObject, "name", "BigDecal")) <= 0){
+		with(instance_random(TopSmall)){
+			obj_create(x, y, "BigDecal");
+		}
+	}
+	with(instances_matching(CustomObject, "name", "BigDecal")){
+		sprite_index = spr.BigTopDecalScorpion;
 	}
 	
 	
@@ -2039,6 +2062,52 @@
 	}
 	
 	
+#define EelGrave_text	return `EELS ${event_tip}NEVER @wFORGET`;
+#define EelGrave_area	return "trench";
+#define EelGrave_chance return ((GameCont.subarea != 3) ? 1/5 : 0);
+#define EelGrave_create
+	var	_w          = 6,
+		_h          = 6,
+		_type       = "round",
+		_dirOff     = 0,
+		_floorDis   = -32,
+		_spawnX     = x,
+		_spawnY     = y,
+		_spawnDis   = 80,
+		_spawnFloor = FloorNormal;
+		
+	floor_set_align(null, null, 32, 32);
+	floor_set_style(1, null);
+	
+	with(floor_room(_spawnX, _spawnY, _spawnDis, _spawnFloor, _w, _h, _type, _dirOff, _floorDis)){
+		var _cw = 4,
+			_ch = 4;
+			
+		floor_set_style(0, null);
+			
+		 // Center Island:
+		floor_fill(x, y, _cw, _ch, _type);
+		var a = random(360);
+		for(var o = 0; o < 360; o += 360 / 3){
+			var l = random_range(16, 24),
+				d = (a + o) + orandom(8);
+				
+			obj_create(x + lengthdir_x(l, d), y + lengthdir_y(l, d), "EelSkull");
+		}
+		
+		 // Want Eels, Bro?:
+		repeat(irandom_range(15, 30)) obj_create(0, 0, "WantEel");
+		
+		 // Walls:
+		instance_create(x - 48, y - 48, Wall);
+		instance_create(x + 32, y - 48, Wall);
+		instance_create(x + 32, y + 32, Wall);
+		instance_create(x - 48, y + 32, Wall);
+	}
+	
+	floor_reset_align();
+	floor_reset_style();
+
 #define teevent_add(_event)
 	/*
 		Adds a given event script reference to the list of events
