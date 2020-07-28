@@ -24,7 +24,8 @@
 #define weapon_load            return 20; // 0.66 Seconds
 #define weapon_auto            return true;
 #define weapon_melee           return false;
-#define weapon_avail           return unlock_get("pack:lair");
+#define weapon_avail           return unlock_get("pack:" + weapon_ntte_pack());
+#define weapon_ntte_pack       return "lair";
 #define weapon_shrine          return mut_bolt_marrow;
 
 #define weapon_fire(_wep)

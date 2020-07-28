@@ -3,16 +3,17 @@
 	global.sprWep = sprite_add_weapon("../sprites/weps/sprLightningRingLauncher.png", 6, 3);
 	global.sprWepLocked = mskNone;
 	
-#define weapon_name   return (weapon_avail() ? "LIGHTRING LAUNCHER" : "LOCKED");
-#define weapon_text   return "JELLY TECHNOLOGY";
-#define weapon_swap   return sndSwapEnergy;
-#define weapon_sprt   return (weapon_avail() ? global.sprWep : global.sprWepLocked);
-#define weapon_area   return (weapon_avail() ? 6 : -1); // 3-1
-#define weapon_type   return type_energy;
-#define weapon_cost   return 3;
-#define weapon_load   return 37; // 1.23 Seconds
-#define weapon_auto   return true;
-#define weapon_avail  return unlock_get("pack:trench");
+#define weapon_name       return (weapon_avail() ? "LIGHTRING LAUNCHER" : "LOCKED");
+#define weapon_text       return "JELLY TECHNOLOGY";
+#define weapon_swap       return sndSwapEnergy;
+#define weapon_sprt       return (weapon_avail() ? global.sprWep : global.sprWepLocked);
+#define weapon_area       return (weapon_avail() ? 6 : -1); // 3-1
+#define weapon_type       return type_energy;
+#define weapon_cost       return 3;
+#define weapon_load       return 37; // 1.23 Seconds
+#define weapon_auto       return true;
+#define weapon_avail      return unlock_get("pack:" + weapon_ntte_pack());
+#define weapon_ntte_pack  return "trench"
 
 #define weapon_reloaded
 	sound_play(sndLightningReload);

@@ -8,9 +8,11 @@
 #define crown_name        return "RED CROWN";
 #define crown_text        return "CHAOTIC @rCRYSTAL HEARTS#@sSMALLER @wAREAS";
 #define crown_tip         return choose("FULL OF LIFE", "SO CRAMPED");
-#define crown_avail       return (GameCont.loops > 0);//unlock_get(`crown:${mod_current}`);
+#define crown_unlock      return `EXPLORE THE @(color:${area_get_back_color("red")})OTHER SIDE`;
+#define crown_avail       return (GameCont.loops > 0 && unlock_get(`crown:${mod_current}`));
 #define crown_menu_avail  return unlock_get(`loadout:crown:${mod_current}`);
 #define crown_loadout     return global.sprCrownLoadout;
+#define crown_ntte_pack   return "crown";
 
 #define crown_menu_button
 	sprite_index = crown_loadout();
@@ -56,3 +58,4 @@
 #define chance_ct(_numer, _denom)                                                       return  random(_denom) < (_numer * current_time_scale);
 #define obj_create(_x, _y, _obj)                                                        return  (is_undefined(_obj) ? [] : mod_script_call_nc('mod', 'telib', 'obj_create', _x, _y, _obj));
 #define unlock_get(_unlock)                                                             return  mod_script_call_nc('mod', 'telib', 'unlock_get', _unlock);
+#define area_get_back_color(_area)                                                      return  mod_script_call_nc('mod', 'telib', 'area_get_back_color', _area);

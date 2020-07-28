@@ -85,12 +85,47 @@
 			
 			return true;
 			
+		case "tesave":
+			
+			var	_argSplit = string_split(_arg, "="),
+				_name     = string_trim(_argSplit[0]),
+				_value    = null;
+				
+			 // Normal:
+			if(array_length(_argSplit) > 1){
+				_value = json_decode(_argSplit[1]);
+				if(_value == json_error){
+					trace_color(`"${_name}" couldn't be set to "${string_trim(_argSplit[1])}".`, c_red);
+					return true;
+				}
+				else if(_value == json_true ) _value = true;
+				else if(_value == json_false) _value = false;
+			}
+			
+			 // Auto-Invert Value:
+			else{
+				_value = mod_script_call_nc("mod", "teassets", "save_get", _name, null);
+				if(is_real(_value)){
+					_value = !_value;
+				}
+				else{
+					trace_color(`"${_name}" can't be toggled.`, c_red);
+					return true;
+				}
+			}
+			
+			 // Set:
+			mod_script_call_nc("mod", "teassets", "save_set", _name, _value);
+			trace_color(`"${_name}" set to ${is_string(_value) ? ('"' + _value + '"') : _value}.`, c_lime);
+			
+			return true;
+			
 		case "unlock":
 			
 			var	_argSplit = string_split(_arg, "="),
-				_name = string_trim(_argSplit[0]),
-				_all = (_name == ""),
-				_value = ((array_length(_argSplit) > 1 || _all) ? json_decode((array_length(_argSplit) > 1) ? _argSplit[1] : "") : !mod_script_call_nc("mod", "teassets", "unlock_get", _name));
+				_name     = string_trim(_argSplit[0]),
+				_all      = (_name == ""),
+				_value    = ((array_length(_argSplit) > 1 || _all) ? json_decode((array_length(_argSplit) > 1) ? _argSplit[1] : "") : !mod_script_call_nc("mod", "teassets", "unlock_get", _name));
 				
 			if(_value == json_error){
 				if(_all){
@@ -105,7 +140,7 @@
 				}
 				else _value = real(_argSplit[1]);
 			}
-			else if(_value == json_true) _value = true;
+			else if(_value == json_true ) _value = true;
 			else if(_value == json_false) _value = false;
 			
 			 // Sound:
@@ -187,6 +222,14 @@
 		chat_comp_add_arg("pet", 0, self);
 	}
 	
+	 // Save File Editing:
+	chat_comp_add("tesave", "(name)", "=", "(value)", "leave value blank to toggle");
+	chat_comp_add_arg("tesave", 0, "unlock:");
+	chat_comp_add_arg("tesave", 0, "stat:");
+	chat_comp_add_arg("tesave", 0, "option:");
+	chat_comp_add_arg("tesave", 2, "0");
+	chat_comp_add_arg("tesave", 2, "1");
+	
 	 // Unlocks:
 	global.unlock = [
 		"pack:coast",
@@ -194,6 +237,7 @@
 		"pack:trench",
 		"pack:lair",
 		"pack:red",
+		"pack:crown",
 		
 		"race:parrot",
 		"race:bee",

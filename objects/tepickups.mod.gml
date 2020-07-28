@@ -3,16 +3,6 @@
 	snd = mod_variable_get("mod", "teassets", "snd");
 	lag = false;
 	
-	 // Bind Events:
-	ntte_bind = {
-		"draw_bonus_spirit" : script_bind_draw(draw_bonus_spirit, -8)
-	};
-	for(var i = 0; i < lq_size(ntte_bind); i++){
-		with(lq_get_value(ntte_bind, i)){
-			persistent = true;
-		}
-	}
-	
 	 // Custom Pickup Instances (Used in step):
 	global.pickup_custom = [];
 	
@@ -28,8 +18,6 @@
 #macro snd global.snd
 #macro mus snd.mus
 #macro lag global.debug_lag
-
-#macro ntte_bind global.bind
 
 #define Backpack_create(_x, _y)
 	with(obj_create(_x, _y, "CustomChest")){
@@ -4566,6 +4554,9 @@
 	}
 	
 #define ntte_begin_step
+	 // Bind Events:
+	script_bind(CustomDraw, script_ref_create(draw_bonus_spirit), -8);
+	
 	 // Bonus Ammo / Overstock:
 	global.bonus_ammo_step = [];
 	with(instances_matching(instances_matching_gt(Player, "bonus_ammo", 0), "infammo", 0)){
@@ -5113,12 +5104,12 @@
 				
 				if(_noVan){
 					// Find Nearest Touching Indicator:
-					var	_nearest = noone,
-						_maxDis = null,
+					var	_nearest  = noone,
+						_maxDis   = null,
 						_maxDepth = null;
 						
 					if(instance_exists(nearwep)){
-						_maxDis = point_distance(x, y, nearwep.x, nearwep.y);
+						_maxDis   = point_distance(x, y, nearwep.x, nearwep.y);
 						_maxDepth = nearwep.depth;
 					}
 					
@@ -5128,12 +5119,12 @@
 							if(!is_array(e) || mod_script_call(e[0], e[1], e[2])){
 								if(_maxDepth == null || depth < _maxDepth){
 									_maxDepth = depth;
-									_maxDis = null;
+									_maxDis   = null;
 								}
 								if(depth == _maxDepth){
 									var _dis = point_distance(x, y, other.x, other.y);
 									if(_maxDis == null || _dis < _maxDis){
-										_maxDis = _dis;
+										_maxDis  = _dis;
 										_nearest = id;
 									}
 								}
@@ -5145,29 +5136,29 @@
 					with(_nearest){
 						nearwep = instance_create(x + xoff, y + yoff, IceFlower);
 						with(nearwep){
-							name = other.text;
-							x = xstart;
-							y = ystart;
-							xprevious = x;
-							yprevious = y;
-							visible = false;
-							mask_index = mskNone;
+							name         = other.text;
+							x            = xstart;
+							y            = ystart;
+							xprevious    = x;
+							yprevious    = y;
+							visible      = false;
+							mask_index   = mskNone;
 							sprite_index = mskNone;
-							spr_idle = mskNone;
-							spr_walk = mskNone;
-							spr_hurt = mskNone;
-							spr_dead = mskNone;
-							spr_shadow = -1;
-							snd_hurt = -1;
-							snd_dead = -1;
-							size = 0;
-							team = 0;
-							my_health = 99999;
-							nexthurt = current_frame + 99999;
+							spr_idle     = mskNone;
+							spr_walk     = mskNone;
+							spr_hurt     = mskNone;
+							spr_dead     = mskNone;
+							spr_shadow   = -1;
+							snd_hurt     = -1;
+							snd_dead     = -1;
+							size         = 0;
+							team         = 0;
+							my_health    = 99999;
+							nexthurt     = current_frame + 99999;
 						}
 						with(other){
 							nearwep = other.nearwep;
-							if(canpick && button_pressed(index, "pick")){
+							if(button_pressed(index, "pick")){
 								other.pick = index;
 							}
 						}
@@ -5514,14 +5505,6 @@
 		}
 	}
 	
-#define cleanup
-	 // Clear Event Bindings:
-	for(var i = 0; i < lq_size(ntte_bind); i++){
-		with(lq_get_value(ntte_bind, i)){
-			instance_destroy();
-		}
-	}
-	
 	
 /// SCRIPTS
 #macro  type_melee                                                                              0
@@ -5590,6 +5573,7 @@
 #define surface_setup(_name, _w, _h, _scale)                                            return  mod_script_call_nc('mod', 'teassets', 'surface_setup', _name, _w, _h, _scale);
 #define shader_setup(_name, _texture, _args)                                            return  mod_script_call_nc('mod', 'teassets', 'shader_setup', _name, _texture, _args);
 #define shader_add(_name, _vertex, _fragment)                                           return  mod_script_call_nc('mod', 'teassets', 'shader_add', _name, _vertex, _fragment);
+#define script_bind(_scriptObj, _scriptRef, _depth)                                     return  mod_script_call_nc('mod', 'teassets', 'script_bind', _scriptObj, _scriptRef, _depth);
 #define obj_create(_x, _y, _obj)                                                        return  (is_undefined(_obj) ? [] : mod_script_call_nc('mod', 'telib', 'obj_create', _x, _y, _obj));
 #define top_create(_x, _y, _obj, _spawnDir, _spawnDis)                                  return  mod_script_call_nc  ('mod', 'telib', 'top_create', _x, _y, _obj, _spawnDir, _spawnDis);
 #define projectile_create(_x, _y, _obj, _dir, _spd)                                     return  mod_script_call_self('mod', 'telib', 'projectile_create', _x, _y, _obj, _dir, _spd);
@@ -5645,7 +5629,6 @@
 #define area_get_secret(_area)                                                          return  mod_script_call_nc  ('mod', 'telib', 'area_get_secret', _area);
 #define area_get_underwater(_area)                                                      return  mod_script_call_nc  ('mod', 'telib', 'area_get_underwater', _area);
 #define area_get_back_color(_area)                                                      return  mod_script_call_nc  ('mod', 'telib', 'area_get_back_color', _area);
-#define area_get_shad_color(_area)                                                      return  mod_script_call_nc  ('mod', 'telib', 'area_get_shad_color', _area);
 #define area_border(_y, _area, _color)                                                  return  mod_script_call_nc  ('mod', 'telib', 'area_border', _y, _area, _color);
 #define area_generate(_area, _sub, _loops, _x, _y, _setArea, _overlapFloor, _scrSetup)  return  mod_script_call_nc  ('mod', 'telib', 'area_generate', _area, _sub, _loops, _x, _y, _setArea, _overlapFloor, _scrSetup);
 #define floor_get(_x, _y)                                                               return  mod_script_call_nc  ('mod', 'telib', 'floor_get', _x, _y);
@@ -5693,3 +5676,4 @@
 #define charm_instance(_inst, _charm)                                                   return  mod_script_call_nc  ('mod', 'telib', 'charm_instance', _inst, _charm);
 #define move_step(_mult)                                                                return  mod_script_call_self('mod', 'telib', 'move_step', _mult);
 #define pool(_pool)                                                                     return  mod_script_call_nc  ('mod', 'telib', 'pool', _pool);
+#define area_get_shad_color(_area)                                                      return  mod_script_call_nc  ('mod', 'telib', 'area_get_shad_color', _area);

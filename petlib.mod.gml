@@ -354,32 +354,33 @@
 				_max = 0;
 				
 			if(is_array(_value)){
-				var _mod = mod_get_names("weapon");
-				for(var i = 0; i < 128 + array_length(_mod); i++){
-					var _wep = ((i < 128) ? i : _mod[i - 128]);
+				var	_mods = mod_get_names("weapon"),
+					_wild = [
+						wep_revolver,
+						wep_golden_revolver,
+						wep_chicken_sword,
+						wep_rusty_revolver,
+						wep_rogue_rifle,
+						wep_guitar,
+						wep_frog_pistol,
+						wep_black_sword,
+						wep_golden_frog_pistol,
+						"crabbone",
+						"merge",
+						"super teleport gun"
+					];
+					
+				for(var i = 128 + array_length(_mods) - 1; i >= 0; i--){
+					var _wep = ((i < 128) ? i : _mods[i - 128]);
 					
 					 // Found:
-					if(array_exists(_value, _wep)){
+					if(array_find_index(_value, _wep) >= 0){
 						_num++;
 						_max++;
 					}
 					
 					 // In the Wild:
-					else if(
-						weapon_get_area(_wep) >= 0
-						|| _wep == wep_revolver
-						|| _wep == wep_golden_revolver
-						|| _wep == wep_chicken_sword
-						|| _wep == wep_rusty_revolver
-						|| _wep == wep_rogue_rifle
-						|| _wep == wep_guitar
-						|| _wep == wep_frog_pistol
-						|| _wep == wep_black_sword
-						|| _wep == wep_golden_frog_pistol
-						|| _wep == "crabbone"
-						|| _wep == "merge"
-						|| _wep == "super teleport gun"
-					){
+					else if(weapon_get_area(_wep) >= 0 || array_find_index(_wild, _wep) >= 0){
 						_max++;
 					}
 				}
@@ -3557,6 +3558,7 @@
 #define surface_setup(_name, _w, _h, _scale)                                            return  mod_script_call_nc('mod', 'teassets', 'surface_setup', _name, _w, _h, _scale);
 #define shader_setup(_name, _texture, _args)                                            return  mod_script_call_nc('mod', 'teassets', 'shader_setup', _name, _texture, _args);
 #define shader_add(_name, _vertex, _fragment)                                           return  mod_script_call_nc('mod', 'teassets', 'shader_add', _name, _vertex, _fragment);
+#define script_bind(_scriptObj, _scriptRef, _depth)                                     return  mod_script_call_nc('mod', 'teassets', 'script_bind', _scriptObj, _scriptRef, _depth);
 #define obj_create(_x, _y, _obj)                                                        return  (is_undefined(_obj) ? [] : mod_script_call_nc('mod', 'telib', 'obj_create', _x, _y, _obj));
 #define top_create(_x, _y, _obj, _spawnDir, _spawnDis)                                  return  mod_script_call_nc  ('mod', 'telib', 'top_create', _x, _y, _obj, _spawnDir, _spawnDis);
 #define projectile_create(_x, _y, _obj, _dir, _spd)                                     return  mod_script_call_self('mod', 'telib', 'projectile_create', _x, _y, _obj, _dir, _spd);
@@ -3612,7 +3614,6 @@
 #define area_get_secret(_area)                                                          return  mod_script_call_nc  ('mod', 'telib', 'area_get_secret', _area);
 #define area_get_underwater(_area)                                                      return  mod_script_call_nc  ('mod', 'telib', 'area_get_underwater', _area);
 #define area_get_back_color(_area)                                                      return  mod_script_call_nc  ('mod', 'telib', 'area_get_back_color', _area);
-#define area_get_shad_color(_area)                                                      return  mod_script_call_nc  ('mod', 'telib', 'area_get_shad_color', _area);
 #define area_border(_y, _area, _color)                                                  return  mod_script_call_nc  ('mod', 'telib', 'area_border', _y, _area, _color);
 #define area_generate(_area, _sub, _loops, _x, _y, _setArea, _overlapFloor, _scrSetup)  return  mod_script_call_nc  ('mod', 'telib', 'area_generate', _area, _sub, _loops, _x, _y, _setArea, _overlapFloor, _scrSetup);
 #define floor_get(_x, _y)                                                               return  mod_script_call_nc  ('mod', 'telib', 'floor_get', _x, _y);
@@ -3660,3 +3661,4 @@
 #define charm_instance(_inst, _charm)                                                   return  mod_script_call_nc  ('mod', 'telib', 'charm_instance', _inst, _charm);
 #define move_step(_mult)                                                                return  mod_script_call_self('mod', 'telib', 'move_step', _mult);
 #define pool(_pool)                                                                     return  mod_script_call_nc  ('mod', 'telib', 'pool', _pool);
+#define area_get_shad_color(_area)                                                      return  mod_script_call_nc  ('mod', 'telib', 'area_get_shad_color', _area);

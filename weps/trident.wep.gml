@@ -35,7 +35,8 @@
 #define weapon_type(_wep)   return type_melee;
 #define weapon_auto(_wep)   return true;
 #define weapon_melee(_wep)  return false;
-#define weapon_avail        return (unlock_get("pack:coast") || unlock_get("wep:" + mod_current));
+#define weapon_avail        return (unlock_get("pack:" + weapon_ntte_pack()) || unlock_get("wep:" + mod_current));
+#define weapon_ntte_pack    return "coast";
 #define weapon_shrine       return [mut_long_arms, mut_bolt_marrow];
 #define weapon_chrg         return true; // Defpack 4
 

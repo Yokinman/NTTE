@@ -587,9 +587,18 @@
 	draw_surface_ext(_surf, _x, _y, _scale, _scale, 0, c_white, draw_get_alpha());
 	
 #define draw_text_bn(_x, _y, _string, _angle)
-	var _col = draw_get_color();
+	/*
+		Draw big portrait name text
+		Portrait names use an angle of 1.5
+		
+		Ex:
+			draw_set_font(fntBigName)
+			draw_text_bn(x, y, "FISH", 1.5);
+	*/
+	
 	_string = string_upper(_string);
 	
+	var _col = draw_get_color();
 	draw_set_color(c_black);
 	draw_text_transformed(_x + 1, _y,     _string, 1, 1, _angle);
 	draw_text_transformed(_x,     _y + 2, _string, 1, 1, _angle);
@@ -1026,12 +1035,6 @@
 		Returns the title associated with a given unlock's corner splat
 	*/
 	
-	 // Specific:
-	switch(_name){
-		case "skin:red crystal": return "RED CRYSTAL";
-	}
-	
-	 // General:
 	var _split = string_split(_name, ":");
 	
 	if(array_length(_split) >= 2){
@@ -1046,7 +1049,8 @@
 					case "oasis"  : return "BUBBLE GUNS";
 					case "trench" : return "TECH GUNS";
 					case "lair"   : return "SAWBLADE GUNS";
-					case "red"    : return "RED GUNS";
+					case "red"    : return `@3(${spr.RedText}:-0.8) GUNS`;
+					case "crown"  : return "CROWNS";
 				}
 					
 				return _pack;
@@ -1073,9 +1077,9 @@
 				
 				 // Get Unlock Name:
 				var _skinName = race_get_title(_race) + " " + string_upper(skin_get_name(_race, _skin));
-				if(string_delete(_skinName, 1, string_length(_skinName) - 4) != "SKIN"){
+				/*if(string_delete(_skinName, 1, string_length(_skinName) - 4) != "SKIN"){
 					_skinName += " SKIN";
-				}
+				}*/
 				
 				return _skinName;
 				
@@ -1129,7 +1133,7 @@
 					case "oasis"  : return "SOAP AND WATER";
 					case "trench" : return "TERRORS FROM THE DEEP";
 					case "lair"   : return "DEVICES OF TORTURE";
-					case "red"    : return "???";
+					case "red"    : return "SPACE BENDS AND BREAKS";
 				}
 				
 				break;

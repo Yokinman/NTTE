@@ -7,22 +7,6 @@
 	ntte_mods = mod_variable_get("mod", "teassets", "mods");
 	ntte_mods_call = [];
 	
-	 // Bind Events:
-	ntte_bind = {
-		"step"        : script_bind_step(ntte_step, 0),
-		"end_step"    : script_bind_end_step(ntte_end_step, 0),
-		"hud"         : script_bind_draw(ntte_hud, 0),
-		"map"         : script_bind_draw(ntte_map, 0,  -70, 7, null),
-		"map_dead"    : script_bind_draw(ntte_map, 0, -120, 4, 0),
-		"map_pause"   : noone,
-		"shadows_top" : script_bind_draw(draw_shadows_top, -6.001)
-	};
-	for(var i = 0; i < lq_size(ntte_bind); i++){
-		with(lq_get_value(ntte_bind, i)){
-			persistent = true;
-		}
-	}
-	
 	 // level_start():
 	global.level_start = (instance_exists(GenCont) || instance_exists(Menu));
 	
@@ -64,8 +48,6 @@
 
 #macro ntte_mods      global.mods
 #macro ntte_mods_call global.mods_call
-
-#macro ntte_bind global.bind
 
 #macro heart_spawn  global.heart_spawn
 #macro weapon_spawn global.weapon_spawn
@@ -1549,6 +1531,11 @@
 #define ntte_begin_step
 	if(lag) trace_time();
 	
+	 // Bind Events:
+	script_bind(CustomStep,    script_ref_create(ntte_step),        0);
+	script_bind(CustomEndStep, script_ref_create(ntte_end_step),    0);
+	script_bind(CustomDraw,    script_ref_create(draw_shadows_top), -6.001);
+	
 	 // Manually Recreating Pause/Loading/GameOver Map:
 	if(global.area_update){
 		global.area_update = false;
@@ -2040,24 +2027,9 @@
 	if(!instance_exists(GenCont) && !instance_exists(LevCont) && instance_exists(Player)){
 		if(instance_exists(Portal) || (!instance_exists(enemy) && !instance_exists(becomenemy) && !instance_exists(CorpseActive))){
 			//if(!array_length(instances_matching_ne(instances_matching(CustomObject, "name", "CatHoleBig"), "sprite_index", mskNone))){ yokin wtf how could you comment out my epic code!?!?
-				var _packList = [
-					"coast",
-					"oasis",
-					"trench",
-					"lair",
-					"red"
-				];
-				
-				if(array_exists(_packList, GameCont.area)){
+				if(array_exists(["coast", "oasis", "trench", "lair", "red"], GameCont.area)){
 					if(GameCont.subarea >= area_get_subarea(GameCont.area)){
 						unlock_set("pack:" + GameCont.area, true);
-						
-						 // Extra Unlocks:
-						switch(GameCont.area){
-							case "lair":
-								unlock_set("crown:crime", true);
-								break;
-						}
 					}
 				}
 			//}
@@ -2169,9 +2141,7 @@
 					}
 					
 					 // Weapon Found:
-					else if(stat_get("found:" + _raw + ".wep") == false){
-						stat_set("found:" + _raw + ".wep", true);
-					}
+					else stat_set("found:" + _raw + ".wep", true);
 				}
 			}
 		}
@@ -2180,6 +2150,7 @@
 	 // Crown Found:
 	if(is_string(crown_current) && array_exists(ntte_mods.crown, crown_current)){
 		stat_set("found:" + crown_current + ".crown", true);
+		save_set("unlock:pack:crown", true);
 	}
 	
 	 // Race Stats:
@@ -2596,60 +2567,61 @@
 		}
 	}
 	
-	 // Event Drawing Visibility:
-	with(ntte_bind){
-		 // HUD:
-		with(hud){
-			active = false;
-			
-			 // Normal:
-			with(instances_matching(TopCont, "visible", true)){
+	 // Bind HUD Drawing:
+	with(script_bind(CustomDraw, script_ref_create(ntte_hud), 0)){
+		active = false;
+		
+		 // Normal:
+		with(instances_matching(TopCont, "visible", true)){
+			if(!other.active || depth - 1 < other.depth){
+				other.active = true;
+				other.depth  = depth - 1;
+			}
+		}
+		
+		 // Loading / Level Up Screen:
+		if(instance_exists(GenCont) || instance_exists(LevCont)){
+			with(instances_matching(UberCont, "visible", true)){
 				if(!other.active || depth - 1 < other.depth){
 					other.active = true;
 					other.depth  = depth - 1;
 				}
 			}
-			
-			 // Loading/Level Up Screen:
-			if(instance_exists(GenCont) || instance_exists(LevCont)){
-				with(instances_matching(UberCont, "visible", true)){
-					if(!other.active || depth - 1 < other.depth){
-						other.active = true;
-						other.depth  = depth - 1;
-					}
-				}
+		}
+	}
+	
+	 // Bind Map Drawing:
+	with(script_bind(CustomDraw, script_ref_create(ntte_map, -70, 7, null), 0)){
+		visible = false;
+		
+		 // Loading Screen:
+		with(instances_matching(GenCont, "visible", true)){
+			if(!other.visible || depth + 1 < other.depth){
+				other.visible = true;
+				other.depth   = depth - 1;
 			}
 		}
+	}
+	with(script_bind(CustomDraw, script_ref_create(ntte_map, -120, 4, 0), 0)){
+		visible = false;
 		
-		 // Map:
-		with(map){
-			visible = false;
-			with(instances_matching(GenCont, "visible", true)){
+		 // Game Over Screen:
+		var	_anim  = 0,
+			_stage = 0;
+			
+		if(!instance_exists(Player)){
+			with(instances_matching(instances_matching(TopCont, "visible", true), "go_addy1", 0)){
 				if(!other.visible || depth + 1 < other.depth){
 					other.visible = true;
 					other.depth   = depth - 1;
+					_stage        = go_stage;
+					_anim         = mapanim;
 				}
 			}
 		}
-		with(map_dead){
-			var	_anim  = 0,
-				_stage = 0;
-				
-			visible = false;
-			if(!instance_exists(Player)){
-				with(instances_matching(instances_matching(TopCont, "visible", true), "go_addy1", 0)){
-					if(!other.visible || depth + 1 < other.depth){
-						other.visible = true;
-						other.depth   = depth - 1;
-						_stage        = go_stage;
-						_anim         = mapanim;
-					}
-				}
-			}
-			script[3] = -120;
-			script[4] = 4 - min(2, _stage);
-			script[5] = _anim;
-		}
+		script[3] = -120;
+		script[4] = 4 - min(2, _stage);
+		script[5] = _anim;
 	}
 	
 	if(lag) trace_time("ntte_end_step");
@@ -2835,10 +2807,9 @@
 	global.paused = true;
 	
 	 // Pause Map Drawing:
-	if(!instance_exists(ntte_bind.map_pause)){
-		with(script_bind_draw(ntte_map_pause, UberCont.depth - 1)){
-			persistent = true;
-			ntte_bind.map_pause = id;
+	var _minID = GameObject.id;
+	with(script_bind(CustomDraw, script_ref_create(ntte_map_pause), UberCont.depth - 1)){
+		if(id > _minID){
 			event_perform(ev_draw, 0);
 		}
 	}
@@ -4071,14 +4042,6 @@
 		return id;
 	}
 	
-#define cleanup
-	 // Clear Event Bindings:
-	for(var i = 0; i < lq_size(ntte_bind); i++){
-		with(lq_get_value(ntte_bind, i)){
-			instance_destroy();
-		}
-	}
-	
 	
 /// SCRIPTS
 #macro  type_melee                                                                              0
@@ -4147,6 +4110,7 @@
 #define surface_setup(_name, _w, _h, _scale)                                            return  mod_script_call_nc('mod', 'teassets', 'surface_setup', _name, _w, _h, _scale);
 #define shader_setup(_name, _texture, _args)                                            return  mod_script_call_nc('mod', 'teassets', 'shader_setup', _name, _texture, _args);
 #define shader_add(_name, _vertex, _fragment)                                           return  mod_script_call_nc('mod', 'teassets', 'shader_add', _name, _vertex, _fragment);
+#define script_bind(_scriptObj, _scriptRef, _depth)                                     return  mod_script_call_nc('mod', 'teassets', 'script_bind', _scriptObj, _scriptRef, _depth);
 #define obj_create(_x, _y, _obj)                                                        return  (is_undefined(_obj) ? [] : mod_script_call_nc('mod', 'telib', 'obj_create', _x, _y, _obj));
 #define top_create(_x, _y, _obj, _spawnDir, _spawnDis)                                  return  mod_script_call_nc  ('mod', 'telib', 'top_create', _x, _y, _obj, _spawnDir, _spawnDis);
 #define projectile_create(_x, _y, _obj, _dir, _spd)                                     return  mod_script_call_self('mod', 'telib', 'projectile_create', _x, _y, _obj, _dir, _spd);
@@ -4202,7 +4166,6 @@
 #define area_get_secret(_area)                                                          return  mod_script_call_nc  ('mod', 'telib', 'area_get_secret', _area);
 #define area_get_underwater(_area)                                                      return  mod_script_call_nc  ('mod', 'telib', 'area_get_underwater', _area);
 #define area_get_back_color(_area)                                                      return  mod_script_call_nc  ('mod', 'telib', 'area_get_back_color', _area);
-#define area_get_shad_color(_area)                                                      return  mod_script_call_nc  ('mod', 'telib', 'area_get_shad_color', _area);
 #define area_border(_y, _area, _color)                                                  return  mod_script_call_nc  ('mod', 'telib', 'area_border', _y, _area, _color);
 #define area_generate(_area, _sub, _loops, _x, _y, _setArea, _overlapFloor, _scrSetup)  return  mod_script_call_nc  ('mod', 'telib', 'area_generate', _area, _sub, _loops, _x, _y, _setArea, _overlapFloor, _scrSetup);
 #define floor_get(_x, _y)                                                               return  mod_script_call_nc  ('mod', 'telib', 'floor_get', _x, _y);
@@ -4250,5 +4213,6 @@
 #define charm_instance(_inst, _charm)                                                   return  mod_script_call_nc  ('mod', 'telib', 'charm_instance', _inst, _charm);
 #define move_step(_mult)                                                                return  mod_script_call_self('mod', 'telib', 'move_step', _mult);
 #define pool(_pool)                                                                     return  mod_script_call_nc  ('mod', 'telib', 'pool', _pool);
+#define area_get_shad_color(_area)                                                      return  mod_script_call_nc  ('mod', 'telib', 'area_get_shad_color', _area);
 #define teevent_set_active(_name, _active)                                              return  mod_script_call_nc('mod', 'teevents', 'teevent_set_active', _name, _active);
 #define teevent_get_active(_name)                                                       return  mod_script_call_nc('mod', 'teevents', 'teevent_get_active', _name);

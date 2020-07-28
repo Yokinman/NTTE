@@ -22,7 +22,8 @@
 #define weapon_load            return 5; // 0.16 Seconds
 #define weapon_auto(_wep)      return true;
 #define weapon_melee           return false;
-#define weapon_avail           return unlock_get("pack:lair");
+#define weapon_avail           return unlock_get("pack:" + weapon_ntte_pack());
+#define weapon_ntte_pack       return "lair";
 
 #define weapon_fire(_wep)
 	var _fire = weapon_fire_init(_wep);

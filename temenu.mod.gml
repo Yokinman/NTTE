@@ -6,21 +6,6 @@
 	 // Mod Lists:
 	ntte_mods = mod_variable_get("mod", "teassets", "mods");
 	
-	 // Bind Events:
-	ntte_bind = {
-		"menu"            : script_bind_draw(draw_menu,            object_get_depth(Menu) - 1),
-		"loadout_crown"   : script_bind_draw(draw_loadout_crown,   object_get_depth(LoadoutCrown) - 1),
-		"loadout_weapon"  : script_bind_draw(draw_loadout_weapon,  object_get_depth(LoadoutWep) - 1),
-		"loadout_tooltip" : script_bind_draw(draw_loadout_tooltip, -100000),
-		"loadout_behind"  : script_bind_draw(draw_loadout_behind,  object_get_depth(Loadout) + 1),
-		"loadout_above"   : script_bind_draw(draw_loadout_above,   object_get_depth(Loadout) - 1)
-	};
-	for(var i = 0; i < lq_size(ntte_bind); i++){
-		with(lq_get_value(ntte_bind, i)){
-			persistent = true;
-		}
-	}
-	
 	 // Menu Layout:
 	NTTEMenu = {
 		"open"			: false,
@@ -127,16 +112,10 @@
 					"other" : {
 						"slct" : array_create(maxp, 0),
 						"list" : [
-							{	name : "AREA UNLOCKS",
-								list : [
-									["pack:coast",  ["harpoon launcher.wep", "net launcher.wep", "clam shield.wep", "trident.wep"]],
-									["pack:oasis",  ["bubble rifle.wep", "bubble shotgun.wep", "bubble minigun.wep", "bubble cannon.wep", "hyper bubbler.wep"]],
-									["pack:trench", ["lightring launcher.wep", "super lightring launcher.wep", "tesla coil.wep", "electroplasma rifle.wep", "electroplasma shotgun.wep", "quasar blaster.wep", "quasar rifle.wep", "quasar cannon.wep"]],
-									["pack:lair",   ["bat disc launcher.wep", "bat disc cannon.wep"]],
-									["crown:crime", ["crime.crown"]]
-								]
+							{	name : "UNLOCKS",
+								list : ["coast", "oasis", "trench", "lair", "red", "crown"]
 							},
-							{	name : "MISC",
+							{	name : "OTHER",
 								list : [
 									["Time",  "time", stat_time],
 									["Bones", "bone", stat_base]
@@ -303,8 +282,6 @@
 #macro lag global.debug_lag
 
 #macro ntte_mods global.mods
-
-#macro ntte_bind global.bind
 
 #macro NTTEMenu         global.menu
 #macro MenuOpen         NTTEMenu.open
@@ -574,20 +551,15 @@
 	 // Remember Last Crown:
 	else crownCamp = crown_current;
 	
-	 // Menu Drawing Visibility:
-	with(ntte_bind){
-		with(menu){
-			depth = (instance_exists(Menu) ? Menu.depth : object_get_depth(Menu)) - 1;
-		}
-		with([loadout_crown, loadout_weapon, loadout_tooltip, loadout_behind, loadout_above]){
-			if(instance_exists(self)){
-				visible = _visible;
-			}
-		}
-		if(instance_exists(Loadout)){
-			with(loadout_behind) depth = Loadout.depth + 1;
-			with(loadout_above)  depth = Loadout.depth - 1;
-		}
+	 // Bind Menu Drawing:
+	script_bind(CustomDraw, script_ref_create(draw_menu), (instance_exists(Menu) ? Menu.depth : object_get_depth(Menu)) - 1);
+	with([
+		script_bind(CustomDraw, script_ref_create(draw_loadout_behind), (instance_exists(Loadout) ? Loadout.depth : object_get_depth(Loadout)) + 1),
+		script_bind(CustomDraw, script_ref_create(draw_loadout_above),  (instance_exists(Loadout) ? Loadout.depth : object_get_depth(Loadout)) - 1),
+		script_bind(CustomDraw, script_ref_create(draw_loadout_crown),  object_get_depth(LoadoutCrown) - 1),
+		script_bind(CustomDraw, script_ref_create(draw_loadout_weapon), object_get_depth(LoadoutWep)   - 1)
+	]){
+		visible = _visible;
 	}
 	
 #define draw_gui_end
@@ -1122,7 +1094,7 @@
 			
 			 // Custom Crown Tooltip:
 			with(_crown.custom.icon) if(visible && hover){
-				with(ntte_bind.loadout_tooltip){
+				with(script_bind(CustomDraw, script_ref_create(draw_loadout_tooltip), -100000)){
 					x    = other.x;
 					y    = other.y - 5 - other.hover;
 					text = (other.locked ? "LOCKED" : (crown_get_name(other.crwn) + "#@s" + crown_get_text(other.crwn)));
@@ -1169,7 +1141,7 @@
 						 // Tooltip:
 						with(other){
 							if(hover){
-								with(ntte_bind.loadout_tooltip){
+								with(script_bind(CustomDraw, script_ref_create(draw_loadout_tooltip), -100000)){
 									x    = _x;
 									y    = _y - 7 + other.overy;
 									text = weapon_get_name(_wep);
@@ -1444,6 +1416,8 @@
 	
 #define ntte_menu()
 	if(MenuOpen){
+		if(lag) trace_time();
+		
 		var _userSeen = [];
 		
 		for(var _index = 0; _index < maxp; _index++){
@@ -1985,10 +1959,20 @@
 										draw_set_halign(fa_left);
 										draw_set_valign(fa_top);
 										if(mod_script_exists("race", _raceCurrent, "race_name")){
-											draw_text_bn(_x + 6 + (_portX * 1.5), _y - 80, race_get_title(_raceCurrent), 1.5);
+											draw_text_bn(
+												_x + 6 + (_portX * 1.5),
+												_y - 80,
+												race_get_title(_raceCurrent),
+												1.5
+											);
 										}
 										else{
-											draw_text_bn(_x + 16 + (_portX * 0.6), _y - 80, "NONE", 1.5);
+											draw_text_bn(
+												_x + 16 + (_portX * 0.6),
+												_y - 80,
+												"NONE",
+												1.5
+											);
 										}
 										
 									break;
@@ -2091,11 +2075,11 @@
 										}
 										
 										for(var i = 0; i < lq_size(_petList); i++){
-											var	_pet = lq_get_key(_petList, i),
-												_info = lq_get_value(_petList, i),
-												_icon = pet_get_icon(_info.mod_type, _info.mod_name, _info.name),
-												_avail = _info.avail,
-												_hover = false,
+											var	_pet      = lq_get_key(_petList, i),
+												_info     = lq_get_value(_petList, i),
+												_icon     = pet_get_icon(_info.mod_type, _info.mod_name, _info.name),
+												_avail    = _info.avail,
+												_hover    = false,
 												_selected = (_petSlct[_index] == _pet && _avail);
 												
 											 // Selecting:
@@ -2151,7 +2135,12 @@
 										draw_set_font(fntBigName);
 										draw_set_halign(fa_left);
 										draw_set_valign(fa_top);
-										draw_text_bn(28 + (2 * max(0, (_appear + 1) - _pop)), 46, (_pet != null ? (_pet.avail ? _pet.name : "UNKNOWN") : "NONE"), 1.5);
+										draw_text_bn(
+											28 + (2 * max(0, (_appear + 1) - _pop)),
+											46,
+											(_pet != null ? (_pet.avail ? _pet.name : "UNKNOWN") : "NONE"),
+											1.5
+										);
 									}
 									
 									 // Get Stats to Display:
@@ -2208,16 +2197,16 @@
 									var _otherList = _statMenu.list;
 									
 									 // Splat:
-									var	_x = -64,
-										_y = game_height - 36,
+									var	_x   = -64,
+										_y   = game_height - 36,
 										_spr = sprLoadoutOpen;
 										
 									draw_sprite_ext(_spr, clamp(_pop - 1, 0, sprite_get_number(_spr) - 1), _x, _y, -1, (game_height - 72) / (240 - 72), 0, c_white, 1);
 									
 									 // Draw Categories:
 									var	_appear = 5,
-										_sx = 6 + (2 * max(0, (_appear + 1) - _pop)),
-										_sy = 44;
+										_sx     = 6 + (2 * max(0, (_appear + 1) - _pop)),
+										_sy     = 44;
 										
 									draw_set_halign(fa_left);
 									draw_set_valign(fa_top);
@@ -2238,45 +2227,87 @@
 										
 										 // Main Drawing:
 										switch(name){
-											case "AREA UNLOCKS":
+											
+											case "UNLOCKS":
 												
 												if(_pop >= _appear){
 													draw_set_font(fntM);
 													
-													var _slct = _statMenu.slct
+													var _slct = _statMenu.slct;
 													
-													 // Auto Select First Unlocked:
-													if(!unlock_get(list[_slct[_index], 0])){
+													 // Auto-Select First Unlocked Pack:
+													if(!unlock_get("pack:" + list[_slct[_index]])){
 														for(var i = 0; i < array_length(list); i++){
-															if(unlock_get(list[i, 0])){
+															if(unlock_get("pack:" + list[i])){
 																_slct[_index] = i;
 																break;
 															}
 														}
 													}
 													
-													 // Up/Down Select:
-													var	_slctSwap = _slct[_index],
-														s = ((button_pressed(_index, "sout") || button_pressed(_index, "east")) - (button_pressed(_index, "nort") || button_pressed(_index, "west")));
+													 // Compile Pack Items:
+													var _packList = {};
+													with(list){
+														lq_set(_packList, self, []);
+													}
+													with(["crown", "weapon"]){
+														var _modType = self;
+														with(mod_get_names(_modType)){
+															var	_modName = self,
+																_modScrt = _modType + "_ntte_pack";
+																
+															if(mod_script_exists(_modType, _modName, _modScrt)){
+																switch(_modType){
+																	case "weapon":
+																		var _pack = mod_script_call_nc(_modType, _modName, _modScrt, _modName);
+																		if(_pack in _packList){
+																			array_push(
+																				lq_get(_packList, _pack),
+																				[_modType, _modName, mod_variable_get(_modType, _modName, "sprWep")]
+																			);
+																		}
+																		break;
+																		
+																	case "crown":
+																		var _pack = mod_script_call_nc(_modType, _modName, _modScrt);
+																		if(_pack in _packList){
+																			array_push(
+																				lq_get(_packList, _pack),
+																				[_modType, _modName, mod_variable_get(_modType, _modName, "sprCrownIdle")]
+																			);
+																		}
+																		break;
+																}
+															}
+														}
+													}
+													
+													 // Arrow Key Select:
+													var	_swap     = (button_pressed(_index, "east") - button_pressed(_index, "west")) + (3 * (button_pressed(_index, "sout") - button_pressed(_index, "nort"))),
+														_slctSwap = _slct[_index];
 														
-													while(s != 0){
-														_slctSwap = (_slctSwap + s + array_length(list)) % array_length(list);
-														if(unlock_get(list[_slctSwap, 0]) || _slctSwap == _slct[_index]){
+													while(_swap != 0){
+														_slctSwap = (_slctSwap + _swap + array_length(list)) % array_length(list);
+														if(unlock_get("pack:" + list[_slctSwap]) || _slctSwap == _slct[_index]){
 															break;
 														}
 													}
 													
-													with(list){
-														var	_unlock = unlock_get(self[0]),
-															_unlockList = self[1],
-															_name = (_unlock ? unlock_get_name(self[0]) : "LOCKED"),
-															_selected = (_unlock && _slct[_index] == array_find_index(other.list, self)),
-															_hover = false;
-															
-														if(_selected){
-															with(UberCont){
+													 // Draw Unlock Icons:
+													with(UberCont){
+														var _ox = 0;
+														for(var i = 0; i < lq_size(_packList); i++){
+															var	_pack       = lq_get_key(_packList, i),
+																_unlockList = lq_get_value(_packList, i),
+																_unlockName = "pack:" + _pack,
+																_unlocked   = unlock_get(_unlockName),
+																_name       = (_unlocked ? unlock_get_name(_unlockName) : "LOCKED"),
+																_selected   = (_unlocked && _slct[_index] == i),
+																_hover      = false;
+																
+															if(_selected){
 																var	_dx = _sx + 116,
-																	_dy = _sy;
+																	_dy = _sy + 8;
 																	
 																 // Splat:
 																var	_spr = sprKilledBySplat,
@@ -2286,52 +2317,44 @@
 																	draw_sprite(_spr, _img, _dx + 32, _dy - (string_height(_name) / 2));
 																}
 																
-																 // Unlocks:
+																 // Unlock Icons:
 																_dy += 2;
-																for(var i = 0; i < array_length(_unlockList); i++){
-																	var _unlockAppear = _appear + 2 + i;
+																for(var j = 0; j < array_length(_unlockList); j++){
+																	var _unlockAppear = _appear + 2 + j;
 																	if(_pop >= _unlockAppear){
-																		var	_split = string_split(_unlockList[i], "."),
-																			_modType = _split[array_length(_split) - 1],
-																			_modName = array_join(array_slice(_split, 0, array_length(_split) - 1), "."),
-																			_found = stat_get("found:" + _unlockList[i]);
+																		var	_modType = _unlockList[j, 0],
+																			_modName = _unlockList[j, 1],
+																			_modIcon = _unlockList[j, 2];
 																			
-																		if(_modType == "wep") _modType = "weapon";
-																		
-																		 // Get Sprite:
-																		var	_spr = -1,
-																			_img = (_found ? ((_pop * 0.4) - (3 * i)) : 0);
+																		if(is_real(_modIcon) && sprite_exists(_modIcon)){
+																			var _found = stat_get("found:" + _modName + "." + ((_modType == "weapon") ? "wep" : _modType));
 																			
-																		if(mod_exists(_modType, _modName)){
-																			switch(_modType){
-																				case "weapon":
-																					_spr = mod_variable_get(_modType, _modName, "sprWep");
-																					if((_img % sprite_get_number(_spr)) < 2) _img = 0;
-																					break;
-																					
-																				case "crown":
-																					_spr = mod_variable_get(_modType, _modName, "sprCrownIdle");
-																					break;
+																			 // Animate:
+																			var	_num = sprite_get_number(_modIcon),
+																				_img = (_found ? ((_pop * 0.4) - (3 * j)) : 0);
+																				
+																			if(
+																				(_img + _num) % ((1 + array_length(_unlockList)) * _num) >= _num
+																				||
+																				(_modType == "weapon" && _img % _num < 2) // No White Flash
+																			){
+																				_img = 0;
 																			}
-																		}
-																		if((_img + sprite_get_number(_spr)) % ((1 + array_length(_unlockList)) * sprite_get_number(_spr)) >= sprite_get_number(_spr)){
-																			_img = 0;
-																		}
-																		
-																		 // Loop Over:
-																		if(_dx + sprite_get_width(_spr) > game_width){
-																			_dx = _sx + 124;
-																			_dy += 16;
-																		}
-																		
-																		if(is_real(_spr) && sprite_exists(_spr)){
+																			
+																			 // Loop Over:
+																			if(_dx + sprite_get_width(_modIcon) > game_width){
+																				_dx = _sx + 124;
+																				_dy += 16;
+																			}
+																			
+																			 // Not Found:
 																			if(!_found){
 																				 // Shadow:
 																				draw_set_fog(true, c_black, 0, 0);
 																				draw_sprite(
-																					_spr,
+																					_modIcon,
 																					_img,
-																					_dx + sprite_get_xoffset(_spr) - (_pop == _unlockAppear),
+																					_dx + sprite_get_xoffset(_modIcon) - (_pop == _unlockAppear),
 																					_dy + 1
 																				);
 																				
@@ -2339,50 +2362,64 @@
 																				draw_set_fog(true, make_color_hsv(0, 0, 28 + (10 * instance_exists(BackMainMenu))), 0, 0);
 																			}
 																			
+																			 // Icon:
 																			draw_sprite(
-																				_spr,
+																				_modIcon,
 																				_img,
-																				_dx + sprite_get_xoffset(_spr) - (_pop == _unlockAppear),
+																				_dx + sprite_get_xoffset(_modIcon) - (_pop == _unlockAppear),
 																				_dy
 																			);
 																			
-																			_dx += 1 + sprite_get_width(_spr);
+																			if(!_found){
+																				draw_set_fog(false, 0, 0, 0);
+																			}
 																			
-																			if(!_found) draw_set_fog(false, 0, 0, 0);
+																			_dx += 1 + sprite_get_width(_modIcon);
 																		}
 																		
 																		 // Sound:
 																		if(_pop == _unlockAppear){
-																			sound_play_pitch(sndAppear, 1 + (i * 0.05));
+																			sound_play_pitch(sndAppear, 1 + (j * 0.05));
 																		}
 																	}
 																}
 															}
-														}
-														
-														 // Selection:
-														if(point_in_rectangle(_mx - _vx, _my - _vy, _sx, _sy, _sx + 120, _sy + string_height(_name))){
-															_hover = true;
-															if(button_pressed(_index, "fire")){
-																_selected = true;
+															
+															 // Pack Icon:
+															var	_spr = lq_defget(spr.UnlockIcon, _pack, -1),
+																_img = (_unlocked ? 0 : 1),
+																_x   = _sx + 24 + _ox,
+																_y   = _sy + 12;
 																
-																if(_unlock){
-																	_slctSwap = array_find_index(other.list, self);
+															if(point_in_rectangle(_mx - _vx + sprite_get_xoffset(_spr), _my - _vy + sprite_get_yoffset(_spr), _x, _y, _x + sprite_get_width(_spr), _y + sprite_get_height(_spr))){
+																_hover = true;
+																
+																 // Tooltip:
+																//if(!_selected){
+																	_tooltip = (_unlocked ? unlock_get_name(_unlockName) : "LOCKED");
+																//}
+																
+																 // Select:
+																if(button_pressed(_index, "fire")){
+																	_selected = true;
+																	
+																	if(_unlocked){
+																		_slctSwap = i;
+																	}
+																	
+																	 // No:
+																	else sound_play(sndNoSelect);
 																}
-																
-																 // No:
-																else sound_play(sndNoSelect);
+															}
+															draw_sprite_ext(_spr, _img, _x, _y - _selected, 1, 1, 0, ((_selected || _hover) ? c_white : c_gray), 1);
+															
+															 // Next:
+															_ox += 24 + 1;
+															if(_ox > 60 && i < lq_size(_packList) - 1){
+																_ox = 0;
+																_sy += 24 + 1;
 															}
 														}
-														
-														 // Name:
-														draw_text_nt(
-															_sx + (2 * _selected) - !_unlock,
-															_sy,
-															(_unlock ? (_selected ? "" : (_hover ? "@s" : "@d")) : `@(color:${make_color_hsv(0, 0, 25 + (15 * (_hover && !_selected)))})`) + _name
-														);
-														
-														_sy += 1 + string_height(_name);
 													}
 													
 													 // Selection Swapped:
@@ -2395,15 +2432,18 @@
 													}
 												}
 												
+												_sy += 16;
+												
 												break;
 												
-											case "MISC":
+											case "OTHER":
 												
 												_statX = _sx + 44;
 												_statY = _sy;
 												_statDraw = { name : "", list : ((_pop >= _appear) ? list : []) };
 												
 												break;
+												
 										}
 										
 										_sy += 16;
@@ -2594,6 +2634,8 @@
 		
 		draw_set_visible_all(true);
 		draw_reset_projection();
+		
+		if(lag) trace_time("ntte_menu");
 	}
 	
 	 // Closed:
@@ -2621,13 +2663,6 @@
 	}
 	
 #define cleanup
-	 // Clear Event Bindings:
-	for(var i = 0; i < lq_size(ntte_bind); i++){
-		with(lq_get_value(ntte_bind, i)){
-			instance_destroy();
-		}
-	}
-	
 	 // Fix Options:
 	if(MenuOpen){
 		with(Menu) mode = 0;
@@ -2712,6 +2747,7 @@
 #define surface_setup(_name, _w, _h, _scale)                                            return  mod_script_call_nc('mod', 'teassets', 'surface_setup', _name, _w, _h, _scale);
 #define shader_setup(_name, _texture, _args)                                            return  mod_script_call_nc('mod', 'teassets', 'shader_setup', _name, _texture, _args);
 #define shader_add(_name, _vertex, _fragment)                                           return  mod_script_call_nc('mod', 'teassets', 'shader_add', _name, _vertex, _fragment);
+#define script_bind(_scriptObj, _scriptRef, _depth)                                     return  mod_script_call_nc('mod', 'teassets', 'script_bind', _scriptObj, _scriptRef, _depth);
 #define obj_create(_x, _y, _obj)                                                        return  (is_undefined(_obj) ? [] : mod_script_call_nc('mod', 'telib', 'obj_create', _x, _y, _obj));
 #define top_create(_x, _y, _obj, _spawnDir, _spawnDis)                                  return  mod_script_call_nc  ('mod', 'telib', 'top_create', _x, _y, _obj, _spawnDir, _spawnDis);
 #define projectile_create(_x, _y, _obj, _dir, _spd)                                     return  mod_script_call_self('mod', 'telib', 'projectile_create', _x, _y, _obj, _dir, _spd);
@@ -2767,7 +2803,6 @@
 #define area_get_secret(_area)                                                          return  mod_script_call_nc  ('mod', 'telib', 'area_get_secret', _area);
 #define area_get_underwater(_area)                                                      return  mod_script_call_nc  ('mod', 'telib', 'area_get_underwater', _area);
 #define area_get_back_color(_area)                                                      return  mod_script_call_nc  ('mod', 'telib', 'area_get_back_color', _area);
-#define area_get_shad_color(_area)                                                      return  mod_script_call_nc  ('mod', 'telib', 'area_get_shad_color', _area);
 #define area_border(_y, _area, _color)                                                  return  mod_script_call_nc  ('mod', 'telib', 'area_border', _y, _area, _color);
 #define area_generate(_area, _sub, _loops, _x, _y, _setArea, _overlapFloor, _scrSetup)  return  mod_script_call_nc  ('mod', 'telib', 'area_generate', _area, _sub, _loops, _x, _y, _setArea, _overlapFloor, _scrSetup);
 #define floor_get(_x, _y)                                                               return  mod_script_call_nc  ('mod', 'telib', 'floor_get', _x, _y);
@@ -2815,6 +2850,7 @@
 #define charm_instance(_inst, _charm)                                                   return  mod_script_call_nc  ('mod', 'telib', 'charm_instance', _inst, _charm);
 #define move_step(_mult)                                                                return  mod_script_call_self('mod', 'telib', 'move_step', _mult);
 #define pool(_pool)                                                                     return  mod_script_call_nc  ('mod', 'telib', 'pool', _pool);
+#define area_get_shad_color(_area)                                                      return  mod_script_call_nc  ('mod', 'telib', 'area_get_shad_color', _area);
 #define unlock_get_name(_name)                                                          return  mod_script_call_nc('mod', 'telib', 'unlock_get_name', _name);
 #define draw_text_bn(_x, _y, _string, _angle)                                                   mod_script_call_nc('mod', 'telib', 'draw_text_bn', _x, _y, _string, _angle);
 #define weapon_get_loadout(_wep)                                                        return  mod_script_call(   'mod', 'telib', 'weapon_get_loadout', _wep)

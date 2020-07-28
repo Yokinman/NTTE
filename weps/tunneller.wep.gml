@@ -5,17 +5,18 @@
 	global.sprWepHUDRed = sprite_add(       "../sprites/weps/sprTunnellerHUDRed.png", 1, 0, 3);
 	global.sprWepLocked = mskNone;
 	
-#define weapon_name    return (weapon_avail() ? "TUNNELLER" : "LOCKED");
-#define weapon_text    return choose(`@wUNLOCK @sTHE @(color:${area_get_back_color("red")})CONTINUUM`, "FULL CIRCLE", `YET ANOTHER @(color:${area_get_back_color("red")})RED KEY`);
-#define weapon_swap    return sndSwapSword;
-#define weapon_sprt    return (weapon_avail() ? global.sprWep : global.sprWepLocked);
-#define weapon_area    return (weapon_avail() ? 22 : -1); // L1 3-1
-#define weapon_load    return 24; // 0.8 Seconds
-#define weapon_auto    return true;
-#define weapon_melee   return false;
-#define weapon_avail   return unlock_get("pack:red");
-#define weapon_shrine  return [mut_long_arms, mut_laser_brain];
-#define weapon_red     return 1;
+#define weapon_name       return (weapon_avail() ? "TUNNELLER" : "LOCKED");
+#define weapon_text       return choose(`@wUNLOCK @sTHE @(color:${area_get_back_color("red")})CONTINUUM`, "FULL CIRCLE", `YET ANOTHER @(color:${area_get_back_color("red")})RED KEY`);
+#define weapon_swap       return sndSwapSword;
+#define weapon_sprt       return (weapon_avail() ? global.sprWep : global.sprWepLocked);
+#define weapon_area       return (weapon_avail() ? 22 : -1); // L1 3-1
+#define weapon_load       return 24; // 0.8 Seconds
+#define weapon_auto       return true;
+#define weapon_melee      return false;
+#define weapon_avail      return unlock_get("pack:" + weapon_ntte_pack());
+#define weapon_ntte_pack  return "red";
+#define weapon_shrine     return [mut_long_arms, mut_laser_brain];
+#define weapon_red        return 1;
 
 #define weapon_type
 	 // Weapon Pickup Ammo Outline:

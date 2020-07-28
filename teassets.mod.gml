@@ -23,15 +23,15 @@
 		 // Big Decals:
 		p = "areas/";
 		BigTopDecal = {
-			"1"     : sprite(p + "Desert/sprDesertBigTopDecal",       1, 32, 24),
-			"2"     : sprite(p + "Sewers/sprSewersBigTopDecal",       8, 32, 24),
-			"3"     : sprite(p + "Scrapyard/sprScrapyardBigTopDecal", 1, 32, 24),
-			"4"     : sprite(p + "Caves/sprCavesBigTopDecal",         1, 32, 24),
-			"7"     : sprite(p + "Palace/sprPalaceBigTopDecal",       1, 32, 24),
-			"104"   : sprite(p + "Caves/sprCursedCavesBigTopDecal",   1, 32, 24),
-			"pizza" : sprite(p + "Pizza/sprPizzaBigTopDecal",         1, 32, 24),
-			"oasis" : sprite(p + "Oasis/sprOasisBigTopDecal",         1, 32, 24),
-			"trench": sprite(p + "Trench/sprTrenchBigTopDecal",       1, 32, 24)
+			"1"      : sprite(p + "Desert/sprDesertBigTopDecal",       1, 32, 24),
+			"2"      : sprite(p + "Sewers/sprSewersBigTopDecal",       8, 32, 24),
+			"3"      : sprite(p + "Scrapyard/sprScrapyardBigTopDecal", 1, 32, 24),
+			"4"      : sprite(p + "Caves/sprCavesBigTopDecal",         1, 32, 24),
+			"7"      : sprite(p + "Palace/sprPalaceBigTopDecal",       1, 32, 24),
+			"104"    : sprite(p + "Caves/sprCursedCavesBigTopDecal",   1, 32, 24),
+			"pizza"  : sprite(p + "Pizza/sprPizzaBigTopDecal",         1, 32, 24),
+			"oasis"  : sprite(p + "Oasis/sprOasisBigTopDecal",         1, 32, 24),
+			"trench" : sprite(p + "Trench/sprTrenchBigTopDecal",       1, 32, 24)
 		};
 		NestDebris        = sprite(p + "Scrapyard/sprNestDebris", 16,     4,  4);
 		msk.BigTopDecal   = sprite(p + "Desert/mskBigTopDecal",    1,    32, 24);
@@ -40,12 +40,26 @@
 		
 		//#region MENU / HUD
 			
-			 // Open Options:
-			p = "menu/";
-			OptionNTTE = sprite(p + "sprOptionNTTE", 1, 32, 12);
-			MenuNTTE   = sprite(p + "sprMenuNTTE",   1, 20,  9);
-			
-			 // LoadoutCrown System:
+			 // Menu:
+			m = "menu/";
+			p = m;
+				
+				 // Open Options:
+				OptionNTTE = sprite(p + "sprOptionNTTE", 1, 32, 12);
+				MenuNTTE   = sprite(p + "sprMenuNTTE",   1, 20,  9);
+				
+				 // Unlock Icons:
+				p = m + "unlocks/";
+				UnlockIcon = {
+					"coast"  : sprite(p + "sprUnlockIconBeach",    2, 12, 12),
+					"oasis"  : sprite(p + "sprUnlockIconBubble",   2, 12, 12),
+					"trench" : sprite(p + "sprUnlockIconTech",     2, 12, 12),
+					"lair"   : sprite(p + "sprUnlockIconSawblade", 2, 12, 12),
+					"red"    : sprite(p + "sprUnlockIconRed",      2, 12, 12),
+					"crown"  : sprite(p + "sprUnlockIconCrown",    2, 12, 12)
+				};
+				
+			 // Loadout Crown System:
 			p = "crowns/";
 			CrownRandomLoadout = sprite(p + "Random/sprCrownRandomLoadout", 2, 16, 16);
 			ClockParts         = sprite(p + "sprClockParts",                2,  1, 1);
@@ -1770,9 +1784,10 @@
 		exit;
 	}
 	
-	 // Surface/Shader Storage:
+	 // Surface/Shader/ScriptBinding Storage:
 	global.surf = {};
 	global.shad = {};
+	global.bind = {};
 	
 	 // Compile Mod Lists:
 	ntte_mods = {
@@ -2126,7 +2141,7 @@
 					}
 				}
 				if(!is_real(_unlockSprite)) _unlockSprite = -1;
-				if(!is_real(_unlockSound)) _unlockSound = -1;
+				if(!is_real(_unlockSound )) _unlockSound  = -1;
 				
 				 // Splat:
 				with(mod_script_call("mod", "telib", "unlock_splat", _unlockName, _unlockText, _unlockSprite, _unlockSound)){
@@ -2399,6 +2414,34 @@
 	}
 	
 	return _shad;
+	
+#define script_bind(_scriptObj, _scriptRef, _depth)
+	/*
+		Creates and stores a persistent CustomScript-type object, future calls return the stored instance
+		
+		Ex:
+			script_bind(CustomDraw, script_ref_create(draw_thing), -8)
+	*/
+	
+	var _key = `${_scriptObj}.${array_join(_scriptRef, ".")}`;
+	
+	 // Initialize & Store:
+	if(!instance_exists(lq_defget(global.bind, _key, noone))){
+		with(instance_create(0, 0, _scriptObj)){
+			persistent = true;
+			lq_set(global.bind, _key, id);
+		}
+	}
+	
+	 // Retrieve:
+	with(lq_get(global.bind, _key)){
+		script = _scriptRef;
+		depth  = _depth;
+		
+		return id;
+	}
+	
+	return noone;
 	
 #define sprite /// sprite(_path, _img, _x, _y, _shine = shnNone)
 	var _path = argument[0], _img = argument[1], _x = argument[2], _y = argument[3];
@@ -2944,6 +2987,13 @@ var _shine = argument_count > 4 ? argument[4] : shnNone;
 	for(var i = 0; i < lq_size(global.shad); i++){
 		var _shad = lq_get_value(global.shad, i).shad;
 		if(_shad != -1) surface_destroy(_shad);
+	}
+	
+	 // Clear Script Bindings:
+	for(var i = 0; i < lq_size(global.bind); i++){
+		with(lq_get_value(global.bind, i)){
+			instance_destroy();
+		}
 	}
 	
 	 // No Crash:

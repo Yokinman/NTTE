@@ -1,6 +1,6 @@
 #define init
 	 // Sprites:
-	global.sprWep       = sprite_add_weapon("../sprites/weps/sprAnnihilator.png",          8, 2);
+	global.sprWep       = sprite_add_weapon("../sprites/weps/sprAnnihilator.png",          8, 3);
 	global.sprWepHUD    = sprite_add(       "../sprites/weps/sprAnnihilatorHUD.png",    1, 0, 3);
 	global.sprWepHUDRed = sprite_add(       "../sprites/weps/sprAnnihilatorHUDRed.png", 1, 0, 3);
 	global.sprWepLocked = mskNone;
@@ -18,7 +18,8 @@
 #define weapon_area         return (weapon_avail() ? 22 : -1); // L1 3-1
 #define weapon_load         return 24; // 0.8 Seconds
 #define weapon_melee(_wep)  return lq_defget(_wep, "melee", true);
-#define weapon_avail        return unlock_get("pack:red");
+#define weapon_avail        return unlock_get("pack:" + weapon_ntte_pack());
+#define weapon_ntte_pack    return "red";
 #define weapon_shrine       return [mut_long_arms, mut_shotgun_shoulders];
 #define weapon_red          return 2;
 

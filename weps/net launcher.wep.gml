@@ -12,7 +12,8 @@
 #define weapon_cost         return 10;
 #define weapon_load         return 36; // 1.2 Seconds
 #define weapon_laser_sight  return false;
-#define weapon_avail        return unlock_get("pack:coast");
+#define weapon_avail        return unlock_get("pack:" + weapon_ntte_pack());
+#define weapon_ntte_pack    return "coast";
 
 #define weapon_fire(_wep)
 	var _fire = weapon_fire_init(_wep);

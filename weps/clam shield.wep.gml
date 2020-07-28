@@ -22,7 +22,8 @@
 #define weapon_load        return 30; // 1 Second
 #define weapon_auto        return false;
 #define weapon_melee       return true;
-#define weapon_avail       return unlock_get("pack:coast");
+#define weapon_avail       return unlock_get("pack:" + weapon_ntte_pack());
+#define weapon_ntte_pack   return "coast";
 
 #define weapon_fire(_wep)
 	var _fire = weapon_fire_init(_wep);

@@ -3,16 +3,17 @@
 	global.sprWep = sprite_add_weapon("../sprites/weps/sprBubbleBat.png", 5, 3);
 	global.sprWepLocked = mskNone;
 	
-#define weapon_name   return (weapon_avail() ? "BUBBLE BAT" : "LOCKED");
-#define weapon_text   return "REFRESHING";
-#define weapon_swap   return sndSwapMotorized;
-#define weapon_sprt   return (weapon_avail() ? global.sprWep : global.sprWepLocked);
-#define weapon_area   return (weapon_avail() ? 6 : -1); // 3-1
-#define weapon_type   return type_explosive;
-#define weapon_cost   return 2;
-#define weapon_load   return 18; // 0.6 Seconds
-#define weapon_melee  return true;
-#define weapon_avail  return unlock_get("pack:oasis");
+#define weapon_name       return (weapon_avail() ? "BUBBLE BAT" : "LOCKED");
+#define weapon_text       return "REFRESHING";
+#define weapon_swap       return sndSwapMotorized;
+#define weapon_sprt       return (weapon_avail() ? global.sprWep : global.sprWepLocked);
+#define weapon_area       return (weapon_avail() ? 6 : -1); // 3-1
+#define weapon_type       return type_explosive;
+#define weapon_cost       return 2;
+#define weapon_load       return 18; // 0.6 Seconds
+#define weapon_melee      return true;
+#define weapon_avail      return unlock_get("pack:" + weapon_ntte_pack());
+#define weapon_ntte_pack  return "oasis";
 
 #define weapon_reloaded
 	var	_l = 14,

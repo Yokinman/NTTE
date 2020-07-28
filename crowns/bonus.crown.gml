@@ -11,6 +11,7 @@
 #define crown_avail       return (GameCont.loops <= 0);//unlock_get(`crown:${mod_current}`);
 #define crown_menu_avail  return unlock_get(`loadout:crown:${mod_current}`);
 #define crown_loadout     return global.sprCrownLoadout;
+#define crown_ntte_pack   return "crown";
 
 #define crown_menu_button
 	sprite_index = crown_loadout();

@@ -32,7 +32,7 @@
 	global.last = _num;
 	
 	 // Sound:
-	if(instance_exists(SkillIcon)){
+	if(_num > 0 && instance_exists(LevCont)){
 		sound_play(sndMut);
 		sound_play_pitch(sndMutLuckyShot, 1.2);
 	}
