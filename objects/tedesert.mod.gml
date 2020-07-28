@@ -1797,6 +1797,261 @@
 	pickup_drop(60, 10);
 	
 	
+#define SilverScorpion_create(_x, _y)
+	with(instance_create(_x, _y, CustomEnemy)){
+		 // Visual:
+		spr_idle = spr.SilverScorpionIdle;
+		spr_walk = spr.SilverScorpionWalk;
+		spr_hurt = spr.SilverScorpionHurt;
+		spr_dead = spr.SilverScorpionDead;
+		spr_fire = spr.SilverScorpionFire;
+		sprite_index = spr_idle;
+		spr_shadow = shd48;
+		hitid = [spr_idle, "SILVER SCORPION"];
+		depth = -2;
+		
+		 // Sounds:
+		snd_hurt = sndGoldScorpionHurt;
+		snd_dead = sndGoldScorpionDead;
+		snd_mele = sndGoldScorpionMelee;
+		
+		 // Vars:
+		mask_index	= mskScorpion;
+		maxhealth	= 70;
+		raddrop 	= 20;
+		size		= 3;
+		canmelee	= true;
+		meleedamage = 5;
+		walk		= 0;
+		walkspeed	= 1.2;
+		maxspeed	= 3.6;
+		gunangle	= random(360);
+		flak		= noone;
+		flak_offset = 5;
+		
+		 // Alarms:
+		alarm1 = 90;
+		
+		return id;
+	}
+	
+#define SilverScorpion_step
+	 // Alarms:
+	if(alarm1_run) exit;
+	if(alarm2_run) exit;
+	
+	 // Movement:
+	enemy_walk(walkspeed, maxspeed);
+	
+	 // Flak Target Tracking:
+	if(instance_exists(flak)){
+		if(flak.time < flak.time_max){
+		
+			 // Retarget:
+			if(instance_seen(x, y, target)){
+				var d = point_direction(x, y, target.x, target.y);
+				scrAim(angle_lerp(gunangle, d, 1/3));
+			}
+			
+			 // Reposition:
+			var l = flak_offset,
+				d = gunangle;
+				
+			with(flak){
+				x = other.x + lengthdir_x(l, d);
+				y = other.y + lengthdir_y(l, d);
+				xprevious   = x;
+				yprevious   = y;
+				direction   = d;
+				image_angle = d;
+			}
+			
+			 // Slow:
+			x = lerp(x, xprevious, 1/3);
+			y = lerp(y, yprevious, 1/3);
+		}
+		else{
+			
+			 // Freed:
+			flak = noone;
+		}
+	}
+	
+	 // Animate:
+	if(sprite_index != spr_fire || (!instance_exists(flak) && anim_end)){
+		sprite_index = enemy_sprite;
+	}
+	
+#define SilverScorpion_alrm1
+	alarm1 = random_range(60, 90);
+	scrWalk(random(360), random_range(20, 30));
+	if(enemy_target(x, y) && instance_seen(x, y, target)){
+		gunangle = point_direction(x, y, target.x, target.y);
+		if(chance(2, 3)){
+			sprite_index = spr_fire;
+			flak = projectile_create(x, y, "SilverScorpionFlak", gunangle, 8);
+		}
+	}
+	else{
+		gunangle = direction;
+	}
+	scrRight(gunangle);
+	
+#define SilverScorpion_death
+	 // Bullets:
+	var n = 7;
+	for(var d = 0; d < 360; d += 360 / n){
+		projectile_create(x, y, "SilverScorpionDevastator", direction + d, random_range(5, 6));
+	}
+	repeat(12){
+		projectile_create(x, y, "VenomPellet", random(360), random_range(4, 8));
+	}
+
+#define SilverScorpionDevastator_create(_x, _y)
+	with(instance_create(_x, _y, CustomProjectile)){
+		 // Vars:
+		mask_index = mskEnemyBullet1;
+		damage = 0;
+		force = 0;
+		typ = 2;
+		
+		return id;
+	}
+	
+#define SilverScorpionDevastator_step
+	if(current_frame_active){
+		projectile_create(
+			x + orandom(9), 
+			y + orandom(9), 
+			choose("VenomPellet", "VenomPelletBack"), 
+			direction, 
+			speed + random(1)
+		);
+	}
+	
+#define SilverScorpionDevastator_hit
+	 // No Damage:
+	instance_destroy();
+	
+#define SilverScorpionDevastator_destroy
+	repeat(7){
+		projectile_create(x, y, "VenomPellet", random(360), random_range(3, 7));
+	}
+
+#define SilverScorpionFlak_create(_x, _y)
+	with(instance_create(_x, _y, CustomProjectile)){
+		 // Visual:
+		sprite_index = spr.SilverScorpionFlak;
+		image_speed  = 0.4;
+		depth		 = -4;
+		
+		 // Vars:
+		mask_index = mskBullet1;
+		damage	   = 2;
+		force	   = 12;
+		typ 	   = 2;
+		time	   = 0;
+		time_max   = 20;
+		// wave	   = random(360);
+		
+		return id;
+	}
+	
+#define SilverScorpionFlak_step
+	// wave += current_time_scale;
+	
+	if(time < time_max){
+		time += current_time_scale;
+		
+		
+		if(time >= time_max){
+			time = time_max;
+			
+			move_contact_solid(direction, speed_raw / 2);
+			
+			typ = 1;
+		}
+		
+		var _scale = (time / time_max);
+		image_xscale = _scale;
+		image_yscale = _scale;
+		
+		if(current_frame_active){
+			var _back = chance(1, 2);
+			with(projectile_create(
+				x, 
+				y, 
+				(_back ? "VenomPelletBack" : "VenomPellet"), 
+				random(360), 
+				4 + (4 * _scale)
+			)){
+				if(_back){
+					speed *= 4/5;
+				}
+			}
+		}
+		
+		x -= hspeed_raw;
+		y -= vspeed_raw;
+	}
+	else{
+		
+		 // Trailing:
+		if(current_frame_active){
+			projectile_create(
+				x + orandom(11), 
+				y + orandom(11), 
+				choose("VenomPellet", "VenomPelletBack"), 
+				direction, 
+				speed + random(1)
+			);
+		}
+		 
+		/*
+		if(chance_ct(4, 5)){
+			for(var i = -1; i <= 1; i += 2){
+				var l = sin(wave / 2) * 16,
+					d = direction + (90 * i);
+					
+				with(projectile_create(x + lengthdir_x(l, d), y + lengthdir_y(l, d), "VenomPellet", direction, (speed * 1/3))){
+					if(i < 1){
+						depth++;
+						spr_idle = spr.VenomPelletBack;
+						spr_fade = spr.VenomPelletBackDisappear;
+						sprite_index = spr_idle;
+					}
+				}
+			}
+		}
+		*/
+	}
+	
+#define SilverScorpionFlak_wall
+	if(time >= time_max){
+		instance_destroy();
+	}
+	
+#define SilverScorpionFlak_hit
+	if(projectile_canhit_melee(other)){
+		projectile_hit_push(other, damage, force);
+	}
+	
+#define SilverScorpionFlak_destroy
+	 // Bullets:
+	var n = 7;
+	for(var d = 0; d < 360; d += 360 / n){
+		projectile_create(x, y, "SilverScorpionDevastator", direction + d, random_range(5, 6));
+	}
+	repeat(12){
+		projectile_create(x, y, "VenomPellet", random(360), random_range(4, 8));
+	}
+	
+	 // Effects:
+	view_shake_at(x, y, 20);
+	sound_play_hit_ext(sndToxicBoltGas, 1, 1);
+	instance_create(x, y, PortalClear);
+	
+
 #define VenomFlak_create(_x, _y)
 	with(instance_create(_x, _y, CustomProjectile)){
 		 // Visual:
@@ -2073,6 +2328,17 @@
 	}
 	
 	
+#define VenomPelletBack_create(_x, _y)
+	with(obj_create(_x, _y, "VenomPellet")){
+		 // Visual:
+		spr_idle = spr.VenomPelletBack;
+		spr_fade = spr.VenomPelletBackDisappear;
+		sprite_index = spr_idle;
+		depth++;
+		
+		return id;
+	}
+	
 #define WantBigMaggot_create(_x, _y)
 	with(instance_create(_x, _y, BigMaggot)){
 		instance_change(BigMaggotBurrow, false);
@@ -2181,6 +2447,11 @@
 	 // Scorp Pet Attack:
 	with(instances_matching(instances_matching(CustomProjectile, "name", "PetVenom"), "visible", true)){
 		draw_sprite_ext(sprite_index, image_index, x, y, image_xscale * 2, image_yscale * 2, image_angle, image_blend, image_alpha * (charge ? (image_xscale / charge_goal) : 1) * 0.2);
+	}
+	
+	 // Silver Scorpion Flak:
+	with(instances_matching(CustomProjectile, "name", "SilverScorpionFlak")){
+		draw_sprite_ext(sprite_index, image_index, x, y, image_xscale * 2, image_yscale * 2, image_angle, image_blend, image_alpha * 0.2);
 	}
 	
 #define ntte_shadows

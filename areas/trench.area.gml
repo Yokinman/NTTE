@@ -405,10 +405,12 @@
 		}
 	}
 	
+	/*
 	 // Eel Party Event:
 	if(GameCont.subarea != 3 && chance((1 + GameCont.loops), 25)){
 		repeat(20 + irandom(10)) obj_create(0, 0, "WantEel");
 	}
+	*/
 
 #define area_effect(_vx, _vy)
 	var	_x = _vx + random(game_width),

@@ -11,7 +11,6 @@
 
 #define weapon_name       return (weapon_avail() ? "ENTANGLER" : "LOCKED");
 #define weapon_text       return `@(color:${area_get_back_color("red")})YOOOOOOO`;
-#define weapon_swap       return sndSwapSword;
 #define weapon_sprt       return (weapon_avail() ? global.sprWep : global.sprWepLocked);
 #define weapon_area       return (weapon_avail() ? 22 : -1); // L1 3-1
 #define weapon_load       return 20; // 0.66 Seconds
@@ -46,6 +45,15 @@
 	
 	 // Red Outline:
 	return global.sprWepHUDRed;
+	
+#define weapon_swap    
+	sound_play_gun(sndScrewdriver, 0.2, 0.6);
+	
+	sound_set_track_position(sndHyperCrystalChargeExplo, 1.6);
+	sound_play_pitchvol(sndHyperCrystalChargeExplo, 0.6, 0.8);
+	sound_set_track_position(sndHyperCrystalChargeExplo, 0);
+	
+	return sndSwapSword;
 	
 #define weapon_fire(_wep)
 	var _fire = weapon_fire_init(_wep);

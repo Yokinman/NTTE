@@ -1362,7 +1362,7 @@
 		
 		 // Rads:
 		var	_rad = (instance_is(target, RadChest) ? 30 : 15),
-			_num = irandom_range(1, 2) + floor(_rad / 15) + skill_get(mut_open_mind),
+			_num = irandom_range(1, 2) + floor(_rad / 15) + skill_get(mut_open_mind) + (_chest == ProtoStatue),
 			_ang = random(360);
 			
 		if(_num > 0){
@@ -1370,7 +1370,7 @@
 				var	_l = random_range(16, 40),
 					_d = _dir + orandom((360 / _num) * 0.4);
 					
-				with(chest_create(x + lengthdir_x(_l, _d), y + lengthdir_y(_l, _d), RadChest, false)){
+				with(chest_create(x + lengthdir_x(_l, _d), y + lengthdir_y(_l, _d), (chance(2, 3) ? "OrchidChest" : RadChest), false)){
 					if(instance_is(self, RadChest) && chance(1, 6)){
 						spr_idle = sprRadChestBig;
 						spr_hurt = sprRadChestBigHurt;
@@ -3070,6 +3070,12 @@
 	with(array_shuffle(_skillList)){
 		var _skill = self;
 		if(_skillAll || (skill_get(_skill) == 0 && array_length(instances_matching(_skillInst, "skill", _skill)) <= 0)){
+			
+			 // Attempted Manual Defpack Support:
+			if(_skill == "prismatic iris"){
+				skill_set(`irisslave${irandom_range(1, 6)}`, 1);
+			}
+			
 			return _skill;
 		}
 	}
