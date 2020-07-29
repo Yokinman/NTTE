@@ -2807,7 +2807,7 @@
 	global.paused = true;
 	
 	 // Pause Map Drawing:
-	var _minID = GameObject.id;
+	var _minID = (instance_exists(GameObject) ? GameObject.id : 0);
 	with(script_bind(CustomDraw, script_ref_create(ntte_map_pause), UberCont.depth - 1)){
 		if(id > _minID){
 			event_perform(ev_draw, 0);

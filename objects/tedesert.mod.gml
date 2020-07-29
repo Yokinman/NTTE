@@ -1724,10 +1724,10 @@
 #define ScorpionRock_create(_x, _y)
 	with(instance_create(_x, _y, CustomProp)){
 		 // Visual:
-		spr_idle = spr.ScorpionRockEnemy;
-		spr_hurt = spr.ScorpionRockHurt;
-		spr_dead = spr.ScorpionRockDead;
-		spr_shadow = shd32;
+		spr_idle     = spr.ScorpionRockEnemy;
+		spr_hurt     = spr.ScorpionRockHurt;
+		spr_dead     = spr.ScorpionRockDead;
+		spr_shadow   = shd32;
 		spr_shadow_y = -3;
 		
 		 // Sound:
@@ -1736,9 +1736,9 @@
 		
 		 // Vars:
 		maxhealth = 32;
-		size = 1;
-		team = 1;
-		friendly = false;
+		size      = 1;
+		team      = 1;
+		friendly  = false;
 		
 		return id;
 	}
@@ -1800,15 +1800,15 @@
 #define SilverScorpion_create(_x, _y)
 	with(instance_create(_x, _y, CustomEnemy)){
 		 // Visual:
-		spr_idle = spr.SilverScorpionIdle;
-		spr_walk = spr.SilverScorpionWalk;
-		spr_hurt = spr.SilverScorpionHurt;
-		spr_dead = spr.SilverScorpionDead;
-		spr_fire = spr.SilverScorpionFire;
+		spr_idle     = spr.SilverScorpionIdle;
+		spr_walk     = spr.SilverScorpionWalk;
+		spr_hurt     = spr.SilverScorpionHurt;
+		spr_dead     = spr.SilverScorpionDead;
+		spr_fire     = spr.SilverScorpionFire;
 		sprite_index = spr_idle;
-		spr_shadow = shd48;
-		hitid = [spr_idle, "SILVER SCORPION"];
-		depth = -2;
+		spr_shadow   = shd48;
+		hitid        = [spr_idle, "SILVER SCORPION"];
+		depth        = -2;
 		
 		 // Sounds:
 		snd_hurt = sndGoldScorpionHurt;
@@ -1816,17 +1816,17 @@
 		snd_mele = sndGoldScorpionMelee;
 		
 		 // Vars:
-		mask_index	= mskScorpion;
-		maxhealth	= 70;
-		raddrop 	= 20;
-		size		= 3;
-		canmelee	= true;
+		mask_index  = mskScorpion;
+		maxhealth   = 70;
+		raddrop     = 20;
+		size        = 3;
+		canmelee    = true;
 		meleedamage = 5;
-		walk		= 0;
-		walkspeed	= 1.2;
-		maxspeed	= 3.6;
-		gunangle	= random(360);
-		flak		= noone;
+		walk        = 0;
+		walkspeed   = 1.2;
+		maxspeed    = 3.6;
+		gunangle    = random(360);
+		flak        = noone;
 		flak_offset = 5;
 		
 		 // Alarms:
@@ -1906,14 +1906,15 @@
 	repeat(12){
 		projectile_create(x, y, "VenomPellet", random(360), random_range(4, 8));
 	}
-
+	
+	
 #define SilverScorpionDevastator_create(_x, _y)
 	with(instance_create(_x, _y, CustomProjectile)){
 		 // Vars:
 		mask_index = mskEnemyBullet1;
-		damage = 0;
-		force = 0;
-		typ = 2;
+		damage     = 0;
+		force      = 0;
+		typ        = 2;
 		
 		return id;
 	}
@@ -1937,22 +1938,23 @@
 	repeat(7){
 		projectile_create(x, y, "VenomPellet", random(360), random_range(3, 7));
 	}
-
+	
+	
 #define SilverScorpionFlak_create(_x, _y)
 	with(instance_create(_x, _y, CustomProjectile)){
 		 // Visual:
 		sprite_index = spr.SilverScorpionFlak;
 		image_speed  = 0.4;
-		depth		 = -4;
+		depth        = -4;
 		
 		 // Vars:
 		mask_index = mskBullet1;
-		damage	   = 2;
-		force	   = 12;
-		typ 	   = 2;
-		time	   = 0;
+		damage     = 2;
+		force      = 12;
+		typ        = 2;
+		time       = 0;
 		time_max   = 20;
-		// wave	   = random(360);
+		//wave       = random(360);
 		
 		return id;
 	}
@@ -2051,7 +2053,7 @@
 	sound_play_hit_ext(sndToxicBoltGas, 1, 1);
 	instance_create(x, y, PortalClear);
 	
-
+	
 #define VenomFlak_create(_x, _y)
 	with(instance_create(_x, _y, CustomProjectile)){
 		 // Visual:

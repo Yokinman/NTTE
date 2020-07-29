@@ -1367,10 +1367,10 @@
 			
 		if(_num > 0){
 			for(var _dir = _ang; _dir < _ang + 360; _dir += (360 / _num)){
-				var	_l = random_range(16, 40),
+				var	_l = random_range(16, 36),
 					_d = _dir + orandom((360 / _num) * 0.4);
 					
-				with(chest_create(x + lengthdir_x(_l, _d), y + lengthdir_y(_l, _d), (chance(2, 3) ? "OrchidChest" : RadChest), false)){
+				with(chest_create(x + lengthdir_x(_l, _d), y + lengthdir_y(_l, _d), (chance(1, 4) ? "OrchidChest" : RadChest), false)){
 					if(instance_is(self, RadChest) && chance(1, 6)){
 						spr_idle = sprRadChestBig;
 						spr_hurt = sprRadChestBigHurt;

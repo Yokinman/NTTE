@@ -1099,8 +1099,8 @@
 	
 #define CrystalHeartBullet_destroy
 	 // Sounds:
-	sound_play_hit_ext(sndGammaGutsKill,      0.8 + random(0.3), 3);
-	sound_play_hit_ext(sndNothing2Beam,       0.7 + random(0.2), 3);
+	sound_play_hit_ext(sndGammaGutsKill,      0.8 + random(0.3), 3.0);
+	sound_play_hit_ext(sndNothing2Beam,       0.7 + random(0.2), 3.0);
 	sound_play_hit_ext(sndHyperCrystalSearch, 0.6 + random(0.3), 1.5);
 	
 	 // Effects:
@@ -1120,10 +1120,10 @@
 		_genID = area_generate(area, subarea, loops, x, y, false, false, _scrt);
 		
 	if(is_real(_genID)){
-		var	_disMin = -1,
-			_chest = area_chest,
+		var	_chest  = area_chest,
 			_chestX = x,
-			_chestY = y;
+			_chestY = y,
+			_disMin = -1;
 			
 		 // Delete Chests:
 		with(instances_matching_gt([RadChest, chestprop], "id", _genID)){
@@ -1132,8 +1132,8 @@
 		
 		 // Spawn Chest on Furthest Floor:
 		with(instances_matching_gt(FloorNormal, "id", _genID)){
-			var	_x = bbox_center_x,
-				_y = bbox_center_y,
+			var	_x   = bbox_center_x,
+				_y   = bbox_center_y,
 				_dis = point_distance(other.x, other.y, _x, _y);
 				
 			if(_dis > _disMin){
@@ -1150,19 +1150,57 @@
 			}
 		}
 		
-		 // Prettify:
-		var _noReveal = [];
+		 // Deptherize:
 		if(area == "red"){
 			with(instances_matching_gt(Floor, "id", _genID)){
 				depth = 8;
 			}
 		}
+		
+		 // TopSmalls:
+		var	_tileOld = [],
+			_tileNew = [];
+			
 		with(instances_matching_gt(TopSmall, "id", _genID)){
-			if(chance(2, 5)){
-				array_push(_noReveal, id);
+			if(chance(1, 5)){
+				array_push(_tileOld, id);
 				event_perform(ev_create, 0);
 			}
+			else array_push(_tileNew, id);
 		}
+		with(instances_matching(_tileOld, "", null)){
+			if(instance_exists(self)){
+				var	_x   = bbox_center_x,
+					_y   = bbox_center_y,
+					_dis = 16;
+					
+				for(var _dir = 0; _dir < 360; _dir += 90){
+					if(chance(1, 2)){
+						with(instances_at(_x + lengthdir_x(_dis, _dir), _y + lengthdir_y(_dis, _dir), _tileNew)){
+							_tileNew = array_delete_value(_tileNew, id);
+							array_push(_tileOld, id);
+							event_perform(ev_create, 0);
+						}
+					}
+				}
+			}
+		}
+		
+		 // TopTinys:
+		var _areaCurrent = GameCont.area;
+		GameCont.area = area;
+		with(instances_matching(_tileNew, "", null)){
+			for(var _x = bbox_left - 8; _x < bbox_right + 1 + 8; _x += 8){
+				for(var _y = bbox_top - 8; _y < bbox_bottom + 1 + 8; _y += 8){
+					if(array_length(instances_at(_x, _y, _tileNew)) <= 0){
+						if(chance(1, 6)){
+							obj_create(_x, _y, "TopTiny");
+						}
+					}
+				}
+			}
+		}
+		GameCont.area = _areaCurrent;
 		
 		/*
 		 // Clientside Darkness:
@@ -1179,7 +1217,7 @@
 		
 		 // Reveal:
 		with(instances_matching_gt([Floor, Wall, TopSmall], "id", _genID)){
-			if(!array_exists(_noReveal, id)){
+			if(!array_exists(_tileOld, id)){
 				with(floor_reveal(bbox_left, bbox_top, bbox_right, bbox_bottom, 6)){
 					time_max *= 1.3;
 				}
@@ -1194,7 +1232,9 @@
 		}
 		
 		 // Goodbye:
-		if(instance_exists(enemy)) portal_poof();
+		if(instance_exists(enemy)){
+			portal_poof();
+		}
 		instance_create(x, y, PortalClear);
 		instance_destroy();
 	}

@@ -109,7 +109,7 @@
 						]
 					},
 					
-					"other" : {
+					"unlocks" : {
 						"slct" : array_create(maxp, 0),
 						"list" : [
 							{	name : "UNLOCKS",
@@ -1809,9 +1809,9 @@
 									MenuPop[_index] = _pop;
 									
 									switch(lq_get_key(_menuList, _statSlct)){
-										case "pets":	sound_play_pitch(sndMenuStats, 1.2);	break;
-										case "other":	sound_play_pitch(sndMenuScores, 1.1);	break;
-										default:		sound_play(sndMenuStats);
+										case "pets"    : sound_play_pitch(sndMenuStats,  1.2); break;
+										case "unlocks" : sound_play_pitch(sndMenuScores, 1.1); break;
+										default        : sound_play(sndMenuStats);
 									}
 								}
 							
@@ -1857,52 +1857,54 @@
 												var	_race  = lq_get_key(_raceList, i),
 													_avail = true;
 													
-												 // Locked:
-												if(mod_script_exists("race", _race, "race_avail")){
-													_avail = mod_script_call("race", _race, "race_avail");
-													if(!is_real(_avail)) _avail = true;
-												}
-												
-												var	_selected = (_raceSlct[_index] == i && _avail),
-													_sprt = mod_script_call("race", _race, "race_mapicon", _index, 0);
+												if(mod_exists("race", _race)){
+													 // Locked:
+													if(mod_script_exists("race", _race, "race_avail")){
+														_avail = mod_script_call("race", _race, "race_avail");
+														if(!is_real(_avail)) _avail = true;
+													}
 													
-												if(!is_real(_sprt) || !sprite_exists(_sprt)) _sprt = sprMapIconChickenHeadless;
-												
-												 // Selection:
-												var _hover = false;
-												if(!_selected && point_in_rectangle(
-													_mx - _vx,
-													_my - _vy,
-													_x - 8,
-													_y - 8,
-													_x + 8,
-													_y + 8
-												)){
-													_hover = true;
-													if(!_avail) _tooltip = "LOCKED";
-													
-													 // Select:
-													if(button_pressed(_index, "fire")){
-														if(_avail){
-															_raceSlct[_index] = i;
-															_pop = 4;
-															MenuPop[_index] = _pop;
-															sound_play((i & 1) ? sndMenuBSkin : sndMenuASkin);
-														}
+													var	_selected = (_raceSlct[_index] == i && _avail),
+														_sprt = mod_script_call("race", _race, "race_mapicon", _index, 0);
 														
-														 // Locked:
-														else{
-															sound_play(sndNoSelect);
-															_selected = true;
+													if(!is_real(_sprt) || !sprite_exists(_sprt)) _sprt = sprMapIconChickenHeadless;
+													
+													 // Selection:
+													var _hover = false;
+													if(!_selected && point_in_rectangle(
+														_mx - _vx,
+														_my - _vy,
+														_x - 8,
+														_y - 8,
+														_x + 8,
+														_y + 8
+													)){
+														_hover = true;
+														if(!_avail) _tooltip = "LOCKED";
+														
+														 // Select:
+														if(button_pressed(_index, "fire")){
+															if(_avail){
+																_raceSlct[_index] = i;
+																_pop = 4;
+																MenuPop[_index] = _pop;
+																sound_play((i & 1) ? sndMenuBSkin : sndMenuASkin);
+															}
+															
+															 // Locked:
+															else{
+																sound_play(sndNoSelect);
+																_selected = true;
+															}
 														}
 													}
+													
+													if(!_avail) draw_set_fog(true, make_color_hsv(0, 0, 22 * (1 + _hover)), 0, 0);
+													draw_sprite_ext(_sprt, 0.4 * current_frame, _x, _y - _selected, 1, 1, 0, (_selected ? c_white : (_hover ? c_silver : c_gray)), 1);
+													if(!_avail) draw_set_fog(false, 0, 0, 0);
+													
+													_x += 32;
 												}
-												
-												if(!_avail) draw_set_fog(true, make_color_hsv(0, 0, 22 * (1 + _hover)), 0, 0);
-												draw_sprite_ext(_sprt, 0.4 * current_frame, _x, _y - _selected, 1, 1, 0, (_selected ? c_white : (_hover ? c_silver : c_gray)), 1);
-												if(!_avail) draw_set_fog(false, 0, 0, 0);
-												
-												_x += 32;
 											}
 											
 											 // Temporary:
@@ -2192,7 +2194,7 @@
 										
 									break;
 									
-								case "other":
+								case "unlocks":
 									
 									var _otherList = _statMenu.list;
 									

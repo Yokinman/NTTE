@@ -112,20 +112,22 @@
 #define BigDecal_create(_x, _y)
 	/*
 		A giant version of the TopPot/TopDecal object
+		If the area doesn't have a spr.BigTopDecal sprite variant then nothing is created
 	*/
 	
-	var a = string(GameCont.area);
-	if(lq_exists(spr.BigTopDecal, a)){
+	var _area = GameCont.area;
+	
+	if(ds_map_exists(spr.BigTopDecal, _area)){
 		with(instance_create(pfloor(_x, 16), pfloor(_y, 16), CustomObject)){
 			 // Visual:
-			sprite_index = lq_get(spr.BigTopDecal, a);
+			sprite_index = spr.BigTopDecal[? _area];
 			image_xscale = choose(-1, 1);
 			image_speed  = 0.4;
 			depth        = -6;
 			
 			 // Vars:
 			mask_index = msk.BigTopDecal;
-			area = GameCont.area;
+			area       = _area;
 			
 			 // Avoid Bad Stuff:
 			var	_tries = 1000,
@@ -886,28 +888,21 @@
 	*/
 	
 	with(instance_create(_x, _y, CustomObject)){
-		var	_w = 6,
-			_h = 4;
-			
-		x = floor((x / 16) - (_w / 2)) * 16;
-		y = floor((y / 16) - (_h / 2)) * 16;
-		
-		 // Visual:
-		spr_floor_hall = sprFloor100;
-		spr_floor_room = spr.VaultFlowerFloor;
-		spr_top_tiny = spr.BuriedVaultTopTiny;
-		obj_deco = Torch;
-		obj_loot = "BuriedVaultPedestal";
-		
 		 // Vars:
-		mask_index   = mskWall;
-		image_xscale = _w;
-		image_yscale = _h;
-		floor_num    = 0;
-		floor_min    = 0;
-		layout       = [];
-		layout_delay = 6;
-		area         = area_vault;
+		mask_index      = mskWall;
+		image_xscale    = 6;
+		image_yscale    = 4;
+		floor_num       = 0;
+		floor_min       = 0;
+		floor_vars      = {};
+		floor_room_vars = { sprite_index : spr.VaultFlowerFloor };
+		layout          = [];
+		layout_delay    = 6;
+		obj_prop        = Torch;
+		obj_loot        = "BuriedVaultPedestal";
+		area            = area_vault;
+		x               = pfloor(bbox_left, 16);
+		y               = pfloor(bbox_top,  16);
 		
 		return id;
 	}
@@ -915,85 +910,107 @@
 #define BuriedVault_step
 	 // Generate Layout:
 	if(array_length(layout) <= 0){
-		if(layout_delay > 0) layout_delay -= current_time_scale;
+		if(layout_delay > 0){
+			layout_delay -= current_time_scale;
+		}
 		else{
-			 // Away From Floors:
+			var _areaCurrent = GameCont.area;
+			
+			 // Move Away From Floors:
+			var	_move = 32,
+				_dis  = random_range(40, 80);
+				
 			direction = random(360);
 			with(instance_nearest_bbox(x, y, Floor)){
 				other.direction = point_direction(bbox_center_x, bbox_center_y, other.x, other.y);
 			}
-			if(array_length(instances_matching(CustomHitme, "name", "PizzaDrain")) > 0){
-				direction = (direction % 180) + 180;
-			}
 			
-			var	_move = 32,
-				_dis  = random_range(40, 80);
-				
 			while(distance_to_object(Floor) < _dis){
 				x = pfloor(x + lengthdir_x(_move, direction), 16);
 				y = pfloor(y + lengthdir_y(_move, direction), 16);
 			}
 			
-			 // Create TopSmalls/Decals:
-			var _tiles = [];
-			for(var _ox = 0; _ox < image_xscale; _ox++){
-				for(var _oy = 0; _oy < image_xscale; _oy++){
-					var	_sx = x + (_ox * 16),
-						_sy = y + (_oy * 16),
-						_center = (_ox > 0 && _ox < image_xscale - 1 && _oy > 0 && _oy < image_xscale - 1);
-						
+			 // TopSmalls:
+			var	_x1      = random_range(bbox_left,      bbox_right  + 1),
+				_y1      = random_range(bbox_top,       bbox_bottom + 1),
+				_x2      = random_range(bbox_left + 16, bbox_right  + 1 - 16),
+				_y2      = random_range(bbox_top  + 16, bbox_bottom + 1 - 16),
+				_tileOld = [],
+				_tileNew = [];
+				
+			for(var _x = 0; _x < image_xscale; _x++){
+				for(var _y = 0; _y < image_xscale; _y++){
+					var _center = (
+						_x > 0                &&
+						_y > 0                &&
+						_x < image_xscale - 1 &&
+						_y < image_xscale - 1
+					);
 					if(_center || chance(1, 3)){
-						if(!position_meeting(_sx, _sy, Floor) && !position_meeting(_sx, _sy, Wall) && !position_meeting(_sx, _sy, TopSmall)){
+						var	_sx = x + (_x * 16),
+							_sy = y + (_y * 16);
+							
+						if(
+							!position_meeting(_sx, _sy, Floor)    &&
+							!position_meeting(_sx, _sy, Wall)     &&
+							!position_meeting(_sx, _sy, TopSmall)
+						){
 							with(instance_create(_sx, _sy, TopSmall)){
-								array_push(_tiles, id);
+								if(collision_line(_x1, _y1, _x2, _y2, id, false, false)){
+									GameCont.area = other.area;
+									event_perform(ev_create, 0);
+									if(!instance_exists(self)) break;
+									array_push(_tileNew, self);
+								}
+								else array_push(_tileOld, self);
+								
+								 // Variance:
+								if(position_meeting(_x2, _y2, id) || chance(2, 3)){
+									sprite_index = area_get_sprite(GameCont.area, sprWall1Top);
+								}
 							}
+							GameCont.area = _areaCurrent;
 						}
 					}
 				}
 			}
-			obj_create(irandom_range(bbox_left, bbox_right + 1), irandom_range(bbox_top, bbox_bottom + 1), "TopDecal");
-			
-			 // Spriterize TopSmalls:
-			var	_x1 = random_range(bbox_left, bbox_right + 1),
-				_y1 = random_range(bbox_top, bbox_bottom + 1),
-				_x2 = random_range(bbox_left + 16, bbox_right - 15),
-				_y2 = random_range(bbox_top + 16, bbox_bottom - 15),
-				_sprTiny = spr_top_tiny;
-				
-			with(array_shuffle(_tiles)){
-				var _vault = collision_line(_x1, _y1, _x2, _y2, id, false, false);
-				sprite_index = area_get_sprite(
-					_vault
-						? other.area
-						: GameCont.area,
-					(position_meeting(_x2, _y2, id) || chance(2, 3))
-						? sprWall1Top
-						: sprWall1Trans
-				);
-				
-				if(_vault){
-					for(var _ox = bbox_left - 8; _ox < bbox_right + 1 + 8; _ox += 8){
-						for(var _oy = bbox_top - 8; _oy < bbox_bottom + 1 + 8; _oy += 8){
-							if(!position_meeting(_ox, _oy, id) && chance(1, 10)){
-								with(instance_create(_ox, _oy, TopPot)){ // TopPot is so epic
-									x = xstart;
-									y = ystart;
-									sprite_index = _sprTiny;
-									image_index = irandom(image_number - 1);
-									image_speed = 0;
+			GameCont.area = area;
+			with(array_shuffle(_tileNew)){
+				for(var _x = bbox_left - 8; _x < bbox_right + 1 + 8; _x += 8){
+					for(var _y = bbox_top - 8; _y < bbox_bottom + 1 + 8; _y += 8){
+						if(array_length(instances_at(_x, _y, _tileNew)) <= 0){
+							if(chance(1, 10)){
+								with(obj_create(_x, _y, "TopTiny")){
+									array_push(_tileNew, id);
 								}
 							}
 						}
 					}
 				}
 			}
+			GameCont.area = _areaCurrent;
+			
+			 // Decal:
+			with(array_shuffle(_tileOld)){
+				if(array_length(instances_meeting(x, y, _tileNew)) <= 0){
+					with(obj_create(
+						irandom_range(bbox_left, bbox_right + 1),
+						irandom_range(bbox_top, bbox_bottom + 1),
+						"TopDecal"
+					)){
+						x = xstart;
+						y = ystart;
+					}
+					break;
+				}
+			}
 			
 			 // Generate Room Layout:
-			var	_fx = pfloor(bbox_center_x, 16),
-				_fy = pfloor(bbox_center_y, 16),
-				_num = irandom_range(6, 12),
-				_dir = direction,
-				_ped = true,
+			var	_fx    = pfloor(bbox_center_x, 16),
+				_fy    = pfloor(bbox_center_y, 16),
+				_num   = irandom_range(6, 12),
+				_dir   = direction,
+				_ped   = true,
 				_tries = 100;
 				
 			while(_num > 0 && _tries-- > 0){
@@ -1005,9 +1022,13 @@
 				
 				var	_spawnPed = chance(_ped, 1 + ((_num - 1) * 2)),
 					_floorDis = 48 + (32 * _spawnPed),
-					n = instance_nearest_bbox(_fx + 16, _fy + 16, Floor);
+					_nearest  = instance_nearest_bbox(_fx + 16, _fy + 16, Floor);
 					
-				if(!instance_exists(n) || abs(_fx - n.x) > _floorDis || abs(_fy - n.y) > _floorDis){
+				if(
+					!instance_exists(_nearest)
+					|| abs(_fx - _nearest.x) > _floorDis
+					|| abs(_fy - _nearest.y) > _floorDis
+				){
 					_num--;
 					_tries = 100;
 					
@@ -1015,18 +1036,15 @@
 					if(_spawnPed){
 						_ped = false;
 						
-						var _img = 0;
+						var _room = 0;
 						for(var _oy = -32; _oy <= 32; _oy += 32){
 							for(var _ox = -32; _ox <= 32; _ox += 32){
 								array_push(layout, {
 									x	 : _fx + _ox,
 									y	 : _fy + _oy,
 									obj	 : Floor,
-									vars : {
-										sprite_index : spr_floor_room,
-										image_index  : _img++
-									}
-								})
+									room : _room++
+								});
 							}
 						}
 						
@@ -1043,20 +1061,17 @@
 					 // Floor:
 					else{
 						array_push(layout, {
-							x	 : _fx,
-							y	 : _fy,
-							obj	 : Floor,
-							vars : {
-								sprite_index : spr_floor_hall
-							}
+							x	: _fx,
+							y	: _fy,
+							obj	: Floor
 						});
 						
-						 // Torch:
+						 // Prop:
 						if(chance(1, 8)){
 							array_push(layout, {
 								x	: _fx + 16,
 								y	: _fy + 16,
-								obj	: obj_deco
+								obj	: obj_prop
 							});
 						}
 					}
@@ -1081,14 +1096,13 @@
 			
 			 // Check if Vault Uncovered:
 			var	_open = false,
-				_sx = bbox_center_x,
-				_sy = bbox_center_y;
+				_sx   = bbox_center_x,
+				_sy   = bbox_center_y;
 				
 			if(place_meeting(x, y, Floor)){
 				_open = true;
 				with(instance_create(x, y, PortalClear)){
-					mask_index   = other.mask_index;
-					sprite_index = other.sprite_index;
+					sprite_index = ((other.mask_index < 0) ? other.sprite_index : other.mask_index);
 					image_xscale = other.image_xscale;
 					image_yscale = other.image_yscale;
 					image_angle  = other.image_angle;
@@ -1118,62 +1132,102 @@
 						_y2 = y + 48 - 1;
 						
 					wall_clear(_x1, _y1, _x2, _y2);
-					with(instance_rectangle_bbox(_x1, _y1, _x2, _y2, [Floor, SnowFloor])) instance_destroy();
+					with(instance_rectangle_bbox(_x1, _y1, _x2, _y2, [Floor, SnowFloor])){
+						instance_destroy();
+					}
 				}
 				
 				 // Generate:
 				var	_minID = GameObject.id;
 				with(layout){
+					var _room = lq_defget(self, "room", -1);
+					
 					 // Clear Space for Special Floors:
-					if(obj == Floor && "vars" in self){
-						if(lq_get(vars, "sprite_index") == spr.VaultFlowerFloor){
-							with(instance_rectangle_bbox(x, y, x + 32 - 1, y + 32 - 1, [Floor, SnowFloor])){
-								instance_destroy();
-							}
+					if(_room >= 0 && (obj == Floor || object_is_ancestor(obj, Floor))){
+						with(instance_rectangle_bbox(x, y, x + 32 - 1, y + 32 - 1, [Floor, SnowFloor])){
+							instance_destroy();
 						}
 					}
 					
 					 // Create:
-					with(obj_create(x, y, obj)){
-						if("vars" in other){
-							for(var i = 0; i < lq_size(other.vars); i++){
-								variable_instance_set(id, lq_get_key(other.vars, i), lq_get_value(other.vars, i));
+					with(other){
+						with(obj_create(other.x, other.y, other.obj)){
+							if(instance_is(self, Floor)){
+								if(_room >= 0){
+									image_index = _room;
+								}
+								variable_instance_set_list(id, ((_room < 0) ? other.floor_vars : other.floor_room_vars));
 							}
 						}
 					}
 				}
 				
 				 // Wallerize:
+				var	_tiles = [],
+					_floor = [];
+					
 				with(instances_matching_gt(Floor, "id", _minID)){
 					floor_walls();
 				}
-				var f = [];
 				with(instances_matching_gt(Wall, "id", _minID)){
-					GameCont.area = (chance(1, 2) ? other.area : _areaCurrent);
-					
 					 // TopSmalls:
 					if(array_length(instance_rectangle_bbox(bbox_left - 1, bbox_top - 1, bbox_right + 1, bbox_bottom + 1, instances_matching_lt(Floor, "id", _minID))) <= 0){
-						wall_tops();
+						if(chance(2, 5)){
+							GameCont.area = _areaCurrent;
+							wall_tops();
+							GameCont.area = other.area;
+						}
+						else with(wall_tops()){
+							array_push(_tiles, self);
+						}
 					}
 					
 					 // Less Softlock:
 					else{
-						GameCont.area = other.area;
-						array_push(f, instance_create(x, y, FloorExplo));
+						array_push(_floor, instance_create(x, y, FloorExplo));
 						instance_destroy();
 					}
 				}
-				
-				 // Even Less Softlock:
-				with(f){ // i dislike walls as objects
-					if(position_meeting(x - 16, y, Wall) && position_meeting(x, y - 16, Wall) && position_meeting(x + 16, y, Wall) && position_meeting(x, y + 16, Wall)){
-						with([instance_place(x - 16, y, Wall), instance_place(x, y - 16, Wall), instance_place(x + 16, y, Wall), instance_place(x, y + 16, Wall)]){
-							GameCont.area = ((id > _minID) ? other.area : _areaCurrent);
-							instance_create(x, y, FloorExplo);
-							instance_destroy();
+				with(instances_matching(_tiles, "", null)){
+					 // TopTinys:
+					for(var _x = bbox_left - 8; _x < bbox_right + 1 + 8; _x += 8){
+						for(var _y = bbox_top - 8; _y < bbox_bottom + 1 + 8; _y += 8){
+							if(array_length(instances_at(_x, _y, _tiles)) <= 0){
+								if(chance(1, 5)){
+									obj_create(_x, _y, "TopTiny");
+								}
+							}
 						}
 					}
 				}
+				
+				 // Even Less Softlock: i dislike walls as objects
+				with(instances_matching(_floor, "", null)){
+					if(
+						position_meeting(x - 16, y,      Wall) &&
+						position_meeting(x,      y - 16, Wall) &&
+						position_meeting(x + 16, y,      Wall) &&
+						position_meeting(x,      y + 16, Wall)
+					){
+						with([
+							instances_meeting(x - 16, y,      Wall),
+							instances_meeting(x,      y - 16, Wall),
+							instances_meeting(x + 16, y,      Wall),
+							instances_meeting(x,      y + 16, Wall)
+						]){
+							with(other){
+								with(instances_matching(other, "", null)){
+									if(id < _minID) GameCont.area = _areaCurrent;
+									instance_create(x, y, FloorExplo);
+									instance_destroy();
+									GameCont.area = other.area;
+								}
+							}
+						}
+					}
+				}
+				
+				GameCont.area = _areaCurrent;
 				
 				 // Cool Reveal:
 				view_shake_at(_sx, _sy, 20);
@@ -1182,12 +1236,11 @@
 				with(instances_matching_gt([Floor, Wall, TopSmall], "id", _minID)){
 					var _time = (point_distance(bbox_center_x, bbox_center_y, _sx, _sy) - 32) / 4.5;
 					with(floor_reveal(bbox_left, bbox_top, bbox_right, bbox_bottom, 4)){
-						time = _time;
+						time  = _time;
 						flash = false;
 					}
 				}
 				
-				GameCont.area = _areaCurrent;
 				instance_destroy();
 			}
 		}
@@ -1197,17 +1250,17 @@
 #define BuriedShrine_create(_x, _y)
 	with(obj_create(_x, _y, "BuriedVault")){
 		 // Visual:
-		spr_floor_room = spr.FloorPalaceShrineRoomLarge;
-		spr_floor_hall = spr.FloorPalaceShrine;
-		spr_top_tiny = spr.BuriedShrineTopTiny;
-		obj_loot = "PalaceAltar";
-		obj_deco = Pillar;
+		floor_room_vars.sprite_index = spr.FloorPalaceShrineRoomLarge;
+		floor_vars.sprite_index      = spr.FloorPalaceShrine;
 		
 		 // Vars:
-		area = area_palace;
+		obj_loot = "PalaceAltar";
+		obj_prop = Pillar;
+		area     = area_palace;
 		
 		return id;
 	}
+	
 	
 #define CustomBullet_create(_x, _y)
 	/*
@@ -4068,9 +4121,9 @@
 		var _spr = area_get_sprite(_area, sprTopPot);
 		if(sprite_exists(_spr)){
 			with(instance_create(_x, _y, TopPot)){
-				image_speed = 0;
+				image_speed  = 0;
 				sprite_index = area_get_sprite(_area, sprTopPot);
-				image_index = irandom(image_number - 1);
+				image_index  = irandom(image_number - 1);
 				
 				 // Offset Again:
 				x = _x;
@@ -4672,6 +4725,47 @@
 	}
 	
 	
+#define TopTiny_create(_x, _y)
+	/*
+		Creates a TopSmall but even smaller
+		If the area doesn't have a spr.TopTiny sprite variant then nothing is created
+	*/
+	
+	if(position_meeting(_x, _y, TopSmall)){
+		with(instance_create(pfloor(_x, 16), pfloor(_y, 16), TopSmall)){
+			if(sprite_exists(sprite_index)){
+				 // Setup Sprite:
+				if(!ds_map_exists(spr.TopTiny, sprite_index)){
+					spr.TopTiny[? sprite_index] = mod_script_call_nc("mod", "teassets", "sprite_add_toptiny", sprite_index);
+				}
+				
+				 // Hitbox:
+				mask_index = ((mask_index < 0) ? sprite_index : mask_index);
+				
+				 // Visual:
+				sprite_index = spr.TopTiny[? sprite_index][(_x >= x + 8), (_y >= y + 8)];
+				image_index  = irandom(image_number - 1);
+				
+				 // Fix Drawing Order:
+				if(fork()){
+					wait 0;
+					if(instance_exists(self)){
+						with(array_flip(instances_meeting(x, y, TopSmall))){
+							instance_copy(false);
+							instance_delete(id);
+						}
+					}
+					exit;
+				}
+			}
+			
+			return id;
+		}
+	}
+	
+	return noone;
+	
+	
 #define UnlockCont_create(_x, _y)
 	/*
 		Used to handle NTTE's custom unlock splat system
@@ -4682,21 +4776,21 @@
 		depth = UberCont.depth - 1;
 		
 		 // Vars:
-		persistent = true;
-		unlock = [];
-		unlock_sprit = sprMutationSplat;
-		unlock_image = 0;
-		unlock_delay = 50;
-		unlock_index = 0;
-		unlock_porty = 0;
+		persistent            = true;
+		unlock                = [];
+		unlock_sprit          = sprMutationSplat;
+		unlock_image          = 0;
+		unlock_delay          = 50;
+		unlock_index          = 0;
+		unlock_porty          = 0;
 		unlock_delay_continue = 0;
-		splash_sprit = sprUnlockPopupSplat;
-		splash_image = 0;
-		splash_delay = 0;
-		splash_index = -1;
-		splash_texty = 0;
-		splash_timer = 0;
-		splash_timer_max = 150;
+		splash_sprit          = sprUnlockPopupSplat;
+		splash_image          = 0;
+		splash_delay          = 0;
+		splash_index          = -1;
+		splash_texty          = 0;
+		splash_timer          = 0;
+		splash_timer_max      = 150;
 		
 		return id;
 	}
@@ -5314,9 +5408,8 @@
 		}
 	}
 	
-	 // Top Object Floor Collision:
 	if(instance_exists(Floor)){
-		 // Update Floor Bounding Box:
+		 // Floor Update:
 		if(global.floor_num != instance_number(Floor) || global.floor_min < Floor.id){
 			global.floor_num = instance_number(Floor);
 			global.floor_min = GameObject.id;
@@ -5332,9 +5425,16 @@
 				global.floor_top    = min(bbox_top,    global.floor_top);
 				global.floor_bottom = max(bbox_bottom, global.floor_bottom);
 			}
+			
+			 // Tiny TopSmall Fix:
+			with(instance_rectangle(global.floor_left, global.floor_top, global.floor_right, global.floor_bottom, instances_matching(TopSmall, "name", "TopTiny"))){
+				if(place_meeting(x, y, Floor)){
+					instance_destroy();
+				}
+			}
 		}
 		
-		 // Floor Collision:
+		 // Top Object Floor Collision:
 		var _topObject = instances_matching(instances_matching(instances_matching(instances_matching(CustomObject, "name", "TopObject"), "zspeed", 0), "zfriction", 0), "speed", 0);
 		with(instance_rectangle_bbox(global.floor_left - 16, global.floor_top - 16, global.floor_right + 16, global.floor_bottom + 16, _topObject)){
 			if(place_meeting(x + mask_x, y + mask_y, Floor) && (jump != 0 || grav > 0)){
@@ -5557,13 +5657,13 @@
 #define ntte_shadows
 	 // Bubble Bombs:
 	with(instances_matching(instances_matching(CustomProjectile, "name", "BubbleBomb"), "big", true)) if(visible){
-		var	f = min((z / 6) - 4, 6),
-			w = max(6 + f, 0) + sin((x + y + z) / 8),
-			h = max(4 + f, 0) + cos((x + y + z) / 8),
+		var	_f = min((z / 6) - 4, 6),
+			_w = max(6 + _f, 0) + sin((x + y + z) / 8),
+			_h = max(4 + _f, 0) + cos((x + y + z) / 8),
 			_x = x,
 			_y = y + 6;
 			
-		draw_ellipse(_x - w, _y - h, _x + w, _y + h, false);
+		draw_ellipse(_x - _w, _y - _h, _x + _w, _y + _h, false);
 	}
 	
 	 // Top Objects:

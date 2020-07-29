@@ -6,8 +6,11 @@
 	spr_load = [[spr, 0]];
 	with(spr){
 		var m, p;
-		msk = {};
-		shd = {};
+		
+		msk         = {};
+		shd         = {};
+		BigTopDecal = ds_map_create();
+		TopTiny     = ds_map_create();
 		
 		 // Shine:
 		p = "sprites/chests/";
@@ -20,24 +23,6 @@
 		Shine64   = sprite_add(p + "sprShine64.png",   7, 32, 32); // Giant Chests (YV)
 		ShineHurt = sprite_add(p + "sprShineHurt.png", 3,  0,  0); // Hurt Flash
 		
-		 // Big Decals:
-		p = "areas/";
-		BigTopDecal = {
-			"1"      : sprite(p + "Desert/sprDesertBigTopDecal",       1, 32, 24),
-			"2"      : sprite(p + "Sewers/sprSewersBigTopDecal",       8, 32, 24),
-			"3"      : sprite(p + "Scrapyard/sprScrapyardBigTopDecal", 1, 32, 24),
-			"4"      : sprite(p + "Caves/sprCavesBigTopDecal",         1, 32, 24),
-			"7"      : sprite(p + "Palace/sprPalaceBigTopDecal",       1, 32, 24),
-			"104"    : sprite(p + "Caves/sprCursedCavesBigTopDecal",   1, 32, 24),
-			"pizza"  : sprite(p + "Pizza/sprPizzaBigTopDecal",         1, 32, 24),
-			"oasis"  : sprite(p + "Oasis/sprOasisBigTopDecal",         1, 32, 24),
-			"trench" : sprite(p + "Trench/sprTrenchBigTopDecal",       1, 32, 24)
-		};
-		NestDebris      	= sprite(p + "Scrapyard/sprNestDebris", 	  16,    4,  4);
-		BigTopDecalScorpion = sprite(p + "Desert/sprBigTopDecalScorpion", 1,	32, 24);
-		msk.BigTopDecal 	= sprite(p + "Desert/mskBigTopDecal",   	  1,    32, 24);
-		shd.BigGenerator	= sprite(p + "Palace/shdBigGenerator",  	  1, 48-16, 32);
-		shd.BigGeneratorR	= sprite(p + "Palace/shdBigGeneratorR", 	  1, 48+16, 32);
 		
 		//#region MENU / HUD
 			
@@ -75,7 +60,7 @@
 		p = "weps/";
 			
 			 // Bone:
-			Bone	  = sprite(p + "sprBone",      1, 6, 6);
+			Bone      = sprite(p + "sprBone",      1, 6, 6);
 			BoneShard = sprite(p + "sprBoneShard", 1, 3, 2, shnWep);
 			
 			 // Trident:
@@ -122,7 +107,7 @@
 			BubbleExplosionSmall = sprite(p + "sprBubbleExplosionSmall",  7, 12, 12);
 			BubbleCharge         = sprite(p + "sprBubbleCharge",         12, 12, 12);
 			BubbleBombBig        = sprite(p + "sprBubbleBombBig",        46, 16, 16);
-			BubbleSlash			 = sprite(p + "sprBubbleSlash",        	  3,  0, 24);
+			BubbleSlash          = sprite(p + "sprBubbleSlash",           3,  0, 24);
 			
 			 // Clam Shield:
 			ClamShield          = sprite(p + "sprClamShield",      14,  0,  7);
@@ -741,12 +726,17 @@
 		m = "areas/Desert/";
 		p = m;
 			
+			 // Big Decal:
+			BigTopDecal[? area_desert] = sprite(p + "sprDesertBigTopDecal",   1, 32, 24);
+			BigTopDecalScorpion        = sprite(p + "sprBigTopDecalScorpion", 1, 32, 24);
+			msk.BigTopDecal            = sprite(p + "mskBigTopDecal",         1, 32, 24);
+			
 			 // Fly:
 			FlySpin = sprite(p + "sprFlySpin", 16, 4, 4);
 			
 			 // Wall Rubble:
-			Wall1BotRubble = sprite(p + "sprWall1BotRubble", 4, 0, 0);
-			Wall1TopRubble = sprite(p + "sprWall1TopRubble", 4, 0, 0);
+			Wall1BotRubble = sprite(p + "sprWall1BotRubble", 4, 0,  0);
+			Wall1TopRubble = sprite(p + "sprWall1TopRubble", 4, 0,  0);
 			Wall1OutRubble = sprite(p + "sprWall1OutRubble", 4, 4, 12);
 			
 			 // Wall Bro:
@@ -789,7 +779,9 @@
 		p = m;
 			
 			 // Decals:
-			TopDecalScrapyardAlt = sprite(p + "sprTopDecalScrapyardAlt", 1, 16, 16);
+			BigTopDecal[? area_scrapyards] = sprite(p + "sprScrapyardBigTopDecal",  1, 32, 24);
+			TopDecalScrapyardAlt           = sprite(p + "sprTopDecalScrapyardAlt",  1, 16, 16);
+			NestDebris                     = sprite(p + "sprNestDebris",           16,  4,  4);
 			
 			 // Sludge Pool:
 			SludgePool          = sprite(p + "sprSludgePool",      4,  0,  0);
@@ -805,6 +797,10 @@
 		//#region CRYSTAL CAVES
 		m = "areas/Caves/";
 		p = m;
+			
+			 // Decals:
+			BigTopDecal[? area_caves       ] = sprite(p + "sprCavesBigTopDecal",       1, 32, 24);
+			BigTopDecal[? area_cursed_caves] = sprite(p + "sprCursedCavesBigTopDecal", 1, 32, 24);
 			
 			 // Wall Spiders:
 			WallSpider          = sprite(p + "sprWallSpider",          2, 8, 8);
@@ -884,16 +880,31 @@
 		m = "areas/Palace/";
 		p = m;
 			
-			 // Shrine Floors:
-			FloorPalaceShrine          = sprite(p + "sprFloorPalaceShrine",          10, 2, 2);
-			FloorPalaceShrineRoomSmall = sprite(p + "sprFloorPalaceShrineRoomSmall",  4, 0, 0);
-			FloorPalaceShrineRoomLarge = sprite(p + "sprFloorPalaceShrineRoomLarge",  9, 0, 0);
+			 // Decals:
+			BigTopDecal[? area_palace] = sprite(p + "sprPalaceBigTopDecal", 1, 32, 24);
+			
+			 // Generator Shadows Woooo:
+			shd.BigGenerator  = sprite(p + "shdBigGenerator",  1, 48-16, 32);
+			shd.BigGeneratorR = sprite(p + "shdBigGeneratorR", 1, 48+16, 32);
 			
 			 // Inactive Throne Hitbox (Can walk on top, so cool broo):
 			msk.NothingInactiveCool = sprite(p + "mskNothingInactiveCool", 1, 150, 100);
 			with(msk.NothingInactiveCool){
 				mask = [false, 0];
 			}
+			
+			 // Shrine Floors:
+			FloorPalaceShrine          = sprite(p + "sprFloorPalaceShrine",          10, 2, 2);
+			FloorPalaceShrineRoomSmall = sprite(p + "sprFloorPalaceShrineRoomSmall",  4, 0, 0);
+			FloorPalaceShrineRoomLarge = sprite(p + "sprFloorPalaceShrineRoomLarge",  9, 0, 0);
+			
+			 // Tiny TopSmalls:
+			TopTiny[? sprWall7Trans] = [
+				[sprite(p + "sprPalaceTopTiny", 8,  0,  0),
+				 sprite(p + "sprPalaceTopTiny", 8,  0, -8)],
+				[sprite(p + "sprPalaceTopTiny", 8, -8,  0),
+				 sprite(p + "sprPalaceTopTiny", 8, -8, -8)]
+			];
 			
 			//#region PROPS
 			p = m + "Props/";
@@ -921,6 +932,14 @@
 		//#region VAULT
 		m = "areas/Vault/";
 		p = m;
+			
+			 // Tiny TopSmalls:
+			TopTiny[? sprWall100Trans] = [
+				[sprite(p + "sprVaultTopTiny", 12,  0,  0),
+				 sprite(p + "sprVaultTopTiny", 12,  0, -8)],
+				[sprite(p + "sprVaultTopTiny", 12, -8,  0),
+				 sprite(p + "sprVaultTopTiny", 12, -8, -8)]
+			];
 			
 			 // Vault Flower Room:
 			VaultFlowerFloor = sprite(p + "sprVaultFlowerFloor", 9, 0, 0);
@@ -1036,6 +1055,9 @@
 			BigBubble    = sprite(p + "sprBigBubble",    1, 24, 24);
 			BigBubblePop = sprite(p + "sprBigBubblePop", 4, 24, 24);
 			
+			 // Decals:
+			BigTopDecal[? "oasis"] = sprite(p + "sprOasisBigTopDecal", 1, 32, 24);
+			
 			 // Ground Crack Effect:
 			Crack = sprite_add_base64("iVBORw0KGgoAAAANSUhEUgAAAEAAAAAgCAYAAACinX6EAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAAZdEVYdFNvZnR3YXJlAHBhaW50Lm5ldCA0LjAuMTczbp9jAAABk0lEQVRoQ+WVS3KDQAxEOUQ22ed0OUPujhEVTWk6PWK+sSgWrwwPI0/3YHvb9/3RUPkkqHwSVEbg4+f7eOHXZkJlBLAAr5CRsqh8FxLEwq6jE7avz+Plr6+BygiUChAkMKNUkAeVUbCBvOCIFqX3elAZCRr8WDYF3oezGFRGIgvFgqqzmOs4D6EyCmn3C+Eyb6+Z86uvApWt1H7fWsEw6diDlIBzLVQiElDBa8KKAmRmCsLCY9ASx3u89VFZ4j8LqArnYe8/jnG+QqWHhMXAzI0yXICgM34LYGvMTmqQIedg06p1Wgb7sBayIBMorSk7aUVD2zJmgQFG0blYQjroQXcc/Qi6UyzECOwz5DjJHlbsvIIBRsH5CpW1zN59y8ynwFsnlVfoI7SyAAGD9IJzLVS2sLIEmc0CtXC1PipbWVnC+S8Doaqp+JGmMgqy+PMp6Cmh8geaygjgzp1FYMgCV7tuofJd6I4reF0Qz0IL3n0lqIzAVRCvIHQeVEagt4BWqLwLM0qg8k6MlkDlnXh8AWPs2wudfCE+JW5sAwAAAABJRU5ErkJggg==",
 			2, 16, 16);
@@ -1045,6 +1067,9 @@
 		//#region TRENCH
 		m = "areas/Trench/";
 		p = m;
+			
+			 // Decals:
+			BigTopDecal[? "trench"] = sprite(p + "sprTrenchBigTopDecal", 1, 32, 24);
 			
 			 // Floors:
 			FloorTrench      = sprite(p + "sprFloorTrench",      4, 0, 0);
@@ -1111,6 +1136,9 @@
 		m = "areas/Sewers/";
 		p = m;
 			
+			 // Decals:
+			BigTopDecal[? area_sewers] = sprite(p + "sprSewersBigTopDecal", 8, 32, 24);
+			
 			 // Manhole:
 			PizzaManhole = [
 				sprite(p + "sprPizzaManhole0", 2, 16, 16),
@@ -1146,6 +1174,9 @@
 		//#region PIZZA SEWERS
 		m = "areas/Pizza/";
 		p = m;
+			
+			 // Decals:
+			BigTopDecal[? area_pizza_sewers] = sprite(p + "sprPizzaBigTopDecal", 1, 32, 24);
 			
 			//#region PROPS
 			p = m + "Props/";
@@ -1406,14 +1437,11 @@
 			BonusHealthMimicFire       = sprite(p + "sprBonusHealthMimicFire",        4, 16, 16);
 			
 			 // Buried Vault:
-			BuriedVaultTopTiny     = sprite(p + "sprVaultTopTiny",     12,  0,  0);
-			BuriedVaultChest       = sprite(p + "sprVaultChest",        1, 12, 12, shn24);
-			BuriedVaultChestOpen   = sprite(p + "sprVaultChestOpen",    1, 12, 12);
-			BuriedVaultChestDebris = sprite(p + "sprVaultChestDebris",  8, 12, 12);
-			BuriedVaultChestBase   = sprite(p + "sprVaultChestBase",    3, 16, 12);
-			ProtoChestMerge        = sprite(p + "sprProtoChestMerge",   6, 12, 12);
-			
-			BuriedShrineTopTiny    = sprite(p + "sprPalaceTopTiny", 	8, 0, 0);
+			BuriedVaultChest       = sprite(p + "sprVaultChest",       1, 12, 12, shn24);
+			BuriedVaultChestOpen   = sprite(p + "sprVaultChestOpen",   1, 12, 12);
+			BuriedVaultChestDebris = sprite(p + "sprVaultChestDebris", 8, 12, 12);
+			BuriedVaultChestBase   = sprite(p + "sprVaultChestBase",   3, 16, 12);
+			ProtoChestMerge        = sprite(p + "sprProtoChestMerge",  6, 12, 12);
 			
 			 // Button Chests:
 			ButtonChest        = sprite(p + "sprButtonChest",        1, 9, 9, shn20);
@@ -1907,6 +1935,23 @@
 #macro save_path "save.sav"
 
 #macro game_scale_nonsync game_screen_get_width_nonsync() / game_width
+
+#macro  area_campfire     0
+#macro  area_desert       1
+#macro  area_sewers       2
+#macro  area_scrapyards   3
+#macro  area_caves        4
+#macro  area_city         5
+#macro  area_labs         6
+#macro  area_palace       7
+#macro  area_vault        100
+#macro  area_oasis        101
+#macro  area_pizza_sewers 102
+#macro  area_mansion      103
+#macro  area_cursed_caves 104
+#macro  area_jungle       105
+#macro  area_hq           106
+#macro  area_crib         107
 
 #define save_ntte()
 	string_save(json_encode(save), save_path);
@@ -2479,30 +2524,41 @@ var _shine = argument_count > 4 ? argument[4] : shnNone;
 		repeat(20){
 			while(array_length(spr_load) > 0){
 				var	_num   = array_length(spr_load) - 1,
+					_load  = null,
 					_list  = spr_load[_num, 0],
 					_index = spr_load[_num, 1];
 					
-				if(_index < lq_size(_list) || _index < array_length(_list)){
-					spr_load[_num, 1]++;
-					
-					var _load = null;
-					if(is_object(_list)){
-						_load = lq_get_value(_list, _index);
-					}
-					else if(is_array(_list)){
+				spr_load[_num, 1]++;
+				
+				 // Grab Value:
+				if(is_array(_list)){
+					if(_index < array_length(_list)){
 						_load = _list[_index];
 					}
-					
-					 // Load Sprite:
+				}
+				else if(is_object(_list)){
+					if(_index < lq_size(_list)){
+						_load = lq_get_value(_list, _index);
+					}
+				}
+				else if(ds_map_valid(_list)){
+					if(_index < ds_map_size(_list)){
+						_load = ds_map_values(_list)[_index];
+					}
+				}
+				
+				 // Process Value:
+				if(!is_undefined(_load)){
+					 // Load Sprites:
 					if(is_object(_load) && "path" in _load){
 						var	_spr    = mskNone,
-							_img	= lq_defget(_load, "img",	1),
-							_x		= lq_defget(_load, "x",		0),
-							_y		= lq_defget(_load, "y",		0),
-							_ext	= lq_defget(_load, "ext",	"png"),
-							_mask	= lq_defget(_load, "mask",	[]),
-							_shine	= lq_defget(_load, "shine",	shnNone),
-							_path	= _load.path + "." + _ext;
+							_img    = lq_defget(_load, "img",   1),
+							_x      = lq_defget(_load, "x",     0),
+							_y      = lq_defget(_load, "y",     0),
+							_ext    = lq_defget(_load, "ext",   "png"),
+							_mask   = lq_defget(_load, "mask",  []),
+							_shine  = lq_defget(_load, "shine", shnNone),
+							_path   = _load.path + "." + _ext;
 							
 						if(fork()){
 							switch(_shine){
@@ -2531,11 +2587,14 @@ var _shine = argument_count > 4 ? argument[4] : shnNone;
 							}
 							
 							 // Store Sprite:
-							if(is_object(_list)){
+							if(is_array(_list)){
+								_list[_index] = _spr;
+							}
+							else if(is_object(_list)){
 								lq_set(_list, lq_get_key(_list, _index), _spr);
 							}
-							else{
-								_list[_index] = _spr;
+							else if(ds_map_valid(_list)){
+								_list[? ds_map_keys(_list)[_index]] = _spr;
 							}
 							
 							 // Precise Hitboxes:
@@ -2562,9 +2621,7 @@ var _shine = argument_count > 4 ? argument[4] : shnNone;
 					}
 					
 					 // Search Deeper:
-					else if(is_object(_load) || is_array(_load)){
-						array_push(spr_load, [_load, 0]);
-					}
+					else array_push(spr_load, [_load, 0]);
 				}
 				
 				 // Go Back:
@@ -2959,9 +3016,9 @@ var _shine = argument_count > 4 ? argument[4] : shnNone;
 		Returns a new sprite made of the given sprite drawn in flat black with a white outline
 	*/
 	
-	var	_sprX = sprite_get_xoffset(_sprite) + 1,
-		_sprY = sprite_get_yoffset(_sprite) + 1,
-		_surfW = sprite_get_width(_sprite) + 2,
+	var	_sprX  = sprite_get_xoffset(_sprite) + 1,
+		_sprY  = sprite_get_yoffset(_sprite) + 1,
+		_surfW = sprite_get_width(_sprite)  + 2,
 		_surfH = sprite_get_height(_sprite) + 2;
 		
 	with(surface_setup("sprLockedWep", _surfW, _surfH, 1)){
@@ -2989,6 +3046,56 @@ var _shine = argument_count > 4 ? argument[4] : shnNone;
 		surface_save(surf, name + ".png");
 		return sprite_add_weapon(name + ".png", _sprX, _sprY);
 	}
+	
+#define sprite_add_toptiny(_spr)
+	/*
+		Returns a new "TopTiny" corner tile sprite list created from the given TopSmall sprite
+	*/
+	
+	var	_sprList = [[0, 0], [0, 0]],
+		_sprImg  = sprite_get_number(_spr),
+		_sprW    = sprite_get_width(_spr),
+		_sprH    = sprite_get_height(_spr),
+		_sprX    = sprite_get_xoffset(_spr),
+		_sprY    = sprite_get_yoffset(_spr);
+		
+	with(surface_setup("sprTopTiny", (_sprW / 2) * _sprImg, (_sprH / 2), 1)){
+		free = true;
+		for(var _x = 0; _x < array_length(_sprList[0]); _x++){
+			for(var _y = 0; _y < array_length(_sprList[1]); _y++){
+				surface_set_target(surf);
+				draw_clear_alpha(0, 0);
+				
+				with(UberCont){
+					for(var _img = 0; _img < _sprImg; _img++){
+						draw_sprite_part(
+							_spr,
+							_img,
+							(_sprW / 2) * (1 - _x),
+							(_sprH / 2) * (1 - _y),
+							_sprW / 2,
+							_sprH / 2,
+							((_x == 0) ? 0 : _sprX) + ((_sprW / 2) * _img),
+							((_y == 0) ? 0 : _sprY)
+						);
+					}
+				}
+				
+				surface_reset_target();
+				
+				 // Add Sprite:
+				surface_save(surf, name + ".png");
+				_sprList[_x, _y] = sprite_add(
+					name + ".png",
+					_sprImg,
+					_sprX - ((_sprW / 2) * _x),
+					_sprY - ((_sprH / 2) * _y)
+				);
+			}
+		}
+	}
+	
+	return _sprList;
 	
 #define cleanup
 	if(save_auto) save_ntte();
