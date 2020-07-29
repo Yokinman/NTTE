@@ -1830,6 +1830,18 @@
 										
 									if(is_undefined(_raceCurrent)) _raceCurrent = "";
 									
+									 // Auto-Select First Loaded Character:
+									if(!mod_exists("race", _raceCurrent)){
+										for(var i = 0; i < lq_size(_raceList); i++){
+											var _race = lq_get_key(_raceList, i);
+											if(mod_exists("race", _race)){
+												_raceCurrent = _race;
+												_raceSlct[_index] = i;
+												break;
+											}
+										}
+									}
+									
 									 // Locked:
 									if(mod_script_exists("race", _raceCurrent, "race_avail")){
 										var _avail = mod_script_call("race", _raceCurrent, "race_avail");
@@ -1839,6 +1851,7 @@
 									}
 									
 									/// Character Swap:
+										
 										 // Splat:
 										var	_x = 0,
 											_y = 36,

@@ -1992,6 +1992,7 @@
 		}
 		else{
 			mod_script_call("skill", "annihilation", "enemy_annihilate", other, 2);
+			sleep(150);
 		}
 		
 		 // Goodbye:

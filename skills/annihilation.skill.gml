@@ -89,6 +89,9 @@
 		with(instances_matching((custom ? instances_matching(object_index, "name", name) : object_index), "annihilation_check", null)){
 			annihilation_check = true;
 			
+			 // Freeze:
+			sleep_max(50);
+			
 			 // Less Rads:
 			if("raddrop" in self){
 				raddrop = round(raddrop / 2);
@@ -415,3 +418,4 @@
 #define unlock_get(_unlock)                                                             return  mod_script_call_nc('mod', 'teassets', 'unlock_get', _unlock);
 #define obj_create(_x, _y, _obj)                                                        return  (is_undefined(_obj) ? [] : mod_script_call_nc('mod', 'telib', 'obj_create', _x, _y, _obj));
 #define area_get_back_color(_area)                                                      return  mod_script_call_nc('mod', 'telib', 'area_get_back_color', _area);
+#define sleep_max(_milliseconds)                                                                mod_script_call_nc('mod', 'telib', 'sleep_max', _milliseconds);

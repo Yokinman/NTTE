@@ -46,13 +46,11 @@
 	 // Red Outline:
 	return global.sprWepHUDRed;
 	
-#define weapon_swap    
-	sound_play_gun(sndScrewdriver, 0.2, 0.6);
-	
-	sound_set_track_position(sndHyperCrystalChargeExplo, 1.6);
-	sound_play_pitchvol(sndHyperCrystalChargeExplo, 0.6, 0.8);
-	sound_set_track_position(sndHyperCrystalChargeExplo, 0);
-	
+#define weapon_swap
+	sound_set_track_position(
+		sound_play_pitchvol(sndHyperCrystalChargeExplo, 0.6, 0.5),
+		1.55
+	);
 	return sndSwapSword;
 	
 #define weapon_fire(_wep)

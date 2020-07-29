@@ -4807,12 +4807,12 @@
 	if(splash_delay > 0) splash_delay -= current_time_scale;
 	else{
 		var _img = 0;
-		if(instance_exists(Player)){
+		if(instance_exists(Player) || instance_exists(BackMainMenu) || instance_exists(PauseButton)){
 			if(splash_timer > 0){
 				splash_timer -= current_time_scale;
-		
+				
 				_img = sprite_get_number(splash_sprit) - 1;
-		
+				
 				 // Text Offset:
 				if(splash_image >= _img && splash_texty > 0){
 					splash_texty -= current_time_scale;
@@ -4820,7 +4820,7 @@
 			}
 			else{
 				splash_texty = 2;
-		
+				
 				 // Splash Next Unlock:
 				if(splash_index < array_length(unlock) - 1){
 					splash_index++;
@@ -4833,7 +4833,7 @@
 	
 	 // Game Over Splash:
 	if(instance_exists(UnlockScreen)) unlock_delay = 1;
-	else if(!instance_exists(Player)){
+	else if(!instance_exists(Player) && !instance_exists(BackMainMenu) && !instance_exists(PauseButton)){
 		while(
 			unlock_index >= 0                   &&
 			unlock_index < array_length(unlock) &&

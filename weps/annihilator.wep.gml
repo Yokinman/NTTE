@@ -13,15 +13,6 @@
 	
 #define weapon_name         return (weapon_avail() ? "ANNIHILATOR" : "LOCKED");
 #define weapon_text         return `@wBEND @sTHE @(color:${area_get_back_color("red")})CONTINUUM`;
-#define weapon_swap    
-	sound_play_gun(sndScrewdriver, 0.2, 0.6);
-	
-	sound_set_track_position(sndHyperCrystalChargeExplo, 1.6);
-	sound_play_pitchvol(sndHyperCrystalChargeExplo, 0.6, 0.8);
-	sound_set_track_position(sndHyperCrystalChargeExplo, 0);
-	
-	return sndSwapHammer;
-	
 #define weapon_sprt         return (weapon_avail() ? global.sprWep : global.sprWepLocked);
 #define weapon_area         return (weapon_avail() ? 22 : -1); // L1 3-1
 #define weapon_load         return 24; // 0.8 Seconds
@@ -59,6 +50,13 @@
 	 // Red Outline:
 	return global.sprWepHUDRed;
 	
+#define weapon_swap
+	sound_set_track_position(
+		sound_play_pitchvol(sndHyperCrystalChargeExplo, 0.6, 0.5),
+		1.55
+	);
+	return sndSwapHammer;
+	
 #define weapon_fire(_wep)
 	var _fire = weapon_fire_init(_wep);
 	_wep = _fire.wep;
@@ -83,8 +81,8 @@
 	
 	 // Normal:
 	else{
-		wepangle *= -1;
-		repeat(3){
+		//wepangle *= -1;
+		//repeat(3){
 			var _skill = skill_get(mut_long_arms),
 				_dis   = 20 * _skill,
 				_dir   = gunangle + (orandom(10) * accuracy);
@@ -100,18 +98,22 @@
 			
 			 // Sounds:
 			sound_play_gun(sndWrench, 0.2, 0.6);
+			sound_set_track_position(
+				sound_play_pitchvol(sndHyperCrystalChargeExplo, 1 + random(0.5), 0.4),
+				1.5
+			);
 			
 			 // Effects:
-			wepangle *= -1;
+			//wepangle *= -1;
 			instance_create(x, y, Smoke);
 			weapon_post(-4, 12, 1);
 			motion_add(_dir, 6);
 			sleep(10);
 			
 			 // Waiting:
-			wait(6);
-			if(!instance_exists(self)) break;		
-		}
+		//	wait(6);
+		//	if(!instance_exists(self)) break;		
+		//}
 	}
 	
 #define step(_primary)
