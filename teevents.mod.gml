@@ -35,6 +35,7 @@
 	teevent_add("RavenArena");
 	teevent_add("FirePit");
 	teevent_add("SealPlaza");
+	teevent_add("YetiHideout");
 	teevent_add("MutantVats");
 	teevent_add("ButtonGame");
 	teevent_add("PopoAmbush");
@@ -1658,6 +1659,19 @@
 	}
 	
 	
+#define YetiHideout_text   return `SMELLS LIKE ${event_tip}WET FUR`;
+#define YetiHideout_area   return area_city;
+#define YetiHideout_chance return 0; // 1/100;
+#define YetiHideout_create
+	with(obj_create(x, y, "BuriedVault")){
+		floor_vars		= {sprite_index : spr.FloorYeti	   };
+		floor_room_vars = {sprite_index : spr.FloorYetiRoom};
+		obj_prop		= "";
+		obj_loot		= "";
+		area			= area_city;
+	}
+	
+
 #define MutantVats_text    return `${event_tip}SPECIMENS`;
 #define MutantVats_area    return area_labs;
 #define MutantVats_chance  return lq_size(global.pastPets);

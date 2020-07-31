@@ -606,6 +606,12 @@
 			
 		case area_caves: /// CRYSTAL CAVES
 			
+			 // Miner Bandit:
+			with(instance_furthest(_spawnX, _spawnY, Bandit)){
+				obj_create(x, y, "MinerBandit");
+				instance_delete(id);
+			}
+			
 			 // Spawn Mortars:
 			with(instances_matching(LaserCrystal, "mortar_check", null)){
 				mortar_check = true;
@@ -797,6 +803,12 @@
 			break;
 			
 		case area_cursed_caves: /// CURSED CRYSTAL CAVES
+			
+			 // Miner Bandit:
+			with(instance_furthest(_spawnX, _spawnY, Bandit)){
+				obj_create(x, y, "MinerBandit");
+				instance_delete(id);
+			}
 			
 			 // Spawn Cursed Mortars:
 			with(instances_matching(InvLaserCrystal, "mortar_check", null)){
@@ -4050,6 +4062,18 @@
 		}
 		
 		return id;
+	}
+	
+#define chat_message(_message, _index)
+	
+	 // The Peas Feature (Peature):
+	if(string_upper(_message) == "LEGUME"){
+		with(instances_matching(CustomHitme, "name", "PizzaRubble")){
+			if(!peas){
+				peas = true;
+				sound_play_hit(sndUncurse, 0);
+			}
+		}
 	}
 	
 	
