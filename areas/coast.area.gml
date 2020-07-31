@@ -3,9 +3,15 @@
 	snd = mod_variable_get("mod", "teassets", "snd");
 	lag = false;
 	
-	 // Ocean:
+	 // Bind Events:
+	var _seaDepth = object_get_depth(Floor) + 10;
+	global.bind_sea = {
+		"main"        : script_bind(CustomDraw, script_ref_create(draw_sea),                false, _seaDepth),
+		"top"         : script_bind(CustomDraw, script_ref_create(draw_sea_top),            false, -1),
+		"visible_max" : script_bind(CustomDraw, script_ref_create(sea_inst_visible, false), false, _seaDepth),
+		"visible_min" : script_bind(CustomDraw, script_ref_create(sea_inst_visible, true),  false, object_get_depth(SubTopCont))
+	};
 	global.sea_inst = [];
-	global.sea_depth = object_get_depth(Floor) + 10;
 	
 	 // # of times that 'area_pop_enemies' must be called before it spawns another enemy, to reduce enemy spawns:
 	global.pop_enemies_wait = 0;
@@ -27,6 +33,8 @@
 
 #macro area_active variable_instance_get(GameCont, "ntte_active_" + mod_current, false) && (GameCont.area == mod_current || GameCont.lastarea == mod_current)
 #macro area_visits variable_instance_get(GameCont, "ntte_visits_" + mod_current, 0)
+
+#macro sea_depth global.bind_sea.main.depth
 
 #macro wading_color make_color_rgb(44, 37, 122)
 
@@ -81,9 +89,10 @@
 			
 			 // Destroy Wall Decals:
 			else if(instance_is(self, FloorExplo)){
-				with(instances_meeting(x, y, GameObject)){
-					event_perform(ev_collision, FloorExplo);
-					if(!instance_exists(other)) break;
+				with(instances_meeting(x, y, [Bones, TopPot])){
+					if(place_meeting(x, y, other)){
+						instance_delete(id);
+					}
 				}
 				instance_delete(self);
 			}
@@ -125,6 +134,16 @@
 #define area_start
 	 // Enable Area:
 	variable_instance_set(GameCont, "ntte_active_" + mod_current, true);
+	
+	 // Active Sea Drawing:
+	for(var i = 0; i < lq_size(global.bind_sea); i++){
+		with(lq_get_value(global.bind_sea, i).id){
+			visible = true;
+		}
+	}
+	with(global.bind_sea.main.id){
+		flash = 0;
+	}
 	
 	 // Subarea-Specific Spawns:
 	switch(GameCont.subarea){
@@ -223,22 +242,6 @@
 		instance_delete(id);
 	}
 	
-	 // Bind Sea Drawing Scripts:
-	if(array_length(instances_matching(CustomDraw, "name", "sea_draw")) <= 0){
-		with(script_bind_draw(sea_draw, global.sea_depth)){
-			name = script[2];
-			wave = 0;
-			wave_dis = 6;
-			wave_ang = 0;
-			flash = 0;
-		}
-	}
-	if(array_length(instances_matching(CustomDraw, "name", "seatop_draw")) <= 0){
-		with(script_bind_draw(seatop_draw, -1)){
-			name = script[2];
-		}
-	}
-	
 	 // Reset Floor Surfaces:
 	with(surface_setup("CoastFloor", null, null, null)){
 		reset = true;
@@ -268,6 +271,11 @@
 	mod_variable_set("mod", "ntte", "area_update", true);
 	
 	 // There Ain't No More Water:
+	for(var i = 0; i < lq_size(global.bind_sea); i++){
+		with(lq_get_value(global.bind_sea, i).id){
+			visible = false;
+		}
+	}
 	with(instances_matching_ne(instances_matching(GameObject, "persistent", true), "wading", null)){
 		wading = 0;
 	}
@@ -458,7 +466,7 @@
 				
 				if(!position_meeting(_x, _y, Floor)){
 					with(instance_create(_x, _y, Detail)){
-						depth = global.sea_depth + 1;
+						depth = sea_depth + 1;
 					}
 				}
 			}
@@ -496,8 +504,8 @@
 	if(area_active){
 		 // Water Wading:
 		if(instance_exists(Floor)){
-			var	_depthMax = global.sea_depth,
-				_depthMin = variable_instance_get(SubTopCont, "depth", object_get_depth(SubTopCont)),
+			var	_depthMax = global.bind_sea.visible_max.depth,
+				_depthMin = global.bind_sea.visible_min.depth,
 				_inst = array_combine(
 					array_combine(
 						[Debris, Corpse, ChestOpen, chestprop, WepPickup, Crown, Grenade, hitme],
@@ -606,8 +614,6 @@
 			with(instances_matching(global.sea_inst, "visible", true)){
 				visible = false;
 			}
-			script_bind_draw(sea_inst_visible, _depthMax, false);
-			script_bind_draw(sea_inst_visible, _depthMin, true);
 		}
 		
 		 // Wading Players:
@@ -663,7 +669,7 @@
 				sound_stop(sndPortalOpen);
 				
 				 // Flash Sea:
-				with(instances_matching(CustomDraw, "name", "sea_draw")){
+				with(global.bind_sea.main.id){
 					flash = 0;
 				}
 				
@@ -795,8 +801,13 @@
 		}
 	}
 	
-#define sea_draw
+#define draw_sea
 	if(lag) trace_time();
+	
+	if("wave"     not in self) wave     = 0;
+	if("wave_dis" not in self) wave_dis = 6;
+	if("wave_ang" not in self) wave_ang = 0;
+	if("flash"    not in self) flash    = 0;
 	
 	wave += current_time_scale;
 	
@@ -824,7 +835,7 @@
 		_surfSwimTopSub = surface_setup("CoastSwimTopSub", _surfSwimW, _surfSwimH, _surfScaleTop),
 		_surfSwimScreen = surface_setup("CoastSwimScreen", _surfSwimW, _surfSwimH, _surfScaleBot);
 		
-	if(lag) trace_time("sea_draw Setup");
+	if(lag) trace_time(script[2] + " Setup");
 	
 	 // Draw Floors to Surface:
 	with(_surfFloor){
@@ -926,7 +937,7 @@
 			}
 			
 			 // Details:
-			with(instances_matching(instances_matching(Detail, "depth", global.sea_depth + 1), "visible", true)){
+			with(instances_matching(instances_matching(Detail, "depth", sea_depth + 1), "visible", true)){
 				draw_sprite_ext(sprite_index, image_index, (x - _surfX) * _surfScale, (y - _surfY) * _surfScale, image_xscale * _surfScale, image_yscale * _surfScale, image_angle, image_blend, image_alpha);
 			}
 			
@@ -937,7 +948,7 @@
 		draw_surface_scale(surf, x, y, 1 / scale);
 	}
 	
-	if(lag) trace_time("sea_draw Floors");
+	if(lag) trace_time(script[2] + " Floors");
 	
 	 // Submerged Rock Decals:
 	with(instances_matching(instances_matching(CustomProp, "name", "CoastDecal", "CoastBigDecal"), "visible", true)){
@@ -960,7 +971,7 @@
 	}
 	draw_set_fog(false, 0, 0, 0);
 	
-	if(lag) trace_time("sea_draw Bottoms");
+	if(lag) trace_time(script[2] + " Bottoms");
 	
 	/// Water Wading Objects:
 		
@@ -1216,7 +1227,7 @@
 			draw_set_fog(false, 0, 0, 0);
 		}
 		
-		if(lag) trace_time("sea_draw Wading");
+		if(lag) trace_time(script[2] + " Wading");
 		
 	 // Draw Sea:
 	draw_set_color(background_color);
@@ -1229,7 +1240,7 @@
 	draw_sprite_tiled(spr.CoastTrans, 0, sin(_wave * 0.02) * 4, sin(_wave * 0.05) * 2);
 	draw_set_alpha(1);
 	
-	if(lag) trace_time("sea_draw Sea");
+	if(lag) trace_time(script[2] + " Sea");
 	
 	 // Foam:
 	var	_waveInt     = 40,                                                            // How often waves occur in frames, affects wave speed
@@ -1322,7 +1333,7 @@
 		wave_ang = pround(random(45), 15);
 	}
 	
-	if(lag) trace_time("sea_draw Foam");
+	if(lag) trace_time(script[2] + " Foam");
 	
 	 // Level Over, Flash Sea:
 	if(instance_exists(Portal)){
@@ -1368,9 +1379,9 @@
 		flash += current_time_scale;
 	}
 	
-	if(lag) trace_time("sea_draw Flash");
+	if(lag) trace_time(script[2] + " Flash");
 	
-#define seatop_draw
+#define draw_sea_top
 	if(lag) trace_time();
 	
 	 // Top Halves of Swimming Objects:
@@ -1378,7 +1389,7 @@
 		draw_surface_scale(surf, x, y, 1 / scale);
 	}
 	
-	if(lag) trace_time("seatop_draw");
+	if(lag) trace_time(script[2]);
 	
 #define sea_inst_visible(_visible)
 	if(lag) trace_time();
@@ -1388,8 +1399,6 @@
 	}
 	
 	if(lag) trace_time(script[2] + "(" + string(depth) + ")");
-	
-	instance_destroy();
 	
 	
 /// SCRIPTS
@@ -1419,7 +1428,7 @@
 #macro  current_frame_active                                                                    (current_frame % 1) < current_time_scale
 #macro  anim_end                                                                                (image_index + image_speed_raw >= image_number || image_index + image_speed_raw < 0)
 #macro  enemy_sprite                                                                            (sprite_index != spr_hurt || anim_end) ? ((speed <= 0) ? spr_idle : spr_walk) : sprite_index
-#macro  enemy_boss                                                                              ('boss' in self && boss) || array_exists([BanditBoss, ScrapBoss, LilHunter, Nothing, Nothing2, FrogQueen, HyperCrystal, TechnoMancer, Last, BigFish, OasisBoss], object_index)
+#macro  enemy_boss                                                                              (('boss' in self) ? boss : ('intro' in self)) || array_exists([Nothing, Nothing2, BigFish, OasisBoss], object_index)
 #macro  player_active                                                                           visible && !instance_exists(GenCont) && !instance_exists(LevCont) && !instance_exists(SitDown) && !instance_exists(PlayerSit)
 #macro  game_scale_nonsync                                                                      game_screen_get_width_nonsync() / game_width
 #macro  bbox_width                                                                              (bbox_right + 1) - bbox_left
@@ -1448,18 +1457,18 @@
 #define angle_lerp(_ang1, _ang2, _num)                                                  return  _ang1 + (angle_difference(_ang2, _ang1) * _num);
 #define draw_self_enemy()                                                                       image_xscale *= right; draw_self(); image_xscale /= right;
 #define enemy_walk(_add, _max)                                                                  if(walk > 0){ walk -= current_time_scale; motion_add_ct(direction, _add); } if(speed > _max) speed = _max;
-#define save_get(_name, _default)                                                       return  mod_script_call_nc('mod', 'teassets', 'save_get', _name, _default);
-#define save_set(_name, _value)                                                                 mod_script_call_nc('mod', 'teassets', 'save_set', _name, _value);
-#define option_get(_name)                                                               return  mod_script_call_nc('mod', 'teassets', 'option_get', _name);
-#define option_set(_name, _value)                                                               mod_script_call_nc('mod', 'teassets', 'option_set', _name, _value);
-#define stat_get(_name)                                                                 return  mod_script_call_nc('mod', 'teassets', 'stat_get', _name);
-#define stat_set(_name, _value)                                                                 mod_script_call_nc('mod', 'teassets', 'stat_set', _name, _value);
-#define unlock_get(_name)                                                               return  mod_script_call_nc('mod', 'teassets', 'unlock_get', _name);
-#define unlock_set(_name, _value)                                                       return  mod_script_call_nc('mod', 'teassets', 'unlock_set', _name, _value);
-#define surface_setup(_name, _w, _h, _scale)                                            return  mod_script_call_nc('mod', 'teassets', 'surface_setup', _name, _w, _h, _scale);
-#define shader_setup(_name, _texture, _args)                                            return  mod_script_call_nc('mod', 'teassets', 'shader_setup', _name, _texture, _args);
-#define shader_add(_name, _vertex, _fragment)                                           return  mod_script_call_nc('mod', 'teassets', 'shader_add', _name, _vertex, _fragment);
-#define script_bind(_scriptObj, _scriptRef, _depth)                                     return  mod_script_call_nc('mod', 'teassets', 'script_bind', _scriptObj, _scriptRef, _depth);
+#define save_get(_name, _default)                                                       return  mod_script_call_nc  ('mod', 'teassets', 'save_get', _name, _default);
+#define save_set(_name, _value)                                                                 mod_script_call_nc  ('mod', 'teassets', 'save_set', _name, _value);
+#define option_get(_name)                                                               return  mod_script_call_nc  ('mod', 'teassets', 'option_get', _name);
+#define option_set(_name, _value)                                                               mod_script_call_nc  ('mod', 'teassets', 'option_set', _name, _value);
+#define stat_get(_name)                                                                 return  mod_script_call_nc  ('mod', 'teassets', 'stat_get', _name);
+#define stat_set(_name, _value)                                                                 mod_script_call_nc  ('mod', 'teassets', 'stat_set', _name, _value);
+#define unlock_get(_name)                                                               return  mod_script_call_nc  ('mod', 'teassets', 'unlock_get', _name);
+#define unlock_set(_name, _value)                                                       return  mod_script_call_nc  ('mod', 'teassets', 'unlock_set', _name, _value);
+#define surface_setup(_name, _w, _h, _scale)                                            return  mod_script_call_nc  ('mod', 'teassets', 'surface_setup', _name, _w, _h, _scale);
+#define shader_setup(_name, _texture, _args)                                            return  mod_script_call_nc  ('mod', 'teassets', 'shader_setup', _name, _texture, _args);
+#define shader_add(_name, _vertex, _fragment)                                           return  mod_script_call_nc  ('mod', 'teassets', 'shader_add', _name, _vertex, _fragment);
+#define script_bind(_scriptObj, _scriptRef, _visible, _depth)                           return  mod_script_call_nc  ('mod', 'teassets', 'script_bind', _scriptObj, _scriptRef, _visible, _depth, ds_list_create());
 #define obj_create(_x, _y, _obj)                                                        return  (is_undefined(_obj) ? [] : mod_script_call_nc('mod', 'telib', 'obj_create', _x, _y, _obj));
 #define top_create(_x, _y, _obj, _spawnDir, _spawnDis)                                  return  mod_script_call_nc  ('mod', 'telib', 'top_create', _x, _y, _obj, _spawnDir, _spawnDis);
 #define projectile_create(_x, _y, _obj, _dir, _spd)                                     return  mod_script_call_self('mod', 'telib', 'projectile_create', _x, _y, _obj, _dir, _spd);

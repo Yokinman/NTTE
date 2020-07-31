@@ -3,8 +3,14 @@
 	snd = mod_variable_get("mod", "teassets", "snd");
 	lag = false;
 	
-	 // Palanking Camera Pan, for Pause Screen:
-	global.palankingPan = [0, 0];
+	 // Bind Events:
+	global.bind_rope = [
+		script_bind(CustomDraw, script_ref_create(draw_harpoon_rope, []), false,  0),
+		script_bind(CustomDraw, script_ref_create(draw_harpoon_rope, []), false, -8)
+	];
+	
+	 // Palanking Camera Pan (During Pause Screen):
+	global.palanking_pan = [0, 0];
 	
 	 // Harpoon Ropes:
 	global.poonRope = [];
@@ -556,11 +562,11 @@
 	with(instance_create(_x, _y, CustomObject)){
 		 // Visual:
 		sprite_index = spr.RockDead[0];
-		spr_bott = spr.RockBott[0];
-		spr_foam = spr.RockFoam[0];
-		depth = 8 + (-y / 20000);
-		image_speed = 0.4;
-		image_index = 0;
+		spr_bott     = spr.RockBott[0];
+		spr_foam     = spr.RockFoam[0];
+		depth        = 5;
+		image_speed  = 0.4;
+		image_index  = 0;
 		
 		 // Floor:
 		var _off = 0;
@@ -592,13 +598,13 @@
 #define Creature_create(_x, _y)
 	with(instance_create(_x, _y, CustomHitme)){
 		 // Visual:
-		spr_idle = spr.CreatureIdle;
-		spr_walk = spr_idle;
-		spr_hurt = spr.CreatureHurt;
-		spr_bott = spr.CreatureBott;
-		spr_foam = spr.CreatureFoam;
+		spr_idle    = spr.CreatureIdle;
+		spr_walk    = spr_idle;
+		spr_hurt    = spr.CreatureHurt;
+		spr_bott    = spr.CreatureBott;
+		spr_foam    = spr.CreatureFoam;
 		image_speed = 0.4;
-		depth = -3;
+		depth       = -3;
 		
 		 // Sounds:
 		snd_hurt = sndOasisBossHurt;
@@ -1751,7 +1757,7 @@
 		intro_pan -= current_time_scale;
 		
 		 // Pan:
-		global.palankingPan = [point_direction(x, y, intro_pan_x, intro_pan_y), point_distance(x, y, intro_pan_x, intro_pan_y) / 1.5];
+		global.palanking_pan = [point_direction(x, y, intro_pan_x, intro_pan_y), point_distance(x, y, intro_pan_x, intro_pan_y) / 1.5];
 		
 		 // Still Camera:
 		for(var i = 0; i < maxp; i++){
@@ -1771,7 +1777,7 @@
 		}
 	}
 	else{
-		global.palankingPan = [0, 0];
+		global.palanking_pan = [0, 0];
 		for(var i = 0; i < maxp; i++){
 			if(view_object[i] == id) view_object[i] = noone;
 		}
@@ -3117,7 +3123,7 @@
 					image_xscale /= 2;
 					image_yscale = image_xscale;
 					growspeed -= 0.01;
-					depth = other.depth + (dsin(other.gunangle) * 0.1);
+					depth = other.depth - (other.gunangle > 180);
 				}
 			}
 			
@@ -3463,7 +3469,9 @@
 						
 						 // Important:
 						if(chance(1, 3)){
-							with(instance_create(x, y, CaveSparkle)) depth = other.depth - 1;
+							with(instance_create(x, y, CaveSparkle)){
+								depth = other.depth - 1;
+							}
 						}
 					}
 					
@@ -3755,7 +3763,9 @@
 	if(instance_exists(toss) && (toss.speed < toss_speed || toss_spin < 20)){
 		with(toss){
 			sound_play_hit(sndDiscDie, 0.2);
-			with(instance_create(x, y, DiscDisappear)) depth = other.depth;
+			with(instance_create(x, y, DiscDisappear)){
+				depth = other.depth;
+			}
 		}
 		instance_delete(toss);
 	}
@@ -3773,16 +3783,16 @@
 	with(instance_create(_x, _y, CustomSlash)){
 		 // Visual:
 		sprite_index = spr.SealAnchor;
-		image_speed = 0;
-		depth = -2;
+		image_speed  = 0;
+		depth        = -2;
 		
 		 // Vars:
 		mask_index = -1;
-		damage = 4;
-		force = 6;
-		team = 1;
-		last_x = [x, x];
-		last_y = [y, y];
+		damage     = 4;
+		force      = 6;
+		team       = 1;
+		last_x     = [x, x];
+		last_y     = [y, y];
 		
 		return id;
 	}
@@ -3814,21 +3824,21 @@
 	 // Effects:
 	var	_dis = [2, sprite_width - 2],
 		_dir = direction;
-
+		
 	for(var i = 0; i < array_length(_dis); i++){
 		var	_x = x + lengthdir_x(_dis[i], _dir),
 			_y = y + lengthdir_y(_dis[i], _dir);
-
+			
 		with(instance_create(_x, _y, BoltTrail)){
 			image_angle = point_direction(x, y, other.last_x[i], other.last_y[i]);
 			image_xscale = point_distance(x, y, other.last_x[i], other.last_y[i]);
 			image_yscale = 0.6;
 		}
-
+		
 		last_x[i] = _x;
 		last_y[i] = _y;
 	}
-
+	
 #define SealAnchor_draw
 	if(instance_exists(creator)){
 		var	_oy = 2,
@@ -4280,29 +4290,29 @@
 #define SealMine_create(_x, _y)
 	with(instance_create(_x, _y, CustomHitme)){
 		 // Visual:
-		spr_idle = spr.SealMine;
-		spr_hurt = spr.SealMineHurt;
-		spr_dead = sprScorchmark;
-		spr_shadow = shd24;
-		hitid = [spr_idle, "WATER MINE"];
+		spr_idle    = spr.SealMine;
+		spr_hurt    = spr.SealMineHurt;
+		spr_dead    = sprScorchmark;
+		spr_shadow  = shd24;
+		hitid       = [spr_idle, "WATER MINE"];
 		image_speed = 0.4;
-		depth = -3;
+		depth       = -3;
 
 		 // Sound:
 		snd_hurt = sndHitMetal;
 
 		 // Vars:
 		mask_index = mskNone;
-		friction = 0;
-		maxhealth = 10;
-		creator = noone;
-		canfly = true;
-		size = 2;
-		team = 0;
-		z = 0;
-		zspeed = 0;
-		zfriction = 1;
-		right = choose(-1, 1);
+		friction   = 0;
+		maxhealth  = 10;
+		creator    = noone;
+		canfly     = true;
+		size       = 2;
+		team       = 0;
+		z          = 0;
+		zspeed     = 0;
+		zfriction  = 1;
+		right      = choose(-1, 1);
 
 		motion_add(random(360), 3);
 
@@ -4956,6 +4966,7 @@
 /// GENERAL
 #define ntte_step
 	 // Harpoon Connections:
+	var	_ropeDraw = [[], []];
 	with(global.poonRope){
 		var	_rope  = self,
 			_link1 = _rope.link1,
@@ -5013,7 +5024,7 @@
 				with(_pullInst){
 					var	_pull = pull,
 						_drag = drag,
-						_dir = dir;
+						_dir  = dir;
 						
 					with(inst){
 						hspeed += lengthdir_x(_pull, _dir);
@@ -5026,7 +5037,7 @@
 			
 			 // Draw Rope:
 			with(other){
-				script_bind_draw(draw_rope, (collision_line(_link1.x, _link1.y, _link2.x, _link2.y, Wall, false, false) ? -8 : 0), _rope);
+				array_push(_ropeDraw[instance_exists(collision_line(_link1.x, _link1.y, _link2.x, _link2.y, Wall, false, false))], _rope);
 			}
 			
 			 // Rope Stretching:
@@ -5047,14 +5058,25 @@
 		}
 		else Harpoon_unrope(_rope);
 	}
+	var i = 0;
+	with(global.bind_rope){
+		with(id){
+			script[3] = _ropeDraw[i++];
+			visible = (array_length(script[3]) > 0);
+			if(visible){
+				depth++;
+				depth--;
+			}
+		}
+	}
 	
 #define ntte_shadows
 	 // Shield Shadows:
 	with(instances_matching(instances_matching(CustomSlash, "name", "ClamShield"), "visible", true)){
-		var	l = -8 - (1 * image_yscale),
-			d = image_angle,
-			_x = x + lengthdir_x(l, d) + spr_shadow_x,
-			_y = y + lengthdir_y(l, d) + spr_shadow_y;
+		var	_l = -8 - (1 * image_yscale),
+			_d = image_angle,
+			_x = x + lengthdir_x(_l, _d) + spr_shadow_x,
+			_y = y + lengthdir_y(_l, _d) + spr_shadow_y;
 			
 		draw_sprite_ext(spr_shadow, 0, _x, _y, image_yscale, image_xscale, image_angle + 90, c_white, 1);
 	}
@@ -5073,31 +5095,35 @@
 	
 #define draw_gui_end
 	 // Palanking camera pan here so that pausing doesn't jank things:
-	var	_dir = global.palankingPan[0],
-		_dis = global.palankingPan[1];
+	var	_dir = global.palanking_pan[0],
+		_dis = global.palanking_pan[1];
 		
 	if(_dis > 0){
 		view_shift(-1, _dir, _dis);
 	}
 	
-#define draw_rope(_rope)
-	instance_destroy();
+#define draw_harpoon_rope(_rope)
+	if(lag) trace_time();
 	
-	with(_rope) if(instance_exists(link1) && instance_exists(link2)){
-		var	_x1 = link1.x,
-			_y1 = link1.y,
-			_x2 = link2.x,
-			_y2 = link2.y,
-			_wid = clamp(length / point_distance(_x1, _y1, _x2, _y2), 0.1, 2),
-			_col = merge_color(c_white, c_red, (0.25 + clamp(0.5 - (break_timer / 15), 0, 0.5)) * clamp(break_force / 100, 0, 1));
+	with(_rope){
+		if(instance_exists(link1) && instance_exists(link2)){
+			var	_x1  = link1.x,
+				_y1  = link1.y,
+				_x2  = link2.x,
+				_y2  = link2.y,
+				_wid = clamp(length / point_distance(_x1, _y1, _x2, _y2), 0.1, 2),
+				_col = merge_color(c_white, c_red, (0.25 + clamp(0.5 - (break_timer / 15), 0, 0.5)) * clamp(break_force / 100, 0, 1));
+				
+			if(break_timer > 0){
+				_wid += (max(1, _wid) - _wid) * min(break_timer / 15, 1);
+			}
 			
-		if(break_timer > 0){
-			_wid += (max(1, _wid) - _wid) * min(break_timer / 15, 1);
+			draw_set_color(_col);
+			draw_line_width(_x1, _y1, _x2, _y2, _wid);
 		}
-		
-		draw_set_color(_col);
-		draw_line_width(_x1, _y1, _x2, _y2, _wid);
 	}
+	
+	if(lag) trace_time(script[2]);
 	
 	
 /// SCRIPTS
@@ -5127,7 +5153,7 @@
 #macro  current_frame_active                                                                    (current_frame % 1) < current_time_scale
 #macro  anim_end                                                                                (image_index + image_speed_raw >= image_number || image_index + image_speed_raw < 0)
 #macro  enemy_sprite                                                                            (sprite_index != spr_hurt || anim_end) ? ((speed <= 0) ? spr_idle : spr_walk) : sprite_index
-#macro  enemy_boss                                                                              ('boss' in self && boss) || array_exists([BanditBoss, ScrapBoss, LilHunter, Nothing, Nothing2, FrogQueen, HyperCrystal, TechnoMancer, Last, BigFish, OasisBoss], object_index)
+#macro  enemy_boss                                                                              (('boss' in self) ? boss : ('intro' in self)) || array_exists([Nothing, Nothing2, BigFish, OasisBoss], object_index)
 #macro  player_active                                                                           visible && !instance_exists(GenCont) && !instance_exists(LevCont) && !instance_exists(SitDown) && !instance_exists(PlayerSit)
 #macro  game_scale_nonsync                                                                      game_screen_get_width_nonsync() / game_width
 #macro  bbox_width                                                                              (bbox_right + 1) - bbox_left
@@ -5156,18 +5182,18 @@
 #define angle_lerp(_ang1, _ang2, _num)                                                  return  _ang1 + (angle_difference(_ang2, _ang1) * _num);
 #define draw_self_enemy()                                                                       image_xscale *= right; draw_self(); image_xscale /= right;
 #define enemy_walk(_add, _max)                                                                  if(walk > 0){ walk -= current_time_scale; motion_add_ct(direction, _add); } if(speed > _max) speed = _max;
-#define save_get(_name, _default)                                                       return  mod_script_call_nc('mod', 'teassets', 'save_get', _name, _default);
-#define save_set(_name, _value)                                                                 mod_script_call_nc('mod', 'teassets', 'save_set', _name, _value);
-#define option_get(_name)                                                               return  mod_script_call_nc('mod', 'teassets', 'option_get', _name);
-#define option_set(_name, _value)                                                               mod_script_call_nc('mod', 'teassets', 'option_set', _name, _value);
-#define stat_get(_name)                                                                 return  mod_script_call_nc('mod', 'teassets', 'stat_get', _name);
-#define stat_set(_name, _value)                                                                 mod_script_call_nc('mod', 'teassets', 'stat_set', _name, _value);
-#define unlock_get(_name)                                                               return  mod_script_call_nc('mod', 'teassets', 'unlock_get', _name);
-#define unlock_set(_name, _value)                                                       return  mod_script_call_nc('mod', 'teassets', 'unlock_set', _name, _value);
-#define surface_setup(_name, _w, _h, _scale)                                            return  mod_script_call_nc('mod', 'teassets', 'surface_setup', _name, _w, _h, _scale);
-#define shader_setup(_name, _texture, _args)                                            return  mod_script_call_nc('mod', 'teassets', 'shader_setup', _name, _texture, _args);
-#define shader_add(_name, _vertex, _fragment)                                           return  mod_script_call_nc('mod', 'teassets', 'shader_add', _name, _vertex, _fragment);
-#define script_bind(_scriptObj, _scriptRef, _depth)                                     return  mod_script_call_nc('mod', 'teassets', 'script_bind', _scriptObj, _scriptRef, _depth);
+#define save_get(_name, _default)                                                       return  mod_script_call_nc  ('mod', 'teassets', 'save_get', _name, _default);
+#define save_set(_name, _value)                                                                 mod_script_call_nc  ('mod', 'teassets', 'save_set', _name, _value);
+#define option_get(_name)                                                               return  mod_script_call_nc  ('mod', 'teassets', 'option_get', _name);
+#define option_set(_name, _value)                                                               mod_script_call_nc  ('mod', 'teassets', 'option_set', _name, _value);
+#define stat_get(_name)                                                                 return  mod_script_call_nc  ('mod', 'teassets', 'stat_get', _name);
+#define stat_set(_name, _value)                                                                 mod_script_call_nc  ('mod', 'teassets', 'stat_set', _name, _value);
+#define unlock_get(_name)                                                               return  mod_script_call_nc  ('mod', 'teassets', 'unlock_get', _name);
+#define unlock_set(_name, _value)                                                       return  mod_script_call_nc  ('mod', 'teassets', 'unlock_set', _name, _value);
+#define surface_setup(_name, _w, _h, _scale)                                            return  mod_script_call_nc  ('mod', 'teassets', 'surface_setup', _name, _w, _h, _scale);
+#define shader_setup(_name, _texture, _args)                                            return  mod_script_call_nc  ('mod', 'teassets', 'shader_setup', _name, _texture, _args);
+#define shader_add(_name, _vertex, _fragment)                                           return  mod_script_call_nc  ('mod', 'teassets', 'shader_add', _name, _vertex, _fragment);
+#define script_bind(_scriptObj, _scriptRef, _visible, _depth)                           return  mod_script_call_nc  ('mod', 'teassets', 'script_bind', _scriptObj, _scriptRef, _visible, _depth, ds_list_create());
 #define obj_create(_x, _y, _obj)                                                        return  (is_undefined(_obj) ? [] : mod_script_call_nc('mod', 'telib', 'obj_create', _x, _y, _obj));
 #define top_create(_x, _y, _obj, _spawnDir, _spawnDis)                                  return  mod_script_call_nc  ('mod', 'telib', 'top_create', _x, _y, _obj, _spawnDir, _spawnDis);
 #define projectile_create(_x, _y, _obj, _dir, _spd)                                     return  mod_script_call_self('mod', 'telib', 'projectile_create', _x, _y, _obj, _dir, _spd);

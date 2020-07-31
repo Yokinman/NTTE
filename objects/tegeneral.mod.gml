@@ -111,7 +111,7 @@
 
 #define BigDecal_create(_x, _y)
 	/*
-		A giant version of the TopPot/TopDecal object
+		A giant version of the TopDecal/TopPot object
 		If the area doesn't have a spr.BigTopDecal sprite variant then nothing is created
 	*/
 	
@@ -119,17 +119,20 @@
 	
 	if(ds_map_exists(spr.BigTopDecal, _area)){
 		with(instance_create(pfloor(_x, 16), pfloor(_y, 16), CustomObject)){
-			 // Visual:
+			 // Visual: 
+			visible      = false;
 			sprite_index = spr.BigTopDecal[? _area];
 			image_xscale = choose(-1, 1);
 			image_speed  = 0.4;
-			depth        = -6;
+			if(_area == area_desert && instance_exists(mod_script_call("mod", "teevents", "teevent_get_active", "ScorpionCity"))){
+				sprite_index = spr.BigTopDecalScorpion;
+			}
 			
 			 // Vars:
 			mask_index = msk.BigTopDecal;
 			area       = _area;
 			
-			 // Avoid Bad Stuff:
+			 // Relocate:
 			var	_tries = 1000,
 				_dis   = 24,
 				_dir   = random(360);
@@ -148,71 +151,112 @@
 					|| distance_to_object(PortalClear) < 32
 				)
 			){
-				x = pfloor((x + lengthdir_x(_dis, _dir)), 16);
-				y = pfloor((y + lengthdir_y(_dis, _dir)), 16);
+				x = pfloor(x + lengthdir_x(_dis, _dir), 16);
+				y = pfloor(y + lengthdir_y(_dis, _dir), 16);
 			}
-			depth -= ((y + 12) / 10000);
 			
-			 // TopSmalls:
-			for(var _ox = -48; _ox < 48; _ox += 32){
-				for(var _oy = -32; _oy < 64; _oy += 32){
-					with(instances_matching_gt(TopSmall, "id", instance_create(x + _ox, y + _oy, Top))){
-						if(chance(1, 2)){
+			 // Big Decal:
+			target = instance_create(x, y, TopPot);
+			with(target){
+				x = xstart;
+				y = ystart;
+				name = "BigDecal";
+				
+				 // Visual:
+				sprite_index = other.sprite_index;
+				image_index  = other.image_index;
+				image_xscale = other.image_xscale;
+				image_yscale = other.image_yscale;
+				image_angle  = other.image_angle;
+				image_speed  = other.image_speed;
+				
+				 // Visual Fix:
+				mask_index = sprite_index;
+				if(place_meeting(x, y, TopPot)){
+					with(instances_meeting(x, y, TopPot)){
+						if(place_meeting(x, y, other)){
+							instance_copy(false);
 							instance_delete(id);
 						}
 					}
 				}
-			}
-			
-			 // TopDecals:
-			var	_num = irandom(4),
-				_ang = random(360);
 				
-			for(var i = _ang; i < _ang + 360; i += (360 / _num)){
-				var	_dis = 24 + random(12),
-					_dir = i + orandom(30);
-					
-				with(obj_create(0, 0, "TopDecal")){
-					if(sprite_index == sprTopDecalScrapyard){
-						image_index = choose(1, 2);
-					}
-					
-					x = other.x + lengthdir_x(_dis * 1.5, _dir);
-					y = other.y + lengthdir_y(_dis, _dir) + 40;
-					
-					if(place_meeting(x, y, Floor)){
-						instance_delete(id);
-					}
-				}
-			}
-			
-			 // Specifics:
-			switch(area){
-				case area_scrapyards: // Ravens
-					
-					var	_ang = random(360),
-						_dis = 8;
-						
-					for(var _dir = _ang; _dir < _ang + 360; _dir += (360 / 3)){
-						top_create(x + lengthdir_x(_dis * random_range(1, 2.5), _dir), y + 8 + lengthdir_y(_dis, _dir), "TopRaven", 0, 0);
-					}
-					
-					 // Lay Flat:
-					depth = -6.0001;
-					
-					break;
-					
-				case area_caves:
-				case area_cursed_caves: // Face drill
-					
-					with(instance_nearest_bbox(x, y, instances_matching_le(instances_matching_ge(Floor, "bbox_top", y - 16), "bbox_bottom", y + 48))){
-						var _fx = bbox_center_x;
-						if(_fx != other.x){
-							other.image_xscale = -sign(_fx - other.x);
+				 // Vars:
+				mask_index = other.mask_index;
+				
+				 // TopSmalls:
+				for(var _ox = -48; _ox < 48; _ox += 32){
+					for(var _oy = -64; _oy < 32; _oy += 32){
+						with(instances_matching_gt(TopSmall, "id", instance_create(x + _ox, y + _oy, Top))){
+							if(chance(1, 2)){
+								instance_delete(id);
+							}
 						}
 					}
+				}
+				
+				 // TopDecals:
+				var	_num = irandom(4),
+					_ang = random(360);
 					
-					break;
+				for(var i = _ang; i < _ang + 360; i += (360 / _num)){
+					var	_dis = 24 + random(12),
+						_dir = i + orandom(30);
+						
+					with(obj_create(x, y, "TopDecal")){
+						 // Placement:
+						x = xstart + lengthdir_x(_dis * 1.5, _dir);
+						y = ystart + lengthdir_y(_dis,       _dir);
+						while(place_meeting(x, y, other)){
+							x += lengthdir_x(8, _dir);
+							y += lengthdir_y(8, _dir);
+						}
+						
+						 // Remove Danger:
+						if(sprite_index == sprTopDecalScrapyard){
+							image_index = choose(1, 2);
+						}
+						
+						 // Nevermind:
+						if(place_meeting(x, y, Floor)){
+							instance_delete(id);
+						}
+					}
+				}
+				
+				 // Specifics:
+				switch(other.area){
+					
+					case area_scrapyards: // Ravens
+						
+						var	_ang = random(360),
+							_dis = 8;
+							
+						for(var _dir = _ang; _dir < _ang + 360; _dir += (360 / 3)){
+							top_create(
+								x + lengthdir_x(_dis * random_range(1, 2.5), _dir),
+								y + lengthdir_y(_dis,                        _dir) - 24,
+								"TopRaven",
+								0,
+								0
+							);
+						}
+						
+						break;
+						
+					case area_caves:
+					case area_cursed_caves: // Face drill
+						
+						with(instance_nearest_bbox(x, y, instances_matching_le(instances_matching_ge(Floor, "bbox_top", y - 32), "bbox_bottom", y + 32))){
+							var _fx = bbox_center_x;
+							if(_fx != other.x){
+								other.image_xscale = -sign(_fx - other.x);
+							}
+						}
+						
+						break;
+						
+				}
 			}
 			
 			return id;
@@ -222,287 +266,307 @@
 	return noone;
 	
 #define BigDecal_step
-	if(!instance_exists(GenCont)){
+	if(instance_exists(target)){
+		x = target.x;
+		y = target.y;
+		
 		 // Area-Specifics:
 		switch(area){
-			case "trench":
-				var _vents = [
-					[  2, -14],
-					[ 15,   8],
-					[  1,   0],
-					[-19,  17],
-					[-12,  25],
-					[ 11,  28],
-					[ 24,  18]
-				];
+			
+			case "trench": // Vent Bubbles
 				
-				// Trench vent bubbles:
-				for(var i = 0; i < array_length(_vents); i++){
+				with([
+					[  2, -46],
+					[ 15, -24],
+					[  1, -32],
+					[-19, -15],
+					[-12,  -7],
+					[ 11,  -4],
+					[ 24, -14]
+				]){
 					if(chance_ct(1, 8)){
-						var p = _vents[i];
-						with(instance_create(x + p[0], y + p[1], Bubble)){
-							friction = 0.2;
-							motion_set(90 + orandom(5), random_range(4, 7));
+						var	_ox = self[0],
+							_oy = self[1];
+							
+						with(other.target){
+							with(instance_create(x + (_ox * image_xscale), y + (_oy * image_yscale), Bubble)){
+								motion_set(90 + orandom(5), random_range(4, 7));
+								friction = 0.2;
+							}
 						}
 					}
 				}
+				
 				break;
-		}
-		
-		 // he ded lol:
-		if(place_meeting(x, y, Floor)){
-			instance_destroy();
+				
 		}
 	}
+	else instance_destroy();
 	
 #define BigDecal_destroy
-	 // General FX:
-	sleep(100);
-	view_shake_at(x, y, 50);
-	with(instance_create(x, y, PortalClear)){
-		mask_index = other.mask_index;
-	}
-	repeat(irandom_range(9, 18)){
-		with(instance_create(x, y, Debris)){
-			speed = random_range(6, 12);
-			if(!place_meeting(x + hspeed_raw, y + vspeed_raw, Floor)){
-				speed /= 3;
-			}
-		}
+	with(target){
+		other.x = x;
+		other.y = y;
+		instance_destroy();
 	}
 	
-	 // Area-Specifics:
-	var	_x = x,
-		_y = y + 16;
-		
-	switch(area){
-		
-		case area_desert: /// Bones and Scorps
-			 
-			 // Scorpion Mode:
-			if(sprite_index == spr.BigTopDecalScorpion){
-				 
-				 // Dunno What This Do:
-				chest_create(x, y, "Backpack", false);
+	if(place_meeting(x, y, Floor) || place_meeting(x, y, Wall)){
+		var	_x = x,
+			_y = y - 8;
+			
+		 // General FX:
+		sleep(60);
+		view_shake_at(x, y, 50);
+		with(instance_create(_x, _y, PortalClear)){
+			sprite_index = other.mask_index;
+		}
+		repeat(irandom_range(9, 18)){
+			with(instance_create(_x, _y, Debris)){
+				speed = random_range(6, 12);
+				if(!place_meeting(x + hspeed_raw, y + vspeed_raw, Floor)){
+					speed /= 3;
+				}
 			}
-			else{
+		}
+		
+		 // Area-Specifics:
+		switch(area){
+			
+			case area_desert: /// Bones and Scorps
+				 
+				 // Scorpion Mode:
+				if(sprite_index == spr.BigTopDecalScorpion){
+					 
+					 // Dunno What This Do:
+					chest_create(_x, _y, "Backpack", false);
+				}
+				else{
+					
+					 // Bonage:
+					repeat(irandom_range(2, 3)){
+						with(instance_create(_x, _y, WepPickup)){
+							wep = "crabbone";
+							motion_set(random(360), random_range(3, 6));
+							repeat(3) scrFX(x, y, 2, Smoke);
+						}
+					}
+					
+					 // Sound:
+					sound_play_hit_ext(sndWallBreakBrick, 0.5 + random(0.2), 2.5);
+				}
 				
-				 // Bonage:
-				repeat(irandom_range(2, 3)){
-					with(instance_create(_x, _y, WepPickup)){
-						motion_set(random(360), random_range(3, 6));
-						wep = "crabbone";
-						repeat(3) scrFX(x, y, 2, Smoke);
+				break;
+				
+			case area_sewers: /// Egg Vat
+			
+				repeat(irandom_range(3, 5)){
+					with(instance_create(_x + orandom(12), _y + orandom(12), FrogEgg)){
+						alarm0       = irandom_range(20, 60);
+						nexthurt     = current_frame + 6;
+						sprite_index = sprFrogEggSpawn;
+						image_index  = 0;
+						image_speed  = random_range(0.1, 0.4);
+						depth        = -1;
+						
+						 // Space Out Eggs:
+						instance_budge(FrogEgg, 32);
+						
+						 // FX:
+						repeat(2) with(instance_create(x + orandom(4), y + orandom(4), AcidStreak)){
+							motion_add(random(360), 1);
+							image_angle = direction;
+							image_speed *= random_range(0.5, 1);
+						}
 					}
 				}
 				
 				 // Sound:
-				sound_play_hit_ext(sndWallBreakBrick, 0.5 + random(0.2), 2.5);
-			}
+				sound_play_hit_ext(sndToxicBarrelGas, 0.6 + random(0.1), 5);
+				
+				break;
+				
+			case area_scrapyards: /// Nest Bits
 			
-			break;
-			
-		case area_sewers: /// Egg Vat
-		
-			repeat(irandom_range(3, 5)){
-				with(instance_create(_x + orandom(16), _y + random(24), FrogEgg)){
-					alarm0       = irandom_range(20, 60);
-					nexthurt     = current_frame + 6;
-					sprite_index = sprFrogEggSpawn;
-					image_speed  = random_range(0.1, 0.4);
-					image_index  = 0;
-					
-					 // Space Out Eggs:
-					instance_budge(prop, 24);
-					
-					 // FX:
-					repeat(2) with(instance_create(x + orandom(4), y + orandom(4), AcidStreak)){
-						motion_add(random(360), 1);
-						image_angle = direction;
-						image_speed *= random_range(0.5, 1);
+				repeat(irandom_range(12, 14)){
+					with(instance_create(_x + orandom(24), _y - random(24), Feather)){
+						motion_add(point_direction(other.x, other.y, x, y), random(6));
+						sprite_index = spr.NestDebris;
+						image_index  = irandom(irandom(image_number - 1));
+						image_speed  = 0;
+						depth        = -1;
+						fall        /= 1 + (image_index / 8);
 					}
 				}
-			}
-			
-			 // Sound:
-			sound_play_hit_ext(sndToxicBarrelGas, 0.6 + random(0.1), 5);
-			
-			break;
-			
-		case area_scrapyards: /// Nest Bits
-		
-			repeat(irandom_range(12, 14)){
-				with(instance_create(_x + orandom(24), _y - random(8) + orandom(12), Feather)){
-					motion_add(point_direction(_x, _y, x, y), random(6));
-					sprite_index = spr.NestDebris;
-					image_index = irandom(irandom(image_number - 1));
-					fall /= 1 + (image_index / 8);
-					image_speed = 0;
-					depth = -1;
-				}
-			}
-			
-			 // Sound:
-			sound_play_hit_ext(sndMoneyPileBreak, 0.6 + random(0.2), 5.5);
-			sound_play_hit_ext(sndWallBreakJungle, 1.2 + random(0.2), 2.5);
-			
-			break;
-			
-		case area_caves:
-		case area_cursed_caves: /// Spider Nest
-		
-			 // Floorify:
-			var	_cx = _x,
-				_cy = _y + 16;
 				
-			floor_set_style(1, area);
-			floor_fill(_cx, _cy, 2, 1, "");
-			floor_reset_style();
-			with(instance_create(_cx, _cy, PortalClear)){
-				image_xscale *= 1.5;
-				image_yscale *= 1.2;
-			}
-			
-			 // Inhabitants:
-			repeat(irandom_range(2, 3)){
-				var e = "Spiderling";
+				 // Sound:
+				sound_play_hit_ext(sndMoneyPileBreak,  0.6 + random(0.2), 5.5);
+				sound_play_hit_ext(sndWallBreakJungle, 1.2 + random(0.2), 2.5);
 				
-				if(chance(1, 3)){
-					e = ((area == 104) ? InvSpider : Spider);
+				break;
+				
+			case area_caves:
+			case area_cursed_caves: /// Spider Nest
+			
+				 // Floorify:
+				floor_set_style(1, area);
+				floor_fill(_x, _y, 2, 1, "");
+				floor_reset_style();
+				with(instance_create(_x, _y, PortalClear)){
+					image_xscale *= 1.5;
+					image_yscale *= 1.2;
 				}
 				
-				with(obj_create(_x + orandom(32), _y + random(24), e)){
-					nexthurt = current_frame + 30;
+				 // Inhabitants:
+				repeat(irandom_range(2, 3)){
+					var e = "Spiderling";
 					
-					 // Props:
-					repeat(irandom_range(1, 2)){
-						with(instance_create(x, y, choose(InvCrystal, Cocoon))){
-							nexthurt = current_frame + 30;
-							instance_budge(prop, 24);
+					if(chance(1, 3)){
+						e = ((area == 104) ? InvSpider : Spider);
+					}
+					
+					with(obj_create(_x + orandom(32), _y + orandom(16), e)){
+						nexthurt = current_frame + 30;
+						
+						 // Props:
+						repeat(irandom_range(1, 2)){
+							with(instance_create(x, y, choose(InvCrystal, Cocoon))){
+								nexthurt = current_frame + 30;
+								instance_budge(prop, 24);
+							}
 						}
 					}
 				}
-			}
-			
-			 // Effects:
-			repeat(irandom_range(12, 14)){
-				with(instance_create(_x + orandom(32), _y - 12 + orandom(16), Feather)){
-					motion_add(point_direction(_x, _y, x, y), random(6));
-					sprite_index = spr.PetSpiderWebBits;
-					image_index = irandom(irandom(image_number - 1));
-					fall *= random(2);
-					image_speed = 0;
-					depth = -1;
-				}
-			}
-			sound_play_hit_ext(sndWallBreakScrap, 0.6 + random(0.2), 2.5);
-			sound_play_hit_ext(sndCocoonBreak, 0.5, 5);
-			
-			break;
-			
-		case area_palace: /// Enormous Headphone Jack
-		
-			 // Explo:
-			var	_ang = random(360),
-				l = 12;
 				
-			for(var d = _ang; d < _ang + 360; d += (360 / 3)){
-				with(instance_create(_x + lengthdir_x(l, d), _y + lengthdir_y(l, d), GreenExplosion)){
-					hitid = 99;
+				 // Effects:
+				repeat(irandom_range(12, 14)){
+					with(instance_create(_x + orandom(32), _y - random(12) + orandom(16), Feather)){
+						motion_add(point_direction(_x, _y, x, y), random(6));
+						sprite_index = spr.PetSpiderWebBits;
+						image_index  = irandom(irandom(image_number - 1));
+						image_speed  = 0;
+						depth        = -1;
+						fall        *= random(2);
+					}
 				}
-			}
-			
-			 // Rads:
-			repeat(16) with(obj_create(_x + orandom(8), _y + 16 + orandom(8), "BackpackPickup")){
-				target = instance_create(x, y, (chance(1, 6) ? BigRad : Rad));
-				with(target) depth = -6;
-				z = random(32);
-				zspeed = random_range(4, 8);
-			}
-			
-			 // Sound:
-			sound_play_hit_ext(sndBigGeneratorBreak, 0.8 + orandom(0.1), 1.5);
-			sound_play_hit_ext(sndHitMetal, 0.2 + random(0.1), 5);
-			
-			break;
-			
-		case "pizza":
-		case area_pizza_sewers: /// Pizza time
-		
-			repeat(irandom_range(4, 6)){
-				obj_create(_x + orandom(4), _y + orandom(4), "Pizza");
-				with(obj_create(_x, _y, "WaterStreak")){
-					speed = 1 + random(3);
-					direction = random(360);
-					image_angle = direction;
-					image_blend = c_orange;
-					image_speed *= random_range(0.4, 1.25);
-					depth = -3;
-					mask_index = mskNone;
-				}
-			}
-			
-			 // Sound:
-			sound_play_hit_ext(sndPizzaBoxBreak,  0.3 + random(0.1), 5);
-			sound_play_hit_ext(sndWallBreakBrick, 0.6 + random(0.2), 2);
-			
-			break;
-			
-		case "oasis":
-		case area_oasis: // Life
-			
-			 // Floorify:
-			var	_cx = _x,
-				_cy = _y + 16;
 				
-			floor_set_style(1, area);
-			floor_fill(_cx, _cy, 2, 1, "");
-			floor_reset_style();
-			with(instance_create(_cx, _cy, PortalClear)){
-				image_xscale *= 1.5;
-				image_yscale *= 1.2;
-			}
+				 // Sound:
+				sound_play_hit_ext(sndWallBreakScrap, 0.6 + random(0.2), 2.5);
+				sound_play_hit_ext(sndCocoonBreak,    0.5,               5);
+				
+				break;
+				
+			case area_palace: /// Enormous Headphone Jack
 			
-			 // They livin in there u kno:
-			repeat(4){
-				var	_sx = _x + orandom(24),
-					_sy = _y + random(24);
+				 // Explo:
+				var	_ang = random(360),
+					_dis = 12;
 					
-				 // Enemy:
-				if(chance(1, 100)){
-					instance_create(_sx, _sy, Freak);
-				}
-				else{
-					if(chance(1, 4)) obj_create(_sx, _sy, Crab);
-					else obj_create(_sx, _sy, choose(BoneFish, "Puffer"));
+				for(var _dir = _ang; _dir < _ang + 360; _dir += (360 / 3)){
+					with(instance_create(_x + lengthdir_x(_dis, _dir), _y + lengthdir_y(_dis, _dir), GreenExplosion)){
+						hitid = 99;
+					}
 				}
 				
-				 // Prop:
-				with(obj_create(_sx + orandom(4), _sy + orandom(4), choose(WaterPlant, WaterPlant, OasisBarrel))){
-					nexthurt = current_frame + 30;
-					instance_budge(prop, 24);
+				 // Rads:
+				repeat(16){
+					with(obj_create(_x + orandom(8), _y + orandom(8), "BackpackPickup")){
+						z      = random(32);
+						zspeed = random_range(4, 8);
+						target = instance_create(x, y, (chance(1, 6) ? BigRad : Rad));
+						with(target) depth = -6;
+					}
 				}
-			}
+				
+				 // Sound:
+				sound_play_hit_ext(sndBigGeneratorBreak, 0.8 + orandom(0.1), 1.5);
+				sound_play_hit_ext(sndHitMetal,          0.2 + random(0.1),  5);
+				
+				break;
+				
+			case "pizza":
+			case area_pizza_sewers: /// Pizza time
 			
-			 // Effects:
-			repeat(20) instance_create(_x + orandom(24), _y + orandom(24), Bubble);
-			sound_play_hit_ext(sndOasisPortal, 2 + orandom(0.2), 4);
-			sound_play_hit_ext(sndOasisExplosion, 1 + orandom(0.2), 4);
+				repeat(irandom_range(4, 6)){
+					obj_create(_x + orandom(4), _y + orandom(4), "Pizza");
+					with(obj_create(_x, _y, "WaterStreak")){
+						speed        = 1 + random(3);
+						direction    = random(360);
+						image_angle  = direction;
+						image_blend  = c_orange;
+						image_speed *= random_range(0.4, 1.25);
+						depth        = -3;
+						mask_index   = mskNone;
+					}
+				}
+				
+				 // Sound:
+				sound_play_hit_ext(sndPizzaBoxBreak,  0.3 + random(0.1), 5);
+				sound_play_hit_ext(sndWallBreakBrick, 0.6 + random(0.2), 2);
+				
+				break;
+				
+			case "oasis":
+			case area_oasis: // Life
+				
+				 // Floorify:
+				floor_set_style(1, area);
+				floor_fill(_x, _y + 8, 2, 1, "");
+				floor_reset_style();
+				with(instance_create(_x, _y + 8, PortalClear)){
+					image_xscale *= 1.5;
+					image_yscale *= 1.2;
+				}
+				
+				 // They livin in there u kno:
+				repeat(4){
+					var	_sx = _x + orandom(24),
+						_sy = _y + orandom(16);
+						
+					 // Enemy:
+					if(chance(1, 100)){
+						instance_create(_sx, _sy, Freak);
+					}
+					else{
+						obj_create(_sx, _sy, (chance(1, 4) ? Crab : choose(BoneFish, "Puffer")));
+					}
+					
+					 // Prop:
+					with(obj_create(_sx + orandom(4), _sy + orandom(4), choose(WaterPlant, WaterPlant, OasisBarrel))){
+						nexthurt = current_frame + 30;
+						instance_budge(prop, 24);
+					}
+				}
+				
+				 // Bubls:
+				repeat(20){
+					instance_create(_x + orandom(24), _y + orandom(24), Bubble);
+				}
+				
+				 // Sound:
+				sound_play_hit_ext(sndOasisPortal,    2 + orandom(0.2), 4);
+				sound_play_hit_ext(sndOasisExplosion, 1 + orandom(0.2), 4);
+				
+				break;
+				
+			case "trench": /// Bubbles
 			
-			break;
-			
-		case "trench": /// Bubbles
-		
-			 // Explo:
-			obj_create(_x, _y, "BubbleExplosion");
-			repeat(3) obj_create(_x, _y, "BubbleExplosionSmall");
-			
-			 // Effects:
-			repeat(150) scrFX([_x, 32], [_y, 24], random(2), Bubble);
-			sound_play_hit_ext(sndOasisExplosion, 0.6 + random(0.2), 3);
-			sound_play_hit_ext(sndOasisExplosionSmall, 0.4 + random(0.2), 6);
-			
-			break;
+				 // Explo:
+				obj_create(_x, _y, "BubbleExplosion");
+				repeat(3){
+					obj_create(_x, _y, "BubbleExplosionSmall");
+				}
+				
+				 // Effects:
+				repeat(150){
+					scrFX([_x, 32], [_y, 24], random(2), Bubble);
+				}
+				
+				 // Sond:
+				sound_play_hit_ext(sndOasisExplosion,      0.6 + random(0.2), 3);
+				sound_play_hit_ext(sndOasisExplosionSmall, 0.4 + random(0.2), 6);
+				
+				break;
+		}
 	}
 	
 	
@@ -4121,11 +4185,12 @@
 		var _spr = area_get_sprite(_area, sprTopPot);
 		if(sprite_exists(_spr)){
 			with(instance_create(_x, _y, TopPot)){
+				 // Visual:
 				image_speed  = 0;
 				sprite_index = area_get_sprite(_area, sprTopPot);
 				image_index  = irandom(image_number - 1);
 				
-				 // Offset Again:
+				 // Relocate:
 				x = _x;
 				y = _y;
 				event_perform(ev_create, 0);
@@ -5079,10 +5144,14 @@
 			 // Top Decal:
 			target = instance_create(x, y, TopPot);
 			with(target){
-				sprite_index = _spr;
-				image_index = irandom(image_number - 1);
-				image_speed = 0;
+				name = "WallEnemy";
 				
+				 // Visual:
+				sprite_index = _spr;
+				image_index  = irandom(image_number - 1);
+				image_speed  = 0;
+				
+				 // Go Back:
 				if(place_meeting(xstart, ystart, Wall) || !place_meeting(xstart, ystart, Floor)){
 					x = xstart;
 					y = ystart;
@@ -5095,7 +5164,9 @@
 				case area_desert:
 					
 					 // Variation:
-					with(target) image_xscale = choose(-1, 1);
+					with(target){
+						image_xscale = choose(-1, 1);
+					}
 					
 					break;
 					
@@ -5123,7 +5194,7 @@
 		
 		switch(area){
 			
-			case area_desert:
+			case area_desert: // WALL BANDIT
 				
 				eyeblink += current_time_scale;
 				
@@ -5164,7 +5235,7 @@
 				
 				break;
 				
-			case area_caves:
+			case area_caves: // WALL SPIDERS
 				
 				 // Sparkle:
 				if(special > 0 && chance_ct(special, 90)){
@@ -5566,8 +5637,8 @@
 	
 #define ntte_dark // Drawing Grays
 	 // Big Decals:
-	with(instances_matching(instances_matching(instances_matching(CustomObject, "name", "BigDecal"), "area", area_caves, area_cursed_caves), "visible", true)){
-		draw_circle(x, y, 96, false);
+	with(instances_matching(instances_matching(CustomObject, "name", "BigDecal"), "area", area_caves, area_cursed_caves)){
+		draw_circle(x, y - 8, 96, false);
 	}
 	
 	 // Pets:
@@ -5584,8 +5655,8 @@
 	
 #define ntte_dark_end // Drawing Clear
 	 // Big Decals:
-	with(instances_matching(instances_matching(instances_matching(CustomObject, "name", "BigDecal"), "area", area_caves, area_cursed_caves), "visible", true)){
-		draw_circle(x, y, 40, false);
+	with(instances_matching(instances_matching(CustomObject, "name", "BigDecal"), "area", area_caves, area_cursed_caves)){
+		draw_circle(x, y - 8, 40, false);
 	}
 	
 	 // Pets:
@@ -5655,6 +5726,18 @@
 	}
 	
 #define ntte_shadows
+	 // Big Decals:
+	with(instances_matching(TopPot, "name", "BigDecal")){
+		var	_x1 = x - 8,
+			_y1 = y,
+			_x2 = x + 8,
+			_y2 = y + 40;
+			
+		if(collision_rectangle(_x1, _y1, _x2, _y2, Floor, false, false)){
+			draw_sprite_ext(sprite_index, image_index, x, y + 8, image_xscale, -image_yscale, 0, c_white, 1);
+		}
+	}
+	
 	 // Bubble Bombs:
 	with(instances_matching(instances_matching(CustomProjectile, "name", "BubbleBomb"), "big", true)) if(visible){
 		var	_f = min((z / 6) - 4, 6),
@@ -5712,7 +5795,7 @@
 #macro  current_frame_active                                                                    (current_frame % 1) < current_time_scale
 #macro  anim_end                                                                                (image_index + image_speed_raw >= image_number || image_index + image_speed_raw < 0)
 #macro  enemy_sprite                                                                            (sprite_index != spr_hurt || anim_end) ? ((speed <= 0) ? spr_idle : spr_walk) : sprite_index
-#macro  enemy_boss                                                                              ('boss' in self && boss) || array_exists([BanditBoss, ScrapBoss, LilHunter, Nothing, Nothing2, FrogQueen, HyperCrystal, TechnoMancer, Last, BigFish, OasisBoss], object_index)
+#macro  enemy_boss                                                                              (('boss' in self) ? boss : ('intro' in self)) || array_exists([Nothing, Nothing2, BigFish, OasisBoss], object_index)
 #macro  player_active                                                                           visible && !instance_exists(GenCont) && !instance_exists(LevCont) && !instance_exists(SitDown) && !instance_exists(PlayerSit)
 #macro  game_scale_nonsync                                                                      game_screen_get_width_nonsync() / game_width
 #macro  bbox_width                                                                              (bbox_right + 1) - bbox_left
@@ -5741,18 +5824,18 @@
 #define angle_lerp(_ang1, _ang2, _num)                                                  return  _ang1 + (angle_difference(_ang2, _ang1) * _num);
 #define draw_self_enemy()                                                                       image_xscale *= right; draw_self(); image_xscale /= right;
 #define enemy_walk(_add, _max)                                                                  if(walk > 0){ walk -= current_time_scale; motion_add_ct(direction, _add); } if(speed > _max) speed = _max;
-#define save_get(_name, _default)                                                       return  mod_script_call_nc('mod', 'teassets', 'save_get', _name, _default);
-#define save_set(_name, _value)                                                                 mod_script_call_nc('mod', 'teassets', 'save_set', _name, _value);
-#define option_get(_name)                                                               return  mod_script_call_nc('mod', 'teassets', 'option_get', _name);
-#define option_set(_name, _value)                                                               mod_script_call_nc('mod', 'teassets', 'option_set', _name, _value);
-#define stat_get(_name)                                                                 return  mod_script_call_nc('mod', 'teassets', 'stat_get', _name);
-#define stat_set(_name, _value)                                                                 mod_script_call_nc('mod', 'teassets', 'stat_set', _name, _value);
-#define unlock_get(_name)                                                               return  mod_script_call_nc('mod', 'teassets', 'unlock_get', _name);
-#define unlock_set(_name, _value)                                                       return  mod_script_call_nc('mod', 'teassets', 'unlock_set', _name, _value);
-#define surface_setup(_name, _w, _h, _scale)                                            return  mod_script_call_nc('mod', 'teassets', 'surface_setup', _name, _w, _h, _scale);
-#define shader_setup(_name, _texture, _args)                                            return  mod_script_call_nc('mod', 'teassets', 'shader_setup', _name, _texture, _args);
-#define shader_add(_name, _vertex, _fragment)                                           return  mod_script_call_nc('mod', 'teassets', 'shader_add', _name, _vertex, _fragment);
-#define script_bind(_scriptObj, _scriptRef, _depth)                                     return  mod_script_call_nc('mod', 'teassets', 'script_bind', _scriptObj, _scriptRef, _depth);
+#define save_get(_name, _default)                                                       return  mod_script_call_nc  ('mod', 'teassets', 'save_get', _name, _default);
+#define save_set(_name, _value)                                                                 mod_script_call_nc  ('mod', 'teassets', 'save_set', _name, _value);
+#define option_get(_name)                                                               return  mod_script_call_nc  ('mod', 'teassets', 'option_get', _name);
+#define option_set(_name, _value)                                                               mod_script_call_nc  ('mod', 'teassets', 'option_set', _name, _value);
+#define stat_get(_name)                                                                 return  mod_script_call_nc  ('mod', 'teassets', 'stat_get', _name);
+#define stat_set(_name, _value)                                                                 mod_script_call_nc  ('mod', 'teassets', 'stat_set', _name, _value);
+#define unlock_get(_name)                                                               return  mod_script_call_nc  ('mod', 'teassets', 'unlock_get', _name);
+#define unlock_set(_name, _value)                                                       return  mod_script_call_nc  ('mod', 'teassets', 'unlock_set', _name, _value);
+#define surface_setup(_name, _w, _h, _scale)                                            return  mod_script_call_nc  ('mod', 'teassets', 'surface_setup', _name, _w, _h, _scale);
+#define shader_setup(_name, _texture, _args)                                            return  mod_script_call_nc  ('mod', 'teassets', 'shader_setup', _name, _texture, _args);
+#define shader_add(_name, _vertex, _fragment)                                           return  mod_script_call_nc  ('mod', 'teassets', 'shader_add', _name, _vertex, _fragment);
+#define script_bind(_scriptObj, _scriptRef, _visible, _depth)                           return  mod_script_call_nc  ('mod', 'teassets', 'script_bind', _scriptObj, _scriptRef, _visible, _depth, ds_list_create());
 #define obj_create(_x, _y, _obj)                                                        return  (is_undefined(_obj) ? [] : mod_script_call_nc('mod', 'telib', 'obj_create', _x, _y, _obj));
 #define top_create(_x, _y, _obj, _spawnDir, _spawnDis)                                  return  mod_script_call_nc  ('mod', 'telib', 'top_create', _x, _y, _obj, _spawnDir, _spawnDis);
 #define projectile_create(_x, _y, _obj, _dir, _spd)                                     return  mod_script_call_self('mod', 'telib', 'projectile_create', _x, _y, _obj, _dir, _spd);

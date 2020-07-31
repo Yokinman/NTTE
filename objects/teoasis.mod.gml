@@ -3,10 +3,16 @@
 	snd = mod_variable_get("mod", "teassets", "snd");
 	lag = false;
 	
+	 // Mod Lists:
+	ntte_mods = mod_variable_get("mod", "teassets", "mods");
+	
+	 // Bind Events:
+	global.bind_underwater_draw = script_bind(CustomDraw, script_ref_create(underwater_draw), false, -3);
+	
 	 // Underwater Stuff:
-	global.waterBubblePop = [];
-	global.waterSoundActive = false;
-	global.waterSound = {
+	global.underwater_bubble_pop = [];
+	global.underwater_sound_active = false;
+	global.underwater_sound = {
 		"sndOasisShoot" : [
 			sndBloodLauncher,
 			sndBouncerShotgun,
@@ -238,6 +244,11 @@
 #macro snd global.snd
 #macro mus snd.mus
 #macro lag global.debug_lag
+
+#macro ntte_mods global.mods
+
+#macro underwater_area   ((GameCont.area == area_vault) ? GameCont.lastarea : GameCont.area)
+#macro underwater_active (!instance_exists(GenCont) && !instance_exists(LevCont) && array_exists(ntte_mods.area, underwater_area) && area_get_underwater(underwater_area))
 
 #define BubbleBomb_create(_x, _y)
 	with(instance_create(_x, _y, CustomProjectile)){
@@ -1537,31 +1548,35 @@
 	}
 	
 #define ntte_step
-	 // Underwater Sounds:
-	if(global.waterSoundActive){
-		if(!area_get_underwater(GameCont.area)){
-			underwater_sound(false);
-		}
-	}
-	else if(area_get_underwater(GameCont.area)){
-		if(array_exists(mod_variable_get("mod", "ntte", "mods").area, GameCont.area)){
-			underwater_sound(true);
-		}
-	}
-	
 	 // Reset Bubbles:
-	if(instance_exists(GenCont)){
-		with(global.waterBubblePop){
+	if(instance_exists(GenCont) || instance_exists(LevCont)){
+		with(global.underwater_bubble_pop){
 			with(self[0]) spr_bubble_pop_check = null;
 		}
-		global.waterBubblePop = [];
+		global.underwater_bubble_pop = [];
+	}
+	
+	 // Underwater Sounds:
+	if(global.underwater_sound_active || array_exists(ntte_mods.area, underwater_area)){
+		underwater_sound(area_get_underwater(underwater_area));
+	}
+	
+	 // Underwater Code:
+	if(underwater_active){
+		underwater_step();
+	}
+	
+#define ntte_end_step
+	 // Underwater Code:
+	var _active = underwater_active;
+	if(_active){
+		underwater_end_step();
+	}
+	with(global.bind_underwater_draw.id){
+		visible = _active;
 	}
 	
 #define underwater_step
-	 // Bind Events:
-	script_bind_end_step(underwater_end_step, 0);
-	script_bind_draw(underwater_draw, -3);
-	
 	 // Lightning:
 	with(Lightning){
 		image_index -= image_speed_raw * 0.75;
@@ -1636,10 +1651,6 @@
 	}
 	
 #define underwater_end_step
-	instance_destroy();
-	
-	if(lag) trace_time();
-	
 	 // Snuff Flames:
 	with(instances_matching([GroundFlame, BlueFlame], "waterbubble", null)){
 	    instance_create(x, y, Smoke);
@@ -1664,7 +1675,7 @@
 	}
 	
 	 // Air Bubble Pop:
-	with(global.waterBubblePop){
+	with(global.underwater_bubble_pop){
 		var _inst = self[0];
 		
 		 // Follow Papa:
@@ -1678,7 +1689,7 @@
 		else{
 			with(_inst) spr_bubble_pop_check = null;
 			with(instance_create(self[1], self[2], BubblePop)) sprite_index = other[3];
-			global.waterBubblePop = array_delete_value(global.waterBubblePop, self);
+			global.underwater_bubble_pop = array_delete_value(global.underwater_bubble_pop, self);
 		}
 	}
 	
@@ -1711,11 +1722,7 @@
 		}
 	}
 	
-	if(lag) trace_time("underwater_end_step");
-	
 #define underwater_draw
-	instance_destroy();
-	
 	if(lag) trace_time();
 	
 	 // Air Bubbles:
@@ -1775,7 +1782,7 @@
 	}
 	with(instances_matching(instances_matching_ne(_inst, "spr_bubble_pop", -1), "spr_bubble_pop_check", null)){
 		spr_bubble_pop_check = true;
-		array_push(global.waterBubblePop, [id, x, y, sprPlayerBubblePop]);
+		array_push(global.underwater_bubble_pop, [id, x, y, sprPlayerBubblePop]);
 	}
 	
 	 // Boiling Water:
@@ -1790,27 +1797,27 @@
 	draw_set_blend_mode(bm_normal);
 	draw_set_fog(false, 0, 0, 0);
 	
-	if(lag) trace_time("underwater_draw");
+	if(lag) trace_time(script[2]);
 	
-#define underwater_sound(_state)
-	global.waterSoundActive = _state;
-	for(var i = 0; i < lq_size(global.waterSound); i++){
-		var _sndOasis = asset_get_index(lq_get_key(global.waterSound, i));
-		with(lq_get_value(global.waterSound, i)){
-			var _snd = self;
-			if(_state) sound_assign(_snd, _sndOasis);
-			else sound_restore(_snd);
+#define underwater_sound(_active)
+	if(global.underwater_sound_active ^^ _active){
+		for(var i = 0; i < lq_size(global.underwater_sound); i++){
+			var _sndOasis = asset_get_index(lq_get_key(global.underwater_sound, i));
+			with(lq_get_value(global.underwater_sound, i)){
+				var _snd = self;
+				if(_active) sound_assign(_snd, _sndOasis);
+				else sound_restore(_snd);
+			}
 		}
 	}
+	global.underwater_sound_active = _active;
 	
 #define cleanup
-	 // Disable Water Sounds:
-	if(global.waterSoundActive){
-		underwater_sound(false);
-	}
+	 // Reset Water Sounds:
+	underwater_sound(false);
 	
 	 // Reset Bubble Pop:
-	with(global.waterBubblePop){
+	with(global.underwater_bubble_pop){
 		with(self[0]) spr_bubble_pop_check = null;
 	}
 	
@@ -1842,7 +1849,7 @@
 #macro  current_frame_active                                                                    (current_frame % 1) < current_time_scale
 #macro  anim_end                                                                                (image_index + image_speed_raw >= image_number || image_index + image_speed_raw < 0)
 #macro  enemy_sprite                                                                            (sprite_index != spr_hurt || anim_end) ? ((speed <= 0) ? spr_idle : spr_walk) : sprite_index
-#macro  enemy_boss                                                                              ('boss' in self && boss) || array_exists([BanditBoss, ScrapBoss, LilHunter, Nothing, Nothing2, FrogQueen, HyperCrystal, TechnoMancer, Last, BigFish, OasisBoss], object_index)
+#macro  enemy_boss                                                                              (('boss' in self) ? boss : ('intro' in self)) || array_exists([Nothing, Nothing2, BigFish, OasisBoss], object_index)
 #macro  player_active                                                                           visible && !instance_exists(GenCont) && !instance_exists(LevCont) && !instance_exists(SitDown) && !instance_exists(PlayerSit)
 #macro  game_scale_nonsync                                                                      game_screen_get_width_nonsync() / game_width
 #macro  bbox_width                                                                              (bbox_right + 1) - bbox_left
@@ -1871,18 +1878,18 @@
 #define angle_lerp(_ang1, _ang2, _num)                                                  return  _ang1 + (angle_difference(_ang2, _ang1) * _num);
 #define draw_self_enemy()                                                                       image_xscale *= right; draw_self(); image_xscale /= right;
 #define enemy_walk(_add, _max)                                                                  if(walk > 0){ walk -= current_time_scale; motion_add_ct(direction, _add); } if(speed > _max) speed = _max;
-#define save_get(_name, _default)                                                       return  mod_script_call_nc('mod', 'teassets', 'save_get', _name, _default);
-#define save_set(_name, _value)                                                                 mod_script_call_nc('mod', 'teassets', 'save_set', _name, _value);
-#define option_get(_name)                                                               return  mod_script_call_nc('mod', 'teassets', 'option_get', _name);
-#define option_set(_name, _value)                                                               mod_script_call_nc('mod', 'teassets', 'option_set', _name, _value);
-#define stat_get(_name)                                                                 return  mod_script_call_nc('mod', 'teassets', 'stat_get', _name);
-#define stat_set(_name, _value)                                                                 mod_script_call_nc('mod', 'teassets', 'stat_set', _name, _value);
-#define unlock_get(_name)                                                               return  mod_script_call_nc('mod', 'teassets', 'unlock_get', _name);
-#define unlock_set(_name, _value)                                                       return  mod_script_call_nc('mod', 'teassets', 'unlock_set', _name, _value);
-#define surface_setup(_name, _w, _h, _scale)                                            return  mod_script_call_nc('mod', 'teassets', 'surface_setup', _name, _w, _h, _scale);
-#define shader_setup(_name, _texture, _args)                                            return  mod_script_call_nc('mod', 'teassets', 'shader_setup', _name, _texture, _args);
-#define shader_add(_name, _vertex, _fragment)                                           return  mod_script_call_nc('mod', 'teassets', 'shader_add', _name, _vertex, _fragment);
-#define script_bind(_scriptObj, _scriptRef, _depth)                                     return  mod_script_call_nc('mod', 'teassets', 'script_bind', _scriptObj, _scriptRef, _depth);
+#define save_get(_name, _default)                                                       return  mod_script_call_nc  ('mod', 'teassets', 'save_get', _name, _default);
+#define save_set(_name, _value)                                                                 mod_script_call_nc  ('mod', 'teassets', 'save_set', _name, _value);
+#define option_get(_name)                                                               return  mod_script_call_nc  ('mod', 'teassets', 'option_get', _name);
+#define option_set(_name, _value)                                                               mod_script_call_nc  ('mod', 'teassets', 'option_set', _name, _value);
+#define stat_get(_name)                                                                 return  mod_script_call_nc  ('mod', 'teassets', 'stat_get', _name);
+#define stat_set(_name, _value)                                                                 mod_script_call_nc  ('mod', 'teassets', 'stat_set', _name, _value);
+#define unlock_get(_name)                                                               return  mod_script_call_nc  ('mod', 'teassets', 'unlock_get', _name);
+#define unlock_set(_name, _value)                                                       return  mod_script_call_nc  ('mod', 'teassets', 'unlock_set', _name, _value);
+#define surface_setup(_name, _w, _h, _scale)                                            return  mod_script_call_nc  ('mod', 'teassets', 'surface_setup', _name, _w, _h, _scale);
+#define shader_setup(_name, _texture, _args)                                            return  mod_script_call_nc  ('mod', 'teassets', 'shader_setup', _name, _texture, _args);
+#define shader_add(_name, _vertex, _fragment)                                           return  mod_script_call_nc  ('mod', 'teassets', 'shader_add', _name, _vertex, _fragment);
+#define script_bind(_scriptObj, _scriptRef, _visible, _depth)                           return  mod_script_call_nc  ('mod', 'teassets', 'script_bind', _scriptObj, _scriptRef, _visible, _depth, ds_list_create());
 #define obj_create(_x, _y, _obj)                                                        return  (is_undefined(_obj) ? [] : mod_script_call_nc('mod', 'telib', 'obj_create', _x, _y, _obj));
 #define top_create(_x, _y, _obj, _spawnDir, _spawnDis)                                  return  mod_script_call_nc  ('mod', 'telib', 'top_create', _x, _y, _obj, _spawnDir, _spawnDis);
 #define projectile_create(_x, _y, _obj, _dir, _spd)                                     return  mod_script_call_self('mod', 'telib', 'projectile_create', _x, _y, _obj, _dir, _spd);

@@ -52,21 +52,6 @@
 			
 			return true;
 			
-		case "teevent":
-			
-			var _active = !lq_defget(global.event, _arg, false);
-			
-			trace_color(
-				_arg + ' ' + (_active ? "ON" : "OFF"),
-				(_active ? c_lime : c_red)
-			);
-			
-			lq_set(global.event, _arg, _active);
-			
-			chat_comp_add_arg("teevent", 0, _arg, (_active ? "ON" : "OFF"));
-			
-			return true;
-			
 		case "loadblock":
 			
 			scriptblock_file_load("scripts/" + _arg + ".txt");
@@ -82,6 +67,21 @@
 		case "top":
 			
 			mod_script_call_nc("mod", "telib", "top_create", mouse_x[_ind], mouse_y[_ind], ((_arg == "Player") ? player_find(_ind) : (object_exists(asset_get_index(_arg)) ? asset_get_index(_arg) : _arg)), 0, 0);
+			
+			return true;
+			
+		case "teevent":
+			
+			var _active = !lq_defget(global.event, _arg, false);
+			
+			trace_color(
+				_arg + ' ' + (_active ? "ON" : "OFF"),
+				(_active ? c_lime : c_red)
+			);
+			
+			lq_set(global.event, _arg, _active);
+			
+			chat_comp_add_arg("teevent", 0, _arg, (_active ? "ON" : "OFF"));
 			
 			return true;
 			
@@ -120,7 +120,7 @@
 			
 			return true;
 			
-		case "unlock":
+		case "teunlock":
 			
 			var	_argSplit = string_split(_arg, "="),
 				_name     = string_trim(_argSplit[0]),
@@ -159,7 +159,7 @@
 			
 			 // Update:
 			with(global.unlock){
-				chat_comp_add_arg("unlock", 0, self, string(mod_script_call_nc("mod", "teassets", "unlock_get", self)));
+				chat_comp_add_arg("teunlock", 0, self, string(mod_script_call_nc("mod", "teassets", "unlock_get", self)));
 			}
 			
 			return true;
@@ -260,14 +260,14 @@
 	with([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, "parrot", "bee"]){
 		array_push(global.unlock, `loadout:wep:${race_get_name(self)}:main`);
 	}
-	chat_comp_add("unlock", "(name)", "=", "(value)", "leave name blank for all, value blank to toggle");
-	chat_comp_add_arg("unlock", 2, "0");
-	chat_comp_add_arg("unlock", 2, "1");
+	chat_comp_add("teunlock", "(name)", "=", "(value)", "leave name blank for all, value blank to toggle");
+	chat_comp_add_arg("teunlock", 2, "0");
+	chat_comp_add_arg("teunlock", 2, "1");
 	if(fork()){
 		while(!mod_exists("mod", "teassets")) wait 0;
 		wait 10;
 		with(global.unlock){
-			chat_comp_add_arg("unlock", 0, self, string(mod_script_call_nc("mod", "teassets", "unlock_get", self)));
+			chat_comp_add_arg("teunlock", 0, self, string(mod_script_call_nc("mod", "teassets", "unlock_get", self)));
 		}
 		exit;
 	}

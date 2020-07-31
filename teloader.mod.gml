@@ -1,20 +1,23 @@
 #define init
+	 // Sprite:
 	global.sprLoad = sprite_add("sprites/menu/sprNTTELoading.png", 2, 32, 8);
 	
 	 // Loading Vars:
-	global.load = 0;
-	global.load_max = 0;
+	global.load      = 0;
+	global.load_max  = 0;
 	global.load_hudy = 0;
 	global.load_hudb = 0;
 	global.load_text = "";
 	
 	 // Coop Delay Increase:
 	var _coop = -1;
-	for(var i = 0; i < maxp; i++) _coop += player_is_active(i);
+	for(var i = 0; i < maxp; i++){
+		_coop += player_is_active(i);
+	}
 	_coop *= 2;
 	
 	 // Mods:
-	global.list = [ // [mod, delay]
+	global.list = [ // [path, delay, loading text]
 		["teassets.mod.gml",                        5 + _coop, "Assets"],
 		["telib.mod.gml",                           1 + _coop, "Main Files"],
 		["temenu.mod.gml",                          1 + _coop],
@@ -79,11 +82,9 @@
 	
 	 // Waiting for...
 	while(
-		!mod_sideload() // Mod loading permissions
-		||
-		(!instance_exists(Menu) || Menu.mode == 0) // Menu to exist
-		||
-		global.load_hudy < 0.99 // Loading bar to appear
+		!mod_sideload()                               // Mod loading permissions
+		|| (!instance_exists(Menu) || Menu.mode == 0) // Menu to exist
+		|| global.load_hudy < 0.99                    // Loading bar to appear
 	){
 		wait 0;
 	}
@@ -97,25 +98,29 @@
 		
 		 // Advance Loading Bar:
 		global.load += 1 + random(0.2);
-		if(array_length(self) > 2) global.load_text = self[2];
+		if(array_length(self) > 2){
+			global.load_text = self[2];
+		}
 		
 		 // Delay:
-		if(_wait > 0) wait _wait;
+		if(_wait > 0){
+			wait _wait;
+		}
 		
 		 // Wait for Sprites:
 		if(array_length(mod_variable_get("mod", "teassets", "spr_load")) > 0){
-			var _perc = 0.2;
+			var _spritePercent = 0.2;
 			
-			global.load /= (1 - _perc)
-			global.load_max /= (1 - _perc);
+			global.load     /= (1 - _spritePercent)
+			global.load_max /= (1 - _spritePercent);
 			
-			var	l = global.load,
-				m = global.load_max * _perc;
+			var	_l = global.load,
+				_m = global.load_max * _spritePercent;
 				
 			while(true){
 				var _sprLoad = mod_variable_get("mod", "teassets", "spr_load");
 				if(array_length(_sprLoad) > 0){
-					global.load = (l + (m * (_sprLoad[0, 1] / array_length(_sprLoad[0, 0]))));
+					global.load = (_l + (_m * (_sprLoad[0, 1] / array_length(_sprLoad[0, 0]))));
 				}
 				else break;
 				wait 0;
@@ -153,9 +158,9 @@
 	}
 	
 	 // Loading Bar:
-	var	_x = round(game_width / 2),
-		_y = round(22 * global.load_hudy),
-		_spr = global.sprLoad,
+	var	_x    = round(game_width / 2),
+		_y    = round(22 * global.load_hudy),
+		_spr  = global.sprLoad,
 		_load = (global.load / global.load_max);
 		
 	draw_set_fog(true, c_black, 0, 0);
@@ -168,9 +173,9 @@
 	
 	for(var i = 0; i <= 1; i++){
 		var	_bloom = clamp(global.load_hudb, 0.4, i),
-			_xsc = 1 + (0.15 * _bloom),
-			_ysc = 1 + (0.5 * _bloom),
-			_alp = ((i <= 0) ? 1 : (0.25 - (0.025 * global.load_hudb)));
+			_xsc   = 1 + (0.15 * _bloom),
+			_ysc   = 1 + (0.5 * _bloom),
+			_alp   = ((i <= 0) ? 1 : (0.25 - (0.025 * global.load_hudb)));
 			
 		if(_alp > 0){
 			if(i > 0) draw_set_blend_mode(bm_add);
@@ -204,12 +209,13 @@
 		draw_set_halign(fa_left);
 		draw_set_valign(fa_top);
 		draw_text_nt(_x + 33, _y - 7, "Loading");
+		
 		draw_set_font(fntSmall);
-		var t = global.load_text;
+		var _text = global.load_text;
 		if(global.load < global.load_max){
-			t += string_repeat(".", round(1.5 + (1.5 * sin(global.load))))
+			_text += string_repeat(".", round(1.5 + (1.5 * sin(global.load))))
 		}
-		draw_text_nt(_x + 34, _y + 2, t);
+		draw_text_nt(_x + 34, _y + 2, _text);
 	}
 	else{
 		var _text = "";

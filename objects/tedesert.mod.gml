@@ -20,7 +20,6 @@
 		spr_shadow   = shd24;
 		spr_shadow_y = -1;
 		hitid        = [spr_idle, "BABY SCORPION"];
-		mask_index   = mskBandit;
 		depth        = -2;
 		
 		 // Sound:
@@ -30,6 +29,7 @@
 		snd_fire = sndScorpionFireStart;
 		
 		 // Vars:
+		mask_index  = mskBandit;
 		gold        = false;
 		maxhealth   = 7;
 		meleedamage = 6;
@@ -184,16 +184,13 @@
 #define BabyScorpionGold_create(_x, _y)
 	with(obj_create(_x, _y, "BabyScorpion")){
 		 // Visual:
-		spr_idle = spr.BabyScorpionGoldIdle;
-		spr_walk = spr.BabyScorpionGoldWalk;
-		spr_hurt = spr.BabyScorpionGoldHurt;
-		spr_dead = spr.BabyScorpionGoldDead;
-		spr_fire = spr.BabyScorpionGoldFire;
-		spr_shadow = shd24;
-		hitid = [spr_idle, "GOLD BABY SCORPION"];
+		spr_idle     = spr.BabyScorpionGoldIdle;
+		spr_walk     = spr.BabyScorpionGoldWalk;
+		spr_hurt     = spr.BabyScorpionGoldHurt;
+		spr_dead     = spr.BabyScorpionGoldDead;
+		spr_fire     = spr.BabyScorpionGoldFire;
+		hitid        = [spr_idle, "BABY GOLDEN#SCORPION"];
 		sprite_index = spr_idle;
-		mask_index = mskBandit;
-		depth = -2;
 		
 		 // Sound:
 		snd_hurt = sndGoldScorpionHurt;
@@ -202,10 +199,10 @@
 		snd_fire = sndGoldScorpionFire;
 		
 		 // Vars:
-		gold = true;
+		gold      = true;
 		maxhealth = 16;
 		my_health = maxhealth;
-		raddrop = 14;
+		raddrop   = 14;
 		
 		return id;
 	}
@@ -218,6 +215,7 @@
 		spr_walk = spr.BanditCamperWalk;
 		spr_hurt = spr.BanditCamperHurt;
 		spr_dead = spr.BanditCamperDead;
+		hitid    = [spr_idle, "CAMPER BANDIT"];
 		
 		 // Vars:
 		rider_target = noone;
@@ -252,7 +250,8 @@
 		spr_walk = spr.BanditHikerWalk;
 		spr_hurt = spr.BanditHikerHurt;
 		spr_dead = spr.BanditHikerDead;
-		gunspr = sprAllyGunTB;
+		gunspr   = sprAllyGunTB;
+		hitid    = [spr_idle, "HIKER BANDIT"];
 		
 		 // Vars:
 		maxhealth = 16;
@@ -298,23 +297,23 @@
 #define BanditTent_create(_x, _y)
 	with(instance_create(_x, _y, CustomProp)){
 		 // Visual:
-		spr_idle = spr.BanditTentIdle;
-		spr_hurt = spr.BanditTentHurt;
-		spr_dead = spr.BanditTentDead;
-		spr_shadow = shd32;
+		spr_idle     = spr.BanditTentIdle;
+		spr_hurt     = spr.BanditTentHurt;
+		spr_dead     = spr.BanditTentDead;
+		spr_shadow   = shd32;
 		spr_shadow_y = 2;
-		depth = -1;
+		depth        = -1;
 		
 		 // Sound:
 		snd_hurt = sndHitPlant;
 		snd_dead = sndMoneyPileBreak;
 		
 		 // Vars:
-		mask_index = -1;
-		my_health = 8;
-		team = 1;
-		size = 1;
-		target = noone;
+		mask_index  = -1;
+		my_health   = 8;
+		team        = 1;
+		size        = 1;
+		target      = noone;
 		target_mask = mskNone;
 		
 		 // Bandits:
@@ -981,10 +980,10 @@
 			vspeed += orandom(2);
 			view_shake_at(x, y, 15);
 			instance_create(x, y, PortalClear);
-			for(var d = direction; d < direction + 360; d += (360 / 5)){
-				repeat(2) scrFX(x, y, [d + orandom(30), 5], Dust);
+			for(var _dir = direction; _dir < direction + 360; _dir += (360 / 5)){
+				repeat(2) scrFX(x, y, [_dir + orandom(30), 5], Dust);
 				with(obj_create(x, y, "WaterStreak")){
-					motion_set(d + orandom(30), 1 + random(4));
+					motion_set(_dir + orandom(30), 1 + random(4));
 					image_angle = direction;
 					image_speed *= random_range(0.8, 1.2);
 				}
@@ -1007,16 +1006,11 @@
 			direction     = 90 - (right * 90);
 			swim_ang_frnt = direction;
 			swim_ang_back = direction;
-			depth         = 0.1;
+			depth         = -1;
 		}
-		else if(sprite_index = spr_hurt || sprite_index == spr_efir){
+		else if(sprite_index = spr_hurt || sprite_index == spr_rise || sprite_index == spr_efir){
 			sprite_index = spr_idle;
 			image_index  = 0;
-		}
-		else if(sprite_index = spr_rise){
-			sprite_index = spr_idle;
-			image_index  = 0;
-			spr_shadow   = spr_shad;
 		}
 		else if(sprite_index = spr_chrg){
 			sprite_index = spr_fire;
@@ -1109,16 +1103,18 @@
 						a = (i * _ang[o]);
 						
 					 // Cool Trail FX:
-					if(speed > 1) with(instance_create(_x, _y, BoltTrail)){
-						motion_add(_oDir[o] + 180 + a, (other.speed + random(other.speed)) / 2);
-						image_xscale = speed * 2;
-						image_yscale = (skill_get(mut_bolt_marrow) ? 0.6 : 1);
-						image_angle = direction;
-						hspeed += other.hspeed;
-						vspeed += other.vspeed;
-						friction = random(0.5);
-						depth = other.depth;
-						//image_blend = make_color_rgb(110, 184, 247);
+					if(speed > 1){
+						with(instance_create(_x, _y, BoltTrail)){
+							motion_add(_oDir[o] + 180 + a, other.speed * random_range(0.5, 1));
+							image_xscale = speed * 2;
+							image_yscale = (skill_get(mut_bolt_marrow) ? 0.6 : 1);
+							image_angle  = direction;
+							hspeed      += other.hspeed;
+							vspeed      += other.vspeed;
+							friction     = random(0.5);
+							depth        = other.depth;
+							//image_blend  = make_color_rgb(110, 184, 247);
+						}
 					}
 					
 					 // Kick up Dust:
@@ -1128,8 +1124,8 @@
 							vspeed += other.vspeed / 2;
 							motion_add(_oDir[o] + 180 + (2 * a), other.speed);
 							image_xscale *= .75;
-							image_yscale = image_xscale;
-							depth = other.depth;
+							image_yscale  = image_xscale;
+							depth         = other.depth;
 						}
 					}
 				}
@@ -1175,9 +1171,10 @@
 			scrRight(direction);
 			speed = 0;
 			
+			spr_shadow   = spr_shad;
 			sprite_index = spr_rise;
-			image_index = 0;
-			depth = -2;
+			image_index  = 0;
+			depth        = -2;
 			
 			mask_index = swim_mask;
 			swim_mask = -1;
@@ -1270,7 +1267,7 @@
 							
 							if(speed > 0 && chance(1, 3)){
 								with(instance_create(x + orandom(6), y + random(8), Sweat)){
-									direction = other.direction + choose(-120, 120) + orandom(10);
+									direction = other.direction + choose(-60, 60) + orandom(10);
 									speed = 0.5;
 								}
 							}
@@ -1588,139 +1585,6 @@
 	}
 	
 	
-#define PetVenom_create(_x, _y)
-	with(instance_create(_x, _y, CustomProjectile)){
-		 // Visual:
-		sprite_index = spr.VenomFlak;
-		mask_index = mskSuperFlakBullet;
-		image_speed = 0.4;
-		depth = -3;
-
-		 // Vars:
-		damage = 2;
-		force = 2;
-		charge = true;
-		charge_goal = 1;
-		charge_speed = 1/30;
-		image_xscale = 0.2;
-		image_yscale = 0.2;
-
-		return id;
-	}
-	
-#define PetVenom_step
-	 // Charge:
-	if(charge){
-		if(
-			image_xscale < charge_goal	&&
-			image_yscale < charge_goal	&&
-			instance_exists(creator)	&&
-			creator.visible
-		){
-			image_xscale += charge_speed * current_time_scale;
-			image_yscale += charge_speed * current_time_scale;
-			
-			 // Effects:
-			sound_play_hit_ext(sndScorpionFire, 0.5 + (1.5 * (image_xscale / charge_goal)), 4);
-			if(chance_ct(1, 4)){
-				var	l = random(sprite_width),
-					d = random(360);
-					
-				with(instance_create(x + lengthdir_x(l, d), y + lengthdir_y(l, d), AcidStreak)){
-					motion_set(d + 180, 2);
-					image_angle = direction;
-					image_xscale = 0.8;
-					image_yscale = 0.8;
-					
-					 // Variance:
-					if(chance(1, 2)){
-						sprite_index = spr.AcidPuff;
-						depth = other.depth - 1;
-						image_angle += 180;
-					}
-					else depth = other.depth + 1;
-					
-					 // Follow Creator:
-					hspeed += other.creator.hspeed;
-					vspeed += other.creator.vspeed;
-				}
-			}
-		}
-		else charge = false;
-	}
-	
-	 // Release:
-	else{
-		image_xscale -= (charge_goal / 7) * current_time_scale;
-		image_yscale -= (charge_goal / 7) * current_time_scale;
-		if(image_xscale <= 0.2) instance_destroy();
-	}
-
-#define PetVenom_end_step
-	 // Follow Papa:
-	if(instance_exists(creator)){
-		x = creator.x + lengthdir_x(10, direction);
-		y = creator.y + lengthdir_y( 6, direction);
-		xprevious = x;
-		yprevious = y;
-	}
-
-#define PetVenom_hit
-	if(projectile_canhit_melee(other)){
-		projectile_hit(other, damage, force, direction);
-		sleep(20);
-	}
-
-#define PetVenom_wall
-	//
-
-#define PetVenom_destroy
-	var	_dir = direction,
-		_lvl = GameCont.level;
-		
-	sleep(10);
-	view_shake_max_at(x, y, 10 + (2 * _lvl));
-	
-	 // Fire:
-	for(var i = -1; i <= 1; i++){
-		repeat(irandom_range(4, 8) + (2 * (i == 0)) + (2 * _lvl)){
-			 // Main Shot:
-			if(i == 0){
-				with(projectile_create(
-					x,
-					y,
-					EnemyBullet2,
-					_dir + orandom(12),
-					8 + random(6)
-				)){
-					force = 12;
-				}
-			}
-			
-			 // Side Shots:
-			else projectile_create(
-				x,
-				y,
-				"VenomPellet",
-				_dir + (45 * i) + orandom(16) + (i * random(6 * _lvl)),
-				4 + random(10)
-			);
-		}
-		
-		 // Effects:
-		with(instance_create(x, y, AcidStreak)){
-			motion_set(_dir + (45 * i), 4);
-			image_angle = direction;
-			image_xscale = 1.6;
-			image_yscale = 1.0;
-		}
-	}
-	
-	 // Sounds:
-	sound_play_hit_ext(sndFlyFire,          1.0 + random(0.4), 2.5);
-	sound_play_hit_ext(sndGoldScorpionFire, 1.6 + random(0.4), 2.5);
-	
-	
 #define ScorpionRock_create(_x, _y)
 	with(instance_create(_x, _y, CustomProp)){
 		 // Visual:
@@ -1824,13 +1688,16 @@
 		meleedamage = 5;
 		walk        = 0;
 		walkspeed   = 1.2;
+		minspeed    = 0;
 		maxspeed    = 3.6;
 		gunangle    = random(360);
-		flak        = noone;
-		flak_offset = 5;
+		ammo        = 0;
+		//flak        = noone;
+		//flak_offset = 5;
 		
 		 // Alarms:
 		alarm1 = 90;
+		alarm2 = -1;
 		
 		return id;
 	}
@@ -1842,28 +1709,29 @@
 	
 	 // Movement:
 	enemy_walk(walkspeed, maxspeed);
+	speed = max(speed, minspeed);
 	
+	/*
 	 // Flak Target Tracking:
 	if(instance_exists(flak)){
 		if(flak.time < flak.time_max){
-		
 			 // Retarget:
 			if(instance_seen(x, y, target)){
-				var d = point_direction(x, y, target.x, target.y);
-				scrAim(angle_lerp(gunangle, d, 1/3));
+				var _d = point_direction(x, y, target.x, target.y);
+				scrAim(angle_lerp(gunangle, _d, 1/3));
 			}
 			
 			 // Reposition:
-			var l = flak_offset,
-				d = gunangle;
+			var _l = flak_offset,
+				_d = gunangle;
 				
 			with(flak){
-				x = other.x + lengthdir_x(l, d);
-				y = other.y + lengthdir_y(l, d);
+				x = other.x + lengthdir_x(_l, _d);
+				y = other.y + lengthdir_y(_l, _d);
 				xprevious   = x;
 				yprevious   = y;
-				direction   = d;
-				image_angle = d;
+				direction   = _d;
+				image_angle = _d;
 			}
 			
 			 // Slow:
@@ -1871,38 +1739,87 @@
 			y = lerp(y, yprevious, 1/3);
 		}
 		else{
-			
 			 // Freed:
 			flak = noone;
 		}
 	}
+	*/
 	
 	 // Animate:
-	if(sprite_index != spr_fire || (!instance_exists(flak) && anim_end)){
+	if(sprite_index != spr_fire /*|| (!instance_exists(flak) && anim_end)*/){
 		sprite_index = enemy_sprite;
 	}
 	
 #define SilverScorpion_alrm1
 	alarm1 = random_range(60, 90);
+	
+	 // Movin'
 	scrWalk(random(360), random_range(20, 30));
-	if(enemy_target(x, y) && instance_seen(x, y, target)){
-		gunangle = point_direction(x, y, target.x, target.y);
-		if(chance(2, 3)){
-			sprite_index = spr_fire;
-			flak = projectile_create(x, y, "SilverScorpionFlak", gunangle, 8);
+	
+	if(ammo <= 0){
+		 // Aggroed:
+		if(enemy_target(x, y) && instance_seen(x, y, target)){
+			scrAim(point_direction(x, y, target.x, target.y));
+			
+			 // Attack:
+			if(true || chance(2, 3)){
+				with(projectile_create(x, y, "VenomFlak", gunangle, 4)){
+					friction = 0.1;
+				}
+				instance_create(x, y, PortalClear);
+				alarm2 = 1;
+				walk /= 5;
+				/*
+				sprite_index = spr_fire;
+				flak = projectile_create(x, y, "SilverScorpionFlak", gunangle, 8);
+				*/
+			}
+		}
+		
+		 // Wander:
+		else scrAim(direction);
+	}
+	
+#define SilverScorpion_alrm2
+	 // Start Firing:
+	if(ammo <= 0){
+		ammo = 8;
+		//minspeed = 0;
+		sound_play_hit(sndGoldScorpionFire, 0.3);
+	}
+	
+	 // Fire:
+	if(ammo > 0){
+		projectile_create(
+			x,
+			y,
+			EnemyBullet2,
+			gunangle + (random_range(20, 60) * choose(-1, 1)),
+			random_range(3, 4)
+		);
+		
+		sprite_index = spr_fire;
+		
+		 // Continue:
+		if(--ammo > 0){
+			alarm2 = 2;
+		}
+		
+		 // End:
+		else{
+			sprite_index = enemy_sprite;
+			if(minspeed == 0) minspeed = 1;
 		}
 	}
-	else{
-		gunangle = direction;
-	}
-	scrRight(gunangle);
 	
 #define SilverScorpion_death
 	 // Bullets:
+	/*
 	var n = 7;
 	for(var d = 0; d < 360; d += 360 / n){
 		projectile_create(x, y, "SilverScorpionDevastator", direction + d, random_range(5, 6));
 	}
+	*/
 	repeat(12){
 		projectile_create(x, y, "VenomPellet", random(360), random_range(4, 8));
 	}
@@ -2054,6 +1971,139 @@
 	instance_create(x, y, PortalClear);
 	
 	
+#define VenomBlast_create(_x, _y)
+	with(instance_create(_x, _y, CustomProjectile)){
+		 // Visual:
+		sprite_index = spr.VenomFlak;
+		image_speed  = 0.4;
+		depth        = -3;
+		
+		 // Vars:
+		mask_index   = mskSuperFlakBullet;
+		image_xscale = 0.2;
+		image_yscale = 0.2;
+		damage       = 2;
+		force        = 2;
+		charge       = true;
+		charge_goal  = 1;
+		charge_speed = 1/30;
+		
+		return id;
+	}
+	
+#define VenomBlast_step
+	 // Charge:
+	if(charge){
+		if(
+			image_xscale < charge_goal	&&
+			image_yscale < charge_goal	&&
+			instance_exists(creator)	&&
+			creator.visible
+		){
+			image_xscale += charge_speed * current_time_scale;
+			image_yscale += charge_speed * current_time_scale;
+			
+			 // Effects:
+			sound_play_hit_ext(sndScorpionFire, 0.5 + (1.5 * (image_xscale / charge_goal)), 4);
+			if(chance_ct(1, 4)){
+				var	_l = random(sprite_width),
+					_d = random(360);
+					
+				with(instance_create(x + lengthdir_x(_l, _d), y + lengthdir_y(_l, _d), AcidStreak)){
+					motion_set(_d + 180, 2);
+					image_angle = direction;
+					image_xscale = 0.8;
+					image_yscale = 0.8;
+					
+					 // Variance:
+					if(chance(1, 2)){
+						sprite_index = spr.AcidPuff;
+						depth = other.depth - 1;
+						image_angle += 180;
+					}
+					else depth = other.depth + 1;
+					
+					 // Follow Creator:
+					hspeed += other.creator.hspeed;
+					vspeed += other.creator.vspeed;
+				}
+			}
+		}
+		else charge = false;
+	}
+	
+	 // Release:
+	else{
+		image_xscale -= (charge_goal / 7) * current_time_scale;
+		image_yscale -= (charge_goal / 7) * current_time_scale;
+		if(image_xscale <= 0.2) instance_destroy();
+	}
+
+#define VenomBlast_end_step
+	 // Follow Papa:
+	if(instance_exists(creator)){
+		x = creator.x + lengthdir_x(10, direction);
+		y = creator.y + lengthdir_y( 6, direction);
+		xprevious = x;
+		yprevious = y;
+	}
+
+#define VenomBlast_hit
+	if(projectile_canhit_melee(other)){
+		projectile_hit(other, damage, force, direction);
+		sleep(20);
+	}
+
+#define VenomBlast_wall
+	//
+
+#define VenomBlast_destroy
+	var	_dir = direction,
+		_lvl = GameCont.level;
+		
+	sleep(10);
+	view_shake_max_at(x, y, 10 + (2 * _lvl));
+	
+	 // Fire:
+	for(var i = -1; i <= 1; i++){
+		repeat(irandom_range(4, 8) + (2 * (i == 0)) + (2 * _lvl)){
+			 // Main Shot:
+			if(i == 0){
+				with(projectile_create(
+					x,
+					y,
+					EnemyBullet2,
+					_dir + orandom(12),
+					8 + random(6)
+				)){
+					force = 12;
+				}
+			}
+			
+			 // Side Shots:
+			else projectile_create(
+				x,
+				y,
+				"VenomPellet",
+				_dir + (45 * i) + orandom(16) + (i * random(6 * _lvl)),
+				4 + random(10)
+			);
+		}
+		
+		 // Effects:
+		with(instance_create(x, y, AcidStreak)){
+			motion_set(_dir + (45 * i), 4);
+			image_angle = direction;
+			image_xscale = 1.6;
+			image_yscale = 1.0;
+		}
+	}
+	
+	 // Sounds:
+	sound_play_hit_ext(sndFlyFire,          1.0 + random(0.4), 2.5);
+	sound_play_hit_ext(sndGoldScorpionFire, 1.6 + random(0.4), 2.5);
+	
+	
 #define VenomFlak_create(_x, _y)
 	with(instance_create(_x, _y, CustomProjectile)){
 		 // Visual:
@@ -2179,22 +2229,28 @@
 	else instance_destroy();
 	
 #define VenomFlak_wall
-	if(!charging && speed > 1){
+	if(charging){
+		 // Destroy:
+		with(other){
+			instance_create(x, y, FloorExplo);
+			instance_destroy();
+		}
+	}
+	else if(speed > 1){
 		 // Bounce:
-		if(place_meeting(x + hspeed, y, Wall)) hspeed *= -1;
-		if(place_meeting(x, y + vspeed, Wall)) vspeed *= -1;
+		move_bounce_solid(true);
 		speed = min(speed, 8);
 		
+		 // Sounds:
+		sound_play_hit_ext(sndShotgunHitWall, 1.2, 1.5);
+		sound_play_hit_ext(sndFrogEggHurt,    0.7, 0.3);
+		
 		 // Effects:
-		with instance_create(x, y, AcidStreak){
+		with(instance_create(x, y, AcidStreak)){
 			motion_set(other.direction, 3);
 			image_angle = direction;
-			 // fat splat:
-			image_yscale *= 2;
+			image_yscale *= 2; // fat splat
 		}
-		
-		sound_play_pitchvol(sndShotgunHitWall,	1.2, 1);
-		sound_play_pitchvol(sndFrogEggHurt,		0.7, 0.2);
 	}
 	
 #define VenomFlak_destroy
@@ -2446,14 +2502,14 @@
 	}
 	
 #define ntte_bloom
-	 // Scorp Pet Attack:
-	with(instances_matching(instances_matching(CustomProjectile, "name", "PetVenom"), "visible", true)){
+	 // Silver Scorpion Pet Attack:
+	with(instances_matching(CustomProjectile, "name", "VenomBlast")){
 		draw_sprite_ext(sprite_index, image_index, x, y, image_xscale * 2, image_yscale * 2, image_angle, image_blend, image_alpha * (charge ? (image_xscale / charge_goal) : 1) * 0.2);
 	}
 	
 	 // Silver Scorpion Flak:
-	with(instances_matching(CustomProjectile, "name", "SilverScorpionFlak")){
-		draw_sprite_ext(sprite_index, image_index, x, y, image_xscale * 2, image_yscale * 2, image_angle, image_blend, image_alpha * 0.2);
+	with(instances_matching(CustomProjectile, "name", "VenomFlak", "SilverScorpionFlak")){
+		draw_sprite_ext(sprite_index, image_index, x, y, 2 * image_xscale, 2 * image_yscale, image_angle, image_blend, 0.2 * image_alpha);
 	}
 	
 #define ntte_shadows
@@ -2496,7 +2552,7 @@
 #macro  current_frame_active                                                                    (current_frame % 1) < current_time_scale
 #macro  anim_end                                                                                (image_index + image_speed_raw >= image_number || image_index + image_speed_raw < 0)
 #macro  enemy_sprite                                                                            (sprite_index != spr_hurt || anim_end) ? ((speed <= 0) ? spr_idle : spr_walk) : sprite_index
-#macro  enemy_boss                                                                              ('boss' in self && boss) || array_exists([BanditBoss, ScrapBoss, LilHunter, Nothing, Nothing2, FrogQueen, HyperCrystal, TechnoMancer, Last, BigFish, OasisBoss], object_index)
+#macro  enemy_boss                                                                              (('boss' in self) ? boss : ('intro' in self)) || array_exists([Nothing, Nothing2, BigFish, OasisBoss], object_index)
 #macro  player_active                                                                           visible && !instance_exists(GenCont) && !instance_exists(LevCont) && !instance_exists(SitDown) && !instance_exists(PlayerSit)
 #macro  game_scale_nonsync                                                                      game_screen_get_width_nonsync() / game_width
 #macro  bbox_width                                                                              (bbox_right + 1) - bbox_left
@@ -2525,18 +2581,18 @@
 #define angle_lerp(_ang1, _ang2, _num)                                                  return  _ang1 + (angle_difference(_ang2, _ang1) * _num);
 #define draw_self_enemy()                                                                       image_xscale *= right; draw_self(); image_xscale /= right;
 #define enemy_walk(_add, _max)                                                                  if(walk > 0){ walk -= current_time_scale; motion_add_ct(direction, _add); } if(speed > _max) speed = _max;
-#define save_get(_name, _default)                                                       return  mod_script_call_nc('mod', 'teassets', 'save_get', _name, _default);
-#define save_set(_name, _value)                                                                 mod_script_call_nc('mod', 'teassets', 'save_set', _name, _value);
-#define option_get(_name)                                                               return  mod_script_call_nc('mod', 'teassets', 'option_get', _name);
-#define option_set(_name, _value)                                                               mod_script_call_nc('mod', 'teassets', 'option_set', _name, _value);
-#define stat_get(_name)                                                                 return  mod_script_call_nc('mod', 'teassets', 'stat_get', _name);
-#define stat_set(_name, _value)                                                                 mod_script_call_nc('mod', 'teassets', 'stat_set', _name, _value);
-#define unlock_get(_name)                                                               return  mod_script_call_nc('mod', 'teassets', 'unlock_get', _name);
-#define unlock_set(_name, _value)                                                       return  mod_script_call_nc('mod', 'teassets', 'unlock_set', _name, _value);
-#define surface_setup(_name, _w, _h, _scale)                                            return  mod_script_call_nc('mod', 'teassets', 'surface_setup', _name, _w, _h, _scale);
-#define shader_setup(_name, _texture, _args)                                            return  mod_script_call_nc('mod', 'teassets', 'shader_setup', _name, _texture, _args);
-#define shader_add(_name, _vertex, _fragment)                                           return  mod_script_call_nc('mod', 'teassets', 'shader_add', _name, _vertex, _fragment);
-#define script_bind(_scriptObj, _scriptRef, _depth)                                     return  mod_script_call_nc('mod', 'teassets', 'script_bind', _scriptObj, _scriptRef, _depth);
+#define save_get(_name, _default)                                                       return  mod_script_call_nc  ('mod', 'teassets', 'save_get', _name, _default);
+#define save_set(_name, _value)                                                                 mod_script_call_nc  ('mod', 'teassets', 'save_set', _name, _value);
+#define option_get(_name)                                                               return  mod_script_call_nc  ('mod', 'teassets', 'option_get', _name);
+#define option_set(_name, _value)                                                               mod_script_call_nc  ('mod', 'teassets', 'option_set', _name, _value);
+#define stat_get(_name)                                                                 return  mod_script_call_nc  ('mod', 'teassets', 'stat_get', _name);
+#define stat_set(_name, _value)                                                                 mod_script_call_nc  ('mod', 'teassets', 'stat_set', _name, _value);
+#define unlock_get(_name)                                                               return  mod_script_call_nc  ('mod', 'teassets', 'unlock_get', _name);
+#define unlock_set(_name, _value)                                                       return  mod_script_call_nc  ('mod', 'teassets', 'unlock_set', _name, _value);
+#define surface_setup(_name, _w, _h, _scale)                                            return  mod_script_call_nc  ('mod', 'teassets', 'surface_setup', _name, _w, _h, _scale);
+#define shader_setup(_name, _texture, _args)                                            return  mod_script_call_nc  ('mod', 'teassets', 'shader_setup', _name, _texture, _args);
+#define shader_add(_name, _vertex, _fragment)                                           return  mod_script_call_nc  ('mod', 'teassets', 'shader_add', _name, _vertex, _fragment);
+#define script_bind(_scriptObj, _scriptRef, _visible, _depth)                           return  mod_script_call_nc  ('mod', 'teassets', 'script_bind', _scriptObj, _scriptRef, _visible, _depth, ds_list_create());
 #define obj_create(_x, _y, _obj)                                                        return  (is_undefined(_obj) ? [] : mod_script_call_nc('mod', 'telib', 'obj_create', _x, _y, _obj));
 #define top_create(_x, _y, _obj, _spawnDir, _spawnDis)                                  return  mod_script_call_nc  ('mod', 'telib', 'top_create', _x, _y, _obj, _spawnDir, _spawnDis);
 #define projectile_create(_x, _y, _obj, _dir, _spd)                                     return  mod_script_call_self('mod', 'telib', 'projectile_create', _x, _y, _obj, _dir, _spd);

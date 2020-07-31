@@ -7,7 +7,7 @@
 	ntte_obj_list = {
 		"tegeneral"   : ["AlertIndicator", "BigDecal", "BoneArrow", "BoneSlash", "BoneFX", "BuriedVault", "BuriedShrine", "CustomBullet", "CustomFlak", "CustomShell", "CustomPlasma", "GroundFlameGreen", "Igloo", "MergeFlak", "ParrotFeather", "ParrotChester", "Pet", "PetRevive", "PetWeaponBecome", "PetWeaponBoss", "PortalBullet", "PortalGuardian", "PortalPrevent", "ReviveNTTE", "TopDecal", "TopObject", "TopTiny", "WallDecal", "WallEnemy"],
 		"tepickups"   : ["Backpack", "Backpacker", "BackpackPickup", "BatChest", "BigIDPDSpawn", "BloodLustPickup", "BoneBigPickup", "BonePickup", "BonusAmmoChest", "BonusAmmoMimic", "BonusAmmoPickup", "BonusHealthChest", "BonusHealthMimic", "BonusHealthPickup", "BuriedVaultChest", "BuriedVaultChestDebris", "BuriedVaultPedestal", "CatChest", "ChestShop", "CursedAmmoChest", "CursedMimic", "CustomChest", "CustomPickup", "HammerHeadPickup", "HarpoonPickup", "OrchidBall", "OrchidChest", "OrchidSkill", "PalaceAltar", "PalankingStatue", "Pizza", "PizzaChest", "PizzaStack", "Prompt", "RedAmmoChest", "RedAmmoPickup", "SpiritPickup", "SunkenChest", "SunkenCoin", "VaultFlower", "VaultFlowerSparkle", "WepPickupGrounded", "WepPickupStick"],
-		"tedesert"    : ["BabyScorpion", "BabyScorpionGold", "BanditCamper", "BanditHiker", "BanditTent", "BigCactus", "BigMaggotSpawn", "Bone", "CoastBossBecome", "CoastBoss", "CowSkull", "FlySpin", "PetVenom", "ScorpionRock", "SilverScorpion", "SilverScorpionDevastator", "SilverScorpionFlak", "VenomFlak", "VenomPellet", "VenomPelletBack", "WantBigMaggot"],
+		"tedesert"    : ["BabyScorpion", "BabyScorpionGold", "BanditCamper", "BanditHiker", "BanditTent", "BigCactus", "BigMaggotSpawn", "Bone", "CoastBossBecome", "CoastBoss", "CowSkull", "FlySpin", "VenomBlast", "ScorpionRock", "SilverScorpion", "SilverScorpionDevastator", "SilverScorpionFlak", "VenomFlak", "VenomPellet", "VenomPelletBack", "WantBigMaggot"],
 		"tecoast"     : ["BloomingAssassin", "BloomingAssassinHide", "BloomingBush", "BloomingCactus", "BuriedCar", "ClamShield", "ClamShieldSlash", "CoastBigDecal", "CoastDecal", "CoastDecalCorpse", "Creature", "Diver", "DiverHarpoon", "Gull", "Harpoon", "HarpoonStick", "NetNade", "Palanking", "PalankingDie", "PalankingSlash", "PalankingSlashGround", "PalankingToss", "Palm", "Pelican", "Seal", "SealAnchor", "SealDisc", "SealHeavy", "SealMine", "TrafficCrab", "Trident"],
 		"teoasis"     : ["BubbleBomb", "BubbleExplosion", "BubbleExplosionSmall", "BubbleSlash", "CrabTank", "HammerShark", "HyperBubble", "OasisPetBecome", "Puffer", "SunkenRoom", "SunkenSealSpawn", "WaterStreak"],
 		"tetrench"    : ["Angler", "Eel", "EelSkull", "ElectroPlasma", "ElectroPlasmaImpact", "Jelly", "JellyElite", "Kelp", "LightningDisc", "LightningDiscEnemy", "PitSpark", "PitSquid", "PitSquidArm", "PitSquidBomb", "PitSquidDeath", "QuasarBeam", "QuasarRing", "TeslaCoil", "TopDecalWaterMine", "TrenchFloorChunk", "Vent", "WantEel"],
@@ -3911,7 +3911,7 @@
 		with(_floors[0]){
 			_x1 = bbox_left;
 			_y1 = bbox_top;
-			_x2 = bbox_right + 1;
+			_x2 = bbox_right  + 1;
 			_y2 = bbox_bottom + 1;
 		}
 		with(_floors){
@@ -3928,8 +3928,19 @@
 			
 			 // Fix Potential Wall Softlock:
 			if(_floorDis <= 0 && _floorNum == _floorNumLast + array_length(_floors)){
-				with(instance_rectangle_bbox(_fx1 - 1, _fy1,     _fx2 + 1, _fy2,     Wall)) if(place_meeting(x, y, Floor)) instance_destroy();
-				with(instance_rectangle_bbox(_fx1,     _fy1 - 1, _fx2,     _fy2 + 1, Wall)) if(place_meeting(x, y, Floor)) instance_destroy();
+				with(array_combine(
+					instance_rectangle_bbox(_fx1 - 1, _fy1,     _fx2 + 1, _fy2,     Wall),
+					instance_rectangle_bbox(_fx1,     _fy1 - 1, _fx2,     _fy2 + 1, Wall)
+				)){
+					if(instance_exists(self) && place_meeting(x, y, Floor)){
+						with(instances_meeting(x, y, [Bones, TopPot])){
+							if(place_meeting(x, y, other)){
+								instance_delete(id);
+							}
+						}
+						instance_delete(id);
+					}
+				}
 			}
 		}
 	}

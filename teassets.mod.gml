@@ -1,12 +1,16 @@
 #define init
 	ntte_version = 2.0;
 	
+	 // Debug Lag:
+	lag = false;
+	
 	 // SPRITES //
 	spr = {};
 	spr_load = [[spr, 0]];
 	with(spr){
 		var m, p;
 		
+		 // Storage:
 		msk         = {};
 		shd         = {};
 		BigTopDecal = ds_map_create();
@@ -559,6 +563,7 @@
 				
 				 // Tentacles:
 				TentacleIdle = sprite(p + "sprTentacleIdle", 8, 20, 28);
+				TentacleHurt = sprite(p + "sprTentacleIdle", 8, 20, 28, shnHurt);
 				TentacleDead = sprite(p + "sprTentacleDead", 4, 20, 28);
 				TentacleSpwn = sprite(p + "sprTentacleSpwn", 6, 20, 28);
 				TentacleTele = sprite(p + "sprTentacleTele", 6, 20, 28);
@@ -727,9 +732,9 @@
 		p = m;
 			
 			 // Big Decal:
-			BigTopDecal[? area_desert] = sprite(p + "sprDesertBigTopDecal",   1, 32, 24);
-			BigTopDecalScorpion        = sprite(p + "sprBigTopDecalScorpion", 1, 32, 24);
-			msk.BigTopDecal            = sprite(p + "mskBigTopDecal",         1, 32, 24);
+			BigTopDecal[? area_desert] = sprite(p + "sprDesertBigTopDecal",   1, 32, 48);
+			BigTopDecalScorpion        = sprite(p + "sprBigTopDecalScorpion", 1, 32, 48);
+			msk.BigTopDecal            = sprite(p + "mskBigTopDecal",         1, 32, 48);
 			
 			 // Fly:
 			FlySpin = sprite(p + "sprFlySpin", 16, 4, 4);
@@ -779,7 +784,7 @@
 		p = m;
 			
 			 // Decals:
-			BigTopDecal[? area_scrapyards] = sprite(p + "sprScrapyardBigTopDecal",  1, 32, 24);
+			BigTopDecal[? area_scrapyards] = sprite(p + "sprScrapyardBigTopDecal",  1, 32, 40);
 			TopDecalScrapyardAlt           = sprite(p + "sprTopDecalScrapyardAlt",  1, 16, 16);
 			NestDebris                     = sprite(p + "sprNestDebris",           16,  4,  4);
 			
@@ -799,8 +804,8 @@
 		p = m;
 			
 			 // Decals:
-			BigTopDecal[? area_caves       ] = sprite(p + "sprCavesBigTopDecal",       1, 32, 24);
-			BigTopDecal[? area_cursed_caves] = sprite(p + "sprCursedCavesBigTopDecal", 1, 32, 24);
+			BigTopDecal[? area_caves       ] = sprite(p + "sprCavesBigTopDecal",       1, 32, 48);
+			BigTopDecal[? area_cursed_caves] = sprite(p + "sprCursedCavesBigTopDecal", 1, 32, 48);
 			
 			 // Wall Spiders:
 			WallSpider          = sprite(p + "sprWallSpider",          2, 8, 8);
@@ -881,7 +886,7 @@
 		p = m;
 			
 			 // Decals:
-			BigTopDecal[? area_palace] = sprite(p + "sprPalaceBigTopDecal", 1, 32, 24);
+			BigTopDecal[? area_palace] = sprite(p + "sprPalaceBigTopDecal", 1, 32, 48);
 			
 			 // Generator Shadows Woooo:
 			shd.BigGenerator  = sprite(p + "shdBigGenerator",  1, 48-16, 32);
@@ -1056,7 +1061,8 @@
 			BigBubblePop = sprite(p + "sprBigBubblePop", 4, 24, 24);
 			
 			 // Decals:
-			BigTopDecal[? "oasis"] = sprite(p + "sprOasisBigTopDecal", 1, 32, 24);
+			BigTopDecal[? area_oasis] = sprite(p + "sprOasisBigTopDecal", 1, 32, 48);
+			BigTopDecal[? "oasis"] = BigTopDecal[? area_oasis];
 			
 			 // Ground Crack Effect:
 			Crack = sprite_add_base64("iVBORw0KGgoAAAANSUhEUgAAAEAAAAAgCAYAAACinX6EAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAAZdEVYdFNvZnR3YXJlAHBhaW50Lm5ldCA0LjAuMTczbp9jAAABk0lEQVRoQ+WVS3KDQAxEOUQ22ed0OUPujhEVTWk6PWK+sSgWrwwPI0/3YHvb9/3RUPkkqHwSVEbg4+f7eOHXZkJlBLAAr5CRsqh8FxLEwq6jE7avz+Plr6+BygiUChAkMKNUkAeVUbCBvOCIFqX3elAZCRr8WDYF3oezGFRGIgvFgqqzmOs4D6EyCmn3C+Eyb6+Z86uvApWt1H7fWsEw6diDlIBzLVQiElDBa8KKAmRmCsLCY9ASx3u89VFZ4j8LqArnYe8/jnG+QqWHhMXAzI0yXICgM34LYGvMTmqQIedg06p1Wgb7sBayIBMorSk7aUVD2zJmgQFG0blYQjroQXcc/Qi6UyzECOwz5DjJHlbsvIIBRsH5CpW1zN59y8ynwFsnlVfoI7SyAAGD9IJzLVS2sLIEmc0CtXC1PipbWVnC+S8Doaqp+JGmMgqy+PMp6Cmh8geaygjgzp1FYMgCV7tuofJd6I4reF0Qz0IL3n0lqIzAVRCvIHQeVEagt4BWqLwLM0qg8k6MlkDlnXh8AWPs2wudfCE+JW5sAwAAAABJRU5ErkJggg==",
@@ -1069,7 +1075,7 @@
 		p = m;
 			
 			 // Decals:
-			BigTopDecal[? "trench"] = sprite(p + "sprTrenchBigTopDecal", 1, 32, 24);
+			BigTopDecal[? "trench"] = sprite(p + "sprTrenchBigTopDecal", 1, 32, 48);
 			
 			 // Floors:
 			FloorTrench      = sprite(p + "sprFloorTrench",      4, 0, 0);
@@ -1137,7 +1143,7 @@
 		p = m;
 			
 			 // Decals:
-			BigTopDecal[? area_sewers] = sprite(p + "sprSewersBigTopDecal", 8, 32, 24);
+			BigTopDecal[? area_sewers] = sprite(p + "sprSewersBigTopDecal", 8, 32, 48);
 			
 			 // Manhole:
 			PizzaManhole = [
@@ -1176,7 +1182,8 @@
 		p = m;
 			
 			 // Decals:
-			BigTopDecal[? area_pizza_sewers] = sprite(p + "sprPizzaBigTopDecal", 1, 32, 24);
+			BigTopDecal[? area_pizza_sewers] = sprite(p + "sprPizzaBigTopDecal", 1, 32, 48);
+			BigTopDecal[? "pizza"] = BigTopDecal[? area_pizza_sewers];
 			
 			//#region PROPS
 			p = m + "Props/";
@@ -1826,10 +1833,12 @@
 		exit;
 	}
 	
-	 // Surface/Shader/ScriptBinding Storage:
+	 // Surface/Shader Storage:
 	global.surf = {};
 	global.shad = {};
-	global.bind = {};
+	
+	 // Script Binding Storage:
+	ntte_bind = [];
 	
 	 // Compile Mod Lists:
 	ntte_mods = {
@@ -1877,26 +1886,28 @@
 		
 		if(option_get("reminders")){
 			global.remind = [
-				{   "pos" : [-85, -2],
-					"but" : GameMenuButton,
-					"txt" : "Turn em on!",
-					"rem" : (!UberCont.opt_bossintros && save_get("option:intros", 1) >= 2)
+				{	"x"      : -85,
+					"y"      : -2,
+					"text"   : "Turn em on!",
+					"object" : GameMenuButton,
+					"active" : (!UberCont.opt_bossintros && save_get("option:intros", 1) >= 2)
 					},
-				{   "pos" : [-85, 29],
-					"but" : AudioMenuButton,
-					"txt" : "Pump it up!",
-					"rem" : (!UberCont.opt_bossintros)
+				{	"x"      : -85,
+					"y"      : 29,
+					"text"   : "Pump it up!",
+					"object" : AudioMenuButton,
+					"active" : (!UberCont.opt_bossintros)
 					}
 			];
 			
 			with(global.remind){
-				txt_inst = noone;
-				tim = 0;
+				text_inst = noone;
+				time = 0;
 			}
 			
 			 // Chat Reminder:
 			var _text = "";
-			if(global.remind[0].rem){
+			if(global.remind[0].active){
 				_text = "enable boss intros and music";
 			}
 			else{
@@ -1913,11 +1924,14 @@
 #macro msk spr.msk
 #macro snd global.snd
 #macro mus snd.mus
+#macro lag global.debug_lag
 
+#macro ntte_bind    global.bind
 #macro ntte_mods    global.mods
 #macro ntte_version global.version
 
-#macro spr_load global.spr_load
+#macro spr_load     global.spr_load
+#macro spr_load_num 20 // How many sprites to load per frame
 
 #macro shnNone false
 #macro shnWep  true
@@ -2119,12 +2133,12 @@
 			loadout : Unlocks an item on the loadout menu
 			
 		Ex:
-			unlock_set("pack:lair", true)
-			unlock_set("race:parrot", true)
-			unlock_set("skin:red crystal", true) // for skin mods
-			unlock_set("skin:parrot:1", true)    // for race mods
-			unlock_set("crown:crime", true)
-			unlock_set("loadout:crown:crime", true)
+			unlock_set("pack:lair",           true)
+			unlock_set("race:parrot",         true)
+			unlock_set("skin:red crystal",    true) // for skin mods
+			unlock_set("skin:parrot:1",       true) // for race mods
+			unlock_set("crown:crime",         false)
+			unlock_set("loadout:crown:crime", false)
 	*/
 	
 	if(unlock_get(_name) != _value){
@@ -2474,33 +2488,34 @@
 	
 	return _shad;
 	
-#define script_bind(_scriptObj, _scriptRef, _depth)
+#define script_bind(_scriptObj, _scriptRef, _visible, _depth, _modKey)
 	/*
-		Creates and stores a persistent CustomScript-type object, future calls return the stored instance
+		Binds the given script to the given event
+		Ensures that the script's controller object always exists, and deletes it when the parent mod is unloaded
 		
+		Args:
+			scriptObj - The event type: CustomStep, CustomBeginStep, CustomEndStep, CustomDraw
+			scriptRef - The script's reference to call
+			visible   - The script's default visibility (for CustomDraw)
+			depth     - The script's default depth (for CustomDraw)
+			modKey    - A ds_list used to tell if the mod that called this script got reloaded/unloaded
+			
 		Ex:
-			script_bind(CustomDraw, script_ref_create(draw_thing), -8)
+			script_bind(CustomDraw, script_ref_create(draw_thing), true, -8)
 	*/
 	
-	var _key = `${_scriptObj}.${array_join(_scriptRef, ".")}`;
+	var _bind = {
+		object  : _scriptObj,
+		script  : _scriptRef,
+		visible : _visible,
+		depth   : _depth,
+		id      : noone,
+		mod_key : _modKey
+	};
 	
-	 // Initialize & Store:
-	if(!instance_exists(lq_defget(global.bind, _key, noone))){
-		with(instance_create(0, 0, _scriptObj)){
-			persistent = true;
-			lq_set(global.bind, _key, id);
-		}
-	}
+	array_push(ntte_bind, _bind);
 	
-	 // Retrieve:
-	with(lq_get(global.bind, _key)){
-		script = _scriptRef;
-		depth  = _depth;
-		
-		return id;
-	}
-	
-	return noone;
+	return _bind;
 	
 #define sprite /// sprite(_path, _img, _x, _y, _shine = shnNone)
 	var _path = argument[0], _img = argument[1], _x = argument[2], _y = argument[3];
@@ -2519,9 +2534,11 @@ var _shine = argument_count > 4 ? argument[4] : shnNone;
 	};
 	
 #define step
+	if(lag) trace_time();
+	
 	 // Sprite Loading:
 	if(array_length(spr_load) > 0){
-		repeat(20){
+		repeat(spr_load_num){
 			while(array_length(spr_load) > 0){
 				var	_num   = array_length(spr_load) - 1,
 					_load  = null,
@@ -2630,13 +2647,43 @@ var _shine = argument_count > 4 ? argument[4] : shnNone;
 		}
 	}
 	
+	 // Script Binding:
+	with(ntte_bind){
+		if(ds_list_valid(mod_key)){
+			if(!instance_exists(id)){
+				id = instance_create(0, 0, object);
+				with(id){
+					script     = array_clone(other.script);
+					depth      = other.depth;
+					visible    = other.visible;
+					persistent = true;
+				}
+			}
+		}
+		
+		 // Delete:
+		else{
+			var	_index = array_find_index(ntte_bind, self),
+				_new   = array_slice(ntte_bind, 0, _index);
+				
+			array_copy(_new, array_length(_new), ntte_bind, _index + 1, array_length(ntte_bind) - (_index + 1));
+			ntte_bind = _new;
+			
+			with(id){
+				instance_destroy();
+			}
+		}
+	}
+	
 	 // Locked Weapon Spriterize:
 	with(ntte_mods.wep){
 		var _name = self;
 		if(mod_variable_get("weapon", _name, "sprWepLocked") == mskNone){
 			var _spr = mod_variable_get("weapon", _name, "sprWep");
 			if(sprite_get_number(_spr) != 1 || sprite_get_width(_spr) != 16 || sprite_get_height(_spr) != 16){
-				with(other) mod_variable_set("weapon", _name, "sprWepLocked", wep_locked_sprite(_spr));
+				with(other){
+					mod_variable_set("weapon", _name, "sprWepLocked", wep_locked_sprite(_spr));
+				}
 			}
 		}
 	}
@@ -2649,42 +2696,51 @@ var _shine = argument_count > 4 ? argument[4] : shnNone;
 		}
 	}
 	
-#define draw_pause
-	draw_set_projection(0);
+	if(lag) trace_time(mod_current + "_step");
 	
+#define draw_pause
 	 // Remind Player:
 	if(option_get("reminders")){
-		var d = current_time_scale;
+		draw_set_projection(0);
+		
+		var _timeTick = 1;
+		
 		with(global.remind){
-			if(rem){
+			if(active){
 				var	_x = (game_width  / 2),
 					_y = (game_height / 2) - 40;
 					
-				if(instance_exists(but)){
-					_x += pos[0];
-					_y += pos[1];
+				 // Reminding:
+				if(instance_exists(object)){
+					_x += x;
+					_y += y;
 					
-					if(tim > 0){
-						tim -= d;
-						d = 0;
-						if(tim <= 0){
-							rem = false;
+					if(time > 0){
+						time -= _timeTick * current_time_scale;
+						_timeTick = 0;
+						
+						 // Done:
+						if(time <= 0){
+							active = false;
 							
-							txt_inst = instance_create(_x, _y, PopupText);
-							with(txt_inst){
-								text = other.txt;
+							 // Text:
+							text_inst = instance_create(_x, _y, PopupText);
+							with(text_inst){
+								text     = other.text;
 								friction = 0.1;
 							}
 						}
 					}
 				}
 				
+				 // Lead Player to Button:
 				else{
-					tim = 20;
+					time = 20;
 					
+					 // Settings Screen:
 					if(instance_exists(OptionMenuButton)){
 						_x -= 38;
-						switch(but){
+						switch(object){
 							case VisualsMenuButton:
 								_y += 24;
 								break;
@@ -2700,10 +2756,15 @@ var _shine = argument_count > 4 ? argument[4] : shnNone;
 						}
 					}
 					
+					 // Main Pause Screen:
 					else if(instance_number(PauseButton) > 2){
-						var b = false;
-						with(PauseButton) if(alarm_get(0) > 0) b = true;
-						if(b) break;
+						var _break = false;
+						with(PauseButton){
+							if(alarm_get(0) > 0){
+								_break = true;
+							}
+						}
+						if(_break) break;
 						
 						_x = game_width - 124;
 						_y = game_height - 78;
@@ -2712,24 +2773,27 @@ var _shine = argument_count > 4 ? argument[4] : shnNone;
 					else continue;
 				}
 				
-				with(other) draw_sprite(sprNew, 0, _x, _y + sin(current_frame / 10));
+				 // Draw Icon:
+				with(other){
+					draw_sprite(sprNew, 0, _x, _y + sin(current_frame / 10));
+				}
 			}
 			
-			 // Text:
-			if(instance_exists(txt_inst)){
-				d = 0.5 * current_time_scale;
+			 // Draw Text:
+			if(instance_exists(text_inst)){
+				_timeTick = 0.5;
 				
 				draw_set_font(fntM);
 				draw_set_halign(fa_center);
 				draw_set_valign(fa_top);
-				with(txt_inst) if(visible){
+				with(instances_matching(text_inst, "visible", true)){
 					draw_text_nt(x, y, text);
 				}
 			}
 		}
+		
+		draw_reset_projection();
 	}
-	
-	draw_reset_projection();
 	
 #define sprite_shine(_spr, _shine)
 	/*
@@ -3028,8 +3092,8 @@ var _shine = argument_count > 4 ? argument[4] : shnNone;
 		with(UberCont){
 			 // Outline:
 			draw_set_fog(true, c_white, 0, 0);
-			for(var d = 0; d < 360; d += 90){
-				draw_sprite(_sprite, 0, _sprX + dcos(d), _sprY + dsin(d));
+			for(var _d = 0; _d < 360; _d += 90){
+				draw_sprite(_sprite, 0, _sprX + dcos(_d), _sprY + dsin(_d));
 			}
 			
 			 // Main:
@@ -3098,7 +3162,10 @@ var _shine = argument_count > 4 ? argument[4] : shnNone;
 	return _sprList;
 	
 #define cleanup
-	if(save_auto) save_ntte();
+	 // Save Game:
+	if(save_auto){
+		save_ntte();
+	}
 	
 	 // Clear Surfaces/Shaders:
 	for(var i = 0; i < lq_size(global.surf); i++){
@@ -3111,8 +3178,8 @@ var _shine = argument_count > 4 ? argument[4] : shnNone;
 	}
 	
 	 // Clear Script Bindings:
-	for(var i = 0; i < lq_size(global.bind); i++){
-		with(lq_get_value(global.bind, i)){
+	with(ntte_bind){
+		with(id){
 			instance_destroy();
 		}
 	}
