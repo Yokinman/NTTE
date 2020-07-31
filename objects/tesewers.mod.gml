@@ -4942,6 +4942,7 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 		team = 0;
 		size = 3;
 		inst = [];
+		peas = false;
 		
 		 // Walls:
 		instance_create(x,      y + 16, Wall);
@@ -5000,6 +5001,21 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 		sprite_index = spr_idle;
 	}
 	
+	 // Pea Sparkles:
+	if(peas && chance_ct(1, 3)){
+		with(instance_create(
+			random_range(bbox_left, bbox_right),
+			random_range(bbox_top,  bbox_bottom),
+			LaserCharge
+		)){
+			sprite_index = sprSpiralStar;
+			image_blend  = make_color_rgb(147, 202, 86);
+			depth		 = other.depth - 1;
+			alarm0		 = random_range(8, 16);
+			motion_set(90, random_range(1, 2));
+		}
+	}
+	
 	 // Die:
 	if(!place_meeting(x, y, Wall)) my_health = 0;
 	if(my_health <= 0) instance_destroy();
@@ -5056,7 +5072,26 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 	}
 
 	 // Pizza time:
-	pet_spawn(x, y + 16, "CoolGuy");
+	with(pet_spawn(x, y + 16, "CoolGuy")){
+		
+		 // Peas:
+		if(other.peas){
+			var _lastIcon = spr_icon;
+			spr_icon = spr.PetPeasIcon;
+			spr_idle = spr.PetPeasIdle;
+			spr_walk = spr.PetPeasWalk;
+			spr_hurt = spr.PetPeasHurt;
+			sprite_index = spr_idle;
+			
+			with(prompt){
+				text = string_replace(
+					text, 
+					string(_lastIcon), 
+					string(other.spr_icon)
+				) + "?";
+			}
+		}
+	}
 
 
 #define PizzaTV_create(_x, _y)

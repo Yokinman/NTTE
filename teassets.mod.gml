@@ -505,6 +505,13 @@
 			LairTurretFire   = sprite(p + "sprLairTurretFire",    3, 12, 12);
 			LairTurretAppear = sprite(p + "sprLairTurretAppear", 11, 12, 12);
 			
+			 // Miner Bandit:
+			p = m + "MinerBandit/";
+			MinerBanditIdle = sprite(p + "sprMinerBanditIdle", 4, 12, 12);
+			MinerBanditWalk = sprite(p + "sprMinerBanditWalk", 6, 12, 12);
+			MinerBanditHurt = sprite(p + "sprMinerBanditHurt", 3, 12, 12);
+			MinerBanditDead = sprite(p + "sprMinerBanditDead", 6, 12, 12);
+			
 			 // Mortar:
 			p = m + "Mortar/";
 			MortarIdle = sprite(p + "sprMortarIdle",  4, 22, 24);
@@ -813,6 +820,10 @@
 		//#region FROZEN CITY
 		m = "areas/City/";
 		p = m;
+			
+			 // ???:
+			FloorYeti	  = sprite(p + "sprFloorYeti",	   4, 0, 0);
+			FloorYetiRoom = sprite(p + "sprFloorYetiRoom", 9, 0, 0);
 			
 			//#region PROPS
 			p = m + "Props/";
@@ -1629,6 +1640,11 @@
 			PetCoolGuyIdle = sprite(p + "sprPetCoolGuyIdle",  4, 12, 12);
 			PetCoolGuyWalk = sprite(p + "sprPetCoolGuyWalk",  6, 12, 12);
 			PetCoolGuyHurt = sprite(p + "sprPetCoolGuyDodge", 3, 12, 12);
+			
+			PetPeasIcon    = sprite(p + "sprPetPeasIcon",	  1,  6,  6);
+			PetPeasIdle    = sprite(p + "sprPetPeasIdle",	  4, 12, 12);
+			PetPeasWalk    = sprite(p + "sprPetPeasWalk",	  6, 12, 12);
+			PetPeasHurt    = sprite(p + "sprPetPeasDodge",	  3, 12, 12);
 			
 			 // BabyShark:
 			p = m + "Oasis/";
