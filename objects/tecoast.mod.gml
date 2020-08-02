@@ -3,17 +3,15 @@
 	snd = mod_variable_get("mod", "teassets", "snd");
 	lag = false;
 	
-	 // Bind Events:
-	global.bind_rope = [
-		script_bind(CustomDraw, script_ref_create(draw_harpoon_rope, []), false,  0),
-		script_bind(CustomDraw, script_ref_create(draw_harpoon_rope, []), false, -8)
-	];
-	
 	 // Palanking Camera Pan (During Pause Screen):
 	global.palanking_pan = [0, 0];
 	
 	 // Harpoon Ropes:
-	global.poonRope = [];
+	global.harpoon_rope_bind = [
+		script_bind("HarpoonRopeDraw",    CustomDraw, script_ref_create(draw_harpoon_rope),  0, false),
+		script_bind("HarpoonRopeDrawTop", CustomDraw, script_ref_create(draw_harpoon_rope), -8, false)
+	];
+	global.harpoon_rope = [];
 	
 #macro spr global.spr
 #macro msk spr.msk
@@ -1351,7 +1349,7 @@
 		broken        : false
 	}
 	
-	array_push(global.poonRope, _rope);
+	array_push(global.harpoon_rope, _rope);
 	
 	with([_link1, _link2]){
 		if("rope" in self){
@@ -1367,7 +1365,7 @@
 #define Harpoon_unrope(_rope)
 	with(_rope){
 		broken = true;
-		global.poonRope = array_delete_value(global.poonRope, self);
+		global.harpoon_rope = array_delete_value(global.harpoon_rope, self);
 		
 		 // Turn Harpoons Into Pickups:
 		with([link1, link2]) if("name" in self){
@@ -4966,8 +4964,8 @@
 /// GENERAL
 #define ntte_step
 	 // Harpoon Connections:
-	var	_ropeDraw = [[], []];
-	with(global.poonRope){
+	var _ropeDraw = [[], []];
+	with(global.harpoon_rope){
 		var	_rope  = self,
 			_link1 = _rope.link1,
 			_link2 = _rope.link2;
@@ -4975,7 +4973,7 @@
 		if(instance_exists(_link1) && instance_exists(_link2)){
 			if(_rope.broken < 0) _rope.length = 0; // Deteriorate Rope
 			
-			var	_length = _rope.length,
+			var	_length  = _rope.length,
 				_linkDis = point_distance(_link1.x, _link1.y, _link2.x, _link2.y) - _length,
 				_linkDir = point_direction(_link1.x, _link1.y, _link2.x, _link2.y);
 				
@@ -5059,11 +5057,11 @@
 		else Harpoon_unrope(_rope);
 	}
 	var i = 0;
-	with(global.bind_rope){
+	with(global.harpoon_rope_bind){
 		with(id){
-			script[3] = _ropeDraw[i++];
-			visible = (array_length(script[3]) > 0);
-			if(visible){
+			inst = _ropeDraw[i++];
+			if(array_length(inst) > 0){
+				visible = true;
 				depth++;
 				depth--;
 			}
@@ -5102,28 +5100,30 @@
 		view_shift(-1, _dir, _dis);
 	}
 	
-#define draw_harpoon_rope(_rope)
-	if(lag) trace_time();
-	
-	with(_rope){
-		if(instance_exists(link1) && instance_exists(link2)){
-			var	_x1  = link1.x,
-				_y1  = link1.y,
-				_x2  = link2.x,
-				_y2  = link2.y,
-				_wid = clamp(length / point_distance(_x1, _y1, _x2, _y2), 0.1, 2),
-				_col = merge_color(c_white, c_red, (0.25 + clamp(0.5 - (break_timer / 15), 0, 0.5)) * clamp(break_force / 100, 0, 1));
+#define draw_harpoon_rope
+	if("inst" in self && array_length(inst) > 0){
+		if(lag) trace_time();
+		
+		with(inst){
+			if(instance_exists(link1) && instance_exists(link2)){
+				var	_x1  = link1.x,
+					_y1  = link1.y,
+					_x2  = link2.x,
+					_y2  = link2.y,
+					_wid = clamp(length / point_distance(_x1, _y1, _x2, _y2), 0.1, 2),
+					_col = merge_color(c_white, c_red, (0.25 + clamp(0.5 - (break_timer / 15), 0, 0.5)) * clamp(break_force / 100, 0, 1));
+					
+				if(break_timer > 0){
+					_wid += (max(1, _wid) - _wid) * min(break_timer / 15, 1);
+				}
 				
-			if(break_timer > 0){
-				_wid += (max(1, _wid) - _wid) * min(break_timer / 15, 1);
+				draw_set_color(_col);
+				draw_line_width(_x1, _y1, _x2, _y2, _wid);
 			}
-			
-			draw_set_color(_col);
-			draw_line_width(_x1, _y1, _x2, _y2, _wid);
 		}
+		
+		if(lag) trace_time(script[2]);
 	}
-	
-	if(lag) trace_time(script[2]);
 	
 	
 /// SCRIPTS
@@ -5193,7 +5193,7 @@
 #define surface_setup(_name, _w, _h, _scale)                                            return  mod_script_call_nc  ('mod', 'teassets', 'surface_setup', _name, _w, _h, _scale);
 #define shader_setup(_name, _texture, _args)                                            return  mod_script_call_nc  ('mod', 'teassets', 'shader_setup', _name, _texture, _args);
 #define shader_add(_name, _vertex, _fragment)                                           return  mod_script_call_nc  ('mod', 'teassets', 'shader_add', _name, _vertex, _fragment);
-#define script_bind(_scriptObj, _scriptRef, _visible, _depth)                           return  mod_script_call_nc  ('mod', 'teassets', 'script_bind', _scriptObj, _scriptRef, _visible, _depth, ds_list_create());
+#define script_bind(_name, _scriptObj, _scriptRef, _depth, _visible)                    return  mod_script_call_nc  ('mod', 'teassets', 'script_bind', _name, _scriptObj, _scriptRef, _depth, _visible);
 #define obj_create(_x, _y, _obj)                                                        return  (is_undefined(_obj) ? [] : mod_script_call_nc('mod', 'telib', 'obj_create', _x, _y, _obj));
 #define top_create(_x, _y, _obj, _spawnDir, _spawnDis)                                  return  mod_script_call_nc  ('mod', 'telib', 'top_create', _x, _y, _obj, _spawnDir, _spawnDis);
 #define projectile_create(_x, _y, _obj, _dir, _spd)                                     return  mod_script_call_self('mod', 'telib', 'projectile_create', _x, _y, _obj, _dir, _spd);
@@ -5215,6 +5215,7 @@
 #define instance_rectangle(_x1, _y1, _x2, _y2, _obj)                                    return  mod_script_call_nc  ('mod', 'telib', 'instance_rectangle', _x1, _y1, _x2, _y2, _obj);
 #define instance_rectangle_bbox(_x1, _y1, _x2, _y2, _obj)                               return  mod_script_call_nc  ('mod', 'telib', 'instance_rectangle_bbox', _x1, _y1, _x2, _y2, _obj);
 #define instances_at(_x, _y, _obj)                                                      return  mod_script_call_nc  ('mod', 'telib', 'instances_at', _x, _y, _obj);
+#define instances_seen(_obj, _bx, _by, _index)                                          return  mod_script_call_nc  ('mod', 'telib', 'instances_seen', _obj, _bx, _by, _index);
 #define instances_seen_nonsync(_obj, _bx, _by)                                          return  mod_script_call_nc  ('mod', 'telib', 'instances_seen_nonsync', _obj, _bx, _by);
 #define instances_meeting(_x, _y, _obj)                                                 return  mod_script_call_self('mod', 'telib', 'instances_meeting', _x, _y, _obj);
 #define variable_instance_get_list(_inst)                                               return  mod_script_call_nc  ('mod', 'telib', 'variable_instance_get_list', _inst);
@@ -5229,8 +5230,7 @@
 #define array_delete_value(_array, _value)                                              return  mod_script_call_nc  ('mod', 'telib', 'array_delete_value', _array, _value);
 #define array_flip(_array)                                                              return  mod_script_call_nc  ('mod', 'telib', 'array_flip', _array);
 #define array_shuffle(_array)                                                           return  mod_script_call_nc  ('mod', 'telib', 'array_shuffle', _array);
-#define array_clone_deep(_array)                                                        return  mod_script_call_nc  ('mod', 'telib', 'array_clone_deep', _array);
-#define lq_clone_deep(_obj)                                                             return  mod_script_call_nc  ('mod', 'telib', 'lq_clone_deep', _obj);
+#define data_clone(_value, _depth)                                                      return  mod_script_call_nc  ('mod', 'telib', 'data_clone', _value, _depth);
 #define scrFX(_x, _y, _motion, _obj)                                                    return  mod_script_call_nc  ('mod', 'telib', 'scrFX', _x, _y, _motion, _obj);
 #define scrRight(_dir)                                                                          mod_script_call_self('mod', 'telib', 'scrRight', _dir);
 #define scrWalk(_dir, _walk)                                                                    mod_script_call_self('mod', 'telib', 'scrWalk', _dir, _walk);

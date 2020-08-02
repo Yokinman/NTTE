@@ -1854,7 +1854,7 @@
 	global.shad = {};
 	
 	 // Script Binding Storage:
-	ntte_bind = [];
+	global.bind = {};
 	
 	 // Compile Mod Lists:
 	ntte_mods = {
@@ -1942,7 +1942,6 @@
 #macro mus snd.mus
 #macro lag global.debug_lag
 
-#macro ntte_bind    global.bind
 #macro ntte_mods    global.mods
 #macro ntte_version global.version
 
@@ -2504,32 +2503,55 @@
 	
 	return _shad;
 	
-#define script_bind(_scriptObj, _scriptRef, _visible, _depth, _modKey)
+#define script_bind(_name, _scriptObj, _scriptRef, _depth, _visible)
 	/*
 		Binds the given script to the given event
 		Ensures that the script's controller object always exists, and deletes it when the parent mod is unloaded
 		
 		Args:
+			name      - The name used to store the script binding
 			scriptObj - The event type: CustomStep, CustomBeginStep, CustomEndStep, CustomDraw
 			scriptRef - The script's reference to call
-			visible   - The script's default visibility (for CustomDraw)
-			depth     - The script's default depth (for CustomDraw)
-			modKey    - A ds_list used to tell if the mod that called this script got reloaded/unloaded
+			depth     - The script's default depth
+			visible   - The script's default visibility, basically "will this event run all the time"
 			
 		Ex:
-			script_bind(CustomDraw, script_ref_create(draw_thing), true, -8)
+			script_bind("draw_thing", CustomDraw, script_ref_create(draw_thing), true, -8)
 	*/
 	
 	var _bind = {
+		name    : _name,
 		object  : _scriptObj,
 		script  : _scriptRef,
-		visible : _visible,
 		depth   : _depth,
-		id      : noone,
-		mod_key : _modKey
+		visible : _visible,
+		id      : noone
 	};
 	
-	array_push(ntte_bind, _bind);
+	 // Fetch Old Controller:
+	if(_name in global.bind){
+		with(lq_get(global.bind, _name)){
+			_bind.id = id;
+			with(id){
+				script = _bind.script;
+				depth  = _bind.depth;
+			}
+		}
+	}
+	
+	 // Make New Controller:
+	if(!instance_exists(_bind.id)){
+		_bind.id = instance_create(0, 0, _bind.object);
+		with(_bind.id){
+			script     = _bind.script;
+			depth      = _bind.depth;
+			visible    = _bind.visible;
+			persistent = true;
+		}
+	}
+	
+	 // Store:
+	lq_set(global.bind, _name, _bind);
 	
 	return _bind;
 	
@@ -2663,30 +2685,16 @@ var _shine = argument_count > 4 ? argument[4] : shnNone;
 		}
 	}
 	
-	 // Script Binding:
-	with(ntte_bind){
-		if(ds_list_valid(mod_key)){
-			if(!instance_exists(id)){
-				id = instance_create(0, 0, object);
-				with(id){
-					script     = array_clone(other.script);
-					depth      = other.depth;
-					visible    = other.visible;
-					persistent = true;
-				}
-			}
-		}
-		
-		 // Delete:
-		else{
-			var	_index = array_find_index(ntte_bind, self),
-				_new   = array_slice(ntte_bind, 0, _index);
-				
-			array_copy(_new, array_length(_new), ntte_bind, _index + 1, array_length(ntte_bind) - (_index + 1));
-			ntte_bind = _new;
-			
-			with(id){
-				instance_destroy();
+	 // Ensure Script Bindings Exist:
+	for(var i = 0; i < lq_size(global.bind); i++){
+		var _bind = lq_get_value(global.bind, i);
+		if(!instance_exists(_bind.id)){
+			_bind.id = instance_create(0, 0, _bind.object);
+			with(_bind.id){
+				script     = _bind.script;
+				depth      = _bind.depth;
+				visible    = _bind.visible;
+				persistent = true;
 			}
 		}
 	}
@@ -3186,16 +3194,20 @@ var _shine = argument_count > 4 ? argument[4] : shnNone;
 	 // Clear Surfaces/Shaders:
 	for(var i = 0; i < lq_size(global.surf); i++){
 		var _surf = lq_get_value(global.surf, i).surf;
-		if(_surf != -1) surface_destroy(_surf);
+		if(_surf != -1){
+			surface_destroy(_surf);
+		}
 	}
 	for(var i = 0; i < lq_size(global.shad); i++){
 		var _shad = lq_get_value(global.shad, i).shad;
-		if(_shad != -1) surface_destroy(_shad);
+		if(_shad != -1){
+			surface_destroy(_shad);
+		}
 	}
 	
 	 // Clear Script Bindings:
-	with(ntte_bind){
-		with(id){
+	for(var i = 0; i < lq_size(global.bind); i++){
+		with(lq_get_value(global.bind, i).id){
 			instance_destroy();
 		}
 	}

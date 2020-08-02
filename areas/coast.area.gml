@@ -5,11 +5,11 @@
 	
 	 // Bind Events:
 	var _seaDepth = object_get_depth(Floor) + 10;
-	global.bind_sea = {
-		"main"        : script_bind(CustomDraw, script_ref_create(draw_sea),                false, _seaDepth),
-		"top"         : script_bind(CustomDraw, script_ref_create(draw_sea_top),            false, -1),
-		"visible_max" : script_bind(CustomDraw, script_ref_create(sea_inst_visible, false), false, _seaDepth),
-		"visible_min" : script_bind(CustomDraw, script_ref_create(sea_inst_visible, true),  false, object_get_depth(SubTopCont))
+	global.sea_bind = {
+		"main"        : script_bind("SeaDraw",       CustomDraw, script_ref_create(draw_sea),                _seaDepth,                    false),
+		"top"         : script_bind("SeaDrawTop",    CustomDraw, script_ref_create(draw_sea_top),            -1,                           false),
+		"visible_max" : script_bind("SeaInstVisMax", CustomDraw, script_ref_create(sea_inst_visible, false), _seaDepth,                    false),
+		"visible_min" : script_bind("SeaInstVisMin", CustomDraw, script_ref_create(sea_inst_visible, true),  object_get_depth(SubTopCont), false)
 	};
 	global.sea_inst = [];
 	
@@ -34,7 +34,7 @@
 #macro area_active variable_instance_get(GameCont, "ntte_active_" + mod_current, false) && (GameCont.area == mod_current || GameCont.lastarea == mod_current)
 #macro area_visits variable_instance_get(GameCont, "ntte_visits_" + mod_current, 0)
 
-#macro sea_depth global.bind_sea.main.depth
+#macro sea_depth global.sea_bind.main.depth
 
 #macro wading_color make_color_rgb(44, 37, 122)
 
@@ -136,12 +136,12 @@
 	variable_instance_set(GameCont, "ntte_active_" + mod_current, true);
 	
 	 // Active Sea Drawing:
-	for(var i = 0; i < lq_size(global.bind_sea); i++){
-		with(lq_get_value(global.bind_sea, i).id){
+	for(var i = 0; i < lq_size(global.sea_bind); i++){
+		with(lq_get_value(global.sea_bind, i).id){
 			visible = true;
 		}
 	}
-	with(global.bind_sea.main.id){
+	with(global.sea_bind.main.id){
 		flash = 0;
 	}
 	
@@ -271,8 +271,8 @@
 	mod_variable_set("mod", "ntte", "area_update", true);
 	
 	 // There Ain't No More Water:
-	for(var i = 0; i < lq_size(global.bind_sea); i++){
-		with(lq_get_value(global.bind_sea, i).id){
+	for(var i = 0; i < lq_size(global.sea_bind); i++){
+		with(lq_get_value(global.sea_bind, i).id){
 			visible = false;
 		}
 	}
@@ -473,17 +473,23 @@
 		}
 	}
 	
-#define area_effect(_vx, _vy)
-	var	_x = _vx + random(game_width),
-		_y = _vy + random(game_height);
-		
-	 // Wind:
-	var f = instance_nearest(_x, _y, Floor);
-	with(f){
-		instance_create(x + random(32), y + random(32), Wind);
-	}
+#define area_effect
+	alarm0 = irandom_range(1, 60);
 	
-	return random(60);
+	for(var i = 0; i < maxp; i++){
+		if(player_is_active(i)){
+			 // Pick Random Player's Screen:
+			do i = irandom(maxp - 1);
+			until player_is_active(i);
+			
+			 // Wind:
+			with(instance_random(instances_seen(Floor, 0, 0, i))){
+				instance_create(random_range(bbox_left, bbox_right + 1), random_range(bbox_top, bbox_bottom + 1), Wind);
+			}
+			
+			break;
+		}
+	}
 	
 #define ntte_begin_step
 	if(area_active){
@@ -504,8 +510,8 @@
 	if(area_active){
 		 // Water Wading:
 		if(instance_exists(Floor)){
-			var	_depthMax = global.bind_sea.visible_max.depth,
-				_depthMin = global.bind_sea.visible_min.depth,
+			var	_depthMax = global.sea_bind.visible_max.depth,
+				_depthMin = global.sea_bind.visible_min.depth,
 				_inst = array_combine(
 					array_combine(
 						[Debris, Corpse, ChestOpen, chestprop, WepPickup, Crown, Grenade, hitme],
@@ -669,7 +675,7 @@
 				sound_stop(sndPortalOpen);
 				
 				 // Flash Sea:
-				with(global.bind_sea.main.id){
+				with(global.sea_bind.main.id){
 					flash = 0;
 				}
 				
@@ -991,30 +997,12 @@
 		surface_screenshot(_surfSwimScreen.surf);
 		draw_set_blend_mode(bm_normal);
 		
-		 // Find Co-op Screen Bounding Area:
-		var	_x1 = +infinity,
-			_y1 = +infinity,
-			_x2 = -infinity,
-			_y2 = -infinity;
-			
-		for(var i = 0; i < maxp; i++){
-			if(player_is_active(i)){
-				var	_x = view_xview[i],
-					_y = view_yview[i];
-					
-				if(_x       < _x1) _x1 = _x;
-				if(_y       < _y1) _y1 = _y;
-				if(_x + _vw > _x2) _x2 = _x + _vw;
-				if(_y + _vh > _y2) _y2 = _y + _vh;
-			}
-		}
-		
 		 // Drawing Water Wading Objects:
 		var _charmOutline = option_get("outline:charm");
-		with(instances_matching_gt(instance_rectangle_bbox(_x1 - 24, _y1 - 24, _x2 + 24, _y2 + 24, global.sea_inst), "wading", 0)){
-			var _isPlayer = (object_index == Player),
-				_sprH = sprite_get_height(sprite_index),
-				_sprY = sprite_get_yoffset(sprite_index);
+		with(instances_matching_gt(instances_seen(global.sea_inst, 24, 24, -1), "wading", 0)){
+			var	_sprH     = sprite_get_height(sprite_index),
+				_sprY     = sprite_get_yoffset(sprite_index),
+				_isPlayer = (object_index == Player);
 				
 			 // Clear Screen:
 			draw_clear_alpha(0, 0);
@@ -1468,7 +1456,7 @@
 #define surface_setup(_name, _w, _h, _scale)                                            return  mod_script_call_nc  ('mod', 'teassets', 'surface_setup', _name, _w, _h, _scale);
 #define shader_setup(_name, _texture, _args)                                            return  mod_script_call_nc  ('mod', 'teassets', 'shader_setup', _name, _texture, _args);
 #define shader_add(_name, _vertex, _fragment)                                           return  mod_script_call_nc  ('mod', 'teassets', 'shader_add', _name, _vertex, _fragment);
-#define script_bind(_scriptObj, _scriptRef, _visible, _depth)                           return  mod_script_call_nc  ('mod', 'teassets', 'script_bind', _scriptObj, _scriptRef, _visible, _depth, ds_list_create());
+#define script_bind(_name, _scriptObj, _scriptRef, _depth, _visible)                    return  mod_script_call_nc  ('mod', 'teassets', 'script_bind', _name, _scriptObj, _scriptRef, _depth, _visible);
 #define obj_create(_x, _y, _obj)                                                        return  (is_undefined(_obj) ? [] : mod_script_call_nc('mod', 'telib', 'obj_create', _x, _y, _obj));
 #define top_create(_x, _y, _obj, _spawnDir, _spawnDis)                                  return  mod_script_call_nc  ('mod', 'telib', 'top_create', _x, _y, _obj, _spawnDir, _spawnDis);
 #define projectile_create(_x, _y, _obj, _dir, _spd)                                     return  mod_script_call_self('mod', 'telib', 'projectile_create', _x, _y, _obj, _dir, _spd);
@@ -1490,6 +1478,7 @@
 #define instance_rectangle(_x1, _y1, _x2, _y2, _obj)                                    return  mod_script_call_nc  ('mod', 'telib', 'instance_rectangle', _x1, _y1, _x2, _y2, _obj);
 #define instance_rectangle_bbox(_x1, _y1, _x2, _y2, _obj)                               return  mod_script_call_nc  ('mod', 'telib', 'instance_rectangle_bbox', _x1, _y1, _x2, _y2, _obj);
 #define instances_at(_x, _y, _obj)                                                      return  mod_script_call_nc  ('mod', 'telib', 'instances_at', _x, _y, _obj);
+#define instances_seen(_obj, _bx, _by, _index)                                          return  mod_script_call_nc  ('mod', 'telib', 'instances_seen', _obj, _bx, _by, _index);
 #define instances_seen_nonsync(_obj, _bx, _by)                                          return  mod_script_call_nc  ('mod', 'telib', 'instances_seen_nonsync', _obj, _bx, _by);
 #define instances_meeting(_x, _y, _obj)                                                 return  mod_script_call_self('mod', 'telib', 'instances_meeting', _x, _y, _obj);
 #define variable_instance_get_list(_inst)                                               return  mod_script_call_nc  ('mod', 'telib', 'variable_instance_get_list', _inst);
@@ -1504,8 +1493,7 @@
 #define array_delete_value(_array, _value)                                              return  mod_script_call_nc  ('mod', 'telib', 'array_delete_value', _array, _value);
 #define array_flip(_array)                                                              return  mod_script_call_nc  ('mod', 'telib', 'array_flip', _array);
 #define array_shuffle(_array)                                                           return  mod_script_call_nc  ('mod', 'telib', 'array_shuffle', _array);
-#define array_clone_deep(_array)                                                        return  mod_script_call_nc  ('mod', 'telib', 'array_clone_deep', _array);
-#define lq_clone_deep(_obj)                                                             return  mod_script_call_nc  ('mod', 'telib', 'lq_clone_deep', _obj);
+#define data_clone(_value, _depth)                                                      return  mod_script_call_nc  ('mod', 'telib', 'data_clone', _value, _depth);
 #define scrFX(_x, _y, _motion, _obj)                                                    return  mod_script_call_nc  ('mod', 'telib', 'scrFX', _x, _y, _motion, _obj);
 #define scrRight(_dir)                                                                          mod_script_call_self('mod', 'telib', 'scrRight', _dir);
 #define scrWalk(_dir, _walk)                                                                    mod_script_call_self('mod', 'telib', 'scrWalk', _dir, _walk);

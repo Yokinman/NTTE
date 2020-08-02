@@ -8,13 +8,14 @@
 	ntte_mods_call = [];
 	
 	 // Bind Events:
-	script_bind(CustomStep,    script_ref_create(ntte_step),        true, 0);
-	script_bind(CustomEndStep, script_ref_create(ntte_end_step),    true, 0);
-	script_bind(CustomDraw,    script_ref_create(draw_shadows_top), true, object_get_depth(SubTopCont));
-	global.bind_hud      = script_bind(CustomDraw, script_ref_create(ntte_hud),                true,  object_get_depth(TopCont) - 1);
-	global.bind_map_load = script_bind(CustomDraw, script_ref_create(ntte_map,  -70, 7, null), false, object_get_depth(GenCont) - 1);
-	global.bind_map_dead = script_bind(CustomDraw, script_ref_create(ntte_map, -120, 4, 0),    false, object_get_depth(TopCont) - 1);
-	global.bind_map_paus = noone;
+	script_bind("NTTEStep",       CustomStep,    script_ref_create(ntte_step),        0,                            true);
+	script_bind("NTTEEndStep",    CustomEndStep, script_ref_create(ntte_end_step),    0,                            true);
+	script_bind("DrawShadowsTop", CustomDraw,    script_ref_create(draw_shadows_top), object_get_depth(SubTopCont), true);
+	global.map_bind = {
+		"load"  : script_bind("NTTEMapLoadDraw", CustomDraw, script_ref_create(ntte_map,  -70, 7, null), object_get_depth(GenCont) - 1, false),
+		"dead"  : script_bind("NTTEMapDeadDraw", CustomDraw, script_ref_create(ntte_map, -120, 4, 0),    object_get_depth(TopCont) - 1, false),
+		"pause" : noone
+	};
 	
 	 // level_start():
 	global.level_start = (instance_exists(GenCont) || instance_exists(Menu));
@@ -38,7 +39,8 @@
 	 // Kills:
 	global.kills_last = GameCont.kills;
 	
-	 // Vault Flower Rerolled Skill:
+	 // HUD:
+	global.hud_bind   = script_bind("NTTEHUDDraw", CustomDraw, script_ref_create(ntte_hud, false), object_get_depth(TopCont) - 1, true);
 	global.hud_reroll = null;
 	
 	 // Scythe Tippage:
@@ -1701,27 +1703,24 @@
 			}
 	}
 	
+	 // NTTE Music / Ambience:
+	ntte_music();
+	
 	 // NTTE Area Effects:
 	if(!instance_exists(GenCont) && !instance_exists(LevCont)){
 		if(array_exists(ntte_mods.area, GameCont.area)){
 			with(instances_matching_le(instances_matching_gt(BackCont, "alarm0", 0), "alarm0", ceil(current_time_scale))){
-				var _scrt = "area_effect";
-				if(mod_script_exists("area", GameCont.area, _scrt)){
-					 // Pick Random Player's Screen:
-					do var i = irandom(maxp - 1);
-					until player_is_active(i);
-					var _vx = view_xview[i], _vy = view_yview[i];
-					
-					 // FX:
-					var _time = mod_script_call("area", GameCont.area, _scrt, _vx, _vy);
-					if(!is_undefined(_time) && _time != 0){
-						alarm0 = _time + current_time_scale;
-					}
+				alarm_set(0, 0);
+				mod_script_call("area", GameCont.area, "area_effect");
+				
+				 // Extra Frame Delay:
+				var _alarm = alarm_get(0);
+				if(_alarm > 0){
+					alarm_set(0, _alarm + ceil(current_time_scale));
 				}
 			}
 		}
 	}
-	ntte_music();
 	
 	 // Game Win Crown Unlock:
 	with(instances_matching_le(instances_matching_gt(PlayerSit, "alarm0", 0), "alarm0", ceil(current_time_scale))){
@@ -2590,59 +2589,62 @@
 	}
 	
 	 // Bind HUD Drawing:
-	with(global.bind_hud.id){
-		active = false;
+	with(global.hud_bind.id){
+		script[3] = false;
 		
 		 // Normal:
 		with(instances_matching(TopCont, "visible", true)){
-			if(!other.active || depth - 1 < other.depth){
-				other.active = true;
-				other.depth  = depth - 1;
+			if(!other.script[3] || depth - 1 < other.depth){
+				other.script[3] = true;
+				other.depth     = depth - 1;
 			}
 		}
 		
 		 // Loading / Level Up Screen:
 		if(instance_exists(GenCont) || instance_exists(LevCont)){
 			with(instances_matching(UberCont, "visible", true)){
-				if(!other.active || depth - 1 < other.depth){
-					other.active = true;
-					other.depth  = depth - 1;
+				if(!other.script[3] || depth - 1 < other.depth){
+					other.script[3] = true;
+					other.depth     = depth - 1;
 				}
 			}
 		}
 	}
 	
 	 // Bind Map Drawing:
-	with(global.bind_map_load.id){
-		visible = false;
-		
+	with(global.map_bind){
 		 // Loading Screen:
-		with(instances_matching(GenCont, "visible", true)){
-			if(!other.visible || depth + 1 < other.depth){
-				other.visible = true;
-				other.depth   = depth - 1;
-			}
-		}
-	}
-	with(global.bind_map_dead.id){
-		visible = false;
-		
-		 // Game Over Screen:
-		var	_anim  = 0,
-			_stage = 0;
-			
-		if(!instance_exists(Player)){
-			with(instances_matching(instances_matching(TopCont, "visible", true), "go_addy1", 0)){
+		with(load.id){
+			visible = false;
+			with(instances_matching(GenCont, "visible", true)){
 				if(!other.visible || depth + 1 < other.depth){
 					other.visible = true;
 					other.depth   = depth - 1;
-					_stage        = go_stage;
-					_anim         = mapanim;
 				}
 			}
 		}
-		script[4] = global.bind_map_dead.script[4] - min(2, _stage);
-		script[5] = _anim;
+		
+		 // Game Over Screen:
+		with(dead.id){
+			var	_anim  = 0,
+				_stage = 0;
+				
+			visible = false;
+			
+			if(!instance_exists(Player)){
+				with(instances_matching(instances_matching(TopCont, "visible", true), "go_addy1", 0)){
+					if(!other.visible || depth + 1 < other.depth){
+						other.visible = true;
+						other.depth   = depth - 1;
+						_stage        = go_stage;
+						_anim         = mapanim;
+					}
+				}
+			}
+			
+			script[4] = 4 - min(2, _stage);
+			script[5] = _anim;
+		}
 	}
 	
 	if(lag) trace_time("ntte_end_step");
@@ -2828,9 +2830,9 @@
 	global.paused = true;
 	
 	 // Pause Map Drawing:
-	if(!instance_exists(global.bind_map_paus)){
-		global.bind_map_paus = script_bind_draw(ntte_map_pause, UberCont.depth - 1);
-		with(global.bind_map_paus){
+	if(!instance_exists(global.map_bind.pause)){
+		with(script_bind_draw(ntte_map_pause, UberCont.depth - 1)){
+			global.map_bind.pause = id;
 			event_perform(ev_draw, 0);
 		}
 	}
@@ -2993,11 +2995,10 @@
 	
 	return _map;
 	
-#define ntte_hud
+#define ntte_hud(_visible)
 	if(lag) trace_time();
 	
-	var	_visible = variable_instance_get(self, "active", false),
-		_local   = player_find_local_nonsync(),
+	var	_local   = player_find_local_nonsync(),
 		_vx      = view_xview_nonsync,
 		_vy      = view_yview_nonsync,
 		_gw      = game_width,
@@ -3861,7 +3862,7 @@
 	draw_set_halign(fa_center);
 	draw_set_valign(fa_top);
 	
-	if(lag) trace_time("ntte_hud");
+	if(lag) trace_time(script[2]);
 	
 #define ntte_map(_mapX, _mapY, _mapIndex)
 	/*
@@ -4144,7 +4145,7 @@
 #define surface_setup(_name, _w, _h, _scale)                                            return  mod_script_call_nc  ('mod', 'teassets', 'surface_setup', _name, _w, _h, _scale);
 #define shader_setup(_name, _texture, _args)                                            return  mod_script_call_nc  ('mod', 'teassets', 'shader_setup', _name, _texture, _args);
 #define shader_add(_name, _vertex, _fragment)                                           return  mod_script_call_nc  ('mod', 'teassets', 'shader_add', _name, _vertex, _fragment);
-#define script_bind(_scriptObj, _scriptRef, _visible, _depth)                           return  mod_script_call_nc  ('mod', 'teassets', 'script_bind', _scriptObj, _scriptRef, _visible, _depth, ds_list_create());
+#define script_bind(_name, _scriptObj, _scriptRef, _depth, _visible)                    return  mod_script_call_nc  ('mod', 'teassets', 'script_bind', _name, _scriptObj, _scriptRef, _depth, _visible);
 #define obj_create(_x, _y, _obj)                                                        return  (is_undefined(_obj) ? [] : mod_script_call_nc('mod', 'telib', 'obj_create', _x, _y, _obj));
 #define top_create(_x, _y, _obj, _spawnDir, _spawnDis)                                  return  mod_script_call_nc  ('mod', 'telib', 'top_create', _x, _y, _obj, _spawnDir, _spawnDis);
 #define projectile_create(_x, _y, _obj, _dir, _spd)                                     return  mod_script_call_self('mod', 'telib', 'projectile_create', _x, _y, _obj, _dir, _spd);
@@ -4166,6 +4167,7 @@
 #define instance_rectangle(_x1, _y1, _x2, _y2, _obj)                                    return  mod_script_call_nc  ('mod', 'telib', 'instance_rectangle', _x1, _y1, _x2, _y2, _obj);
 #define instance_rectangle_bbox(_x1, _y1, _x2, _y2, _obj)                               return  mod_script_call_nc  ('mod', 'telib', 'instance_rectangle_bbox', _x1, _y1, _x2, _y2, _obj);
 #define instances_at(_x, _y, _obj)                                                      return  mod_script_call_nc  ('mod', 'telib', 'instances_at', _x, _y, _obj);
+#define instances_seen(_obj, _bx, _by, _index)                                          return  mod_script_call_nc  ('mod', 'telib', 'instances_seen', _obj, _bx, _by, _index);
 #define instances_seen_nonsync(_obj, _bx, _by)                                          return  mod_script_call_nc  ('mod', 'telib', 'instances_seen_nonsync', _obj, _bx, _by);
 #define instances_meeting(_x, _y, _obj)                                                 return  mod_script_call_self('mod', 'telib', 'instances_meeting', _x, _y, _obj);
 #define variable_instance_get_list(_inst)                                               return  mod_script_call_nc  ('mod', 'telib', 'variable_instance_get_list', _inst);
@@ -4180,8 +4182,7 @@
 #define array_delete_value(_array, _value)                                              return  mod_script_call_nc  ('mod', 'telib', 'array_delete_value', _array, _value);
 #define array_flip(_array)                                                              return  mod_script_call_nc  ('mod', 'telib', 'array_flip', _array);
 #define array_shuffle(_array)                                                           return  mod_script_call_nc  ('mod', 'telib', 'array_shuffle', _array);
-#define array_clone_deep(_array)                                                        return  mod_script_call_nc  ('mod', 'telib', 'array_clone_deep', _array);
-#define lq_clone_deep(_obj)                                                             return  mod_script_call_nc  ('mod', 'telib', 'lq_clone_deep', _obj);
+#define data_clone(_value, _depth)                                                      return  mod_script_call_nc  ('mod', 'telib', 'data_clone', _value, _depth);
 #define scrFX(_x, _y, _motion, _obj)                                                    return  mod_script_call_nc  ('mod', 'telib', 'scrFX', _x, _y, _motion, _obj);
 #define scrRight(_dir)                                                                          mod_script_call_self('mod', 'telib', 'scrRight', _dir);
 #define scrWalk(_dir, _walk)                                                                    mod_script_call_self('mod', 'telib', 'scrWalk', _dir, _walk);
