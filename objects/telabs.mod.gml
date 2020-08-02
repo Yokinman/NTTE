@@ -1770,8 +1770,30 @@
 	
 /// GENERAL
 #define ntte_begin_step
-	 // Weapon Necromancy:
+	 // Custom Necromancy:
 	with(instances_matching_gt(instances_matching_le(ReviveArea, "alarm0", ceil(current_time_scale)), "alarm0", 0)){
+		 // Skeals:
+		if(place_meeting(x, y, Corpse)){
+			with(instances_meeting(x, y, instances_matching_lt(Corpse, "size", 3))){
+				var _sealType = array_find_index(spr.SealDead, sprite_index);
+				if(_sealType >= 0){
+					if(place_meeting(x, y, other)){
+						with(obj_create(x, y, "Seal")){
+							type  = _sealType;
+							skeal = true;
+							//kills = 0; !!! i mean it's only 1 extra kill
+							
+							 // Effects:
+							instance_create(x, y, ReviveFX);
+							sound_play_hit_big(sndNecromancerRevive, 0.2);
+						}
+						instance_delete(id);
+					}
+				}
+			}
+		}
+		
+		 // Merged Weapons:
 		if(place_meeting(x, y, WepPickup)){
 			with(instances_meeting(x, y, WepPickup)){
 				if(point_distance(x, y, other.x, other.y - 2) < (other.sprite_width * 0.4)){

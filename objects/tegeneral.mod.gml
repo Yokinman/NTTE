@@ -409,37 +409,37 @@
 			
 				 // Floorify:
 				floor_set_style(1, area);
-				floor_fill(_x, _y, 2, 1, "");
+				floor_fill(_x, _y - 8, 2, 1, "");
 				floor_reset_style();
-				with(instance_create(_x, _y, PortalClear)){
+				with(instance_create(_x, _y - 8, PortalClear)){
 					image_xscale *= 1.5;
 					image_yscale *= 1.2;
 				}
 				
 				 // Inhabitants:
 				repeat(irandom_range(2, 3)){
-					var e = "Spiderling";
-					
-					if(chance(1, 3)){
-						e = ((area == 104) ? InvSpider : Spider);
-					}
-					
-					with(obj_create(_x + orandom(32), _y + orandom(16), e)){
-						nexthurt = current_frame + 30;
-						
-						 // Props:
-						repeat(irandom_range(1, 2)){
-							with(instance_create(x, y, choose(InvCrystal, Cocoon))){
-								nexthurt = current_frame + 30;
-								instance_budge(prop, 24);
-							}
-						}
+					obj_create(
+						_x + orandom(32),
+						_y + orandom(16) - 8,
+						(chance(1, 2) ? "MinerBandit" : "Spiderling")
+					);
+				}
+				
+				 // Props:
+				repeat(irandom_range(3, 4)){
+					with(instance_create(
+						_x + orandom(32),
+						_y + orandom(16) - 8,
+						choose(InvCrystal, Cocoon)
+					)){
+						nexthurt = current_frame + 6;
+						instance_budge(prop, 24);
 					}
 				}
 				
 				 // Effects:
 				repeat(irandom_range(12, 14)){
-					with(instance_create(_x + orandom(32), _y - random(12) + orandom(16), Feather)){
+					with(instance_create(_x + orandom(32), _y - random(32), Feather)){
 						motion_add(point_direction(_x, _y, x, y), random(6));
 						sprite_index = spr.PetSpiderWebBits;
 						image_index  = irandom(irandom(image_number - 1));

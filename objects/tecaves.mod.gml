@@ -1548,17 +1548,26 @@
 	
 	
 #define MinerBandit_create(_x, _y)
+	/*
+		Bandit with light hat
+		
+		Vars
+			light_angle   - Used for gradual light rotation
+			light_visible - Used for flickering
+	*/
+	
 	with(instance_create(_x, _y, Bandit)){
 		 // Visual:
-		spr_idle = spr.MinerBanditIdle;
-		spr_walk = spr.MinerBanditWalk;
-		spr_hurt = spr.MinerBanditHurt;
-		spr_dead = spr.MinerBanditDead;
+		spr_idle     = spr.MinerBanditIdle;
+		spr_walk     = spr.MinerBanditWalk;
+		spr_hurt     = spr.MinerBanditHurt;
+		spr_dead     = spr.MinerBanditDead;
+		hitid        = [spr_idle, "MINER BANDIT"];
 		sprite_index = spr_idle;
-		hitid = [spr_idle, "MINER BANDIT"];
 		
 		 // Vars:
 		maxhealth	  = 8; // protective headgear
+		my_health     = maxhealth;
 		light_angle   = gunangle;
 		light_visible = true;
 		
@@ -1568,12 +1577,17 @@
 	}
 	
 #define MinerBandit_step
-	light_angle   = angle_lerp(light_angle, gunangle, 1/4);
-	light_visible = (
-		GameCont.area == area_cursed_caves 
-		?  chance(1, 10) // broken light
-		: !chance(1, 30)
-	);
+	 // Turn Light:
+	light_angle = angle_lerp(light_angle, gunangle, current_time_scale / 4);
+	
+	 // Flicker:
+	if(frame_active((GameCont.area == area_cursed_caves) ? 3 : 2)){
+		light_visible = (
+			(GameCont.area == area_cursed_caves)
+			?  chance(1, 10) // broken light
+			: !chance(1, 15)
+		);
+	}
 
 #define Mortar_create(_x, _y)
 	with(instance_create(_x, _y, CustomEnemy)){
@@ -3374,20 +3388,18 @@
 	
 	 // Miner Bandit:
 	with(instances_matching(instances_matching(instances_matching(Bandit, "name", "MinerBandit"), "visible", true), "light_visible", true)){
-		var l = 120,
-			d = 20 + orandom(1),
+		var _l  = 120,
+			_d  = 20 + orandom(1),
+			_x2 = x + lengthdir_x(_l, light_angle + _d),
+			_y2 = y + lengthdir_y(_l, light_angle + _d),
+			_x3 = x + lengthdir_x(_l, light_angle - _d),
+			_y3 = y + lengthdir_y(_l, light_angle - _d);
 			
-			_x2 = x + lengthdir_x(l, light_angle + d),
-			_y2 = y + lengthdir_y(l, light_angle + d),
-			
-			_x3 = x + lengthdir_x(l, light_angle - d),
-			_y3 = y + lengthdir_y(l, light_angle - d);
-		
 		 // Light Beam:	
 		draw_triangle(x, y, _x2, _y2, _x3, _y3, false);
 		draw_circle(
-			x + lengthdir_x(l, light_angle), 
-			y + lengthdir_y(l, light_angle), 
+			x + lengthdir_x(_l, light_angle), 
+			y + lengthdir_y(_l, light_angle), 
 			point_distance(_x2, _y2, _x3, _y3) / 2, 
 			false
 		);
