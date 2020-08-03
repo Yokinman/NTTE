@@ -3296,9 +3296,9 @@
 	
 	with(instance_create(_x, _y, CustomProp)){
 		 // Visual:
-		spr_idle = spr.PalaceAltarIdle;
-		spr_hurt = spr.PalaceAltarHurt;
-		spr_dead = spr.PalaceAltarDead;
+		spr_idle     = spr.PalaceAltarIdle;
+		spr_hurt     = spr.PalaceAltarHurt;
+		spr_dead     = spr.PalaceAltarDead;
 		sprite_index = spr_idle;
 		
 		 // Sounds:
@@ -3316,10 +3316,10 @@
 		 // Prompt:
 		prompt = prompt_create("  CHOOSE");
 		with(prompt){
-			xoff = -8;
-			yoff = -16;
+			xoff       = -8;
+			yoff       = -16;
 			mask_index = mskReviveArea;
-			on_meet = script_ref_create(VaultFlower_prompt_meet);
+			on_meet    = script_ref_create(VaultFlower_prompt_meet);
 		}
 		
 		 // Alarms:
@@ -3402,6 +3402,7 @@
 			alert       = { spr:sprEatRad, img:-0.25, x:6, y:6 };
 			blink       = 15;
 			alarm0      = 60;
+			flash       = 6;
 			snd_flash   = sndLevelUp;
 		}
 	}

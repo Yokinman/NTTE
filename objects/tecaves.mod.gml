@@ -1176,27 +1176,23 @@
 			_tileNew = [];
 			
 		with(instances_matching_gt(TopSmall, "id", _genID)){
-			if(chance(1, 5)){
-				array_push(_tileOld, id);
-				event_perform(ev_create, 0);
-			}
-			else array_push(_tileNew, id);
+			array_push((chance(1, 5) ? _tileOld : _tileNew), id);
 		}
 		with(instances_matching(_tileOld, "", null)){
-			if(instance_exists(self)){
-				var	_x   = bbox_center_x,
-					_y   = bbox_center_y,
-					_dis = 16;
-					
-				for(var _dir = 0; _dir < 360; _dir += 90){
-					if(chance(1, 2)){
-						with(instances_at(_x + lengthdir_x(_dis, _dir), _y + lengthdir_y(_dis, _dir), _tileNew)){
-							_tileNew = array_delete_value(_tileNew, id);
-							array_push(_tileOld, id);
-							event_perform(ev_create, 0);
-						}
-					}
+			var	_x   = bbox_center_x,
+				_y   = bbox_center_y,
+				_dis = 16;
+				
+			for(var _dir = 0; _dir < 360; _dir += 90){
+				with(instances_at(_x + lengthdir_x(_dis, _dir), _y + lengthdir_y(_dis, _dir), _tileNew)){
+					_tileNew = array_delete_value(_tileNew, id);
+					array_push(_tileOld, id);
 				}
+			}
+		}
+		with(instances_matching(_tileOld, "", null)){
+			with(self){
+				event_perform(ev_create, 0);
 			}
 		}
 		
@@ -1204,10 +1200,13 @@
 		var _areaCurrent = GameCont.area;
 		GameCont.area = area;
 		with(instances_matching(_tileNew, "", null)){
-			for(var _x = bbox_left - 8; _x < bbox_right + 1 + 8; _x += 8){
-				for(var _y = bbox_top - 8; _y < bbox_bottom + 1 + 8; _y += 8){
+			var	_ox = pfloor(random_range(bbox_left, bbox_right  + 1 + 8), 8),
+				_oy = pfloor(random_range(bbox_top,  bbox_bottom + 1 + 8), 8);
+				
+			for(var _x = _ox - 8; _x < _ox + 8; _x += 8){
+				for(var _y = _oy - 8; _y < _oy + 8; _y += 8){
 					if(array_length(instances_at(_x, _y, _tileNew)) <= 0){
-						if(chance(1, 6)){
+						if(chance(1, 1)){
 							obj_create(_x, _y, "TopTiny");
 						}
 					}
@@ -1215,6 +1214,13 @@
 			}
 		}
 		GameCont.area = _areaCurrent;
+		
+		 // Extra TopSmalls:
+		with(instances_matching(_tileNew, "", null)){
+			if(instance_exists(self)){
+				instance_create(x + choose(-16, 0), y + choose(-16, 0), Top);
+			}
+		}
 		
 		/*
 		 // Clientside Darkness:

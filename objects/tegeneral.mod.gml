@@ -4815,7 +4815,9 @@
 				if(fork()){
 					wait 0;
 					if(instance_exists(self)){
-						with(array_flip(instances_meeting(x, y, TopSmall))){
+						var _inst = instances_matching_ne(instance_rectangle_bbox(bbox_left - 1, bbox_top - 1, bbox_right, bbox_bottom, TopSmall), "name", "TopTiny");
+						array_sort(_inst, true);
+						with(_inst){
 							instance_copy(false);
 							instance_delete(id);
 						}

@@ -11,10 +11,13 @@
 		var m, p;
 		
 		 // Storage:
-		msk         = {};
-		shd         = {};
-		BigTopDecal = ds_map_create();
-		TopTiny     = ds_map_create();
+		msk             = {};
+		shd             = {};
+		BigTopDecal     = ds_map_create();
+		TopTiny         = ds_map_create();
+		MergeWep        = {};
+		MergeWepLoadout = {};
+		MergeWepText    = {};
 		
 		 // Shine:
 		p = "sprites/chests/";
@@ -1156,6 +1159,9 @@
 			 // Decals:
 			BigTopDecal[? area_sewers] = sprite(p + "sprSewersBigTopDecal", 8, 32, 48);
 			
+			 // Fix Decal Not Fully Covering Wall:
+			sprite_replace(sprSewerDecal, "sprites/" + p + "sprWallDecalSewer.png", 1, 16, 24);
+			
 			 // Manhole:
 			PizzaManhole = [
 				sprite(p + "sprPizzaManhole0", 2, 16, 16),
@@ -1195,6 +1201,9 @@
 			 // Decals:
 			BigTopDecal[? area_pizza_sewers] = sprite(p + "sprPizzaBigTopDecal", 1, 32, 48);
 			BigTopDecal[? "pizza"] = BigTopDecal[? area_pizza_sewers];
+			
+			 // Fix Decal Not Fully Covering Wall:
+			sprite_replace(sprPizzaSewerDecal, "sprites/" + p + "sprWallDecalPizza.png", 1, 16, 24);
 			
 			//#region PROPS
 			p = m + "Props/";
@@ -1240,7 +1249,7 @@
 			
 			 // Decals:
 			TopDecalLair  = sprite(p + "sprTopDecalLair",  2, 16, 16);
-			WallDecalLair = sprite(p + "sprWallDecalLair", 1, 16, 16);
+			WallDecalLair = sprite(p + "sprWallDecalLair", 1, 16, 24);
 			
 			 // Manholes:
 			Manhole               = sprite(p + "sprManhole",               12, 16, 48);
@@ -1321,10 +1330,13 @@
 			WallRedBot   = sprite(p + "sprWallCrystalBot",    2, 0,  0);
 			WallRedTop   = sprite(p + "sprWallCrystalTop",    4, 0,  0);
 			WallRedOut   = sprite(p + "sprWallCrystalOut",    1, 4, 12);
-			WallRedTrans = sprite(p + "sprWallCrystalTrans",  4, 0,  0);
+			WallRedTrans = sprite(p + "sprWallCrystalTrans",  4, 1,  1);
 			WallRedFake  =[sprite(p + "sprWallCrystalFake1", 16, 0,  0),
 			               sprite(p + "sprWallCrystalFake2", 16, 0,  0)];
 			DebrisRed    = sprite(p + "sprDebrisCrystal",     4, 4,  4);
+			with(WallRedTrans){
+				mask = [false, 2, x, y, x + 15, y + 15, 1];
+			}
 			
 			 // Fake Walls:
 			WallFakeBot = sprite(p + "sprWallFakeBot", 16, 0, 0);
@@ -1497,11 +1509,6 @@
 			SunkenChestOpen = sprite(p + "sprSunkenChestOpen", 1, 12, 12);
 			SunkenCoin      = sprite(p + "sprCoin",            1,  3,  3, shn8);
 			SunkenCoinBig   = sprite(p + "sprCoinBig",         1,  3,  3, shn8);
-			
-			 // Merged Weapon Sprite Storage:
-			MergeWep = {};
-			MergeWepLoadout = {};
-			MergeWepText = {};
 			
 		//#endregion
 		
@@ -3161,10 +3168,10 @@ var _shine = argument_count > 4 ? argument[4] : shnNone;
 							_img,
 							(_sprW / 2) * (1 - _x),
 							(_sprH / 2) * (1 - _y),
-							_sprW / 2,
-							_sprH / 2,
-							((_x == 0) ? 0 : _sprX) + ((_sprW / 2) * _img),
-							((_y == 0) ? 0 : _sprY)
+							(_sprW / 2),
+							(_sprH / 2),
+							(_sprW / 2) * _img,
+							0
 						);
 					}
 				}
@@ -3176,8 +3183,8 @@ var _shine = argument_count > 4 ? argument[4] : shnNone;
 				_sprList[_x, _y] = sprite_add(
 					name + ".png",
 					_sprImg,
-					_sprX - ((_sprW / 2) * _x),
-					_sprY - ((_sprH / 2) * _y)
+					(_sprX - 8) * _x,
+					(_sprY - 8) * _y
 				);
 			}
 		}
