@@ -124,13 +124,17 @@
 			sprite_index = spr.BigTopDecal[? _area];
 			image_xscale = choose(-1, 1);
 			image_speed  = 0.4;
-			if(_area == area_desert && instance_exists(mod_script_call("mod", "teevents", "teevent_get_active", "ScorpionCity"))){
-				sprite_index = spr.BigTopDecalScorpion;
-			}
 			
 			 // Vars:
 			mask_index = msk.BigTopDecal;
 			area       = _area;
+			
+			 // Scorpion:
+			if(area == area_desert && instance_exists(mod_script_call("mod", "teevents", "teevent_get_active", "ScorpionCity"))){
+				sprite_index = spr.BigTopDecalScorpion;
+				hitid        = [sprite_index, "GRAND SCORPION"];
+				team         = 1;
+			}
 			
 			 // Relocate:
 			var	_tries = 1000,
@@ -336,13 +340,80 @@
 				 
 				 // Scorpion Mode:
 				if(sprite_index == spr.BigTopDecalScorpion){
-					 
-					 // Dunno What This Do:
-					chest_create(_x, _y, "Backpack", false);
-				}
-				else{
+					 // Clear Walls:
+					with(instance_create(_x, _y, PortalClear)){
+						image_xscale *= 1.5;
+						image_yscale *= 1.5;
+						with(instances_meeting(x, y, Wall)){
+							if(place_meeting(x, y, other)){
+								with(other){
+									event_perform(ev_collision, Wall);
+								}
+							}
+						}
+					}
 					
-					 // Bonage:
+					 // Baboom:
+					repeat(75){
+						var	_dir = random(360),
+							_spd = random_range(2, 6);
+							
+						repeat(2){
+							with(projectile_create(_x, _y, EnemyBullet2, _dir, max(0.1, _spd--))){
+								friction = -0.2;
+							}
+						}
+					}
+					repeat(2){
+						with(projectile_create(x, y, "VenomFlak", 0, 0)){
+							charging = false;
+							alarm0   = 1;
+						}
+					}
+					
+					 // Pickups:
+					var _part = mod_script_call("weapon", "merge", "weapon_merge_decide_raw", 0, 1 + GameCont.hard, -1, wep_frog_pistol, false);
+					if(array_length(_part) >= 2){
+						with(obj_create(x, y, "WepPickupGrounded")){
+							target = instance_create(x, y, WepPickup);
+							with(target){
+								wep  = wep_merge(_part[0], _part[1]);
+								ammo = true;
+							}
+						}
+					}
+					with(rad_drop(x, y, 50, 0, 0)){
+						speed += 0.4;
+					}
+					
+					 // Corpse Bits:
+					var _spr = spr.BigTopDecalScorpionDebris;
+					for(var _img = 0; _img < sprite_get_number(_spr); _img++){
+						with(instance_create(_x, _y, Debris)){
+							sprite_index = _spr;
+							image_index  = _img;
+							image_xscale = choose(-1, 1);
+							depth        = object_get_depth(Corpse);
+							speed        = random_range(10, 14);
+						}
+					}
+					
+					 // Effects:
+					repeat(50){
+						with(scrFX(_x, _y, random(6), Dust)){
+							image_xscale = 2 + random(2);
+							image_yscale = image_xscale;
+							friction     = speed * 0.02;
+						}
+					}
+					
+					 // Sound:
+					sound_play_pitchvol(sndGoldScorpionDead, 0.8,               2.0);
+					sound_play_hit_ext(sndWallBreakBrick,    0.5 + random(0.2), 2.5);
+				}
+				
+				 // Bonage:
+				else{
 					repeat(irandom_range(2, 3)){
 						with(instance_create(_x, _y, WepPickup)){
 							wep = "crabbone";

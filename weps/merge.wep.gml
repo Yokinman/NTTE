@@ -1475,27 +1475,48 @@
 			gold            - Only use golden weapons, true/false
 			
 		Ex:
-			weapon_merge_decide_raw(0, GameCont.hard, -1, -1, false)
+			weapon_merge_decide_raw(0, 1 + GameCont.hard, -1, -1, false)
 			weapon_merge_decide_raw(3, GameCont.hard, wep_shotgun, [wep, bwep], false)
 	*/
 	
 	var	_stockAvoid = [],
 		_frontAvoid = [];
 		
-	if(is_array(_stock)){
-		_stockAvoid = _stock;
-		_stock = -1;
+	if(!is_object(_stock)){
+		if(is_array(_stock)){
+			_stockAvoid = _stock;
+			_stock = -1;
+		}
+		else with(wepList){
+			if(weap == _stock){
+				_stock = self;
+				break;
+			}
+		}
 	}
-	if(is_array(_front)){
-		_frontAvoid = _front;
-		_front = -1;
+	if(!is_object(_front)){
+		if(is_array(_front)){
+			_frontAvoid = _front;
+			_front = -1;
+		}
+		else with(wepList){
+			if(weap == _front){
+				_front = self;
+				break;
+			}
+		}
 	}
+	
+	 // Hardmode:
+	_hardMax += ceil((GameCont.hard - (UberCont.hardmode * 13)) / (1 + (UberCont.hardmode * 2))) - GameCont.hard;
 	
 	 // Robot:
 	for(var i = 0; i < maxp; i++){
-		_hardMax += (player_get_race(i) == "robot");
+		if(player_get_race(i) == "robot"){
+			_hardMax++;
+		}
 	}
-	_hardMin += (5 * ultra_get("robot", 1));
+	_hardMin += 5 * ultra_get("robot", 1);
 	
 	 // Just in Case:
 	_hardMax = max(0, _hardMax);

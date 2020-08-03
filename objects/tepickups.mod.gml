@@ -102,6 +102,20 @@
 			if(array_length(_part) >= 2){
 				_wep = wep_merge(_part[0], _part[1]);
 			}
+			
+			 // Parts:
+			repeat(_wepNum){
+				var	_ang = random(360),
+					_num = irandom_range(2, 3);
+					
+				for(var _dir = _ang; _dir < _ang + 360; _dir += (360 / _num)){
+					with(scrFX(x, y, [_dir + orandom(70), 3], Shell)){
+						sprite_index = spr.BackpackDebris;
+						image_index  = irandom(image_number - 1);
+						image_speed  = 0;
+					}
+				}
+			}
 		}
 		
 		 // Create:

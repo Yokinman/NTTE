@@ -307,7 +307,12 @@
 				 // Barrel:
 				var _barrel = noone;
 				with(instance_nearest_bbox(x + orandom(1), y + orandom(1), _inst)){
-					with(instances_meeting(x, y, Wall)) instance_destroy();
+					with(instances_meeting(x, y, Wall)){
+						with(instances_matching_gt(Debris, "id", instance_create(x, y, FloorExplo))){
+							instance_delete(id);
+						}
+						instance_destroy();
+					}
 					_barrel = instance_create(bbox_center_x, bbox_center_y, Barrel);
 				}
 				with(_barrel){
@@ -847,7 +852,15 @@
 				break;
 			}
 		}
-		if(_delete) instance_delete(id);
+		if(_delete){
+			with(instance_create(x, y, FloorExplo)){
+				depth = 10;
+				with(instances_matching_gt(Debris, "id", id)){
+					instance_delete(id);
+				}
+			}
+			instance_destroy();
+		}
 	}
 	
 	 // More Scorpions:

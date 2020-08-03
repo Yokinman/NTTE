@@ -85,7 +85,7 @@
 		//repeat(3){
 			var _skill = skill_get(mut_long_arms),
 				_dis   = 20 * _skill,
-				_dir   = gunangle + (orandom(10) * accuracy);
+				_dir   = gunangle/* + orandom(10 * accuracy)*/;
 				
 			 // Slash:
 			projectile_create(
