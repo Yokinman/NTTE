@@ -2628,41 +2628,41 @@
 	
 #define Weapon_create
 	 // Visual:
-	hitid = [spr.PetWeaponIdle, "WEAPON MIMIC"];
-	spr_spwn = spr.PetWeaponSpwn;
-	spr_hide = spr.PetWeaponHide;
+	hitid        = [spr.PetWeaponIdle, "WEAPON MIMIC"];
+	spr_spwn     = spr.PetWeaponSpwn;
+	spr_hide     = spr.PetWeaponHide;
 	spr_bubble_y = -1;
 	sprite_index = spr_hide;
-	image_index = image_number - 1;
+	image_index  = image_number - 1;
 	
 	 // Sounds:
 	snd_hurt = sndMimicHurt;
 	snd_dead = sndMimicDead;
 	
 	 // Vars:
-	mask_index = mskFrogEgg;
-	maxhealth = 20;
-	type = irandom(5);
-	gunangle = random(360);
+	mask_index    = mskFrogEgg;
+	maxhealth     = 20;
+	type          = choose(type_melee, type_bullet, type_shell, type_bolt, type_explosive, type_energy);
+	gunangle      = random(360);
 	gunangle_goal = gunangle;
 	gunangle_turn = 0.25;
-	shootdis_min = 0;
-	shootdis_max = 192;
-	target = noone;
-	curse = false;
-	setup = true;
+	shootdis_min  = 0;
+	shootdis_max  = 192;
+	target        = noone;
+	curse         = false;
+	setup         = true;
 	
 	 // Weapons:
 	with(["", "b"]){
-		var b = self;
+		var _b = self;
 		with(other){
-			variable_instance_set(self, b + "wep",       wep_none);
-			variable_instance_set(self, b + "wkick",     0);
-			variable_instance_set(self, b + "wepangle",  0);
-			variable_instance_set(self, b + "wepflip",   choose(-1, 1));
-			variable_instance_set(self, b + "reload",    30);
-			variable_instance_set(self, b + "can_shoot", false);
-			variable_instance_set(self, b + "wep_laser", 0);
+			variable_instance_set(self, _b + "wep",       wep_none);
+			variable_instance_set(self, _b + "wkick",     0);
+			variable_instance_set(self, _b + "wepangle",  0);
+			variable_instance_set(self, _b + "wepflip",   choose(-1, 1));
+			variable_instance_set(self, _b + "reload",    30);
+			variable_instance_set(self, _b + "can_shoot", false);
+			variable_instance_set(self, _b + "wep_laser", 0);
 		}
 	}
 	
@@ -2689,8 +2689,8 @@
 		if(wep == wep_none){
 			 // Cursed:
 			if(curse){
-				wep = wep_super_disc_gun;
-				type = 2;
+				wep  = wep_super_disc_gun;
+				type = type_shell;
 			}
 			
 			 // Normal:
@@ -2701,13 +2701,13 @@
 					: (GameCont.loops > 0)
 				);
 				
-				switch(type){     // NORMAL //           // LOOP //           // RARE //
-					case 0:	wep = [wep_wrench,           wep_energy_sword,    wep_jackhammer         ][_typeSub]; break;
-					case 1:	wep = [wep_revolver,         wep_heavy_revolver,  wep_minigun            ][_typeSub]; break;
-					case 2:	wep = [wep_shotgun,          wep_eraser,          wep_heavy_slugger      ][_typeSub]; break;
-					case 3:	wep = [wep_crossbow,         wep_auto_crossbow,   wep_splinter_pistol    ][_typeSub]; break;
-					case 4:	wep = [wep_grenade_launcher, wep_blood_launcher,  wep_sticky_launcher    ][_typeSub]; break;
-					case 5:	wep = [wep_laser_cannon,     wep_plasma_cannon,   wep_super_plasma_cannon][_typeSub]; break;
+				switch(type){                   // NORMAL //           // LOOP //           // RARE //
+					case type_melee     : wep = [wep_wrench,           wep_energy_sword,    wep_jackhammer         ][_typeSub]; break;
+					case type_bullet    : wep = [wep_revolver,         wep_heavy_revolver,  wep_minigun            ][_typeSub]; break;
+					case type_shell     : wep = [wep_shotgun,          wep_eraser,          wep_heavy_slugger      ][_typeSub]; break;
+					case type_bolt      : wep = [wep_crossbow,         wep_auto_crossbow,   wep_splinter_pistol    ][_typeSub]; break;
+					case type_explosive : wep = [wep_grenade_launcher, wep_blood_launcher,  wep_sticky_launcher    ][_typeSub]; break;
+					case type_energy    : wep = [wep_laser_cannon,     wep_plasma_cannon,   wep_super_plasma_cannon][_typeSub]; break;
 				}
 			}
 			
@@ -2719,47 +2719,51 @@
 				}
 			}
 		}
-		else{
-			type = (weapon_is_melee(wep) ? 0 : weapon_get_type(wep));
-		}
+		else type = (
+			weapon_is_melee(wep)
+			? type_melee
+			: weapon_get_type(wep)
+		);
 		
 		 // Weapon Setup:
 		gunangle_turn = 0.25;
-		shootdis_min = 32;
-		shootdis_max = 192;
+		shootdis_min  = 32;
+		shootdis_max  = 192;
 		switch(type){
-			case 0:
+			case type_melee:
 				shootdis_min = 0;
 				break;
 				
-			case 2:
+			case type_shell:
 				shootdis_min = 0;
 				shootdis_max = 96 + (64 * (wep == wep_eraser));
 				break;
 				
-			case 3:
+			case type_bolt:
 				gunangle_turn = 0.5;
-				shootdis_min = 64;
-				shootdis_max = 320;
+				shootdis_min  = 64;
+				shootdis_max  = 320;
 				break;
 				
-			case 4:
+			case type_explosive:
 				gunangle_turn = 0.1;
 				break;
 		}
-		if(wep == wep_jackhammer) gunangle_turn = 0.1;
+		if(wep == wep_jackhammer){
+			gunangle_turn = 0.1;
+		}
 	}
 	
 	 // Melee:
-	var w = choose(-120, 120);
-	wepangle = w * weapon_is_melee(wep);
-	bwepangle = -w * weapon_is_melee(bwep);
+	var _ang = choose(-120, 120);
+	wepangle  =  _ang * weapon_is_melee(wep);
+	bwepangle = -_ang * weapon_is_melee(bwep);
 	
 	 // Cursed Sprites:
 	if(curse){
 		with(["idle", "walk", "hurt", "dead", "spwn", "hide", "icon"]){
-			var	_type = self,
-				_spr = variable_instance_get(other, "spr_" + _type, -1),
+			var	_type    = self,
+				_spr     = variable_instance_get(other, "spr_" + _type, -1),
 				_sprName = "PetWeapon" + string_upper(string_char_at(_type, 1)) + string_delete(_type, 1, 1);
 				
 			if(_spr == lq_get(spr, _sprName)){
@@ -2850,11 +2854,11 @@
 			){
 				var _shot = false;
 				with(["", "b"]){
-					var b = self;
+					var _b = self;
 					with(other){
-						var	_wep      = variable_instance_get(self, b + "wep"),
-							_reload   = variable_instance_get(self, b + "reload"),
-							_canShoot = variable_instance_get(self, b + "can_shoot");
+						var	_wep      = variable_instance_get(self, _b + "wep"),
+							_reload   = variable_instance_get(self, _b + "reload"),
+							_canShoot = variable_instance_get(self, _b + "can_shoot");
 							
 						if(_canShoot <= 0 && _wep != wep_none && _reload <= 0){
 							if(
@@ -2875,8 +2879,8 @@
 									_canShoot += floor(random(15) / _wepLoad);
 								}
 								
-								variable_instance_set(self, b + "reload",    _reload);
-								variable_instance_set(self, b + "can_shoot", _canShoot);
+								variable_instance_set(self, _b + "reload",    _reload);
+								variable_instance_set(self, _b + "can_shoot", _canShoot);
 							}
 						}
 					}
@@ -2895,14 +2899,14 @@
 	
 	 // Weapons:
 	with(["", "b"]){
-		var b = self;
+		var _b = self;
 		with(other){
-			var	_wep    = variable_instance_get(self, b + "wep"),
-				_wkick  = variable_instance_get(self, b + "wkick"),
-				_reload = variable_instance_get(self, b + "reload");
+			var	_wep    = variable_instance_get(self, _b + "wep"),
+				_wkick  = variable_instance_get(self, _b + "wkick"),
+				_reload = variable_instance_get(self, _b + "reload");
 				
 			 // Weapon Kick:
-			if(!instance_is(self, enemy) || b != ""){
+			if(!instance_is(self, enemy) || _b != ""){
 				_wkick -= clamp(_wkick, -current_time_scale, current_time_scale);
 			}
 			
@@ -2916,28 +2920,28 @@
 					&& _wep != wep_none
 					&& sprite_index != spr_spwn
 					&& sprite_index != spr_hide
-					&& variable_instance_get(self, b + "can_shoot") <= 0
+					&& variable_instance_get(self, _b + "can_shoot") <= 0
 				){
 					var _snd = -1;
 					
 					 // Melee:
-					variable_instance_set(self, b + "wepflip", -variable_instance_get(self, b + "wepflip"));
+					variable_instance_set(self, _b + "wepflip", -variable_instance_get(self, _b + "wepflip"));
 					if(weapon_is_melee(_wep)){
-						var	l = 12,
-							d = gunangle + variable_instance_get(self, b + "wepangle");
+						var	_l = 12,
+							_d = gunangle + variable_instance_get(self, _b + "wepangle");
 							
-						instance_create(x + lengthdir_x(l, d), y + lengthdir_y(l, d), WepSwap);
-						variable_instance_set(self, b + "wkick", -3);
+						instance_create(x + lengthdir_x(_l, _d), y + lengthdir_y(_l, _d), WepSwap);
+						variable_instance_set(self, _b + "wkick", -3);
 						_snd = sndMeleeFlip;
 					}
 					
 					 // Normal:
 					else switch(weapon_get_type(_wep)){
-						case 2: // SHELL
+						case type_shell:
 							_snd = sndShotReload;
 							
 							 // Epic:
-							variable_instance_set(self, b + "wkick", -4);
+							variable_instance_set(self, _b + "wkick", -4);
 							repeat(weapon_get_cost(_wep)){
 								with(instance_create(x, y, Shell)){
 									sprite_index = sprShotShell;
@@ -2946,17 +2950,17 @@
 							}
 							break;
 							
-						case 3: // BOLT
+						case type_bolt:
 							_snd = sndCrossReload;
 							break;
 							
-						case 4: // EXPLOSIVE
+						case type_explosive:
 							if(array_exists([wep_grenade_launcher, wep_golden_grenade_launcher, wep_grenade_shotgun, wep_grenade_rifle, wep_auto_grenade_shotgun, wep_ultra_grenade_launcher, wep_sticky_launcher, wep_hyper_launcher, wep_toxic_launcher, wep_cluster_launcher, wep_heavy_grenade_launcher], _wep)){
 								_snd = sndNadeReload;
 							}
 							break;
 							
-						case 5: // ENERGY
+						case type_energy:
 							if(string_pos("PLASMA", weapon_get_name(_wep)) == 1){
 								_snd = sndPlasmaReload;
 							}
@@ -2974,7 +2978,7 @@
 			
 			 // Ready:
 			else{
-				var _wepLaser = variable_instance_get(self, b + "wep_laser");
+				var _wepLaser = variable_instance_get(self, _b + "wep_laser");
 				
 				 // Laser Sight:
 				if(weapon_get_laser_sight(wep)){
@@ -2991,10 +2995,10 @@
 				}
 				
 				 // Shoot:
-				var _canShoot = variable_instance_get(self, b + "can_shoot");
+				var _canShoot = variable_instance_get(self, _b + "can_shoot");
 				if(_canShoot > 0){
-					var	_minID = GameObject.id,
-						_wepangle = variable_instance_get(self, b + "wepangle");
+					var	_minID    = GameObject.id,
+						_wepangle = variable_instance_get(self, _b + "wepangle");
 						
 					_canShoot--;
 					_wepLaser = 0;
@@ -3060,15 +3064,15 @@
 						}
 					}
 					
-					variable_instance_set(self, b + "can_shoot", _canShoot);
-					variable_instance_set(self, b + "wepangle",  _wepangle);
+					variable_instance_set(self, _b + "can_shoot", _canShoot);
+					variable_instance_set(self, _b + "wepangle",  _wepangle);
 				}
 				
-				variable_instance_set(self, b + "wep_laser", _wepLaser);
+				variable_instance_set(self, _b + "wep_laser", _wepLaser);
 			}
 			
-			variable_instance_set(self, b + "wkick",  _wkick);
-			variable_instance_set(self, b + "reload", _reload);
+			variable_instance_set(self, _b + "wkick",  _wkick);
+			variable_instance_set(self, _b + "reload", _reload);
 		}
 	}
 	
@@ -3085,11 +3089,11 @@
 		
 	if(_spr != spr_spwn && _spr != spr_hide && !instance_exists(variable_instance_get(self, "revive", noone))){
 		with(["", "b"]){
-			var b = self;
+			var _b = self;
 			with(other){
-				var	_wep     = variable_instance_get(self, b + "wep"),
-					_wepLoad = variable_instance_get(self, b + "reload"),
-					_wepAng  = variable_instance_get(self, b + "wepangle"),
+				var	_wep     = variable_instance_get(self, _b + "wep"),
+					_wepLoad = variable_instance_get(self, _b + "reload"),
+					_wepAng  = variable_instance_get(self, _b + "wepangle"),
 					_wepDir  = gunangle + _wepAng;
 					
 				array_push(_wepDraw, {
@@ -3098,12 +3102,12 @@
 					"y"    : _y + lengthdir_y(_wepOffX, _wepDir) + lengthdir_y(_wepOffY * 2/3, _wepDir - 90),
 					"gang" : gunangle,
 					"wang" : _wepAng,
-					"kick" : variable_instance_get(self, b + "wkick"),
-					"flip" : ((_wepAng != 0) ? variable_instance_get(self, b + "wepflip") : 1) * ((_wepOffY == 0) ? right : sign(_wepOffY)),
+					"kick" : variable_instance_get(self, _b + "wkick"),
+					"flip" : ((_wepAng != 0) ? variable_instance_get(self, _b + "wepflip") : 1) * ((_wepOffY == 0) ? right : sign(_wepOffY)),
 					"blnd" : merge_color(_col, c_black, 0.15 * (_wepLoad > 0) * weapon_is_melee(_wep)),
 					"alph" : _alp,
 					"load" : _wepLoad,
-					"lasr" : min(1, weapon_get_laser_sight(_wep) * variable_instance_get(self, b + "wep_laser"))
+					"lasr" : min(1, weapon_get_laser_sight(_wep) * variable_instance_get(self, _b + "wep_laser"))
 				});
 				
 				_wepOffY *= -1;

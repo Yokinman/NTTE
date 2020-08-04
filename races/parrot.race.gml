@@ -595,9 +595,9 @@
 				with(_feathersTargeting) canhold = true;
 				
 				if(feather_targ_delay <= 0){
-					var	_targ = [],
-						_targX = mouse_x[index],
-						_targY = mouse_y[index],
+					var	_targ       = [],
+						_targX      = mouse_x[index],
+						_targY      = mouse_y[index],
 						_targRadius = feather_targ_radius,
 						_featherMax = array_length(_feathersTargeting);
 						

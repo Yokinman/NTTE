@@ -319,7 +319,7 @@
 			_y = y - 8;
 			
 		 // General FX:
-		sleep(60);
+		sleep(100);
 		view_shake_at(x, y, 50);
 		with(instance_create(_x, _y, PortalClear)){
 			sprite_index = other.mask_index;
@@ -2514,10 +2514,7 @@
 		
 		 // Z-Axis Support:
 		if("z" in target){
-			if(target.object_index == RavenFly || target.object_index == LilHunterFly){
-				y += target.z;
-			}
-			else y -= target.z;
+			y -= abs(target.z);
 		}
 	}
 	else{
@@ -3306,7 +3303,7 @@
 		sprite_index = spr.PetWeaponChst;
 		 
 		 // Vars:
-		type = irandom(5);
+		type = choose(type_melee, type_bullet, type_shell, type_bolt, type_explosive, type_energy);
 		
 		 // Prompt:
 		prompt = prompt_create("BATTLE");
@@ -3316,9 +3313,9 @@
 		
 		 // Curse:
 		switch(crown_current){
-			case crwn_none:   curse = false;        break;
-			case crwn_curses: curse = chance(2, 3); break;
-			default:          curse = chance(1, 7);
+			case crwn_none   : curse = false;        break;
+			case crwn_curses : curse = chance(2, 3); break;
+			default          : curse = chance(1, 7);
 		}
 		
 		return id;
@@ -3467,7 +3464,7 @@
 				_pathY = null;
 				
 			switch(type){
-				case 0: /// MELEE
+				case type_melee: // MELEE
 					
 					 // Movement:
 					if(instance_seen(x, y, target)){
@@ -3493,7 +3490,7 @@
 					
 					break;
 					
-				case 2: /// CLOSE RANGE
+				case type_shell: /// CLOSE RANGE
 					
 					 // Movement:
 					if(instance_seen(x, y, target)){
@@ -3509,7 +3506,7 @@
 					
 					break;
 					
-				case 3: /// LONG RANGE + COVER
+				case type_bolt: /// LONG RANGE + COVER
 				
 					 // Go to Cover:
 					if(cover_delay > 0 || PetWeaponBoss_point_is_cover(cover_x, cover_y, _tx, _ty)){
@@ -3588,7 +3585,7 @@
 					
 					break;
 					
-				case 5: /// ENERGY
+				case type_energy: /// BIG FIREPOWER, LOW MOVEMENT
 				
 					 // Movement:
 					if(instance_seen(x, y, target)){
@@ -3611,7 +3608,7 @@
 					
 					break;
 					
-				default:
+				default: /// DEFAULT
 				
 					 // Movement:
 					if(instance_seen(x, y, target)){
@@ -3706,18 +3703,18 @@
 								if(weapon_get_auto(_wep) || _wepLoad <= 10){
 									_canShoot += floor(random(30) / _wepLoad);
 								}
-								if(type == 4 || _wep == wep_jackhammer){
+								if(type == type_explosive || _wep == wep_jackhammer){
 									_canShoot += irandom(ceil(3 * (1 - (my_health / maxhealth))));
 								}
 								
 								 // Shooting Delay:
 								alarm2 = 30 + (_canShoot * _wepLoad);
 								switch(type){
-									case 0:
+									case type_melee:
 										alarm2 += 15 + (30 * (wep == wep_jackhammer));
 										break;
 										
-									case 2: // Warning
+									case type_shell: // Warning
 										_reload = 9;
 										with(alert_create(self, spr_icon)){
 											alert.x--;
@@ -3728,7 +3725,7 @@
 										}
 										break;
 										
-									case 5:
+									case type_energy:
 										alarm2 += random(30);
 										break;
 								}
@@ -3745,7 +3742,7 @@
 	}
 	
 #define PetWeaponBoss_hurt(_hitdmg, _hitvel, _hitdir)
-	if(type == 0 || type == 2){
+	if(type == type_melee || type == type_shell){
 		_hitdir = angle_lerp(_hitdir, _hitdir + 180, random_range(0.5, 1));
 	}
 	enemy_hurt(_hitdmg, _hitvel, _hitdir);
@@ -4504,8 +4501,8 @@
 								if("walk" not in self || walk <= 0 || instance_is(self, Freak) || instance_is(self, ExploFreak)){
 									other.idle_time = 10 + random(20);
 									
-									var n = (instance_exists(Player) ? instance_nearest(other.x, other.y, Player) : instance_nearest(other.x - 16, other.y - 16, Floor));
-									direction = point_direction(other.x, other.y, n.x, n.y - 8);
+									var _target = (instance_exists(Player) ? instance_nearest(other.x, other.y, Player) : instance_nearest(other.x - 16, other.y - 16, Floor));
+									direction = point_direction(other.x, other.y, _target.x, _target.y - 8);
 									speed += current_time_scale;
 									
 									if("walk"     in self) walk = other.idle_time;
@@ -4519,16 +4516,20 @@
 						else{
 							idle_time = random_range(idle_wait[0], idle_wait[1]);
 							
-							var n = instance_nearest(x, y, Player);
+							var _target = instance_nearest(x, y, Player);
 							
 							with(target){
 								 // Face Player:
-								if(instance_exists(n)){
-									var d = point_direction(x, y, n.x, n.y - 8) + orandom(5);
-									if("gunangle" in self) gunangle = d;
+								if(instance_exists(_target)){
+									var _targetDir = point_direction(x, y, _target.x, _target.y - 8) + orandom(5);
+									if("gunangle" in self){
+										gunangle = _targetDir;
+									}
 									if("right" in self){
-										if("gunangle" not in self) direction = d;
-										scrRight(d);
+										if("gunangle" not in self){
+											direction = _targetDir;
+										}
+										scrRight(_targetDir);
 									}
 								 }
 								
@@ -4550,7 +4551,7 @@
 							}
 							
 							 // Let's Roll:
-							if(chance(1, 5) && instance_near(x, y, n, 160)){
+							if(chance(1, 5) && instance_near(x, y, _target, 160)){
 								jump_time = 1;
 							}
 						}
@@ -4561,14 +4562,14 @@
 						jump_time -= current_time_scale;
 						if(jump_time <= 0){
 							jump_time = 0;
-							canmove = true;
+							canmove   = true;
 							
 							 // Cmon Bros:
 							with(instances_matching_gt(instances_matching(object_index, "name", name), "jump_time", 0)){
 								if(instance_exists(target) && target.object_index == other.target.object_index && instance_near(x, y, other, 64)){
 									jump_time = 0;
 									idle_time = random_range(10, 60);
-									canmove = true;
+									canmove   = true;
 								}
 							}
 						}
@@ -4610,7 +4611,7 @@
 						
 						 // Stop Rising:
 						else{
-							speed = 6;
+							speed  = 6;
 							zspeed = 0;
 						}
 					}
@@ -4621,9 +4622,9 @@
 					if(speed > 0){
 						direction = point_direction(x, y, jump_x, jump_y);
 						if(point_distance(x, y, jump_x, jump_y) <= speed_raw){
-							speed = 0;
-							x = jump_x;
-							y = jump_y;
+							speed  = 0;
+							x      = jump_x;
+							y      = jump_y;
 							zspeed = -jump * max(1, (z - 8) / 20);
 						}
 					}
@@ -4634,9 +4635,9 @@
 						else{
 							 // Take Flight:
 							if(jump_time == 0){
-								jump_x = x;
-								jump_y = y;
-								zspeed = jump;
+								jump_x    = x;
+								jump_y    = y;
+								zspeed    = jump;
 								zfriction = grav;
 							}
 							
@@ -4647,8 +4648,8 @@
 								with(target){
 									right *= choose(-1, 1);
 									if(instance_exists(Player)){
-										var t = instance_nearest(x, y, Player);
-										scrRight(point_direction(x, y, t.x, t.y));
+										var _target = instance_nearest(x, y, Player);
+										scrRight(point_direction(x, y, _target.x, _target.y));
 									}
 								}
 							}
@@ -4668,7 +4669,7 @@
 							if(
 								(other.jump_x == other.x && other.jump_y == other.y)
 								|| !place_meeting(other.jump_x, other.jump_y, Floor)
-								|| place_meeting(other.jump_x, other.jump_y, Wall)
+								||  place_meeting(other.jump_x, other.jump_y, Wall)
 							){
 								var	_x = other.x,
 									_y = other.y;
@@ -4699,10 +4700,10 @@
 								
 								 // Random Nearby Floor:
 								else{
-									var	l = random_range(48, 96),
-										d = random(360);
+									var	_l = random_range(48, 96),
+										_d = random(360);
 										
-									with(instance_nearest_bbox(_x + lengthdir_x(l, d), _y + lengthdir_y(l, d), Floor)){
+									with(instance_nearest_bbox(_x + lengthdir_x(_l, _d), _y + lengthdir_y(_l, _d), Floor)){
 										_x = bbox_center_x;
 										_y = bbox_center_y;
 									}
@@ -4728,14 +4729,14 @@
 			case projectile: // Damage Related
 				
 				with(target){
-					var	_inst = id,
+					var	_inst     = id,
 						_saveMask = mask_index;
 						
 					mask_index = lq_defget(other.target_save, "mask_index", mask_index);
 					
 					with(instances_matching_ne(instance_rectangle(x - 32, y - 32, x + 32, y + 32, instances_matching(other.object_index, "name", other.name)), "id", other)){
 						with(target) if(instance_is(self, hitme)){
-							var m = mask_index;
+							var _lastMask = mask_index;
 							mask_index = lq_defget(other.target_save, "mask_index", mask_index);
 							
 							if(place_meeting(x, y, _inst)){
@@ -4746,7 +4747,7 @@
 								if(!instance_exists(other)) exit;
 							}
 							
-							mask_index = m;
+							mask_index = _lastMask;
 						}
 					}
 					
@@ -5272,15 +5273,20 @@
 				eyeblink += current_time_scale;
 				
 				 // Lookin'
-				var	n = instance_nearest(x, y, Player),
-					_dir = 90;
+				var	_dir    = 90,
+					_target = instance_near(
+						x,
+						y,
+						instances_matching(Player, "visible", true),
+						8 + (64 * (1 + !position_meeting(x, y, Wall)) * (1 + instance_exists(enemy)))
+					);
 					
-				if(instance_exists(n) && n.visible && (instance_near(x, y, n, 140) || !position_meeting(x, y, Wall))){
-					if(n.y < y - 8){
+				if(instance_exists(_target)){
+					if(_target.y < y - 8){
 						_dir = 270 + (30 * sin(eyeblink / 40));
 					}
 					else{
-						_dir = point_direction(x, y - 8, n.x, n.y);
+						_dir = point_direction(x, y - 8, _target.x, _target.y);
 					}
 				}
 				
@@ -5288,7 +5294,7 @@
 				eyedir = (eyedir + 360) % 360;
 				
 				 // Target Eye Control:
-				var	_num = 0.5 + (0.5 * (angle_difference(eyedir, 270) / 120)),
+				var	_num   = 0.5 + (0.5 * (angle_difference(eyedir, 270) / 120)),
 					_blink = ((eyeblink % 250) < 6 || (eyeblink % 300) < 6);
 					
 				with(target){
@@ -5500,14 +5506,27 @@
 				var _inst  = instances_matching(instances_matching_gt(_object, "id", _lastID), "z", null),
 					_break = false;
 				
-				if(_object == Effect){
-					_inst = instances_matching_ne(_inst, "object_index", RainSplash, RainDrop, SnowFlake, Bubble);
-					if(instance_number(Smoke) >= 100){
-						_inst = instances_matching_ne(_inst, "object_index", Smoke);
-					}
-					if(instance_number(Dust) >= 100){
-						_inst = instances_matching_ne(_inst, "object_index", Dust);
-					}
+				switch(_object){
+					case hitme: // Wall-Breaking Bros (Big Bandit)
+						with(instances_matching(_inst, "top_object_wallcheck", null)){
+							move_step(1);
+							top_object_wallcheck = place_meeting(x, y, Wall);
+							if(top_object_wallcheck){
+								_inst = instances_matching_ne(_inst, "id", id);
+							}
+							move_step(-1);
+						}
+						break;
+						
+					case Effect: // Anti-Lag
+						_inst = instances_matching_ne(_inst, "object_index", RainSplash, RainDrop, SnowFlake, Bubble);
+						if(instance_number(Smoke) >= 100){
+							_inst = instances_matching_ne(_inst, "object_index", Smoke);
+						}
+						if(instance_number(Dust) >= 100){
+							_inst = instances_matching_ne(_inst, "object_index", Dust);
+						}
+						break;
 				}
 				
 				if(array_length(_inst) > 0){

@@ -238,6 +238,7 @@
 				 // Desperation Clone:
 				with(obj_create(x, y, "CrystalClone")){
 					creator = other;
+					clone   = instances_matching(instances_matching_lt(clone, "size", 3), "intro", null);
 				}
 				
 				 // Effects:
@@ -361,7 +362,7 @@
 				with(instances_matching(instances_matching(CustomObject, "name", "CrystalClone"), "creator", id)){
 					_cloneNum += variable_instance_get(target, "size", 1);
 				}
-				if(chance((1 - (_cloneNum / clone_max)), 1)){
+				if(!chance(_cloneNum, clone_max)){
 					with(obj_create(x, y, "CrystalClone")){
 						_canWarp = false;
 						creator = other;

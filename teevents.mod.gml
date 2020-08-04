@@ -82,8 +82,8 @@
 		_type       = "",
 		_dirOff     = 30,
 		_floorDis   = -32,
-		_spawnX     = x,
-		_spawnY     = y,
+		_spawnX     = spawn_x,
+		_spawnY     = spawn_y,
 		_spawnDis   = 128,
 		_spawnFloor = FloorNormal;
 		
@@ -208,8 +208,8 @@
 		_type       = "",
 		_dirOff     = 0,
 		_floorDis   = 32,
-		_spawnX     = x,
-		_spawnY     = y,
+		_spawnX     = spawn_x,
+		_spawnY     = spawn_y,
 		_spawnDis   = 32,
 		_spawnFloor = FloorNormal;
 		
@@ -221,8 +221,10 @@
 		"Scorpion" : 1,
 		"Maggot"   : 1,
 		"Skull"    : 1,
-		"Dummy"    : (GameCont.loops <= 0)
+		"Dummy"    : instance_exists(WantBoss)
 	});
+	dummy_spawn = 1;
+	dummy_music = false;
 	switch(type){
 		case "Chest":
 		case "Dummy":
@@ -603,62 +605,96 @@
 	switch(type){
 		
 		case "Dummy":
-			
-			if(!position_meeting(x, y, TutorialTarget)){
-				var	_playerPos = [],
-					_wall = [];
-					
-				 // Move Player to Spawnable Position:
-				with(Wall){
-					if((!place_free(x - 16, y) && !place_free(x + 16, y)) || (!place_free(x, y + 16) && ! place_free(x, y - 16))){
-						if(array_length(instance_rectangle_bbox(bbox_left - 1, bbox_top - 1, bbox_right + 1, bbox_bottom + 1, TopSmall)) > 0){
-							array_push(_wall, id);
-						}
-					}
-				}
-				with(instance_nearest_bbox(x + orandom(16), y + orandom(16), _wall)){
-					var _dis = 112;
-					for(var _dir = 0; _dir < 360; _dir += 4){
-						var	_fx = x + lengthdir_x(_dis, _dir),
-							_fy = y + lengthdir_y(_dis, _dir);
+		
+			 // Bandit Ambush:
+			if(instance_exists(WantBoss)){
+				if(dummy_spawn > 0){
+					if(!position_meeting(x, y, TutorialTarget)){
+						dummy_spawn--;
+						dummy_music = true;
+						
+						 // Move Player to Spawnable Position:
+						var	_wall      = [],
+							_playerPos = [];
 							
-						if(!collision_line(x, y, _fx, _fy, Wall, true, true)){
-							with(Player){
-								array_push(_playerPos, [id, x, y]);
-								x = _fx;
-								y = _fy;
+						with(Wall){
+							if((!place_free(x - 16, y) && !place_free(x + 16, y)) || (!place_free(x, y + 16) && ! place_free(x, y - 16))){
+								if(array_length(instance_rectangle_bbox(bbox_left - 1, bbox_top - 1, bbox_right + 1, bbox_bottom + 1, TopSmall)) > 0){
+									array_push(_wall, id);
+								}
 							}
-							break;
+						}
+						with(instance_nearest_bbox(x + orandom(16), y + orandom(16), _wall)){
+							var _dis = 112;
+							for(var _dir = 0; _dir < 360; _dir += 4){
+								var	_fx = x + lengthdir_x(_dis, _dir),
+									_fy = y + lengthdir_y(_dis, _dir);
+									
+								if(!collision_line(x, y, _fx, _fy, Wall, true, true)){
+									with(Player){
+										array_push(_playerPos, [id, x, y]);
+										x = _fx;
+										y = _fy;
+									}
+									break;
+								}
+							}
+						}
+						
+						 // Call Big Bandit:
+						var _minID = GameObject.id;
+						with(WantBoss) with(self){
+							var	_lastSub   = GameCont.subarea,
+								_lastAlarm = alarm_get(0);
+								
+							event_perform(ev_alarm, 0);
+							
+							GameCont.subarea = _lastSub;
+							if(instance_exists(self)){
+								alarm_set(0, _lastAlarm);
+							}
+						}
+						
+						 // Return Players:
+						with(_playerPos){
+							with(self[0]){
+								x = other[1];
+								y = other[2];
+							}
+						}
+						
+						 // Fix Big Bandit:
+						with(instances_matching_gt(BanditBoss, "id", _minID)){
+							var _target = instance_nearest(x, y, Player);
+							if(instance_exists(_target)){
+								scrAim(point_direction(x, y, _target.x, _target.y));
+							}
+							
+							 // Awesomesauce:
+							hitid = [sprTargetIdle, "BANDIT AMBUSH"];
+							
+							 // Less:
+							GameCont.bigbandit_dummy_spawn = variable_instance_get(GameCont, "bigbandit_dummy_spawn", 0) + 1;
 						}
 					}
 				}
 				
-				 // Call Big Bandit:
-				var _minID = GameObject.id;
-				with(WantBoss) with(self){
-					event_perform(ev_alarm, 0);
-				}
-				
-				 // Return Players:
-				with(_playerPos){
-					with(self[0]){
-						x = other[1];
-						y = other[2];
+				 // Boss Win Music Fix:
+				else if(dummy_music && GameCont.subarea != 3 && !instance_exists(BanditBoss)){
+					dummy_music = false;
+					with(MusCont){
+						alarm_set(1, 1);
 					}
 				}
-				
-				 // Fix Big Bandit:
-				with(instances_matching_gt(BanditBoss, "id", _minID)){
-					var n = instance_nearest(x, y, Player);
-					if(instance_exists(n)){
-						scrAim(point_direction(x, y, n.x, n.y));
+			}
+			
+			 // Nevermind...
+			else if(instance_exists(Portal) && position_meeting(x, y, TutorialTarget)){
+				with(instances_at(x, y, TutorialTarget)){
+					if(position_meeting(other.x, other.y, id)){
+						my_health = 0;
 					}
-					
-					 // Awesomesauce:
-					hitid = [sprTargetIdle, "BANDIT AMBUSH"];
 				}
-				
-				instance_destroy();
 			}
 			
 			break;
@@ -671,8 +707,8 @@
 #define MaggotPark_chance  return 1/50;
 
 #define MaggotPark_create
-	var	_x          = x,
-		_y          = y,
+	var	_x          = spawn_x,
+		_y          = spawn_y,
 		_num        = 3,
 		_ang        = random(360),
 		_nestNum    = _num,
@@ -683,8 +719,8 @@
 		_type       = "round",
 		_dirOff     = 0,
 		_floorDis   = -32,
-		_spawnX     = _x,
-		_spawnY     = _y,
+		_spawnX     = spawn_x,
+		_spawnY     = spawn_y,
 		_spawnDis   = 160,
 		_spawnFloor = FloorNormal;
 		
@@ -882,8 +918,8 @@
 	
 	 // Scorpion Nests:
 	var	_minID      = GameObject.id,
-		_spawnX     = x,
-		_spawnY     = y,
+		_spawnX     = spawn_x,
+		_spawnY     = spawn_y,
 		_spawnFloor = FloorNormal;
 		
 	repeat(3){
@@ -973,7 +1009,7 @@
 	}
 	
 	
-#define SewerPool_text    return choose(`${event_tip}RADIOACTIVE SEWAGE @wSMELLS#WORSE THAN YOU THINK`, `${event_tip}ACID RAIN @wRUNOFF`);
+#define SewerPool_text    return choose(`${event_tip}RADIOACTIVE SEWAGE @sSMELLS#WORSE THAN YOU THINK`, `${event_tip}ACID RAIN @sRUNOFF`);
 #define SewerPool_area    return area_sewers;
 #define SewerPool_chance  return 1/5;
 
@@ -984,8 +1020,8 @@
 		_dirStart   = 90,
 		_dirOff     = 0,
 		_floorDis   = -32,
-		_spawnX     = x,
-		_spawnY     = y,
+		_spawnX     = spawn_x,
+		_spawnY     = spawn_y,
 		_spawnDis   = 96,
 		_spawnFloor = [];
 		
@@ -1024,7 +1060,7 @@
 			}
 			
 			 // Just Bros Bathing Together:
-			if(point_distance(x, y, 10016, 10016) >= 128){
+			if(point_distance(x, y, _spawnX, _spawnY) >= 128){
 				repeat(2 + irandom(1)){
 					with(obj_create(x - irandom(16), y + orandom(24), "Cat")){
 						right = choose(-1, 1);
@@ -1077,13 +1113,13 @@
 							
 							 // Entrance:
 							floor_set_style(1, "lair");
-							for(var l = _border; l <= _dis; l += 32){
-								with(floor_set(_fx - 16 + lengthdir_x(l, _dir), _fy - 16 + lengthdir_y(l, _dir), true)){
+							for(var _l = _border; _l <= _dis; _l += 32){
+								with(floor_set(_fx - 16 + lengthdir_x(_l, _dir), _fy - 16 + lengthdir_y(_l, _dir), true)){
 									 // Doors:
-									if(l > _dis - 32){
+									if(_l > _dis - 32){
 										door_create(x + 16, y + 16, _dir);
 									}
-									if(l <= _border){
+									if(_l <= _border){
 										door_create(x + 16, y + 16, _dir + 180);
 									}
 									
@@ -1138,8 +1174,8 @@
 								for(var _side = -1; _side <= 1; _side += 2){
 									var	_off = 20,
 										_num = 2,
-										l = 28,
-										d = (180 * (_side < 0)) - _off;
+										_l   = 28,
+										_d   = (180 * (_side < 0)) - _off;
 										
 									repeat(_num){
 										var _obj = choose(
@@ -1150,13 +1186,13 @@
 											"AlbinoGator"
 										);
 										
-										with(obj_create(x + orandom(2) + lengthdir_x(l, d), y - random(4) + lengthdir_y(l, d), _obj)){
+										with(obj_create(x + orandom(2) + lengthdir_x(_l, _d), y - random(4) + lengthdir_y(_l, _d), _obj)){
 											x = xstart;
 											y = ystart;
 											image_index = irandom(image_number - 1);
 											
 											 // Aim:
-											scrAim(d + 180);
+											scrAim(_d + 180);
 											if(chance(2, 3)){
 												gunangle = 90 + (random_range(30, 50) * right);
 											}
@@ -1170,9 +1206,9 @@
 												case "BabyGator":
 													if(chance(1, 2)){
 														with(instance_copy(false)){
-															var o = orandom(30);
-															x += lengthdir_x(16, d + o);
-															y += lengthdir_y(16, d + o);
+															var _o = orandom(30);
+															x += lengthdir_x(16, _d + _o);
+															y += lengthdir_y(16, _d + _o);
 															right *= choose(-1, 1);
 															gunangle = 90 + (angle_difference(90, gunangle) * right) + orandom(20);
 															array_push(_inst, id);
@@ -1184,7 +1220,7 @@
 											array_push(_inst, id);
 										}
 										
-										d += (_off * 2) / (_num - 1);
+										_d += (_off * 2) / (_num - 1);
 									}
 								}
 							}
@@ -1347,8 +1383,8 @@
 		_type       = "round",
 		_dirOff     = 60,
 		_floorDis   = ((GameCont.subarea == 3) ? -16 : 0),
-		_spawnX     = x,
-		_spawnY     = y,
+		_spawnX     = spawn_x,
+		_spawnY     = spawn_y,
 		_spawnDis   = 32,
 		_spawnFloor = FloorNormal,
 		_instTop    = [],
@@ -1359,9 +1395,6 @@
 	floor_set_align(null, null, 32, 32);
 	
 	with(floor_room(_spawnX, _spawnY, _spawnDis, _spawnFloor, _w, _h, _type, _dirOff, _floorDis)){
-		other.x = x;
-		other.y = y;
-		
 		 // Decals:
 		repeat(3){
 			obj_create(x, y, "TopDecal");
@@ -1415,10 +1448,10 @@
 					
 					 // Ravens:
 					var	_num = 3 + ceil(GameCont.loops / 2),
-						l = 24;
+						_l   = 24;
 						
-					for(var d = _dir; d < _dir + 360; d += (360 / _num)){
-						with(top_create(x + lengthdir_x(l, d), y + lengthdir_x(l, d), "TopRaven", d + orandom(40), -1)){
+					for(var _d = _dir; _d < _dir + 360; _d += (360 / _num)){
+						with(top_create(x + lengthdir_x(_l, _d), y + lengthdir_x(_l, _d), "TopRaven", _d + orandom(40), -1)){
 							array_push(_instTop, id);
 						}
 					}
@@ -1491,7 +1524,7 @@
 	
 	floor_reset_align();
 	
-	inst_top = _instTop;
+	inst_top  = _instTop;
 	inst_idle = _instIdle;
 	with(inst_top) jump_time = -1;
 	
@@ -1520,7 +1553,7 @@
 	}
 	
 	
-#define FirePit_text    return `${event_tip}RAIN DROPS @wTURN TO ${event_tip}STEAM`;
+#define FirePit_text    return `${event_tip}RAIN DROPS @sTURN TO ${event_tip}STEAM`;
 #define FirePit_area    return area_scrapyards;
 #define FirePit_chance  return ((GameCont.subarea != 3) ? 1/12 : 0);
 
@@ -1621,8 +1654,8 @@
 		_type       = "",
 		_dirOff     = 0,
 		_floorDis   = -64,
-		_spawnX     = x,
-		_spawnY     = y,
+		_spawnX     = spawn_x,
+		_spawnY     = spawn_y,
 		_spawnDis   = 160,
 		_spawnFloor = FloorNormal;
 		
@@ -1677,11 +1710,11 @@
 #define YetiHideout_chance return 0; // 1/100;
 #define YetiHideout_create
 	with(obj_create(x, y, "BuriedVault")){
-		floor_vars		= {sprite_index : spr.FloorYeti	   };
-		floor_room_vars = {sprite_index : spr.FloorYetiRoom};
-		obj_prop		= "";
-		obj_loot		= "";
-		area			= area_city;
+		floor_vars      = { sprite_index : spr.FloorYeti     };
+		floor_room_vars = { sprite_index : spr.FloorYetiRoom };
+		obj_prop        = "";
+		obj_loot        = "";
+		area            = area_city;
 	}
 	
 
@@ -1689,8 +1722,8 @@
 #define MutantVats_area    return area_labs;
 #define MutantVats_chance  return lq_size(global.pastPets);
 #define MutantVats_create
-	var _spawnX     = x,
-		_spawnY     = y,
+	var _spawnX     = spawn_x,
+		_spawnY     = spawn_y,
 		_spawnDis   = 128,
 		_spawnFloor = FloorNormal,
 		_w          = 6,
@@ -1766,16 +1799,17 @@
 #define ButtonGame_text		return `NEVER TOUCH THE ${event_tip}RED BUTTON`;
 #define ButtonGame_area 	return area_labs;
 #define ButtonGame_chance	return 0; // 1/4;
+
 #define ButtonGame_create
-	var	_spawnX     = x,
-		_spawnY     = y,
-		_spawnDis   = 32,
-		_spawnFloor = FloorNormal,
-		_w          = 4,
+	var	_w          = 4,
 		_h          = 4,
 		_type       = "",
 		_dirOff     = 0,
-		_floorDis   = -32;
+		_floorDis   = -32,
+		_spawnX     = spawn_x,
+		_spawnY     = spawn_y,
+		_spawnDis   = 32,
+		_spawnFloor = FloorNormal;
 		
 	floor_set_align(null, null, 32, 32);
 	
@@ -1792,15 +1826,15 @@
 	floor_reset_style();
 
 	/*
-	var _spawnX     = x,
-		_spawnY     = y,
-		_spawnDis   = 32,
-		_spawnFloor = FloorNormal,
-		_w          = 5,
+	var _w          = 5,
 		_h          = 5,
 		_type       = "",
 		_dirOff     = 0,
-		_floorDis   = -32;
+		_floorDis   = -32,
+		_spawnX     = spawn_x,
+		_spawnY     = spawn_y,
+		_spawnDis   = 32,
+		_spawnFloor = FloorNormal;
 		
 	floor_set_align(null, null, 32, 32);
 	
@@ -1825,7 +1859,7 @@
 	*/
 	
 	
-#define PalaceShrine_text    return choose(`${event_tip}RAD MANIPULATION @wIS KINDA TRICKY`, `${event_tip}FINAL PROVISIONS`);
+#define PalaceShrine_text    return choose(`${event_tip}RAD MANIPULATION @sIS @wKINDA TRICKY`, `${event_tip}FINAL PROVISIONS`);
 #define PalaceShrine_area    return area_palace;
 #define PalaceShrine_chance  return ((GameCont.subarea == 2 && array_length(PalaceShrine_skills()) > 0) ? (1 / (1 + max(0, GameCont.wepmuts))) : 0);
 
@@ -1857,8 +1891,8 @@
 		_dirOff     = 0,
 		_dirStart   = random(360),
 		_floorDis   = 0,
-		_spawnX     = x,
-		_spawnY     = y,
+		_spawnX     = spawn_x,
+		_spawnY     = spawn_y,
 		_spawnDis   = 128,
 		_spawnFloor = FloorNormal;
 		
@@ -2039,14 +2073,14 @@
 	return _pool;
 	
 	
-#define PopoAmbush_text    return `${event_tip}THE IDPD @wIS WAITING FOR YOU`;
+#define PopoAmbush_text    return choose(`${event_tip}THE ${(player_count_race(char_venuz) > 0) ? "POPO" : "I.D.P.D."} @sIS @wWAITING FOR YOU`, `${event_tip}AMBUSHED`);
 #define PopoAmbush_area    return area_palace;
 #define PopoAmbush_chance  return ((GameCont.subarea != 3) ? clamp((GameCont.popolevel - 2), 0, 5) / 10 : 0);
 
 #define PopoAmbush_create
 	 // Ambush:
 	repeat(2 + irandom(2)) instance_create(x, y, IDPDSpawn);
-	with(instance_nearest(10016, 10016, IDPDSpawn)){
+	with(instance_nearest(spawn_x, spawn_y, IDPDSpawn)){
 		with(obj_create(x, y, "BigIDPDSpawn")){
 			instance_create(x, y, PortalClear);
 			with(alert_create(id, (freak ? spr.PopoFreakAlert : spr.PopoEliteAlert))){
@@ -2077,7 +2111,7 @@
 	}
 	
 	
-#define EelGrave_text    return `EELS ${event_tip}NEVER @wFORGET`;
+#define EelGrave_text    return `EELS ${event_tip}NEVER @sFORGET`;
 #define EelGrave_area    return "trench";
 #define EelGrave_chance  return ((GameCont.subarea != 3) ? 1/5 : 0);
 
@@ -2087,8 +2121,8 @@
 		_type       = "round",
 		_dirOff     = 0,
 		_floorDis   = -32,
-		_spawnX     = x,
-		_spawnY     = y,
+		_spawnX     = spawn_x,
+		_spawnY     = spawn_y,
 		_spawnDis   = 80,
 		_spawnFloor = FloorNormal;
 		
@@ -2162,19 +2196,27 @@
 		
 		 // Normal:
 		else if(!instance_exists(teevent_get_active(_name))){
-			with(instance_create(10016, 10016, CustomObject)){
+			with(instance_create(0, 0, CustomObject)){
 				name     = "NTTEEvent";
 				mod_type = script_ref_create(0)[0];
 				mod_name = mod_current;
 				event    = _name;
 				tip      = mod_script_call(mod_type, mod_name, event + "_text");
 				floors   = [];
+				spawn_x  = 10016;
+				spawn_y  = 10016;
 				
-				 // Tip:
-				if(is_string(tip) && tip != ""){
-					with(instances_matching(GenCont, "tip_ntte_event", null)){
-						tip_ntte_event = "@w" + other.tip;
-						tip = tip_ntte_event;
+				with(GenCont){
+					 // Spawn Point:
+					other.spawn_x = spawn_x;
+					other.spawn_y = spawn_y;
+					
+					 // Tip:
+					if(is_string(other.tip) && other.tip != ""){
+						if("tip_ntte_event" not in self){
+							tip_ntte_event = other.tip;
+							tip            = tip_ntte_event;
+						}
 					}
 				}
 			}
@@ -2198,6 +2240,7 @@
 	
 	 // All:
 	if(_name == all){
+		array_sort(_inst, true);
 		return _inst;
 	}
 	
@@ -2211,18 +2254,16 @@
 	
 /// GENERAL
 #define game_start
-	 // Pet History:
+	 // Reset:
 	global.livePets = {};
 	global.pastPets = {};
 	
 #define ntte_begin_step
 	 // No Infinite Rads:
-	if(GameCont.loops <= 0){
-		with(instances_matching(PopoFreak, "ntte_raddrop", null)){
-			ntte_raddrop = true;
-			if(kills == 0){
-				raddrop = 0;
-			}
+	with(instances_matching(PopoFreak, "ntte_raddrop", null)){
+		ntte_raddrop = (kills == 0 && GameCont.loops <= 0);
+		if(ntte_raddrop){
+			raddrop = 0;
 		}
 	}
 	

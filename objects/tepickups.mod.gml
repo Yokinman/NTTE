@@ -2763,10 +2763,7 @@
 		x = target.x + target.hspeed_raw - lengthdir_x(_odis, _odir);
 		y = target.y + target.vspeed_raw - lengthdir_y(_odis, _odir);
 		if("z" in target){
-			if(target.object_index == RavenFly || target.object_index == LilHunterFly){
-				y += target.z;
-			}
-			else y -= target.z;
+			y -= abs(target.z);
 		}
 		xprevious = x;
 		yprevious = y;
@@ -4501,10 +4498,7 @@
 		x = _t.x + _t.hspeed_raw + stick_x;
 		y = _t.y + _t.vspeed_raw + stick_y;
 		if("z" in _t){
-			if(_t.object_index == RavenFly || _t.object_index == LilHunterFly){
-				y += _t.z;
-			}
-			else y -= _t.z;
+			y -= abs(_t.z);
 		}
 		xprevious = x;
 		yprevious = y;

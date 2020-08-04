@@ -488,7 +488,7 @@
 			}
 		}
 		
-		if(lag) trace_time(script[2] + "_" + _type);
+		if(lag) trace_time(script[2] + "_" + _type + " (" + string(array_length(inst)) + ")");
 	}
 	
 #define obj_step(_type)
@@ -3020,10 +3020,10 @@
 		Returns whether or not an area is secret
 		
 		Means the area:
-			Has Proto Statues
-			Is returned to from other secret areas like Crib, IDPD HQ, Crown Vault, etc.
-			Spawns IDPD on new Crowns
-			Creates rad canisters when below the desired amount
+			Is not returned to from other secret areas like Crib, IDPD HQ, Crown Vault, etc.
+			Has no Proto Statues
+			Doesn't spawn IDPD on new Crowns
+			Doesn't create rad canisters when below the desired amount
 			..?
 	*/
 	
@@ -3348,7 +3348,9 @@
 		 // Kill:
 		if(y > _y + 64 && instance_is(self, hitme) && my_health > 0){
 			my_health = 0;
-			if("lasthit" in self) lasthit = [sprDebris102, "CAVE IN"];
+			if("lasthit" in self){
+				lasthit = [sprTurtleDead, "CAVE IN"];
+			}
 			event_perform(ev_step, ev_step_normal);
 		}
 		

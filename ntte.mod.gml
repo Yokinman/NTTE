@@ -183,9 +183,7 @@
 #define level_start // game_start but every level
 	var	_spawnX     = 10016,
 		_spawnY     = 10016,
-		_normalArea = (GameCont.hard > 1 && instance_number(enemy) > instance_number(EnemyHorror)),
-		_topChance  = 1/100,
-		_topSpawn   = [];
+		_normalArea = (GameCont.hard > 1 && instance_number(enemy) > instance_number(EnemyHorror));
 		
 	 // Visibilize Pets:
 	with(instances_matching(CustomHitme, "name", "Pet")){
@@ -203,11 +201,25 @@
 			
 			 // Quiet Down:
 			with(instances_matching(Player, "nearwep", target)){
-				if(!place_meeting(x, y, nearwep)){
-					nearwep = noone;
+				nearwep = noone;
+			}
+		}
+	}
+	
+	 // Subtract Big Bandit Ambush Spawns:
+	if(GameCont.area == area_desert){
+		with(instances_matching(WantBoss, "bigbandit_dummy_spawn", null)){
+			bigbandit_dummy_spawn = variable_instance_get(GameCont, "bigbandit_dummy_spawn", 0);
+			if(bigbandit_dummy_spawn != 0){
+				number -= bigbandit_dummy_spawn;
+				if(number == 0){
+					instance_destroy();
 				}
 			}
 		}
+	}
+	else if(!area_get_secret(GameCont.area)){
+		GameCont.bigbandit_dummy_spawn = 0;
 	}
 	
 	 // Flavor Big Cactus:
@@ -338,29 +350,29 @@
 					other.x = x;
 					other.y = y;
 					switch(other.type){
-						case 0: // MELEE
+						case type_melee:
 							floor_fill(x, y, 3, 3, "");
 							break;
 							
-						case 1: // BULLET
+						case type_bullet:
 							floor_fill(x, y, 5, 5, "round");
 							break;
 							
-						case 2: // SHELL
+						case type_shell:
 							floor_fill(x, y, 3, 3, "round");
 							break;
 							
-						case 3: // BOLT
+						case type_bolt:
 							floor_fill(x, y, 3, 3, "round");
 							floor_fill(x, y, 5, 5, "ring");
 							break;
 							
-						case 4: // EXPLOSIVE
+						case type_explosive:
 							floor_fill(x, y, 5, 1, "");
 							floor_fill(x, y, 1, 5, "");
 							break;
 							
-						case 5: // ENERGY
+						case type_energy:
 							floor_fill(x, y, 5, 5, "ring");
 							break;
 					}
@@ -606,7 +618,8 @@
 			
 			break;
 			
-		case area_caves: /// CRYSTAL CAVES
+		case area_caves:
+		case area_cursed_caves: /// CRYSTAL CAVES
 			
 			 // Miner Bandit:
 			with(instance_furthest(_spawnX, _spawnY, Bandit)){
@@ -614,29 +627,47 @@
 				instance_delete(id);
 			}
 			
-			 // Spawn Mortars:
-			with(instances_matching(LaserCrystal, "mortar_check", null)){
-				mortar_check = true;
-				if(chance(1, 4)){
-					obj_create(x, y, "Mortar");
-					instance_delete(self);
-				}
-			}
-			
 			 // Baby:
 			with(instances_matching(Spider, "spiderling_check", null)){
-				spiderling_check = true;
-				if(chance(1, 4)){
+				spiderling_check = chance(1, 4);
+				if(spiderling_check){
 					obj_create(x, y, "Spiderling");
 					instance_delete(id);
 				}
 			}
 			
+			 // Spawn Mortars:
+			with(instances_matching(crystaltype, "mortar_check", null)){
+				mortar_check = chance(1, 4);
+				if(mortar_check){
+					switch(object_index){
+						case LaserCrystal:
+							obj_create(x, y, "Mortar");
+							instance_delete(id);
+							break;
+							
+						case InvLaserCrystal:
+							obj_create(x, y, "InvMortar");
+							instance_delete(id);
+							break;
+					}
+				}
+			}
+			
 			 // Preloop Lightning Crystals:
-			if(GameCont.loops <= 0){
-				with(LaserCrystal) if(chance(1, 40 * ((crown_current == crwn_blood) ? 0.7 : 1))){
-					instance_create(x, y, LightningCrystal);
-					instance_delete(id);
+			if(GameCont.loops <= 0 && GameCont.subarea <= 1){
+				with(LaserCrystal){
+					if(chance(1, 40 * ((crown_current == crwn_blood) ? 0.7 : 1))){
+						instance_create(x, y, LightningCrystal);
+						instance_delete(id);
+					}
+				}
+			}
+			
+			 // Spawn Prism:
+			if(GameCont.area == area_cursed_caves){
+				with(instance_furthest(_spawnX, _spawnY, BigCursedChest)){
+					pet_spawn(x, y, "Prism");
 				}
 			}
 			
@@ -804,38 +835,11 @@
 			
 			break;
 			
-		case area_cursed_caves: /// CURSED CRYSTAL CAVES
-			
-			 // Miner Bandit:
-			with(instance_furthest(_spawnX, _spawnY, Bandit)){
-				obj_create(x, y, "MinerBandit");
-				instance_delete(id);
-			}
-			
-			 // Spawn Cursed Mortars:
-			with(instances_matching(InvLaserCrystal, "mortar_check", null)){
-				mortar_check = chance(1, 4);
-				if(mortar_check){
-					obj_create(x, y, "InvMortar");
-					instance_delete(id);
-				}
-			}
-			
-			 // Spawn Prism:
-			with(BigCursedChest) pet_spawn(x, y, "Prism");
-			
-			break;
-			
 		case area_jungle: /// JUNGLE where is the hive ?
 			
 			 // Top Spawns:
-			_topSpawn = [
-				[Bush,					1],
-				[JungleAssassinHide,	1/3],
-				[BigFlower,				1/3]
-			];
-			with(instances_matching([JungleBandit, JungleFly], "", null)){
-				if(chance(1, 3)){
+			with(instances_matching([Bush, JungleAssassinHide, JungleBandit, JungleFly], "", null)){
+				if(chance(1, 4)){
 					top_create(x, y, id, -1, -1);
 				}
 			}
@@ -874,14 +878,38 @@
 	}
 	
 	 // Activate Events:
-	with(array_flip(teevent_get_active(all))){
+	with(teevent_get_active(all)){
+		x = 0;
+		y = 0;
+		
+		 // Set Events:
 		on_step    = script_ref_create_ext(mod_type, mod_name, event + "_step");
 		on_cleanup = script_ref_create_ext(mod_type, mod_name, event + "_cleanup");
 		
-		 // Event Generation:
+		 // Generate Event:
 		var _minID = GameObject.id;
 		mod_script_call(mod_type, mod_name, event + "_create");
-		floors = array_combine(floors, instances_matching_gt(Floor, "id", _minID));
+		floors = instances_matching_gt(Floor, "id", _minID);
+		
+		 // Position Controller:
+		if(x == 0 && y == 0){
+			if(array_length(floors) > 0){
+				var	_x1 = +infinity,
+					_y1 = +infinity,
+					_x2 = -infinity,
+					_y2 = -infinity;
+					
+				with(floors){
+					if(_x1 > bbox_left      ) _x1 = bbox_left;
+					if(_y1 > bbox_top       ) _y1 = bbox_top;
+					if(_x2 < bbox_right  + 1) _x2 = bbox_right  + 1;
+					if(_y2 < bbox_bottom + 1) _y2 = bbox_bottom + 1;
+				}
+				
+				x = (_x1 + _x2) / 2;
+				y = (_y1 + _y2) / 2;
+			}
+		}
 	}
 	
 	 // Wall Enemies / Props:
@@ -1061,9 +1089,9 @@
 							var	l = 160,
 								d = _dir;
 								
-							with(chest_create(_x + lengthdir_x(l, d), _y + lengthdir_y(l, d), BigWeaponChest, true)){
+							with(chest_create(_x + lengthdir_x(l, d), _y + lengthdir_y(l, d), BigWeaponChest, false)){
 								with(top_create(x, y, self, d, l)){
-									with(chest_create(x + lengthdir_x(16, d), y + lengthdir_y(16, d), AmmoChest, true)){
+									with(chest_create(x + lengthdir_x(16, d), y + lengthdir_y(16, d), AmmoChest, false)){
 										top_create(x, y, self, -1, -1);
 									}
 									top_create(x, y, Cactus, d + 180 + orandom(90), -1);
@@ -1082,7 +1110,7 @@
 							else with(Player) if(my_health < maxhealth / 2 && chance(1, 2)){
 								_obj = HealthChest;
 							}
-							with(chest_create(_x, _y - 16, _obj, true)){
+							with(chest_create(_x, _y - 16, _obj, false)){
 								with(top_create(x, y, self, 0, 0)) spr_shadow_y--;
 							}
 							break;
@@ -1180,125 +1208,9 @@
 		}
 	}
 	
-	 // Top Spawns:
-	var _rollMax = 0;
-	with(_topSpawn) _rollMax += self[1];
-	if(array_length(_topSpawn) > 0){
-		with(instances_matching([TopSmall, Wall], "", null)) if(chance(_topChance, 1)){
-			var _roll = random(_rollMax);
-			if(_roll > 0){
-				 // Decide:
-				var _obj = -1;
-				with(_topSpawn){
-					_roll -= self[1];
-					if(_roll <= 0){
-						_obj = self[0];
-						break;
-					}
-				}
-				
-				 // Spawn:
-				var	_x = x + random(8),
-					_y = y + random(8);
-					
-				with(top_create(_x, _y, _obj, -1, -1)){
-					switch(_obj){
-						case Barrel: // Bandit Boys
-							for(var d = spawn_dir; d < spawn_dir + 360; d += (360 / 3)){
-								var l = random_range(12, 24);
-								with(top_create(x + lengthdir_x(l, d), y + lengthdir_y(l, d), Bandit, d, 0)){
-									idle_walk_chance = 1/20;
-								}
-							}
-							break;
-							
-						case BoneFish: // Fish Schools
-						case "Puffer":
-						case "HammerShark":
-							var	_num = irandom_range(1, 4) + (3 * GameCont.loops),
-								_ang = random(360);
-								
-							if(_obj == "HammerShark"){
-								_num = floor(_num / 4);
-							}
-							
-							if(_num > 0) for(var _dir = _ang; _dir < _ang + 360; _dir += (360 / _num)){
-								var	l = 12 + random(12 + (4 * GameCont.loops)),
-									d = _dir + orandom(40);
-									
-								with(top_create(x + lengthdir_x(l, d), y + lengthdir_y(l, d), _obj, d, 0)){
-									jump_time = other.jump_time;
-									z = max(8, other.z + orandom(8));
-								}
-							}
-							break;
-							
-						case Car: // Perching Ravens
-						case Tires:
-						case MeleeFake:
-							with(top_create(target.x, target.y + 1, "TopRaven", 0, 0)){
-								z += max(0, ((sprite_get_bbox_bottom(target.spr_idle) + 1) - sprite_get_bbox_top(target.spr_idle)) - 5);
-								
-								switch(_obj){
-									case Car:
-										x += 2 * other.target.image_xscale * variable_instance_get(other.target, "right", 1);
-										z += choose(-1, 0, 1);
-										break;
-										
-									case MeleeFake:
-										z -= choose(3, 4);
-										break;
-								}
-							}
-							break;
-							
-						case CrystalProp: // Spider Time
-						//case InvCrystal:
-							if(chance(1, 8)) repeat(irandom_range(1, 3)){
-								top_create(x, y, "Spiderling", random(360), -1);
-							}
-							break;
-							
-						case Freak: // Freak Groups
-							var _num = irandom_range(1, 4);
-							if(_num > 0) repeat(_num){
-								with(top_create(x + orandom(24), y + orandom(24), _obj, 0, 0)){
-									jump_time = other.jump_time;
-								}
-							}
-							break;
-							
-						/*case Hydrant: // Seal Squads
-							var	_type = choose(5, 6),
-								_time = 30 * random_range(5, 1 + instance_number(enemy)),
-								_num = 3 + irandom(2 + (crown_current == crwn_blood)) + ceil(GameCont.loops / 2);
-								
-							for(var d = spawn_dir; d < spawn_dir + 360; d += (360 / _num)){
-								with(top_create(x, y, (chance(1, 80) ? Bandit : "Seal"), d, -1)){
-									jump_time = _time + random(30);
-									with(target) if(variable_instance_get(self, "name") == "Seal"){
-										type = (chance(1, 2) ? _type : 4);
-										spr_idle = spr.SealIdle[type];
-										spr_walk = spr.SealWalk[type];
-										spr_weap = spr.SealWeap[type];
-									}
-								}
-							}
-							break;*/
-							
-						/*case ToxicBarrel: // Cat Dudes
-							repeat(choose(1, 1, 2)){
-								top_create(x, y, "Cat", random(360), -1);
-							}
-							break;*/
-					}
-				}
-			}
-		}
-	}
-	
+	/*
 	 // Top Chests:
-	if(false && _normalArea && (GameCont.area != area_desert || GameCont.loops > 0)){
+	if(_normalArea && (GameCont.area != area_desert || GameCont.loops > 0)){
 		var _obj = -1;
 		
 		 // Health:
@@ -1342,6 +1254,7 @@
 			}
 		}
 	}
+	*/
 	
 	 // Baby Scorpions:
 	if(instance_exists(Scorpion) || instance_exists(GoldScorpion)){
