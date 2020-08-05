@@ -1292,9 +1292,11 @@
 	if(array_length(inst) > 0){
 		with(inst){
 			 // Deactivate:
-			if(instance_exists(self) && !instance_seen(x, y, Player) && sprite_index != spr_hurt){
+			if(instance_exists(self) && !instance_near(x, y, Player, 96) && sprite_index != spr_hurt){
 				alarm1 = -1;
-				if(instance_is(self, GatorSmoke)) timer = 0;
+				if(instance_is(self, GatorSmoke)){
+					timer = 0;
+				}
 			}
 			
 			 // Reactivate:
@@ -1308,7 +1310,7 @@
 							var	_x = x,
 								_y = y;
 								
-							with(instance_create(x, y, Shell)) sprite_index = sprCigarette;
+							with(instance_create(_x, _y, Shell)) sprite_index = sprCigarette;
 							instance_change(Gator, true);
 							x = _x;
 							y = _y;

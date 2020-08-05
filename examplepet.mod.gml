@@ -1,4 +1,5 @@
 #define init
+	 // Sprites:
 	global.sprBabyIcon = sprite_add("sprites/pets/Example/sprBabyIcon.png", 1,  6,  6);
 	global.sprBabyIdle = sprite_add("sprites/pets/Example/sprBabyIdle.png", 4, 12, 12);
 	global.sprBabyWalk = sprite_add("sprites/pets/Example/sprBabyWalk.png", 6, 12, 12);
@@ -90,31 +91,39 @@
 		}
 	}
 	
-#define Baby_create(_x, _y)
+#define Baby_create
 	 // Visual:
-	spr_idle = global.sprBabyIdle;
-	spr_walk = global.sprBabyWalk;
-	spr_hurt = global.sprBabyHurt;
-	spr_shadow = shd16;
+	spr_idle     = global.sprBabyIdle;
+	spr_walk     = global.sprBabyWalk;
+	spr_hurt     = global.sprBabyHurt;
+	spr_shadow   = shd16;
 	spr_shadow_y = 5;
 	
 	 // Vars:
 	walkspeed = 0.8;
-	maxspeed = 3;
+	maxspeed  = 3;
 	
 	 // Stat:
-	if("tears" not in stat) stat.tears = 0;
+	if("tears" not in stat){
+		stat.tears = 0;
+	}
 	
 #define Baby_icon
 	return global.sprBabyIcon;
 	
 #define Baby_ttip
-	return ["JUST A BABY", "DON'T MAKE THEM SAD"];
+	return [
+		"JUST A BABY",
+		"DON'T MAKE THEM SAD"
+	];
 	
 #define Baby_stat(_name, _value)
 	switch(_name){
-		case "":      return global.sprBabyIdle;
-		case "tears": return [_name, `@(color:${make_color_rgb(30, 160, 240)})${_value}`];
+		case "":
+			return global.sprBabyIdle;
+			
+		case "tears":
+			return [_name, `@(color:${make_color_rgb(30, 160, 240)})${_value}`];
 	}
 	
 #define Baby_step
@@ -123,14 +132,13 @@
 		instance_create(x, y, Sweat);
 		
 		 // Special Stat:
-		if("tears" not in stat) stat.tears = 0;
 		stat.tears++;
 	}
 	
 #define Baby_hurt(_hitdmg, _hitvel, _hitdir)
 	 // Hurt/Dodge Sprite:
 	sprite_index = spr_hurt;
-	image_index = 0;
+	image_index  = 0;
 	
 	 // Effects:
 	instance_create(x, y, Dust);

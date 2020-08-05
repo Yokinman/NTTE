@@ -912,6 +912,13 @@
 				mask = [false, 0];
 			}
 			
+			 // Better Game Over Sprite (Big sprite so that the on-hover text is more mandatory):
+			NothingDeathCause = sprite(p + "sprNothingDeathCause", 1, 80, 80);
+			
+			 // Stairs:
+			FloorPalaceStairs       = sprite(p + "sprFloorPalaceStairs",       3, 0, 0);
+			FloorPalaceStairsCarpet = sprite(p + "sprFloorPalaceStairsCarpet", 6, 0, 0);
+			
 			 // Shrine Floors:
 			FloorPalaceShrine          = sprite(p + "sprFloorPalaceShrine",          10, 2, 2);
 			FloorPalaceShrineRoomSmall = sprite(p + "sprFloorPalaceShrineRoomSmall",  4, 0, 0);
@@ -1290,13 +1297,9 @@
 				CouchDead = sprite(p + "sprCouchDead", 3, 32, 32);
 				
 				 // Door:
-				CatDoor         = sprite(p + "sprCatDoor",          10, 2, 0);
-				CatDoorDebris   = sprite(p + "sprCatDoorDebris",     4, 4, 4);
-				msk.CatDoor     = sprite(p + "mskCatDoor",           1, 4, 0);
-				msk.CatDoorLOS  = sprite(p + "mskCatDoorLOS",        1, 4, 0);
-				with(msk.CatDoorLOS){
-					mask = [false, 1];
-				}
+				CatDoor       = sprite(p + "sprCatDoor",       10, 2, 0);
+				CatDoorDebris = sprite(p + "sprCatDoorDebris",  4, 4, 4);
+				msk.CatDoor   = sprite(p + "mskCatDoor",        1, 4, 0);
 				
 				 // Rug:
 				Rug = sprite(p + "sprRug", 2, 26, 26);

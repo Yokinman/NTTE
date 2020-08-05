@@ -185,9 +185,16 @@
 		_spawnY     = 10016,
 		_normalArea = (GameCont.hard > 1 && instance_number(enemy) > instance_number(EnemyHorror));
 		
-	 // Visibilize Pets:
+	 // Activate Pets:
 	with(instances_matching(CustomHitme, "name", "Pet")){
 		visible = true;
+		if(instance_exists(leader)){
+			x = leader.x;
+			y = leader.y;
+			xprevious = x;
+			yprevious = y;
+			move_contact_solid(wave, 16);
+		}
 	}
 	
 	 // Grounded Guitar/Sword:
@@ -758,6 +765,35 @@
 			break;
 			
 		case area_palace: /// PALACE
+			
+			 // Stairs:
+			if(GameCont.subarea == 3){
+				var	_sprStairs    = spr.FloorPalaceStairs,
+					_sprCarpet    = spr.FloorPalaceStairsCarpet,
+					_sprStairsImg = sprite_get_number(_sprStairs),
+					_sprCarpetImg = sprite_get_number(_sprCarpet);
+					
+				with(instances_matching(Carpet, "sprite_index", sprCarpet)){
+					with(FloorNormal){
+						var _img = floor(((bbox_center_y - other.bbox_top - 128) % 368) / 32);
+						if(_img >= 0 && _img < _sprStairsImg){
+							sprite_index = _sprStairs;
+							image_index  = _img;
+							depth        = 8;
+							
+							 // Carpet Mode:
+							if(place_meeting(x, y, other)){
+								sprite_index = _sprCarpet;
+								image_index *= (_sprCarpetImg / _sprStairsImg);
+								if(bbox_center_x > other.x){
+									image_index++;
+								}
+							}
+						}
+					}
+					depth = 9;
+				}
+			}
 			
 			 // Cool Dudes:
 			with(Guardian) if(chance(1, 20)){
@@ -2417,6 +2453,9 @@
 		if(hitid_fix){
 			hitid = [sprMSpawnIdle, "MAGGOT NEST"];
 		}
+	}
+	if(GameCont.deathcause == 37){
+		GameCont.deathcause = [spr.NothingDeathCause, "THE THRONE"];
 	}
 	
 	 // Call Scripts:

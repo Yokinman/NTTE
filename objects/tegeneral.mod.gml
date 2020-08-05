@@ -2692,23 +2692,26 @@
 		maxhealth = round(maxhealth * (1 + (0.5 * loops)));
 	}
 	
+	 // End of Level Revive:
+	if(instance_exists(revive)){
+		if(instance_exists(GenCont) || (instance_exists(leader) && instance_exists(Portal))){
+			with(revive){
+				instance_destroy();
+			}
+		}
+	}
+	
 	 // Loading/Level Up Screen:
 	if(instance_exists(GenCont) || instance_exists(LevCont)){
-		visible = false;
+		visible      = false;
 		portal_angle = 0;
 		
 		 // Follow Player:
 		var _inst = (instance_exists(leader) ? leader : instance_nearest(x, y, Player));
 		if(instance_exists(_inst)){
-			x = _inst.x + orandom(16);
-			y = _inst.y + orandom(16);
+			x = _inst.x;
+			y = _inst.y;
 		}
-	}
-	
-	 // End of Level Revive:
-	if(instance_exists(GenCont) || (instance_exists(leader) && instance_exists(Portal))){
-		with(revive) instance_destroy();
-		my_health = maxhealth;
 	}
 	
 	if(visible){
@@ -2723,19 +2726,41 @@
 		else sprite_index = enemy_sprite;
 		
 		 // Push:
-		if(instance_exists(leader) && place_meeting(x, y, Player)){
-			with(instances_meeting(x, y, instances_matching_gt(Player, "speed", 0))){
-				if(place_meeting(x, y, other)) with(other){
-					motion_add_ct(point_direction(other.x, other.y, x, y), push);
+		if(place_meeting(x, y, hitme)){
+			if(place_meeting(x, y, enemy)){
+				with(instances_meeting(x, y, enemy)){
+					if(place_meeting(x, y, other)){
+						if(size <= other.size){
+							motion_add_ct(point_direction(other.x, other.y, x, y), 1);
+						}
+						if(size >= other.size){
+							with(other){
+								motion_add_ct(point_direction(other.x, other.y, x, y), push);
+							}
+						}
+					}
+				}
+			}
+			if(place_meeting(x, y, Player)){
+				with(instances_meeting(x, y, instances_matching_ne(Player, "speed", 0))){
+					if(place_meeting(x, y, other)){
+						if(size - 3 <= other.size){
+							motion_add_ct(point_direction(other.x, other.y, x, y), 1);
+						}
+						if(size - 3 >= other.size){
+							with(other){
+								motion_add_ct(point_direction(other.x, other.y, x, y), push);
+							}
+						}
+					}
 				}
 			}
 		}
 		if(place_meeting(x, y, object_index)){
-			with(instances_meeting(x, y, instances_matching(instances_matching(object_index, "name", name), "visible", true))){
-				if(place_meeting(x, y, other) && !instance_exists(revive)){
-					motion_add(point_direction(other.x, other.y, x, y), push);
+			with(instances_meeting(x, y, instances_matching_ge(instances_matching(instances_matching(object_index, "name", name), "visible", true), "size", size))){
+				if(place_meeting(x, y, other)){
 					with(other){
-						motion_add(point_direction(other.x, other.y, x, y), push);
+						motion_add_ct(point_direction(other.x, other.y, x, y), push);
 					}
 				}
 			}
@@ -2752,9 +2777,6 @@
 	 // Death:
 	if(maxhealth > 0 && my_health <= 0){
 		if(revive == noone){
-			visible = false;
-			
-			 // Revive:
 			revive = obj_create(x, y, "PetRevive");
 			with(revive){
 				creator = other;
@@ -2785,7 +2807,10 @@
 			}
 			
 			 // Push:
-			motion_add(direction + orandom(20), speed * 2);
+			motion_add(
+				direction + orandom(20),
+				speed * 2
+			);
 			
 			 // Truly Dead:
 			if(corpse && !instance_exists(corpse_inst)){
@@ -2793,7 +2818,7 @@
 			}
 			sound_play_hit(snd_dead, 0.3);
 			sprite_index = spr_hurt;
-			image_index = 0;
+			image_index  = 0;
 			
 			 // Custom Death Event:
 			var _scrt = pet + "_death";
@@ -2802,9 +2827,23 @@
 			}
 		}
 	}
-	else if(revive != noone){
-		with(revive) instance_destroy();
-		revive = noone;
+	else{
+		 // Destroy Revive:
+		if(revive != noone){
+			with(revive) instance_destroy();
+			revive = noone;
+		}
+		
+		 // Destroy Corpse:
+		if(corpse_inst != noone){
+			with(corpse_inst){
+				repeat(2){
+					scrFX([x, 4], [y, 4], 0, Smoke);
+				}
+				instance_destroy();
+			}
+			corpse_inst = noone;
+		}
 	}
 	
 	 // Portal Attraction:
@@ -2831,8 +2870,8 @@
 		if(place_meeting(x, y, Portal)){
 			repeat(3) instance_create(x, y, Dust);
 			with(revive) instance_destroy();
+			visible    = false;
 			persistent = true;
-			visible = false;
 		}
 	}
 	
@@ -2853,12 +2892,12 @@
 	
 	 // Player Owns Pet:
 	if(instance_exists(leader)){
-		can_take = false;
+		can_take   = false;
 		persistent = true;
 		
 		 // Check if Target in Line of Sight:
-		var	_xtarget = leader.x,
-			_ytarget = leader.y,
+		var	_xtarget    = leader.x,
+			_ytarget    = leader.y,
 			_targetSeen = true;
 			
 		for(var i = 0; i < array_length(path_wall); i++){
@@ -2908,7 +2947,7 @@
 	else{
 		 // Leader Died or Something:
 		if(leader != noone){
-			leader = noone;
+			leader   = noone;
 			can_take = true;
 		}
 		
@@ -2966,10 +3005,15 @@
 			}
 		}
 	}
-	with(prompt) visible = other.can_take;
+	with(prompt){
+		visible = other.can_take;
+	}
 	
 	if(visible || instance_exists(revive)){
-		if(instance_exists(leader)) team = leader.team;
+		 // Allied:
+		if(instance_exists(leader)){
+			team = leader.team;
+		}
 		
 		 // Dodge Collision:
 		if(maxhealth <= 0){
@@ -3222,8 +3266,9 @@
 		depth = -5;
 		
 		 // Vars:
-		damage  = 1;
-		creator = noone;
+		damage     = 1;
+		creator    = noone;
+		persistent = true;
 		
 		 // Prompt:
 		prompt = prompt_create(`@rREVIVE`);
@@ -3236,6 +3281,8 @@
 	
 #define PetRevive_step
 	if(instance_exists(creator)){
+		creator.visible = false;
+		
 		 // Spinny:
 		creator.x += (sin(current_frame / 10) / 3) * current_time_scale;
 		creator.y += (cos(current_frame / 10) / 3) * current_time_scale;
@@ -3278,18 +3325,14 @@
 	else instance_destroy();
 	
 #define PetRevive_draw
-	with(creator) event_perform(ev_draw, 0);
+	with(creator){
+		event_perform(ev_draw, 0);
+	}
 	
 #define PetRevive_destroy
 	with(creator){
-		visible = true;
+		visible   = true;
 		my_health = maxhealth;
-		
-		 // Delete Corpse:
-		with(corpse_inst){
-			repeat(2) scrFX([x, 4], [y, 4], 0, Smoke);
-			instance_destroy();
-		}
 	}
 	
 	
@@ -3334,8 +3377,10 @@
 			curse = other.curse;
 			
 			 // Push Away:
-			with(player_find(other.prompt.pick)) with(other){
-				motion_add(point_direction(other.x, other.y, x, y), 3);
+			with(player_find(other.prompt.pick)){
+				with(other){
+					motion_add(point_direction(other.x, other.y, x, y), 3);
+				}
 			}
 		}
 		GameCont.nochest = 0;

@@ -1688,7 +1688,6 @@
 		meleedamage = 5;
 		walk        = 0;
 		walkspeed   = 1.2;
-		minspeed    = 0;
 		maxspeed    = 3.6;
 		gunangle    = random(360);
 		ammo        = 0;
@@ -1709,7 +1708,6 @@
 	
 	 // Movement:
 	enemy_walk(walkspeed, maxspeed);
-	speed = max(speed, minspeed);
 	
 	/*
 	 // Flak Target Tracking:
@@ -1746,8 +1744,10 @@
 	*/
 	
 	 // Animate:
-	if(sprite_index != spr_fire /*|| (!instance_exists(flak) && anim_end)*/){
-		sprite_index = enemy_sprite;
+	if(ammo <= 0 && array_length(instances_matching(instances_matching(instances_matching(CustomProjectile, "name", "VenomFlak"), "creator", id), "charging", true)) <= 0){
+		if(sprite_index != spr_fire || anim_end /*|| (!instance_exists(flak) && anim_end)*/){
+			sprite_index = enemy_sprite;
+		}
 	}
 	
 #define SilverScorpion_alrm1
@@ -1764,7 +1764,11 @@
 			 // Attack:
 			if(true || chance(2, 3)){
 				with(projectile_create(x, y, "VenomFlak", gunangle, 4)){
-					friction = 0.1;
+					friction      = 0.4;
+					image_xscale *= 1.25;
+					image_yscale *= 1.25;
+					charge_time   = 30;
+					alarm0        = charge_time;
 				}
 				instance_create(x, y, PortalClear);
 				alarm2 = 1;
@@ -1784,8 +1788,7 @@
 	 // Start Firing:
 	if(ammo <= 0){
 		ammo = 8;
-		//minspeed = 0;
-		sound_play_hit(sndGoldScorpionFire, 0.3);
+		sound_play_hit_ext(sndScorpionFireStart, 0.5 + random(0.3), 3);
 	}
 	
 	 // Fire:
@@ -1803,12 +1806,6 @@
 		 // Continue:
 		if(--ammo > 0){
 			alarm2 = 2;
-		}
-		
-		 // End:
-		else{
-			sprite_index = enemy_sprite;
-			if(minspeed == 0) minspeed = 1;
 		}
 	}
 	
@@ -2111,15 +2108,16 @@
 		image_speed  = 0.4;
 		
 		 // Vars:
-		friction = 0.4;
-		damage   = 6;
-		force    = 6;
-		typ      = 2;
-		creator  = noone;
-		charging = true;
+		friction    = 0.4;
+		damage      = 6;
+		force       = 6;
+		typ         = 2;
+		creator     = noone;
+		charging    = true;
+		charge_time = max(1, 15 / (1 + (0.5 * GameCont.loops)));
 		
 		 // Alarms:
-		alarm0 = max(1, 15 / (1 + (0.5 * GameCont.loops)));
+		alarm0 = charge_time;
 		
 		return id;
 	}
@@ -2197,7 +2195,7 @@
 	
 #define VenomFlak_draw
 	if(charging){
-		var _scale = 0.25 + (1 - (alarm0 / 15)) + random(0.2);
+		var _scale = 0.25 + (1 - (alarm0 / charge_time)) + random(0.2);
 		draw_sprite_ext(sprite_index, image_index, x, y, image_xscale * _scale, image_yscale * _scale, image_angle, image_blend, image_alpha);
 	}
 	else draw_self();
@@ -2325,7 +2323,7 @@
 		damage     = 2;
 		force      = 4;
 		typ        = 2;
-		minspeed   = 4
+		minspeed   = 4;
 		hit_list   = [];
 		
 		return id;
@@ -2508,7 +2506,20 @@
 	}
 	
 	 // Silver Scorpion Flak:
-	with(instances_matching(CustomProjectile, "name", "VenomFlak", "SilverScorpionFlak")){
+	with(instances_matching(CustomProjectile, "name", "VenomFlak")){
+		var	_xsc = 2,
+			_ysc = 2,
+			_alp = 0.2;
+			
+		image_xscale *= _xsc;
+		image_yscale *= _ysc;
+		image_alpha  *= _alp;
+		event_perform(ev_draw, 0);
+		image_xscale /= _xsc;
+		image_yscale /= _ysc;
+		image_alpha  /= _alp;
+	}
+	with(instances_matching(CustomProjectile, "name", "SilverScorpionFlak")){
 		draw_sprite_ext(sprite_index, image_index, x, y, 2 * image_xscale, 2 * image_yscale, image_angle, image_blend, 0.2 * image_alpha);
 	}
 	

@@ -1728,15 +1728,17 @@
 			if(current_frame_active){
 				with(instances_matching([WantRevivePopoFreak, VanSpawn, IDPDSpawn], "", null)){
 					for(var i = 0; i <= 1; i++){
-						var a = alarm_get(i);
-						if(a > 0) alarm_set(i, a + max(1, current_time_scale));
+						var _alarm = alarm_get(i);
+						if(_alarm > 0){
+							alarm_set(i, _alarm + 1);
+						}
 					}
 				}
 				with(Seal){
-					var	i = 1,
-						a = alarm_get(i);
-						
-					if(a > 0) alarm_set(i, a + max(1, current_time_scale));
+					var _alarm = alarm_get(1);
+					if(_alarm > 0){
+						alarm_set(1, _alarm + 1);
+					}
 				}
 			}
 			

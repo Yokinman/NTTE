@@ -620,17 +620,54 @@
 		}
 	}
 	
-#define ntte_begin_step
-	if(area_active){
-		 // Resprite turrets iam smash brother and i dont want to recode turrets:
-		with(instances_matching_ne(Turret, "hitid", "LairTurret")){
-			hitid = "LairTurret";
-			spr_idle = spr.LairTurretAppear;
-			spr_walk = spr.LairTurretAppear;
-			spr_hurt = spr.LairTurretAppear;
-			spr_dead = spr.LairTurretDead;
-			spr_fire = spr.LairTurretFire;
-			sprite_index = spr_idle;
+#define ntte_step
+	 // Resprite turrets iam smash brother and i dont want to recode turrets:
+	with(instances_matching(Turret, "ntte_lairturret", null)){
+		ntte_lairturret = area_active;
+		if(ntte_lairturret){
+			spr_idle     = spr.LairTurretAppear;
+			spr_walk     = spr.LairTurretIdle;
+			spr_hurt     = spr.LairTurretHurt;
+			spr_dead     = spr.LairTurretDead;
+			spr_fire     = spr.LairTurretFire;
+			hitid        = [spr_idle, "LAIR TURRET"];
+			sprite_index = enemy_sprite;
+		}
+	}
+	with(instances_matching(Turret, "spr_idle", spr.LairTurretAppear)){
+		if(anim_end || sprite_index != spr_idle){
+			event_perform(ev_other, ev_animation_end);
+			spr_idle = spr.LairTurretIdle;
+			spr_walk = spr.LairTurretIdle;
+			spr_hurt = spr.LairTurretHurt;
+		}
+	}
+	with(instances_matching(EnemyBullet1, "ntte_lairturret", null)){
+		ntte_lairturret = (
+			object_index == EnemyBullet1
+			&& is_array(hitid)
+			&& array_length(hitid) > 1
+			&& hitid[1] == "LAIR TURRET"
+		);
+		if(ntte_lairturret){
+			with(projectile_create(x, y, EnemyBullet2, direction, speed)){
+				 // Effects:
+				with(instance_create(x, y, AcidStreak)){
+					sprite_index = spr.AcidPuff;
+					image_angle  = other.direction + orandom(30);
+					depth        = other.depth - (image_angle >= 180);
+					
+					with(instance_create(x, y, AcidStreak)){
+						motion_set(other.image_angle, 2 + random(2));
+						image_angle = direction;
+						depth       = other.depth;
+					}
+				}
+				
+				 // Sounds:
+				sound_play_hit(sndFrogEggSpawn3, 0.4);
+			}
+			instance_delete(id);
 		}
 	}
 	

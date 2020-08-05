@@ -567,34 +567,39 @@
 	draw_sprite_ext(_sprite, 0, _x - lengthdir_x(_wkick, _ang), _y - lengthdir_y(_wkick, _ang), 1, _flip, _ang + (_meleeAng * (1 - (_wkick / 20))), _blend, _alpha);
 	
 #define draw_lasersight(_x, _y, _dir, _maxDistance, _width)
+	/*
+		Performs hitscan and draws a laser sight line
+		Returns the line's ending position
+	*/
+	
 	var	_sx = _x,
 		_sy = _y,
 		_lx = _sx,
 		_ly = _ly,
 		_md = _maxDistance,
-		d = _md,
-		m = 0; // Minor hitscan increment distance
+		_d  = _md,
+		_m  = 0; // Minor hitscan increment distance
 		
-	while(d > 0){
+	while(_d > 0){
 		 // Major Hitscan Mode (Start at max, go back until no collision line):
-		if(m <= 0){
-			_lx = _sx + lengthdir_x(d, _dir);
-			_ly = _sy + lengthdir_y(d, _dir);
-			d -= sqrt(_md);
+		if(_m <= 0){
+			_lx = _sx + lengthdir_x(_d, _dir);
+			_ly = _sy + lengthdir_y(_d, _dir);
+			_d -= sqrt(_md);
 			
 			 // Enter minor hitscan mode:
 			if(!collision_line(_sx, _sy, _lx, _ly, Wall, false, false)){
-				m = 2;
-				d = sqrt(_md);
+				_m = 2;
+				_d = sqrt(_md);
 			}
 		}
 		
 		 // Minor Hitscan Mode (Move until collision):
 		else{
 			if(position_meeting(_lx, _ly, Wall)) break;
-			_lx += lengthdir_x(m, _dir);
-			_ly += lengthdir_y(m, _dir);
-			d -= m;
+			_lx += lengthdir_x(_m, _dir);
+			_ly += lengthdir_y(_m, _dir);
+			_d -= _m;
 		}
 	}
 	
@@ -3343,7 +3348,7 @@
 	if(lag) trace_time("area_border_step");
 	
 #define area_border_cavein(_y, _caveDis, _caveInst)
-	 // Delete:
+	 // Destroy:
 	with(instances_matching_ne(instances_matching_gt(GameObject, "y", _y + _caveDis), "object_index", Dust)){
 		 // Kill:
 		if(y > _y + 64 && instance_is(self, hitme) && my_health > 0){
@@ -3351,20 +3356,23 @@
 			if("lasthit" in self){
 				lasthit = [sprTurtleDead, "CAVE IN"];
 			}
-			event_perform(ev_step, ev_step_normal);
 		}
 		
 		 // Save:
 		else if(persistent || (instance_is(self, Pickup) && !instance_is(self, Rad)) || instance_is(self, chestprop) || (instance_is(self, Corpse) && y < _y + 240) || (instance_is(self, CustomHitme) && "name" in self && name == "Pet")){
-			if(!array_exists(_caveInst, id)) array_push(_caveInst, id);
+			if(!array_exists(_caveInst, id)){
+				array_push(_caveInst, id);
+			}
 		}
 		
-		 // Delete:
-		else instance_delete(id);
+		 // Destroy:
+		else instance_destroy();
 	}
 	
 	 // Hide Wall Shadows:
-	with(instances_matching_gt(Wall, "bbox_bottom", _y + _caveDis - 32)) outspr = -1;
+	with(instances_matching_gt(Wall, "bbox_bottom", _y + _caveDis - 32)){
+		outspr = -1;
+	}
 	
 	instance_destroy();
 	

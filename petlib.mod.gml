@@ -17,27 +17,36 @@
 
 #define CoolGuy_create
 	 // Visual:
-	spr_shadow = shd16;
+	spr_shadow   = shd16;
 	spr_shadow_y = 4;
 
 	 // Vars:
-	maxspeed = 3.5;
-	poop = 1;
-	poop_delay = 0;
-	combo = 0;
-	combo_text = noone;
+	maxspeed    = 3.5;
+	poop        = 1;
+	poop_delay  = 0;
+	combo       = 0;
+	combo_text  = noone;
 	combo_texty = 0;
 	combo_delay = 0;
-	kills_last = GameCont.kills;
+	kills_last  = GameCont.kills;
 	
 	 // Stat:
-	if("combo" not in stat) stat.combo = 0;
+	if("combo" not in stat){
+		stat.combo = 0;
+	}
 
 #define CoolGuy_ttip
-	return ["JUST A COOL GUY", "BRO", "HIGH SCORE!", "BACKWARD CAPS ARE COOL"];
+	return [
+		"JUST A COOL GUY",
+		"BRO",
+		"HIGH SCORE!",
+		"BACKWARD CAPS ARE COOL"
+	];
 
 #define CoolGuy_stat(_name, _value)
-	if(_name == "") return spr.PetCoolGuyIdle;
+	if(_name == ""){
+		return spr.PetCoolGuyIdle;
+	}
 
 #define CoolGuy_step
 	 // Kill Combos:
@@ -256,18 +265,26 @@
 	
 #define Orchid_create
 	 // Vars:
-	raddrop = 0;
+	raddrop    = 0;
 	skill_rads = 60;
 	skill_inst = [];
 	
 	 // Stat:
-	if("mutations" not in stat) stat.mutations = 0;
+	if("mutations" not in stat){
+		stat.mutations = 0;
+	}
 	
 #define Orchid_ttip
-	return ["ELEGANT", "FLORID", "GENETIC MAGIC"];
+	return [
+		"ELEGANT",
+		"FLORID",
+		"GENETIC MAGIC"
+	];
 	
 #define Orchid_stat(_name, _value)
-	if(_name == "") return spr.PetOrchidIdle;
+	if(_name == ""){
+		return spr.PetOrchidIdle;
+	}
 	
 #define Orchid_step
 	wave += current_time_scale;
@@ -320,10 +337,10 @@
 	
 #define Mimic_create
 	 // Visual:
-	spr_open = spr.PetMimicOpen;
-	spr_hide = spr.PetMimicHide;
+	spr_open     = spr.PetMimicOpen;
+	spr_hide     = spr.PetMimicHide;
 	spr_bubble_y = -1;
-	depth = -1;
+	depth        = -1;
 	
 	 // Vars:
 	mask_index   = mskFreak;
@@ -339,10 +356,17 @@
 	prompt_mimic = prompt_create("DROP");
 	
 	 // Stat:
-	if("weapons" not in stat) stat.weapons = [];
+	if("weapons" not in stat){
+		stat.weapons = [];
+	}
 	
 #define Mimic_ttip
-	return ["EXTERNAL STORAGE", "GUN DEALER", "WHAT YOU NEED", "BUY SOMETHING"];
+	return [
+		"EXTERNAL STORAGE",
+		"GUN DEALER",
+		"WHAT YOU NEED",
+		"BUY SOMETHING"
+	];
 	
 #define Mimic_stat(_name, _value)
 	switch(_name){
@@ -541,31 +565,40 @@
 
 #define Parrot_create
 	 // Visual:
-	spr_shadow = shd16;
+	spr_shadow   = shd16;
 	spr_shadow_y = 4;
 	spr_bubble_y = -2;
-	bskin = false;
-	depth = -3;
+	bskin        = false;
+	depth        = -3;
 
 	 // Vars:
-	maxspeed = 3.5;
-	perched = noone;
-	perched_x = 0;
-	perched_y = 0;
-	pickup = noone;
-	pickup_x = 0;
-	pickup_y = 0;
+	maxspeed    = 3.5;
+	perched     = noone;
+	perched_x   = 0;
+	perched_y   = 0;
+	pickup      = noone;
+	pickup_x    = 0;
+	pickup_y    = 0;
 	pickup_held = false;
-	path_wall = [Wall];
+	path_wall   = [Wall];
 	
 	 // Stat:
-	if("pickups" not in stat) stat.pickups = 0;
+	if("pickups" not in stat){
+		stat.pickups = 0;
+	}
 	
 #define Parrot_ttip
-	return ["PARROTS RETRIEVE @wPICKUPS", "HANDY", "THEY LIKE YOU", "HAND OVER HAND"];
+	return [
+		"PARROTS RETRIEVE @wPICKUPS",
+		"HANDY",
+		"THEY LIKE YOU",
+		"HAND OVER HAND"
+	];
 
 #define Parrot_stat(_name, _value)
-	if(_name == "") return spr.PetParrotIdle;
+	if(_name == ""){
+		return spr.PetParrotIdle;
+	}
 
 #define Parrot_anim
 	sprite_index = enemy_sprite;
@@ -798,38 +831,46 @@
 
 #define Salamander_create
 	 // Visual:
-	spr_chrg = spr.PetSalamanderChrg;
+	spr_chrg     = spr.PetSalamanderChrg;
 	spr_shadow_y = -2;
-	depth = -3;
+	depth        = -3;
 	
 	 // Vars:
-	mask_index = mskAlly;
-	dash = false;
-	dash_max = 3;
-	dash_add = dash_max / 20;
-	dash_charge = 0;
-	dash_charging = false;
-	dash_direction = direction;
-	right_delay = 0;
-	mount = false;
-	mount_y = 0;
+	mask_index        = mskAlly;
+	dash              = false;
+	dash_max          = 3;
+	dash_add          = dash_max / 20;
+	dash_charge       = 0;
+	dash_charging     = false;
+	dash_direction    = direction;
+	right_delay       = 0;
+	mount             = false;
+	mount_y           = 0;
 	prompt_mount_time = -1;
 	prompt_mount_text = ["MOUNT", "DISMOUNT"];
-	prompt_mount = prompt_create(prompt_mount_text[mount]);
+	prompt_mount      = prompt_create(prompt_mount_text[mount]);
 	with(prompt_mount){
 		image_xscale = 2;
 		image_yscale = 2;
-		on_meet = script_ref_create(Salamander_prompt_meet);
+		on_meet      = script_ref_create(Salamander_prompt_meet);
 	}
 	
 	 // Stat:
-	if("tossed" not in stat) stat.tossed = 0;
+	if("tossed" not in stat){
+		stat.tossed = 0;
+	}
 	
 #define Salamander_ttip
-	return ["VEHICULAR COMBAT", "NITROUS", "PUNT"];
+	return [
+		"VEHICULAR COMBAT",
+		"NITROUS",
+		"PUNT"
+	];
 	
 #define Salamander_stat(_name, _value)
-	if(_name == "") return spr.PetSalamanderIdle;
+	if(_name == ""){
+		return spr.PetSalamanderIdle;
+	}
 	
 #define Salamander_anim
 	 // Charging Up:
@@ -1276,28 +1317,36 @@
 	 // Visual:
 	spr_fire   = spr.PetScorpionFire;
 	spr_shield = spr.PetScorpionShield;
-	hitid = [spr_idle, "SILVER SCORPION"];
+	hitid      = [spr_idle, "SILVER SCORPION"];
 	
 	 // Sounds:
 	snd_hurt = sndScorpionMelee;
 	snd_dead = sndScorpionDie;
 	
 	 // Vars:
-	mask_index = mskFrogEgg;
-	maxhealth = 12;
-	maxspeed = 3.4;
-	target = noone;
-	my_venom = noone;
+	mask_index    = mskFrogEgg;
+	maxhealth     = 12;
+	maxspeed      = 3.4;
+	target        = noone;
+	my_venom      = noone;
 	scorpion_city = true;
 	
 	 // Stat:
-	if("blocked" not in stat) stat.blocked = 0;
+	if("blocked" not in stat){
+		stat.blocked = 0;
+	}
 	
 #define Scorpion_ttip
-	return ["SPIT VENOM", "ROCKSLIDE", "HIGH ON THE FOOD CHAIN"];
+	return [
+		"SPIT VENOM",
+		"ROCKSLIDE",
+		"HIGH ON THE FOOD CHAIN"
+	];
 	
 #define Scorpion_stat(_name, _value)
-	if(_name == "") return spr.PetScorpionIdle;
+	if(_name == ""){
+		return spr.PetScorpionIdle;
+	}
 	
 #define Scorpion_anim
 	if((sprite_index != spr_hurt && sprite_index != spr_shield) || anim_end){
@@ -1431,14 +1480,14 @@
 	
 #define Slaughter_create
 	 // Visual:
-	spr_spwn = spr.PetSlaughterSpwn;
-	spr_fire = spr.PetSlaughterBite;
-	hitid = [spr_idle, "SLAUGHTERFISH"];
-	sprite_index = spr_spwn;
-	spr_shadow_y = -2;
-	spr_bubble = -1;
+	spr_spwn       = spr.PetSlaughterSpwn;
+	spr_fire       = spr.PetSlaughterBite;
+	hitid          = [spr_idle, "SLAUGHTERFISH"];
+	sprite_index   = spr_spwn;
+	spr_shadow_y   = -2;
+	spr_bubble     = -1;
 	spr_bubble_pop = -1;
-	depth = -3;
+	depth          = -3;
 	
 	 // Sound:
 	snd_hurt = sndOasisBossHurt;
@@ -1446,21 +1495,31 @@
 	
 	 // Vars:
 	mask_index = mskFrogEgg;
-	maxhealth = 30;
-	maxspeed = 3.4;
-	nextexplo = 0;
-	target = noone;
-	my_bite = noone;
-	my_bone = noone;
+	maxhealth  = 30;
+	maxspeed   = 3.4;
+	size       = 2;
+	nextexplo  = 0;
+	target     = noone;
+	my_bite    = noone;
+	my_bone    = noone;
 	
 	 // Stat:
-	if("bites" not in stat) stat.bites = 0;
+	if("bites" not in stat){
+		stat.bites = 0;
+	}
 	
 #define Slaughter_ttip
-	return ["BUBBLE BLOWIN'", "BABY", "JAWS", "VICIOUS"];
+	return [
+		"BUBBLE BLOWIN'",
+		"BABY",
+		"JAWS",
+		"VICIOUS"
+	];
 	
 #define Slaughter_stat(_name, _value)
-	if(_name == "") return spr.PetSlaughterIdle;
+	if(_name == ""){
+		return spr.PetSlaughterIdle;
+	}
 	
 #define Slaughter_anim
 	if((sprite_index != spr_hurt && sprite_index != spr_spwn && sprite_index != spr_fire) || anim_end){
@@ -1488,21 +1547,14 @@
 	}
 	
 #define Slaughter_step
-	if(nextexplo > current_frame) image_index = 0;
-	if(sprite_index == spr_spwn) speed = 0;
+	 // Spawn Animation:
+	if(sprite_index == spr_spwn){
+		speed = 0;
+	}
 	
-	 // Extra Push:
-	else if(place_meeting(x, y, hitme) && sprite_index != spr_fire){
-		with(instances_meeting(x, y, hitme)){
-			if(place_meeting(x, y, other)){
-				if(size < other.size){
-					motion_add_ct(point_direction(other.x, other.y, x, y), 1);
-				}
-				with(other){
-					motion_add_ct(point_direction(other.x, other.y, x, y), 1);
-				}
-			}
-		}
+	 // Bubble Armor Active:
+	if(nextexplo > current_frame){
+		image_index = 0;
 	}
 	
 	 // Biting:
@@ -1704,10 +1756,10 @@
 					
 					var	_ang = random(360),
 						_num = 3 + (crown_current == crwn_death),
-						l = 8;
+						_l   = 8;
 						
-					for(var d = _ang; d < _ang + 360; d += (360 / _num)){
-						projectile_create(x + lengthdir_x(l, d), y + lengthdir_y(l, d), "BubbleExplosionSmall", 0, 0);
+					for(var _d = _ang; _d < _ang + 360; _d += (360 / _num)){
+						projectile_create(x + lengthdir_x(_l, _d), y + lengthdir_y(_l, _d), "BubbleExplosionSmall", 0, 0);
 					}
 					
 					 // Sound:
@@ -1742,29 +1794,36 @@
 	spr_bubble_y = 1;
 
 	 // Vars:
-	maxspeed = 3.4;
-	web_list = [];
-	web_list_x1 = +infinity;
-	web_list_y1 = +infinity;
-	web_list_x2 = -infinity;
-	web_list_y2 = -infinity;
-	web_add_l = 8;
-	web_add_side = choose(-90, 90);
-	web_add_d = direction + web_add_side;
+	maxspeed      = 3.4;
+	web_list      = [];
+	web_list_x1   = +infinity;
+	web_list_y1   = +infinity;
+	web_list_x2   = -infinity;
+	web_list_y2   = -infinity;
+	web_add_l     = 8;
+	web_add_side  = choose(-90, 90);
+	web_add_d     = direction + web_add_side;
 	web_timer_max = 9;
-	web_timer = web_timer_max;
-	web_frame = 0;
-	web_bits = 0;
-	cursed = false;
+	web_timer     = web_timer_max;
+	web_frame     = 0;
+	web_bits      = 0;
+	cursed        = false;
 	
 	 // Alarms:
 	//alarm1 = -1;
 	
 	 // Stat:
-	if("webbed" not in stat) stat.webbed = 0;
+	if("webbed" not in stat){
+		stat.webbed = 0;
+	}
 	
 #define Spider_ttip
-	return ["A BIT STUCK", "STICKY SITUATION", "GROSS", "COCOONED"];
+	return [
+		"A BIT STUCK",
+		"STICKY SITUATION",
+		"GROSS",
+		"COCOONED"
+	];
 	
 #define Spider_stat(_name, _value)
 	switch(_name){
@@ -1928,25 +1987,31 @@
 	
 #define Twins_create
 	 // Visual:
-	spr_idle = mskNone;
-	spr_walk = mskNone;
-	spr_hurt = mskNone;
+	spr_idle   = mskNone;
+	spr_walk   = mskNone;
+	spr_hurt   = mskNone;
 	spr_shadow = mskNone;
 	
 	 // Vars:
-	twin_count = 2;
-	twin_array = array_create(twin_count, noone);
-	twin_angle = 0;
+	twin_count       = 2;
+	twin_array       = array_create(twin_count, noone);
+	twin_angle       = 0;
 	twin_orbit_coeff = 0;
 	
 	 // Stat:
-	if("diverted" not in stat) stat.diverted = 0;
+	if("diverted" not in stat){
+		stat.diverted = 0;
+	}
 	
 #define Twins_ttip
-	return [""];
+	return [
+		""
+	];
 	
 #define Twins_stat(_name, _value)
-	if(_name == "") return spr.PetTwinsStat;
+	if(_name == ""){
+		return spr.PetTwinsStat;
+	}
 	
 #define Twins_step
 	twin_angle = (twin_angle + current_time_scale) % 360;
@@ -2033,25 +2098,31 @@
 	
 #define Octo_create
 	 // Visual:
-	spr_hide = spr.PetOctoHide;
-	spr_shadow = shd16;
-	spr_shadow_y = 5;
-	spr_bubble = -1;
+	spr_hide       = spr.PetOctoHide;
+	spr_shadow     = shd16;
+	spr_shadow_y   = 5;
+	spr_bubble     = -1;
 	spr_bubble_pop = -1;
 	
 	 // Vars:
-	friction = 0.1;
-	maxspeed = 3.4;
-	hiding = false;
-	arcing = 0;
+	friction      = 0.1;
+	maxspeed      = 3.4;
+	hiding        = false;
+	arcing        = 0;
 	arcing_attack = 0;
-	path_wall = [Wall];
+	path_wall     = [Wall];
 	
 	 // Stat:
-	if("arcing" not in stat) stat.arcing = 0;
+	if("arcing" not in stat){
+		stat.arcing = 0;
+	}
 
 #define Octo_ttip
-	return ["BRAIN WAVES", "TEAMWORK", "JUMP ROPE"];
+	return [
+		"BRAIN WAVES",
+		"TEAMWORK",
+		"JUMP ROPE"
+	];
 
 #define Octo_stat(_name, _value)
 	switch(_name){
@@ -2345,28 +2416,36 @@
 	
 #define Prism_create
 	 // Visual:
-	spr_bubble = -1;
+	spr_bubble     = -1;
 	spr_bubble_pop = -1;
-	depth = -3;
+	depth          = -3;
 
 	 // Vars:
-	mask_index = mskFrogEgg;
-	maxspeed = 2.5;
-	tp_delay = irandom(30);
-	push = 0.5;
-	alarm0 = -1;
-	spawn_loc = [x, y];
-	path_wall = [Wall];
+	mask_index  = mskFrogEgg;
+	maxspeed    = 2.5;
+	tp_delay    = irandom(30);
+	alarm0      = -1;
+	spawn_loc   = [x, y];
+	path_wall   = [Wall];
 	flash_frame = 0;
 	
 	 // Stat:
-	if("splits" not in stat) stat.splits = 0;
+	if("splits" not in stat){
+		stat.splits = 0;
+	}
 	
 #define Prism_ttip
-	return ["STRANGE GEOMETRY", "CURSED REFRACTION", "YEAH OH ", "LIGHT BEAMS"];
+	return [
+		"STRANGE GEOMETRY",
+		"CURSED REFRACTION",
+		"YEAH OH ",
+		"LIGHT BEAMS"
+	];
 	
 #define Prism_stat(_name, _value)
-	if(_name == "") return spr.PetPrismIdle;
+	if(_name == ""){
+		return spr.PetPrismIdle;
+	}
 	
 #define Prism_step
 	if(instance_exists(leader)){
@@ -2667,10 +2746,15 @@
 	}
 	
 	 // Stat:
-	if("battle" not in stat) stat.battle = [0, 0];
+	if("battle" not in stat){
+		stat.battle = [0, 0];
+	}
 	
 #define Weapon_ttip
-	return ["MUTUAL RESPECT", "WALKING WEAPON"];
+	return [
+		"MUTUAL RESPECT",
+		"WALKING WEAPON"
+	];
 	
 #define Weapon_stat(_name, _value)
 	switch(_name){
