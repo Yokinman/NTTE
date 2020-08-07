@@ -607,8 +607,8 @@
 	}
 	
 	 // Pickups:
- 	pickup_drop(50, 35);
-	pickup_drop(50, 35);
+ 	pickup_drop(50, 35, 0);
+	pickup_drop(50, 35, 1);
 	pickup_drop(100, 0);
 	pickup_drop(100, 0);
 	
@@ -622,8 +622,8 @@
 		sound_play_pitchvol(sndChest, 0.6, 1.5);
 	}
 	else{
-		pickup_drop(50, 35);
-		pickup_drop(50, 35);
+		pickup_drop(50, 35, 0);
+		pickup_drop(50, 35, 1);
 	}
 	pickup_drop(100, 0);
 	pickup_drop(100, 0);
@@ -1658,7 +1658,7 @@
 	}
 	
 	 // Possessions:
-	pickup_drop(60, 10);
+	pickup_drop(60, 10, 0);
 	
 	
 #define SilverScorpion_create(_x, _y)
@@ -1675,8 +1675,8 @@
 		depth        = -2;
 		
 		 // Sounds:
-		snd_hurt = sndGoldScorpionHurt;
-		snd_dead = sndGoldScorpionDead;
+		snd_hurt = sndSawedOffShotgun;
+		snd_dead = sndExploGuardianDeadCharge;
 		snd_mele = sndGoldScorpionMelee;
 		
 		 // Vars:
@@ -1684,11 +1684,10 @@
 		maxhealth   = 70;
 		raddrop     = 20;
 		size        = 3;
-		canmelee    = true;
 		meleedamage = 5;
 		walk        = 0;
 		walkspeed   = 1.2;
-		maxspeed    = 3.6;
+		maxspeed    = 2.5;
 		gunangle    = random(360);
 		ammo        = 0;
 		//flak        = noone;
@@ -1744,35 +1743,26 @@
 	*/
 	
 	 // Animate:
-	if(ammo <= 0 && array_length(instances_matching(instances_matching(instances_matching(CustomProjectile, "name", "VenomFlak"), "creator", id), "charging", true)) <= 0){
-		if(sprite_index != spr_fire || anim_end /*|| (!instance_exists(flak) && anim_end)*/){
-			sprite_index = enemy_sprite;
-		}
+	if(sprite_index != spr_fire /*|| (!instance_exists(flak) && anim_end)*/){
+		sprite_index = enemy_sprite;
 	}
 	
 #define SilverScorpion_alrm1
-	alarm1 = random_range(60, 90);
+	alarm1 = irandom_range(60, 90);
 	
 	 // Movin'
 	scrWalk(random(360), random_range(20, 30));
 	
 	if(ammo <= 0){
 		 // Aggroed:
-		if(enemy_target(x, y) && instance_seen(x, y, target)){
+		if(enemy_target(x, y) && (my_health < maxhealth || instance_seen(x, y, target))){
 			scrAim(point_direction(x, y, target.x, target.y));
+			direction = gunangle + orandom(40);
 			
 			 // Attack:
-			if(true || chance(2, 3)){
-				with(projectile_create(x, y, "VenomFlak", gunangle, 4)){
-					friction      = 0.4;
-					image_xscale *= 1.25;
-					image_yscale *= 1.25;
-					charge_time   = 30;
-					alarm0        = charge_time;
-				}
-				instance_create(x, y, PortalClear);
+			if(!chance(point_distance(x, y, target.x, target.y) - 128, 192)){
+				alarm1 = irandom_range(75, 120);
 				alarm2 = 1;
-				walk /= 5;
 				/*
 				sprite_index = spr_fire;
 				flak = projectile_create(x, y, "SilverScorpionFlak", gunangle, 8);
@@ -1787,39 +1777,79 @@
 #define SilverScorpion_alrm2
 	 // Start Firing:
 	if(ammo <= 0){
-		ammo = 8;
-		sound_play_hit_ext(sndScorpionFireStart, 0.5 + random(0.3), 3);
+		ammo = 10;
+		
+		 // Flak:
+		with(projectile_create(x, y, "VenomFlak", gunangle, 3)){
+			friction      = 0.2;
+			image_xscale *= 1.25;
+			image_yscale *= 1.25;
+			charge_time   = other.ammo * 3;
+			alarm0        = charge_time;
+		}
+		
+		 // Sound:
+		sound_play_hit_ext(sndGoldScorpionFire,  1.2 + random(0.2), 6);
+		sound_play_hit_ext(sndCrownGuardianFire, 0.5 + random(0.2), 4);
+		sound_play_hit_ext(sndGuardianAppear,    0.5 + random(0.2), 3.5);
 	}
 	
 	 // Fire:
 	if(ammo > 0){
+		if(--ammo > 0){
+			alarm2 = 3;
+		}
+		
+		 // Pew pew:
 		projectile_create(
 			x,
 			y,
 			EnemyBullet2,
-			gunangle + (random_range(20, 60) * choose(-1, 1)),
-			random_range(3, 4)
+			gunangle + (random_range(20, 140) * (((ammo % 2) < 1) ? -1 : 1)),
+			3
 		);
 		
-		sprite_index = spr_fire;
+		 // Sound:
+		sound_play_hit(sndScorpionFire, 0.2);
 		
-		 // Continue:
-		if(--ammo > 0){
-			alarm2 = 2;
+		 // Animate:
+		if(ammo > 0 && sprite_index != spr_hurt){
+			sprite_index = spr_fire;
 		}
+		else sprite_index = enemy_sprite;
 	}
 	
 #define SilverScorpion_death
-	 // Bullets:
+	 // Blammo:
+	instance_create(x, y, PortalClear);
+	sound_play_hit_ext(sndSuperSlugger, 1.3 + random(0.2), 1.5);
+	view_shake_at(x, y, 30);
+	
+	 // Splat:
+	var _ang = direction + 45;
+	for(var _dir = _ang; _dir < _ang + 360; _dir += (360 / 4)){
+		with(scrFX(x, y, [_dir, 9], AcidStreak)){
+			image_angle = direction;
+		}
+	}
+	
+	 // Venom:
+	with(projectile_create(x, y, "VenomFlak", direction, 0)){
+		charging = false;
+		repeat(12){
+			projectile_create(x, y, EnemyBullet2,  random(360), random_range(3, 5));
+			projectile_create(x, y, "VenomPellet", random(360), random_range(8, 12));
+		}
+	}
 	/*
 	var n = 7;
 	for(var d = 0; d < 360; d += 360 / n){
 		projectile_create(x, y, "SilverScorpionDevastator", direction + d, random_range(5, 6));
 	}
 	*/
-	repeat(12){
-		projectile_create(x, y, "VenomPellet", random(360), random_range(4, 8));
-	}
+	
+	 // Pickups:
+	pickup_drop(0, 25, 0);
 	
 	
 #define SilverScorpionDevastator_create(_x, _y)
@@ -2115,6 +2145,7 @@
 		creator     = noone;
 		charging    = true;
 		charge_time = max(1, 15 / (1 + (0.5 * GameCont.loops)));
+		explo_time  = 40;
 		
 		 // Alarms:
 		alarm0 = charge_time;
@@ -2204,8 +2235,8 @@
 	if(charging){
 		charging = false;
 		
-		alarm0 = 40;
-		typ = 1;
+		alarm0 = explo_time;
+		typ    = 1;
 		
 		with(creator){
 			 // Fire:
@@ -2213,9 +2244,9 @@
 			
 			 // Effects:
 			wkick = min(wkick + 9, 16);
-			sound_play_pitchvol(sndFlakCannon,			0.8,				0.4);
-			sound_play_pitchvol(sndCrystalRicochet,		1.4 + random(0.4),	0.8);
-			sound_play_pitchvol(sndLightningRifleUpg,	0.8,				0.4);
+			sound_play_pitchvol(sndFlakCannon,        0.8,               0.4);
+			sound_play_pitchvol(sndCrystalRicochet,   1.4 + random(0.4), 0.8);
+			sound_play_pitchvol(sndLightningRifleUpg, 0.8,               0.4);
 			
 			repeat(3 + irandom(2)){
 				scrFX([x, 6], [y, 6], [gunangle + orandom(2), 4 + random(4)], Smoke);
@@ -2253,7 +2284,9 @@
 	
 #define VenomFlak_destroy
 	instance_create(x, y, PortalClear);
-	if(!instance_is(creator, Player)) pickup_drop(50, 0);
+	if(!instance_is(creator, Player)){
+		pickup_drop(50, 0);
+	}
 	
 	 // Effects:
 	for(var a = 0; a < 360; a += (360 / 20)){
@@ -2628,6 +2661,7 @@
 #define instances_seen(_obj, _bx, _by, _index)                                          return  mod_script_call_nc  ('mod', 'telib', 'instances_seen', _obj, _bx, _by, _index);
 #define instances_seen_nonsync(_obj, _bx, _by)                                          return  mod_script_call_nc  ('mod', 'telib', 'instances_seen_nonsync', _obj, _bx, _by);
 #define instances_meeting(_x, _y, _obj)                                                 return  mod_script_call_self('mod', 'telib', 'instances_meeting', _x, _y, _obj);
+#define instance_get_name(_inst)                                                        return  mod_script_call_nc  ('mod', 'telib', 'instance_get_name', _inst);
 #define variable_instance_get_list(_inst)                                               return  mod_script_call_nc  ('mod', 'telib', 'variable_instance_get_list', _inst);
 #define variable_instance_set_list(_inst, _list)                                                mod_script_call_nc  ('mod', 'telib', 'variable_instance_set_list', _inst, _list);
 #define draw_weapon(_sprite, _x, _y, _ang, _meleeAng, _wkick, _flip, _blend, _alpha)            mod_script_call_nc  ('mod', 'telib', 'draw_weapon', _sprite, _x, _y, _ang, _meleeAng, _wkick, _flip, _blend, _alpha);
@@ -2704,6 +2738,6 @@
 #define sprite_get_team(_sprite)                                                        return  mod_script_call_nc  ('mod', 'telib', 'sprite_get_team', _sprite);
 #define lightning_connect(_x1, _y1, _x2, _y2, _arc, _enemy)                             return  mod_script_call_self('mod', 'telib', 'lightning_connect', _x1, _y1, _x2, _y2, _arc, _enemy);
 #define charm_instance(_inst, _charm)                                                   return  mod_script_call_nc  ('mod', 'telib', 'charm_instance', _inst, _charm);
-#define move_step(_mult)                                                                return  mod_script_call_self('mod', 'telib', 'move_step', _mult);
+#define motion_step(_mult)                                                              return  mod_script_call_self('mod', 'telib', 'motion_step', _mult);
 #define pool(_pool)                                                                     return  mod_script_call_nc  ('mod', 'telib', 'pool', _pool);
 #define area_get_shad_color(_area)                                                      return  mod_script_call_nc  ('mod', 'telib', 'area_get_shad_color', _area);

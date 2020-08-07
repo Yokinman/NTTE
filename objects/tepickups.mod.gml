@@ -154,7 +154,7 @@
 				}
 			}
 			else{
-				pickup_drop(10000, 0);
+				pickup_drop(100 / pickup_chance_multiplier, 0);
 				
 				 // Rogues:
 				var _rogue = 0;
@@ -2438,7 +2438,9 @@
 	
 	 // Pickups:
 	var _objMin = GameObject.id;
-	repeat(num) pickup_drop(200, 0);
+	repeat(num){
+		pickup_drop(100 / pickup_chance_multiplier, 0);
+	}
 	
 	 // Make Dropped Ammo Cursed:
 	with(instances_matching_lt(instances_matching_gt(AmmoPickup, "id", _objMin), "cursed", 1)){
@@ -3495,7 +3497,7 @@
 			/*
 			 // Loot:
 			var _minID = GameObject.id;
-			pickup_drop(10000, 0);
+			pickup_drop(100 / pickup_chance_multiplier, 0);
 			with(instances_matching_gt([Pickup, chestprop], "id", _minID)){
 				with(obj_create(x, y, "BackpackPickup")){
 					target = other;
@@ -3525,7 +3527,7 @@
 	}
 	
 	/*
-	pickup_drop(10000, 0);
+	pickup_drop(100 / pickup_chance_multiplier, 0);
 	chest_create(x, y, "Backpack", false);
 
 	 // Become Big:
@@ -3593,6 +3595,312 @@
 				team  = 2;
 			}
 		}
+	}
+	
+	
+#define ParrotChester_create(_x, _y)
+	/*
+		Follows a chestprop until it's opened, then sends ParrotFeathers to the nearest Player with race=="parrot"
+		
+		Ex:
+			with(GiantWeaponChest){
+				with(obj_create(x, y, "ParrotChester")){
+					creator = other;
+					num = 96;
+				}
+			}
+	*/
+	
+	with(instance_create(_x, _y, CustomObject)){
+		 // Vars:
+		creator = noone;
+		small = false;
+		num = 6;
+		
+		return id;
+	}
+	
+#define ParrotChester_step
+	if(instance_exists(creator)){
+		x = creator.x;
+		y = creator.y;
+	}
+	else{
+		if(num > 0 && position_meeting(x, y, (small ? SmallChestPickup : ChestOpen))){
+			var t = instances_matching(Player, "race", "parrot");
+			
+			 // Pickup Feathers go to Nearest Parrot:
+			if(small && !place_meeting(x, y, Portal)){
+				t = instance_nearest(x, y, Player);
+				if(instance_exists(t) && t.race != "parrot"){
+					t = noone;
+				}
+			}
+			
+			 // Feathers:
+			with(t){
+				for(var i = 0; i < other.num; i++){
+					with(obj_create(other.x, other.y, "ParrotFeather")){
+						bskin        = other.bskin;
+						index        = other.index;
+						creator      = other;
+						target       = other;
+						stick_wait   = 3;
+						sprite_index = race_get_sprite(other.race, sprite_index);
+					}
+					
+					 // Sound FX:
+					if(fork()){
+						wait((i * (4 / other.num)) + irandom(irandom(1)));
+						sound_play_pitchvol(sndBouncerSmg, 3 + random(0.2), 0.2 + random(0.1));
+						exit;
+					}
+				}
+			}
+		}
+		
+		instance_destroy();
+	}
+	
+	
+#define ParrotFeather_create(_x, _y)
+	/*
+		A feather that homes in on its target and charms them
+		If their target is a Player then it will give them feather ammo instead of charming
+		Used for Parrot's active ability
+	*/
+	
+	with(instance_create(_x, _y, CustomObject)){
+		 // Visual:
+		sprite_index     = sprChickenFeather;
+		image_blend_fade = c_gray;
+		depth            = -8;
+		
+		 // Vars:
+		mask_index     = mskLaser;
+		creator        = noone;
+		target         = noone;
+		index          = -1;
+		bskin          = 0;
+		stick          = false;
+		stickx         = 0;
+		sticky         = 0;
+		stick_time_max = 60;// * (1 + ultra_get("parrot", 3));
+		stick_time     = stick_time_max;
+		stick_list     = [];
+		stick_wait     = 0;
+		canhold        = false;
+		move_factor    = 0;
+		
+		 // Push:
+		motion_add(random(360), 4 + random(2));
+		image_angle = direction + 135;
+		
+		return id;
+	}
+	
+#define ParrotFeather_step
+	speed -= speed_raw * 0.1;
+	
+	 // Timer:
+	if(stick_time > 0){
+		 // Generate Queue:
+		if(stick){
+			if(array_length(stick_list) <= 0){
+				var _list = instances_matching(instances_matching(instances_matching(object_index, "name", name), "target", target), "creator", creator);
+				with(_list){
+					stick_list = _list;
+				}
+			}
+		}
+		else stick_list = [];
+		
+		 // Decrement When First in Queue:
+		if(
+			stick
+			? (array_find_index(stick_list, id) == 0)
+			: (stick_time < stick_time_max)
+		){
+			stick_time -= lq_defget(variable_instance_get(target, "ntte_charm", 0), "time_speed", 1) * current_time_scale;
+		}
+	}
+	
+	if(stick_time > 0 && instance_exists(target) && (!stick || ("ntte_charm" in target && lq_defget(target.ntte_charm, "charmed", true)))){
+		if(!stick){
+			stick_list = [];
+			
+			var _hold = false;
+			
+			if(canhold){
+				 // Reach Target Faster:
+				if(
+					distance_to_object(target) > 48 &&
+					abs(angle_difference(direction, point_direction(x, y, target.x, target.y))) < 30
+				){
+					move_factor += ((distance_to_object(target) / 128) - move_factor) * 0.3 * current_time_scale;
+				}
+				else{
+					move_factor -= move_factor * 0.8 * current_time_scale;
+				}
+				move_factor = max(0, move_factor);
+				x += hspeed_raw * move_factor;
+				y += vspeed_raw * move_factor;
+				
+				 // Active Held:
+				if(instance_is(creator, Player)){
+					with(creator){
+						if(canspec && player_active){
+							if(button_check(index, "spec") || usespec > 0){
+								_hold = true;
+							}
+						}
+					}
+				}
+			}
+			else move_factor = 0;
+			
+			 // Orbit Target:
+			if(_hold || stick_wait != 0){
+				var	_l = 16,
+					_d = point_direction(target.x, target.y, x, y);
+					
+				_d += 5 * sign(angle_difference(direction, _d));
+				
+				var	_x = target.x + lengthdir_x(_l, _d),
+					_y = target.y + lengthdir_y(_l, _d);
+					
+				motion_add_ct(point_direction(x, y, _x, _y) + orandom(60), 1);
+			}
+			
+			 // Reach Target:
+			else{
+				canhold = false;
+				
+				 // Fly Towards Enemy:
+				motion_add_ct(point_direction(x, y, target.x, target.y) + orandom(60), 1);
+				
+				if(distance_to_object(target) < 2 || (target == creator && place_meeting(x, y, Portal))){
+					 // Effects:
+					with(instance_create(x, y, Dust)) depth = other.depth - 1;
+					sound_play_pitchvol(sndFlyFire,        2 + random(0.2),  0.25);
+					sound_play_pitchvol(sndChickenThrow,   1 + orandom(0.3), 0.25);
+					sound_play_pitchvol(sndMoneyPileBreak, 1 + random(3),    0.5);
+					
+					 // Stick to & Charm Enemy:
+					if(target != creator){
+						stick       = true;
+						stickx      = random(x - target.x) * (("right" in target) ? target.right : 1);
+						sticky      = random(y - target.y);
+						image_angle = random(360);
+						speed       = 0;
+						
+						 // Parrot's Special Stat:
+						if("ntte_charm" not in target){
+							var _race = variable_instance_get(creator, "race", char_random);
+							if(_race == "parrot"){
+								var _stat = "race:" + _race + ":spec";
+								stat_set(_stat, stat_get(_stat) + 1);
+							}
+						}
+						
+						 // Charm Enemy:
+						var _wasUncharmed = ("ntte_charm" not in target || !target.ntte_charm.charmed);
+						with(charm_instance(target, true)){
+							if(_wasUncharmed || time >= 0 || feather){
+								time += max(other.stick_time, 1);
+							}
+							index   = other.index;
+							feather = true;
+						}
+					}
+					
+					 // Player Pickup:
+					else{
+						with(creator){
+							if("feather_ammo" in self){
+								feather_ammo++;
+								if("feather_ammo_max" in self && feather_ammo > feather_ammo_max){
+									feather_ammo = feather_ammo_max;
+								}
+							}
+						}
+						instance_delete(id);
+						exit;
+					}
+				}
+			}
+			
+			 // Stick Delay:
+			if(stick_wait > 0){
+				stick_wait -= current_time_scale;
+				if(stick_wait <= 0) stick_wait = 0;
+			}
+			
+			 // Facing:
+			image_angle = direction + 135;
+		}
+	}
+	
+	else{
+		 // Travel to Creator:
+		if(!stick && stick_time > 0 && instance_exists(creator)){
+			target = creator;
+		}
+		
+		 // End:
+		else instance_destroy();
+	}
+	
+#define ParrotFeather_end_step
+	if(stick && instance_exists(target)){
+		x       = target.x + (stickx * image_xscale * (("right" in target) ? target.right : 1));
+		y       = target.y + (sticky * image_yscale);
+		visible = target.visible;
+		depth   = target.depth - 1;
+		
+		 // Target In Water:
+		if("wading" in target && target.wading != 0){
+			visible = true;
+		}
+		
+		 // Z-Axis Support:
+		if("z" in target){
+			y -= abs(target.z);
+		}
+	}
+	else{
+		visible = true;
+		depth = -8;
+	}
+	
+#define ParrotFeather_draw // Code below is 2x faster than using a draw_sprite_ext so
+	var _col = image_blend;
+	image_blend = merge_color(image_blend, image_blend_fade, 1 - (stick_time / stick_time_max));
+	draw_self();
+	image_blend = _col;
+	
+#define ParrotFeather_destroy
+	 // Fall to Ground:
+	with(instance_create(x, y, Feather)){
+		sprite_index = other.sprite_index;
+		image_angle  = other.image_angle;
+		image_blend  = other.image_blend_fade;
+		depth        = ((!position_meeting(x, y, Floor) && !instance_seen(x, y, other.creator)) ? -6.01 : 0);
+	}
+	
+	 // Sound:
+	sound_play_pitchvol(sndMoneyPileBreak, 1.5 + random(1.5), random(0.4));
+	if("ntte_charm" in target){
+		sound_play_pitchvol(
+			sndAssassinPretend,
+			1.5 + random(1.5),
+			(stick_time_max / max(stick_time_max, lq_defget(target.ntte_charm, "time", 0)))
+		);
+	}
+	
+#define ParrotFeather_cleanup
+	with(stick_list) if(instance_exists(self)){
+		stick_list = array_delete_value(stick_list, other);
 	}
 	
 	
@@ -5074,6 +5382,47 @@
 		}
 	}
 	
+	 // Chests Give Feathers:
+	if(!instance_exists(GenCont)){
+		with(instances_matching(chestprop, "my_feather_storage", null)){
+			my_feather_storage = obj_create(x, y, "ParrotChester");
+			
+			 // Vars:
+			with(my_feather_storage){
+				creator = other;
+				switch(other.object_index){
+					case IDPDChest:
+					case BigWeaponChest:
+					case BigCursedChest:
+						num = 18;
+						break;
+						
+					case GiantWeaponChest:
+					case GiantAmmoChest:
+						num = 60;
+						break;
+				}
+			}
+		}
+		
+		 // Throne Butt : Pickups Give Feathers
+		if(skill_get(mut_throne_butt) > 0){
+			with(instances_matching(Pickup, "my_feather_storage", null)){
+				my_feather_storage = noone;
+				if(mask_index == mskPickup){
+					my_feather_storage = obj_create(x, y, "ParrotChester");
+					
+					 // Vars:
+					with(my_feather_storage){
+						creator = other;
+						small   = true;
+						num     = ceil(2 * skill_get(mut_throne_butt));
+					}
+				}
+			}
+		}
+	}
+	
 	 // Grabbing Custom Pickups:
 	with(instances_matching([Player, Portal], "", null)){
 		if(place_meeting(x, y, Pickup)){
@@ -5615,6 +5964,7 @@
 #define instances_seen(_obj, _bx, _by, _index)                                          return  mod_script_call_nc  ('mod', 'telib', 'instances_seen', _obj, _bx, _by, _index);
 #define instances_seen_nonsync(_obj, _bx, _by)                                          return  mod_script_call_nc  ('mod', 'telib', 'instances_seen_nonsync', _obj, _bx, _by);
 #define instances_meeting(_x, _y, _obj)                                                 return  mod_script_call_self('mod', 'telib', 'instances_meeting', _x, _y, _obj);
+#define instance_get_name(_inst)                                                        return  mod_script_call_nc  ('mod', 'telib', 'instance_get_name', _inst);
 #define variable_instance_get_list(_inst)                                               return  mod_script_call_nc  ('mod', 'telib', 'variable_instance_get_list', _inst);
 #define variable_instance_set_list(_inst, _list)                                                mod_script_call_nc  ('mod', 'telib', 'variable_instance_set_list', _inst, _list);
 #define draw_weapon(_sprite, _x, _y, _ang, _meleeAng, _wkick, _flip, _blend, _alpha)            mod_script_call_nc  ('mod', 'telib', 'draw_weapon', _sprite, _x, _y, _ang, _meleeAng, _wkick, _flip, _blend, _alpha);
@@ -5691,6 +6041,6 @@
 #define sprite_get_team(_sprite)                                                        return  mod_script_call_nc  ('mod', 'telib', 'sprite_get_team', _sprite);
 #define lightning_connect(_x1, _y1, _x2, _y2, _arc, _enemy)                             return  mod_script_call_self('mod', 'telib', 'lightning_connect', _x1, _y1, _x2, _y2, _arc, _enemy);
 #define charm_instance(_inst, _charm)                                                   return  mod_script_call_nc  ('mod', 'telib', 'charm_instance', _inst, _charm);
-#define move_step(_mult)                                                                return  mod_script_call_self('mod', 'telib', 'move_step', _mult);
+#define motion_step(_mult)                                                              return  mod_script_call_self('mod', 'telib', 'motion_step', _mult);
 #define pool(_pool)                                                                     return  mod_script_call_nc  ('mod', 'telib', 'pool', _pool);
 #define area_get_shad_color(_area)                                                      return  mod_script_call_nc  ('mod', 'telib', 'area_get_shad_color', _area);

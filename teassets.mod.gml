@@ -14,6 +14,7 @@
 		msk             = {};
 		shd             = {};
 		BigTopDecal     = ds_map_create();
+		msk.BigTopDecal = ds_map_create();
 		TopTiny         = ds_map_create();
 		MergeWep        = {};
 		MergeWepLoadout = {};
@@ -741,10 +742,10 @@
 		p = m;
 			
 			 // Big Decal:
-			BigTopDecal[? area_desert] = sprite(p + "sprBigTopDecalDesert",         1, 32, 48);
-			BigTopDecalScorpion        = sprite(p + "sprBigTopDecalScorpion",       1, 32, 48);
-			BigTopDecalScorpionDebris  = sprite(p + "sprBigTopDecalScorpionDebris", 8, 10, 10);
-			msk.BigTopDecal            = sprite(p + "mskBigTopDecal",               1, 32, 48);
+			BigTopDecal[?     area_desert] = sprite(p + "sprBigTopDecalDesert",         1, 32, 56);
+			msk.BigTopDecal[? area_desert] = sprite(p + "../mskBigTopDecal",            1, 32, 12);
+			BigTopDecalScorpion            = sprite(p + "sprBigTopDecalScorpion",       1, 32, 52);
+			BigTopDecalScorpionDebris      = sprite(p + "sprBigTopDecalScorpionDebris", 8, 10, 10);
 			
 			 // Fly:
 			FlySpin = sprite(p + "sprFlySpin", 16, 4, 4);
@@ -794,7 +795,7 @@
 		p = m;
 			
 			 // Decals:
-			BigTopDecal[? area_scrapyards] = sprite(p + "sprBigTopDecalScrapyard",  1, 32, 40);
+			BigTopDecal[? area_scrapyards] = sprite(p + "sprBigTopDecalScrapyard",  1, 32, 48);
 			TopDecalScrapyardAlt           = sprite(p + "sprTopDecalScrapyardAlt",  1, 16, 16);
 			NestDebris                     = sprite(p + "sprNestDebris",           16,  4,  4);
 			
@@ -814,8 +815,10 @@
 		p = m;
 			
 			 // Decals:
-			BigTopDecal[? area_caves       ] = sprite(p + "sprBigTopDecalCaves",       1, 32, 48);
-			BigTopDecal[? area_cursed_caves] = sprite(p + "sprBigTopDecalCursedCaves", 1, 32, 48);
+			BigTopDecal[?     area_caves       ] = sprite(p + "sprBigTopDecalCaves",       1, 32, 56);
+			BigTopDecal[?     area_cursed_caves] = sprite(p + "sprBigTopDecalCursedCaves", 1, 32, 56);
+			msk.BigTopDecal[? area_caves       ] = sprite(p + "../mskBigTopDecal",         1, 32, 16);
+			msk.BigTopDecal[? area_cursed_caves] = msk.BigTopDecal[? area_caves];
 			
 			 // Wall Spiders:
 			WallSpider          = sprite(p + "sprWallSpider",          2, 8, 8);
@@ -900,7 +903,8 @@
 		p = m;
 			
 			 // Decals:
-			BigTopDecal[? area_palace] = sprite(p + "sprBigTopDecalPalace", 1, 32, 48);
+			BigTopDecal[?     area_palace] = sprite(p + "sprBigTopDecalPalace", 1, 32, 56);
+			msk.BigTopDecal[? area_palace] = sprite(p + "../mskBigTopDecal",    1, 32, 16);
 			
 			 // Generator Shadows Woooo:
 			shd.BigGenerator  = sprite(p + "shdBigGenerator",  1, 48-16, 32);
@@ -1082,7 +1086,7 @@
 			BigBubblePop = sprite(p + "sprBigBubblePop", 4, 24, 24);
 			
 			 // Decals:
-			BigTopDecal[? area_oasis] = sprite(p + "sprBigTopDecalOasis", 1, 32, 48);
+			BigTopDecal[? area_oasis] = sprite(p + "sprBigTopDecalOasis", 1, 32, 52);
 			BigTopDecal[? "oasis"] = BigTopDecal[? area_oasis];
 			
 			 // Ground Crack Effect:
@@ -1096,7 +1100,8 @@
 		p = m;
 			
 			 // Decals:
-			BigTopDecal[? "trench"] = sprite(p + "sprBigTopDecalTrench", 1, 32, 48);
+			BigTopDecal[?     "trench"] = sprite(p + "sprBigTopDecalTrench", 1, 32, 52);
+			msk.BigTopDecal[? "trench"] = sprite(p + "../mskBigTopDecal",    1, 32, 16);
 			
 			 // Floors:
 			FloorTrench      = sprite(p + "sprFloorTrench",      4, 0, 0);
@@ -1164,7 +1169,7 @@
 		p = m;
 			
 			 // Decals:
-			BigTopDecal[? area_sewers] = sprite(p + "sprBigTopDecalSewers", 8, 32, 48);
+			BigTopDecal[? area_sewers] = sprite(p + "sprBigTopDecalSewers", 8, 32, 56);
 			
 			 // Fix Decal Not Fully Covering Wall:
 			sprite_replace(sprSewerDecal, "sprites/" + p + "sprWallDecalSewer.png", 1, 16, 24);
@@ -1206,7 +1211,7 @@
 		p = m;
 			
 			 // Decals:
-			BigTopDecal[? area_pizza_sewers] = sprite(p + "sprBigTopDecalPizza", 1, 32, 48);
+			BigTopDecal[? area_pizza_sewers] = sprite(p + "sprBigTopDecalPizza", 1, 32, 56);
 			BigTopDecal[? "pizza"] = BigTopDecal[? area_pizza_sewers];
 			
 			 // Fix Decal Not Fully Covering Wall:

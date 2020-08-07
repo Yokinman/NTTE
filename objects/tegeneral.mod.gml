@@ -118,7 +118,7 @@
 	var _area = GameCont.area;
 	
 	if(ds_map_exists(spr.BigTopDecal, _area)){
-		with(instance_create(pfloor(_x, 16), pfloor(_y, 16), CustomObject)){
+		with(instance_create(_x, _y, CustomObject)){
 			 // Visual: 
 			visible      = false;
 			sprite_index = spr.BigTopDecal[? _area];
@@ -126,142 +126,119 @@
 			image_speed  = 0.4;
 			
 			 // Vars:
-			mask_index = msk.BigTopDecal;
+			mask_index = msk.BigTopDecal[? (ds_map_exists(msk.BigTopDecal, _area) ? _area : area_desert)];
+			target     = noone;
 			area       = _area;
 			
 			 // Scorpion:
 			if(area == area_desert && instance_exists(mod_script_call("mod", "teevents", "teevent_get_active", "ScorpionCity"))){
 				sprite_index = spr.BigTopDecalScorpion;
-				hitid        = [sprite_index, "GRAND SCORPION"];
-				team         = 1;
 			}
 			
 			 // Relocate:
-			var	_tries = 1000,
+			var	_xoff  = (sprite_get_xoffset(mask_index) - ((sprite_get_bbox_left(mask_index) + sprite_get_bbox_right(mask_index) + 1) / 2)) * image_xscale,
+				_yoff  = (sprite_get_yoffset(mask_index) - ((sprite_get_bbox_top(mask_index) + sprite_get_bbox_bottom(mask_index) + 1) / 2)) * image_yscale,
 				_dis   = 24,
-				_dir   = random(360);
+				_dir   = random(360),
+				_tries = 1000;
 				
 			with(instance_nearest_bbox(x, y, Floor)){
 				_dir = point_direction(bbox_center_x, bbox_center_y, other.x, other.y);
 			}
 			
+			x = pround(_x, 16) + _xoff;
+			y = pround(_y, 16) + _yoff;
+			
 			while(
-				_tries-- > 0 &&
-				(
-					place_meeting(x, y, Floor)
-					|| place_meeting(x, y, Bones)
-					|| place_meeting(x, y, TopPot)
-					|| place_meeting(x, y, CustomObject)
-					|| distance_to_object(PortalClear) < 32
+				_tries-- > 0
+				&& (
+					place_meeting(x, y, Floor)       ||
+					place_meeting(x, y, Bones)       ||
+					place_meeting(x, y, TopPot)      ||
+					place_meeting(x, y, PortalClear) ||
+					place_meeting(x, y, CustomObject)
 				)
 			){
-				x = pfloor(x + lengthdir_x(_dis, _dir), 16);
-				y = pfloor(y + lengthdir_y(_dis, _dir), 16);
+				x = pround(x - _xoff + lengthdir_x(_dis, _dir), 16) + _xoff;
+				y = pround(y - _yoff + lengthdir_y(_dis, _dir), 16) + _yoff;
 			}
 			
-			 // Big Decal:
-			target = instance_create(x, y, TopPot);
-			with(target){
-				x = xstart;
-				y = ystart;
-				name = "BigDecal";
-				
-				 // Visual:
-				sprite_index = other.sprite_index;
-				image_index  = other.image_index;
-				image_xscale = other.image_xscale;
-				image_yscale = other.image_yscale;
-				image_angle  = other.image_angle;
-				image_speed  = other.image_speed;
-				
-				 // Visual Fix:
-				mask_index = sprite_index;
-				if(place_meeting(x, y, TopPot)){
-					with(instances_meeting(x, y, TopPot)){
-						if(place_meeting(x, y, other)){
-							instance_copy(false);
-							instance_delete(id);
+			 // TopSmalls:
+			for(var _ox = -64; _ox < 64; _ox += 32){
+				for(var _oy = -48; _oy < 64; _oy += 32){
+					with(instances_matching_gt(TopSmall, "id", instance_create(pround(x + _ox, 16), pround(y + _oy, 16), Top))){
+						if(chance(1, 2) && !point_in_rectangle(bbox_center_x, bbox_center_y, other.bbox_left - 16, other.bbox_top - 16, other.bbox_right + 1 + 16, other.bbox_bottom + 1 + 64)){
+							instance_destroy();
 						}
 					}
-				}
-				
-				 // Vars:
-				mask_index = other.mask_index;
-				
-				 // TopSmalls:
-				for(var _ox = -48; _ox < 48; _ox += 32){
-					for(var _oy = -64; _oy < 32; _oy += 32){
-						with(instances_matching_gt(TopSmall, "id", instance_create(x + _ox, y + _oy, Top))){
-							if(chance(1, 2)){
-								instance_delete(id);
-							}
-						}
-					}
-				}
-				
-				 // TopDecals:
-				var	_num = irandom(4),
-					_ang = random(360);
-					
-				for(var i = _ang; i < _ang + 360; i += (360 / _num)){
-					var	_dis = 24 + random(12),
-						_dir = i + orandom(30);
-						
-					with(obj_create(x, y, "TopDecal")){
-						 // Placement:
-						x = xstart + lengthdir_x(_dis * 1.5, _dir);
-						y = ystart + lengthdir_y(_dis,       _dir);
-						while(place_meeting(x, y, other)){
-							x += lengthdir_x(8, _dir);
-							y += lengthdir_y(8, _dir);
-						}
-						
-						 // Remove Danger:
-						if(sprite_index == sprTopDecalScrapyard){
-							image_index = choose(1, 2);
-						}
-						
-						 // Nevermind:
-						if(place_meeting(x, y, Floor)){
-							instance_delete(id);
-						}
-					}
-				}
-				
-				 // Specifics:
-				switch(other.area){
-					
-					case area_scrapyards: // Ravens
-						
-						var	_ang = random(360),
-							_dis = 8;
-							
-						for(var _dir = _ang; _dir < _ang + 360; _dir += (360 / 3)){
-							top_create(
-								x + lengthdir_x(_dis * random_range(1, 2.5), _dir),
-								y + lengthdir_y(_dis,                        _dir) - 24,
-								"TopRaven",
-								0,
-								0
-							);
-						}
-						
-						break;
-						
-					case area_caves:
-					case area_cursed_caves: // Face drill
-						
-						with(instance_nearest_bbox(x, y, instances_matching_le(instances_matching_ge(Floor, "bbox_top", y - 32), "bbox_bottom", y + 32))){
-							var _fx = bbox_center_x;
-							if(_fx != other.x){
-								other.image_xscale = -sign(_fx - other.x);
-							}
-						}
-						
-						break;
-						
 				}
 			}
+			
+			 // TopDecals:
+			var	_num = irandom(4),
+				_ang = random(360);
+				
+			for(var i = _ang; i < _ang + 360; i += (360 / _num)){
+				var	_dis = 24 + random(12),
+					_dir = i + orandom(30);
+					
+				with(obj_create(x, y, "TopDecal")){
+					 // Placement:
+					x = xstart + lengthdir_x(_dis * 1.5, _dir);
+					y = ystart + lengthdir_y(_dis,       _dir);
+					while(place_meeting(x, y, other)){
+						x += lengthdir_x(8, _dir);
+						y += lengthdir_y(8, _dir);
+					}
+					
+					 // Remove Danger:
+					if(sprite_index == sprTopDecalScrapyard){
+						image_index = choose(1, 2);
+					}
+					
+					 // Nevermind:
+					if(place_meeting(x, y, Floor)){
+						instance_delete(id);
+					}
+				}
+			}
+			
+			 // Specifics:
+			switch(area){
+				
+				case area_scrapyards: // Ravens
+					
+					var	_ang = random(360),
+						_dis = 8;
+						
+					for(var _dir = _ang; _dir < _ang + 360; _dir += (360 / 3)){
+						top_create(
+							x + lengthdir_x(_dis * random_range(1, 2.5), _dir),
+							y + lengthdir_y(_dis,                        _dir) - 12,
+							"TopRaven",
+							0,
+							0
+						);
+					}
+					
+					break;
+					
+				case area_caves:
+				case area_cursed_caves: // Face drill
+					
+					with(instance_nearest_bbox(x, y, instances_matching_ge(instances_matching_le(Floor, "bbox_top", y + 32), "bbox_bottom", y - 16))){
+						var _fx = bbox_center_x;
+						if(_fx != other.x){
+							other.image_xscale = -sign(_fx - other.x);
+						}
+					}
+					
+					break;
+					
+			}
+			
+			 // Decal Setup:
+			BigDecal_step();
 			
 			return id;
 		}
@@ -270,7 +247,50 @@
 	return noone;
 	
 #define BigDecal_step
-	if(instance_exists(target)){
+	if(!instance_exists(target)){
+		 // Decal Setup:
+		if(!place_meeting(x, y, Floor)){
+			target = instance_create(x, y, Bones);
+			with(target){
+				name         = "BigDecal";
+				mask_index   = other.mask_index;
+				sprite_index = other.sprite_index;
+				image_index  = other.image_index;
+				image_speed  = other.image_speed;
+				image_xscale = other.image_xscale;
+				image_yscale = other.image_yscale;
+				image_angle  = other.image_angle;
+				image_blend  = other.image_blend;
+				image_alpha  = other.image_alpha;
+				
+				 // Lay Flat:
+				if(other.area == area_scrapyards){
+					depth = -6;
+					with(SubTopCont){
+						with(instance_create(0, 0, GameObject)){
+							instance_change(SubTopCont, true);
+						}
+						instance_destroy();
+					}
+				}
+				
+				 // Override Top Decals:
+				with(instances_meeting(x, y, [TopPot, Bones])){
+					if(place_meeting(x, y, other)){
+						instance_delete(id);
+					}
+				}
+			}
+		}
+		
+		 // Death:
+		if(!instance_exists(target)){
+			instance_destroy();
+		}
+	}
+	
+	 // Step:
+	else{
 		x = target.x;
 		y = target.y;
 		
@@ -305,7 +325,6 @@
 				
 		}
 	}
-	else instance_destroy();
 	
 #define BigDecal_destroy
 	with(target){
@@ -314,18 +333,17 @@
 		instance_destroy();
 	}
 	
-	if(place_meeting(x, y, Floor) || place_meeting(x, y, Wall)){
-		var	_x = x,
-			_y = y - 8;
-			
+	if(place_meeting(x, y, Floor)){
+		y -= 8;
+		
 		 // General FX:
 		sleep(100);
 		view_shake_at(x, y, 50);
-		with(instance_create(_x, _y, PortalClear)){
+		with(instance_create(x, y, PortalClear)){
 			sprite_index = other.mask_index;
 		}
 		repeat(irandom_range(9, 18)){
-			with(instance_create(_x, _y, Debris)){
+			with(instance_create(x, y, Debris)){
 				speed = random_range(6, 12);
 				if(!place_meeting(x + hspeed_raw, y + vspeed_raw, Floor)){
 					speed /= 3;
@@ -341,7 +359,7 @@
 				 // Scorpion Mode:
 				if(sprite_index == spr.BigTopDecalScorpion){
 					 // Clear Walls:
-					with(instance_create(_x, _y, PortalClear)){
+					with(instance_create(x, y, PortalClear)){
 						image_xscale *= 1.5;
 						image_yscale *= 1.5;
 						with(instances_meeting(x, y, Wall)){
@@ -359,7 +377,9 @@
 							_spd = random_range(2, 6);
 							
 						repeat(2){
-							with(projectile_create(_x, _y, EnemyBullet2, _dir, max(0.1, _spd--))){
+							with(projectile_create(x, y, EnemyBullet2, _dir, max(0.1, _spd--))){
+								team     = -1;
+								hitid    = [other.sprite_index, "GRAND SCORPION"];
 								friction = -0.2;
 							}
 						}
@@ -372,7 +392,7 @@
 					}
 					
 					 // Pickups:
-					var _part = mod_script_call("weapon", "merge", "weapon_merge_decide_raw", 0, 1 + GameCont.hard, -1, wep_frog_pistol, false);
+					/*var _part = mod_script_call("weapon", "merge", "weapon_merge_decide_raw", 0, 1 + GameCont.hard, -1, wep_frog_pistol, false);
 					if(array_length(_part) >= 2){
 						with(obj_create(x, y, "WepPickupGrounded")){
 							target = instance_create(x, y, WepPickup);
@@ -381,7 +401,7 @@
 								ammo = true;
 							}
 						}
-					}
+					}*/
 					with(rad_drop(x, y, 50, 0, 0)){
 						speed += 0.4;
 					}
@@ -389,7 +409,7 @@
 					 // Corpse Bits:
 					var _spr = spr.BigTopDecalScorpionDebris;
 					for(var _img = 0; _img < sprite_get_number(_spr); _img++){
-						with(instance_create(_x, _y, Debris)){
+						with(instance_create(x, y, Debris)){
 							sprite_index = _spr;
 							image_index  = _img;
 							image_xscale = choose(-1, 1);
@@ -400,7 +420,7 @@
 					
 					 // Effects:
 					repeat(50){
-						with(scrFX(_x, _y, random(6), Dust)){
+						with(scrFX(x, y, random(6), Dust)){
 							image_xscale = 2 + random(2);
 							image_yscale = image_xscale;
 							friction     = speed * 0.02;
@@ -415,7 +435,7 @@
 				 // Bonage:
 				else{
 					repeat(irandom_range(2, 3)){
-						with(instance_create(_x, _y, WepPickup)){
+						with(instance_create(x, y, WepPickup)){
 							wep = "crabbone";
 							motion_set(random(360), random_range(3, 6));
 							repeat(3) scrFX(x, y, 2, Smoke);
@@ -429,37 +449,56 @@
 				break;
 				
 			case area_sewers: /// Egg Vat
-			
-				repeat(irandom_range(3, 5)){
-					with(instance_create(_x + orandom(12), _y + orandom(12), FrogEgg)){
+				
+				var	_ang  = random(360),
+					_num  = irandom_range(3, 5),
+					_sort = [];
+					
+				for(var _dir = _ang; _dir < _ang + 360; _dir += (360 / _num)){
+					var _dis = random_range(8, 12);
+					with(instance_create(
+						x + lengthdir_x(_dis * random_range(1, 1.5), _dir),
+						y + lengthdir_y(_dis,                        _dir) + 4,
+						FrogEgg
+					)){
 						alarm0       = irandom_range(20, 60);
 						nexthurt     = current_frame + 6;
 						sprite_index = sprFrogEggSpawn;
 						image_index  = 0;
-						image_speed  = random_range(0.1, 0.4);
-						depth        = -1;
-						
-						 // Space Out Eggs:
-						instance_budge(FrogEgg, 32);
+						image_speed *= random_range(0.25, 1);
 						
 						 // FX:
-						repeat(2) with(instance_create(x + orandom(4), y + orandom(4), AcidStreak)){
-							motion_add(random(360), 1);
-							image_angle = direction;
-							image_speed *= random_range(0.5, 1);
+						repeat(2){
+							with(instance_create(x + orandom(4), y + orandom(4), AcidStreak)){
+								motion_add(random(360), 1);
+								image_angle = direction;
+								image_speed *= random_range(0.5, 1);
+							}
 						}
+						
+						array_push(_sort, [id, y]);
+					}
+				}
+				
+				 // Depth Fix:
+				array_sort_sub(_sort, 1, false);
+				with(_sort){
+					with(self[0]){
+						depth++;
+						depth--;
 					}
 				}
 				
 				 // Sound:
-				sound_play_hit_ext(sndToxicBarrelGas, 0.6 + random(0.1), 5);
+				sound_play_hit_ext(sndFrogExplode,    0.6 + random(0.2), 5);
+				sound_play_hit_ext(sndToxicBarrelGas, 0.6 + random(0.1), 3.5);
 				
 				break;
 				
 			case area_scrapyards: /// Nest Bits
-			
+				
 				repeat(irandom_range(12, 14)){
-					with(instance_create(_x + orandom(24), _y - random(24), Feather)){
+					with(instance_create(x + orandom(24), y - random(24), Feather)){
 						motion_add(point_direction(other.x, other.y, x, y), random(6));
 						sprite_index = spr.NestDebris;
 						image_index  = irandom(irandom(image_number - 1));
@@ -477,12 +516,14 @@
 				
 			case area_caves:
 			case area_cursed_caves: /// Spider Nest
-			
+				
+				y += 8;
+				
 				 // Floorify:
 				floor_set_style(1, area);
-				floor_fill(_x, _y - 8, 2, 1, "");
+				floor_fill(x, y, 2, 1, "");
 				floor_reset_style();
-				with(instance_create(_x, _y - 8, PortalClear)){
+				with(instance_create(x, y, PortalClear)){
 					image_xscale *= 1.5;
 					image_yscale *= 1.2;
 				}
@@ -490,8 +531,8 @@
 				 // Inhabitants:
 				repeat(irandom_range(2, 3)){
 					obj_create(
-						_x + orandom(32),
-						_y + orandom(16) - 8,
+						x + orandom(32),
+						y + orandom(16) - 8,
 						(chance(1, 2) ? "MinerBandit" : "Spiderling")
 					);
 				}
@@ -499,19 +540,19 @@
 				 // Props:
 				repeat(irandom_range(3, 4)){
 					with(instance_create(
-						_x + orandom(32),
-						_y + orandom(16) - 8,
+						x + orandom(32),
+						y + orandom(16) - 8,
 						choose(InvCrystal, Cocoon)
 					)){
 						nexthurt = current_frame + 6;
-						instance_budge(prop, 24);
+						instance_budge(prop, 16);
 					}
 				}
 				
 				 // Effects:
 				repeat(irandom_range(12, 14)){
-					with(instance_create(_x + orandom(32), _y - random(32), Feather)){
-						motion_add(point_direction(_x, _y, x, y), random(6));
+					with(instance_create(x + orandom(32), y - random(32), Feather)){
+						motion_add(point_direction(other.x, other.y, x, y), random(6));
 						sprite_index = spr.PetSpiderWebBits;
 						image_index  = irandom(irandom(image_number - 1));
 						image_speed  = 0;
@@ -521,26 +562,27 @@
 				}
 				
 				 // Sound:
+				sound_play_hit_ext(sndHitMetal,       0.4 + random(0.2), 5);
+				sound_play_hit_ext(sndPlantPotBreak,  0.4 + random(0.2), 2.5);
 				sound_play_hit_ext(sndWallBreakScrap, 0.6 + random(0.2), 2.5);
-				sound_play_hit_ext(sndCocoonBreak,    0.5,               5);
 				
 				break;
 				
 			case area_palace: /// Enormous Headphone Jack
-			
+				
 				 // Explo:
 				var	_ang = random(360),
 					_dis = 12;
 					
 				for(var _dir = _ang; _dir < _ang + 360; _dir += (360 / 3)){
-					with(instance_create(_x + lengthdir_x(_dis, _dir), _y + lengthdir_y(_dis, _dir), GreenExplosion)){
+					with(instance_create(x + lengthdir_x(_dis, _dir), y + lengthdir_y(_dis, _dir), GreenExplosion)){
 						hitid = 99;
 					}
 				}
 				
 				 // Rads:
 				repeat(16){
-					with(obj_create(_x + orandom(8), _y + orandom(8), "BackpackPickup")){
+					with(obj_create(x + orandom(8), y + orandom(8) + 8, "BackpackPickup")){
 						z      = random(32);
 						zspeed = random_range(4, 8);
 						target = instance_create(x, y, (chance(1, 6) ? BigRad : Rad));
@@ -556,10 +598,10 @@
 				
 			case "pizza":
 			case area_pizza_sewers: /// Pizza time
-			
+				
 				repeat(irandom_range(4, 6)){
-					obj_create(_x + orandom(4), _y + orandom(4), "Pizza");
-					with(obj_create(_x, _y, "WaterStreak")){
+					obj_create(x + orandom(4), y + orandom(4), "Pizza");
+					with(obj_create(x, y, "WaterStreak")){
 						speed        = 1 + random(3);
 						direction    = random(360);
 						image_angle  = direction;
@@ -572,26 +614,28 @@
 				
 				 // Sound:
 				sound_play_hit_ext(sndPizzaBoxBreak,  0.3 + random(0.1), 5);
-				sound_play_hit_ext(sndWallBreakBrick, 0.6 + random(0.2), 2);
+				sound_play_hit_ext(sndWallBreakBrick, 0.6 + random(0.2), 1.5);
 				
 				break;
 				
 			case "oasis":
 			case area_oasis: // Life
 				
+				y += 8;
+				
 				 // Floorify:
 				floor_set_style(1, area);
-				floor_fill(_x, _y + 8, 2, 1, "");
+				floor_fill(x, y, 2, 1, "");
 				floor_reset_style();
-				with(instance_create(_x, _y + 8, PortalClear)){
+				with(instance_create(x, y, PortalClear)){
 					image_xscale *= 1.5;
 					image_yscale *= 1.2;
 				}
 				
 				 // They livin in there u kno:
 				repeat(4){
-					var	_sx = _x + orandom(24),
-						_sy = _y + orandom(16);
+					var	_sx = x + orandom(24),
+						_sy = y + orandom(16) - 8;
 						
 					 // Enemy:
 					if(chance(1, 100)){
@@ -610,26 +654,27 @@
 				
 				 // Bubls:
 				repeat(20){
-					instance_create(_x + orandom(24), _y + orandom(24), Bubble);
+					instance_create(x + orandom(24), y + orandom(24), Bubble);
 				}
 				
 				 // Sound:
-				sound_play_hit_ext(sndOasisPortal,    2 + orandom(0.2), 4);
-				sound_play_hit_ext(sndOasisExplosion, 1 + orandom(0.2), 4);
+				sound_play_hit_ext(sndHitMetal,       0.5 + orandom(0.2), 2.5);
+				sound_play_hit_ext(sndOasisPortal,    2.0 + orandom(0.2), 4);
+				sound_play_hit_ext(sndOasisExplosion, 1.0 + orandom(0.2), 4);
 				
 				break;
 				
 			case "trench": /// Bubbles
-			
+				
 				 // Explo:
-				obj_create(_x, _y, "BubbleExplosion");
+				obj_create(x, y, "BubbleExplosion");
 				repeat(3){
-					obj_create(_x, _y, "BubbleExplosionSmall");
+					obj_create(x, y, "BubbleExplosionSmall");
 				}
 				
 				 // Effects:
 				repeat(150){
-					scrFX([_x, 32], [_y, 24], random(2), Bubble);
+					scrFX([x, 32], [y, 24], random(2), Bubble);
 				}
 				
 				 // Sond:
@@ -637,6 +682,7 @@
 				sound_play_hit_ext(sndOasisExplosionSmall, 0.4 + random(0.2), 6);
 				
 				break;
+				
 		}
 	}
 	
@@ -890,21 +936,21 @@
 	with(instance_create(_x, _y, CustomSlash)){
 		 // Visual:
 		sprite_index = spr.BoneSlashLight;
-		image_speed = 0.4;
-
+		image_speed  = 0.4;
+		
 		 // Vars:
 		mask_index = msk.BoneSlashLight;
-		friction = 0.1;
-		damage = 24;
-		force = 8;
-		heavy = false;
-		walled = false;
-		rotspeed = 0;
-		setup = true;
-
+		friction   = 0.1;
+		damage     = 24;
+		force      = 8;
+		heavy      = false;
+		walled     = false;
+		rotspeed   = 0;
+		setup      = true;
+		
 		return id;
 	}
-
+	
 #define BoneSlash_setup
 	setup = false;
 
@@ -1911,8 +1957,8 @@
 			}
 		}
 	}
-	else repeat(2){
-		pickup_drop(50, 20);
+	else for(var i = 0; i < 2; i++){
+		pickup_drop(50, 20, i);
 	}
 	
 	 // Effects:
@@ -2244,312 +2290,6 @@
 	}
 	with(instance_create(x, y, BulletHit)){
 		sprite_index = sprFlakHit;
-	}
-	
-	
-#define ParrotChester_create(_x, _y)
-	/*
-		Follows a chestprop until it's opened, then sends ParrotFeathers to the nearest Player with race=="parrot"
-		
-		Ex:
-			with(GiantWeaponChest){
-				with(obj_create(x, y, "ParrotChester")){
-					creator = other;
-					num = 96;
-				}
-			}
-	*/
-	
-	with(instance_create(_x, _y, CustomObject)){
-		 // Vars:
-		creator = noone;
-		small = false;
-		num = 6;
-		
-		return id;
-	}
-	
-#define ParrotChester_step
-	if(instance_exists(creator)){
-		x = creator.x;
-		y = creator.y;
-	}
-	else{
-		if(num > 0 && position_meeting(x, y, (small ? SmallChestPickup : ChestOpen))){
-			var t = instances_matching(Player, "race", "parrot");
-			
-			 // Pickup Feathers go to Nearest Parrot:
-			if(small && !place_meeting(x, y, Portal)){
-				t = instance_nearest(x, y, Player);
-				if(instance_exists(t) && t.race != "parrot"){
-					t = noone;
-				}
-			}
-			
-			 // Feathers:
-			with(t){
-				for(var i = 0; i < other.num; i++){
-					with(obj_create(other.x, other.y, "ParrotFeather")){
-						bskin        = other.bskin;
-						index        = other.index;
-						creator      = other;
-						target       = other;
-						stick_wait   = 3;
-						sprite_index = race_get_sprite(other.race, sprite_index);
-					}
-					
-					 // Sound FX:
-					if(fork()){
-						wait((i * (4 / other.num)) + irandom(irandom(1)));
-						sound_play_pitchvol(sndBouncerSmg, 3 + random(0.2), 0.2 + random(0.1));
-						exit;
-					}
-				}
-			}
-		}
-		
-		instance_destroy();
-	}
-	
-	
-#define ParrotFeather_create(_x, _y)
-	/*
-		A feather that homes in on its target and charms them
-		If their target is a Player then it will give them feather ammo instead of charming
-		Used for Parrot's active ability
-	*/
-	
-	with(instance_create(_x, _y, CustomObject)){
-		 // Visual:
-		sprite_index     = sprChickenFeather;
-		image_blend_fade = c_gray;
-		depth            = -8;
-		
-		 // Vars:
-		mask_index     = mskLaser;
-		creator        = noone;
-		target         = noone;
-		index          = -1;
-		bskin          = 0;
-		stick          = false;
-		stickx         = 0;
-		sticky         = 0;
-		stick_time_max = 60;// * (1 + ultra_get("parrot", 3));
-		stick_time     = stick_time_max;
-		stick_list     = [];
-		stick_wait     = 0;
-		canhold        = false;
-		move_factor    = 0;
-		
-		 // Push:
-		motion_add(random(360), 4 + random(2));
-		image_angle = direction + 135;
-		
-		return id;
-	}
-	
-#define ParrotFeather_step
-	speed -= speed_raw * 0.1;
-	
-	 // Timer:
-	if(stick_time > 0){
-		 // Generate Queue:
-		if(stick){
-			if(array_length(stick_list) <= 0){
-				var _list = instances_matching(instances_matching(instances_matching(object_index, "name", name), "target", target), "creator", creator);
-				with(_list){
-					stick_list = _list;
-				}
-			}
-		}
-		else stick_list = [];
-		
-		 // Decrement When First in Queue:
-		if(
-			stick
-			? (array_find_index(stick_list, id) == 0)
-			: (stick_time < stick_time_max)
-		){
-			stick_time -= lq_defget(variable_instance_get(target, "ntte_charm", 0), "time_speed", 1) * current_time_scale;
-		}
-	}
-	
-	if(stick_time > 0 && instance_exists(target) && (!stick || ("ntte_charm" in target && lq_defget(target.ntte_charm, "charmed", true)))){
-		if(!stick){
-			stick_list = [];
-			
-			var _hold = false;
-			
-			if(canhold){
-				 // Reach Target Faster:
-				if(
-					distance_to_object(target) > 48 &&
-					abs(angle_difference(direction, point_direction(x, y, target.x, target.y))) < 30
-				){
-					move_factor += ((distance_to_object(target) / 128) - move_factor) * 0.3 * current_time_scale;
-				}
-				else{
-					move_factor -= move_factor * 0.8 * current_time_scale;
-				}
-				move_factor = max(0, move_factor);
-				x += hspeed_raw * move_factor;
-				y += vspeed_raw * move_factor;
-				
-				 // Active Held:
-				if(instance_is(creator, Player)){
-					with(creator){
-						if(canspec && player_active){
-							if(button_check(index, "spec") || usespec > 0){
-								_hold = true;
-							}
-						}
-					}
-				}
-			}
-			else move_factor = 0;
-			
-			 // Orbit Target:
-			if(_hold || stick_wait != 0){
-				var	_l = 16,
-					_d = point_direction(target.x, target.y, x, y);
-					
-				_d += 5 * sign(angle_difference(direction, _d));
-				
-				var	_x = target.x + lengthdir_x(_l, _d),
-					_y = target.y + lengthdir_y(_l, _d);
-					
-				motion_add_ct(point_direction(x, y, _x, _y) + orandom(60), 1);
-			}
-			
-			 // Reach Target:
-			else{
-				canhold = false;
-				
-				 // Fly Towards Enemy:
-				motion_add_ct(point_direction(x, y, target.x, target.y) + orandom(60), 1);
-				
-				if(distance_to_object(target) < 2 || (target == creator && place_meeting(x, y, Portal))){
-					 // Effects:
-					with(instance_create(x, y, Dust)) depth = other.depth - 1;
-					sound_play_pitchvol(sndFlyFire,        2 + random(0.2),  0.25);
-					sound_play_pitchvol(sndChickenThrow,   1 + orandom(0.3), 0.25);
-					sound_play_pitchvol(sndMoneyPileBreak, 1 + random(3),    0.5);
-					
-					 // Stick to & Charm Enemy:
-					if(target != creator){
-						stick       = true;
-						stickx      = random(x - target.x) * (("right" in target) ? target.right : 1);
-						sticky      = random(y - target.y);
-						image_angle = random(360);
-						speed       = 0;
-						
-						 // Parrot's Special Stat:
-						if("ntte_charm" not in target){
-							var _race = variable_instance_get(creator, "race", char_random);
-							if(_race == "parrot"){
-								var _stat = "race:" + _race + ":spec";
-								stat_set(_stat, stat_get(_stat) + 1);
-							}
-						}
-						
-						 // Charm Enemy:
-						var _wasUncharmed = ("ntte_charm" not in target || !target.ntte_charm.charmed);
-						with(charm_instance(target, true)){
-							if(_wasUncharmed || time >= 0 || feather){
-								time += max(other.stick_time, 1);
-							}
-							index   = other.index;
-							feather = true;
-						}
-					}
-					
-					 // Player Pickup:
-					else{
-						with(creator){
-							if("feather_ammo" in self){
-								feather_ammo++;
-								if("feather_ammo_max" in self && feather_ammo > feather_ammo_max){
-									feather_ammo = feather_ammo_max;
-								}
-							}
-						}
-						instance_delete(id);
-						exit;
-					}
-				}
-			}
-			
-			 // Stick Delay:
-			if(stick_wait > 0){
-				stick_wait -= current_time_scale;
-				if(stick_wait <= 0) stick_wait = 0;
-			}
-			
-			 // Facing:
-			image_angle = direction + 135;
-		}
-	}
-	
-	else{
-		 // Travel to Creator:
-		if(!stick && stick_time > 0 && instance_exists(creator)){
-			target = creator;
-		}
-		
-		 // End:
-		else instance_destroy();
-	}
-	
-#define ParrotFeather_end_step
-	if(stick && instance_exists(target)){
-		x       = target.x + (stickx * image_xscale * (("right" in target) ? target.right : 1));
-		y       = target.y + (sticky * image_yscale);
-		visible = target.visible;
-		depth   = target.depth - 1;
-		
-		 // Target In Water:
-		if("wading" in target && target.wading != 0){
-			visible = true;
-		}
-		
-		 // Z-Axis Support:
-		if("z" in target){
-			y -= abs(target.z);
-		}
-	}
-	else{
-		visible = true;
-		depth = -8;
-	}
-	
-#define ParrotFeather_draw // Code below is 2x faster than using a draw_sprite_ext so
-	var _col = image_blend;
-	image_blend = merge_color(image_blend, image_blend_fade, 1 - (stick_time / stick_time_max));
-	draw_self();
-	image_blend = _col;
-	
-#define ParrotFeather_destroy
-	 // Fall to Ground:
-	with(instance_create(x, y, Feather)){
-		sprite_index = other.sprite_index;
-		image_angle  = other.image_angle;
-		image_blend  = other.image_blend_fade;
-		depth        = ((!position_meeting(x, y, Floor) && !instance_seen(x, y, other.creator)) ? -6.01 : 0);
-	}
-	
-	 // Sound:
-	sound_play_pitchvol(sndMoneyPileBreak, 1.5 + random(1.5), random(0.4));
-	if("ntte_charm" in target){
-		sound_play_pitchvol(
-			sndAssassinPretend,
-			1.5 + random(1.5),
-			(stick_time_max / max(stick_time_max, lq_defget(target.ntte_charm, "time", 0)))
-		);
-	}
-	
-#define ParrotFeather_cleanup
-	with(stick_list) if(instance_exists(self)){
-		stick_list = array_delete_value(stick_list, other);
 	}
 	
 	
@@ -3032,7 +2772,7 @@
 		
 		 // Wall Collision:
 		if(visible || instance_exists(revive)){
-			move_step(1);
+			motion_step(1);
 			
 			with(path_wall){
 				var _walled = false;
@@ -3068,7 +2808,7 @@
 				if(_walled) break;
 			}
 			
-			move_step(-1);
+			motion_step(-1);
 		}
 	}
 	
@@ -4213,7 +3953,7 @@
 	}
 	
 	 // Pickups:
-	pickup_drop(40, 10);
+	pickup_drop(40, 10, 0);
 	
 	
 #define PortalPrevent_create(_x, _y)
@@ -5254,28 +4994,18 @@
 	 // Create:
 	if(sprite_exists(_spr)){
 		with(instance_create(_x, _y, CustomObject)){
-			 // Vars:
-			area     = _area;
-			special  = false;
-			eyeblink = random(10000);
-			eyedir   = 90;
+			 // Visual:
+			visible      = false;
+			sprite_index = _spr;
+			image_index  = irandom(image_number - 1);
+			image_speed  = 0;
 			
-			 // Top Decal:
-			target = instance_create(x, y, TopPot);
-			with(target){
-				name = "WallEnemy";
-				
-				 // Visual:
-				sprite_index = _spr;
-				image_index  = irandom(image_number - 1);
-				image_speed  = 0;
-				
-				 // Go Back:
-				if(place_meeting(xstart, ystart, Wall) || !place_meeting(xstart, ystart, Floor)){
-					x = xstart;
-					y = ystart;
-				}
-			}
+			 // Vars:
+			mask_index = -1;
+			area       = _area;
+			special    = false;
+			eyeblink   = random(10000);
+			eyedir     = 90;
 			
 			 // Area-Specific:
 			switch(area){
@@ -5283,21 +5013,40 @@
 				case area_desert:
 					
 					 // Variation:
-					with(target){
-						image_xscale = choose(-1, 1);
-					}
+					image_xscale = choose(-1, 1);
 					
 					break;
 					
 				case area_caves:
 					
 					 // No Orange Crystals:
-					with(instances_at(x, y, Wall)){
-						topindex = irandom(1);
+					if(place_meeting(x, y, Wall)){
+						with(instances_meeting(x, y, Wall)){
+							if(place_meeting(x, y, other)){
+								topindex = irandom(1);
+							}
+						}
 					}
 					
 					break;
 					
+			}
+			
+			 // Top Decal:
+			target = instance_create(x, y, TopPot);
+			with(target){
+				name         = "WallEnemy";
+				x            = other.x;
+				y            = other.y;
+				mask_index   = other.mask_index;
+				sprite_index = other.sprite_index;
+				image_index  = other.image_index;
+				image_speed  = other.image_speed;
+				image_xscale = other.image_xscale;
+				image_yscale = other.image_yscale;
+				image_angle  = other.image_angle;
+				image_blend  = other.image_blend;
+				image_alpha  = other.image_alpha;
 			}
 			
 			return id;
@@ -5376,9 +5125,13 @@
 	else instance_destroy();
 	
 #define WallEnemy_destroy
-	with(target) instance_destroy();
+	with(target){
+		other.x = x;
+		other.y = y;
+		instance_destroy();
+	}
 	
-	if(position_meeting(x, y, FloorExplo)){
+	if(place_meeting(x, y, Floor)){
 		switch(area){
 			
 			case area_desert:
@@ -5408,7 +5161,7 @@
 					}
 					
 					 // Pickup:
-					pickup_drop(1000, 0);
+					pickup_drop(100 / pickup_chance_multiplier, 0);
 					with(instances_matching_gt([Pickup, chestprop], "id", id)){
 						with(obj_create(x, y, "BackpackPickup")){
 							target    = other;
@@ -5487,47 +5240,6 @@
 	with(instances_matching_lt(instances_matching(CustomObject, "name", "UnlockCont"), "id", GameCont.id)) instance_destroy();
 	
 #define ntte_step
-	 // Chests Give Feathers:
-	if(!instance_exists(GenCont)){
-		with(instances_matching(chestprop, "my_feather_storage", null)){
-			my_feather_storage = obj_create(x, y, "ParrotChester");
-			
-			 // Vars:
-			with(my_feather_storage){
-				creator = other;
-				switch(other.object_index){
-					case IDPDChest:
-					case BigWeaponChest:
-					case BigCursedChest:
-						num = 18;
-						break;
-						
-					case GiantWeaponChest:
-					case GiantAmmoChest:
-						num = 60;
-						break;
-				}
-			}
-		}
-		
-		 // Throne Butt : Pickups Give Feathers
-		if(skill_get(mut_throne_butt) > 0){
-			with(instances_matching(Pickup, "my_feather_storage", null)){
-				my_feather_storage = noone;
-				if(mask_index == mskPickup){
-					my_feather_storage = obj_create(x, y, "ParrotChester");
-					
-					 // Vars:
-					with(my_feather_storage){
-						creator = other;
-						small   = true;
-						num     = ceil(2 * skill_get(mut_throne_butt));
-					}
-				}
-			}
-		}
-	}
-	
 	 // Pet Leveling Up FX:
 	with(instances_matching(LevelUp, "nttepet_levelup", null)){
 		nttepet_levelup = true;
@@ -5554,12 +5266,12 @@
 				switch(_object){
 					case hitme: // Wall-Breaking Bros (Big Bandit)
 						with(instances_matching(_inst, "top_object_wallcheck", null)){
-							move_step(1);
+							motion_step(1);
 							top_object_wallcheck = place_meeting(x, y, Wall);
 							if(top_object_wallcheck){
 								_inst = instances_matching_ne(_inst, "id", id);
 							}
-							move_step(-1);
+							motion_step(-1);
 						}
 						break;
 						
@@ -5865,18 +5577,6 @@
 	}
 	
 #define ntte_shadows
-	 // Big Decals:
-	with(instances_matching(TopPot, "name", "BigDecal")){
-		var	_x1 = x - 8,
-			_y1 = y,
-			_x2 = x + 8,
-			_y2 = y + 40;
-			
-		if(collision_rectangle(_x1, _y1, _x2, _y2, Floor, false, false)){
-			draw_sprite_ext(sprite_index, image_index, x, y + 8, image_xscale, -image_yscale, 0, c_white, 1);
-		}
-	}
-	
 	 // Bubble Bombs:
 	with(instances_matching(instances_matching(CustomProjectile, "name", "BubbleBomb"), "big", true)) if(visible){
 		var	_f = min((z / 6) - 4, 6),
@@ -5999,6 +5699,7 @@
 #define instances_seen(_obj, _bx, _by, _index)                                          return  mod_script_call_nc  ('mod', 'telib', 'instances_seen', _obj, _bx, _by, _index);
 #define instances_seen_nonsync(_obj, _bx, _by)                                          return  mod_script_call_nc  ('mod', 'telib', 'instances_seen_nonsync', _obj, _bx, _by);
 #define instances_meeting(_x, _y, _obj)                                                 return  mod_script_call_self('mod', 'telib', 'instances_meeting', _x, _y, _obj);
+#define instance_get_name(_inst)                                                        return  mod_script_call_nc  ('mod', 'telib', 'instance_get_name', _inst);
 #define variable_instance_get_list(_inst)                                               return  mod_script_call_nc  ('mod', 'telib', 'variable_instance_get_list', _inst);
 #define variable_instance_set_list(_inst, _list)                                                mod_script_call_nc  ('mod', 'telib', 'variable_instance_set_list', _inst, _list);
 #define draw_weapon(_sprite, _x, _y, _ang, _meleeAng, _wkick, _flip, _blend, _alpha)            mod_script_call_nc  ('mod', 'telib', 'draw_weapon', _sprite, _x, _y, _ang, _meleeAng, _wkick, _flip, _blend, _alpha);
@@ -6075,6 +5776,6 @@
 #define sprite_get_team(_sprite)                                                        return  mod_script_call_nc  ('mod', 'telib', 'sprite_get_team', _sprite);
 #define lightning_connect(_x1, _y1, _x2, _y2, _arc, _enemy)                             return  mod_script_call_self('mod', 'telib', 'lightning_connect', _x1, _y1, _x2, _y2, _arc, _enemy);
 #define charm_instance(_inst, _charm)                                                   return  mod_script_call_nc  ('mod', 'telib', 'charm_instance', _inst, _charm);
-#define move_step(_mult)                                                                return  mod_script_call_self('mod', 'telib', 'move_step', _mult);
+#define motion_step(_mult)                                                              return  mod_script_call_self('mod', 'telib', 'motion_step', _mult);
 #define pool(_pool)                                                                     return  mod_script_call_nc  ('mod', 'telib', 'pool', _pool);
 #define area_get_shad_color(_area)                                                      return  mod_script_call_nc  ('mod', 'telib', 'area_get_shad_color', _area);

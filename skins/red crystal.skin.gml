@@ -44,7 +44,7 @@
 	
 /// SCRIPTS
 #macro  current_frame_active                                                                    (current_frame % 1) < current_time_scale
-#define orandom(n)                                                                      return  random_range(-n, n);
+#define orandom(_num)                                                                   return  random_range(-_num, _num);
 #define chance(_numer, _denom)                                                          return  random(_denom) < _numer;
 #define chance_ct(_numer, _denom)                                                       return  random(_denom) < (_numer * current_time_scale);
 #define unlock_get(_unlock)                                                             return  mod_script_call_nc('mod', 'teassets', 'unlock_get', _unlock);

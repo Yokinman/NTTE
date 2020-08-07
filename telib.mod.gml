@@ -15,8 +15,8 @@
 	
 	 // Object List (Used for cheats mod, basically):
 	ntte_obj_list = {
-		"tegeneral"   : ["AlertIndicator", "BigDecal", "BoneArrow", "BoneSlash", "BoneFX", "BuriedVault", "BuriedShrine", "CustomBullet", "CustomFlak", "CustomShell", "CustomPlasma", "GroundFlameGreen", "Igloo", "MergeFlak", "ParrotFeather", "ParrotChester", "Pet", "PetRevive", "PetWeaponBecome", "PetWeaponBoss", "PortalBullet", "PortalGuardian", "PortalPrevent", "ReviveNTTE", "TopDecal", "TopObject", "TopTiny", "WallDecal", "WallEnemy"],
-		"tepickups"   : ["Backpack", "Backpacker", "BackpackPickup", "BatChest", "BigIDPDSpawn", "BloodLustPickup", "BoneBigPickup", "BonePickup", "BonusAmmoChest", "BonusAmmoMimic", "BonusAmmoPickup", "BonusHealthChest", "BonusHealthMimic", "BonusHealthPickup", "BuriedVaultChest", "BuriedVaultChestDebris", "BuriedVaultPedestal", "CatChest", "ChestShop", "CursedAmmoChest", "CursedMimic", "CustomChest", "CustomPickup", "HammerHeadPickup", "HarpoonPickup", "OrchidBall", "OrchidChest", "OrchidSkill", "PalaceAltar", "PalankingStatue", "Pizza", "PizzaChest", "PizzaStack", "Prompt", "RedAmmoChest", "RedAmmoPickup", "SpiritPickup", "SunkenChest", "SunkenCoin", "VaultFlower", "VaultFlowerSparkle", "WepPickupGrounded", "WepPickupStick"],
+		"tegeneral"   : ["AlertIndicator", "BigDecal", "BoneArrow", "BoneSlash", "BoneFX", "BuriedVault", "BuriedShrine", "CustomBullet", "CustomFlak", "CustomShell", "CustomPlasma", "GroundFlameGreen", "Igloo", "MergeFlak", "Pet", "PetRevive", "PetWeaponBecome", "PetWeaponBoss", "PortalBullet", "PortalGuardian", "PortalPrevent", "ReviveNTTE", "TopDecal", "TopObject", "TopTiny", "WallDecal", "WallEnemy"],
+		"tepickups"   : ["Backpack", "Backpacker", "BackpackPickup", "BatChest", "BigIDPDSpawn", "BloodLustPickup", "BoneBigPickup", "BonePickup", "BonusAmmoChest", "BonusAmmoMimic", "BonusAmmoPickup", "BonusHealthChest", "BonusHealthMimic", "BonusHealthPickup", "BuriedVaultChest", "BuriedVaultChestDebris", "BuriedVaultPedestal", "CatChest", "ChestShop", "CursedAmmoChest", "CursedMimic", "CustomChest", "CustomPickup", "HammerHeadPickup", "HarpoonPickup", "OrchidBall", "OrchidChest", "OrchidSkill", "PalaceAltar", "PalankingStatue", "ParrotFeather", "ParrotChester", "Pizza", "PizzaChest", "PizzaStack", "Prompt", "RedAmmoChest", "RedAmmoPickup", "SpiritPickup", "SunkenChest", "SunkenCoin", "VaultFlower", "VaultFlowerSparkle", "WepPickupGrounded", "WepPickupStick"],
 		"tedesert"    : ["BabyScorpion", "BabyScorpionGold", "BanditCamper", "BanditHiker", "BanditTent", "BigCactus", "BigMaggotSpawn", "Bone", "CoastBossBecome", "CoastBoss", "CowSkull", "FlySpin", "VenomBlast", "ScorpionRock", "SilverScorpion", "SilverScorpionDevastator", "SilverScorpionFlak", "VenomFlak", "VenomPellet", "VenomPelletBack", "WantBigMaggot"],
 		"tecoast"     : ["BloomingAssassin", "BloomingAssassinHide", "BloomingBush", "BloomingCactus", "BuriedCar", "ClamShield", "ClamShieldSlash", "CoastBigDecal", "CoastDecal", "CoastDecalCorpse", "Creature", "Diver", "DiverHarpoon", "Gull", "Harpoon", "HarpoonStick", "NetNade", "Palanking", "PalankingDie", "PalankingSlash", "PalankingSlashGround", "PalankingToss", "Palm", "Pelican", "Seal", "SealAnchor", "SealDisc", "SealHeavy", "SealMine", "TrafficCrab", "Trident"],
 		"teoasis"     : ["BubbleBomb", "BubbleExplosion", "BubbleExplosionSmall", "BubbleSlash", "CrabTank", "HammerShark", "HyperBubble", "OasisPetBecome", "Puffer", "SunkenRoom", "SunkenSealSpawn", "WaterStreak"],
@@ -734,6 +734,36 @@
 	}
 	
 	return array_join(_stringSplit, "");
+	
+#define string_space(_string)
+	/*
+		Returns the given string with spaces inserted between numbers<->letters, letters<->numbers, and lowercase<->uppercase
+		
+		Ex:
+			string_space("CoolGuy123") == "Cool Guy 123"
+	*/
+	
+	var	_char     = "",
+		_charLast = "",
+		_charNext = "";
+		
+	for(var i = 0; i <= string_length(_string); i++){
+		_charNext = string_char_at(_string, i + 1);
+		
+		if(
+			(_char != string_lower(_char) && (_charLast != string_upper(_charLast) || (_charLast != string_lower(_charLast) && _charNext != string_upper(_charNext))))
+			|| (string_digits(_char) != "" && string_letters(_charLast) != "")
+			|| (string_letters(_char) != "" && string_digits(_charLast) != "") 
+		){
+			_string = string_insert(" ", _string, i);
+			i++;
+		}
+		
+		_charLast = _char;
+		_char = _charNext;
+	}
+	
+	return _string;
 	
 #define scrWalk(_dir, _walk)
 	walk = (is_array(_walk) ? random_range(_walk[0], _walk[1]) : _walk);
@@ -1941,6 +1971,76 @@
 	
 	return _new;
 	
+#define instance_get_name(_inst)
+	/*
+		Returns a displayable name for a given instance or object
+	*/
+	
+	var _name  = "";
+	
+	 // Instance:
+	if(instance_exists(_inst) && !object_exists(_inst)){
+		 // Cause of Death:
+		if("hitid" in _inst){
+			var _hitid = _inst.hitid;
+			
+			if(is_real(_hitid)){
+				_hitid = floor(_hitid);
+				
+				 // Built-In:
+				var _list = ["bandit", "maggot", "rad maggot", "big maggot", "scorpion", "golden scorpion", "big bandit", "rat", "big rat", "green rat", "gator", "frog", "super frog", "mom", "assassin", "raven", "salamander", "sniper", "big dog", "spider", "new cave thing", "laser crystal", "hyper crystal", "snow bandit", "snowbot", "wolf", "snowtank", "lil hunter", "freak", "explo freak", "rhino freak", "necromancer", "turret", "technomancer", "guardian", "explo guardian", "dog guardian", "throne", "throne II", "bonefish", "crab", "turtle", "molefish", "molesarge", "fireballer", "super fireballer", "jock", "@p@qc@qu@qr@qs@qe@qd @qs@qp@qi@qd@qe@qr", "@p@qc@qu@qr@qs@qe@qd @qc@qr@qy@qs@qt@qa@ql", "mimic", "health mimic", "grunt", "inspector", "shielder", "crown guardian", "explosion", "small explosion", "fire trap", "shield", "toxic", "horror", "barrel", "toxic barrel", "golden barrel", "car", "venus car", "venus car fixed", "venus car 2", "icy car" , "thrown car", "mine", "crown of death", "rogue strike", "blood launcher", "blood cannon", "blood hammer", "disc", "@p@qc@qu@qr@qs@qe", "big dog missile", "halloween bandit", "lil hunter fly", "throne death", "jungle bandit", "jungle assassin", "jungle fly", "crown of hatred", "ice flower", "@p@qc@qu@qr@qs@qe@qd @qa@qm@qm@qo @qp@qi@qc@qk@qu@qp", "electrocution", "elite grunt", "blood gamble", "elite shielder", "elite inspector", "captain", "van", "buff gator", "generator", "lightning crystal", "golden snowtank", "green explosion", "small generator", "golden disc", "big dog explosion", "popo freak", "throne II death", "big fish"];
+				if(_hitid >= 0 && _hitid < array_length(_list)){
+					_name = loc(`CauseOfDeath:${_hitid}`, _list[_hitid]);
+				}
+				
+				 // Sprite:
+				else if(sprite_exists(_hitid)){
+					_name = sprite_get_name(_hitid);
+				}
+			}
+			
+			 // Custom:
+			else if(is_array(_hitid) && array_length(_hitid) > 1){
+				_name = string(_hitid[1]);
+			}
+		}
+		
+		 // Named:
+		if(_name == ""){
+			if("name" in _inst && string_pos("Custom", _name) == 1){
+				_name = string(_inst.name);
+				if(string_pos(" ", _name) <= 0){
+					_name = string_space(_name);
+				}
+			}
+		}
+	}
+	
+	 // Object:
+	if(_name == ""){
+		var _obj = (
+			object_exists(_inst)
+			? _inst
+			: variable_instance_get(_inst, "object_index", -1)
+		);
+		if(object_exists(_obj)){
+			switch(_obj){
+				case Bullet1      : _name = "Bullet";            break;
+				case Bullet2      : _name = "Shell";             break;
+				case EnemyBullet1 : _name = "Enemy Bullet";      break;
+				case EnemyBullet2 : _name = "Enemy Shell";       break;
+				case EnemyBullet3 : _name = "Venom";             break;
+				case EnemyBullet4 : _name = "Sniper Bullet";     break;
+				case EFlakBullet  : _name = "Enemy Flak Bullet"; break;
+				case PlasmaBig    : _name = "Big Plasma";        break;
+				case PlasmaHuge   : _name = "Huge Plasma";       break;
+				default           : _name  = string_space(object_get_name(_obj));
+			}
+		}
+	}
+	
+	return _name;
+	
 #define instance_nearest_array(_x, _y, _obj)
 	/*
 		Returns the instance closest to a given point from an array of instances
@@ -2070,7 +2170,7 @@
 	
 #define instances_meeting(_x, _y, _obj)
 	/*
-		Returns all given instances that would be touching the calling instance at a given position
+		Returns all instances whose bounding boxes overlap the calling instance's bounding box at the given position
 		Much better performance than manually performing 'place_meeting(x, y, other)' on every instance
 	*/
 	
@@ -5706,7 +5806,7 @@
 		UberCont.opt_shake = _shake;
 	}
 	
-#define move_step(_mult)
+#define motion_step(_mult)
 	/*
 		Performs an instance's basic movement code, scaled by a given number
 	*/

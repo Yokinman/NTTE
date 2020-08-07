@@ -196,7 +196,7 @@
 	
 #define Angler_death
 	pickup_drop(80, 0);
-	pickup_drop(60, 5);
+	pickup_drop(60, 5, 0);
 	
 	/// Light Broke:
 		var	_x = x + (20 * right),
@@ -945,8 +945,12 @@
 	sprite_index = spr_walk;
 
 #define Jelly_death
-	if(type <= 2) pickup_drop(50, 2);
-	else pickup_drop(100, 10);
+	if(type <= 2){
+		pickup_drop(50, 2, 0);
+	}
+	else{
+		pickup_drop(100, 10, 0);
+	}
 
 
 #define JellyElite_create(_x, _y)
@@ -1524,6 +1528,21 @@
 		alarm1 = 90;
 		alarm2 = 90;
 		alarm3 = random_range(1, 30);
+		
+		 // Make PitClear object later, for BigDecals and uhh yeah just do it
+		with(instance_create(xpos, ypos - 16, CustomObject)){
+			sprite_index = mskReviveArea;
+			image_xscale = other.image_xscale * 1.6;
+			image_yscale = other.image_yscale * 1.6;
+			image_angle  = other.image_angle;
+			if(fork()){
+				wait 0;
+				if(instance_exists(self)){
+					instance_destroy();
+				}
+				exit;
+			}
+		}
 		
 		return id;
 	}
@@ -4344,7 +4363,7 @@
 	draw_set_fog(false, 0, 0, 0);
 	
 #define draw_anglertrail
-	var _inst = instances_matching(instances_matching_ge(instances_matching(instances_matching(CustomEnemy, "name", "Angler"), "hiding", false), "ammo", 0), "visible", true);
+	var _inst = instances_matching(instances_matching(instances_matching(CustomEnemy, "name", "Angler"), "hiding", false), "visible", true);
 	
 	if(array_length(_inst) > 0){
 		if(lag) trace_time();
@@ -4381,7 +4400,7 @@
 			}
 			
 			 // Draw Trails:
-			with(_inst){
+			with(instances_matching_ge(_inst, "ammo", 0)){
 				if(sprite_index != spr_appear){
 					var	_x1    = xprevious,
 						_y1    = yprevious,
@@ -4520,6 +4539,7 @@
 #define instances_seen(_obj, _bx, _by, _index)                                          return  mod_script_call_nc  ('mod', 'telib', 'instances_seen', _obj, _bx, _by, _index);
 #define instances_seen_nonsync(_obj, _bx, _by)                                          return  mod_script_call_nc  ('mod', 'telib', 'instances_seen_nonsync', _obj, _bx, _by);
 #define instances_meeting(_x, _y, _obj)                                                 return  mod_script_call_self('mod', 'telib', 'instances_meeting', _x, _y, _obj);
+#define instance_get_name(_inst)                                                        return  mod_script_call_nc  ('mod', 'telib', 'instance_get_name', _inst);
 #define variable_instance_get_list(_inst)                                               return  mod_script_call_nc  ('mod', 'telib', 'variable_instance_get_list', _inst);
 #define variable_instance_set_list(_inst, _list)                                                mod_script_call_nc  ('mod', 'telib', 'variable_instance_set_list', _inst, _list);
 #define draw_weapon(_sprite, _x, _y, _ang, _meleeAng, _wkick, _flip, _blend, _alpha)            mod_script_call_nc  ('mod', 'telib', 'draw_weapon', _sprite, _x, _y, _ang, _meleeAng, _wkick, _flip, _blend, _alpha);
@@ -4596,6 +4616,6 @@
 #define sprite_get_team(_sprite)                                                        return  mod_script_call_nc  ('mod', 'telib', 'sprite_get_team', _sprite);
 #define lightning_connect(_x1, _y1, _x2, _y2, _arc, _enemy)                             return  mod_script_call_self('mod', 'telib', 'lightning_connect', _x1, _y1, _x2, _y2, _arc, _enemy);
 #define charm_instance(_inst, _charm)                                                   return  mod_script_call_nc  ('mod', 'telib', 'charm_instance', _inst, _charm);
-#define move_step(_mult)                                                                return  mod_script_call_self('mod', 'telib', 'move_step', _mult);
+#define motion_step(_mult)                                                              return  mod_script_call_self('mod', 'telib', 'motion_step', _mult);
 #define pool(_pool)                                                                     return  mod_script_call_nc  ('mod', 'telib', 'pool', _pool);
 #define area_get_shad_color(_area)                                                      return  mod_script_call_nc  ('mod', 'telib', 'area_get_shad_color', _area);

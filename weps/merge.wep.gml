@@ -3058,46 +3058,18 @@
 		case proj_create:
 			if(object_index == Disc) return true; // No discs
 			
-			var _obj = object_index;
-			
 			 // Resprite:
+			var _name = instance_get_name(self);
 			with(team_instance_sprite(1, self)){
 				o.time = 50;
 				o.team_change = (speed > 0);
-			
+				
 				 // Auto-Hitid:
 				if(hitid == -1){
-					var	_sprt = sprite_index,
-						_name = string_letters(object_get_name(_obj));
-						
-					switch(_obj){
-						case Bullet2:
-							_name = "Shell";
-							break;
-							
-						case Laser:
-						case EnemyLaser:
-							_sprt = sprEnemyLaserStart;
-							break;
-							
-						case PlasmaBig:
-							_name = "BigPlasma";
-							break;
-							
-						case PlasmaHuge:
-							_name = "HugePlasma";
-							break;
-					}
-					
-					 // Auto-Space:
-					for(var i = 2; i <= string_length(_name); i++){
-						var _char = string_char_at(_name, i);
-						if(_char == string_upper(_char)){
-							_name = string_insert(" ", _name, i++);
-						}
-					}
-					
-					hitid = [_sprt, _name];
+					hitid = [
+						((sprite_index == sprEnemyLaser) ? sprEnemyLaserStart : sprite_index),
+						_name
+					];
 				}
 			}
 			break;
@@ -4569,6 +4541,7 @@
 #define instances_seen(_obj, _bx, _by, _index)                                          return  mod_script_call_nc  ('mod', 'telib', 'instances_seen', _obj, _bx, _by, _index);
 #define instances_seen_nonsync(_obj, _bx, _by)                                          return  mod_script_call_nc  ('mod', 'telib', 'instances_seen_nonsync', _obj, _bx, _by);
 #define instances_meeting(_x, _y, _obj)                                                 return  mod_script_call_self('mod', 'telib', 'instances_meeting', _x, _y, _obj);
+#define instance_get_name(_inst)                                                        return  mod_script_call_nc  ('mod', 'telib', 'instance_get_name', _inst);
 #define variable_instance_get_list(_inst)                                               return  mod_script_call_nc  ('mod', 'telib', 'variable_instance_get_list', _inst);
 #define variable_instance_set_list(_inst, _list)                                                mod_script_call_nc  ('mod', 'telib', 'variable_instance_set_list', _inst, _list);
 #define draw_weapon(_sprite, _x, _y, _ang, _meleeAng, _wkick, _flip, _blend, _alpha)            mod_script_call_nc  ('mod', 'telib', 'draw_weapon', _sprite, _x, _y, _ang, _meleeAng, _wkick, _flip, _blend, _alpha);
@@ -4645,6 +4618,6 @@
 #define sprite_get_team(_sprite)                                                        return  mod_script_call_nc  ('mod', 'telib', 'sprite_get_team', _sprite);
 #define lightning_connect(_x1, _y1, _x2, _y2, _arc, _enemy)                             return  mod_script_call_self('mod', 'telib', 'lightning_connect', _x1, _y1, _x2, _y2, _arc, _enemy);
 #define charm_instance(_inst, _charm)                                                   return  mod_script_call_nc  ('mod', 'telib', 'charm_instance', _inst, _charm);
-#define move_step(_mult)                                                                return  mod_script_call_self('mod', 'telib', 'move_step', _mult);
+#define motion_step(_mult)                                                              return  mod_script_call_self('mod', 'telib', 'motion_step', _mult);
 #define pool(_pool)                                                                     return  mod_script_call_nc  ('mod', 'telib', 'pool', _pool);
 #define area_get_shad_color(_area)                                                      return  mod_script_call_nc  ('mod', 'telib', 'area_get_shad_color', _area);
