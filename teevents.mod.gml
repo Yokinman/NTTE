@@ -1648,7 +1648,7 @@
 	
 #define SealPlaza_text    return `${event_tip}DISTANT RELATIVES`;
 #define SealPlaza_area    return area_city;
-#define SealPlaza_chance  return ((GameCont.subarea != 3 && unlock_get("pack:coast")) ? 1/7 : 0);
+#define SealPlaza_chance  return (unlock_get("pack:coast") ? 1/18 : 0);
 
 #define SealPlaza_create
 	var	_minID      = GameObject.id,

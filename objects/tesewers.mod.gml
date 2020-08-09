@@ -1865,7 +1865,8 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 		 // Visual:
 		sprite_index = spr.BatScreech;
 		image_speed  = 0.4;
-		depth        = -3;
+		image_alpha  = 0.4;
+		depth        = -7;
 		hitid        = [sprite_index, "SOUND"];
 		
 		 // Vars:
@@ -1965,7 +1966,7 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 	
 #define BatScreech_draw
 	draw_set_blend_mode(bm_add);
-	draw_sprite_ext(sprite_index, image_index, x, y, image_xscale, image_yscale, image_angle, image_blend, image_alpha * 0.4);
+	draw_sprite_ext(sprite_index, image_index, x, y, image_xscale, image_yscale, image_angle, image_blend, image_alpha);
 	draw_set_blend_mode(bm_normal);
 	
 #define BatScreech_hit
@@ -2975,7 +2976,7 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 	
 #define CatBoss_alrm3
 	alarm3 = 150;
-
+	
 	 // Underground Cats:
 	if(chance(1, 1 + array_length(instances_matching(CustomEnemy, "name", "Cat")))){
 		with(obj_create(0, 0, "Cat")){
@@ -2993,7 +2994,7 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 		if(snd_hurt == sndBuffGatorHit){
 			sound_play_hit_ext(snd_hurt, 0.6 + random(0.3), 3);
 		}
-
+		
 		 // Half HP:
 		var h = (maxhealth / 2);
 		if(in_range(my_health, h - _hitdmg + 1, h)){
@@ -3003,7 +3004,7 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 			}
 			else sound_play(snd_lowh);
 		}
-
+		
 		 // Break charging:
 		if(supertime > 0 && superbreakmax > 0){
 			supertime += _hitdmg * 4;
@@ -3041,36 +3042,36 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 			}
 		}
 	}
-
+	
 	 // Toxic immune
 	else with(other){
 		instance_copy(false);
 		instance_delete(id);
 		for(var i = 0; i < maxp; i++) view_shake[i] -= 1;
 	}
-
+	
 #define CatBoss_death
 	 // Hmmmm
 	instance_create(x, y, PortalClear);
 	instance_create(x, y, ToxicDelay);
-
+	
 	 // Pickups:
 	repeat(2){
 		pickup_drop(100, 0);
 	}
-
+	
 	 // Buff Partner:
 	var _partner = instances_matching(CustomEnemy, "name", "BatBoss");
 	if(array_length(_partner) > 0) with(_partner){
 		var _heal = ceil(maxhealth / 4);
 		maxhealth += _heal;
-
+		
 		 // Rad Heals:
 		with(other){
 			 // Rads:
 			var	_num = min(raddrop, 24),
 				_rad = rad_drop(x, y, _num, direction, speed);
-
+				
 			raddrop -= _num;
 			with(_rad){
 				alarm0 /= 3;
@@ -3079,21 +3080,21 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 				image_index = 1;
 				depth = -3;
 			}
-
+			
 			 // Partner Sucks Up Rads:
 			with(rad_path(_rad, other)){
 				heal = ceil(_heal / array_length(_rad));
 			}
 		}
 	}
-
+	
 	 // Boss Win Music:
 	else with(MusCont) alarm_set(1, 1);
-
+	
 #define CatBoss_cleanup
 	sound_stop(jetpack_loop);
-
-
+	
+	
 #define CatBossAttack_create(_x, _y)
 	with(instance_create(_x, _y, CustomObject)){
 		 // Visual:

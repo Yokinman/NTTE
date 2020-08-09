@@ -3477,7 +3477,7 @@
 		
 		 // Vars:
 		mask_index = sprPortalClear;
-		maxhealth  = 300;
+		maxhealth  = 260;
 		team       = 1;
 		size       = 4;
 		phase      = _phase;
@@ -3494,73 +3494,61 @@
 		while(phase < _cPhase){
 			phase++;
 			
-			/*
-			 // Loot:
-			var _minID = GameObject.id;
-			pickup_drop(100 / pickup_chance_multiplier, 0);
-			with(instances_matching_gt([Pickup, chestprop], "id", _minID)){
-				with(obj_create(x, y, "BackpackPickup")){
-					target = other;
-					event_perform(ev_step, ev_step_end);
-				}
-			}
-			
-			 // Blank:
-			scrPalankingStatueBlank(1 + phase);
-			*/
-			
 			 // Resprite:
-			spr_idle = spr.PalankingStatueIdle[phase];
-			spr_hurt = spr.PalankingStatueHurt[phase];
+			spr_idle     = spr.PalankingStatueIdle[phase];
+			spr_hurt     = spr.PalankingStatueHurt[phase];
 			sprite_index = spr_hurt;
 			
-			 // Effects:
-			repeat(3) scrPalankingStatueChunk(x, y, random(360), random_range(3, 8), random_range(3, 8));
+			 // Chunks:
+			repeat(3){
+				PalankingStatue_chunk(x, y, random(360), random_range(2, 5), random_range(4, 5));
+			}
+			
+			 // Sound:
 			sound_play_hit_ext(snd.PalankingHurt, 0.7 + random(0.2), 0.5);
 		}
 	}
 
 #define PalankingStatue_death
-	var _minID = GameObject.id;
-	with(obj_create(x, y, "BackpackPickup")){
-		target = obj_create(x, y, "Backpack");
+	 // Boomba:
+	team = 2;
+	var _dis = 16;
+	for(var _dir = 0; _dir < 360; _dir += 90){
+		projectile_create(
+			x + lengthdir_x(_dis, _dir) + orandom(32),
+			y + lengthdir_y(_dis, _dir) + orandom(32),
+			"BubbleExplosion",
+			0,
+			0
+		);
+		projectile_create(x, y, "HyperBubble", _dir, 4);
 	}
 	
-	/*
-	pickup_drop(100 / pickup_chance_multiplier, 0);
-	chest_create(x, y, "Backpack", false);
-
-	 // Become Big:
-	with(instances_matching_gt([Pickup, chestprop], "id", _minID)){
-		if(instance_is(self, AmmoPickup) || instance_is(self, AmmoChest)){
-			chest_create(x, y, AmmoChest, false);
-		}
-		else if(instance_is(self, HPPickup) || instance_is(self, HealthChest)){
-			chest_create(x, y, HealthChest, false);
-		}
-		instance_delete(id);
+	 // Pickups:
+	for(var i = 0; i < 3; i++){
+		pickup_drop(100, 10, i);
 	}
 	
-	 // Z-ify:
-	with(instances_matching_gt([Pickup, chestprop], "id", _minID)){
-		with(obj_create(x, y, "BackpackPickup")){
-			target = other;
-			zfriction = 0.6;
-			zspeed = random_range(3, 4);
-			speed = 1 + orandom(0.5);
-			event_perform(ev_step, ev_step_end);
-		}
-	}
-	
-	 // Blank:
-	scrPalankingStatueBlank(2 + phase);
-	*/
-	
-	 // Effects:
-	scrPalankingStatueChunk(x, y, random(360), random_range(3, 8), random_range(3, 8));
+	 // Sound:
 	sound_play_hit_ext(snd.PalankingDead, 0.7 + random(0.2), 0.5);
 	
-#define scrPalankingStatueChunk(_x, _y, _dir, _spd, _zspd)
+	 // Effects:
+	repeat(5){
+		PalankingStatue_chunk(x, y, random(360), random_range(1, 3), random_range(6, 10));
+	}
+	for(var i = 0; i < maxp; i++){
+		var	_x = view_xview[i] + (game_width  / 2),
+			_y = view_yview[i] + (game_height / 2);
+			
+		view_shift(
+			i,
+			point_direction(_x, _y, x, y),
+			point_distance(_x, _y, x, y) * 1.5
+		);
+	}
+	sleep(100);
+	
+#define PalankingStatue_chunk(_x, _y, _dir, _spd, _zspd)
 	with(scrFX(_x, _y, [_dir, _spd], ScrapBossCorpse)){
 		sprite_index = spr.PalankingStatueChunk;
 		image_index  = irandom(image_number - 1);
@@ -3568,32 +3556,14 @@
 		
 		 // Z-ify:
 		with(obj_create(_x, _y, "BackpackPickup")){
-			target = other;
+			target    = other;
 			zfriction = 0.6;
-			zspeed = _zspd;
-			speed  = _spd;
+			zspeed    = _zspd;
+			speed     = _spd;
 			event_perform(ev_step, ev_step_end);
 		}
 		
 		return id;
-	}
-	
-#define scrPalankingStatueBlank(_num)
-	var n = _num;
-	for(var i = 0; i < n; i++){
-		var	s = 0.5 + (0.5 * (1 - (i / n))),
-			l = (24 * i) * (s * 2);
-			
-		repeat(1 + i){
-			var d = random(360);
-			with(obj_create(x + lengthdir_x(l, d) + orandom(5), y + lengthdir_y(l, d) + orandom(5), "BatScreech")){
-				image_xscale = s;
-				image_yscale = s;
-				image_speed *= s;
-				depth = -7;
-				team  = 2;
-			}
-		}
 	}
 	
 	

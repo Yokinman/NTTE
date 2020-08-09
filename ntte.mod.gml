@@ -347,7 +347,7 @@
 	}
 	
 	 // Wepmimic Arena:
-	if(_normalArea && (chance(GameCont.nochest - 4, 4) || chance(1, 100))){
+	if(_normalArea && chance(GameCont.nochest - 4, 4)){
 		with(instance_furthest(_spawnX, _spawnY, WeaponChest)){
 			with(obj_create(x, y, "PetWeaponBecome")){
 				curse = max(curse, other.curse);
@@ -1134,7 +1134,9 @@
 								}
 								
 								 // Skipping Doesn't Count:
-								if(instance_is(self, BigWeaponChest)) GameCont.nochest -= 2;
+								if(instance_is(self, BigWeaponChest)){
+									GameCont.nochest -= 2;
+								}
 							}
 							break;
 							

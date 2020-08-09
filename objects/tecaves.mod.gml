@@ -1573,7 +1573,7 @@
 		sprite_index = spr_idle;
 		
 		 // Vars:
-		maxhealth	  = 8; // protective headgear
+		maxhealth     = 8; // protective headgear
 		my_health     = maxhealth;
 		light_angle   = gunangle;
 		light_visible = true;
@@ -1588,14 +1588,16 @@
 	light_angle = angle_lerp(light_angle, gunangle, current_time_scale / 4);
 	
 	 // Flicker:
-	if(frame_active((GameCont.area == area_cursed_caves) ? 3 : 2)){
-		light_visible = (
-			(GameCont.area == area_cursed_caves)
-			?  chance(1, 10) // broken light
-			: !chance(1, 15)
-		);
+	if(frame_active(3)){
+		light_visible = !chance(1, 10);
+		
+		 // Broken:
+		if(GameCont.area == area_cursed_caves){
+			light_visible = !light_visible;
+		}
 	}
-
+	
+	
 #define Mortar_create(_x, _y)
 	with(instance_create(_x, _y, CustomEnemy)){
 		 // Visual:
@@ -3395,27 +3397,29 @@
 	}
 	
 	 // Miner Bandit:
-	with(instances_matching(instances_matching(instances_matching(Bandit, "name", "MinerBandit"), "visible", true), "light_visible", true)){
-		var _l  = 120,
-			_d  = 20 + orandom(1),
-			_x2 = x + lengthdir_x(_l, light_angle + _d),
-			_y2 = y + lengthdir_y(_l, light_angle + _d),
-			_x3 = x + lengthdir_x(_l, light_angle - _d),
-			_y3 = y + lengthdir_y(_l, light_angle - _d);
-			
-		 // Light Beam:	
-		draw_triangle(x, y, _x2, _y2, _x3, _y3, false);
-		draw_circle(
-			x + lengthdir_x(_l, light_angle), 
-			y + lengthdir_y(_l, light_angle), 
-			point_distance(_x2, _y2, _x3, _y3) / 2, 
-			false
-		);
+	with(instances_matching(instances_matching(Bandit, "name", "MinerBandit"), "visible", true)){
+		 // Light Beam:
+		if(light_visible == true){
+			var _l  = 120,
+				_d  = 20 + orandom(1),
+				_x2 = x + lengthdir_x(_l, light_angle + _d),
+				_y2 = y + lengthdir_y(_l, light_angle + _d),
+				_x3 = x + lengthdir_x(_l, light_angle - _d),
+				_y3 = y + lengthdir_y(_l, light_angle - _d);
+				
+			draw_triangle(x, y, _x2, _y2, _x3, _y3, false);
+			draw_circle(
+				x + lengthdir_x(_l, light_angle), 
+				y + lengthdir_y(_l, light_angle), 
+				point_distance(_x2, _y2, _x3, _y3) / 2, 
+				false
+			);
+		}
 		
+		 // Helmet Glow:
 		var _cl = 9,
 			_cr = 24;
 			
-		 // Helmet Glow:
 		draw_circle(
 			x + lengthdir_x(_cl, light_angle), 
 			y + lengthdir_y(_cl, light_angle), 
@@ -3444,28 +3448,26 @@
 	
 	 // Miner Bandit:
 	with(instances_matching(instances_matching(instances_matching(Bandit, "name", "MinerBandit"), "visible", true), "light_visible", true)){
-		var l = 60,
-			d = 15 + orandom(1),
+		 // Light Beam:
+		var _l  = 60,
+			_d  = 15 + orandom(1),
+			_x2 = x + lengthdir_x(_l, light_angle + _d),
+			_y2 = y + lengthdir_y(_l, light_angle + _d),
+			_x3 = x + lengthdir_x(_l, light_angle - _d),
+			_y3 = y + lengthdir_y(_l, light_angle - _d);
 			
-			_x2 = x + lengthdir_x(l, light_angle + d),
-			_y2 = y + lengthdir_y(l, light_angle + d),
-			
-			_x3 = x + lengthdir_x(l, light_angle - d),
-			_y3 = y + lengthdir_y(l, light_angle - d);
-			
-		 // Light Beam:	
 		draw_triangle(x, y, _x2, _y2, _x3, _y3, false);
 		draw_circle(
-			x + lengthdir_x(l, light_angle), 
-			y + lengthdir_y(l, light_angle), 
+			x + lengthdir_x(_l, light_angle), 
+			y + lengthdir_y(_l, light_angle), 
 			point_distance(_x2, _y2, _x3, _y3) / 2, 
 			false
 		);
 		
+		 // Helmet Glow:
 		var _cl = 6,
 			_cr = 12;
 			
-		 // Helmet Glow:
 		draw_circle(
 			x + lengthdir_x(_cl, light_angle), 
 			y + lengthdir_y(_cl, light_angle), 
