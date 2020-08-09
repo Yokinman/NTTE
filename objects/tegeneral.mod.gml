@@ -1840,13 +1840,28 @@
 	*/
 	
 	with(instance_create(_x, _y, CustomProp)){
-		 // Visual:
+		 // Facing:
 		front = chance(1, 3);
-		spr_idle = (front ? spr.IglooFrontIdle : spr.IglooSideIdle);
-		spr_hurt = (front ? spr.IglooFrontHurt : spr.IglooSideHurt);
-		spr_dead = (front ? spr.IglooFrontDead : spr.IglooSideDead);
+		with(instances_matching(CustomProp, "name", "PalankingStatue")){
+			if(other.x >= bbox_left && other.x < bbox_right + 1){
+				if(y > other.y){
+					other.front = true;
+				}
+			}
+			else if(other.y >= bbox_top && other.y < bbox_bottom + 1){
+				other.front = false;
+				if(other.x != x){
+					other.image_xscale = sign(x - other.x);
+				}
+			}
+		}
+		
+		 // Visual:
+		spr_idle     = (front ? spr.IglooFrontIdle : spr.IglooSideIdle);
+		spr_hurt     = (front ? spr.IglooFrontHurt : spr.IglooSideHurt);
+		spr_dead     = (front ? spr.IglooFrontDead : spr.IglooSideDead);
 		sprite_index = spr_idle;
-		depth = -1;
+		depth        = -1;
 		
 		 // Sound:
 		snd_hurt = sndHitRock;
@@ -1856,7 +1871,7 @@
 		mask_index = -1;
 		maxhealth  = 30;
 		team       = 1;
-		size       = 3;
+		size       = 2;
 		num        = irandom_range(5, 6);
 		type       = irandom_range(4, 6);
 		alert      = true;

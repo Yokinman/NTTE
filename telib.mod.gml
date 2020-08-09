@@ -2859,7 +2859,10 @@
 					array_push(_overlapFloorFill, [bbox_left + _ox, bbox_top + _oy, bbox_right + _ox, bbox_bottom + _oy]);
 					instance_destroy();
 				}
-				with(instance_rectangle_bbox(_x1, _y1, _x2, _y2, [SnowFloor, chestprop, RadChest])){
+				with(instance_rectangle_bbox(_x1, _y1 - 1, _x2, _y2 - 1, SnowFloor)){
+					instance_delete(id);
+				}
+				with(instance_rectangle_bbox(_x1, _y1, _x2, _y2, [chestprop, RadChest])){
 					instance_delete(id);
 				}
 			}
@@ -3862,12 +3865,16 @@
 	}
 	
 	 // Destroy Floor:
-	else with(instances_at(_x, _y, [Floor, SnowFloor])){
-		var	_x1 = bbox_left - 16,
-			_y1 = bbox_top - 16,
-			_x2 = bbox_right + 16,
+	else with(instances_at(_x, _y, Floor)){
+		var	_x1 = bbox_left   - 16,
+			_y1 = bbox_top    - 16,
+			_x2 = bbox_right  + 16,
 			_y2 = bbox_bottom + 16;
 			
+		with(instances_meeting(x, y - 1, SnowFloor)){
+			instance_destroy();
+		}
+		
 		instance_destroy();
 		
 		if(instance_exists(Wall)){
@@ -3923,7 +3930,7 @@
 		with(instance_rectangle(bbox_left, bbox_top, bbox_right + 1, bbox_bottom + 1, Detail)){
 			instance_destroy();
 		}
-		with(instances_meeting(x, y, SnowFloor)){
+		with(instances_meeting(x, y - 1, SnowFloor)){
 			instance_destroy();
 		}
 		instance_destroy();
@@ -5672,10 +5679,10 @@
 	_y = _gridPos[1];
 	
 	 // Floors:
-	var	_ax = global.floor_align_x,
-		_ay = global.floor_align_y,
-		_aw = global.floor_align_w,
-		_ah = global.floor_align_h,
+	var	_ax   = global.floor_align_x,
+		_ay   = global.floor_align_y,
+		_aw   = global.floor_align_w,
+		_ah   = global.floor_align_h,
 		_inst = [];
 		
 	floor_set_align(_x, _y, _ow, _oh);

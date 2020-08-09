@@ -20,8 +20,8 @@
 		MergeWepLoadout = {};
 		MergeWepText    = {};
 		
-		 // Shine:
-		p = "sprites/chests/";
+		 // Shine Overlay:
+		p = "sprites/shine/";
 		Shine8    = sprite_add(p + "sprShine8.png",    7,  4,  4); // Rads
 		Shine10   = sprite_add(p + "sprShine10.png",   7,  5,  5); // Pickups
 		Shine12   = sprite_add(p + "sprShine12.png",   7,  6,  6); // Big Rads
@@ -30,6 +30,7 @@
 		Shine24   = sprite_add(p + "sprShine24.png",   7, 12, 12); // Big Chests
 		Shine64   = sprite_add(p + "sprShine64.png",   7, 32, 32); // Giant Chests (YV)
 		ShineHurt = sprite_add(p + "sprShineHurt.png", 3,  0,  0); // Hurt Flash
+		ShineSnow = sprite_add(p + "sprShineSnow.png", 1,  0,  0); // Snow Floors
 		
 		//#region MENU / HUD
 			
@@ -832,9 +833,11 @@
 		m = "areas/City/";
 		p = m;
 			
-			 // ???:
-			FloorYeti	  = sprite(p + "sprFloorYeti",	   4, 0, 0);
-			FloorYetiRoom = sprite(p + "sprFloorYetiRoom", 9, 0, 0);
+			 // Seal Plaza:
+			FloorSeal         = sprite(p + "sprFloorSeal",     4, 2, 2);
+			SnowFloorSeal     = sprite(p + "sprFloorSeal",     4, 2, 2, shnSnow);
+			FloorSealRoom     = sprite(p + "sprFloorSealRoom", 9, 2, 2);
+			SnowFloorSealRoom = sprite(p + "sprFloorSealRoom", 9, 2, 2, shnSnow);
 			
 			//#region PROPS
 			p = m + "Props/";
@@ -1974,6 +1977,7 @@
 #macro shn24   spr.Shine24
 #macro shn64   spr.Shine64
 #macro shnHurt spr.ShineHurt
+#macro shnSnow spr.ShineSnow
 
 #macro save      global.save
 #macro save_auto global.save_auto

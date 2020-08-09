@@ -57,12 +57,13 @@
 #macro event_list global.event_list
 
 #macro BuriedVault_spawn (variable_instance_get(GenCont, "safespawn", 1) > 0 && GameCont.area != "coast")
+#macro BuriedVault_found variable_instance_get(GameCont, "buried_vaults", 0)
 
 #macro ScorpionCity_pet instances_matching_gt(instances_matching(instances_matching(CustomHitme, "name", "Pet"), "pet", "Scorpion"), "scorpion_city", 0)
 
-#define BuriedVault_text    return ((GameCont.area == area_vault) ? "" : choose(`SECRETS IN THE ${event_tip}WALLS`, `${event_tip}ARCHAEOLOGY`, `ANCIENT ${event_tip}STRUCTURES`));
+#define BuriedVault_text    return ((GameCont.area == area_vault || BuriedVault_found > 0) ? "" : choose(`SECRETS IN THE ${event_tip}WALLS`, `${event_tip}ARCHAEOLOGY`, `ANCIENT ${event_tip}STRUCTURES`));
 #define BuriedVault_hard    return 5; // 3-1+
-#define BuriedVault_chance  return ((GameCont.area == area_vault) ? 1/2 : (BuriedVault_spawn / (12 + (2 * variable_instance_get(GameCont, "buried_vaults", 0)))));
+#define BuriedVault_chance  return ((GameCont.area == area_vault) ? 1/2 : (BuriedVault_spawn ? (1 / (12 + (2 * BuriedVault_found))) : 0));
 
 #define BuriedVault_create
 	if(instance_number(enemy) > instance_number(EnemyHorror) || GameCont.area == area_vault){
@@ -71,7 +72,7 @@
 		}
 	}
 	
-#define BanditCamp_text    return `${event_tip}BANDITS`;
+#define BanditCamp_text    return ((GameCont.loops > 0) ? "" : `${event_tip}BANDITS`);
 #define BanditCamp_area    return area_desert;
 #define BanditCamp_hard    return 3; // 1-3+
 #define BanditCamp_chance  return ((GameCont.subarea == 3) ? 1/10 : 1/20);
@@ -1009,7 +1010,7 @@
 	}
 	
 	
-#define SewerPool_text    return choose(`${event_tip}RADIOACTIVE SEWAGE @sSMELLS#WORSE THAN YOU THINK`, `${event_tip}ACID RAIN @sRUNOFF`);
+#define SewerPool_text    return choose("", choose(`${event_tip}RADIOACTIVE SEWAGE @sSMELLS#WORSE THAN YOU THINK`, `${event_tip}ACID RAIN @sRUNOFF`));
 #define SewerPool_area    return area_sewers;
 #define SewerPool_chance  return 1/5;
 
@@ -1076,7 +1077,7 @@
 
 #define GatorDen_text    return `${event_tip}DISTANT CHATTER`;
 #define GatorDen_area    return area_sewers;
-#define GatorDen_chance  return ((crown_current == "crime") ? 1 : (unlock_get("crown:crime") ? 1/5 : 0));
+#define GatorDen_chance  return ((crown_current == "crime") ? 1 : (unlock_get("crown:crime") ? 1/10 : 0));
 
 #define GatorDen_create
 	var _inst = [];
@@ -1651,11 +1652,11 @@
 
 #define SealPlaza_create
 	var	_minID      = GameObject.id,
-		_w          = 6,
-		_h          = 6,
+		_w          = 3,
+		_h          = 3,
 		_type       = "",
 		_dirOff     = 0,
-		_floorDis   = -64,
+		_floorDis   = -32,
 		_spawnX     = spawn_x,
 		_spawnY     = spawn_y,
 		_spawnDis   = 160,
@@ -1664,56 +1665,171 @@
 	floor_set_align(null, null, 32, 32);
 	
 	with(floor_room(_spawnX, _spawnY, _spawnDis, _spawnFloor, _w, _h, _type, _dirOff, _floorDis)){
-		var	_iglooW          = 3,
-			_iglooH          = 3,
-			_iglooType       = "",
-			_iglooDirOff     = 0,
-			_iglooSpawnX     = x,
-			_iglooSpawnY     = y,
-			_iglooFloorDis   = -32,
-			_iglooSpawnDis   = 0,
-			_iglooSpawnFloor = floors;
+		 // Royal Presence:
+		for(var i = 0; i < array_length(floors); i++){
+			with(floors[i]){
+				sprite_index = spr.FloorSealRoom;
+				image_index  = i;
+			}
+		}
+		obj_create(x, y - 6, "PalankingStatue");
+		
+		 // Main Igloos:
+		//var _floorRoad = [];
+		for(var _dir = 0; _dir < 360; _dir += 90){
+			var	_iglooW = 3,
+				_iglooH = 3,
+				_pathX1 = x + lengthdir_x(16 * _w, _dir),
+				_pathY1 = y + lengthdir_y(16 * _h, _dir),
+				_pathX2 = _pathX1,
+				_pathY2 = _pathY1;
+				
+			 // Avoid Spawn:
+			var	_dis = point_distance(x, y, _spawnX, _spawnY),
+				_x1  = x - lengthdir_x(ceil(_iglooW / 2) * 32, _dir - 90),
+				_y1  = y - lengthdir_y(ceil(_iglooH / 2) * 32, _dir - 90),
+				_x2  = x + lengthdir_x(ceil(_iglooW / 2) * 32, _dir - 90) + lengthdir_x(_dis, _dir),
+				_y2  = y + lengthdir_y(ceil(_iglooH / 2) * 32, _dir - 90) + lengthdir_y(_dis, _dir);
+				
+			if(point_in_rectangle(_spawnX, _spawnY, min(_x1, _x2), min(_y1, _y2), max(_x1, _x2), max(_y1, _y2))){
+				_pathX2 = x + lengthdir_x(max(0, _dis - 64), _dir);
+				_pathY2 = y + lengthdir_y(max(0, _dis - 64), _dir);
+			}
 			
-		 // Igloos:
-		repeat(3){
-			with(floor_room(_iglooSpawnX, _iglooSpawnY, _iglooSpawnDis, _iglooSpawnFloor, _iglooW, _iglooH, _iglooType, _iglooDirOff, _iglooFloorDis)){
+			 // Igloo Room:
+			else with(floor_room_create(x, y, _iglooW, _iglooH, "", _dir, 0, 0)){
 				with(obj_create(x, y, "Igloo")){
 					chest = true;
+				}
+				_pathX2 = x - lengthdir_x(16, _dir);
+				_pathY2 = y - lengthdir_y(16, _dir);
+			}
+			
+			 // Path:
+			var _pathDis = point_distance(_pathX1, _pathY1, _pathX2, _pathY2);
+			for(var _dis = 16; _dis < _pathDis; _dis += 32){
+				with(floor_set(
+					_pathX1 + lengthdir_x(_dis, _dir) - 16,
+					_pathY1 + lengthdir_y(_dis, _dir) - 16,
+					true
+				)){
+					sprite_index = spr.FloorSeal;
+					//array_push(_floorRoad, id);
+					
+					 // Props:
+					if(chance(1, 5)){
+						if(!place_meeting(x, y, prop) && !place_meeting(x, y, chestprop)){
+							with(instance_create(bbox_center_x, bbox_center_y, choose(Hydrant, StreetLight, Car))){
+								x = xstart;
+								y = ystart;
+								if(instance_is(self, StreetLight)){
+									move_contact_solid(90, 8);
+								}
+							}
+						}
+					}
+					
+					 // Push Props Off Path:
+					with(instance_rectangle(bbox_left, bbox_top, bbox_right + 1, bbox_bottom + 1, instances_matching_lt(prop, "size", 3))){
+						var	_try = true,
+							_off = choose(-90, 90);
+							
+						for(var i = -1; i <= 1; i += 2){
+							var	_x = x,
+								_y = y;
+								
+							move_contact_solid(_dir + (_off * i), 32);
+							
+							if(
+								!point_in_rectangle(x, y, other.bbox_left, other.bbox_top, other.bbox_right + 1, other.bbox_bottom + 1)
+								&& !place_meeting(x, y, prop)
+								&& !place_meeting(x, y, chestprop)
+							){
+								_try = false;
+								break;
+							}
+							
+							x = _x;
+							y = _y;
+						}
+						if(_try){
+							move_contact_solid(_dir, 32);
+						}
+					}
 				}
 			}
 		}
 		
-		 // Royal Presence:
-		obj_create(x, y, "PalankingStatue");
-		
-		 // The Neighbors:
-		repeat(3) instance_create(x, y, Bandit);
-		repeat(2) with(instance_random(instances_matching(floors, "", null))){
-			if(!place_meeting(x, y, hitme) && !place_meeting(x, y, Wall)){
-				instance_create(x + 16, y + 16, SnowMan);
+		 // Other Igloos:
+		with(instances_matching(CustomProp, "name", "Igloo")){
+			 // Face Statue:
+			if(x != other.x){
+				image_xscale = sign(other.x - x);
 			}
+			
+			/*
+			 // Connect to Main Road:
+			if((x < other.x1 || x > other.x2) && (y < other.y1 || y > other.y2)){
+				with(instance_nearest_bbox(x, y, _floorRoad)){
+					if((other.x >= bbox_left && other.x < bbox_right + 1) || (other.y >= bbox_top && other.y < bbox_bottom + 1)){
+						with(floor_fill(
+							(other.x + bbox_center_x) / 2,
+							(other.y + bbox_center_y) / 2,
+							max(1, floor(abs(other.x - bbox_center_x) / 32) - 1),
+							max(1, floor(abs(other.y - bbox_center_y) / 32) - 1),
+							""
+						)){
+							sprite_index = spr.FloorSeal;
+						}
+					}
+				}
+			}
+			*/
 		}
 		
+		 // The Neighbors:
+		repeat(3){
+			instance_create(x, y, Bandit);
+		}
 	}
 	
 	floor_reset_align();
 	
-	 // Corner Walls:
+	 // Floor Setup:
+	var	_floorSeal = [spr.FloorSeal,     spr.FloorSealRoom],
+		_floorSnow = [spr.SnowFloorSeal, spr.SnowFloorSealRoom];
+		
 	with(instances_matching_gt(Floor, "id", _minID)){
-		if(!place_meeting(x - 32, y, Floor) && !place_meeting(x, y - 32, Floor)) instance_create(x,      y,      Wall);
-		if(!place_meeting(x + 32, y, Floor) && !place_meeting(x, y - 32, Floor)) instance_create(x + 16, y,      Wall);
-		if(!place_meeting(x - 32, y, Floor) && !place_meeting(x, y + 32, Floor)) instance_create(x,      y + 16, Wall);
-		if(!place_meeting(x + 32, y, Floor) && !place_meeting(x, y + 32, Floor)) instance_create(x + 16, y + 16, Wall);
+		var i = array_find_index(_floorSeal, sprite_index);
+		
+		 // Road Tiles:
+		if(i >= 0){
+			traction = 0.45;
+			material = ((i > 0) ? 5 : 2);
+			depth    = 8;
+			with(instance_create(x, y - 1, SnowFloor)){
+				sprite_index = _floorSnow[i];
+				image_index  = other.image_index;
+				image_speed  = other.image_speed;
+			}
+		}
+		
+		 // Corner Walls:
+		if(!place_meeting(x - 32, y, Floor) && !place_meeting(x, y - 32, Floor) && !place_meeting(x, y, hitme)) instance_create(x,      y,      Wall);
+		if(!place_meeting(x + 32, y, Floor) && !place_meeting(x, y - 32, Floor) && !place_meeting(x, y, hitme)) instance_create(x + 16, y,      Wall);
+		if(!place_meeting(x - 32, y, Floor) && !place_meeting(x, y + 32, Floor) && !place_meeting(x, y, hitme)) instance_create(x,      y + 16, Wall);
+		if(!place_meeting(x + 32, y, Floor) && !place_meeting(x, y + 32, Floor) && !place_meeting(x, y, hitme)) instance_create(x + 16, y + 16, Wall);
 	}
 	
 	
 #define YetiHideout_text   return `SMELLS LIKE ${event_tip}WET FUR`;
 #define YetiHideout_area   return area_city;
 #define YetiHideout_chance return 0; // 1/100;
+
 #define YetiHideout_create
 	with(obj_create(x, y, "BuriedVault")){
-		floor_vars      = { sprite_index : spr.FloorYeti     };
-		floor_room_vars = { sprite_index : spr.FloorYetiRoom };
+		floor_vars      = { sprite_index : spr.FloorSeal     };
+		floor_room_vars = { sprite_index : spr.FloorSealRoom };
 		obj_prop        = "";
 		obj_loot        = "";
 		area            = area_city;

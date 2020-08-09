@@ -3466,9 +3466,9 @@
 		var _phase = 0;
 		
 		 // Visual:
-		spr_idle = spr.PalankingStatueIdle[_phase];
-		spr_hurt = spr.PalankingStatueHurt[_phase];
-		spr_dead = spr.PalankingStatueDead;
+		spr_idle     = spr.PalankingStatueIdle[_phase];
+		spr_hurt     = spr.PalankingStatueHurt[_phase];
+		spr_dead     = spr.PalankingStatueDead;
 		sprite_index = spr_idle;
 		
 		 // Sounds:
@@ -3476,16 +3476,16 @@
 		snd_dead = sndPillarBreak;
 		
 		 // Vars:
-		maxhealth = 300;
-		team = 1;
-		size = 3;
-		phase = _phase;
+		mask_index = sprPortalClear;
+		maxhealth  = 300;
+		team       = 1;
+		size       = 4;
+		phase      = _phase;
 		
 		return id;
 	}
 	
 #define PalankingStatue_step
-	
 	 // Change Phase:
 	if(sprite_index == spr_hurt){
 		var	_mPhase = 4,
@@ -3577,7 +3577,6 @@
 		
 		return id;
 	}
-	
 	
 #define scrPalankingStatueBlank(_num)
 	var n = _num;
