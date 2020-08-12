@@ -1731,29 +1731,31 @@
 					
 					 // Push Props Off Path:
 					with(instance_rectangle(bbox_left, bbox_top, bbox_right + 1, bbox_bottom + 1, instances_matching_lt(prop, "size", 3))){
-						var	_try = true,
-							_off = choose(-90, 90);
-							
-						for(var i = -1; i <= 1; i += 2){
-							var	_x = x,
-								_y = y;
+						if(_dir == 90 || _dir == 270 || !instance_is(self, Car)){
+							var	_try = true,
+								_off = choose(-90, 90);
 								
-							move_contact_solid(_dir + (_off * i), 32);
-							
-							if(
-								!point_in_rectangle(x, y, other.bbox_left, other.bbox_top, other.bbox_right + 1, other.bbox_bottom + 1)
-								&& !place_meeting(x, y, prop)
-								&& !place_meeting(x, y, chestprop)
-							){
-								_try = false;
-								break;
+							for(var i = -1; i <= 1; i += 2){
+								var	_x = x,
+									_y = y;
+									
+								move_contact_solid(_dir + (_off * i), 32);
+								
+								if(
+									!point_in_rectangle(x, y, other.bbox_left, other.bbox_top, other.bbox_right + 1, other.bbox_bottom + 1)
+									&& !place_meeting(x, y, prop)
+									&& !place_meeting(x, y, chestprop)
+								){
+									_try = false;
+									break;
+								}
+								
+								x = _x;
+								y = _y;
 							}
-							
-							x = _x;
-							y = _y;
-						}
-						if(_try){
-							move_contact_solid(_dir, 32);
+							if(_try){
+								move_contact_solid(_dir, 32);
+							}
 						}
 					}
 				}
