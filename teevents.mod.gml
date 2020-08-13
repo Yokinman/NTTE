@@ -935,6 +935,22 @@
 		//floor_set_style(1, null);
 		
 		with(floor_room(_spawnX, _spawnY, _spawnDis, _spawnFloor, _w, _h, _type, _dirOff, _floorDis)){
+			
+			 // Cool-Ass Rocky Floors:
+			with(floors){
+				sprite_index = spr.FloorScorpion;
+				depth = 8;
+				
+				with(instance_create(
+					x + orandom(1), 
+					y - irandom_range(2, 3), 
+					SnowFloor
+				)){
+					sprite_index = spr.SnowFloorScorpion;
+					image_angle += orandom(1);
+				}
+			}
+			
 			 // Family:
 			repeat(max(1, ((_w + _h) / 2) - 2)){
 				instance_create(x, y, (chance(1, 5) ? GoldScorpion : Scorpion));
@@ -946,7 +962,7 @@
 				
 			for(var _dir = _ang; _dir < _ang + 360; _dir += (360 / _boneNum)){
 				var	_d   = _dir + orandom(30),
-					_obj = choose("Backpacker", LightBeam, WepPickup);
+					_obj = choose(BonePile, BonePile, "CowSkull"); // choose("Backpacker", LightBeam, WepPickup);
 					
 				with(obj_create(round(x + lengthdir_x((_w * 16) - 24, _d)), round(y + lengthdir_y((_h * 16) - 24, _d)), _obj)){
 					if(_obj == WepPickup){

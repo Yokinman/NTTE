@@ -759,6 +759,10 @@
 			 // Wall Bro:
 			WallBandit = sprite(p + "sprWallBandit", 9, 8, 8);
 			
+			 // Scorpion Floor:
+			FloorScorpion	  = sprite(p + "sprFloorScorpion",	   2, 8, 8);
+			SnowFloorScorpion = sprite(p + "sprSnowFloorScorpion", 1, 8, 8);
+			
 			//#region PROPS
 			p = m + "Props/";
 				
