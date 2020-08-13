@@ -2065,6 +2065,72 @@
 		solid = _lastSolid;
 	}
 	
+	 // Stairs:
+	if(GameCont.area == 7 && GameCont.subarea == 3){
+		if(!instance_exists(Nothing)){
+			with(Player){
+				
+				 // Walking Uphill:
+				if(vspeed_raw < 0){
+					var _meeting = false,
+						_spriteA = spr.FloorPalaceStairs,
+						_spriteB = spr.FloorPalaceStairsCarpet;
+						
+					with(
+						instances_meeting(
+							x, 
+							y, 
+							instances_matching(
+								Floor, 
+								"sprite_index", 
+								_spriteA, 
+								_spriteB
+							)
+						)
+					){
+						if(
+							(
+								sprite_index == _spriteA
+								&&
+								image_index == 1
+							)
+							||
+							(
+								sprite_index == _spriteB
+								&&
+								(
+									image_index == 2
+									|| 
+									image_index == 3
+								)
+							)
+						){
+							if(place_meeting(x, y - 5, other)){
+								_meeting = true;
+							}
+						}
+					}
+					if(_meeting){
+						y -= vspeed_raw / 2;
+						
+						 // Dust Effect:
+						if(variable_instance_get(id, "ntte_stairsdust", true)){
+							ntte_stairsdust = false;
+							
+							sleep(30);
+							with(instance_create(x, y, Dust)){
+								sprite_index = sprSmoke;
+							}
+						}
+					}
+					else{
+						ntte_stairsdust = true;
+					}
+				}
+			}
+		}
+	}
+	
 	if(lag) trace_time("ntte_step");
 	
 #define ntte_end_step
