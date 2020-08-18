@@ -759,6 +759,10 @@
 			 // Wall Bro:
 			WallBandit = sprite(p + "sprWallBandit", 9, 8, 8);
 			
+			 // Scorpion Floor:
+			FloorScorpion	  = sprite(p + "sprFloorScorpion",	   2, 8, 8);
+			SnowFloorScorpion = sprite(p + "sprSnowFloorScorpion", 1, 8, 8);
+			
 			//#region PROPS
 			p = m + "Props/";
 				
@@ -923,8 +927,8 @@
 			NothingDeathCause = sprite(p + "sprNothingDeathCause", 1, 80, 80);
 			
 			 // Stairs:
-			FloorPalaceStairs       = sprite(p + "sprFloorPalaceStairs",       3, 0, 0);
-			FloorPalaceStairsCarpet = sprite(p + "sprFloorPalaceStairsCarpet", 6, 0, 0);
+			FloorPalaceStairs           = sprite(p + "sprFloorPalaceStairs",       3, 0, 0);
+			FloorPalaceStairsCarpet 	= sprite(p + "sprFloorPalaceStairsCarpet", 6, 0, 0);
 			
 			 // Shrine Floors:
 			FloorPalaceShrine          = sprite(p + "sprFloorPalaceShrine",          10, 2, 2);

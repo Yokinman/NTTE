@@ -278,7 +278,8 @@
 	return [
 		"ELEGANT",
 		"FLORID",
-		"GENETIC MAGIC"
+		"GENETIC MAGIC",
+		"YOU WERE THE KING OF KARAT FLOWERS" // i love you jesus christ // jesus christ i love you yes i do
 	];
 	
 #define Orchid_stat(_name, _value)
@@ -2121,7 +2122,8 @@
 	return [
 		"BRAIN WAVES",
 		"TEAMWORK",
-		"JUMP ROPE"
+		"JUMP ROPE",
+		"BRING FORTH THE MOLLUSK" // for peas
 	];
 
 #define Octo_stat(_name, _value)
