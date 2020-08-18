@@ -1383,7 +1383,7 @@
 		Charms or uncharms the given instance(s) and returns a LWO containing their charm-related vars
 		
 		Ex:
-			with(instance_charm(Bandit, true)){
+			with(charm_instance(Bandit, true)){
 				time = 300;
 			}
 	*/
