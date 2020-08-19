@@ -2067,7 +2067,7 @@
 	
 	 // Stairs:
 	if(GameCont.area == 7 && GameCont.subarea == 3){
-		if(!instance_exists(Nothing)){
+		if(!instance_exists(Nothing) && skill_get(mut_extra_feet) <= 0){
 			with(Player){
 				
 				 // Walking Uphill:

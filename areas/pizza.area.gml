@@ -29,7 +29,8 @@
 	return choose(
 		choose(
 			"IT SMELLS NICE HERE",
-			"HUNGER..."
+			"HUNGER...",
+			"WHAT THE CHEESE" // thxsprite's childhood catchphrase // he's talking about it in a voice call right now bro // he got mad i didn't put '!?' at the end, don't let him win
 		),
 		mod_script_call("area", "lair", "area_text")
 	);
