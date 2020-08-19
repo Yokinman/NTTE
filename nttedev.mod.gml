@@ -280,7 +280,16 @@
 		chat_comp_add_arg("wepmerge", 2, t);
 	}
 	
+	 // Events:
+	global.bind_step = noone;
+	
 #define step
+	 // Bind Events:
+	if(!instance_exists(global.bind_step)){
+		global.bind_step = script_bind_step(step_post, 0);
+	}
+	
+#define step_post
 	 // Activate Events:
 	with(instances_matching(GenCont, "nttedev_event_check", null)){
 		nttedev_event_check = true;
@@ -647,3 +656,7 @@
 #define trace_error(_string)
 	trace_color(`${mod_current} | ${_string}`, c_red);
 	
+#define cleanup
+	with(global.bind_step){
+		instance_destroy();
+	}

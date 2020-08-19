@@ -4419,6 +4419,43 @@
 		if(spr_hurt == spr.VaultFlowerWiltedHurt) spr_hurt = spr.VaultFlowerHurt;
 		if(spr_dead == spr.VaultFlowerWiltedDead) spr_dead = spr.VaultFlowerDead;
 		
+		 // Camera:
+		if(!instance_exists(Menu) && !instance_exists(PopoScene)){
+			var _userSeen = [];
+			for(var i = 0; i < maxp; i++){
+				if(player_is_active(i)){
+					var _user = player_get_uid(i);
+					if(!array_exists(_userSeen, _user)){
+						array_push(_userSeen, _user);
+						
+						if(view_object[i] == noone){
+							var	_x   = 0,
+								_y   = 0,
+								_num = 0;
+								
+							with(Player) if(player_get_uid(index) == _user){
+								_x += x;
+								_y += y;
+								_num++;
+							}
+							
+							if(_num > 0){
+								_x /= _num;
+								_y /= _num;
+								
+								var	_dis = min(960 / point_distance(_x, _y, x, y), point_distance(_x, _y, x, y) / 3),
+									_dir = point_direction(_x, _y, x, y);
+									
+								if(_dis > 0){
+									view_shift(i, _dir, _dis);
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+		
 		 // Wilt:
 		if(!global.VaultFlower_alive || skill_get(skill) == 0){
 			alive = false;
@@ -4437,16 +4474,16 @@
 			sprite_index = spr.VaultFlowerHurt;
 			with(alert_create(self, skill_get_icon("reroll")[0])){
 				image_speed = 0;
-				alert = {};
-				snd_flash = sndLevelUp;
+				alert       = {};
+				snd_flash   = sndLevelUp;
 			}
-			for(var a = 0; a < 360; a += (360 / 10)){
-				var	l = 8 + (8 * dcos(a * 4)),
-					d = a + orandom(60);
+			for(var _ang = 0; _ang < 360; _ang += (360 / 10)){
+				var	_l = 8 + (8 * dcos(_ang * 4)),
+					_d = _ang + orandom(60);
 					
 				with(scrFX(
-					x + lengthdir_x(l, d),
-					y + lengthdir_y(l, d),
+					x + lengthdir_x(_l, _d),
+					y + lengthdir_y(_l, _d),
 					[90, random_range(0.25, 1.5)],
 					"VaultFlowerSparkle"
 				)){
