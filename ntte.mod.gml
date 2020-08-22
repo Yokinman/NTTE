@@ -1327,7 +1327,7 @@
 	
 	 // Lair Chests:
 	var	_crime = (crown_current == "crime"),
-		_lair  = (variable_instance_get(GameCont, "ntte_visits_lair", 0) > 0);
+		_lair  = (skill_get("silver tongue") > 0); // (variable_instance_get(GameCont, "ntte_visits_lair", 0) > 0);
 		
 	if(_lair || _crime){
 		var _crimePick = (_crime ? choose(AmmoChest, WeaponChest) : -1);

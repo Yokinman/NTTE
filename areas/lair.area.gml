@@ -295,6 +295,7 @@
 	}
 	
 #define area_finish
+	
 	 // Next Subarea:
 	if(subarea < area_subarea()){
 		subarea++;
@@ -305,6 +306,41 @@
 		var _next = area_next();
 		area    = _next[0];
 		subarea = _next[1];
+		
+		 // Silver Tongue:
+		var _skill = "silver tongue";
+		if(mod_exists("skill", _skill) && skill_get(_skill) <= 0){
+			
+			var _wepMuted = wepmuted;
+				
+			skillpoints++;
+			endpoints++;
+			
+			if(fork()){
+				wait(0){
+					with(GameCont){
+						endpoints--;
+						wepmuted = _wepMuted;
+						
+						with(SkillIcon) instance_destroy();
+						with(LevCont)	maxselect = 0;
+						
+						 // Star of the Show:
+						with(instance_create(0, 0, SkillIcon)){
+							creator = LevCont;
+							num 	= 0;
+							alarm0	= 3;
+							
+							skill = _skill;
+							name  = skill_get_name(_skill);
+							text  = skill_get_text(_skill);
+							mod_script_call("skill", _skill, "skill_button");
+						}
+					}
+				}
+				exit;
+			}
+		}
 	}
 	
 #define area_transit
