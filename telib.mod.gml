@@ -316,7 +316,9 @@
 											visible = true;
 											
 											 // Add to Instance List:
-											if("inst" not in self) inst = [];
+											if("inst" not in self){
+												inst = [];
+											}
 											array_push(inst, _inst);
 											
 											 // Add to Object List:
@@ -2787,9 +2789,18 @@
 		}
 		
 		 // No Duplicates:
-		with(BackCont) instance_destroy();
-		with(TopCont) instance_destroy();
-		with(SubTopCont) instance_destroy();
+		with(BackCont){
+			event_perform(ev_other, ev_room_end);
+			instance_destroy();
+		}
+		with(TopCont){
+			darkness = true;
+			event_perform(ev_other, ev_room_end);
+			instance_destroy();
+		}
+		with(SubTopCont){
+			instance_destroy();
+		}
 		
 		 // Deactivate Objects:
 		game_deactivate();
@@ -4217,6 +4228,17 @@
 	}
 	
 #define instance_budge(_objAvoid, _disMax)
+	/*
+		Moves the current instance to the nearest space within the given distance that isn't touching the given object
+		Also avoids moving an instance outside of the level if they were touching a Floor
+		Returns 'true' if the instance was moved to an open space, 'false' otherwise
+		
+		Args:
+			objAvoid - The object(s) or instance(s) to avoid
+			disMax   - The maximum distance that the current instance can be moved
+			           Use -1 to automatically determine the distance using the bounding boxes of the current instance and objAvoid
+	*/
+	
 	var	_isArray = is_array(_objAvoid),
 		_canWall = (!place_meeting(x, y, Floor) || (_isArray ? array_exists(_objAvoid, Wall) : (_objAvoid == Wall)));
 		
@@ -4228,7 +4250,9 @@
 		with(_isArray ? _objAvoid : [_objAvoid]){
 			if(object_exists(self)){
 				var _mask = object_get_mask(self);
-				if(_mask == -1) _mask = object_get_sprite(self);
+				if(_mask < 0){
+					_mask = object_get_sprite(self);
+				}
 				_w = max(_w, (sprite_get_bbox_right(_mask) + 1) - sprite_get_bbox_left(_mask));
 				_h = max(_h, (sprite_get_bbox_bottom(_mask) + 1) - sprite_get_bbox_top(_mask));
 			}
@@ -4648,10 +4672,12 @@
 	
 #define path_shrink(_path, _wall, _skipMax)
 	var	_pathNew = [],
-		_link = 0;
-
-	if(!is_array(_wall)) _wall = [_wall];
-
+		_link    = 0;
+		
+	if(!is_array(_wall)){
+		_wall = [_wall];
+	}
+	
 	for(var i = 0; i < array_length(_path); i++){
 		 // Save Important Points on Path:
 		var _save = (
@@ -4659,14 +4685,14 @@
 			i >= array_length(_path) - 1 ||
 			i - _link >= _skipMax
 		);
-
+		
 		 // Save Points Going Around Walls:
 		if(!_save){
 			var	_x1 = _path[i + 1, 0],
 				_y1 = _path[i + 1, 1],
 				_x2 = _path[_link, 0],
 				_y2 = _path[_link, 1];
-
+				
 			for(var j = 0; j < array_length(_wall); j++){
 				if(collision_line(_x1, _y1, _x2, _y2, _wall[j], false, false)){
 					_save = true;
@@ -4674,14 +4700,14 @@
 				}
 			}
 		}
-
+		
 		 // Store:
 		if(_save){
 			array_push(_pathNew, _path[i]);
 			_link = i;
 		}
 	}
-
+	
 	return _pathNew;
 	
 #define path_reaches(_path, _xtarget, _ytarget, _wall)
@@ -4705,16 +4731,16 @@
 	
 #define path_direction(_path, _x, _y, _wall)
 	if(!is_array(_wall)) _wall = [_wall];
-
+	
 	 // Find Nearest Unobstructed Point on Path:
 	var	_nearest = -1,
 		_disMax = infinity;
-
+		
 	for(var i = 0; i < array_length(_path); i++){
 		var	_px = _path[i, 0],
 			_py = _path[i, 1],
 			_dis = point_distance(_x, _y, _px, _py);
-
+			
 		if(_dis < _disMax){
 			var _walled = false;
 			for(var j = 0; j < array_length(_wall); j++){
@@ -4729,13 +4755,13 @@
 			}
 		}
 	}
-
+	
 	 // Find Direction to Next Point on Path:
 	if(_nearest >= 0){
 		var	_follow = min(_nearest + 1, array_length(_path) - 1),
 			_nx = _path[_follow, 0],
 			_ny = _path[_follow, 1];
-
+			
 		 // Go to Nearest Point if Path to Next Point Obstructed:
 		for(var j = 0; j < array_length(_wall); j++){
 			if(collision_line(x, y, _nx, _ny, _wall[j], false, false)){
@@ -4744,10 +4770,10 @@
 				break;
 			}
 		}
-
+		
 		return point_direction(x, y, _nx, _ny);
 	}
-
+	
 	return null;
 	
 #define path_draw(_path)
