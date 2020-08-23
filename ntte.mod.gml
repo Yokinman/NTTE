@@ -1327,7 +1327,7 @@
 	
 	 // Lair Chests:
 	var	_crime = (crown_current == "crime"),
-		_lair  = (variable_instance_get(GameCont, "ntte_visits_lair", 0) > 0);
+		_lair  = (skill_get("silver tongue") > 0); // (variable_instance_get(GameCont, "ntte_visits_lair", 0) > 0);
 		
 	if(_lair || _crime){
 		var _crimePick = (_crime ? choose(AmmoChest, WeaponChest) : -1);
@@ -2067,7 +2067,7 @@
 	
 	 // Stairs:
 	if(GameCont.area == 7 && GameCont.subarea == 3){
-		if(!instance_exists(Nothing)){
+		if(!instance_exists(Nothing) && skill_get(mut_extra_feet) <= 0){
 			with(Player){
 				
 				 // Walking Uphill:

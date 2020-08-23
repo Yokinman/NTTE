@@ -2425,25 +2425,20 @@
 	
 	
 #define TwinOrbital_create(_x, _y)
-	with(instance_create(_x, _y, CustomSlash)){
+	with(instance_create(_x, _y, CustomHitme)){
 		 // Visual:
 		sprite_index = spr.PetTwinsRed;
-		image_speed  = 0;
+		spr_effect	 = spr.PetTwinsRedEffect;
+		image_speed  = 0.4;
 		depth        = -3;
 		
 		 // Vars:
 		mask_index = mskFreak;
-		creator    = noone;
-		leader     = noone;
+		maxhealth  = 0;
+		parent     = noone;
 		white      = false;
-		setup      = true;
-		damage     = 2;
-		force      = 4;
-		team       = 2;
-		kick       = 0;
-		kick_dir   = 0;
-		twin       = noone;
-		free       = false;
+		setup	   = true;
+		twin	   = noone;
 		
 		return id;
 	}
@@ -2453,125 +2448,17 @@
 	
 	if(white){
 		sprite_index = spr.PetTwinsWhite;
+		spr_effect	 = spr.PetTwinsWhiteEffect;
+	}
+	if(instance_exists(parent)){
+		prompt = parent.prompt;
 	}
 	
 #define TwinOrbital_step
 	if(setup) TwinOrbital_setup();
-
-	 // Visibilize:
-	var _lastFree = free;
-	free = (place_meeting(x, y, Floor) && !place_meeting(x, y, TopSmall));
 	
-	 // Effects:
-	if(free != _lastFree){
-		instance_create(x, y, ThrowHit)
-	}
-	if(free){
-		if(white){
-			if(chance_ct(1, 20)){
-				with(scrFX([x, 8], [y, 8], [90, random_range(0.2, 0.5)], LaserCharge)){
-					sprite_index = sprSpiralStar;
-					image_index  = choose(0, irandom(image_number - 1));
-					depth        = other.depth - 1;
-					alarm0       = random_range(15, 30);
-				}
-			}
-			if(chance_ct(1, 25)){
-				with(instance_create(x + orandom(8), y + orandom(8), BulletHit)){
-					sprite_index = sprThrowHit;
-					image_xscale = 0.2 + random(0.3);
-					image_yscale = image_xscale;
-					depth        = other.depth - 1;
-				}
-			}
-		}
-	}
-	
-	 // Kick:
-	kick = max(abs(kick) - current_time_scale, 0) * sign(kick);
-	
-	
-#define TwinOrbital_hit
-	if(free && projectile_canhit_melee(other)){
-		projectile_hit(other, damage, force, direction);
-		
-		 // Game Feel:
-		sleep_max(20);
-		kick = 4;
-		kick_dir = lerp(point_direction(x, y, other.x, other.y), direction, 0.5);
-	}
-	
-#define TwinOrbital_projectile
-	var _projDir = other.direction;
-	
-	 // Divert:
-	if(instance_exists(twin)){
-		kick = 6;
-		kick_dir = _projDir;
-		
-		TwinOrbital_effect(x, y, _projDir);
-		repeat(irandom_range(1, 3)){
-			with(scrFX(x, y, [_projDir + orandom(10), random(1)], LaserCharge)){
-				alarm0 = random_range(10, 20);
-			}
-		}
-		
-		with(twin){
-			kick = -3;
-			kick_dir = _projDir;
-			
-			TwinOrbital_effect(x, y, _projDir);
-			repeat(irandom_range(1, 3)){
-				with(scrFX(x, y, [_projDir + orandom(10), random(1)], LaserCharge)){
-					sprite_index = sprSpiralStar;
-					alarm0 = random_range(10, 20);
-				}
-			}
-		}
-		
-		if(twin.free){
-			var _twin = twin;
-			with(team_instance_sprite(team, other)){
-				team = other.team;
-				x = _twin.x;
-				y = _twin.y;
-			}
-		}
-		
-		else{
-			instance_delete(other);
-		}
-	}
-	
-	 // Oh Well:
-	else{
-		instance_create(x, y, Smoke);
-		instance_delete(other);
-	}
-
-	
-	 // Stat:
-	with(creator){
-		if("stat" in self && "diverted" in stat){
-			stat.diverted++;
-		}
-	}
-	
-#define TwinOrbital_draw
-	if(free){
-		draw_sprite_ext(sprite_index, image_index, x + lengthdir_x(kick, kick_dir), y + lengthdir_y(kick, kick_dir), image_xscale, image_yscale, image_angle, image_blend, image_alpha);
-	}
-	
-#define TwinOrbital_effect(_x, _y, _dir)
-	var _sprite = (white ? spr.PetTwinsEffectWhite : spr.PetTwinsEffectRed);
-	with(instance_create(_x, _y, BulletHit)){
-		sprite_index = _sprite;
-		image_angle = _dir;
-		depth = other.depth - 1;
-		
-		return id;
-	}
-	
+	var _player = variable_instance_get(parent, "leader", noone),
+		_team	= variable_instance_get(team,	"team",	  0);
 	
 #define VlasmaBullet_create(_x, _y)
 	with(instance_create(_x, _y, CustomProjectile)){

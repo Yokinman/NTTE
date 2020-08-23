@@ -1768,9 +1768,12 @@
 			PetTwinsIcon        = sprite(p + "sprPetTwinsIcon",        1,  6,  6);
 			PetTwinsStat        = sprite(p + "sprPetTwinsStat",        6, 12, 12);
 			PetTwinsRed         = sprite(p + "sprPetTwinsRed",         6, 12, 12);
+			PetTwinsRedIcon		= sprite(p + "sprPetTwinsRedIcon",	   1,  6,  6);
+			PetTwinsRedEffect   = sprite(p + "sprPetTwinsRedEffect",   6,  8,  8);
 			PetTwinsWhite       = sprite(p + "sprPetTwinsWhite",       6, 12, 12);
-			PetTwinsEffectRed   = sprite(p + "sprPetTwinsEffectRed",   6,  8,  8);
-			PetTwinsEffectWhite = sprite(p + "sprPetTwinsEffectWhite", 6,  8,  8);
+			PetTwinsWhiteIcon	= sprite(p + "sprPetTwinsWhiteIcon",   1,  6,  6);
+			PetTwinsWhiteEffect = sprite(p + "sprPetTwinsWhiteEffect", 6,  8,  8);
+			CrystalWhiteTrail	= sprite(p + "sprCrystalWhiteTrail",   5,  8,  8);
 			
 		//#endregion
 	}

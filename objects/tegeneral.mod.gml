@@ -2786,7 +2786,7 @@
 		}
 		
 		 // Wall Collision:
-		if(visible || instance_exists(revive)){
+		if((visible || instance_exists(revive))){
 			motion_step(1);
 			
 			with(path_wall){
@@ -2834,6 +2834,12 @@
 	}
 	
 #define Pet_end_step
+	 // Custom End Step Event:
+	var _scrt = pet + "_end_step";
+	if(mod_script_exists(mod_type, mod_name, _scrt)){
+		mod_script_call(mod_type, mod_name, _scrt);
+	}
+	
 	 // Reset Hitbox:
 	if(mask_index == mskNone && mask_store != null){
 		mask_index = mask_store;
