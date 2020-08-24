@@ -2078,7 +2078,11 @@
 		case "outline": // Auto Outlines
 			if(_value >= 2){
 				var _local = player_find_local_nonsync();
-				_value = (player_is_active(_local) ? player_get_outlines(_local) : false);
+				_value = (
+					player_is_active(_local)
+					? player_get_outlines(_local)
+					: false
+				);
 			}
 			break;
 			

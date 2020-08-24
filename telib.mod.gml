@@ -3464,23 +3464,25 @@
 #define area_border_cavein(_y, _caveDis, _caveInst)
 	 // Destroy:
 	with(instances_matching_ne(instances_matching_gt(GameObject, "y", _y + _caveDis), "object_index", Dust)){
-		 // Kill:
-		if(y > _y + 64 && instance_is(self, hitme) && my_health > 0){
-			my_health = 0;
-			if("lasthit" in self){
-				lasthit = [sprTurtleDead, "CAVE IN"];
+		if(instance_exists(self)){
+			 // Kill:
+			if(y > _y + 64 && instance_is(self, hitme) && my_health > 0){
+				my_health = 0;
+				if("lasthit" in self){
+					lasthit = [sprTurtleDead, "CAVE IN"];
+				}
 			}
-		}
-		
-		 // Save:
-		else if(persistent || (instance_is(self, Pickup) && !instance_is(self, Rad)) || instance_is(self, chestprop) || (instance_is(self, Corpse) && y < _y + 240) || (instance_is(self, CustomHitme) && "name" in self && name == "Pet")){
-			if(!array_exists(_caveInst, id)){
-				array_push(_caveInst, id);
+			
+			 // Save:
+			else if(persistent || (instance_is(self, Pickup) && !instance_is(self, Rad)) || instance_is(self, chestprop) || (instance_is(self, Corpse) && y < _y + 240) || (instance_is(self, CustomHitme) && "name" in self && name == "Pet")){
+				if(!array_exists(_caveInst, id)){
+					array_push(_caveInst, id);
+				}
 			}
+			
+			 // Destroy:
+			else instance_destroy();
 		}
-		
-		 // Destroy:
-		else instance_destroy();
 	}
 	
 	 // Hide Wall Shadows:

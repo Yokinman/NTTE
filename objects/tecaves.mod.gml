@@ -668,12 +668,8 @@
 	}
 	
 #define CrystalClone_draw
-	var _vx   = view_xview_nonsync,
-		_vy   = view_yview_nonsync,
-		_gw   = game_width,
-		_gh   = game_height,
-		_inst = instances_matching(instances_matching(instances_matching(object_index, "name", name), "depth", depth), "sprite_index", sprite_index);
-		
+	var _inst = instances_matching(instances_matching(instances_matching(object_index, "name", name), "depth", depth), "sprite_index", sprite_index);
+	
 	if(appear > 0){
 		_inst = [id];
 	}
@@ -682,7 +678,12 @@
 	}
 	
 	if(_inst[0] == id){
-		with(surface_setup("CrystalClone", _gw, _gh, option_get("quality:major"))){
+		var	_vx = view_xview_nonsync,
+			_vy = view_yview_nonsync,
+			_gw = game_width,
+			_gh = game_height,
+			
+		with(surface_setup("CrystalClone", _gw, _gh, option_get("quality:main"))){
 			x = _vx;
 			y = _vy;
 			
@@ -888,7 +889,7 @@
 	}
 	
 	 // Manual Contact Damage:
-	if(!is_undefined(area) && place_meeting(x, y, hitme)){
+	if(!is_undefined(area) && place_meeting(x, y, Player)){
 		with(instances_meeting(x, y, instances_matching_ne(Player, "team", team))){
 			if(place_meeting(x, y, other)){
 				with(other) if(projectile_canhit_melee(other)){
@@ -1257,7 +1258,6 @@
 			portal_poof();
 		}
 		instance_create(x, y, PortalClear);
-		instance_destroy();
 	}
 	
 #define CrystalHeartBullet_area_generate_setup(_goal, _direction, _seed)
