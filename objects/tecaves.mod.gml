@@ -668,17 +668,13 @@
 	}
 	
 #define CrystalClone_draw
-	var _inst = instances_matching(instances_matching(instances_matching(object_index, "name", name), "depth", depth), "sprite_index", sprite_index);
+	var _inst = (
+		(appear > 0)
+		? [id]
+		: instances_matching_le(instances_matching(instances_matching(instances_matching(object_index, "name", name), "depth", depth), "sprite_index", sprite_index), "appear", 0)
+	);
 	
-	if(appear > 0){
-		_inst = [id];
-	}
-	else{
-		_inst = instances_matching_le(_inst, "appear", 0);
-	}
-	
-	var _draw = (_inst[0] == id);
-	if(_draw){
+	if(_inst[0] == id){
 		var	_vx = view_xview_nonsync,
 			_vy = view_yview_nonsync,
 			_gw = game_width,
