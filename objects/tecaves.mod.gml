@@ -677,101 +677,106 @@
 		_inst = instances_matching_le(_inst, "appear", 0);
 	}
 	
-	if(_inst[0] == id){
+	var _draw = (_inst[0] == id);
+	if(_draw){
 		var	_vx = view_xview_nonsync,
 			_vy = view_yview_nonsync,
 			_gw = game_width,
-			_gh = game_height,
+			_gh = game_height;
 			
-		with(surface_setup("CrystalClone", _gw, _gh, option_get("quality:main"))){
-			x = _vx;
-			y = _vy;
-			
-			 // Copy & Clear Screen:
-			draw_set_blend_mode_ext(bm_one, bm_zero);
-			surface_screenshot(surf);
-			draw_set_alpha(0);
-			draw_surface_scale(surf, x, y, 1 / scale);
-			draw_set_alpha(1);
-			draw_set_blend_mode(bm_normal)
-			
-			 // Draw Clones:
-			with(other){
-				var _lastTimeScale = current_time_scale;
-				current_time_scale = 0.0000000000000001;
+		_inst = instances_seen(_inst, 24, 24, -1);
+		
+		if(array_length(_inst) > 0){
+			with(surface_setup("CrystalClone", _gw, _gh, game_scale_nonsync)){
+				x = _vx;
+				y = _vy;
 				
-				 // Cloned Instances:
-				with(_inst){
-					if(time > 60 || (time % 6) < 3){
-						with(target){
-							 // Self:
-							with(self) event_perform(ev_draw, 0);
-							
-							 // Appearing Visual:
-							if(other.appear > 0){
-								visible = true;
+				 // Copy & Clear Screen:
+				draw_set_blend_mode_ext(bm_one, bm_zero);
+				surface_screenshot(surf);
+				draw_set_alpha(0);
+				draw_surface_scale(surf, x, y, 1 / scale);
+				draw_set_alpha(1);
+				draw_set_blend_mode(bm_normal)
+				
+				 // Draw Clones:
+				with(other){
+					var _lastTimeScale = current_time_scale;
+					current_time_scale = 0.0000000000000001;
+					
+					 // Cloned Instances:
+					with(_inst){
+						if(time > 60 || (time % 6) < 3){
+							with(target){
+								 // Self:
+								with(self) event_perform(ev_draw, 0);
 								
-								 // Set Hitbox to Sprite:
-								var	_lastMask   = mask_index,
-									_lastXScale = image_xscale;
+								 // Appearing Visual:
+								if(other.appear > 0){
+									visible = true;
 									
-								mask_index = sprite_index;
-								if("right" in self){
-									image_xscale *= right;
-								}
-								
-								 // Cool Wavy Cut:
-								var	_x1 = bbox_left,
-									_y1 = bbox_top,
-									_x2 = bbox_right  + 1,
-									_y2 = bbox_bottom + 1,
-									_h  = (_y2 - _y1) / 16,
-									_y  = lerp(_y1 - (_h * 2), _y2, min(1, other.appear));
+									 // Set Hitbox to Sprite:
+									var	_lastMask   = mask_index,
+										_lastXScale = image_xscale;
+										
+									mask_index = sprite_index;
+									if("right" in self){
+										image_xscale *= right;
+									}
 									
-								draw_set_blend_mode_ext(bm_zero, bm_zero);
-								draw_primitive_begin(pr_trianglestrip);
-								
-								draw_vertex(_x1, _y1);
-								for(var _x = _x1; _x <= _x2; _x++){
-									draw_vertex(_x, max(_y1, _y + (_h * sin((_x - _x1 + current_frame) / (2 * _h))) + (_h * cos((_x - _x1 - current_frame) / (4 * _h)))));
-									draw_vertex(_x, _y1);
+									 // Cool Wavy Cut:
+									var	_x1 = bbox_left,
+										_y1 = bbox_top,
+										_x2 = bbox_right  + 1,
+										_y2 = bbox_bottom + 1,
+										_h  = (_y2 - _y1) / 16,
+										_y  = lerp(_y1 - (_h * 2), _y2, min(1, other.appear));
+										
+									draw_set_blend_mode_ext(bm_zero, bm_zero);
+									draw_primitive_begin(pr_trianglestrip);
+									
+									draw_vertex(_x1, _y1);
+									for(var _x = _x1; _x <= _x2; _x++){
+										draw_vertex(_x, max(_y1, _y + (_h * sin((_x - _x1 + current_frame) / (2 * _h))) + (_h * cos((_x - _x1 - current_frame) / (4 * _h)))));
+										draw_vertex(_x, _y1);
+									}
+									
+									draw_primitive_end();
+									draw_set_blend_mode(bm_normal);
+									
+									 // Reset Hitbox:
+									mask_index   = _lastMask;
+									image_xscale = _lastXScale;
 								}
-								
-								draw_primitive_end();
-								draw_set_blend_mode(bm_normal);
-								
-								 // Reset Hitbox:
-								mask_index   = _lastMask;
-								image_xscale = _lastXScale;
 							}
 						}
 					}
+					
+					 // Epic Overlay:
+					if(sprite_exists(sprite_index)){
+						if(appear > 0){
+							draw_set_blend_mode(bm_add);
+						}
+						draw_set_color_write_enable(true, true, true, false);
+						draw_sprite_tiled(sprite_index, image_index, 0, 0);
+						draw_set_color_write_enable(true, true, true, true);
+						if(appear > 0){
+							draw_set_blend_mode(bm_normal);
+						}
+					}
+					
+					current_time_scale = _lastTimeScale;
 				}
 				
-				 // Epic Overlay:
-				if(sprite_exists(sprite_index)){
-					if(appear > 0){
-						draw_set_blend_mode(bm_add);
-					}
-					draw_set_color_write_enable(true, true, true, false);
-					draw_sprite_tiled(sprite_index, image_index, 0, 0);
-					draw_set_color_write_enable(true, true, true, true);
-					if(appear > 0){
-						draw_set_blend_mode(bm_normal);
-					}
+				 // Redraw Screen:
+				if(other.appear <= 0){
+					draw_set_blend_mode(bm_add);
 				}
-				
-				current_time_scale = _lastTimeScale;
+				surface_screenshot(surf);
+				draw_set_blend_mode_ext(bm_one, bm_zero);
+				draw_surface_scale(surf, x, y, 1 / scale);
+				draw_set_blend_mode(bm_normal);
 			}
-			
-			 // Redraw Screen:
-			if(other.appear <= 0){
-				draw_set_blend_mode(bm_add);
-			}
-			surface_screenshot(surf);
-			draw_set_blend_mode_ext(bm_one, bm_zero);
-			draw_surface_scale(surf, x, y, 1 / scale);
-			draw_set_blend_mode(bm_normal);
 		}
 	}
 	
