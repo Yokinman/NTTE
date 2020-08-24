@@ -629,7 +629,10 @@
 	 // Appearing:
 	if(appear > 0){
 		appear -= (current_time_scale / 24);
-		with(target) speed = 0;
+		with(target){
+			speed = 0;
+			visible = (other.appear <= 0);
+		}
 	}
 	
 #define CrystalClone_end_step
@@ -675,14 +678,14 @@
 	);
 	
 	if(_inst[0] == id){
-		var	_vx = view_xview_nonsync,
-			_vy = view_yview_nonsync,
-			_gw = game_width,
-			_gh = game_height;
-			
 		_inst = instances_seen(_inst, 24, 24, -1);
 		
 		if(array_length(_inst) > 0){
+			var	_vx = view_xview_nonsync,
+				_vy = view_yview_nonsync,
+				_gw = game_width,
+				_gh = game_height;
+				
 			with(surface_setup("CrystalClone", _gw, _gh, game_scale_nonsync)){
 				x = _vx;
 				y = _vy;
