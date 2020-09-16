@@ -281,7 +281,11 @@
 			_text  = "",
 			_index = 0;
 			
-		with(string_split(string_replace_all(_fileText, chr(9), " "), chr(13) + chr(10))){
+		_fileText = string_replace_all(_fileText, chr(9),            " ");
+		_fileText = string_replace_all(_fileText, chr(13) + chr(10), chr(10));
+		_fileText = string_replace_all(_fileText, chr(10),           chr(13) + chr(10));
+		
+		with(string_split(_fileText, chr(13) + chr(10))){
 			var _line = self;
 			
 			 // New Changelog:
