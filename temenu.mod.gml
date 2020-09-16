@@ -647,121 +647,125 @@
 	ntte_menu();
 	
 #define draw_menu
-	var _add = ((mod_exists("mod", "teloader") || (!MenuOpen && array_length(instances_matching_ge(Menu, "charsplat", 3)) <= 0)) ? -1 : 1);
-	MenuSplat = clamp(MenuSplat + (_add * current_time_scale), 0, sprite_get_number(sprBossNameSplat) - 1);
+	MenuSplat = clamp(MenuSplat + current_time_scale, 0, sprite_get_number(sprBossNameSplat) - 1);
 	
 	 // Campfire Menu Button:
 	if(instance_exists(Menu)){
-		draw_set_projection(0);
-		
-		if(MenuOpen){
-			 // Hide Things:
-			with(Menu){
-				mode = 0;
-				charsplat = 1;
-				for(var i = 0; i < array_length(charx); i++){
-					charx[i] = 0;
-				}
-				sound_volume(sndMenuCharSelect, 0);
-			}
-			with(Loadout) instance_destroy();
-			with(loadbutton) instance_destroy();
-			with(menubutton) instance_destroy();
-			with(BackFromCharSelect) noinput = 10;
+		if(Menu.mode == 1){
+			draw_set_projection(0);
 			
-			 // Dim Screen:
-			draw_set_color(c_black);
-			draw_set_alpha(0.75);
-			draw_rectangle(0, 0, game_width, game_height, 0);
-			draw_set_alpha(1);
-			
-			 // Leave:
-			for(var i = 0; i < maxp; i++){
-				with(BackFromCharSelect){
-					if(position_meeting((mouse_x[i] - (view_xview[i] + xstart)) + x, (mouse_y[i] - (view_yview[i] + ystart)) + y, id)){
-						if(button_pressed(i, "fire")){
-							MenuOpen = false;
-							break;
-						}
-					}
-				}
-				if(button_pressed(i, "spec") || button_pressed(i, "paus")){
-					MenuOpen = false;
-					break;
-				}
-			}
-			if(!MenuOpen || mod_exists("mod", "teloader")){
-				MenuOpen = false;
-				MenuSplat = 1;
-				sound_play(sndClickBack);
-				
-				 // Reset Menu:
+			if(MenuOpen){
+				 // Hide Things:
 				with(Menu){
-					mode = 0;
-					event_perform(ev_step, ev_step_end);
-					sound_volume(sndMenuCharSelect, 1);
-					sound_stop(sndMenuCharSelect);
-					with(CharSelect) alarm0 = 2;
+					mode      = 0;
+					alarm0    = -1;
+					charsplat = 1;
+					for(var i = 0; i < array_length(charx); i++){
+						charx[i] = 0;
+					}
+					sound_volume(sndMenuCharSelect, 0);
 				}
-				with(Loadout) selected = 0;
+				with(Loadout) instance_destroy();
+				with(loadbutton) instance_destroy();
+				with(menubutton) instance_destroy();
+				with(BackFromCharSelect) noinput = 10;
 				
-				 // Tiny Partial Fix:
-				draw_loadout_behind();
-			}
-		}
-		
-		 // Open:
-		else if(MenuSplat > 0){
-			var	_x = game_width - 40,
-				_y = 40,
-				_w = 40,
-				_h = 24;
+				 // Dim Screen:
+				draw_set_color(c_black);
+				draw_set_alpha(0.75);
+				draw_rectangle(0, 0, game_width, game_height, 0);
+				draw_set_alpha(1);
 				
-			 // Co-op Offset:
-			var _max = 0;
-			for(var i = 0; i < array_length(Menu.charx); i++){
-				if(Menu.charx[i] != 0){
-					_max = i;
+				 // Leave:
+				for(var i = 0; i < maxp; i++){
+					with(BackFromCharSelect){
+						if(position_meeting((mouse_x[i] - (view_xview[i] + xstart)) + x, (mouse_y[i] - (view_yview[i] + ystart)) + y, id)){
+							if(button_pressed(i, "fire")){
+								MenuOpen = false;
+								break;
+							}
+						}
+					}
+					if(button_pressed(i, "spec") || button_pressed(i, "paus")){
+						MenuOpen = false;
+						break;
+					}
 				}
-			}
-			if(_max >= 2){
-				_x = (game_width / 2) - 20;
-				_y += 2;
+				
+				 // Closed:
+				if(!MenuOpen){
+					MenuSplat = 1;
+					sound_play(sndClickBack);
+					
+					 // Reset Menu:
+					with(Menu) with(self){
+						mode = 0;
+						event_perform(ev_step, ev_step_end);
+						sound_volume(sndMenuCharSelect, 1);
+						sound_stop(sndMenuCharSelect);
+						with(CharSelect) alarm0 = 2;
+					}
+					with(Loadout) selected = 0;
+					
+					 // Tiny Partial Fix:
+					draw_loadout_behind();
+				}
 			}
 			
-			 // Player Clicky:
-			var _hover = false;
-			if(!instance_exists(Loadout) || !Loadout.selected){
-				for(var i = 0; i < maxp; i++){
-					if(point_in_rectangle(mouse_x[i] - view_xview[i], mouse_y[i] - view_yview[i], _x, _y - 8, _x + _w, _y + _h)){
-						_hover = true;
-						if(button_pressed(i, "fire")){
-							sound_play_pitch(sndMenuCredits, 1 + orandom(0.1));
-							MenuOpen = true;
-							MenuSplat = 1;
-							break;
+			 // Open:
+			else if(MenuSplat > 0){
+				var	_x = game_width - 40,
+					_y = 40,
+					_w = 40,
+					_h = 24;
+					
+				 // Co-op Offset:
+				var _max = 0;
+				for(var i = 0; i < array_length(Menu.charx); i++){
+					if(Menu.charx[i] != 0){
+						_max = i;
+					}
+				}
+				if(_max >= 2){
+					_x = (game_width / 2) - 20;
+					_y += 2;
+				}
+				
+				 // Player Clicky:
+				var _hover = false;
+				if(!instance_exists(Loadout) || !Loadout.selected){
+					for(var i = 0; i < maxp; i++){
+						if(point_in_rectangle(mouse_x[i] - view_xview[i], mouse_y[i] - view_yview[i], _x, _y - 8, _x + _w, _y + _h)){
+							_hover = true;
+							if(button_pressed(i, "fire")){
+								sound_play_pitch(sndMenuCredits, 1 + orandom(0.1));
+								MenuOpen = true;
+								MenuSplat = 1;
+								break;
+							}
 						}
+					}
+				}
+				
+				 // Button Visual:
+				draw_sprite_ext(sprBossNameSplat, MenuSplat, _x + 17, _y + 12 + MenuSplat, 1, 1, 90, c_white, 1);
+				if(!MenuOpen){
+					var _wave = (MenuSplatBlink % 300) - 120,
+						_col  = ((_hover || in_range(_wave, 0, 5) || in_range(_wave, 8, 10)) ? c_white : c_silver);
+						
+					draw_sprite_ext(spr.MenuNTTE, 0, _x + (_w / 2), _y + 8 + _hover, 1, 1, 0, _col, 1);
+				}
+				if(MenuSplatBlink >= 0){
+					MenuSplatBlink += current_time_scale;
+					if(_hover || !option_get("reminders")){
+						MenuSplatBlink = -1;
 					}
 				}
 			}
 			
-			 // Button Visual:
-			draw_sprite_ext(sprBossNameSplat, MenuSplat, _x + 17, _y + 12 + MenuSplat, 1, 1, 90, c_white, 1);
-			if(!MenuOpen){
-				var _wave = (MenuSplatBlink % 300) - 120,
-					_col  = ((_hover || in_range(_wave, 0, 5) || in_range(_wave, 8, 10)) ? c_white : c_silver);
-					
-				draw_sprite_ext(spr.MenuNTTE, 0, _x + (_w / 2), _y + 8 + _hover, 1, 1, 0, _col, 1);
-			}
-			if(MenuSplatBlink >= 0){
-				MenuSplatBlink += current_time_scale;
-				if(_hover || !option_get("reminders")){
-					MenuSplatBlink = -1;
-				}
-			}
+			draw_reset_projection();
 		}
-		
-		draw_reset_projection();
+		else MenuOpen = false;
 	}
 	
 	 // Main Code:

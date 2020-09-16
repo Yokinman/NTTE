@@ -1,0 +1,229 @@
+2.0 ~ Heart to Heart
+	
+	  $(sprite:menu/banners/sprEvents.png:1:110:47)
+	GENERAL
+	+	New area: $(sprite:areas/Crystal/sprRedText.png:12:12:4:-0.8)
+	+	New crowns: @bBONUS @s& $(rgb:235:0:67)RED
+	+	New mutation: @wCOMPASSION
+	+	Desert Wall Bandits
+	+	Desert Blocked Rooms
+	+	Scrapyards @gSludge Pools
+	+	Miner Bandits
+	+	Arctic Seal @wIgloos
+	+	Labs Freak Chambers
+	+	Crown Vault @yFlower
+	+	@bI.D.P.D. HQ @sElevators
+	+	@bI.D.P.D. HQ @sSecurity Guards
+	+	$(rgb:140:45:170)Hammerhead @sPickups
+	+	@yOrchid @sChests
+	+	@bBonus @sChests
+	+	@wOverhauled @sthe @bBonus Ammo @s& @bHP @ssystems
+	+	$(rgb:235:0:67)Crystal Hearts
+	+	Mom has her very own nest
+	+	The turtles bought a new rug
+	+	Special loading screen for $(rgb:210:60:170)Pizza Sewers
+	+	Cat chests synergize with @wCrown of Love @sbetter
+	+	Walltop ravens now support telekinesis, sharp teeth, anomaly, etc.
+	+	New unlockable skin for $(rgb:140:45:170)Crystal
+	@d+	Try skipping big weapon chests
+	~	The normal treasure chest now spawns out at sea, and has better loot
+	~	The sunken treasure chest now spawns in its own room, instead of over walls
+	~	Crown of Crime now unlocks when you open the Lair
+	~	Lair's normal chests are now shop chests, instead of the bosses dropping them
+	~	Reduced Scrapyard sawblade trap spawns by 50% and removed them for Big Dog
+	~	Spiderwalls launch Spiderlings on the z-axis to make them more obvious
+	~	Reduced loop scaling for spider walls and made them more performant
+	*	Fixed the walltop rad maggot canister softlock
+	*	Fixed Big Bat rarely creating a permanent 9999 health bat when transforming
+	*	Fixed the opened $(rgb:210:60:170)Pizza Sewers @smanhole sometimes leaving open chests and scorchmark tops above it
+	*	Fixed an error from the shark boss being charmed while all players are dead
+	*	Fixed some things executing multiple times for every extra co-op player
+	*	Fixed Big Dog not being able to interact with any of NTTE's prompts
+	*	Fixed the Trident getting lost if thrown at the inactive Throne
+	*	Fixed Buried Vaults having the potential to softlock the game
+	*	Fixed Coast lagging to death from firing certain merged weapons a lot
+	*	Fixed $(rgb:210:60:170)Pizza Sewers @sdoors sometimes becoming a partial wall
+	*	Fixed Lair's room generation being a little biased towards the east
+	*	Fixed the mod not working that well on the GMS2 beta
+	*	Incomplete Buried Vaults should occur much less often
+	*	Buried Vaults shouldn't open instantly anymore
+	*	Going to $(rgb:210:60:170)Pizza Sewers @snow unlocks Eyes' B-skin
+	*	Parrot supports mod compatibility much betterer
+	*	Top enemies shouldn't be able to jump into a little wall jail anymore
+	-	Lair's doors no longer blocks enemy line of sight
+	-	Trench's weapon chest can no longer get replaced by a treasure chest
+	-	Removed/reduced a number of top enemy/prop spawns in favor of new additions
+	
+	  $(sprite:menu/banners/sprEvents.png:1:110:47)
+	EVENTS
+	+	Bandit Camp
+	+	Scorpion City
+	+	New & Improved Maggot Park
+	+	Sewer Pool
+	+	Bounty Hunter Den
+	+	Raven Arena
+	+	Fire Pit
+	+	Seal Plaza
+	+	The Hideout
+	+	Mutant Vats
+	+	Button Game
+	+	Palace Shrines
+	+	Buried Shrines
+	+	Super Ambush
+	+	Eel Grave
+	-	Removed old "events", which mainly increased enemy spawns
+	
+	  $(sprite:menu/banners/sprEventsHalf.png:1:56:47)$(sprite:menu/banners/sprEventsHalf.png:1:56:47)$(sprite:menu/banners/sprEventsHalf.png:1:56:47)
+	PETS
+	+	Pet for @wGeneral Areas
+	+	Pet for @sScrapyards
+	+	Pet for $(rgb:96:45:0)Crown Vault
+	+	Pet for $(sprite:areas/Crystal/sprRedText.png:12:12:0:-0.8)
+	+	@wSpider @shas a special interaction with @yCursed Caves
+	+	@pPrism @scan dupe bones and thrown weapons, at a @p@qcost
+	~	Pet @rHP @snow scales by @w+50% @sper loop
+	~	Pets are now revived through a prompt, instead of just contact
+	~	Pets always get sucked into portals even if untamed
+	~	Getting the @wSilver Scorpion @sis no longer based on RNG
+	~	Revised @bOcto's @sidle & walk sprites
+	~	Stats menu icons now align to the center column instead of the left
+	*	Fixed pets causing big lag if they couldn't find a path to the player
+	*	Fixed the $(rgb:210:60:170)Pizza Sewers @scave-in causing pets it killed to become immortal for the rest of the level
+	
+	  $(sprite:menu/banners/sprEvents.png:1:110:47)
+	WEAPONS
+	+	Clam Shield
+	+	Bubble Bat
+	+	@gEnergy Bat
+	+	@pTeleport Gun
+	+	$(rgb:235:0:67)Annihilator
+	+	$(rgb:235:0:67)Entangler
+	+	$(rgb:235:0:67)Tunneller
+	~	Revised @wQuasar Cannon's @ssprite
+	~	@wBone @sthrowing speed is now increased by @bLong Arms
+	~	@wBubble Bombs @sare better at holding projectiles
+	
+	POLISH & IMPROVEMENT
+	+	Better performance overall, pray for good frames
+	+	Seals now get necromanced into Skeletal Seals
+	+	Bolts now stick in Seal shields
+	+	Backpacks have new skeleton props and weapon debris
+	+	Deflected projectiles visually change:
+			@2(sprEnemyBullet1:1) -> @2(sprAllyBullet:1)
+			@3(sprBullet2:1) -> @3(sprEBullet3:1)
+	+	Implemented new unlock icons for NTTE's stats screen
+	+	Now manually storing NTTE's golden weapons on the loadout so you can start with them
+	+	Neat alert indicators for various things, such as offscreen van portals and seals
+	+	Guitar and Black Sword now spawn stuck in the ground, so awesome
+	+	Gave Big Dog a big air bubble underwater, instead of tiny bubl
+	+	YV's car spawns a 3x3 room so it doesn't overlap chests or props
+	+	Gave Pit Squid's tentacles a cool death sprite
+	+	Implemented some more underwater area polish
+	+	Gave shadows to big wall decals, Captain's desk/TV, and Cuz's couch/TV
+	+	Improved buried vaults a bit visually
+	+	Gave the Throne room some cool stair tiles
+	+	You can actually walk up to the Nuclear Throne now, wtf
+	+	All of NTTE's visuals now support higher pixel scaling modes
+	~	The @wWater Quality @soption is now @wVisual Quality @sand affects much more
+	~	Merged Disc Gun projectiles now use enemy flavored sprites
+	~	Slightly increased Coast and Lair's music volume
+	~	Coast now only spawns mine props on its 3rd level
+	~	Seal King now plays boss music for the initial wave of seals
+	~	Reduced mortar plasma's impact screenshake and sound volume, it was kinda insane
+	~	Big Bat's flak cannon now blows up if deflected while charging
+	~	The charm shader is a bit better at giving enemies green eyes
+	~	Buried Vaults are rarer, but have a more obvious hint
+	~	Venom pellets have new sprites and do piercing damage
+	~	Gave the Throne's a smaller cause-of-death sprite
+	~	Walltop object's shadows are now 10% more transparent
+	*	Fixed Spiderlings not being captured by bubble bombs
+	*	Fixed sawblade trap explosions not setting a cause of death on game over
+	*	Fixed pickups out in Coast's ocean getting pushed back to shore crazy fast
+	*	Fixed the base game's wall decals sometimes getting destroyed around the spawn
+	*	Fixed the Throne's flames disappearing instantly when initially shot
+	*	Fixed rain splashes appearing below walls when outside the level
+	*	Fixed loading screen pets and weapons affecting level gen
+	*	NTTE's areas shouldn't create any props near the spawn anymore
+	*	Spirit pickups now correctly play poof FX for their extra Haste halo
+	
+	BALANCE
+	+	Albino Gators throw quasar nades
+	+	Arctic Seal discs have custom sprites and red trails for visibility
+	+	Gave Pit Squid's tentacles some neat energy outlines for visibility
+	~	Portal Guardians are much scarier
+	~	Big Maggot Nests emit less maggots and have had their HP reduced from 50 to 42
+	~	Reduced HP of various Coast enemies:
+			Pelican (50 to 45)
+			Diver (12 to 10)
+			Seal (12 to 10)
+			Heavy Seal (40 to 32)
+			Seal King (300 to 260)
+	~	Seal King spawns more grunt seals, less shielder and blunderbuss seals
+	~	Seal shielders should be much less difficult (smaller hitbox, won't always face the player, etc.)
+	~	Jellyfish speed increased and contact damage upped from 3 to 4
+	~	Eels move a little faster
+	~	Spirit pickups now only drop from enemies that are bosses
+	~	Spirit pickups fade significantly faster and turn into HP pickups on death
+	*	Pit Squid's eye lasers should no longer hit the player through walls
+	*	Fixed Pit Squid's tentacles not being shootable while going up/down
+	-	Disabled the Jungle's Last Wish reroll for future reasons, now done by another flower
+	-	Removed big rad canister loot from Buried Vaults
+
+	@dThank you for playing! ~Team TE
+	
+1.1 ~ Polish & Bug Squashing
+	
+	+	Top enemies now support telekinesis, sharp teeth, brain capacity, anomaly, etc.
+	+	Charm now supports all non-NTTE modded enemies automatically (hopefully)
+	+	Weapons now exist in the loading screen portal
+	+	Opening IDPD chests now closes the portal, just cause
+	+	Bonus ammo now supports pop pop
+	+	Variant scrapyards wall car
+	+	Big Shots venom flak can now drop pickups
+	+	Gave normal water mines the coast water mine's explosion
+	+	Seal King music
+	+	Seal King now smacks pickups away
+	+	Buried vaults look a bit more natural
+	~	Top enemy optimizations
+	~	Top enemies are a bit more inclined to jump off the wall
+	~	Crown of Crime now picks between replacing all weapon chests vs all ammo chests instead of a 66% chance per chest
+	~	Minor change to how charmed enemies target things, they'll attack somewhat more often
+	~	Increased Sawblade Gun's spawn area from 2-1 to 3-2
+	~	Renamed Parrot's description to make their active more obvious
+	~	Renamed the Slaughter skull's "CHUNK" prompt to "SHARE"
+	~	Pet Mimic now holds their weapon in place so it doesn't get pushed away
+	~	Pet Mimic's indicator now says "DROP" when they don't have a weapon
+	~	Optimizations to Hyper Bubbler's hitscan
+	~	Made squid tentacles a stronger light source
+	*	Fixed the god mode bat
+	*	MIGHT have fixed the walking-over-trench-pit desync (see if you still get it)
+	*	Pet Octo no longer zaps vault statues and other important things
+	*	Pets no longer attack the Pizza Sewers squad on-sight
+	*	Fixed seals being able to attack during Seal King's intro sometimes
+	*	Fixed charm green eyes not appearing in coast's water
+	*	Fixed charmed heavy seals flailing a bit slowly sometimes
+	*	Fixed vaults not playing their music in NTTE areas
+	*	Fixed buried vaults occasionally spawning close enough to instantly open
+	*	Fixed buried vaults sometimes spawning disjointed (probably)
+	*	Fixed bubble vents rarely exploding on the player entering the level
+	*	Fixed players getting rotated for the rest of the level if in range of a portal that gets closed (by opening the Lair or similar)
+	*	Fixed the heavy seal's mine overlapping things like Seal King
+	*	Fixed elite jellies not giving off light
+	*	Fixed an error from player sawblade discs
+	*	Fixed an error from harpoon ropes
+	-	Seal King no longer charms newly spawned seals when he's charmed (caused big lag)
+	-	Removed bone duplication
+	
+1.02 ~ Hotfix 2
+	
+	*	Fixed a rare heavy seal anchor error
+	*	Fixed a hard crash sometimes caused by ally-sprited charmed enemy projectiles
+	*	Fixed bonus spirit halos not appearing when in coast's water
+	*	Fixed buried vaults being able to mess up the pizza drain hallway
+	*	Buried vaults should be closer to 100% consistent with giving loot
+	
+1.01 ~ Hotfix 1
+	
+	*	Fixed charmed laser crystals erroring
+	
+1.0 ~ RELEASE

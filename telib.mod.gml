@@ -5800,7 +5800,7 @@
 
 #define trace_error(_error)
 	trace(_error);
-	trace_color(" ^ Screenshot that error and post it on NTTE's itch.io page, thanks!", c_yellow);
+	trace_color(" ^ Screenshot that error and post it on NT:TE's itch.io page, thanks!", c_yellow);
 	
 #define sleep_max(_milliseconds)
 	/*

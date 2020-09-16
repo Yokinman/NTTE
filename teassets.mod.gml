@@ -838,8 +838,8 @@
 		p = m;
 			
 			 // Seal Plaza:
-			FloorSeal         = sprite(p + "sprFloorSeal",     4, 2, 2);
-			SnowFloorSeal     = sprite(p + "sprFloorSeal",     4, 2, 2, shnSnow);
+			FloorSeal         = sprite(p + "sprFloorSeal",     4, 16, 16);
+			SnowFloorSeal     = sprite(p + "sprFloorSeal",     4, 16, 16, shnSnow);
 			FloorSealRoom     = sprite(p + "sprFloorSealRoom", 9, 2, 2);
 			SnowFloorSealRoom = sprite(p + "sprFloorSealRoom", 9, 2, 2, shnSnow);
 			
@@ -2859,7 +2859,7 @@ var _shine = argument_count > 4 ? argument[4] : shnNone;
 		_sprY   = sprite_get_yoffset(_spr),
 		_sprW   = sprite_get_width(_spr),
 		_sprH   = sprite_get_height(_spr),
-		_sprImg = sprite_get_number(_shine),
+		_sprImg = max(sprite_get_number(_spr), sprite_get_number(_shine)),
 		_shineW = sprite_get_width(_shine),
 		_shineH = sprite_get_height(_shine);
 		
@@ -2879,7 +2879,7 @@ var _shine = argument_count > 4 ? argument[4] : shnNone;
 					_y = 0;
 					
 				 // Normal Sprite:
-				draw_sprite(_spr, 0, _x + _sprX, _y + _sprY);
+				draw_sprite(_spr, _img, _x + _sprX, _y + _sprY);
 				
 				 // Overlay Shine:
 				draw_set_color_write_enable(true, true, true, false);

@@ -4863,7 +4863,11 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 		 // Generate the Realm:
 		var _lastArea = GameCont.area;
 		if(!instance_exists(Portal)){
-			area_generate(area, subarea, loops, _sx + 16, _sy - 16, true, 0, null);
+			var _scrSetup = null;
+			if(crown_current == "red"){
+				_scrSetup = script_ref_create_ext("crown", "red", "step");
+			}
+			area_generate(area, subarea, loops, _sx + 16, _sy - 16, true, 0, _scrSetup);
 		}
 		
 		 // Finish Path:
@@ -4915,7 +4919,7 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 			unlock_set("crown:crime", true);
 		}
 		
-		
+	
 #define PizzaManholeCover_create(_x, _y)
 	repeat(2 + irandom(2)){
 		with(instance_create(_x + orandom(20), _y + orandom(20), GroundFlame)){

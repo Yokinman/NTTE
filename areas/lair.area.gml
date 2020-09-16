@@ -211,7 +211,7 @@
 //#macro surfCarpet global.surfCarpet
 
 #define area_subarea           return 1;
-#define area_goal              return 110;
+#define area_goal              return 100;
 #define area_next              return [area_scrapyards, 1];
 #define area_music             return mus.Lair;
 #define area_music_boss        return mus.BigShots;
@@ -365,7 +365,7 @@
 	}
 	
 	 // Spawn Rooms:
-	if(array_length(room_list) < 4){
+	if(array_length(room_list) < floor(4 * (goal / 100))){
 		var k = "";
 		do k = lq_get_key(room_type, irandom(lq_size(room_type) - 1));
 		until (lq_get(room_type, k).special == false);
