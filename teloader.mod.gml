@@ -559,8 +559,8 @@
 
 #macro path_mod       "NTTE/"
 #macro path_download  "../../mods/" + path_mod
-#macro path_version   "version.txt"
 #macro path_load      "main.txt"
+#macro path_version   "NTTE-Version.txt"
 #macro path_changelog "NTTE-Changelog.txt"
 
 #macro git_user    "Yokinman"
