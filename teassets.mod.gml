@@ -838,10 +838,12 @@
 		p = m;
 			
 			 // Seal Plaza:
-			FloorSeal         = sprite(p + "sprFloorSeal",     4, 16, 16);
-			SnowFloorSeal     = sprite(p + "sprFloorSeal",     4, 16, 16, shnSnow);
-			FloorSealRoom     = sprite(p + "sprFloorSealRoom", 9, 2, 2);
-			SnowFloorSealRoom = sprite(p + "sprFloorSealRoom", 9, 2, 2, shnSnow);
+			FloorSeal            = sprite(p + "sprFloorSeal",         4, 16, 16);
+			SnowFloorSeal        = sprite(p + "sprFloorSeal",         4, 16, 16, shnSnow);
+			FloorSealRoom        = sprite(p + "sprFloorSealRoom",     9, 16, 16);
+			SnowFloorSealRoom    = sprite(p + "sprFloorSealRoom",     9, 16, 16, shnSnow);
+			FloorSealRoomBig     = sprite(p + "sprFloorSealRoomBig", 25, 16, 16);
+			SnowFloorSealRoomBig = sprite(p + "sprFloorSealRoomBig", 25, 16, 16, shnSnow);
 			
 			//#region PROPS
 			p = m + "Props/";

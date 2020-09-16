@@ -339,6 +339,8 @@
 				global.load.num   = 0;
 				global.load.total = array_length(global.load.list);
 				
+				wait 10;
+				
 				with(global.load.list){
 					var	_path = self[0],
 						_wait = self[1];

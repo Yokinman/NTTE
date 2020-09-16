@@ -1682,11 +1682,10 @@
 	
 	with(floor_room(_spawnX, _spawnY, _spawnDis, _spawnFloor, _w, _h, _type, _dirOff, _floorDis)){
 		 // Royal Presence:
-		for(var i = 0; i < array_length(floors); i++){
-			with(floors[i]){
-				sprite_index = spr.FloorSealRoom;
-				image_index  = i;
-			}
+		var _img = 0;
+		with(floor_fill(x, y, _w + 2, _h + 2, "")){
+			sprite_index = spr.FloorSealRoomBig;
+			image_index  = _img++;
 		}
 		obj_create(x, y - 6, "PalankingStatue");
 		
@@ -1695,8 +1694,8 @@
 		for(var _dir = 0; _dir < 360; _dir += 90){
 			var	_iglooW = 3,
 				_iglooH = 3,
-				_pathX1 = x + lengthdir_x(16 * _w, _dir),
-				_pathY1 = y + lengthdir_y(16 * _h, _dir),
+				_pathX1 = x + lengthdir_x(16 * (_w + 2), _dir),
+				_pathY1 = y + lengthdir_y(16 * (_h + 2), _dir),
 				_pathX2 = _pathX1,
 				_pathY2 = _pathY1;
 				
@@ -1714,11 +1713,16 @@
 			
 			 // Igloo Room:
 			else with(floor_room_create(x, y, _iglooW, _iglooH, "", _dir, 0, 0)){
-				with(obj_create(x, y, "Igloo")){
+				var _img = 0;
+				with(floors){
+					sprite_index = spr.FloorSealRoom;
+					image_index  = _img++;
+				}
+				with(obj_create(x, y - 2, "Igloo")){
 					chest = true;
 				}
-				_pathX2 = x - lengthdir_x(16, _dir);
-				_pathY2 = y - lengthdir_y(16, _dir);
+				_pathX2 = x - lengthdir_x(_iglooW * 16, _dir);
+				_pathY2 = y - lengthdir_y(_iglooH * 16, _dir);
 			}
 			
 			 // Path:
@@ -1814,17 +1818,21 @@
 	floor_reset_align();
 	
 	 // Floor Setup:
-	var	_floorSeal = [spr.FloorSeal,     spr.FloorSealRoom],
-		_floorSnow = [spr.SnowFloorSeal, spr.SnowFloorSealRoom];
+	var	_floorSeal = [spr.FloorSeal,     spr.FloorSealRoom,     spr.FloorSealRoomBig],
+		_floorSnow = [spr.SnowFloorSeal, spr.SnowFloorSealRoom, spr.SnowFloorSealRoomBig];
 		
 	with(instances_matching_gt(Floor, "id", _minID)){
 		var i = array_find_index(_floorSeal, sprite_index);
 		
 		 // Road Tiles:
 		if(i >= 0){
-			traction = 0.45;
-			material = ((i > 0) ? 5 : 2);
 			depth    = 8;
+			traction = 0.45;
+			switch(i){
+				case 0: material = 2;                                                  break;
+				case 1: material = 5;                                                  break;
+				case 2: material = (array_exists([0, 4, 20, 24], image_index) ? 2 : 5) break;
+			}
 			with(instance_create(x, y - 1, SnowFloor)){
 				sprite_index = _floorSnow[i];
 				image_index  = other.image_index;
