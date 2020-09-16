@@ -1519,78 +1519,80 @@
 	
 	 // Character Selection Menu:
 	if(instance_exists(Menu)){
-		 // Custom Character Stuff:
-		with(ntte_mods.race){
-			var _name = self;
-			
-			 // Create Custom CampChars:
-			if(mod_exists("race", _name) && unlock_get("race:" + _name)){
-				if(array_length(instances_matching(CampChar, "race", _name)) <= 0){
-					with(CampChar_create(64, 48, _name)){
-						 // Poof in:
-						repeat(8) with(instance_create(x, y + 4, Dust)){
-							motion_add(random(360), 3);
-							depth = other.depth - 1;
+		if(!mod_exists("mod", "teloader")){
+			 // Custom Character Stuff:
+			with(ntte_mods.race){
+				var _name = self;
+				
+				 // Create Custom CampChars:
+				if(mod_exists("race", _name) && unlock_get("race:" + _name)){
+					if(array_length(instances_matching(CampChar, "race", _name)) <= 0){
+						with(CampChar_create(64, 48, _name)){
+							 // Poof in:
+							repeat(8) with(instance_create(x, y + 4, Dust)){
+								motion_add(random(360), 3);
+								depth = other.depth - 1;
+							}
 						}
 					}
-				}
-			}
-			
-			 // CharSelect:
-			with(instances_matching(CharSelect, "race", _name)){
-				 // race_avail Fix:
-				if(mod_script_exists("race", _name, "race_avail") && !mod_script_call_nc("race", _name, "race_avail")){
-					noinput = 10;
 				}
 				
-				 // New:
-				else if(stat_get("race:" + _name + ":runs") <= 0){
-					script_bind_draw(CharSelect_draw_new, depth - 0.001, id);
-				}
-			}
-		}
-		
-		 // CampChar Management:
-		for(var i = 0; i < maxp; i++) if(player_is_active(i)){
-			var _race = player_get_race(i);
-			if(array_exists(ntte_mods.race, _race)){
-				with(instances_matching(CampChar, "race", _race)){
-					 // Pan Camera:
-					var _local = false;
-					for(var j = 0; j < maxp; j++){
-						if(j != i && player_get_uid(j) == player_get_uid(i)){
-							_local = true;
-							break;
-						}
-					}
-					if(!_local){
-						var _char = instances_matching(CampChar, "num", 17);
-						with(_char[array_length(_char) - 1]){
-							var	_x1 = x,
-								_y1 = y,
-								_x2 = other.x,
-								_y2 = other.y,
-								_pan = 4;
-								
-							view_shift(
-								i,
-								point_direction(_x1, _y1, _x2, _y2),
-								point_distance(_x1, _y1, _x2, _y2) * (1 + ((2/3) / _pan)) * 0.1
-							);
-						}
+				 // CharSelect:
+				with(instances_matching(CharSelect, "race", _name)){
+					 // race_avail Fix:
+					if(mod_script_exists("race", _name, "race_avail") && !mod_script_call_nc("race", _name, "race_avail")){
+						noinput = 10;
 					}
 					
-					 // Manually Animate:
-					if(anim_end){
-						if(sprite_index != spr_menu){
-							if(sprite_index == spr_to){
-								sprite_index = spr_menu;
-							}
-							else{
-								sprite_index = spr_to;
+					 // New:
+					else if(stat_get("race:" + _name + ":runs") <= 0){
+						script_bind_draw(CharSelect_draw_new, depth - 0.001, id);
+					}
+				}
+			}
+			
+			 // CampChar Management:
+			for(var i = 0; i < maxp; i++) if(player_is_active(i)){
+				var _race = player_get_race(i);
+				if(array_exists(ntte_mods.race, _race)){
+					with(instances_matching(CampChar, "race", _race)){
+						 // Pan Camera:
+						var _local = false;
+						for(var j = 0; j < maxp; j++){
+							if(j != i && player_get_uid(j) == player_get_uid(i)){
+								_local = true;
+								break;
 							}
 						}
-						image_index = 0;
+						if(!_local){
+							var _char = instances_matching(CampChar, "num", 17);
+							with(_char[array_length(_char) - 1]){
+								var	_x1 = x,
+									_y1 = y,
+									_x2 = other.x,
+									_y2 = other.y,
+									_pan = 4;
+									
+								view_shift(
+									i,
+									point_direction(_x1, _y1, _x2, _y2),
+									point_distance(_x1, _y1, _x2, _y2) * (1 + ((2/3) / _pan)) * 0.1
+								);
+							}
+						}
+						
+						 // Manually Animate:
+						if(anim_end){
+							if(sprite_index != spr_menu){
+								if(sprite_index == spr_to){
+									sprite_index = spr_menu;
+								}
+								else{
+									sprite_index = spr_to;
+								}
+							}
+							image_index = 0;
+						}
 					}
 				}
 			}

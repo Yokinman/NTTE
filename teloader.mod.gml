@@ -498,6 +498,12 @@
 					
 					 // Save Version:
 					string_save(git_version, path_download + path_version);
+					
+					 // Just in Case:
+					if(global.load.total == 0){
+						global.load.total = 1;
+						global.load.num   = global.load.total;
+					}
 				}
 				
 				break;

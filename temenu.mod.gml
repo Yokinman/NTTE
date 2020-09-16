@@ -647,7 +647,16 @@
 	ntte_menu();
 	
 #define draw_menu
-	MenuSplat = clamp(MenuSplat + current_time_scale, 0, sprite_get_number(sprBossNameSplat) - 1);
+	 // Animate NTTE Splat:
+	var _add = 1;
+	if(mod_exists("mod", "teloader")){
+		if(mod_variable_exists("mod", "teloader", "load")){
+			if(mod_variable_get("mod", "teloader", "load").total > 0){
+				_add *= -1;
+			}
+		}
+	}
+	MenuSplat = clamp(MenuSplat + (_add * current_time_scale), 0, sprite_get_number(sprBossNameSplat) - 1);
 	
 	 // Campfire Menu Button:
 	if(instance_exists(Menu)){
