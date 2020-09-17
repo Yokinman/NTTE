@@ -2437,7 +2437,7 @@
 		depth        = -3;
 		
 		 // Vars:
-		mask_index = mskFreak;
+		mask_index = mskFrogEgg;
 		maxhealth  = 0;
 		parent     = noone;
 		white      = false;
