@@ -716,7 +716,7 @@
 						{	"x"      : 0,
 							"y"      : 0,
 							"font"   : fntSmall,
-							"text"   : (changelog_exists(_logIndex) ? "Update" : "Play"),
+							"text"   : (changelog_exists(_logIndex) ? "Update" : "Load"),
 							"color"  : "s",
 							"active" : (instance_exists(Menu) && mod_sideload() && (!changelog_exists(_logIndex) || global.version != git_version))
 						},
@@ -762,7 +762,7 @@
 											if(button_pressed(j, "fire")){
 												sound_play_pitchvol(sndClick, 1 + random_range(-0.1, 0.1), 0.6);
 												switch(text){
-													case "Play":
+													case "Load":
 														other.type = load_type_loading;
 														break;
 														

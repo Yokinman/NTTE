@@ -768,25 +768,38 @@
 			
 			 // Stairs:
 			if(GameCont.subarea == 3){
-				var	_sprStairs    = spr.FloorPalaceStairs,
-					_sprCarpet    = spr.FloorPalaceStairsCarpet,
-					_sprStairsImg = sprite_get_number(_sprStairs),
-					_sprCarpetImg = sprite_get_number(_sprCarpet);
-					
 				with(instances_matching(Carpet, "sprite_index", sprCarpet)){
-					with(FloorNormal){
-						var _img = floor(((bbox_center_y - other.bbox_top - 128) % 368) / 32);
-						if(_img >= 0 && _img < _sprStairsImg){
-							sprite_index = _sprStairs;
-							image_index  = _img;
-							depth        = 8;
+					var	_x1     = x - 128,
+						_y1     = bbox_top + 128,
+						_x2     = x + 128,
+						_y2     = 10016,
+						_spr    = spr.FloorPalaceStairs,
+						_sprNum = sprite_get_number(_spr),
+						_floors = FloorNormal;
+						
+					for(var _y = _y1; _y < _y2; _y += 368){
+						with(instance_nearest_array(_x1, _y, _floors)){
+							with(instance_create(x, y + 32 - 5, CustomObject)){
+								mask_index    = mskFloor;
+								image_xscale  = (_x2 - _x1) / 32;
+								on_begin_step = PalaceStairs_begin_step;
+							}
 							
-							 // Carpet Mode:
-							if(place_meeting(x, y, other)){
-								sprite_index = _sprCarpet;
-								image_index *= (_sprCarpetImg / _sprStairsImg);
-								if(bbox_center_x > other.x){
-									image_index++;
+							 // Spriterize:
+							for(var i = 0; i < _sprNum; i++){
+								with(instance_rectangle_bbox(_x1, y + (32 * i), _x2, y + (32 * (i + 1)) - 1, _floors)){
+									sprite_index = _spr;
+									image_index  = i;
+									depth        = 8;
+									
+									 // Carpet Time:
+									if(place_meeting(x, y, Carpet)){
+										sprite_index = spr.FloorPalaceStairsCarpet;
+										image_index *= 2;
+										if(bbox_center_x > (_x1 + _x2) / 2){
+											image_index++;
+										}
+									}
 								}
 							}
 						}
@@ -2045,6 +2058,7 @@
 		with(Player){
 			motion_step(1);
 			
+			 // Smooth Wall Collision:
 			if(place_meeting(x, y, other)){
 				x = xprevious;
 				y = yprevious;
@@ -2061,74 +2075,35 @@
 			}
 			
 			motion_step(-1);
+			
+			 // Slow Stair Climbing:
+			if(collision_rectangle(other.x - 20, other.y + 40, other.x + 20, other.y + 80, id, false, false)){
+				ntte_stairslow = 8;
+			}
 		}
 		solid = _lastSolid;
 	}
 	
-	 // Stairs:
-	if(GameCont.area == 7 && GameCont.subarea == 3){
-		if(!instance_exists(Nothing) && skill_get(mut_extra_feet) <= 0){
-			with(Player){
-				
-				 // Walking Uphill:
-				if(vspeed_raw < 0){
-					var _meeting = false,
-						_spriteA = spr.FloorPalaceStairs,
-						_spriteB = spr.FloorPalaceStairsCarpet;
-						
-					with(
-						instances_meeting(
-							x, 
-							y, 
-							instances_matching(
-								Floor, 
-								"sprite_index", 
-								_spriteA, 
-								_spriteB
-							)
-						)
-					){
-						if(
-							(
-								sprite_index == _spriteA
-								&&
-								image_index == 1
-							)
-							||
-							(
-								sprite_index == _spriteB
-								&&
-								(
-									image_index == 2
-									|| 
-									image_index == 3
-								)
-							)
-						){
-							if(place_meeting(x, y - 5, other)){
-								_meeting = true;
-							}
-						}
-					}
-					if(_meeting){
-						y -= vspeed_raw / 2;
-						
-						 // Dust Effect:
-						if(variable_instance_get(id, "ntte_stairsdust", true)){
-							ntte_stairsdust = false;
-							
-							sleep(30);
-							with(instance_create(x, y, Dust)){
-								sprite_index = sprSmoke;
-							}
-						}
-					}
-					else{
-						ntte_stairsdust = true;
+	 // Stair Climbing:
+	with(instances_matching_gt(Player, "ntte_stairslow", 0)){
+		 // Slow:
+		if(roll == false){
+			if(abs(vspeed) > 0.2 && skill_get(mut_extra_feet) <= 0){
+				if(!instance_exists(Nothing) || vspeed < 0){
+					var _goal = 0.45 + (maxspeed / 4);
+					if(friction < _goal){
+						friction = lerp(friction, _goal, ntte_stairslow / 5);
 					}
 				}
 			}
 		}
+		
+		 // Don't roll on stairs bro:
+		else if(skill_get(mut_throne_butt) <= 0){
+			vspeed += 0.4 * current_time_scale;
+		}
+		
+		ntte_stairslow -= current_time_scale;
 	}
 	
 	if(lag) trace_time("ntte_step");
@@ -4029,6 +4004,33 @@
 				sound_stop(_snd);
 				global.amb_current = _snd - 1;
 			}
+		}
+	}
+	
+#define PalaceStairs_begin_step
+	 // Walking Up Stairs:
+	if(place_meeting(x, y, Player)){
+		with(instances_matching_ne(instances_meeting(x, y, Player), "footkind", 0)){
+			 // Footsteps:
+			if(sprite_index == spr_walk && roll == false){
+				if(round(image_index) == footstep || footextra == true){
+					var	_snd = asset_get_index(`sndFoot${place_meeting(x, y, Carpet) ? "Sho" : "Met"}Rock${irandom_range(1, 6)}`),
+						_pit = ((vspeed > 0) ? 0.8 : 1) + orandom(0.1),
+						_vol = 0.3;
+						
+					sound_play_pitchvol(_snd, _pit, _vol);
+				}
+				
+				 // Dust Effect:
+				if("ntte_stairslow" not in self || ntte_stairslow <= 0){
+					with(instance_create(x, y, Dust)){
+						sprite_index = sprSmoke;
+					}
+				}
+			}
+			
+			 // Slow:
+			ntte_stairslow = 5;
 		}
 	}
 	

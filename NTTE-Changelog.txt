@@ -121,7 +121,7 @@
 	+	Implemented some more underwater area polish
 	+	Gave shadows to big wall decals, Captain's desk/TV, and Cuz's couch/TV
 	+	Improved buried vaults a bit visually
-	+	Gave the Throne room some cool stair tiles
+	+	Gave the Throne room some working stairs
 	+	You can actually walk up to the Nuclear Throne now, wtf
 	+	All of NTTE's visuals now support higher pixel scaling modes
 	~	The @wWater Quality @soption is now @wVisual Quality @sand affects much more

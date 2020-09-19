@@ -929,8 +929,8 @@
 			NothingDeathCause = sprite(p + "sprNothingDeathCause", 1, 80, 80);
 			
 			 // Stairs:
-			FloorPalaceStairs           = sprite(p + "sprFloorPalaceStairs",       3, 0, 0);
-			FloorPalaceStairsCarpet 	= sprite(p + "sprFloorPalaceStairsCarpet", 6, 0, 0);
+			FloorPalaceStairs       = sprite(p + "sprFloorPalaceStairs",       3, 0, 0);
+			FloorPalaceStairsCarpet = sprite(p + "sprFloorPalaceStairsCarpet", 6, 0, 0);
 			
 			 // Shrine Floors:
 			FloorPalaceShrine          = sprite(p + "sprFloorPalaceShrine",          10, 2, 2);
