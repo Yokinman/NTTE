@@ -16,7 +16,7 @@
 #define weapon_type   return type_melee;
 #define weapon_cost   return 2;
 //#define weapon_rads   return 16;
-#define weapon_load   return 15; // 0.5 Seconds
+#define weapon_load   return 25; // 0.83 Seconds
 #define weapon_melee  return false;
 
 #define weapon_fire(_wep)
@@ -24,7 +24,7 @@
 	_wep = _fire.wep;
 	
 	 // Portal Bullet:
-	with(projectile_create(x, y, "PortalBullet", gunangle, 26)){
+	with(projectile_create(x, y, "PortalBullet", gunangle, 12)){
 		image_speed = 2.5;
 		mask_index  = mskBullet1;
 		damage      = 25;

@@ -889,7 +889,13 @@
 			 // Top Spawns:
 			with(instances_matching([Bush, JungleAssassinHide, JungleBandit, JungleFly], "", null)){
 				if(chance(1, 4)){
-					top_create(x, y, id, -1, -1);
+					if(object_index = JungleAssassinHide) {
+						with(instance_create(x, y, JungleAssassin)) top_create(x, y, id, -1, -1);
+						
+						instance_delete(self);
+					}
+					
+					else top_create(x, y, id, -1, -1);
 				}
 			}
 			

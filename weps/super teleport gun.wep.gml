@@ -31,7 +31,7 @@
 	 // Portal Bullets:
 	var _off = (10 * accuracy);
 	for(var i = -1.5; i <= 1.5; i++){
-		with(projectile_create(x, y, "PortalBullet", gunangle + (i * _off), 26)){
+		with(projectile_create(x, y, "PortalBullet", gunangle + (i * _off), 12)){
 			image_speed = 2.5;
 			mask_index  = mskBullet1;
 			damage      = 25;

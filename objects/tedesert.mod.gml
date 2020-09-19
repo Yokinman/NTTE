@@ -993,7 +993,7 @@
 			 // Intro:
 			if(!intro){
 				intro = true;
-				boss_intro("");
+				boss_intro("BigFish");
 				sound_play(sndOasisBossIntro);
 			}
 		}
