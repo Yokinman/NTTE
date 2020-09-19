@@ -928,6 +928,9 @@
 			 // Better Game Over Sprite (Big sprite so that the on-hover text is more mandatory):
 			NothingDeathCause = sprite(p + "sprNothingDeathCause", 1, 80, 80);
 			
+			 // Throne Shadow:
+			shd.Nothing = sprite(p + "shdNothing", 1, 128, 100);
+			
 			 // Stairs:
 			FloorPalaceStairs       = sprite(p + "sprFloorPalaceStairs",       3, 0, 0);
 			FloorPalaceStairsCarpet = sprite(p + "sprFloorPalaceStairsCarpet", 6, 0, 0);

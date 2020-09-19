@@ -2016,10 +2016,45 @@
 	 // Better Inactive Throne Hitbox:
 	with(instances_matching(NothingIntroMask, "mask_index", mskNothingInactive, msk.NothingInactiveCool)){
 		with(instances_matching(instances_matching([NothingInactive, BecomeNothing], "xstart", xstart), "ystart", ystart)){
+			 // Activation:
+			if(
+				instance_is(self, BecomeNothing)
+				&& sprite_index == sprNothingActivate
+				&& image_index >= 1
+			){
+				 // Reset Depth:
+				if(depth >= object_get_depth(BackCont)){
+					depth = object_get_depth(Nothing);
+				}
+				
+				 // Leg Break Wall:
+				if(image_index >= 2){
+					var _lastMask = mask_index;
+					mask_index = object_get_mask(Nothing);
+					if(place_meeting(x, y, Wall)){
+						with(instance_rectangle_bbox(
+							bbox_left,
+							lerp(bbox_bottom, bbox_top, clamp(floor(image_index) / 6, 0, 1)),
+							bbox_right,
+							bbox_bottom,
+							Wall
+						)){
+							if(place_meeting(x, y, other)){
+								instance_create(x, y, FloorExplo);
+								instance_destroy();
+							}
+						}
+					}
+					mask_index = _lastMask;
+				}
+			}
+			
 			 // Shadow Fix:
-			depth = max(depth, 5);
-			if("spr_shadow" in self){
-				spr_shadow = -1;
+			else{
+				depth = max(depth, object_get_depth(BackCont));
+				if("spr_shadow" in self){
+					spr_shadow = -1;
+				}
 			}
 			
 			 // Better Hitbox:
@@ -2095,7 +2130,7 @@
 		 // Slow:
 		if(roll == false){
 			if(abs(vspeed) > 0.2 && skill_get(mut_extra_feet) <= 0){
-				if(!instance_exists(Nothing) || vspeed < 0){
+				if(true || !instance_exists(Nothing)){
 					var _goal = 0.45 + (maxspeed / 4);
 					if(friction < _goal){
 						friction = lerp(friction, _goal, ntte_stairslow / 5);
@@ -2110,6 +2145,34 @@
 		}
 		
 		ntte_stairslow -= current_time_scale;
+	}
+	
+	 // Shadow Fixes:
+	with(instances_matching(instances_matching(Pillar, "spr_shadow_y", 0), "spr_shadow", shd24)){
+		spr_shadow_y = -3;
+	}
+	with(instances_matching(Nothing, "spr_shadow", -1)){
+		spr_shadow = spr.shd.Nothing;
+	}
+	with(instances_matching([LastIntro, LastCutscene], "spr_shadow", shd24)){
+		spr_shadow   = sprDeskEmpty;
+		spr_shadow_y = 4;
+	}
+	with(instances_matching(BigTV, "spr_shadow", shd24)){
+		spr_shadow   = spr_idle;
+		spr_shadow_x = -(image_xscale < 0);
+		spr_shadow_y = 8;
+	}
+	with(instances_matching(VenuzTV, "spr_shadow", shd24)){
+		spr_shadow   = spr_idle;
+		spr_shadow_y = 2;
+	}
+	with(instances_matching(VenuzCouch, "spr_shadow", shd24)){
+		spr_shadow   = spr_idle;
+		spr_shadow_y = 4;
+	}
+	with(instances_matching([Generator, GeneratorInactive], "spr_shadow", shd24, spr.shd.BigGenerator, spr.shd.BigGeneratorR)){
+		spr_shadow = ((image_xscale < 0) ? spr.shd.BigGeneratorR : spr.shd.BigGenerator);
 	}
 	
 	if(lag) trace_time("ntte_step");
@@ -2474,29 +2537,6 @@
 	with(instances_matching(TrapScorchMark, "depth", 8)){
 		depth = 9;
 	}
-	with(instances_matching(instances_matching(Pillar, "spr_shadow_y", 0), "spr_shadow", shd24)){
-		spr_shadow_y = -3;
-	}
-	with(instances_matching([LastIntro, LastCutscene], "spr_shadow", shd24)){
-		spr_shadow   = sprDeskEmpty;
-		spr_shadow_y = 4;
-	}
-	with(instances_matching(BigTV, "spr_shadow", shd24)){
-		spr_shadow   = spr_idle;
-		spr_shadow_x = -(image_xscale < 0);
-		spr_shadow_y = 8;
-	}
-	with(instances_matching(VenuzTV, "spr_shadow", shd24)){
-		spr_shadow   = spr_idle;
-		spr_shadow_y = 2;
-	}
-	with(instances_matching(VenuzCouch, "spr_shadow", shd24)){
-		spr_shadow   = spr_idle;
-		spr_shadow_y = 4;
-	}
-	with(instances_matching([Generator, GeneratorInactive], "spr_shadow", shd24, spr.shd.BigGenerator, spr.shd.BigGeneratorR)){
-		spr_shadow = ((image_xscale < 0) ? spr.shd.BigGeneratorR : spr.shd.BigGenerator);
-	}
 	with(instances_matching(MaggotSpawn, "hitid_fix", null)){
 		hitid_fix = (!is_real(hitid) && !is_array(hitid));
 		if(hitid_fix){
@@ -2691,6 +2731,11 @@
 #define draw_shadows
 	var _lag = (lag && !instance_exists(PauseButton) && !instance_exists(BackMainMenu));
 	if(_lag) trace_time();
+	
+	 // Throne Intro Shadow:
+	with(instances_matching_ge(instances_matching(instances_matching(BecomeNothing, "visible", true), "sprite_index", sprNothingActivate), "image_index", 1)){
+		draw_sprite(spr.shd.Nothing, 0, x, y);
+	}
 	
 	 // Call Scripts:
 	ntte_call("shadows");
