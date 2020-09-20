@@ -253,29 +253,34 @@
 	}
 	catch(_error){}
 	
-	 // Retrieve Changelog:
-	var _fileText = "";
-	try{
-		with(github_repo_request(git_user, git_repo, git_token, `contents/${path_changelog}?ref=${git_branch}`)){
-			var _path = "github_data/" + name;
-			
-			 // Download:
-			file_download(download_url, _path);
-			while(!file_loaded(_path)){
-				wait 0;
+	 // Retrieve Changelog File:
+	var _fileText = undefined;
+	if(global.version != git_version){
+		try{
+			with(github_repo_request(git_user, git_repo, git_token, `contents/${path_changelog}?ref=${git_branch}`)){
+				var _path = "github_data/" + name;
+				
+				 // Download:
+				file_download(download_url, _path);
+				while(!file_loaded(_path)){
+					wait 0;
+				}
+				
+				 // Get:
+				if(file_exists(_path)){
+					_fileText = string_load(_path);
+					file_delete(_path);
+				}
+				else file_unload(_path);
 			}
-			
-			 // Get:
-			if(file_exists(_path)){
-				_fileText = string_load(_path);
-				file_delete(_path);
-			}
-			else file_unload(_path);
+		}
+		catch(_error){
+			_fileText = file_read(path_changelog);
 		}
 	}
-	catch(_error){
-		_fileText = file_read(path_changelog);
-	}
+	else _fileText = file_read(path_changelog);
+	
+	 // Parse Changelog File:
 	if(!is_undefined(_fileText)){
 		var	_name  = "",
 			_text  = "",
@@ -1738,15 +1743,19 @@
 										
 										 // Load Sprite:
 										if(!file_loaded(_path)){
-											try{
-												file_download(
-													github_repo_request(git_user, git_repo, git_token, `contents/${_path}?ref=${git_branch}`).download_url,
-													_path
-												);
+											if(global.version != git_version){
+												try{
+													file_download(
+														github_repo_request(git_user, git_repo, git_token, `contents/${_path}?ref=${git_branch}`).download_url,
+														_path
+													);
+												}
+												catch(_error){
+													file_load(_path);
+												}
 											}
-											catch(_error){
-												file_load(_path);
-											}
+											else file_load(_path);
+											
 											while(!file_loaded(_path)){
 												wait 0;
 											}

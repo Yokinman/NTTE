@@ -1,10 +1,11 @@
 2.0 ~ Heart to Heart
 	
-	  $(sprite:menu/banners/sprEvents.png:1:110:47)
+	  $(sprite:menu/banners/sprHeart2Heart.png:1:110:47)
 	GENERAL
 	+	New area: $(sprite:areas/Crystal/sprRedText.png:12:12:4:-0.8)
 	+	New crowns: @bBONUS @s& $(rgb:235:0:67)RED
 	+	New mutation: @wCOMPASSION
+	+	New unlockable skin for $(rgb:140:45:170)Crystal
 	+	Desert Wall Bandits
 	+	Desert Blocked Rooms
 	+	Scrapyards @gSludge Pools
@@ -19,20 +20,13 @@
 	+	@bBonus @sChests
 	+	@wOverhauled @sthe @bBonus Ammo @s& @bHP @ssystems
 	+	$(rgb:235:0:67)Crystal Hearts
-	+	Mom has her very own nest
-	+	The turtles bought a new rug
-	+	Special loading screen for $(rgb:210:60:170)Pizza Sewers
 	+	Cat chests synergize with @wCrown of Love @sbetter
-	+	Walltop ravens now support telekinesis, sharp teeth, anomaly, etc.
-	+	New unlockable skin for $(rgb:140:45:170)Crystal
-	@d+	Try skipping big weapon chests
+	+	Walltop enemies now support telekinesis, sharp teeth, anomaly, etc.
 	~	The normal treasure chest now spawns out at sea, and has better loot
 	~	The sunken treasure chest now spawns in its own room, instead of over walls
 	~	Crown of Crime now unlocks when you open the Lair
 	~	Lair's normal chests are now shop chests, instead of the bosses dropping them
 	~	Reduced Scrapyard sawblade trap spawns by 50% and removed them for Big Dog
-	~	Spiderwalls launch Spiderlings on the z-axis to make them more obvious
-	~	Reduced loop scaling for spider walls and made them more performant
 	*	Fixed the walltop rad maggot canister softlock
 	*	Fixed Big Bat rarely creating a permanent 9999 health bat when transforming
 	*	Fixed the opened $(rgb:210:60:170)Pizza Sewers @smanhole sometimes leaving open chests and scorchmark tops above it
@@ -56,29 +50,13 @@
 	
 	  $(sprite:menu/banners/sprEvents.png:1:110:47)
 	EVENTS
-	+	Bandit Camp
-	+	Scorpion City
-	+	New & Improved Maggot Park
-	+	Sewer Pool
-	+	Bounty Hunter Den
-	+	Raven Arena
-	+	Fire Pit
-	+	Seal Plaza
-	+	The Hideout
-	+	Mutant Vats
-	+	Button Game
-	+	Palace Shrines
-	+	Buried Shrines
-	+	Super Ambush
-	+	Eel Grave
+	+	Area-specific level events, such as Bandit Camps, Palace Shrines, and Fire Pits
 	-	Removed old "events", which mainly increased enemy spawns
 	
-	  $(sprite:menu/banners/sprEventsHalf.png:1:56:47)$(sprite:menu/banners/sprEventsHalf.png:1:56:47)$(sprite:menu/banners/sprEventsHalf.png:1:56:47)
+	  $(sprite:menu/banners/sprPets.png:1:110:47)
 	PETS
-	+	Pet for @wGeneral Areas
-	+	Pet for @sScrapyards
-	+	Pet for $(rgb:96:45:0)Crown Vault
-	+	Pet for $(sprite:areas/Crystal/sprRedText.png:12:12:0:-0.8)
+	+	New pets found in Scrapyards and $(rgb:96:45:0)Crown Vaults
+	@d+	Try skipping big weapon chests
 	+	@wSpider @shas a special interaction with @yCursed Caves
 	+	@pPrism @scan dupe bones and thrown weapons, at a @p@qcost
 	~	Pet @rHP @snow scales by @w+50% @sper loop
@@ -90,7 +68,7 @@
 	*	Fixed pets causing big lag if they couldn't find a path to the player
 	*	Fixed the $(rgb:210:60:170)Pizza Sewers @scave-in causing pets it killed to become immortal for the rest of the level
 	
-	  $(sprite:menu/banners/sprEvents.png:1:110:47)
+	  $(sprite:menu/banners/sprWeapons1.png:1:56:47)$(sprite:menu/banners/sprWeapons2.png:1:56:47)
 	WEAPONS
 	+	Clam Shield
 	+	Bubble Bat
@@ -103,27 +81,33 @@
 	~	@wBone @sthrowing speed is now increased by @bLong Arms
 	~	@wBubble Bombs @sare better at holding projectiles
 	
+	  $(sprite:menu/banners/sprPolish.png:1:112:47)
 	POLISH & IMPROVEMENT
-	+	Better performance overall, pray for good frames
+	+	Various performance improvements
+	+	Deflected projectiles visually change:
+		@2(sprEnemyBullet1:1) -> @2(sprAllyBullet:1)
+		@3(sprBullet2:1) -> @3(sprEBullet3:1)
+	+	Neat alert indicators for various things, such as offscreen van portals and seals
+	+   NTTE's golden weapons are now stored manually
+	+	Implemented new unlock icons for NTTE's stats screen
+	+	Gave Big Dog a big air bubble underwater, instead of a tiny bubble
+	+	Gave Pit Squid's tentacles a cool death sprite
+	+	Gave the Throne room some working stairs
+	+	The Throne's carpet is now walkable
+	+	Mom has her very own nest
+	+	The turtles bought a new rug
+	+	Special loading screen for $(rgb:210:60:170)Pizza Sewers
 	+	Seals now get necromanced into Skeletal Seals
 	+	Bolts now stick in Seal shields
 	+	Backpacks have new skeleton props and weapon debris
-	+	Deflected projectiles visually change:
-			@2(sprEnemyBullet1:1) -> @2(sprAllyBullet:1)
-			@3(sprBullet2:1) -> @3(sprEBullet3:1)
-	+	Implemented new unlock icons for NTTE's stats screen
-	+	Now manually storing NTTE's golden weapons on the loadout so you can start with them
-	+	Neat alert indicators for various things, such as offscreen van portals and seals
 	+	Guitar and Black Sword now spawn stuck in the ground, so awesome
-	+	Gave Big Dog a big air bubble underwater, instead of tiny bubl
 	+	YV's car spawns a 3x3 room so it doesn't overlap chests or props
-	+	Gave Pit Squid's tentacles a cool death sprite
 	+	Implemented some more underwater area polish
 	+	Gave shadows to big wall decals, Captain's desk/TV, and Cuz's couch/TV
 	+	Improved buried vaults a bit visually
-	+	Gave the Throne room some working stairs
-	+	You can actually walk up to the Nuclear Throne now, wtf
 	+	All of NTTE's visuals now support higher pixel scaling modes
+	~	Spiderwalls launch Spiderlings on the z-axis to make them more obvious
+	~	Reduced loop scaling for spider walls and made them more performant
 	~	The @wWater Quality @soption is now @wVisual Quality @sand affects much more
 	~	Merged Disc Gun projectiles now use enemy flavored sprites
 	~	Slightly increased Coast and Lair's music volume
@@ -134,7 +118,7 @@
 	~	The charm shader is a bit better at giving enemies green eyes
 	~	Buried Vaults are rarer, but have a more obvious hint
 	~	Venom pellets have new sprites and do piercing damage
-	~	Gave the Throne's a smaller cause-of-death sprite
+	~	Gave the Throne a smaller cause-of-death sprite
 	~	Walltop object's shadows are now 10% more transparent
 	*	Fixed Spiderlings not being captured by bubble bombs
 	*	Fixed sawblade trap explosions not setting a cause of death on game over
