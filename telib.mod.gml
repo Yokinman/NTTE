@@ -5142,15 +5142,15 @@
 	
 #define pet_get_icon(_modType, _modName, _name)
 	var _icon = {
-		spr	: spr.PetParrotIcon,
-		img	: 0.4 * current_frame,
-		x	: 0,
-		y	: 0,
-		xsc	: 1,
-		ysc	: 1,
-		ang	: 0,
-		col	: c_white,
-		alp	: 1
+		"spr" : spr.PetParrotIcon,
+		"img" : 0.4 * current_frame,
+		"x"   : 0,
+		"y"   : 0,
+		"xsc" : 1,
+		"ysc" : 1,
+		"ang" : 0,
+		"col" : c_white,
+		"alp" : 1
 	};
 	
 	 // Custom:
@@ -5169,14 +5169,21 @@
 		}
 	}
 	
+	 // Stored Icon:
+	else if(
+		"name" in self
+		&& name == "Pet"
+		&& sprite_exists(spr_icon)
+	){
+		_icon.spr = spr_icon;
+	}
+	
 	 // Default:
-	else if(_modType == "mod" && _modName == "petlib"){
-		if(variable_instance_get(self, "name") == "Pet" && sprite_exists(variable_instance_get(self, "spr_icon", -1))){
-			_icon.spr = spr_icon;
-		}
-		else{
-			_icon.spr = lq_defget(spr, "Pet" + _name + "Icon", -1);
-		}
+	else if(
+		_modType == "mod" &&
+		_modName == "petlib"
+	){
+		_icon.spr = lq_defget(spr, "Pet" + _name + "Icon", -1);
 	}
 	
 	return _icon;

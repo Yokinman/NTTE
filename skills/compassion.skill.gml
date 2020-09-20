@@ -28,7 +28,9 @@
 	
 #define skill_take(_num)
 	mod_variable_set("mod", "ntte", "pet_max", mod_variable_get("mod", "ntte", "pet_max") + (_num - global.last));
-	with(instances_matching_ne(Player, "ntte_pet_max", null)) ntte_pet_max += (_num - global.last);
+	with(instances_matching_ne(Player, "ntte_pet_max", null)){
+		ntte_pet_max += (_num - global.last);
+	}
 	global.last = _num;
 	
 	 // Sound:

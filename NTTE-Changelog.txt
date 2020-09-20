@@ -119,10 +119,10 @@
 	+	YV's car spawns a 3x3 room so it doesn't overlap chests or props
 	+	Gave Pit Squid's tentacles a cool death sprite
 	+	Implemented some more underwater area polish
-	+	Gave shadows to big wall decals, Captain's desk/TV, and Cuz's couch/TV
+	+	Gave shadows to big wall decals, the Throne, Captain's desk/TV, and Cuz's couch/TV
 	+	Improved buried vaults a bit visually
 	+	Gave the Throne room some working stairs
-	+	You can actually walk up to the Nuclear Throne now, wtf
+	+	Made the Throne's legs break the side walls as they extend
 	+	All of NTTE's visuals now support higher pixel scaling modes
 	~	The @wWater Quality @soption is now @wVisual Quality @sand affects much more
 	~	Merged Disc Gun projectiles now use enemy flavored sprites

@@ -194,10 +194,10 @@
 			PopoVlasmaCannon  = sprite(p + "sprPopoVlasmaCannon",  5, 10, 10);
 			
 			 // Venom Pellets:
-			VenomPelletAppear   	 = sprite(p + "sprVenomPelletAppear",   	 1, 8, 8);
-			VenomPellet         	 = sprite(p + "sprVenomPellet",         	 2, 8, 8);
-			VenomPelletDisappear	 = sprite(p + "sprVenomPelletDisappear",	 5, 8, 8);
-			VenomPelletBack			 = sprite(p + "sprVenomPelletBack",			 2, 8, 8);
+			VenomPelletAppear        = sprite(p + "sprVenomPelletAppear",        1, 8, 8);
+			VenomPellet              = sprite(p + "sprVenomPellet",              2, 8, 8);
+			VenomPelletDisappear     = sprite(p + "sprVenomPelletDisappear",     5, 8, 8);
+			VenomPelletBack          = sprite(p + "sprVenomPelletBack",          2, 8, 8);
 			VenomPelletBackDisappear = sprite(p + "sprVenomPelletBackDisappear", 5, 8, 8);
 			
 			 // Variants:
@@ -403,7 +403,7 @@
 			CatBossChrg     = sprite(p + "sprBigCatChrg",        2, 24, 24);
 			CatBossFire     = sprite(p + "sprBigCatFire",        2, 24, 24);
 			CatBossWeap     = sprite(p + "sprCatBossToxer",      2,  4,  7);
-			CatBossWeapChrg = sprite(p + "sprCatBossToxerChrg",	12,  1,  7);
+			CatBossWeapChrg = sprite(p + "sprCatBossToxerChrg", 12,  1,  7);
 			BossHealFX      = sprite(p + "sprBossHealFX",       10,  9,  9);
 			
 			 // Crab Tank:
@@ -760,7 +760,7 @@
 			WallBandit = sprite(p + "sprWallBandit", 9, 8, 8);
 			
 			 // Scorpion Floor:
-			FloorScorpion	  = sprite(p + "sprFloorScorpion",	   2, 8, 8);
+			FloorScorpion     = sprite(p + "sprFloorScorpion",     2, 8, 8);
 			SnowFloorScorpion = sprite(p + "sprSnowFloorScorpion", 1, 8, 8);
 			
 			//#region PROPS
@@ -1612,7 +1612,7 @@
 			 // Parrot Charm:
 			p = m + "Parrot/";
 			AllyReviveArea      = sprite(p + "sprAllyReviveArea",      4, 35, 45);
-			AllyNecroReviveArea	= sprite(p + "sprAllyNecroReviveArea", 4, 17, 20);
+			AllyNecroReviveArea = sprite(p + "sprAllyNecroReviveArea", 4, 17, 20);
 			
 		//#endregion
 		
@@ -1676,10 +1676,10 @@
 			PetCoolGuyWalk = sprite(p + "sprPetCoolGuyWalk",  6, 12, 12);
 			PetCoolGuyHurt = sprite(p + "sprPetCoolGuyDodge", 3, 12, 12);
 			
-			PetPeasIcon    = sprite(p + "sprPetPeasIcon",	  1,  6,  6);
-			PetPeasIdle    = sprite(p + "sprPetPeasIdle",	  4, 12, 12);
-			PetPeasWalk    = sprite(p + "sprPetPeasWalk",	  6, 12, 12);
-			PetPeasHurt    = sprite(p + "sprPetPeasDodge",	  3, 12, 12);
+			PetPeasIcon    = sprite(p + "sprPetPeasIcon",     1,  6,  6);
+			PetPeasIdle    = sprite(p + "sprPetPeasIdle",     4, 12, 12);
+			PetPeasWalk    = sprite(p + "sprPetPeasWalk",     6, 12, 12);
+			PetPeasHurt    = sprite(p + "sprPetPeasDodge",    3, 12, 12);
 			
 			 // BabyShark:
 			p = m + "Oasis/";
@@ -1773,12 +1773,12 @@
 			PetTwinsIcon        = sprite(p + "sprPetTwinsIcon",        1,  6,  6);
 			PetTwinsStat        = sprite(p + "sprPetTwinsStat",        6, 12, 12);
 			PetTwinsRed         = sprite(p + "sprPetTwinsRed",         6, 12, 12);
-			PetTwinsRedIcon		= sprite(p + "sprPetTwinsRedIcon",	   1,  6,  6);
+			PetTwinsRedIcon     = sprite(p + "sprPetTwinsRedIcon",     1,  6,  6);
 			PetTwinsRedEffect   = sprite(p + "sprPetTwinsRedEffect",   6,  8,  8);
 			PetTwinsWhite       = sprite(p + "sprPetTwinsWhite",       6, 12, 12);
-			PetTwinsWhiteIcon	= sprite(p + "sprPetTwinsWhiteIcon",   1,  6,  6);
+			PetTwinsWhiteIcon   = sprite(p + "sprPetTwinsWhiteIcon",   1,  6,  6);
 			PetTwinsWhiteEffect = sprite(p + "sprPetTwinsWhiteEffect", 6,  8,  8);
-			CrystalWhiteTrail	= sprite(p + "sprCrystalWhiteTrail",   5,  8,  8);
+			CrystalWhiteTrail   = sprite(p + "sprCrystalWhiteTrail",   5,  8,  8);
 			
 		//#endregion
 	}

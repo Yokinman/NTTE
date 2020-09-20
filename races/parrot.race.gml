@@ -481,7 +481,7 @@
 	charm_hplink_hud        = 0;
 	charm_hplink_hud_hp     = array_create(2, 0);
 	charm_hplink_hud_hp_lst = 0;
-
+	
 	 // Extra Pet Slot:
 	ntte_pet_max = mod_variable_get("mod", "ntte", "pet_max") + 1;
 	

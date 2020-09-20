@@ -2693,7 +2693,11 @@
 		}
 		
 		 // Time Stat:
-		if(instance_is(leader, Player) && "owned" in stat){
+		if(
+			instance_is(leader, Player)
+			&& array_exists(leader.ntte_pet, id)
+			&& "owned" in stat
+		){
 			stat.owned += (current_time_scale / 30);
 		}
 	}
@@ -2786,7 +2790,7 @@
 		}
 		
 		 // Wall Collision:
-		if((visible || instance_exists(revive))){
+		if(visible || instance_exists(revive)){
 			motion_step(1);
 			
 			with(path_wall){
@@ -2834,17 +2838,19 @@
 	}
 	
 #define Pet_end_step
-	 // Custom End Step Event:
-	var _scrt = pet + "_end_step";
-	if(mod_script_exists(mod_type, mod_name, _scrt)){
-		mod_script_call(mod_type, mod_name, _scrt);
-	}
-	
 	 // Reset Hitbox:
 	if(mask_index == mskNone && mask_store != null){
 		mask_index = mask_store;
 		mask_store = null;
 	}
+	
+	/*
+	 // Custom End Step Event:
+	var _scrt = pet + "_end_step";
+	if(mod_script_exists(mod_type, mod_name, _scrt)){
+		mod_script_call(mod_type, mod_name, _scrt);
+	}
+	*/
 	
 #define Pet_draw
 	 // Outline Setup:
