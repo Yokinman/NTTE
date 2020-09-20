@@ -94,6 +94,7 @@
 	+	Gave Pit Squid's tentacles a cool death sprite
 	+	Gave the Throne room some working stairs
 	+	The Throne's carpet is now walkable
+	+	Made the Throne's legs break the side walls as they extend
 	+	Mom has her very own nest
 	+	The turtles bought a new rug
 	+	Special loading screen for $(rgb:210:60:170)Pizza Sewers
@@ -103,7 +104,7 @@
 	+	Guitar and Black Sword now spawn stuck in the ground, so awesome
 	+	YV's car spawns a 3x3 room so it doesn't overlap chests or props
 	+	Implemented some more underwater area polish
-	+	Gave shadows to big wall decals, Captain's desk/TV, and Cuz's couch/TV
+	+	Gave shadows to big wall decals, the Throne, Captain's desk/TV, and Cuz's couch/TV
 	+	Improved buried vaults a bit visually
 	+	All of NTTE's visuals now support higher pixel scaling modes
 	~	Spiderwalls launch Spiderlings on the z-axis to make them more obvious

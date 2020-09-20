@@ -69,9 +69,15 @@
 	global.hud_reroll       = null;
 	global.kills_last       = GameCont.kills;
 	global.scythe_tip_index = 0;
-	global.pet_max          = 1;
 	for(var i = 0; i < array_length(global.pet_mapicon); i++){
 		global.pet_mapicon[i] = [];
+	}
+	
+	 // Reset Max Pets:
+	var _diff = (1 - global.pet_max);
+	global.pet_max += _diff;
+	with(instances_matching_ne(Player, "ntte_pet_max", null)){
+		ntte_pet_max += _diff;
 	}
 	
 	 // Projectile Team Spriterizer Controller:
@@ -3802,6 +3808,10 @@
 				
 				if(_draw){
 					var _icon = pet_get_icon(mod_type, mod_name, pet);
+					
+					if(sprite_exists(spr_icon)){
+						_icon.spr = spr_icon;
+					}
 					
 					if(sprite_exists(_icon.spr)){
 						var	_x = x + _icon.x,

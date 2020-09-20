@@ -5460,8 +5460,12 @@
 	with(_inst) pick = -1;
 	_inst = instances_matching(_inst, "visible", true);
 	if(array_length(_inst) > 0){
-		with(Player) if(visible || variable_instance_get(id, "wading", 0) > 0){
-			if(place_meeting(x, y, CustomObject) && !place_meeting(x, y, IceFlower) && !place_meeting(x, y, CarVenusFixed)){
+		with(instances_matching(Player, "visible", true)){
+			if(
+				place_meeting(x, y, CustomObject)
+				&& !place_meeting(x, y, IceFlower)
+				&& !place_meeting(x, y, CarVenusFixed)
+			){
 				var _noVan = true;
 				
 				 // Van Check:
@@ -5486,18 +5490,20 @@
 					}
 					
 					with(instances_meeting(x, y, _inst)){
-						if(place_meeting(x, y, other) && (!instance_exists(creator) || creator.visible || variable_instance_get(creator, "wading", 0) > 0)){
-							var e = on_meet;
-							if(!is_array(e) || mod_script_call(e[0], e[1], e[2])){
-								if(_maxDepth == null || depth < _maxDepth){
-									_maxDepth = depth;
-									_maxDis   = null;
-								}
-								if(depth == _maxDepth){
-									var _dis = point_distance(x, y, other.x, other.y);
-									if(_maxDis == null || _dis < _maxDis){
-										_maxDis  = _dis;
-										_nearest = id;
+						if(place_meeting(x, y, other)){
+							if(!instance_exists(creator) || creator.visible){
+								var e = on_meet;
+								if(!is_array(e) || mod_script_call(e[0], e[1], e[2])){
+									if(_maxDepth == null || depth < _maxDepth){
+										_maxDepth = depth;
+										_maxDis   = null;
+									}
+									if(depth == _maxDepth){
+										var _dis = point_distance(x, y, other.x, other.y);
+										if(_maxDis == null || _dis < _maxDis){
+											_maxDis  = _dis;
+											_nearest = id;
+										}
 									}
 								}
 							}
