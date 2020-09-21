@@ -1997,27 +1997,26 @@
 	depth          = -3;
 	
 	 // Vars:
-	mask_index      = mskFrogEgg;
-	friction	    = 0.1;
-	minspeed	    = 0.2;
-	maxspeed	    = 3;
-	walkspeed   	= 0.3;
-	path_wall       = [];
-	partner 		= noone;
-	white   		= irandom(1);
-	orbit           = 0;
-	walled			= false;
-	flash           = 0;
-	setup			= true;
-	team			= 1;
+	mask_index  = mskExploder;
+	friction    = 0.1;
+	minspeed    = 0.2;
+	maxspeed    = 3;
+	walkspeed   = 0.3;
+	path_wall   = [];
+	partner     = noone;
+	orbit_pull  = 0;
+	orbit_dis   = 24;
+	orbit_speed = 3;
+	flash       = 0;
+	white       = false;
+	walled      = false;
+	setup       = true;
+	//team        = 1;
 	
 	 // Stat:
 	if("diverted" not in stat){
 		stat.diverted = 0;
 	}
-	
-#define Twins_icon
-	return spr.PetTwinsIcon;
 	
 #define Twins_ttip
 	return [
@@ -2030,6 +2029,9 @@
 	if(_name == ""){
 		return spr.PetTwinsStat;
 	}
+	
+#define Twins_icon
+	return spr.PetTwinsIcon;
 	
 #define Twins_setup
 	setup = false;
@@ -2080,25 +2082,26 @@
 			_twinCount = array_length(_twinList),
 			_orbitX    = leader.x,
 			_orbitY    = leader.y,
-			_orbitLen  = 24,
-			_orbitDir  = (360 / _twinCount) * (1 + _twinIndex) + (3 * leader.wave * current_time_scale);
+			_orbitLen  = orbit_dis,
+			_orbitDir  = (360 * (_twinIndex / _twinCount)) + (orbit_speed * leader.wave);
 			
-		x = lerp(x, _orbitX + lengthdir_x(_orbitLen, _orbitDir), orbit);
-		y = lerp(y, _orbitY + lengthdir_y(_orbitLen, _orbitDir), orbit);
-		
-		orbit = min(orbit + (current_time_scale / 6), 1);
-		
-		 // Stay Close:
-		var _dis = 2 * _orbitLen;
-		if(point_distance(x, y, _orbitX, _orbitY) > _dis){
-			instance_create(x, y, Dust);
+		if(orbit_pull > 0){
+			x = lerp(x, _orbitX + lengthdir_x(_orbitLen, _orbitDir), orbit_pull);
+			y = lerp(y, _orbitY + lengthdir_y(_orbitLen, _orbitDir), orbit_pull);
 			
-			var _dir = point_direction(_orbitX, _orbitY, x, y);
-			x = _orbitX + lengthdir_x(_dis, _dir);
-			y = _orbitY + lengthdir_y(_dis, _dir);
-			
-			instance_create(x, y, Smoke);
+			 // Stay Close:
+			var _dis = 2 * _orbitLen;
+			if(point_distance(x, y, _orbitX, _orbitY) > _dis){
+				instance_create(x, y, Dust);
+				
+				var _dir = point_direction(_orbitX, _orbitY, x, y);
+				x = _orbitX + lengthdir_x(_dis, _dir);
+				y = _orbitY + lengthdir_y(_dis, _dir);
+				
+				instance_create(x, y, Smoke);
+			}
 		}
+		orbit_pull = min(orbit_pull + (current_time_scale / 6), 1);
 		
 		 // Ignore Walls:
 		if(array_exists(path_wall, Wall)){
@@ -2108,9 +2111,9 @@
 	
 	 // Idle Movement Stuff:
 	else{
-		orbit = 0;
 		speed = max(speed, minspeed + friction);
 		//angle_lerp(direction, round(direction / 8) * 8, 1/3);
+		orbit_pull = 0;
 		
 		 // Bounce Off Walls:
 		if(!array_exists(path_wall, Wall)){
@@ -2137,7 +2140,7 @@
 			spr_shadow = shd24;
 			
 			 // Sound:
-			sound_play_hit_ext(sndCursedReminder, 0.6 + orandom(0.1), 0.15);
+			sound_play_hit_ext(sndCursedReminder, 0.6 + orandom(0.1), 0.3);
 			
 			 // Effects:
 			repeat(5){
@@ -2155,28 +2158,170 @@
 			}
 		}
 	}
+	
+	 // Not in Wall:
 	else{
-		 // Enter Wall:
-		if(place_meeting(x, y, Wall)){
-			walled     = true;
-			flash      = 2;
-			spr_shadow = mskNone;
-			
-			 // Sound:
-			sound_play_hit_ext(sndCursedChest, 2 + orandom(0.1), 0.1);
-			
-			 // Effects:
-			with(instance_create(x, y, ThrowHit)){
-				sprite_index = (other.white ? sprImpactWrists : spr.SquidCharge);
-				image_xscale = 2/3;
-				image_yscale = 2/3;
-				image_speed  = 0.4;
-				depth        = other.depth - 1;
+		 // Divert Projectiles:
+		if(place_meeting(x, y, projectile)){
+			with(instances_meeting(x, y, instances_matching_ne(projectile, "team", team))){
+				if(instance_exists(self) && place_meeting(x, y, other)){
+					var _inst = (
+						(typ == 0)
+						? noone
+						: id
+					);
+					
+					 // Specifics:
+					switch(object_index){
+						case Laser:
+						case EnemyLaser:
+							_inst = instance_clone();
+							break;
+							
+						case Lightning:
+						case EnemyLightning:
+							_inst = id;
+							
+							 // Delete Lightning Manually:
+							with(other){
+								for(
+									var i = _inst + ceil(_inst.ammo);
+									(i > _inst - 100 && (!instance_exists(i) || (i.object_index == _inst.object_index && i.creator == _inst.creator && i.team == _inst.team)));
+									i--
+								){
+									if(instance_exists(i) && i != _inst){
+										if(i < _inst){
+											if(place_meeting(x, y, i)){
+												instance_delete(_inst);
+												_inst = i;
+											}
+											else break;
+										}
+										else instance_delete(i);
+									}
+								}
+							}
+							break;
+					}
+					
+					if(instance_exists(_inst)){
+						with(other){
+							orbit_pull = 0;
+							
+							 // Effects:
+							flash = 6;
+							Twins_effect((x + _inst.x) / 2, (y + _inst.y) / 2, white, -6, _inst.direction);
+							
+							 // Sound:
+							with(partner){
+								audio_sound_set_track_position(
+									sound_play_hit_ext(sndLaserCrystalDeath, 0.8 + orandom(0.1), 0.5),
+									0.4
+								);
+							}
+							var _snd = sound_play_gun(
+								sndCrystalJuggernaut,
+								0,
+								1 - ((_inst.damage / 3) / instance_number(_inst.object_index))
+							);
+							audio_sound_pitch(_snd, 1.6 + random(0.8));
+							//audio_sound_gain(_snd, audio_sound_get_gain(_snd) * (_inst.damage / 3), 0);
+							
+							 // Send to Partner:
+							if(instance_exists(partner) && !partner.walled){
+								var _dir  = point_direction(partner.x, partner.y, _inst.xstart, _inst.ystart);
+								
+								with(team_instance_sprite(team, _inst)){
+									x         = other.partner.x;
+									y         = other.partner.y;
+									xprevious = x;
+									yprevious = y;
+									xstart    = x;
+									ystart    = y;
+									deflected = true;
+									team      = other.team;
+									
+									var _dirOff = angle_difference(_dir, direction);
+									direction   += _dirOff;
+									image_angle += _dirOff;
+									
+									 // Rebounce:
+									if("zspeed" in self) zspeed *= -1;
+									if("zvel"   in self) zvel   *= -1;
+									
+									 // Specifics:
+									switch(object_index){
+										case Laser:
+										case EnemyLaser:
+											var _laserList = instances_matching_ne(instances_matching(instances_matching(instances_matching(object_index, "creator", creator), "team", team), "deflected", true), "id", id);
+											if(array_length(_laserList) > 0){
+												instance_delete(_laserList[array_length(_laserList) - 1]);
+											}
+											image_xscale = 1;
+											event_perform(ev_alarm, 0);
+											break;
+											
+										case Lightning:
+										case EnemyLightning:
+											event_perform(ev_alarm, 0);
+											break;
+									}
+								}
+								
+								 // Effects:
+								with(partner){
+									flash = other.flash;
+									Twins_effect(x, y, white, 12, _dir);
+								}
+							}
+							
+							 // Sent to the Warp Zone:
+							else{
+								with(partner){
+									sound_play_hit_ext(sndHitWall, 0.8 + orandom(0.1), 1.3);
+									with(instance_create(x, y, ThrowHit)){
+										image_xscale = 2/3;
+										image_yscale = 2/3;
+										depth        = -7;
+									}
+								}
+								instance_delete(_inst);
+							}
+						}
+					}
+				}
+			}
+		}
+		
+		 // Contact Damage:
+		if(instance_exists(leader) && place_meeting(x, y, hitme)){
+			with(instances_meeting(x, y, instances_matching_ne(hitme, "team", team))){
+				if(!instance_is(self, Player) && place_meeting(x, y, other)){
+					with(other){
+						if(projectile_canhit_melee(other)){
+							 // Effects:
+							repeat(3){
+								with(instance_create(x, y, CrystTrail)){
+									sprite_index = (other.white ? spr.CrystalWhiteTrail : spr.CrystalRedTrail);
+									speed		*= 2/3;
+								}
+							}
+							
+							 // Push Away:
+							if(instance_exists(leader)){
+								other.direction = point_direction(leader.x, leader.y, other.x, other.y);
+							}
+							
+							 // Damage:
+							projectile_hit(other, 2);
+						}
+					}
+				}
 			}
 		}
 		
 		 // Sparkles:
-		else if(white){
+		if(white){
 			if(chance_ct(1, 20)){
 				with(scrFX([x, 6], [y, 6], [90, random_range(0.2, 0.5)], LaserCharge)){
 					sprite_index = sprSpiralStar;
@@ -2204,85 +2349,23 @@
 				image_speed = 0.4;
 			}
 		}
-	}
-	
-	 // Divert Projectiles:
-	if(place_meeting(x, y, projectile)){
-		with(instances_meeting(x, y, instances_matching_ne(instances_matching_ne(projectile, "team", team), "typ", 0))){
-			if(place_meeting(x, y, other)){
-				with(other){
-					if(instance_exists(partner)){
-						if(partner.walled){
-							instance_create(partner.x, partner.y, Smoke);
-							instance_delete(other);
-						}
-						else{
-							var	_x = other.xstart,
-								_y = other.ystart;
-								
-							if(false && instance_exists(other.creator)){
-								_x = other.creator.x;
-								_y = other.creator.y;
-							}
-							
-							var _dir = point_direction(partner.x, partner.y, _x, _y);
-							
-							 // Effects:
-							flash = 3;
-							partner.flash = flash;
-							Twins_effect(other.x - other.hspeed, other.y - other.vspeed, white, other.direction);
-							Twins_effect(partner.x, partner.y, partner.white, _dir);
-							
-							 // Sound:
-							sound_play_hit_ext(sndCrystalShield, 1.4 + orandom(0.1), 2.4);
-							
-							 // Divert:
-							with(team_instance_sprite(team, other)){
-								x = other.partner.x;
-								y = other.partner.y;
-								
-								var _dirOff = angle_difference(_dir, direction);
-								direction   += _dirOff;
-								image_angle += _dirOff;
-								
-								deflected = true;
-								team      = other.team;
-								
-								 // Rebounce:
-								if("zspeed" in id) zspeed *= -1;
-								if("zvel"   in id) zvel   *= -1;
-							}
-						}
-					}
-					
-					 // Sent to the Warp Zone:
-					else instance_delete(other);
-				}
-			}
-		}
-	}
-	
-	 // Hurtin:
-	if(place_meeting(x, y, hitme)){
-		with(instances_meeting(x, y, instances_matching_ne(hitme, "team", team))){
-			if(!instance_is(self, Player) && place_meeting(x, y, other)){
-				with(other){
-					if(projectile_canhit_melee(other)){
-						projectile_hit(other, 2);
-						if(instance_exists(leader)){
-							other.direction = point_direction(leader.x, leader.y, other.x, other.y);
-						}
-						/*
-						if(other.my_health > 0){
-							instance_create(partner.x, partner.y, Smoke);
-						}
-						else{
-							other.x = partner.x;
-							other.y = partner.y;
-						}
-						*/
-					}
-				}
+		
+		 // Enter Wall:
+		if(position_meeting(x, y, Wall)){
+			walled     = true;
+			flash      = 2;
+			spr_shadow = mskNone;
+			
+			 // Sound:
+			sound_play_hit_ext(sndCursedChest, 2 + orandom(0.1), 0.3);
+			
+			 // Effects:
+			with(instance_create(x, y, ThrowHit)){
+				sprite_index = (other.white ? sprImpactWrists : spr.SquidCharge);
+				image_xscale = 2/3;
+				image_yscale = 2/3;
+				image_speed  = 0.4;
+				depth        = other.depth - 1;
 			}
 		}
 	}
@@ -2323,11 +2406,11 @@
 		}
 	}
 	
-#define Twins_effect(_x, _y, _white, _dir)
-	var _len = 12;
+#define Twins_effect(_x, _y, _white, _len, _dir)
 	with(instance_create(_x + lengthdir_x(_len, _dir), _y + lengthdir_y(_len, _dir), BulletHit)){
 		sprite_index = (_white ? spr.PetTwinsWhiteEffect : spr.PetTwinsRedEffect);
 		image_angle  = _dir;
+		depth        = other.depth - 1;
 	}
 	
 	
@@ -2780,7 +2863,7 @@
 								 // No Cloning Other Lightning Within the Chain:
 								for(
 									var i = id + ceil(ammo);
-									(i > id || instance_is(i, Lightning) || !instance_exists(i));
+									(i > id || instance_is(i, Lightning) || (i > id - 100 && !instance_exists(i)));
 									i--
 								){
 									if(instance_is(i, Lightning)) with(i){

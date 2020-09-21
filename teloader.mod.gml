@@ -1779,8 +1779,6 @@
 											});
 											array_push(_sprList, _spr);
 										}
-										
-										file_unload(_path);
 									}
 									
 									break;
