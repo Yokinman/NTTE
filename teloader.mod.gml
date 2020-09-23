@@ -92,7 +92,7 @@
 		];
 	}
 	
-	 // Changelog:
+	 // Changelog (Everything related to this is expected to be nonsync, except for the changelog viewer being open or not):
 	global.log = {};
 	with(global.log){
 		list   = ds_list_create();
@@ -937,12 +937,12 @@
 							 // Sound:
 							if(!bar.active){
 								bar.active = true;
-								sound_play_pitch(sndCrownAppear, 0.9 + random(0.2));
+								sound_play_pitch(sndCrownAppear, 0.9 + random_nonsync(0.2));
 							}
 						}
 						else if(bar.active){
 							bar.active = false;
-							sound_play_pitch(sndMutAppear, 0.9 + random(0.2));
+							sound_play_pitch(sndMutAppear, 0.9 + random_nonsync(0.2));
 						}
 						
 						 // Mouse Drag Scrolling:
@@ -992,7 +992,7 @@
 								var _move = (button_pressed_nonsync(_index, "east") - button_pressed_nonsync(_index, "west"));
 								if(_move != 0){
 									_lines.splat.index += _move;
-									sound_play_pitch(sndMutAppear, 1.2 + random(0.4));
+									sound_play_pitch(sndMutAppear, 1.2 + random_nonsync(0.4));
 								}
 								if(_scrollMax > _scrollMin){
 									var _goal = min(
@@ -1179,6 +1179,8 @@
 						_pop    = appear + _min,
 						_popAdd = 2 * current_time_scale;
 						
+					appear += _popAdd;
+					
 					draw_set_halign(fa_left);
 					draw_set_valign(fa_top);
 					
@@ -1231,8 +1233,6 @@
 							else draw_text_nt(_dx, _dy, "@s" + _text);
 						}
 					}
-					
-					appear += _popAdd;
 				}
 				
 				 // Cycle Buttons:
@@ -1250,7 +1250,7 @@
 								changelog_set_display(changelog_get_display() + _cycle);
 							}
 							else{
-								sound_play_pitchvol(sndNoSelect, 1.2 + random(0.2), 0.3);
+								sound_play_pitchvol(sndNoSelect, 1.2 + random_nonsync(0.2), 0.3);
 							}
 						}
 						_oy += _cycle;
@@ -1265,7 +1265,7 @@
 									changelog_set_display(changelog_get_display() + _cycle);
 								}
 								else{
-									sound_play_pitchvol(sndNoSelect, 1.2 + random(0.2), 0.3);
+									sound_play_pitchvol(sndNoSelect, 1.2 + random_nonsync(0.2), 0.3);
 								}
 								sound_play_pitchvol(sndClick, 1, 0.3);
 							}
@@ -1361,7 +1361,11 @@
 							
 							 // Hover Extend:
 							if(_hover){
-								draw_set_color(merge_color(make_color_rgb(39, 43, 65), c_black, (_active ? 0 : 0.4)));
+								draw_set_color(merge_color(
+									make_color_rgb(39, 43, 65),
+									c_black,
+									(_active ? 0 : 0.4)
+								));
 								draw_rectangle(_rx, _ry, _rx + _w - 1, _ry + _h - 1, false);
 								if(_active){
 									_rx++;
@@ -1571,7 +1575,7 @@
 					with(cuz){
 						if(global.version == git_version){
 							sprite_index = sprCuzIdle;
-							image_index  = irandom(sprite_get_number(sprite_index) - 1);
+							image_index  = random_nonsync(sprite_get_number(sprite_index));
 						}
 						else{
 							sprite_index = sprCuzHorn;
@@ -1595,7 +1599,7 @@
 			}
 			
 			 // Sound:
-			sound_play_pitch(sndMenuCredits, 1 + random_range(-0.1, 0.1));
+			sound_play_pitch(sndMenuCredits, 0.9 + random_nonsync(0.2));
 		}
 		
 		 // Closed:
@@ -2021,16 +2025,19 @@
 			}
 	*/
 	
-	var	_url      = `https://api.github.com/repos/${_gitUser}/${_gitRepo}`,
-		_headers  = ds_map_create(),
-		_dataPath = `github_data/request_${_gitUser}_${_gitRepo}_${get_timer_nonsync()}.txt`;
-		
+	 // Global Variable Setup:
+	if(!mod_variable_exists(script_ref_create(0)[0], mod_current, "github_repo_request_id")){
+		global.github_repo_request_id = 0;
+	}
+	
 	 // Setup URL:
+	var	_url = `https://api.github.com/repos/${_gitUser}/${_gitRepo}`;
 	if(_gitPath != ""){
 		_url += "/" + _gitPath;
 	}
 	
 	 // Setup HTTP Headers:
+	var _headers = ds_map_create();
 	if(_gitToken != ""){
 		_headers[? "Authorization"] = "token " + _gitToken;
 	}
@@ -2039,6 +2046,7 @@
 	_headers[? "User-Agent"   ] = "Nuclear Throne Together";
 	
 	 // Request Data:
+	var _dataPath = `github_data/repo_request_${_gitUser}_${_gitRepo}_${global.github_repo_request_id++}.txt`;
 	http_request(_url, "GET", _headers, "", _dataPath);
 	ds_map_destroy(_headers);
 	while(!file_loaded(_dataPath)){

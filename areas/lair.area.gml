@@ -212,7 +212,7 @@
 
 #define area_subarea           return 1;
 #define area_goal              return 100;
-#define area_next              return [area_scrapyards, 1];
+#define area_next              return [area_scrapyards, 2];
 #define area_music             return mus.Lair;
 #define area_music_boss        return mus.BigShots;
 #define area_ambient           return amb102;

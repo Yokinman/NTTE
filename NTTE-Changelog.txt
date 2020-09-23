@@ -84,7 +84,7 @@
 	*	Fixed pets causing big lag if they couldn't find a path to the player
 	*	Fixed the $(rgb:210:60:170)Pizza Sewers @scave-in causing pets it killed to become immortal for the rest of the level
 	
-	  $(sprite:menu/banners/sprWeapons1.png:1:56:47)$(sprite:menu/banners/sprWeapons2.png:1:56:47)
+	  $(sprite:menu/banners/sprWeapons1.png:1:55:47)$(sprite:menu/banners/sprWeapons2.png:1:55:47)
 	WEAPONS
 	+	Clam Shield
 	+	Bubble Bat
@@ -96,7 +96,7 @@
 	~	@wBone @sthrowing speed is now increased by @bLong Arms
 	~	@wBubble Bombs @sare better at holding projectiles
 	
-	  $(sprite:menu/banners/sprPolish.png:1:112:47)
+	  $(sprite:menu/banners/sprPolish.png:1:110:47)
 	POLISH & IMPROVEMENT
 	+	Various performance improvements
 	+	Deflected projectiles visually change:
@@ -105,6 +105,7 @@
 	+	Neat alert indicators for various things, such as offscreen van portals $(sprite:alerts/sprVanAlert.png:1:7:6) and seals $(sprite:alerts/sprSealAlert.png:1:6:6)
 	+	NTTE's golden weapons are now stored manually
 	+	Implemented new unlock icons for NTTE's stats screen
+	+	Added a boss intro for the Big Fish boss
 	+	Gave Pit Squid's tentacles a cool death sprite
 	+	Gave the Throne room some working stairs, the carpet is now fully walkable
 	+	Made the Throne's legs break the side walls as they extend

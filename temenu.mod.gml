@@ -759,7 +759,7 @@
 				 // Button Visual:
 				draw_sprite_ext(sprBossNameSplat, MenuSplat, _x + 17, _y + 12 + MenuSplat, 1, 1, 90, c_white, 1);
 				if(!MenuOpen){
-					var _wave = (MenuSplatBlink % 300) - 120,
+					var _wave = (MenuSplatBlink % 300) - 60,
 						_col  = ((_hover || in_range(_wave, 0, 5) || in_range(_wave, 8, 10)) ? c_white : c_silver);
 						
 					draw_sprite_ext(spr.MenuNTTE, 0, _x + (_w / 2), _y + 8 + _hover, 1, 1, 0, _col, 1);
@@ -900,7 +900,7 @@
 							var	_crwn  = crwn,
 								_crwnX = x,
 								_crwnY = y + 2;
-							
+								
 							with(surface_setup("CrownCompareScreen", game_width, game_height, 1)){
 								x = _vx;
 								y = _vy;
@@ -909,7 +909,7 @@
 								surface_set_target(surf);
 								draw_clear(c_black);
 								surface_reset_target();
-								draw_set_blend_mode_ext(bm_one, bm_one);
+								draw_set_blend_mode_ext(bm_one, bm_inv_src_alpha);
 								surface_screenshot(surf);
 								draw_set_blend_mode(bm_normal);
 								
@@ -1230,6 +1230,7 @@
 				 // Capture Screen:
 				surface_set_target(surf);
 				draw_clear(c_black);
+				surface_reset_target();
 				draw_set_blend_mode_ext(bm_one, bm_inv_src_alpha);
 				surface_screenshot(surf);
 				draw_set_blend_mode(bm_normal);
@@ -1249,7 +1250,8 @@
 					}
 					
 					/// Draw Mask of What to Hide:
-					draw_set_fog(true, c_black, 0, 0);
+					
+						draw_set_fog(true, c_black, 0, 0);
 						
 						 // The Currently Selected Crown:
 						if(!is_undefined(_crown) && _crown.custom.slct != -1 && _crown.slct != crwn_none){
@@ -1280,29 +1282,30 @@
 							draw_loadoutwep(_wep, 0, (_x - _surfX - 60 - _off) * _surfScale, (_y - _surfY - 14 + _off) * _surfScale, _surfScale, _surfScale, 0, c_white, 1);
 						}
 						
-					draw_set_fog(false, 0, 0, 0);
-					
-					 // Overlay Screen + Loadout Splat Over Mask:
-					draw_set_color_write_enable(true, true, true, false);
-					
-					with(other){
-						draw_surface_scale(surf, (x - _surfX) * _surfScale, (y - _surfY) * _surfScale, _surfScale / scale);
-					}
-					
-					_y -= introsettle;
-					
-					draw_sprite_ext(sprLoadoutSplat, image_index, (_x - _surfX) * _surfScale, (_y - _surfY) * _surfScale, _surfScale, _surfScale, 0, c_white, 1);
-					if(selected == true){
-						draw_sprite_ext(sprLoadoutOpen, openanim, (_x - _surfX) * _surfScale, (_y - _surfY) * _surfScale, _surfScale, _surfScale, 0, c_white, 1);
-					}
-					if(_race == "steroids"){
-						draw_loadoutwep(wep_revolver, 0, (_x - _surfX - 40 - _off) * _surfScale, (_y - _surfY - 14 + _off) * _surfScale, _surfScale, _surfScale, 0, c_ltgray, 1);
-					}
-					
-					draw_set_color_write_enable(true, true, true, true);
+						draw_set_fog(false, 0, 0, 0);
+						
+					/// Overlay Screen + Loadout Splat Over Mask:
+						
+						draw_set_color_write_enable(true, true, true, false);
+						
+						 // Screen:
+						with(other){
+							draw_surface_scale(surf, (x - _surfX) * _surfScale, (y - _surfY) * _surfScale, _surfScale / scale);
+						}
+						
+						 // Loadout:
+						draw_sprite_ext(sprLoadoutSplat, image_index, (_x - _surfX) * _surfScale, ((_y - introsettle) - _surfY) * _surfScale, _surfScale, _surfScale, 0, c_white, 1);
+						if(selected == true){
+							draw_sprite_ext(sprLoadoutOpen, openanim, (_x - _surfX) * _surfScale, ((_y - introsettle) - _surfY) * _surfScale, _surfScale, _surfScale, 0, c_white, 1);
+						}
+						if(_race == "steroids"){
+							draw_loadoutwep(wep_revolver, 0, ((_x - 40 - _off) - _surfX) * _surfScale, ((_y - introsettle - 14) - _surfY + _off) * _surfScale, _surfScale, _surfScale, 0, c_ltgray, 1);
+						}
+						
+						draw_set_color_write_enable(true, true, true, true);
+						
+					surface_reset_target();
 				}
-				
-				surface_reset_target();
 			}
 			
 			other.x = _surfX;

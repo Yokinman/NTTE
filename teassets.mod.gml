@@ -42,6 +42,9 @@
 				OptionNTTE = sprite(p + "sprOptionNTTE", 1, 32, 12);
 				MenuNTTE   = sprite(p + "sprMenuNTTE",   1, 20,  9);
 				
+				 // Eyes Maggot Shadow:
+				shd.EyesMenu = sprite(p + "shdEyesMenu", 24, 16, 18);
+				
 				 // Unlock Icons:
 				p = m + "unlocks/";
 				UnlockIcon = {
@@ -1823,21 +1826,23 @@
 	}
 	
 	 // SAVE FILE //
+	save_data = {};
 	save_auto = false;
-	save = {};
-	
 	if(fork()){
-		 // Load Existing Save:
 		var _path = save_path;
-		wait file_load(_path);
 		
-		if(file_loaded(_path) && file_exists(_path)){
+		 // Load Existing Save:
+		file_load(_path);
+		while(!file_loaded(_path)){
+			wait 0;
+		}
+		if(file_exists(_path)){
 			var _save = json_decode(string_load(_path));
 			
 			if(_save != json_error){
 				 // Copy Loaded Save's Vars:
 				for(var i = 0; i < lq_size(_save); i++){
-					lq_set(save, lq_get_key(_save, i), lq_get_value(_save, i));
+					lq_set(save_data, lq_get_key(_save, i), lq_get_value(_save, i));
 				}
 				
 				 // Defaulterize Options:
@@ -1866,17 +1871,21 @@
 				var _pathCorrupt = string_insert("CORRUPT", _path, string_pos(".", _path));
 				string_save(string_load(_path), _pathCorrupt);
 				if(fork()){
-					while(mod_exists("mod", "teloader")) wait 0;
+					while(mod_exists("mod", "teloader")){
+						wait 0;
+					}
 					wait 1;
 					trace_color(`NTTE | Something isn't right with your save file... creating a new one and moving old to '${_pathCorrupt}'.`, c_red);
 					exit;
 				}
 			}
 		}
+		file_unload(_path);
 		
-		 // New Save File:
+		 // Re-Save:
 		save_ntte();
 		save_auto = true;
+		
 		exit;
 	}
 	
@@ -1926,7 +1935,9 @@
 	 // Reminders:
 	global.remind = [];
 	if(fork()){
-		while(mod_exists("mod", "teloader")) wait 0;
+		while(mod_exists("mod", "teloader")){
+			wait 0;
+		}
 		
 		trace_color("NTTE | Finished loading!", c_yellow);
 		repeat(20 * (game_height / 240)) trace("");
@@ -1991,7 +2002,7 @@
 #macro shnHurt spr.ShineHurt
 #macro shnSnow spr.ShineSnow
 
-#macro save      global.save
+#macro save_data global.save
 #macro save_auto global.save_auto
 #macro save_path "save.sav"
 
@@ -2015,7 +2026,7 @@
 #macro  area_crib         107
 
 #define save_ntte()
-	string_save(json_encode(save), save_path);
+	string_save(json_encode(save_data), save_path);
 	
 #define save_get(_name, _default)
 	/*
@@ -2028,7 +2039,7 @@
 	*/
 	
 	var	_path = string_split(_name, ":"),
-		_save = save;
+		_save = save_data;
 		
 	with(_path){
 		if(!lq_exists(_save, self)){
@@ -2049,7 +2060,7 @@
 	*/
 	
 	var	_path = string_split(_name, ":"),
-		_save = save;
+		_save = save_data;
 		
 	with(array_slice(_path, 0, array_length(_path) - 1)){
 		if(!is_object(lq_get(_save, self))){

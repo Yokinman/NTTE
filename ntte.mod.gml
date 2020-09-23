@@ -48,7 +48,7 @@
 	global.scythe_tip       = ["press @we @sto change modes", "the @rscythe @scan do so much more", "press @we @sto rearrange a few @rbones", "just press @we @salready", "please press @we", "@w@qe"];
 	
 	 // Spawn Guarantees:
-	heart_spawn = {};
+	heart_spawn  = {};
 	weapon_spawn = [];
 	
 #macro spr global.spr
@@ -320,7 +320,7 @@
 			var _spawnFloor = [];
 			with(instances_matching_ne(FloorNormal, "name", "WallFake")){
 				if(instance_exists(Player) && distance_to_object(Player) > 128){
-					if(!instance_exists(Wall) || distance_to_object(Wall) < 34){
+					if(!place_meeting(x, y, Wall) && (!instance_exists(Wall) || distance_to_object(Wall) < 34)){
 						array_push(_spawnFloor, id);
 					}
 				}
@@ -337,14 +337,12 @@
 				 // Create:
 				while((_heartNum + _chaosNum) > 0){
 					with(instance_random(_spawnFloor)){
-						var _type = ((_chaosNum > 0) ? "ChaosHeart" : "CrystalHeart");
-						with(obj_create(bbox_center_x, bbox_center_y + 2, _type)){
-							with(instance_create(x, y, PortalClear)){
-								mask_index = other.mask_index;
-							}
-						}
+						obj_create(
+							bbox_center_x,
+							bbox_center_y + 2,
+							((_chaosNum > 0) ? "ChaosHeart" : "CrystalHeart")
+						);
 					}
-					
 					if(_chaosNum > 0) _chaosNum--;
 					else _heartNum--;
 				}
@@ -2743,6 +2741,15 @@
 		draw_sprite(spr.shd.Nothing, 0, x, y);
 	}
 	
+	 // Campfire Maggot Shadow:
+	with(instances_matching(CampChar, "sprite_index", sprEyesMenu, sprEyesMenuSelected, sprEyesMenuDeselect, sprEyesMenuSelect)){
+		switch(sprite_index){
+			case sprEyesMenu         : draw_sprite(spr.shd.EyesMenu, image_index, x + spr_shadow_x,     y + spr_shadow_y); break;
+			case sprEyesMenuDeselect : draw_sprite(spr.shd.EyesMenu, 0,           x + spr_shadow_x - 1, y + spr_shadow_y); break;
+			default                  : draw_sprite(spr.shd.EyesMenu, 0,           x + spr_shadow_x - 2, y + spr_shadow_y);
+		}
+	}
+	
 	 // Call Scripts:
 	ntte_call("shadows");
 	
@@ -3076,14 +3083,16 @@
 		}
 		
 		 // Rad Canister Offset:
-		if(_players > 1) _ox -= 17;
+		if(_players > 1){
+			_ox -= 17;
+		}
 		
 		 // Determine which side of the screen each player's HUD is on:
-		var	_hudSide = array_create(maxp, 0),
-			_num = 0;
+		var	_hudNum  = 0,
+			_hudSide = array_create(maxp, 0);
 			
-		for(var i = 0; i < maxp; i++) if( player_is_local_nonsync(i)) _hudSide[i] = (_num++ & 1);
-		for(var i = 0; i < maxp; i++) if(!player_is_local_nonsync(i)) _hudSide[i] = (_num++ & 1);
+		for(var i = 0; i < maxp; i++) if( player_is_local_nonsync(i)) _hudSide[i] = (_hudNum++ & 1);
+		for(var i = 0; i < maxp; i++) if(!player_is_local_nonsync(i)) _hudSide[i] = (_hudNum++ & 1);
 		
 	/// Surface Setup:
 		var	_surfScreen = surface_setup("HUDScreen", _gw, _gh, game_scale_nonsync),

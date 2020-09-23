@@ -2111,9 +2111,9 @@
 	
 	 // Idle Movement Stuff:
 	else{
+		orbit_pull = 0;
 		speed = max(speed, minspeed + friction);
 		//angle_lerp(direction, round(direction / 8) * 8, 1/3);
-		orbit_pull = 0;
 		
 		 // Bounce Off Walls:
 		if(!array_exists(path_wall, Wall)){
@@ -2228,65 +2228,74 @@
 							//audio_sound_gain(_snd, audio_sound_get_gain(_snd) * (_inst.damage / 3), 0);
 							
 							 // Send to Partner:
-							if(instance_exists(partner) && !partner.walled){
-								var _dir  = point_direction(partner.x, partner.y, _inst.xstart, _inst.ystart);
-								
-								with(team_instance_sprite(team, _inst)){
-									x         = other.partner.x;
-									y         = other.partner.y;
-									xprevious = x;
-									yprevious = y;
-									xstart    = x;
-									ystart    = y;
-									deflected = true;
-									team      = other.team;
-									
-									var _dirOff = angle_difference(_dir, direction);
-									direction   += _dirOff;
-									image_angle += _dirOff;
-									
-									 // Rebounce:
-									if("zspeed" in self) zspeed *= -1;
-									if("zvel"   in self) zvel   *= -1;
-									
-									 // Specifics:
-									switch(object_index){
-										case Laser:
-										case EnemyLaser:
-											var _laserList = instances_matching_ne(instances_matching(instances_matching(instances_matching(object_index, "creator", creator), "team", team), "deflected", true), "id", id);
-											if(array_length(_laserList) > 0){
-												instance_delete(_laserList[array_length(_laserList) - 1]);
-											}
-											image_xscale = 1;
-											event_perform(ev_alarm, 0);
-											break;
-											
-										case Lightning:
-										case EnemyLightning:
-											event_perform(ev_alarm, 0);
-											break;
-									}
-								}
-								
-								 // Effects:
+							if(instance_exists(partner)){
 								with(partner){
-									flash = other.flash;
-									Twins_effect(x, y, white, 12, _dir);
+									if(!walled){
+										var _dir  = point_direction(x, y, _inst.xstart, _inst.ystart);
+										
+										 // Effects:
+										flash = other.flash;
+										Twins_effect(x, y, white, 12, _dir);
+										
+										 // Freez:
+										if(!collision_line(x, y, _inst.xstart, _inst.ystart, Wall, false, false)){
+											orbit_pull = 0;
+										}
+										
+										 // Divert:
+										with(team_instance_sprite(team, _inst)){
+											x         = other.x;
+											y         = other.y;
+											xprevious = x;
+											yprevious = y;
+											xstart    = x;
+											ystart    = y;
+											deflected = true;
+											team      = other.team;
+											
+											var _dirOff = angle_difference(_dir, direction);
+											direction   += _dirOff;
+											image_angle += _dirOff;
+											
+											 // Rebounce:
+											if("zspeed" in self) zspeed *= -1;
+											if("zvel"   in self) zvel   *= -1;
+											
+											 // Specifics:
+											switch(object_index){
+												case Laser:
+												case EnemyLaser:
+													var _laserList = instances_matching_ne(instances_matching(instances_matching(instances_matching(object_index, "creator", creator), "team", team), "deflected", true), "id", id);
+													if(array_length(_laserList) > 0){
+														instance_delete(_laserList[array_length(_laserList) - 1]);
+													}
+													image_xscale = 1;
+													event_perform(ev_alarm, 0);
+													break;
+													
+												case Lightning:
+												case EnemyLightning:
+													event_perform(ev_alarm, 0);
+													break;
+											}
+										}
+									}
+									
+									 // Walled:
+									else{
+										sound_play_hit_ext(sndHitWall, 0.8 + orandom(0.1), 1.3);
+										with(instance_create(x, y, ThrowHit)){
+											image_xscale = 2/3;
+											image_yscale = 2/3;
+											depth        = -7;
+										}
+										instance_delete(_inst);
+									}
 								}
 							}
 							
-							 // Sent to the Warp Zone:
-							else{
-								with(partner){
-									sound_play_hit_ext(sndHitWall, 0.8 + orandom(0.1), 1.3);
-									with(instance_create(x, y, ThrowHit)){
-										image_xscale = 2/3;
-										image_yscale = 2/3;
-										depth        = -7;
-									}
-								}
-								instance_delete(_inst);
-							}
+							 // Send to the Warp Zone:
+							else instance_delete(_inst);
 						}
 					}
 				}

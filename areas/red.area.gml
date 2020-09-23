@@ -6,10 +6,6 @@
 	 // For Manual Map Drawing:
 	global.mapdata_warp_draw = [];
 	
-	 // Twins Location:
-	global.twins_x = null;
-	global.twins_y = null;
-	
 #macro spr global.spr
 #macro msk spr.msk
 #macro snd global.snd
@@ -165,14 +161,6 @@
 				instance_destroy();
 			}
 		}
-	}
-	
-	 // Create Twins:
-	if(!is_undefined(global.twins_x) && !is_undefined(global.twins_y)){
-		pet_spawn(global.twins_x, global.twins_y, "Twins");
-		
-		global.twins_x = null;
-		global.twins_y = null;
 	}
 	
 #define area_finish
@@ -440,8 +428,7 @@
 				}
 				
 				 // Twins:
-				global.twins_x = x;
-				global.twins_y = y;
+				pet_spawn(x, y, "Twins");
 			}
 		}
 		

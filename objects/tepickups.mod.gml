@@ -4419,7 +4419,7 @@
 		if(spr_hurt == spr.VaultFlowerWiltedHurt) spr_hurt = spr.VaultFlowerHurt;
 		if(spr_dead == spr.VaultFlowerWiltedDead) spr_dead = spr.VaultFlowerDead;
 		
-		 // Camera:
+		 // Camera Pan:
 		if(!instance_exists(Menu) && !instance_exists(PopoScene)){
 			var _userSeen = [];
 			for(var i = 0; i < maxp; i++){
@@ -4428,27 +4428,37 @@
 					if(!array_exists(_userSeen, _user)){
 						array_push(_userSeen, _user);
 						
-						if(view_object[i] == noone){
-							var	_x   = 0,
-								_y   = 0,
-								_num = 0;
-								
-							with(Player) if(player_get_uid(index) == _user){
-								_x += x;
-								_y += y;
-								_num++;
-							}
+						var	_x   = 0,
+							_y   = 0,
+							_num = 0;
 							
-							if(_num > 0){
-								_x /= _num;
-								_y /= _num;
-								
-								var	_dis = min(960 / point_distance(_x, _y, x, y), point_distance(_x, _y, x, y) / 3),
-									_dir = point_direction(_x, _y, x, y);
-									
-								if(_dis > 0){
-									view_shift(i, _dir, _dis);
+						 // Camera Position:
+						for(var j = 0; j < maxp; j++){
+							if(_user == player_get_uid(j)){
+								if(!instance_exists(view_object[j])){
+									with(instances_matching(Player, "index", j)){
+										_x += x;
+										_y += y;
+										_num++;
+									}
 								}
+								else{
+									_num = 0;
+									break;
+								}
+							}
+						}
+						
+						 // Pan:
+						if(_num > 0){
+							_x /= _num;
+							_y /= _num;
+							
+							var	_dis = min(960 / point_distance(_x, _y, x, y), point_distance(_x, _y, x, y) / 3),
+								_dir = point_direction(_x, _y, x, y);
+								
+							if(_dis > 0){
+								view_shift(i, _dir, _dis);
 							}
 						}
 					}

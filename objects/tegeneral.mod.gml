@@ -2457,7 +2457,7 @@
 	}
 	
 	 // Loading/Level Up Screen:
-	if(instance_exists(GenCont) || instance_exists(LevCont)){
+	if((instance_exists(GenCont) && instance_exists(FloorMaker)) || instance_exists(LevCont)){
 		visible      = false;
 		portal_angle = 0;
 		

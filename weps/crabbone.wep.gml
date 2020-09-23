@@ -156,7 +156,7 @@
 						 // Pickuped:
 						with(other){
 							if(_primary || race == "steroids"){
-								wep_set(_primary, "wkick", 2);
+								wep_set(_primary, "wkick", 0);
 							}
 							else{
 								mod_script_call("mod", "tepickups", "pickup_text", "% BONE", _num);
