@@ -323,15 +323,6 @@
 					move_contact_solid(point_direction(x, y, _doorX, _doorY) + orandom(60), 8);
 					xprevious = x;
 					yprevious = y;
-					
-					 // Go Away Bro:
-					with(instances_meeting(x, y, [chestprop, hitme])){
-						if(place_meeting(x, y, other)){
-							instance_budge(other, -1);
-							xstart = x;
-							ystart = y;
-						}
-					}
 				}
 				
 				 // Generate Wall:
@@ -380,6 +371,18 @@
 							}
 						}
 						if(_break) break;
+					}
+				}
+				
+				 // Move Away Barrel Bros:
+				with(_barrel){
+					with(instances_meeting(x, y, [chestprop, hitme])){
+						if(place_meeting(x, y, other)){
+							if(instance_budge(other, -1)){
+								xstart = x;
+								ystart = y;
+							}
+						}
 					}
 				}
 				
@@ -932,23 +935,32 @@
 			_spawnDis = 64 + (max(_w, _h) * 16);
 			
 		floor_set_align(null, null, 32, 32);
-		//floor_set_style(1, null);
+		floor_set_style(1, null);
 		
 		with(floor_room(_spawnX, _spawnY, _spawnDis, _spawnFloor, _w, _h, _type, _dirOff, _floorDis)){
-			
 			 // Cool-Ass Rocky Floors:
-			with(floors){
+			with(instances_matching(floors, "area", area_desert)){
 				sprite_index = spr.FloorScorpion;
-				depth = 8;
+				image_index  = irandom(image_number - 1);
+				depth        = 8;
+				material     = 4;
+				traction     = 0.45;
+				styleb       = false;
 				
+				 // Add Thickness:
 				with(instance_create(
 					x + orandom(1), 
 					y - irandom_range(2, 3), 
 					SnowFloor
 				)){
 					sprite_index = spr.SnowFloorScorpion;
+					image_index  = other.image_index;
+					image_speed  = other.image_speed;
 					image_angle += orandom(1);
 				}
+				
+				 // More Details:
+				instance_create(random_range(bbox_left, bbox_right + 1), random_range(bbox_top, bbox_bottom + 1), Detail);
 			}
 			
 			 // Family:
@@ -970,20 +982,10 @@
 					}
 				}
 			}
-			
-			 // Details:
-			for(var _d = 0; _d < 360; _d += random_range(4, 10)){
-				var _l = (chance(1, 3) ? random_range(1/3, 1/2) : random(1/4)) * 32;
-				with(instance_create(round(x + lengthdir_x(_w * _l, _d)), round(y + lengthdir_y(_h * _l, _d)), Detail)){
-					if(floor(image_index) != 4 && chance(1, 5)){
-						image_index = 4;
-					}
-				}
-			}
 		}
 		
 		floor_reset_align();
-		//floor_reset_style();
+		floor_reset_style();
 	}
 	
 	 // Nest Corner Walls:

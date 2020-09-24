@@ -224,9 +224,6 @@
 	snd_thrn = race_sound(sndMutant1Thrn);
 	footkind = 1; // Sho
 	
-	 // Perching Parrot:
-	parrot_bob = [0];
-	
 	 // Re-Get Ultras When Revived:
 	for(var i = 0; i < ultra_count(mod_current); i++){
 		if(ultra_get(mod_current, i)){

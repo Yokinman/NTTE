@@ -61,9 +61,9 @@
 	
 	 // Object Script Binding:
 	ntte_obj_bind = {
-		"begin_step" : script_bind("ObjectBeginStep", CustomBeginStep, script_ref_create(obj_bind, "begin_step"), 0, false),
-		"step"       : script_bind("ObjectStep",      CustomStep,      script_ref_create(obj_bind, "step"),       0, false),
-		"end_step"   : script_bind("ObjectEndStep",   CustomEndStep,   script_ref_create(obj_bind, "end_step"),   0, false),
+		"begin_step" : script_bind("ObjectBeginStep", CustomBeginStep, script_ref_create(obj_bind, "begin_step"), 0, true),
+		"step"       : script_bind("ObjectStep",      CustomStep,      script_ref_create(obj_bind, "step"),       0, true),
+		"end_step"   : script_bind("ObjectEndStep",   CustomEndStep,   script_ref_create(obj_bind, "end_step"),   0, true),
 		"draw"       : ds_map_create()
 	};
 	ntte_obj_bind_list = {};
@@ -308,13 +308,12 @@
 												CustomDraw,
 												script_ref_create(obj_bind, _event),
 												_depth,
-												false
+												true
 											);
 										}
 										
-										with((_isDraw ? _bind[? _depth] : _bind).id){
-											visible = true;
-											
+										 // Add:
+										with(_isDraw ? _bind[? _depth] : _bind){
 											 // Add to Instance List:
 											if("inst" not in self){
 												inst = [];
@@ -323,7 +322,7 @@
 											
 											 // Add to Object List:
 											var _obj     = _inst.object_index,
-												_objList = (("inst_obj" in self) ? inst_obj : lq_defget(ntte_obj_bind_list, _event, []));
+												_objList = lq_defget(ntte_obj_bind_list, _event, []);
 												
 											for(var i = _obj; object_exists(i); i = object_get_parent(i)){
 												if(array_exists(_objList, i)){
@@ -338,13 +337,6 @@
 													}
 												}
 												array_push(_objList, _obj);
-											}
-											if(_isDraw){
-												with(ds_map_values(_bind)){
-													with(id){
-														obj_list = _objList;
-													}
-												}
 											}
 											lq_set(ntte_obj_bind_list, _event, _objList);
 										}
@@ -421,11 +413,10 @@
 		A script bind controller that calls scripts for NTTE's non-"Custom" objects
 	*/
 	
-	if(visible){
+	var _objList = lq_defget(ntte_obj_bind_list, _type, []);
+	
+	if(array_length(_objList) > 0){
 		if(lag) trace_time();
-		
-		if("inst"     not in self) inst     = [];
-		if("inst_obj" not in self) inst_obj = lq_defget(ntte_obj_bind_list, _type, []);
 		
 		var	_bind    = lq_get(ntte_obj_bind, _type),
 			_isDraw  = ds_map_valid(_bind),
@@ -433,64 +424,54 @@
 			
 		 // Changed Depth:
 		if(_isDraw){
-			with(instances_matching_ne(inst, "depth", depth)){
-				if(!ds_map_exists(_bind, depth)){
-					_bind[? depth] = script_bind(
-						"ObjectDraw" + string(depth),
-						CustomDraw,
-						script_ref_create(obj_bind, _type),
-						depth,
-						false
-					);
-				}
-				with(_bind[? depth].id){
-					visible = true;
+			var _bindList = _bind;
+			_bind = _bind[? depth];
+			if("inst" in _bind){
+				with(instances_matching_ne(_bind.inst, "depth", depth)){
+					if(!ds_map_exists(_bindList, depth)){
+						_bindList[? depth] = script_bind(
+							"ObjectDraw" + string(depth),
+							CustomDraw,
+							script_ref_create(obj_bind, _type),
+							depth,
+							true
+						);
+					}
 				}
 			}
 		}
 		
 		 // Collect Instances:
-		inst = instances_matching_ne(inst_obj, _varName, null);
+		_bind.inst = instances_matching_ne(_objList, _varName, null);
 		if(_isDraw){
-			inst = instances_matching(inst, "depth", depth);
+			_bind.inst = instances_matching(_bind.inst, "depth", depth);
 		}
 		
 		 // Call Scripts:
-		with(_isDraw ? instances_matching(inst, "visible", true) : inst){
+		with(_isDraw ? instances_matching(_bind.inst, "visible", true) : _bind.inst){
 			var _scrt = variable_instance_get(self, _varName);
 			if(array_length(_scrt) > 2){
 				mod_script_call(_scrt[0], _scrt[1], _scrt[2]);
 			}
 		}
 		
-		 // Goodbye:
-		if(array_length(inst) <= 0){
-			visible = false;
-			
-			 // Clear Object List:
+		 // Done, Clear Object List:
+		if(array_length(_bind.inst) <= 0){
 			var _clear = true;
 			if(_isDraw){
-				with(ds_map_values(_bind)){
-					if(instance_exists(id) && id.visible){
+				with(ds_map_values(lq_get(ntte_obj_bind, _type))){
+					if(array_length(inst) > 0){
 						_clear = false;
 						break;
 					}
 				}
 			}
 			if(_clear){
-				inst_obj = [];
-				lq_set(ntte_obj_bind_list, _type, inst_obj);
-				if(_isDraw){
-					with(ds_map_values(_bind)){
-						if(instance_exists(id)){
-							id.inst_obj = other.inst_obj;
-						}
-					}
-				}
+				lq_set(ntte_obj_bind_list, _type, []);
 			}
 		}
 		
-		if(lag) trace_time(script[2] + "_" + _type + " (" + string(array_length(inst)) + ")");
+		if(lag) trace_time(script[2] + "_" + _type + " (" + string(array_length(_bind.inst)) + ")");
 	}
 	
 #define obj_step(_type)
@@ -2870,8 +2851,10 @@
 					array_push(_overlapFloorFill, [bbox_left + _ox, bbox_top + _oy, bbox_right + _ox, bbox_bottom + _oy]);
 					instance_destroy();
 				}
-				with(instance_rectangle_bbox(_x1, _y1 - 1, _x2, _y2 - 1, SnowFloor)){
-					instance_delete(id);
+				with(instance_rectangle_bbox(_x1, _y1, _x2, _y2, SnowFloor)){
+					if(point_in_rectangle(bbox_center_x, bbox_center_y, _x1, _y1, _x2 + 1, _y2 + 1)){
+						instance_destroy();
+					}
 				}
 				with(instance_rectangle_bbox(_x1, _y1, _x2, _y2, [chestprop, RadChest])){
 					instance_delete(id);
@@ -3884,8 +3867,10 @@
 			_x2 = bbox_right  + 16,
 			_y2 = bbox_bottom + 16;
 			
-		with(instances_meeting(x, y - 1, SnowFloor)){
-			instance_destroy();
+		with(instances_meeting(x, y, SnowFloor)){
+			if(point_in_rectangle(bbox_center_x, bbox_center_y, other.bbox_left, other.bbox_top, other.bbox_right + 1, other.bbox_bottom + 1)){
+				instance_destroy();
+			}
 		}
 		
 		instance_destroy();
@@ -3943,8 +3928,10 @@
 		with(instance_rectangle(bbox_left, bbox_top, bbox_right + 1, bbox_bottom + 1, Detail)){
 			instance_destroy();
 		}
-		with(instances_meeting(x, y - 1, SnowFloor)){
-			instance_destroy();
+		with(instances_meeting(x, y, SnowFloor)){
+			if(point_in_rectangle(bbox_center_x, bbox_center_y, other.bbox_left, other.bbox_top, other.bbox_right + 1, other.bbox_bottom + 1)){
+				instance_destroy();
+			}
 		}
 		instance_destroy();
 	}

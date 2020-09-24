@@ -457,14 +457,6 @@
 	snd_thrn = race_sound(sndMutant1Thrn);
 	footkind = 2; // Pla
 	
-	 // Perching Parrot:
-	parrot_bob = [0, 1, 1, 0];
-	if(bskin == 1){
-		for(var i = 0; i < array_length(parrot_bob); i++){
-			parrot_bob[i] += 3;
-		}
-	}
-	
 	 // Feather Related:
 	feather_num            = 12;
 	feather_num_mult       = 1;

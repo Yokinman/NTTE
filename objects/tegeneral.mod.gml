@@ -432,7 +432,7 @@
 					sound_play_hit_ext(sndWallBreakBrick,    0.5 + random(0.2), 2.5);
 				}
 				
-				 // Bonage:
+				 // Boneage:
 				else{
 					repeat(irandom_range(2, 3)){
 						with(instance_create(x, y, WepPickup)){

@@ -3,6 +3,9 @@
 	snd = mod_variable_get("mod", "teassets", "snd");
 	lag = false;
 	
+	 // Pet Parrot Bobbing:
+	global.parrot_bob = ds_map_create();
+	
 #macro spr global.spr
 #macro msk spr.msk
 #macro snd global.snd
@@ -701,40 +704,65 @@
 	if(instance_exists(perched)){
 		var _perch = perched;
 		
-		with(PlayerSit){
-			var _player = instances_matching(Player, "", null);
-			if(_perch == _player[array_length(_player) - 1]) _perch = self;
-		}
-		
-		var	_uvsStart = sprite_get_uvs(_perch.sprite_index, 0),
-			_uvsCurrent = sprite_get_uvs(_perch.sprite_index, _perch.image_index);
-
 		_x += perched_x;
 		_y += perched_y;
-
-		 // Manual Bobbing:
-		if(_uvsStart[0] == 0 && _uvsStart[2] == 1 && "parrot_bob" in _perch){
-			with(_perch){
-				var _bob = parrot_bob[floor(image_index % array_length(parrot_bob))];
-				if(is_array(_bob)){
-					if(array_length(_bob) > 0) _x += _bob[0];
-					if(array_length(_bob) > 1) _y += _bob[1];
-				}
-				else _y += _bob;
+		
+		 // Sittin:
+		with(PlayerSit){
+			var _player = instances_matching(Player, "", null);
+			if(_perch == _player[array_length(_player) - 1]){
+				_perch = self;
 			}
 		}
-
-		 // Auto Bobbing:
-		else{
-			if(_perch.sprite_index != sprMutant10Idle && _perch.sprite_index != sprMutant4Idle){
-				_x += (_uvsCurrent[4] - _uvsStart[4]) * (("right" in _perch) ? _perch.right : 1);
-			}
-			_y += (_uvsCurrent[5] - _uvsStart[5]);
-		}
+		
+		 // Bobbing:
+		var _bob = Parrot_bob(_perch.sprite_index, _perch.image_index);
+		_x += _bob[0] * (("right" in _perch) ? _perch.right : 1);
+		_y += _bob[1];
 	}
-
+	
 	draw_sprite_ext(_spr, _img, _x, _y, _xsc, _ysc, _ang, _col, _alp);
-
+	
+#define Parrot_bob(_spr, _img)
+	/*
+		Returns Parrot pet's [x, y] bobbing offset for the given frame of a given sprite
+	*/
+	
+	 // Setup:
+	if(!ds_map_exists(global.parrot_bob, _spr)){
+		var _bob = [];
+		
+		 // Find Sprite's Precise Left/Top Positions:
+		for(var i = 0; i < sprite_get_number(_spr); i++){
+			var _copy = sprite_duplicate_ext(_spr, i, 1);
+			sprite_collision_mask(_copy, true, 0, 0, 0, 0, 0, 1, 0);
+			array_push(_bob, [
+				sprite_get_bbox_right(_copy),
+				sprite_get_bbox_top(_copy)
+			]);
+			sprite_delete(_copy);
+		}
+		
+		 // Reduce to Offsets:
+		for(var i = array_length(_bob) - 1; i >= 0; i--){
+			for(var j = array_length(_bob[i]) - 1; j >= 0; j--){
+				_bob[i, j] -= _bob[0, j];
+			}
+		}
+		
+		global.parrot_bob[? _spr] = _bob;
+	}
+	
+	 // Retrieve:
+	var	_bob = global.parrot_bob[? _spr],
+		_max = array_length(_bob);
+		
+	if(_max > 0){
+		return _bob[((_img % _max) + _max) % _max];
+	}
+	
+	return [0, 0];
+	
 #define Parrot_alrm0(_leaderDir, _leaderDis)
 	if(instance_exists(leader)){
 		 // Fly Toward Pickup:
