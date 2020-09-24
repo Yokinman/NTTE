@@ -35,9 +35,9 @@
 	teevent_add("RavenArena");
 	teevent_add("FirePit");
 	teevent_add("SealPlaza");
-	teevent_add("YetiHideout");
+	//teevent_add("YetiHideout");
 	teevent_add("MutantVats");
-	teevent_add("ButtonGame");
+	//teevent_add("ButtonGame");
 	teevent_add("PopoAmbush");
 	teevent_add("PalaceShrine");
 	teevent_add("EelGrave");
@@ -68,7 +68,7 @@
 #define BuriedVault_create
 	if(instance_number(enemy) > instance_number(EnemyHorror) || GameCont.area == area_vault){
 		with(instance_random(Wall)){
-			obj_create(x, y, ((GameCont.level >= 10 && chance(1, 3)) ? "BuriedShrine" : "BuriedVault"));
+			obj_create(x, y, ((GameCont.level >= 10 && chance(1, 3) && false) ? "BuriedShrine" : "BuriedVault"));
 		}
 	}
 	
@@ -222,7 +222,7 @@
 		"Scorpion" : 1,
 		"Maggot"   : 1,
 		"Skull"    : 1,
-		"Dummy"    : instance_exists(WantBoss)
+		"Dummy"    : (instance_exists(WantBoss) && GameCont.subarea < 3)
 	});
 	dummy_spawn = 1;
 	dummy_music = false;
@@ -569,7 +569,7 @@
 				with(instance_create(_cx, _cy, TutorialTarget)){
 					maxhealth = 8;
 					my_health = maxhealth;
-					team = 1;
+					team      = 1;
 					
 					 // Decals:
 					repeat(4) with(obj_create(x, y, "TopDecal")){
@@ -1852,7 +1852,7 @@
 	
 #define YetiHideout_text   return `SMELLS LIKE ${event_tip}WET FUR`;
 #define YetiHideout_area   return area_city;
-#define YetiHideout_chance return 0; // 1/100;
+#define YetiHideout_chance return 1/100;
 
 #define YetiHideout_create
 	with(obj_create(x, y, "BuriedVault")){
@@ -1942,9 +1942,9 @@
 	floor_reset_style();
 	
 	
-#define ButtonGame_text		return `NEVER TOUCH THE ${event_tip}RED BUTTON`;
-#define ButtonGame_area 	return area_labs;
-#define ButtonGame_chance	return 0; // 1/4;
+#define ButtonGame_text    return `NEVER TOUCH THE ${event_tip}RED BUTTON`;
+#define ButtonGame_area    return area_labs;
+#define ButtonGame_chance  return 1/4;
 
 #define ButtonGame_create
 	var	_w          = 4,
@@ -2259,7 +2259,7 @@
 	
 #define EelGrave_text    return `EELS ${event_tip}NEVER @sFORGET`;
 #define EelGrave_area    return "trench";
-#define EelGrave_chance  return ((GameCont.subarea != 3) ? 1/5 : 0);
+#define EelGrave_chance  return (unlock_get("pack:trench") ? 1/8 : 0);
 
 #define EelGrave_create
 	var	_w          = 6,
@@ -2273,26 +2273,28 @@
 		_spawnFloor = FloorNormal;
 		
 	floor_set_align(null, null, 32, 32);
-	floor_set_style(1, null);
+	floor_set_style(1, "trench");
 	
 	with(floor_room(_spawnX, _spawnY, _spawnDis, _spawnFloor, _w, _h, _type, _dirOff, _floorDis)){
-		var _cw = 4,
-			_ch = 4;
-			
-		floor_set_style(0, null);
-			
 		 // Center Island:
-		floor_fill(x, y, _cw, _ch, _type);
-		var a = random(360);
-		for(var o = 0; o < 360; o += 360 / 3){
-			var l = random_range(16, 24),
-				d = (a + o) + orandom(8);
+		floor_reset_style();
+		floor_fill(x, y, _w - 2, _h - 2, _type);
+		
+		 // Skulls:
+		var _ang = random(360);
+		for(var _dir = _ang; _dir < 360; _dir += (360 / 3)){
+			var	_l = random_range(16, 24),
+				_d = _dir + orandom(8);
 				
-			obj_create(x + lengthdir_x(l, d), y + lengthdir_y(l, d), "EelSkull");
+			obj_create(x + lengthdir_x(_l, _d), y + lengthdir_y(_l, _d), "EelSkull");
 		}
 		
 		 // Want Eels, Bro?:
-		repeat(irandom_range(15, 30)) obj_create(0, 0, "WantEel");
+		repeat(15 * (1 + GameCont.loops)){
+			with(obj_create(x, y, "WantEel")){
+				elite = 150;
+			}
+		}
 		
 		 // Walls:
 		instance_create(x - 48, y - 48, Wall);

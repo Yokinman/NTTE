@@ -397,17 +397,11 @@
 	 // Got too many eels, bro? No problem:
 	with(instances_matching(CustomEnemy, "name", "Eel")){
 		if(array_length(instances_matching(CustomEnemy, "name", "Eel")) > 8 + (4 * GameCont.loops)){
-			obj_create(0, 0, "WantEel");
+			obj_create(x, y, "WantEel");
 			instance_delete(id);
 		}
+		else break;
 	}
-	
-	/*
-	 // Eel Party Event:
-	if(GameCont.subarea != 3 && chance((1 + GameCont.loops), 25)){
-		repeat(20 + irandom(10)) obj_create(0, 0, "WantEel");
-	}
-	*/
 	
 #define area_effect
 	alarm0 = irandom_range(30, 50);
@@ -879,17 +873,17 @@
 			}
 			
 			 // WantEel:
-			with(instances_matching(instances_matching(CustomEnemy, "name", "WantEel"), "active", true)){
+			with(instances_matching(instances_matching(CustomObject, "name", "WantEel"), "visible", true)){
 				draw_sprite_ext(
-					sprite,
-					(current_frame * current_time_scale * image_speed) % 16,
-					(xpos - _surfX) * _surfScale,
-					((ypos - _surfY) + (12 * (1 - pit_height))) * _surfScale,
-					image_xscale * pit_height * _surfScale * right,
+					sprite_index,
+					image_index,
+					(x - _surfX) * _surfScale,
+					((y - _surfY) + (12 * (1 - pit_height))) * _surfScale,
+					image_xscale * pit_height * _surfScale,
 					image_yscale * pit_height * _surfScale,
 					image_angle,
 					image_blend,
-					visible
+					image_alpha
 				);
 			}
 			

@@ -3453,58 +3453,56 @@
 			
 		case proj_destroy: // Explosions
 			with(o){
-				var	_num = num,
-					_dis = ((_num > 1) ? 16 : 0),
+				var	_num    = num,
+					_dis    = ((_num > 1) ? 16 : 0),
 					_dirAng = random(360);
 					
 				for(var i = 0; i < _num; i++){
-					var	_boom = false,
+					var	_obj       = ((xplo == 1) ? GreenExplosion        : ((xplo == 2) ? MeatExplosion : Explosion)),
+						_objSmall  = ((xplo == 1) ? "SmallGreenExplosion" : ((xplo == 2) ? MeatExplosion : SmallExplosion)),
+						_boom      = false,
 						_boomSmall = [],
-						_snd = -1,
-						_pit = 1 + orandom(0.1),
-						_vol = 3,
-						_dir = (360 * (i / _num)) + _dirAng,
-						_x = x + lengthdir_x(_dis, _dir),
-						_y = y + lengthdir_y(_dis, _dir);
+						_snd       = -1,
+						_pit       = 1 + orandom(0.1),
+						_vol       = 3,
+						_dir       = (360 * (i / _num)) + _dirAng,
+						_x         = x + lengthdir_x(_dis, _dir),
+						_y         = y + lengthdir_y(_dis, _dir);
 						
 					if(_num > 1 && type >= 1){
-						with(instance_create(x + lengthdir_x(_dis / 2, _dir), y + lengthdir_y(_dis / 2, _dir), SmallExplosion)){
-							hitid = 56;
-						}
+						array_push(
+							_boomSmall,
+							instance_create(x + lengthdir_x(_dis / 2, _dir), y + lengthdir_y(_dis / 2, _dir), _objSmall)
+						);
 					}
 					
 					switch(type){
 						case 1:
-							_snd = sndExplosion;
+							_snd  = sndExplosion;
 							_boom = true;
 							break;
 							
 						case 2:
-							_snd = sndExplosionL;
+							_snd  = sndExplosionL;
 							_boom = true;
 							
 							var _ang = random(360);
-							for(var a = _ang; a < _ang + 360; a += (360 / 3)){
-								var	l = 4,
-									d = a + orandom(10);
+							for(var _a = _ang; _a < _ang + 360; _a += (360 / 3)){
+								var	_l = 4,
+									_d = _a + orandom(10);
 									
-								array_push(_boomSmall, instance_create(_x + lengthdir_x(l, d), _y + lengthdir_y(l, d), ((xplo == 2) ? MeatExplosion : SmallExplosion)));
+								array_push(_boomSmall, obj_create(_x + lengthdir_x(_l, _d), _y + lengthdir_y(_l, _d), _objSmall));
 							}
 							break;
 							
 						default:
-							switch(xplo){
-								case 2:
-									_snd = sndBloodLauncherExplo;
-									_pit = 1.4 + orandom(0.2);
-									_vol = 1.5;
-									array_push(_boomSmall, instance_create(_x, _y, MeatExplosion));
-									break;
-									
-								default:
-									_snd = sndExplosionS;
-									array_push(_boomSmall, instance_create(_x, _y, SmallExplosion));
+							_snd = sndExplosionS;
+							if(xplo == 2){
+								_snd = sndBloodLauncherExplo;
+								_pit = 1.4 + orandom(0.2);
+								_vol = 1.5;
 							}
+							array_push(_boomSmall, obj_create(_x, _y, _objSmall));
 							break;
 					}
 					
@@ -3512,42 +3510,44 @@
 					if(_boom){
 						switch(xplo){
 							case 1:
-								with(instance_create(_x, _y, GreenExplosion)) hitid = 99;
+								with(instance_create(_x, _y, _obj)){
+									hitid = 99;
+								}
 								break;
 								
 							case 2:
 								_snd = sndBloodLauncherExplo;
 								
 								var	_ang = random(360),
-									l = 24;
+									_l   = 24;
 									
-								for(var d = _ang; d < _ang + 360; d += (360 / 3)){
+								for(var _d = _ang; _d < _ang + 360; _d += (360 / 3)){
 									with(instance_create(x, y, BloodStreak)){
-										image_angle = d;
+										image_angle = _d;
 									}
-									array_push(_boomSmall, instance_create(_x + lengthdir_x(l, d), _y + lengthdir_y(l, d), MeatExplosion));
+									array_push(
+										_boomSmall,
+										instance_create(_x + lengthdir_x(_l, _d), _y + lengthdir_y(_l, _d), _obj)
+									);
 								}
 								break;
 								
 							default:
-								with(instance_create(_x, _y, Explosion)) hitid = 55;
+								with(instance_create(_x, _y, _obj)){
+									hitid = 55;
+								}
 						}
 					}
 					with(_boomSmall){
-						switch(other.xplo){
-							case 1:
-								sprite_index = spr.SmallGreenExplosion;
-								damage = 12;
-								force = 8;
-								hitid = [sprite_index, "SMALL GREEN#EXPLOSION"];
-								break;
-								
-							case 2:
-								hitid = [sprite_index, "BLOOD EXPLOSION"];
-								break;
-								
-							default:
-								hitid = 56;
+						if(hitid == -1){
+							switch(other.xplo){
+								case 2:
+									hitid = [sprite_index, "BLOOD EXPLOSION"];
+									break;
+									
+								default:
+									hitid = 56;
+							}
 						}
 						if(distance_to_object(PlasmaImpact) <= 0){
 							with(instance_nearest(x, y, PlasmaImpact)){
@@ -3625,8 +3625,6 @@
 		case proj_step:
 			 // Try to Stick:
 			if(!instance_exists(o.stic_inst)){
-				o.num = 1;
-				
 				if(o.stic_mask != null){
 					mask_index = o.stic_mask;
 					o.stic_mask = null;
@@ -3694,7 +3692,7 @@
 			break;
 			
 		case proj_destroy:
-			if(o.stic_inst != noone) o.num = 3;
+			o.num = 3;
 			proj_explo(_event, o);
 	}
 	

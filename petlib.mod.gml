@@ -732,7 +732,7 @@
 	if(!ds_map_exists(global.parrot_bob, _spr)){
 		var _bob = [];
 		
-		 // Find Sprite's Precise Left/Top Positions:
+		 // Find Sprite's Precise Right & Top Positions:
 		for(var i = 0; i < sprite_get_number(_spr); i++){
 			var _copy = sprite_duplicate_ext(_spr, i, 1);
 			sprite_collision_mask(_copy, true, 0, 0, 0, 0, 0, 1, 0);

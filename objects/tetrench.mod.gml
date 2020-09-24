@@ -3902,28 +3902,30 @@
 		An Eel waiting to come out of the pit, he's waiting
 	*/
 	
-	with(instance_create(_x, _y, CustomEnemy)){
+	with(instance_create(_x, _y, CustomObject)){
 		 // Visual:
-		sprite = spr.WantEel;
+		sprite_index = spr.WantEel;
+		image_xscale = choose(-1, 1);
+		visible      = false;
+		depth        = 1000;
 		
 		 // Vars:
-		xpos       = x;
-		ypos       = y;
-		x          = 0;
-		y          = 0;
-		mask_index = mskNone;
-		mask       = mskRat;
-		maxhealth  = 12;
-		active     = false;
-		canfly     = true;
+		mask_index = mskRat;
+		friction   = 0.4;
 		walk       = 0;
 		walkspeed  = 0.6;
 		maxspeed   = 2.4;
 		pit_height = 0;
+		elite      = 10;
 		
 		 // Alarms:
 		alarm1 = 30;
 		alarm2 = -1;
+		
+		 // No Portals:
+		with(obj_create(0, 0, "PortalPrevent")){
+			creator = other;
+		}
 		
 		return id;	
 	}
@@ -3934,22 +3936,13 @@
 	if(alarm2_run) exit;
 	
 	 // Active:
-	if(active){
+	if(visible){
 		 // Movement:
 		enemy_walk(walkspeed, maxspeed);
 		
-		 // Bounce:
-		mask_index = mask;
-		if(place_meeting(xpos + hspeed_raw, ypos + vspeed_raw, Wall)){
-			if(place_meeting(xpos + hspeed_raw, ypos, Wall)) hspeed_raw *= -1;
-			if(place_meeting(xpos, ypos + vspeed_raw, Wall)) vspeed_raw *= -1;
-			scrRight(direction);
-		}
-		mask_index = mskNone;
-		
 		 // Effects:
 		if(chance_ct(1, 30)){
-			with(obj_create(xpos + orandom(6), ypos + orandom(6), "PitSpark")){
+			with(obj_create(x + orandom(6), y + orandom(6), "PitSpark")){
 				tentacle_visible = false;
 			}
 		}
@@ -3957,108 +3950,112 @@
 		 // Rise From Pits:
 		pit_height += 0.02 * current_time_scale;
 		if(pit_height >= 1){
-			 // Become Eel:
-			with(obj_create(xpos, ypos, "Eel")){
-				direction = other.direction;
-				speed     = other.speed;
-				right     = other.right;
-				walk      = other.walk;
-				alarm1    = 30;
-			}
-			
-			 // Effects:
-			repeat(3 + irandom(4)) instance_create(xpos, ypos, Bubble);
-			repeat(1 + irandom(2)) instance_create(xpos, ypos, PortalL);
-			
-			instance_delete(id);
-			exit;
+			instance_destroy();
 		}
 	}
 	else walk = 0;
 	
 #define WantEel_end_step
-	x = 0;
-	y = 0;
-	
-	if(active){
-		mask_index = mask;
-		
-		 // Movin'
-		xpos += hspeed_raw;
-		ypos += vspeed_raw;
-		
-		 // Floor Collision:
-		if(pit_get(xpos, ypos)){
-			var f = instances_meeting(xpos, ypos, FloorPitless);
-			if(array_length(f) > 0){
-				xpos -= hspeed_raw;
-				ypos -= vspeed_raw;
-				
-				if(array_length(instances_meeting(xpos + hspeed_raw, ypos, f)) > 0) hspeed_raw *= -1;
-				if(array_length(instances_meeting(xpos, ypos + vspeed_raw, f)) > 0) vspeed_raw *= -1;
-				speed *= 0.5;
-				
-				xpos += hspeed_raw;
-				ypos += vspeed_raw;
-				
-				scrRight(direction);
+	if(visible){
+		 // Wall Collision:
+		if(place_meeting(x, y, Wall)){
+			x = xprevious;
+			y = yprevious;
+			
+			 // Bounce:
+			if(place_meeting(x + hspeed_raw, y, Wall)) hspeed_raw *= -1;
+			if(place_meeting(x, y + vspeed_raw, Wall)) vspeed_raw *= -1;
+			if(hspeed != 0){
+				image_xscale = abs(image_xscale) * sign(hspeed);
 			}
 		}
 		
-		mask_index = mskNone;
+		 // Floor Collision:
+		if(pit_get(x, y)){
+			var _floor = instances_meeting(x, y, FloorPitless);
+			if(array_length(_floor) > 0){
+				x = xprevious;
+				y = yprevious;
+				
+				 // Bounce:
+				if(array_length(instances_meeting(x + hspeed_raw, y, _floor)) > 0) hspeed_raw *= -1;
+				if(array_length(instances_meeting(x, y + vspeed_raw, _floor)) > 0) vspeed_raw *= -1;
+				if(hspeed != 0){
+					image_xscale = abs(image_xscale) * sign(hspeed);
+				}
+				speed *= 0.5;
+			}
+		}
 	}
 	
 #define WantEel_alrm1
-	alarm1 = 20 + random(20);
-	
-	enemy_target(xpos, ypos);
+	alarm1 = 30 + random(60);
 	
 	 // Activate:
-	if(!active){
+	if(enemy_target(x, y) && !visible){
 		var _numEels = array_length(instances_matching(CustomEnemy, "name", "Eel"));
 		if(
 			(chance(1, 3) || _numEels <= 1) &&
-			_numEels + array_length(instances_matching(instances_matching(object_index, "name", name), "active", true)) <= 6 + (4 * GameCont.loops)
+			_numEels + array_length(instances_matching(instances_matching(object_index, "name", name), "visible", true)) <= 6 + (4 * GameCont.loops)
 		){
-			if(instance_exists(target)){
-				var _floor = [];
-				with(array_shuffle(FloorPit)){
-					if(
-						!place_meeting(x, y, Wall)       &&
-						!place_meeting(x, y, FloorExplo) &&
-						instance_near(bbox_center_x, bbox_center_y, other.target, 160)
-					){
-						other.xpos   = bbox_center_x;
-						other.ypos   = bbox_center_y;
-						other.active = true;
-						other.alarm2 = 30;
-						break;
-					}
+			with(array_shuffle(FloorPit)){
+				if(
+					!place_meeting(x, y, Wall)       &&
+					!place_meeting(x, y, FloorExplo) &&
+					instance_near(bbox_center_x, bbox_center_y, other.target, 160)
+				){
+					other.x       = bbox_center_x;
+					other.y       = bbox_center_y;
+					other.visible = true;
+					other.alarm2  = 30;
+					break;
 				}
 			}
 		}
-		else alarm1 = 30 + random(60);
 	}
 
 	 // Motionize:
-	if(active){
+	if(visible){
+		alarm1 = 20 + random(20);
 		scrWalk(
-			(instance_seen(x, y, target)
-				? point_direction(xpos, ypos, target.x, target.y) + orandom(30)
+			(
+				instance_seen(x, y, target)
+				? point_direction(x, y, target.x, target.y) + orandom(30)
 				: random(360)
 			),
 			[20, 60]
 		);
+		if(hspeed != 0){
+			image_xscale = abs(image_xscale) * sign(hspeed);
+		}
 	}
 	
 #define WantEel_alrm2
 	alarm2 = -1;
 	
-	enemy_target(xpos, ypos);
-	
 	 // Watch Out:
-	if(instance_near(xpos, ypos, target, 96)){
-		instance_create(xpos, ypos, AssassinNotice);
+	if(enemy_target(x, y) && instance_near(x, y, target, 96)){
+		instance_create(x, y, AssassinNotice);
+	}
+	
+#define WantEel_destroy
+	 // Become Eel:
+	with(obj_create(x, y, "Eel")){
+		direction = other.direction;
+		speed     = other.speed;
+		walk      = other.walk;
+		elite     = other.elite;
+		right     = other.image_xscale;
+		alarm1    = 30;
+	}
+	
+	 // Effects:
+	repeat(3 + irandom(4)) instance_create(x, y, Bubble);
+	repeat(1 + irandom(2)) instance_create(x, y, PortalL);
+	
+	 // Allow Portals:
+	with(instances_matching(instances_matching(becomenemy, "name", "PortalPrevent"), "creator", id)){
+		instance_destroy();
 	}
 	
 	

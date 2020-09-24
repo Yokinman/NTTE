@@ -26,6 +26,7 @@
 	~	The normal treasure chest now spawns out at sea, and has better loot
 	~	The sunken treasure chest now spawns in its own room, instead of over walls
 	~	Crown of Crime now unlocks when you open the Lair
+	~	Lair now exits at 3-2, instead of 3-1
 	~	Lair's normal chests are now shop chests, instead of the bosses dropping them
 	~	Reduced Scrapyard sawblade trap spawns by 50% and removed them for Big Dog
 	*	Fixed the walltop rad maggot canister softlock
@@ -79,6 +80,7 @@
 	~	Pets are now revived through a prompt, instead of just contact
 	~	Pets always get sucked into portals even if untamed
 	~	Getting the @wSilver Scorpion @sis no longer based on RNG
+	~	Parrot pet now perches nicely on all modded characters and skins
 	~	Revised @bOcto's @sidle & walk sprites
 	~	Stats menu icons now align to the center column instead of the left
 	*	Fixed pets causing big lag if they couldn't find a path to the player
@@ -100,12 +102,12 @@
 	POLISH & IMPROVEMENT
 	+	Various performance improvements
 	+	Deflected projectiles visually change:
-		@2(sprEnemyBullet1:1) -> @2(sprAllyBullet:1)
-		@3(sprBullet2:1) -> @3(sprEBullet3:1)
+			@2(sprEnemyBullet1:1) -> @2(sprAllyBullet:1)
+			@3(sprBullet2:1) -> @3(sprEBullet3:1)
 	+	Neat alert indicators for various things, such as offscreen van portals $(sprite:alerts/sprVanAlert.png:1:7:6) and seals $(sprite:alerts/sprSealAlert.png:1:6:6)
 	+	NTTE's golden weapons are now stored manually
 	+	Implemented new unlock icons for NTTE's stats screen
-	+	Added a boss intro for the Big Fish boss
+	+	Added a boss intro to the Big Fish boss
 	+	Gave Pit Squid's tentacles a cool death sprite
 	+	Gave the Throne room some working stairs, the carpet is now fully walkable
 	+	Made the Throne's legs break the side walls as they extend
@@ -118,7 +120,12 @@
 	+	Guitar and Black Sword now spawn stuck in the ground, so awesome
 	+	YV's car spawns a 3x3 room so it doesn't overlap chests or props
 	+	Implemented some more underwater area polish
-	+	Gave shadows to big wall decals, the Throne, Captain's desk/TV, and Cuz's couch/TV
+	+	Gave shadows to:
+			Big wall decals
+			The Throne
+			Eyes' maggot friend
+			Captain's desk/TV
+			Cuz's couch/TV
 	+	Improved buried vaults a bit visually
 	+	All of NTTE's visuals now support higher pixel scaling modes
 	~	Spiderwalls launch Spiderlings on the z-axis to make them more obvious

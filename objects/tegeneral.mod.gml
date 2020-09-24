@@ -384,10 +384,21 @@
 							}
 						}
 					}
-					repeat(2){
-						with(projectile_create(x, y, "VenomFlak", 0, 0)){
-							charging = false;
-							alarm0   = 1;
+					with(projectile_create(x, y, "VenomFlak", 0, 0)){
+						charging = false;
+						alarm0   = 1;
+					}
+					with(projectile_create(x, y, GreenExplosion, 0, 0)){
+						alarm0 = -1;
+						
+						 // Small Explosions:
+						var _ang = random(360);
+						for(var _dir = _ang; _dir < _ang + 360; _dir += (360 / 3)){
+							var _dis = random_range(12, 24);
+							with(projectile_create(x + lengthdir_x(_dis, _dir), y + lengthdir_y(_dis, _dir), "SmallGreenExplosion", 0, 0)){
+								hitid = other.hitid;
+								instance_create(x, y, ScorchGreen);
+							}
 						}
 					}
 					
@@ -429,7 +440,8 @@
 					
 					 // Sound:
 					sound_play_pitchvol(sndGoldScorpionDead, 0.8,               2.0);
-					sound_play_hit_ext(sndWallBreakBrick,    0.5 + random(0.2), 2.5);
+					sound_play_hit_ext(sndBigMaggotDie,      0.5 + random(0.2), 3.0);
+					sound_play_hit_ext(sndExplosionCar,      0.8 + random(0.4), 1.5);
 				}
 				
 				 // Boneage:
@@ -4049,6 +4061,24 @@
 		}
 		
 		instance_destroy();
+	}
+	
+	
+#define SmallGreenExplosion_create(_x, _y)
+	/*
+		A SmallExplosion variant of the GreenExplosion
+	*/
+	
+	with(instance_create(_x, _y, SmallExplosion)){
+		 // Visual:
+		sprite_index = spr.SmallGreenExplosion;
+		hitid        = [sprite_index, "SMALL GREEN#EXPLOSION"];
+		
+		 // Vars:
+		damage = 12;
+		force  = 8;
+		
+		return id;
 	}
 	
 	
