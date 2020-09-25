@@ -1097,7 +1097,7 @@
 					 // Attempt to Unstick from Wall:
 					if(place_meeting(x, y, Wall)){
 						if(charge < 2.5){
-							instance_budge(Wall, -1);
+							instance_budge(Wall, 32);
 						}
 						
 						 // Big boy:

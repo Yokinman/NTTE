@@ -1723,7 +1723,7 @@
 				var	_name = self,
 					_scrt = "weapon_blood";
 					
-				if(mod_script_exists("weapon", _name, "weapon_blood")){
+				if(mod_script_exists("weapon", _name, _scrt)){
 					var _wepList = [];
 					with(instances_matching(Player, "infammo", 0)){
 						if(player_active){
@@ -1743,7 +1743,7 @@
 									_cost = weapon_get_cost(_wep);
 									
 								if(ammo[_type] < _cost && _type != type_melee){
-									var _blood = mod_script_call_self("weapon", _name, "weapon_blood", _wep);
+									var _blood = mod_script_call_self("weapon", _name, _scrt, _wep);
 									if(_blood != 0){
 										ammo[_type] += _cost;
 										lasthit = [weapon_get_sprt(_wep), weapon_get_name(_wep)];
@@ -1842,6 +1842,30 @@
 			}
 			
 			exit;
+		}
+	}
+	
+	 // Unleash da Portal:
+	with(instances_matching(Player, "race", "robot")){
+		if(canspec && button_pressed(index, "spec") && bwep != wep_none){
+			if(player_active){
+				var	_scrt = "weapon_ntte_portal",
+					_name = wep_raw(wep);
+					
+				if(is_string(_name)){
+					if(mod_script_exists("weapon", _name, _scrt)){
+						if(mod_script_call("weapon", _name, _scrt, wep)){
+							with(projectile_create(x, y, "PortalBullet", random(360), 20)){
+								event_perform(ev_other, ev_animation_end);
+								move_contact_solid(direction, random_range(32, 160));
+								instance_destroy();
+							}
+							sound_play_hit_ext(sndGuardianDead, 0.6, 1);
+							view_shake_at(x, y, 30);
+						}
+					}
+				}
+			}
 		}
 	}
 	
@@ -4158,7 +4182,6 @@
 	}
 	
 #define chat_message(_message, _index)
-	
 	 // The Peas Feature (Peature):
 	if(string_upper(_message) == "LEGUME"){
 		with(instances_matching(CustomHitme, "name", "PizzaRubble")){

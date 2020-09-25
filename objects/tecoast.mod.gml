@@ -4881,7 +4881,9 @@
 		_x = x + lengthdir_x(l, d),
 		_y = y + lengthdir_y(l, d);
 		
-	instance_create(_x, _y, BubblePop).image_index = 1;
+	with(instance_create(_x, _y, BubblePop)){
+		image_index = 1;
+	}
 	repeat(3) scrFX(
 		_x,
 		_y,

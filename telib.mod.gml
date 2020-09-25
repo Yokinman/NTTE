@@ -4228,8 +4228,10 @@
 			           Use -1 to automatically determine the distance using the bounding boxes of the current instance and objAvoid
 	*/
 	
-	var	_isArray = is_array(_objAvoid),
-		_canWall = (!place_meeting(x, y, Floor) || (_isArray ? array_exists(_objAvoid, Wall) : (_objAvoid == Wall)));
+	var	_isArray  = is_array(_objAvoid),
+		_inLevel  = !place_meeting(xprevious, yprevious, Floor),
+		_disAdd   = 4,
+		_dirStart = 0;
 		
 	 // Auto Max Distance:
 	if(_disMax < 0){
@@ -4242,7 +4244,7 @@
 				if(_mask < 0){
 					_mask = object_get_sprite(self);
 				}
-				_w = max(_w, (sprite_get_bbox_right(_mask) + 1) - sprite_get_bbox_left(_mask));
+				_w = max(_w, (sprite_get_bbox_right(_mask)  + 1) - sprite_get_bbox_left(_mask));
 				_h = max(_h, (sprite_get_bbox_bottom(_mask) + 1) - sprite_get_bbox_top(_mask));
 			}
 			else{
@@ -4251,11 +4253,10 @@
 			}
 		}
 		
-		_disMax = (sqrt(sqr(bbox_width + _w) + sqr(bbox_height + _h)) / 2) + _disAdd;
+		_disMax = sqrt(sqr(bbox_width + _w) + sqr(bbox_height + _h)) + _disAdd;
 	}
 	
 	 // Starting Direction:
-	var _dirStart = 0;
 	if(x != xprevious || y != yprevious){
 		_dirStart = point_direction(x, y, xprevious, yprevious);
 	}
@@ -4264,9 +4265,7 @@
 	}
 	
 	 // Search for Open Space:
-	var	_dis    = 0,
-		_disAdd = 4;
-		
+	var _dis = 0;
 	while(_dis <= _disMax){
 		 // Look Around:
 		var _dirAdd = 360 / max(1, 4 * _dis);
@@ -4275,7 +4274,7 @@
 				_y = y + lengthdir_y(_dis, _dir);
 				
 			if(_isArray ? (array_length(instances_meeting(_x, _y, _objAvoid)) <= 0) : !place_meeting(_x, _y, _objAvoid)){
-				if(_canWall || (place_free(_x, _y) && (position_meeting(_x, _y, Floor) || place_meeting(_x, _y, Floor)))){
+				if(_inLevel || (place_free(_x, _y) && (position_meeting(_x, _y, Floor) || place_meeting(_x, _y, Floor)))){
 					x = _x;
 					y = _y;
 					xprevious = x;

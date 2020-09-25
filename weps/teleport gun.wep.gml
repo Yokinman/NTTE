@@ -4,39 +4,52 @@
 	
 	 // LWO:
 	global.lwoWep = {
-		wep  : mod_current,
-		inst : []
+		wep      : mod_current,
+		inst     : [],
+		gunangle : 0
 	};
 	
-#define weapon_name   return "TELEPORT GUN";
-#define weapon_text   return "DON'T BLINK";
-#define weapon_swap   return sndSwapEnergy;
-#define weapon_sprt   return global.sprWep;
-#define weapon_area   return 6; // 3-1
-#define weapon_type   return type_melee;
-#define weapon_cost   return 2;
-//#define weapon_rads   return 16;
-#define weapon_load   return 25; // 0.83 Seconds
-#define weapon_melee  return false;
+#define weapon_name         return "TELEPORT GUN";
+#define weapon_text         return "DON'T BLINK";
+#define weapon_sprt         return global.sprWep;
+#define weapon_area         return 7; // 3-2
+#define weapon_type         return type_melee;
+#define weapon_load         return 10; // 0.33 Seconds
+#define weapon_auto         return true;
+#define weapon_melee        return false;
+#define weapon_ntte_portal  return true;
 
+#define weapon_swap
+	sound_play(sndCrystalTB);
+	return sndSwapShotgun;
+	
 #define weapon_fire(_wep)
 	var _fire = weapon_fire_init(_wep);
 	_wep = _fire.wep;
 	
 	 // Portal Bullet:
-	with(projectile_create(x, y, "PortalBullet", gunangle, 12)){
-		image_speed = 2.5;
-		mask_index  = mskBullet1;
-		damage      = 25;
+	with(projectile_create(x, y, "PortalBullet", gunangle, random_range(11, 13))){
+		mask   = mskPlasma;
+		damage = 25;
+		spec   = _fire.spec;
+		roids  = _fire.roids;
 		
 		 // Remember Me:
 		array_push(_wep.inst, id);
 	}
+	_wep.gunangle = gunangle;
+	
+	 // Sound:
+	sound_play_hit(sndGuardianAppear, 0.2);
+	var _snd = sound_play_hit(sndClick, 0);
+	audio_sound_pitch(_snd, 1.5);
+	audio_sound_gain(_snd, 0.7 * audio_sound_get_gain(_snd), 0);
+	var _snd = sound_play_gun(sndCrystalTB, 0, 0.5);
+	audio_sound_pitch(_snd, 0.6 + random(0.2));
+	audio_sound_gain(_snd, 1.5 * audio_sound_get_gain(_snd), 0);
 	
 	 // Effects:
-	weapon_post(8, 16, 0);
-	motion_add(gunangle, 4);
-	move_contact_solid(gunangle, 12);
+	weapon_post(5, -5, 2);
 	
 #define step(_primary)
 	var _wep = wep_get(_primary, "wep", mod_current);
@@ -47,11 +60,25 @@
 		wep_set(_primary, "wep", _wep);
 	}
 	
-	 // Dynamic Reload:
+	 // Portal Bullet Control:
 	_wep.inst = instances_matching(_wep.inst, "", null);
 	if(array_length(_wep.inst) > 0){
-		wep_set(_primary, "reload", weapon_get_load(_wep));
+		 // Dynamic Reload:
+		wep_set(_primary, "reload",    max(wep_get(_primary, "reload", 0), weapon_get_load(_wep)));
+		wep_set(_primary, "can_shoot", false);
+		
+		 // Aiming:
+		if(gunangle != _wep.gunangle){
+			var _turn = angle_difference(gunangle, _wep.gunangle);
+			with(_wep.inst){
+				if(hold){
+					direction   += _turn;
+					image_angle += _turn;
+				}
+			}
+		}
 	}
+	_wep.gunangle = gunangle;
 	
 	
 /// SCRIPTS

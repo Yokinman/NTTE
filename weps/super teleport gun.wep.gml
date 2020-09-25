@@ -4,22 +4,28 @@
 	
 	 // LWO:
 	global.lwoWep = {
-		wep  : mod_current,
-		inst : []
+		wep      : mod_current,
+		inst     : [],
+		gunangle : 0
 	};
 	
-#define weapon_name   return "SUPER TELEPORT GUN";
-#define weapon_text   return "POSITION INDETERMINABLE";
-#define weapon_swap   return sndSwapEnergy;
-#define weapon_sprt   return global.sprWep;
-#define weapon_type   return type_melee;
-#define weapon_load   return 45; // 1.5 Seconds
-#define weapon_melee  return false;
+#define weapon_name         return "SUPER TELEPORT GUN";
+#define weapon_text         return "POSITION INDETERMINABLE";
+#define weapon_sprt         return global.sprWep;
+#define weapon_type         return type_melee;
+#define weapon_load         return 45; // 1.5 Seconds
+#define weapon_auto         return true;
+#define weapon_melee        return false;
+#define weapon_ntte_portal  return true;
 
+#define weapon_swap
+	sound_play(sndCrystalTB);
+	return sndSwapShotgun;
+	
 #define weapon_area
 	 // Cursed Chest Exclusive:
 	if(("curse" in self && curse > 0) || ("curse" in other && other.curse > 0)){
-		return 8; // 3-3
+		return 13; // 5-2
 	}
 	
 	return -1;
@@ -31,20 +37,30 @@
 	 // Portal Bullets:
 	var _off = (10 * accuracy);
 	for(var i = -1.5; i <= 1.5; i++){
-		with(projectile_create(x, y, "PortalBullet", gunangle + (i * _off), 12)){
-			image_speed = 2.5;
-			mask_index  = mskBullet1;
-			damage      = 25;
+		with(projectile_create(x, y, "PortalBullet", gunangle + (i * _off), random_range(11, 13))){
+			mask   = mskPlasma;
+			damage = 25;
+			spec   = _fire.spec;
+			roids  = _fire.roids;
 			
 			 // Remember Me:
 			array_push(_wep.inst, id);
 		}
 	}
+	_wep.gunangle = gunangle;
+	
+	 // Sound:
+	sound_play_hit(sndGuardianAppear, 0.2);
+	var _snd = sound_play_hit(sndCrystalJuggernaut, 0);
+	audio_sound_pitch(_snd, 1.2 + random(0.2));
+	audio_sound_gain(_snd, 1.3 * audio_sound_get_gain(_snd), 0);
+	var _snd = sound_play_gun(sndCrystalTB, 0, -0.5);
+	audio_sound_pitch(_snd, 0.4 + random(0.2));
+	audio_sound_gain(_snd, 1.5 * audio_sound_get_gain(_snd), 0);
 	
 	 // Effects:
-	weapon_post(24, 32, 8);
-	motion_add(gunangle, 4);
-	move_contact_solid(gunangle, 12);
+	weapon_post(6, -12, 8);
+	
 	
 #define step(_primary)
 	var _wep = wep_get(_primary, "wep", mod_current);
@@ -55,11 +71,25 @@
 		wep_set(_primary, "wep", _wep);
 	}
 	
-	 // Dynamic Reload:
+	 // Portal Bullet Control:
 	_wep.inst = instances_matching(_wep.inst, "", null);
 	if(array_length(_wep.inst) > 0){
-		wep_set(_primary, "reload", weapon_get_load(_wep));
+		 // Dynamic Reload:
+		wep_set(_primary, "reload",    max(wep_get(_primary, "reload", 0), weapon_get_load(_wep)));
+		wep_set(_primary, "can_shoot", false);
+		
+		 // Aiming:
+		if(gunangle != _wep.gunangle){
+			var _turn = angle_difference(gunangle, _wep.gunangle);
+			with(_wep.inst){
+				if(hold){
+					direction   += _turn;
+					image_angle += _turn;
+				}
+			}
+		}
 	}
+	_wep.gunangle = gunangle;
 	
 	
 /// SCRIPTS

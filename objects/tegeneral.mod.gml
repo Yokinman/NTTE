@@ -3625,7 +3625,7 @@
 #define PortalBullet_create(_x, _y)
 	/*
 		A projectile that teleports its creator to itself when destroyed
-		Also teleports hitmes that it damages to its creator's position, basically swapping their positions
+		Also teleports non-prop hitmes that it damages to its creator's position, basically swapping their positions
 	*/
 	
 	with(instance_create(_x, _y, CustomProjectile)){
@@ -3638,40 +3638,73 @@
 		
 		 // Vars:
 		mask_index = mskNone;
+		mask       = mskSuperFlakBullet;
 		damage     = 2;
 		force      = 0;
 		typ        = 1;
 		creator    = noone;
 		portal     = false;
+		hold       = true;
+		spec       = false;
+		roids      = false;
+		hit_thing  = false;
 		
 		return id;
 	}
 	
 #define PortalBullet_anim
-	 // Fire:
 	if(sprite_index == spr_spwn){
 		sprite_index = spr_idle;
-		if(mask_index == mskNone){
-			mask_index = mskSuperFlakBullet;
-		}
+		mask_index   = mask;
 		
 		 // FX:
-		sound_play_pitch(sndGuardianHurt, 1.5 + orandom(0.2));
-		repeat(5) scrFX(x, y, [direction + orandom(60), 3], Dust);
+		var _snd = audio_play_sound(sndGuardianHurt, 0, false);
+		audio_sound_pitch(_snd, 0.4 + random(0.1));
+		audio_sound_gain(_snd, 0.3, 0);
+		repeat(3){
+			scrFX(x, y, 3, Smoke);
+		}
 	}
 	
 #define PortalBullet_step
-	 // Spawning:
-	if(sprite_index == spr_spwn){
-		if(instance_exists(creator)){
-			var	l = 12,
-				d = direction;
-				
-			x = creator.x + lengthdir_x(l, d);
-			y = creator.y + lengthdir_y(l, d);
+	 // Charging:
+	if(hold){
+		 // Hold Still:
+		var _wep = variable_instance_get(creator, (roids ? "b" : "") + "wep");
+		if(
+			sprite_index == spr_spwn
+			|| (
+				instance_is(creator, Player)
+				&& creator.visible
+				&& array_length(instances_matching(CrystalShield, "creator", creator)) <= 0
+				&& button_check(creator.index, (spec ? "spec" : "fire"))
+				&& is_object(_wep)
+				&& is_array(lq_get(_wep, "inst"))
+				&& array_exists(_wep.inst, id)
+			)
+		){
+			if(instance_exists(creator)){
+				var	_l = 12 - variable_instance_get(creator, (roids ? "b" : "") + "wkick", 0),
+					_d = direction;
+					
+				x = creator.x + lengthdir_x(_l, _d);
+				y = creator.y + lengthdir_y(_l, _d);
+			}
+			motion_step(-1);
 		}
-		x -= hspeed_raw;
-		y -= vspeed_raw;
+		
+		 // Fire:
+		else{
+			hold = false;
+			
+			 // FX:
+			var _kick = (roids ? "b" : "") + "wkick";
+			if(_kick in creator){
+				variable_instance_set(creator, _kick, 10);
+			}
+			sound_play_pitch(sndGuardianHurt, 1.5 + orandom(0.2));
+			repeat(5) scrFX(x, y, [direction + orandom(60), 3], Dust);
+		}
 	}
 	
 	 // Slow Down:
@@ -3704,42 +3737,93 @@
 	}
 	
 #define PortalBullet_hit
-	if(projectile_canhit(other) && !instance_is(other, prop) && other.team != 0){
-		projectile_hit_push(other, damage, force);
-		
-		 // Portal:
-		var _portal = (portal && instance_is(other, Player));
-		if(_portal){
-			with(creator){
-				speed     = 0;
-				my_health = 0;
+	if(projectile_canhit(other) && other.my_health > 0){
+		if(instance_is(creator, Player) || (!instance_is(other, prop) && other.team != 0)){
+			projectile_hit_push(other, damage, force);
+			hit_thing = true;
+			
+			 // Portal:
+			var _portal = (portal && instance_is(other, Player));
+			if(_portal){
+				with(creator){
+					speed     = 0;
+					my_health = 0;
+				}
 			}
+			
+			 // Swap Positions:
+			with(other){
+				if(!instance_is(self, prop) && team != 0 && size < 6){
+					if(instance_exists(other.creator)){
+						x = other.creator.x;
+						y = other.creator.y;
+					}
+					else{
+						x = other.xstart;
+						y = other.ystart;
+					}
+					xprevious = x;
+					yprevious = y;
+					
+					 // Effects:
+					with(instance_create(x, y, BulletHit)){
+						sprite_index = sprPortalDisappear;
+						depth        = other.depth - 1;
+						image_angle  = 0;
+					}
+					repeat(3) scrFX(x, y, 2, Smoke);
+					sound_play_hit_ext(sndPortalAppear, 2.5, 2);
+					
+					 // Just in Case:
+					with(instance_create(x, y, PortalClear)){
+						mask_index   = other.mask_index;
+						sprite_index = other.sprite_index;
+						image_xscale = other.image_xscale;
+						image_yscale = other.image_yscale;
+						image_angle  = other.image_angle;
+					}
+				}
+			}
+			
+			 // Portal:
+			if(_portal){
+				instance_destroy();
+				if(instance_exists(other)){
+					instance_create(other.x, other.y, Portal);
+				}
+			}
+			
+			 // Death:
+			else instance_destroy();
 		}
-		
-		 // Swap Positions:
-		with(other){
-			if(!instance_is(self, prop) && team != 0 && size < 6){
-				if(instance_exists(other.creator)){
-					x = other.creator.x;
-					y = other.creator.y;
-				}
-				else{
-					x = other.xstart;
-					y = other.ystart;
-				}
-				xprevious = x;
-				yprevious = y;
-				
-				 // Effects:
+	}
+	
+#define PortalBullet_destroy
+	repeat(5) scrFX(x, y, [direction, 2], Smoke);
+	sound_play_hit_ext(sndGuardianDisappear, 2, 2);
+	
+	 // Teleport:
+	if(
+		instance_exists(creator)
+		&& (creator.visible || ("wading" in creator && creator.wading > 0))
+		&& (position_meeting(x, y, Floor) || place_meeting(x, y, Floor) || hit_thing)
+	){
+		with(creator){
+			 // Disappear:
+			if("spr_disappear" in self){
 				with(instance_create(x, y, BulletHit)){
-					sprite_index = sprPortalDisappear;
-					depth = other.depth - 1;
-					image_angle = 0;
+					sprite_index = other.spr_disappear;
+					image_xscale = other.image_xscale * other.right;
+					image_yscale = other.image_yscale;
+					image_angle  = other.image_angle;
+					depth        = other.depth - 1;
 				}
-				repeat(3) scrFX(x, y, 2, Smoke);
-				sound_play_hit_ext(sndPortalAppear, 2.5, 2);
-				
-				 // Just in Case:
+			}
+			
+			 // Move & Avoid Walls:
+			x = other.x;
+			y = other.y;
+			if(!instance_budge(Wall, 40)){
 				with(instance_create(x, y, PortalClear)){
 					mask_index   = other.mask_index;
 					sprite_index = other.sprite_index;
@@ -3748,116 +3832,59 @@
 					image_angle  = other.image_angle;
 				}
 			}
-		}
-		
-		 // Portal:
-		if(_portal){
-			instance_destroy();
-			if(instance_exists(other)){
-				instance_create(other.x, other.y, Portal);
-			}
-		}
-		
-		 // Death:
-		else instance_destroy();
-	}
-	
-#define PortalBullet_destroy
-	repeat(5) scrFX(x, y, [direction, 2], Smoke);
-	sound_play_hit_ext(sndGuardianDisappear, 2, 2);
-	
-	 // Teleport:
-	if(instance_exists(creator)){
-		with(creator){
-			 // Disappear:
-			if("spr_disappear" in self){
-				with(instance_create(x, y, BulletHit)){
-					sprite_index = other.spr_disappear;
-					image_xscale = other.image_xscale * other.right;
-					image_yscale = other.image_yscale;
-					image_angle = other.image_angle;
-					depth = other.depth - 1;
-				}
-			}
-			
-			 // Move:
-			x = other.x;
-			y = other.y;
 			xprevious = x;
 			yprevious = y;
-			
-			 // Unwall:
-			instance_budge(Wall, -1);
 			
 			 // Appear:
 			image_index = 0;
 			if("spr_appear" in self){
 				sprite_index = spr_appear;
 			}
+			else with(instance_create(x, y, BulletHit)){
+				sprite_index = spr.PortalBulletHit;
+				image_angle  = 0;
+			}
 			sound_play_hit_ext(sndPortalAppear, 3, (instance_is(id, Player) ? 0.5 : 1.5));
+			
+			 // Move Shield:
+			with(instances_matching(CrystalShield, "creator", id)){
+				instance_create(x, y, CrystalShieldDisappear);
+				x = other.x;
+				y = other.y;
+			}
+			
+			 // Player Impact Zone:
+			if(instance_is(self, Player)){
+				var _minID = GameObject.id;
+				with(projectile_create(x, y, "BatScreech", 0, 0)){
+					image_alpha = 0;
+					damage      = 4;
+					force       = 1.5;
+				}
+				with(instances_matching_gt(Dust, "id", _minID)){
+					instance_delete(id);
+				}
+				
+				 // Effects:
+				sleep(80);
+				view_shake_at(x, y, 40);
+				motion_add(direction + 180, 4);
+				var _ang = random(360);
+				for(var _dir = _ang; _dir < _ang + 360; _dir += (360 / 5)){
+					with(instance_create(x, y, PortalL)){
+						mask_index = mskAlly;
+						move_contact_solid(_dir + orandom(30), random_range(32, 40));
+					}
+				}
+			}
 		}
 	}
 	
-	 // Creator Dead:
+	 // Can't Teleport:
 	else with(instance_create(x, y, BulletHit)){
 		sprite_index = sprPortalDisappear;
 		image_xscale = 0.7;
 		image_yscale = image_xscale;
-	}
-
-	// Extra Player fire stuff:
-	if(instance_is(creator, Player)){
-		/*
-		with(projectile_create(x, y, MeatExplosion, 0, 0)){
-			sprite_index = sprPortalShock;
-			image_xscale = 0.55;
-			image_yscale = 0.55;
-			image_alpha  = 0;
-			damage       = 12;
-		}
-		*/
-		var _minID = GameObject.id;
-		with(projectile_create(x, y, "BatScreech", 0, 0)){
-			image_alpha = 0;
-			damage = 4;
-			force *= 3/2;
-		}
-		with(instances_matching_gt(Dust, "id", _minID)){
-			instance_delete(id);
-		}
-		
-		/*
-		 // Lightning:
-		for(var i = 0; i < 360; i += 360 / 4){
-			with(projectile_create(x, y, Lightning, direction + i, 0)){
-				ammo = irandom_range(5, 10);
-				event_perform(ev_alarm, 0);
-			}
-			with(instances_matching_gt(Lightning, "id", _minID)){
-				sprite_index = spr.PortalBulletLightning;
-				image_index = 0;
-				image_speed += (1 - (min(distance_to_object(creator), 48) / 48)) / 8;
-			}
-			with(instances_matching_gt(LightningHit, "id", _minID)){
-				with(instance_create(x, y, BulletHit)){
-					sprite_index = sprThrowHit;
-					image_xscale = 2/3;
-					image_yscale = image_xscale;
-				}
-				instance_delete(id);
-			}
-		}
-		*/
-		
-		 // Effects:
-		sleep(80);
-		view_shake_at(x, y, 40);
-		with(instance_create(x, y, CaveSparkle)){
-			sprite_index = spr.PortalBulletHit;
-		}
-		with(creator){
-			motion_add(direction + 180, 4);
-		}
 	}
 	
 	
