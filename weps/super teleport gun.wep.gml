@@ -9,14 +9,13 @@
 		gunangle : 0
 	};
 	
-#define weapon_name         return "SUPER TELEPORT GUN";
-#define weapon_text         return "POSITION INDETERMINABLE";
-#define weapon_sprt         return global.sprWep;
-#define weapon_type         return type_melee;
-#define weapon_load         return 45; // 1.5 Seconds
-#define weapon_auto         return true;
-#define weapon_melee        return false;
-#define weapon_ntte_portal  return true;
+#define weapon_name   return "SUPER TELEPORT GUN";
+#define weapon_text   return "POSITION INDETERMINABLE";
+#define weapon_sprt   return global.sprWep;
+#define weapon_type   return type_melee;
+#define weapon_load   return 45; // 1.5 Seconds
+#define weapon_auto   return true;
+#define weapon_melee  return false;
 
 #define weapon_swap
 	sound_play(sndCrystalTB);
@@ -30,18 +29,31 @@
 	
 	return -1;
 	
+#define weapon_ntte_eat
+	 // Unleash da Portal:
+	with(projectile_create(x, y, "PortalBullet", random(360), 20)){
+		event_perform(ev_other, ev_animation_end);
+		move_contact_solid(direction, random_range(32, 160));
+		instance_destroy();
+	}
+	
+	 // Effects:
+	view_shake_at(x, y, 30);
+	sound_play_pitch(sndGuardianDead, 0.6);
+	
 #define weapon_fire(_wep)
 	var _fire = weapon_fire_init(_wep);
 	_wep = _fire.wep;
 	
 	 // Portal Bullets:
-	var _off = (10 * accuracy);
-	for(var i = -1.5; i <= 1.5; i++){
-		with(projectile_create(x, y, "PortalBullet", gunangle + (i * _off), random_range(11, 13))){
+	var _num = 4;
+	for(var _off = -1; _off <= 1; _off += 2 / (_num - 1)){
+		with(projectile_create(x, y, "PortalBullet", gunangle + (15 * _off * accuracy), random_range(11, 13))){
 			mask   = mskPlasma;
 			damage = 25;
 			spec   = _fire.spec;
 			roids  = _fire.roids;
+			offset = 20 - (2 * abs(_off));
 			
 			 // Remember Me:
 			array_push(_wep.inst, id);

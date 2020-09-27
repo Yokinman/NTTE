@@ -343,7 +343,8 @@
 #define floor_bones(_num, _chance, _linked)                                             return  mod_script_call_self('mod', 'telib', 'floor_bones', _num, _chance, _linked);
 #define floor_walls()                                                                   return  mod_script_call_self('mod', 'telib', 'floor_walls');
 #define wall_tops()                                                                     return  mod_script_call_self('mod', 'telib', 'wall_tops');
-#define wall_clear(_x1, _y1, _x2, _y2)                                                          mod_script_call_nc  ('mod', 'telib', 'wall_clear', _x1, _y1, _x2, _y2);
+#define wall_clear(_x, _y)                                                              return  mod_script_call_self('mod', 'telib', 'wall_clear', _x, _y);
+#define wall_delete(_x1, _y1, _x2, _y2)                                                         mod_script_call_nc  ('mod', 'telib', 'wall_delete', _x1, _y1, _x2, _y2);
 #define sound_play_hit_ext(_snd, _pit, _vol)                                            return  mod_script_call_self('mod', 'telib', 'sound_play_hit_ext', _snd, _pit, _vol);
 #define race_get_sprite(_race, _sprite)                                                 return  mod_script_call     ('mod', 'telib', 'race_get_sprite', _race, _sprite);
 #define race_get_title(_race)                                                           return  mod_script_call_self('mod', 'telib', 'race_get_title', _race);
@@ -373,4 +374,3 @@
 #define charm_instance(_inst, _charm)                                                   return  mod_script_call_nc  ('mod', 'telib', 'charm_instance', _inst, _charm);
 #define motion_step(_mult)                                                              return  mod_script_call_self('mod', 'telib', 'motion_step', _mult);
 #define pool(_pool)                                                                     return  mod_script_call_nc  ('mod', 'telib', 'pool', _pool);
-#define area_get_shad_color(_area)                                                      return  mod_script_call_nc  ('mod', 'telib', 'area_get_shad_color', _area);

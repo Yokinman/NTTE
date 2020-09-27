@@ -609,10 +609,10 @@
 						_fy = _floor.y + lengthdir_y(_floor.h / 2, _dir);
 						
 					if(!position_meeting(_fx + dcos(_dir), _fy - dsin(_dir), Floor)){
-						var	_hallW = max(1, abs(lengthdir_x(_hallDis / 32, _dir))),
-							_hallH = max(1, abs(lengthdir_y(_hallDis / 32, _dir))),
-							_hallX = _fx + lengthdir_x(max(32, _hallDis) / 2, _dir),
-							_hallY = _fy + lengthdir_y(max(32, _hallDis) / 2, _dir),
+						var	_hallW    = max(1, abs(lengthdir_x(_hallDis / 32, _dir))),
+							_hallH    = max(1, abs(lengthdir_y(_hallDis / 32, _dir))),
+							_hallX    = _fx + lengthdir_x(max(32, _hallDis) / 2, _dir),
+							_hallY    = _fy + lengthdir_y(max(32, _hallDis) / 2, _dir),
 							_hallXOff = lengthdir_x(32, _dir),
 							_hallYOff = lengthdir_y(32, _dir);
 							
@@ -642,8 +642,8 @@
 							if(_spawn){
 								var	_x = bbox_center_x,
 									_y = bbox_center_y,
-									_w = bbox_width  / 32,
-									_h = bbox_height / 32;
+									_w = floor(bbox_width  / 32),
+									_h = floor(bbox_height / 32);
 									
 								 // Store Walls:
 								var	_wall = [],
@@ -660,7 +660,7 @@
 										array_push(_tops, variable_instance_get_list(self));
 										instance_delete(id);
 									}
-									with(instance_rectangle_bbox(bbox_left - 16, bbox_top - 16, bbox_right + 16 - 1, bbox_bottom + 16 - 1, TopSmall)){
+									with(instance_rectangle_bbox(bbox_left - 1, bbox_top - 1, bbox_right, bbox_bottom, TopSmall)){
 										array_push(_tops, variable_instance_get_list(self));
 										instance_delete(id);
 									}
@@ -703,10 +703,10 @@
 								 // Details:
 								with(instances_matching_gt(Floor, "id", _minID)){
 									if(chance(1, 5)){
-										var s = styleb;
+										var _b = styleb;
 										styleb = false;
 										instance_create(random_range(bbox_left, bbox_right + 1), random_range(bbox_top, bbox_bottom + 1), Detail);
-										styleb = s;
+										styleb = _b;
 									}
 									depth = 10;
 								}
@@ -1988,7 +1988,8 @@
 #define floor_bones(_num, _chance, _linked)                                             return  mod_script_call_self('mod', 'telib', 'floor_bones', _num, _chance, _linked);
 #define floor_walls()                                                                   return  mod_script_call_self('mod', 'telib', 'floor_walls');
 #define wall_tops()                                                                     return  mod_script_call_self('mod', 'telib', 'wall_tops');
-#define wall_clear(_x1, _y1, _x2, _y2)                                                          mod_script_call_nc  ('mod', 'telib', 'wall_clear', _x1, _y1, _x2, _y2);
+#define wall_clear(_x, _y)                                                              return  mod_script_call_self('mod', 'telib', 'wall_clear', _x, _y);
+#define wall_delete(_x1, _y1, _x2, _y2)                                                         mod_script_call_nc  ('mod', 'telib', 'wall_delete', _x1, _y1, _x2, _y2);
 #define sound_play_hit_ext(_snd, _pit, _vol)                                            return  mod_script_call_self('mod', 'telib', 'sound_play_hit_ext', _snd, _pit, _vol);
 #define race_get_sprite(_race, _sprite)                                                 return  mod_script_call     ('mod', 'telib', 'race_get_sprite', _race, _sprite);
 #define race_get_title(_race)                                                           return  mod_script_call_self('mod', 'telib', 'race_get_title', _race);
@@ -2018,4 +2019,3 @@
 #define charm_instance(_inst, _charm)                                                   return  mod_script_call_nc  ('mod', 'telib', 'charm_instance', _inst, _charm);
 #define motion_step(_mult)                                                              return  mod_script_call_self('mod', 'telib', 'motion_step', _mult);
 #define pool(_pool)                                                                     return  mod_script_call_nc  ('mod', 'telib', 'pool', _pool);
-#define area_get_shad_color(_area)                                                      return  mod_script_call_nc  ('mod', 'telib', 'area_get_shad_color', _area);

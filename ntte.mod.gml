@@ -891,15 +891,13 @@
 		case area_jungle: /// JUNGLE where is the hive ?
 			
 			 // Top Spawns:
-			with(instances_matching([Bush, JungleAssassinHide, JungleBandit, JungleFly], "", null)){
+			var _topify = [Bush, JungleBandit, JungleFly];
+			if(GameCont.loops > 0){
+				array_push(_topify, JungleAssassinHide);
+			}
+			with(instances_matching(_topify, "", null)){
 				if(chance(1, 4)){
-					if(object_index = JungleAssassinHide) {
-						with(instance_create(x, y, JungleAssassin)) top_create(x, y, id, -1, -1);
-						
-						instance_delete(self);
-					}
-					
-					else top_create(x, y, id, -1, -1);
+					top_create(x, y, id, -1, -1);
 				}
 			}
 			
@@ -1845,24 +1843,17 @@
 		}
 	}
 	
-	 // Unleash da Portal:
+	 // Robot Eating:
 	with(instances_matching(Player, "race", "robot")){
 		if(canspec && button_pressed(index, "spec") && bwep != wep_none){
 			if(player_active){
-				var	_scrt = "weapon_ntte_portal",
-					_name = wep_raw(wep);
-					
+				var _name = wep_raw(wep);
 				if(is_string(_name)){
-					if(mod_script_exists("weapon", _name, _scrt)){
-						if(mod_script_call("weapon", _name, _scrt, wep)){
-							with(projectile_create(x, y, "PortalBullet", random(360), 20)){
-								event_perform(ev_other, ev_animation_end);
-								move_contact_solid(direction, random_range(32, 160));
-								instance_destroy();
-							}
-							sound_play_hit_ext(sndGuardianDead, 0.6, 1);
-							view_shake_at(x, y, 30);
-						}
+					mod_script_call("weapon", _name, "weapon_ntte_eat", wep);
+					
+					 // Red:
+					if(weapon_get_red(wep)){
+						obj_create(x, y, "RedAmmoPickup");
 					}
 				}
 			}
@@ -4334,7 +4325,8 @@
 #define floor_bones(_num, _chance, _linked)                                             return  mod_script_call_self('mod', 'telib', 'floor_bones', _num, _chance, _linked);
 #define floor_walls()                                                                   return  mod_script_call_self('mod', 'telib', 'floor_walls');
 #define wall_tops()                                                                     return  mod_script_call_self('mod', 'telib', 'wall_tops');
-#define wall_clear(_x1, _y1, _x2, _y2)                                                          mod_script_call_nc  ('mod', 'telib', 'wall_clear', _x1, _y1, _x2, _y2);
+#define wall_clear(_x, _y)                                                              return  mod_script_call_self('mod', 'telib', 'wall_clear', _x, _y);
+#define wall_delete(_x1, _y1, _x2, _y2)                                                         mod_script_call_nc  ('mod', 'telib', 'wall_delete', _x1, _y1, _x2, _y2);
 #define sound_play_hit_ext(_snd, _pit, _vol)                                            return  mod_script_call_self('mod', 'telib', 'sound_play_hit_ext', _snd, _pit, _vol);
 #define race_get_sprite(_race, _sprite)                                                 return  mod_script_call     ('mod', 'telib', 'race_get_sprite', _race, _sprite);
 #define race_get_title(_race)                                                           return  mod_script_call_self('mod', 'telib', 'race_get_title', _race);
@@ -4364,6 +4356,5 @@
 #define charm_instance(_inst, _charm)                                                   return  mod_script_call_nc  ('mod', 'telib', 'charm_instance', _inst, _charm);
 #define motion_step(_mult)                                                              return  mod_script_call_self('mod', 'telib', 'motion_step', _mult);
 #define pool(_pool)                                                                     return  mod_script_call_nc  ('mod', 'telib', 'pool', _pool);
-#define area_get_shad_color(_area)                                                      return  mod_script_call_nc  ('mod', 'telib', 'area_get_shad_color', _area);
 #define teevent_set_active(_name, _active)                                              return  mod_script_call_nc('mod', 'teevents', 'teevent_set_active', _name, _active);
 #define teevent_get_active(_name)                                                       return  mod_script_call_nc('mod', 'teevents', 'teevent_get_active', _name);

@@ -9,19 +9,30 @@
 		gunangle : 0
 	};
 	
-#define weapon_name         return "TELEPORT GUN";
-#define weapon_text         return "DON'T BLINK";
-#define weapon_sprt         return global.sprWep;
-#define weapon_area         return 7; // 3-2
-#define weapon_type         return type_melee;
-#define weapon_load         return 10; // 0.33 Seconds
-#define weapon_auto         return true;
-#define weapon_melee        return false;
-#define weapon_ntte_portal  return true;
+#define weapon_name   return "TELEPORT GUN";
+#define weapon_text   return "DON'T BLINK";
+#define weapon_sprt   return global.sprWep;
+#define weapon_area   return 7; // 3-2
+#define weapon_type   return type_melee;
+#define weapon_load   return 10; // 0.33 Seconds
+#define weapon_auto   return true;
+#define weapon_melee  return false;
 
 #define weapon_swap
 	sound_play(sndCrystalTB);
 	return sndSwapShotgun;
+	
+#define weapon_ntte_eat
+	 // Unleash da Portal:
+	with(projectile_create(x, y, "PortalBullet", random(360), 20)){
+		event_perform(ev_other, ev_animation_end);
+		move_contact_solid(direction, random_range(32, 160));
+		instance_destroy();
+	}
+	
+	 // Effects:
+	view_shake_at(x, y, 30);
+	sound_play_pitch(sndGuardianDead, 0.6);
 	
 #define weapon_fire(_wep)
 	var _fire = weapon_fire_init(_wep);

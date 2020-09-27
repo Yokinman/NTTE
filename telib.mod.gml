@@ -226,7 +226,7 @@
 
 #macro bbox_center_x (bbox_left + bbox_right + 1) / 2
 #macro bbox_center_y (bbox_top + bbox_bottom + 1) / 2
-#macro bbox_width    (bbox_right + 1) - bbox_left
+#macro bbox_width    (bbox_right  + 1) - bbox_left
 #macro bbox_height   (bbox_bottom + 1) - bbox_top
 
 #macro FloorNormal instances_matching(Floor, "object_index", Floor)
@@ -246,6 +246,7 @@
 #macro team_sprite_obj_map global.team_sprite_object_map
 
 #define obj_create(_x, _y, _name)
+	 // Normal Object:
 	if(is_real(_name) && object_exists(_name)){
 		return instance_create(_x, _y, _name);
 	}
@@ -2605,9 +2606,6 @@
 		}
 	}
 	
-#define frame_active(_interval)
-	return ((current_frame % _interval) < current_time_scale);
-	
 #define skill_get_icon(_skill)
 	/*
 		Returns an array containing the [sprite_index, image_index] of a mutation's HUD icon
@@ -3176,21 +3174,21 @@
 	 // Normal Area:
 	return area_get_background_color(_area);
 	
-#define area_get_shad_color(_area)
-	/*
-		Return's a given area's shadow color, but also supports custom areas
-	*/
-	
-	 // Custom Area:
-	if(is_string(_area)){
-		var _scrt = "area_shadow_color";
-		if(mod_script_exists("area", _area, _scrt)){
-			return mod_script_call("area", _area, _scrt);
-		}
-	}
-	
-	 // Normal Area:
-	return area_get_shadow_color(_area);
+//#define area_get_shad_color(_area)
+//	/*
+//		Return's a given area's shadow color, but also supports custom areas
+//	*/
+//	
+//	 // Custom Area:
+//	if(is_string(_area)){
+//		var _scrt = "area_shadow_color";
+//		if(mod_script_exists("area", _area, _scrt)){
+//			return mod_script_call("area", _area, _scrt);
+//		}
+//	}
+//	
+//	 // Normal Area:
+//	return area_get_shadow_color(_area);
 	
 #define area_get_sprite(_area, _spr)
 	/*
@@ -3816,7 +3814,7 @@
 				with(instances_matching(instances_matching(_obj, "x", _x), "y", _y)) instance_delete(id);
 			}
 			else{
-				floor_clear(_x, _y, _x + _w - 1, _y + _h - 1);
+				floor_delete(_x, _y, _x + _w - 1, _y + _h - 1);
 			}
 		}
 		
@@ -3844,7 +3842,7 @@
 		with(_inst){
 			if(!instance_exists(FloorMaker)){
 				 // Clear Area:
-				wall_clear(bbox_left, bbox_top, bbox_right, bbox_bottom);
+				wall_delete(bbox_left, bbox_top, bbox_right, bbox_bottom);
 				
 				 // Details:
 				if(chance(1, 6)){
@@ -3878,7 +3876,7 @@
 		if(instance_exists(Wall)){
 			with(other){
 				 // Un-Wall:
-				wall_clear(_x1, _y1, _x2, _y2);
+				wall_delete(_x1, _y1, _x2, _y2);
 				
 				 // Re-Wall:
 				for(var _fx = _x1; _fx < _x2 + 1; _fx += 16){
@@ -3897,7 +3895,11 @@
 	
 	return _inst;
 	
-#define floor_clear(_x1, _y1, _x2, _y2)
+#define floor_delete(_x1, _y1, _x2, _y2)
+	/*
+		Deletes all Floors and Floor-related objects within the given rectangular area
+	*/
+	
 	with(instance_rectangle_bbox(_x1, _y1, _x2, _y2, Floor)){
 		for(var	_x = bbox_left; _x < bbox_right + 1; _x += 16){
 			for(var	_y = bbox_top; _y < bbox_bottom + 1; _y += 16){
@@ -3938,8 +3940,8 @@
 	
 #define floor_tunnel(_x1, _y1, _x2, _y2)
 	/*
-		Creates a PortalClear that destroys all Walls between two given points, making a FloorExplo tunnel
-		Tunnel's height defaults to 32, set its 'image_yscale' to change
+		Creates and returns a PortalClear that destroys all Walls between two given points, making a FloorExplo tunnel
+		Tunnel's height defaults to 32 (image_yscale=16), set its 'image_yscale' to change
 	*/
 	
 	with(instance_create(_x1, _y1, PortalClear)){
@@ -3948,8 +3950,8 @@
 			
 		sprite_index = sprBoltTrail;
 		image_speed  = 16 / _dis;
-		image_xscale = _dis / bbox_width;
-		image_yscale = 32 / bbox_height;
+		image_xscale = _dis;
+		image_yscale = 16;
 		image_angle  = _dir;
 		
 		 // Ensure Tunnel:
@@ -4184,23 +4186,47 @@
 	
 	return noone;
 	
+#define wall_clear(_x, _y)
+	/*
+		Creates and returns a PortalClear that destroys all Walls touching the calling instance at the given position
+	*/
 	
-#define wall_clear(_x1, _y1, _x2, _y2)
-	with(instance_rectangle_bbox(_x1, _y1, _x2, _y2, [Wall, TopSmall, TopPot, Bones, InvisiWall])){
-		if(instance_is(self, Wall)){
-			with(instances_matching(instances_matching(TrapScorchMark, "x", x), "y", y)){
-				instance_delete(id);
-			}
+	with(instance_create(_x, _y, PortalClear)){
+		sprite_index = ((other.mask_index < 0) ? other.sprite_index : other.mask_index);
+		image_xscale = other.image_xscale;
+		image_yscale = other.image_yscale;
+		image_angle  = other.image_angle;
+		
+		return id;
+	}
+	
+#define wall_delete(_x1, _y1, _x2, _y2)
+	/*
+		Deletes all Walls and Wall-related objects within the given rectangular area
+	*/
+	
+	with(instance_rectangle_bbox(_x1, _y1, _x2, _y2, [Wall, InvisiWall])){
+		with(instances_matching(instances_matching(TrapScorchMark, "x", x), "y", y)){
+			instance_delete(id);
 		}
+		instance_delete(id);
+	}
+	with(instance_rectangle_bbox(_x1, _y1, _x2, _y2, [TopSmall, TopPot, Bones])){
 		instance_delete(id);
 	}
 	
 #define wall_tops()
+	/*
+		Creates the outer TopSmall tiles around the calling Wall instance
+	*/
+	
 	var _minID = GameObject.id;
+	
 	instance_create(x - 16, y - 16, Top);
 	instance_create(x - 16, y,      Top);
 	instance_create(x,      y - 16, Top);
 	instance_create(x,      y,      Top);
+	
 	return instances_matching_gt(TopSmall, "id", _minID);
 	
 #define wall_update(_x1, _y1, _x2, _y2)
@@ -5751,12 +5777,14 @@
 		
 	for(var _side = -1; _side <= 1; _side += 2){
 		with(obj_create(_dx + lengthdir_x(16 * _side, _dir - 90), _dy + lengthdir_y(16 * _side, _dir - 90), "CatDoor")){
-			image_angle = _dir;
+			image_angle  = _dir;
 			image_yscale = -_side;
 			
 			 // Link Doors:
 			partner = _partner;
-			with(partner) partner = other;
+			with(partner){
+				partner = other;
+			}
 			_partner = id;
 			
 			 // Ensure LoS Wall Creation:
@@ -6098,7 +6126,7 @@
 			team_get_sprite(1, sprFlakBullet) == sprEFlak
 	*/
 	
-	var	_spriteList = team_sprite_map[? _sprite],
+	var	_spriteList  = team_sprite_map[? _sprite],
 		_spriteIndex = _team - sprite_team_start;
 		
 	if(_spriteIndex >= 0 && _spriteIndex < array_length(_spriteList)){

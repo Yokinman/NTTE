@@ -176,6 +176,17 @@
 	 // HUD Sprite:
 	return scythe_get(_wep, "sprt_hud");
 	
+#define weapon_ntte_eat
+	 // Partial Refund:
+	repeat(3){
+		with(instance_create(x, y, WepPickup)){
+			wep = "crabbone";
+		}
+	}
+	
+	 // Sound:
+	sound_play_pitchvol(sndMutant14Dead, 1.4, 0.5);
+	
 #define weapon_fire(_wep)
 	var _fire = weapon_fire_init(_wep);
 	_wep = _fire.wep;

@@ -336,12 +336,12 @@
 	if(place_meeting(x, y, Floor)){
 		y -= 8;
 		
+		 // Break Walls:
+		wall_clear(x, y);
+		
 		 // General FX:
 		sleep(100);
 		view_shake_at(x, y, 50);
-		with(instance_create(x, y, PortalClear)){
-			sprite_index = other.mask_index;
-		}
 		repeat(irandom_range(9, 18)){
 			with(instance_create(x, y, Debris)){
 				speed = random_range(6, 12);
@@ -1294,12 +1294,7 @@
 				
 			if(place_meeting(x, y, Floor)){
 				_open = true;
-				with(instance_create(x, y, PortalClear)){
-					sprite_index = ((other.mask_index < 0) ? other.sprite_index : other.mask_index);
-					image_xscale = other.image_xscale;
-					image_yscale = other.image_yscale;
-					image_angle  = other.image_angle;
-				}
+				wall_clear(x, y);
 			}
 			with(layout) if(!_open && obj == Floor){
 				var	_x = x,
@@ -1324,7 +1319,7 @@
 						_x2 = x + 48 - 1,
 						_y2 = y + 48 - 1;
 						
-					wall_clear(_x1, _y1, _x2, _y2);
+					wall_delete(_x1, _y1, _x2, _y2);
 					with(instance_rectangle_bbox(_x1, _y1, _x2, _y2, [Floor, SnowFloor])){
 						instance_destroy();
 					}
@@ -3642,12 +3637,12 @@
 		damage     = 2;
 		force      = 0;
 		typ        = 1;
+		offset     = 12;
 		creator    = noone;
 		portal     = false;
 		hold       = true;
 		spec       = false;
 		roids      = false;
-		hit_thing  = false;
 		
 		return id;
 	}
@@ -3684,11 +3679,17 @@
 			)
 		){
 			if(instance_exists(creator)){
-				var	_l = 12 - variable_instance_get(creator, (roids ? "b" : "") + "wkick", 0),
-					_d = direction;
-					
-				x = creator.x + lengthdir_x(_l, _d);
-				y = creator.y + lengthdir_y(_l, _d);
+				var _lastMask = mask_index;
+				mask_index = mskAlly;
+				
+				x = creator.x;
+				y = creator.y;
+				move_contact_solid(
+					direction,
+					offset - variable_instance_get(creator, (roids ? "b" : "") + "wkick", 0)
+				);
+				
+				mask_index = _lastMask;
 			}
 			motion_step(-1);
 		}
@@ -3740,7 +3741,6 @@
 	if(projectile_canhit(other) && other.my_health > 0){
 		if(instance_is(creator, Player) || (!instance_is(other, prop) && other.team != 0)){
 			projectile_hit_push(other, damage, force);
-			hit_thing = true;
 			
 			 // Portal:
 			var _portal = (portal && instance_is(other, Player));
@@ -3753,34 +3753,39 @@
 			
 			 // Swap Positions:
 			with(other){
-				if(!instance_is(self, prop) && team != 0 && size < 6){
-					if(instance_exists(other.creator)){
-						x = other.creator.x;
-						y = other.creator.y;
-					}
-					else{
-						x = other.xstart;
-						y = other.ystart;
-					}
-					xprevious = x;
-					yprevious = y;
-					
-					 // Effects:
-					with(instance_create(x, y, BulletHit)){
-						sprite_index = sprPortalDisappear;
-						depth        = other.depth - 1;
-						image_angle  = 0;
-					}
-					repeat(3) scrFX(x, y, 2, Smoke);
-					sound_play_hit_ext(sndPortalAppear, 2.5, 2);
-					
-					 // Just in Case:
-					with(instance_create(x, y, PortalClear)){
-						mask_index   = other.mask_index;
-						sprite_index = other.sprite_index;
-						image_xscale = other.image_xscale;
-						image_yscale = other.image_yscale;
-						image_angle  = other.image_angle;
+				if(size < 6){
+					if(
+						(!instance_is(self, prop) && team != 0)
+						|| instance_is(self, RadChest)
+						|| instance_is(self, Car)
+						|| instance_is(self, CarVenus)
+						|| instance_is(self, CarVenusFixed)
+						|| instance_is(self, CarThrow)
+						|| instance_is(self, MeleeFake)
+						|| instance_is(self, JungleAssassinHide)
+					){
+						if(instance_exists(other.creator)){
+							x = other.creator.x;
+							y = other.creator.y;
+						}
+						else{
+							x = other.xstart;
+							y = other.ystart;
+						}
+						xprevious = x;
+						yprevious = y;
+						
+						 // Effects:
+						with(instance_create(x, y, BulletHit)){
+							sprite_index = sprPortalDisappear;
+							depth        = other.depth - 1;
+							image_angle  = 0;
+						}
+						repeat(3) scrFX(x, y, 2, Smoke);
+						sound_play_hit_ext(sndPortalAppear, 2.5, 2);
+						
+						 // Just in Case:
+						wall_clear(x, y);
 					}
 				}
 			}
@@ -3806,11 +3811,15 @@
 	if(
 		instance_exists(creator)
 		&& (creator.visible || ("wading" in creator && creator.wading > 0))
-		&& (position_meeting(x, y, Floor) || place_meeting(x, y, Floor) || hit_thing)
+		&& (
+			position_meeting(x, y, Floor) ||
+			place_meeting(x, y, Floor)    ||
+			(instance_near(x, y, creator, 512) && instance_seen(x, y, creator) && !collision_line(x, y, creator.x, creator.y, InvisiWall, false, false))
+		)
 	){
 		with(creator){
 			 // Disappear:
-			if("spr_disappear" in self){
+			if("name" in self && name == "PortalGuardian"){
 				with(instance_create(x, y, BulletHit)){
 					sprite_index = other.spr_disappear;
 					image_xscale = other.image_xscale * other.right;
@@ -3819,25 +3828,23 @@
 					depth        = other.depth - 1;
 				}
 			}
+			else with(instance_create(x, y, BulletHit)){
+				sprite_index = sprPortalDisappear;
+				image_angle  = 0;
+			}
 			
 			 // Move & Avoid Walls:
 			x = other.x;
 			y = other.y;
 			if(!instance_budge(Wall, 40)){
-				with(instance_create(x, y, PortalClear)){
-					mask_index   = other.mask_index;
-					sprite_index = other.sprite_index;
-					image_xscale = other.image_xscale;
-					image_yscale = other.image_yscale;
-					image_angle  = other.image_angle;
-				}
+				wall_clear(x, y);
 			}
 			xprevious = x;
 			yprevious = y;
 			
 			 // Appear:
 			image_index = 0;
-			if("spr_appear" in self){
+			if("name" in self && name == "PortalGuardian"){
 				sprite_index = spr_appear;
 			}
 			else with(instance_create(x, y, BulletHit)){
@@ -4658,31 +4665,14 @@
 		if(other.unstick && place_meeting(x, y, Wall)){
 			if(place_meeting(x, y, Floor)){
 				 // Emergency:
-				if(other.maxspeed <= 0 || !instance_budge(Wall, -1)){
+				if(other.maxspeed <= 0 || !instance_budge(Wall, 24)){
 					 // Emergency+:
-					with(instance_create(x, y, PortalClear)){
-						mask_index   = other.mask_index;
-						sprite_index = other.sprite_index;
-						image_xscale = other.image_xscale;
-						image_yscale = other.image_yscale;
-						image_angle  = other.image_angle;
-					}
+					wall_clear(x, y);
 					
 					 // No Baby Jails:
 					with(instance_nearest_bbox(x, y, Floor)){
-						var	_fx = bbox_center_x,
-							_fy = bbox_center_y;
-							
-						while(true){
-							var _wall = collision_line(other.x, other.y, _fx, _fy, Wall, false, false);
-							with(_wall){
-								with(instance_create(x, y, FloorExplo)){
-									 // Visual Fix:
-									with(instances_matching_gt(Wall, "id", id)) visible = false;
-								}
-								instance_destroy();
-							}
-							if(!instance_exists(_wall)) break;
+						with(floor_tunnel(bbox_center_x, bbox_center_y, other.x, other.y)){
+							image_yscale = 1;
 						}
 					}
 				}
@@ -5346,16 +5336,62 @@
 				
 				var _inst  = instances_matching(instances_matching_gt(_object, "id", _lastID), "z", null),
 					_break = false;
-				
+					
+				 // Object-Specifics:
 				switch(_object){
-					case hitme: // Wall-Breaking Bros (Big Bandit)
+					case hitme: // Avoid Wall-Breaking Bros (Big Bandit)
 						with(instances_matching(_inst, "top_object_wallcheck", null)){
-							motion_step(1);
-							top_object_wallcheck = place_meeting(x, y, Wall);
-							if(top_object_wallcheck){
-								_inst = instances_matching_ne(_inst, "id", id);
+							if(instance_exists(self)){
+								top_object_wallcheck = false;
+								
+								motion_step(1);
+								
+								if(place_meeting(x, y, Wall)){
+									 // Check for Wall-Breaking Capabilities:
+									if(position_meeting(x, y, PortalClear)){
+										top_object_wallcheck = true;
+									}
+									else{
+										var	_x = x,
+											_y = y;
+											
+										with(instances_meeting(x, y, Wall)){
+											if(instance_exists(self) && place_meeting(x, y, other)){
+												with(other){
+													if(other.solid || solid){
+														x = xprevious;
+														y = yprevious;
+														other.x = other.xprevious;
+														other.y = other.yprevious;
+													}
+													
+													event_perform(ev_collision, Wall);
+													
+													if(instance_exists(self)){
+														x = _x;
+														y = _y;
+														if(!instance_exists(other)){
+															top_object_wallcheck = true;
+															break;
+														}
+													}
+													else break;
+												}
+											}
+										}
+									}
+									
+									 // Cancel Topification:
+									if(!instance_exists(self) || top_object_wallcheck){
+										_inst = instances_matching_ne(_inst, "id", self);
+										if(!instance_exists(self)){
+											continue;
+										}
+									}
+								}
+								
+								motion_step(-1);
 							}
-							motion_step(-1);
 						}
 						break;
 						
@@ -5370,6 +5406,7 @@
 						break;
 				}
 				
+				 // Topify:
 				if(array_length(_inst) > 0){
 					with(instances_matching(CustomObject, "name", "TopObject")){
 						with(
@@ -5385,23 +5422,37 @@
 							"ystart", search_y2),
 							"creator", null, noone, target)
 						){
-							if(!position_meeting(x, y, Floor)){
-								 // Effects:
-								if(instance_is(self, Effect) && !instance_is(self, ChestOpen) && !instance_is(self, Debris) && !instance_is(self, Scorchmark)){
-									if(instance_is(self, MeltSplat)){
-										instance_destroy();
-									}
-									else depth = min(depth, -6.01);
-								}
-								else if(instance_is(self, SharpTeeth)){
-									depth = min(depth, -8);
-								}
-								
-								 // Epic Stuff:
-								else top_create(x, y, id, 0, 0);
-							}
-							
 							_inst = array_delete_value(_inst, self);
+							
+							switch(_object){
+								case Effect:
+									if(!position_meeting(x, y, Floor)){
+										switch(object_index){
+											case ChestOpen:
+											case Debris:
+											case Scorchmark:
+												top_create(x, y, id, 0, 0);
+												break;
+												
+											case MeltSplat:
+												instance_destroy();
+												break;
+												
+											default:
+												depth = min(depth, -6.01);
+										}
+									}
+									break;
+									
+								case SharpTeeth:
+									depth = min(depth, -8);
+									break;
+									
+								default:
+									if(place_meeting(x, y, Wall) || !position_meeting(x, y, Floor)){
+										top_create(x, y, id, 0, 0);
+									}
+							}
 						}
 						if(array_length(_inst) <= 0){
 							break;
@@ -5832,7 +5883,8 @@
 #define floor_bones(_num, _chance, _linked)                                             return  mod_script_call_self('mod', 'telib', 'floor_bones', _num, _chance, _linked);
 #define floor_walls()                                                                   return  mod_script_call_self('mod', 'telib', 'floor_walls');
 #define wall_tops()                                                                     return  mod_script_call_self('mod', 'telib', 'wall_tops');
-#define wall_clear(_x1, _y1, _x2, _y2)                                                          mod_script_call_nc  ('mod', 'telib', 'wall_clear', _x1, _y1, _x2, _y2);
+#define wall_clear(_x, _y)                                                              return  mod_script_call_self('mod', 'telib', 'wall_clear', _x, _y);
+#define wall_delete(_x1, _y1, _x2, _y2)                                                         mod_script_call_nc  ('mod', 'telib', 'wall_delete', _x1, _y1, _x2, _y2);
 #define sound_play_hit_ext(_snd, _pit, _vol)                                            return  mod_script_call_self('mod', 'telib', 'sound_play_hit_ext', _snd, _pit, _vol);
 #define race_get_sprite(_race, _sprite)                                                 return  mod_script_call     ('mod', 'telib', 'race_get_sprite', _race, _sprite);
 #define race_get_title(_race)                                                           return  mod_script_call_self('mod', 'telib', 'race_get_title', _race);
@@ -5862,4 +5914,3 @@
 #define charm_instance(_inst, _charm)                                                   return  mod_script_call_nc  ('mod', 'telib', 'charm_instance', _inst, _charm);
 #define motion_step(_mult)                                                              return  mod_script_call_self('mod', 'telib', 'motion_step', _mult);
 #define pool(_pool)                                                                     return  mod_script_call_nc  ('mod', 'telib', 'pool', _pool);
-#define area_get_shad_color(_area)                                                      return  mod_script_call_nc  ('mod', 'telib', 'area_get_shad_color', _area);

@@ -46,6 +46,36 @@
 	 // Normal:
 	return weapon_get_sprt(_wep);
 	
+#define weapon_ntte_eat(_wep)
+	 // Fix Stacked Eating:
+	if(is_object(_wep)){
+		var _num = (lq_defget(_wep, "ammo", 0) - 1);
+		if(_num > 0) repeat(_num){
+			 // Regurgitate:
+			if(ultra_get("robot", 2) > 0 && chance(3, 7)){
+				sound_play_hit_big(sndRegurgitate, 0.2);
+				repeat(ultra_get("robot", 2)){
+					instance_create(x, y, choose(AmmoChest, choose(WeaponChest, WeaponChest, HealthChest)));
+				}
+			}
+			
+			 // Normal:
+			else if(random(maxhealth) > my_health && crown_current != crwn_life){
+				instance_create(x, y, HPPickup)
+			}
+			else{
+				instance_create(x, y, AmmoPickup)
+			}
+			
+			 // Throne Butt:
+			if(skill_get(mut_throne_butt) > 0){
+				repeat(skill_get(mut_throne_butt)){
+					instance_create(x, y, AmmoPickup);
+				}
+			}
+		}
+	}
+	
 #define weapon_fire(_wep)
 	var _fire = weapon_fire_init(_wep);
 	_wep = _fire.wep;
