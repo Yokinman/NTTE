@@ -1346,33 +1346,63 @@
 		instance_delete(id);
 	}
 	
-	 // Lair Chests:
-	var	_crime = (crown_current == "crime"),
-		_lair  = (skill_get("silver tongue") > 0); // (variable_instance_get(GameCont, "ntte_visits_lair", 0) > 0);
-		
-	if(_lair || _crime){
-		var _crimePick = (_crime ? choose(AmmoChest, WeaponChest) : -1);
-		
+	 // Crown of Crime:
+	if(crown_current == "crime"){
 		 // Cat Chests:
-		with(instances_matching_ne(AmmoChest, "object_index", IDPDChest, GiantAmmoChest)){
-			if(instance_is(self, _crimePick) || chance(_lair, 5)){
+		if(chance(1, 2)){
+			with(instances_matching_ne(AmmoChest, "object_index", IDPDChest, GiantAmmoChest)){
 				chest_create(x, y, "CatChest", true);
 				instance_delete(id);
 			}
 		}
 		
 		 // Bat Chests:
-		with(instances_matching_ne(WeaponChest, "object_index", GiantWeaponChest)){
-			if(instance_is(self, _crimePick) || chance(_lair, 5)){
-				with(chest_create(x, y, "BatChest", true)){
-					if("name" in self && name == "BatChest"){
-						big = (instance_is(other, BigWeaponChest) || instance_is(other, BigCursedChest));
-						curse = other.curse;
+		else with(instances_matching_ne(WeaponChest, "object_index", GiantWeaponChest)){
+			with(chest_create(x, y, "BatChest", true)){
+				if("name" in self && name == "BatChest"){
+					big   = (instance_is(other, BigWeaponChest) || instance_is(other, BigCursedChest));
+					curse = other.curse;
+				}
+			}
+			instance_delete(id);
+		}
+	}
+	
+	 // Silver Tongue:
+	if(skill_get("silver tongue") > 0){
+		floor_set_style(1, "lair");
+		repeat(skill_get("silver tongue")){
+			with(instance_random(FloorNormal)){
+				with(floor_room_create(bbox_center_x, bbox_center_y, 1, 1, "", pround(random(360), 90), 0, 0)){
+					chest_create(x, y, "CatChest", true);
+					
+					for(var _x = x1; _x < x2; _x += 16){
+						for(var _y = y1; _y < y2; _y += 16){
+							with(instance_create(_x, _y, Wall)){
+								sprite_index = area_get_sprite("lair", sprWall1Bot);
+								outspr       = area_get_sprite("lair", sprWall1Out);
+								topspr       = area_get_sprite("lair", sprWall1Top);
+							}
+						}
+					}
+					
+					if(fork()){
+						while(point_distance(x, y, 0.x, 0.y) > 128) wait 0;
+						wait 30;
+						trace("???");
+						with(instance_create(x, y, Explosion)){
+							alarm0 = -1;
+						}
+						wait 6;
+						repeat(5){
+							scrFX(x, y, 6, "CatDoorDebris");
+						}
+						exit;
 					}
 				}
-				instance_delete(id);
 			}
 		}
+		floor_reset_style();
 	}
 	
 	 // Red Ammo Canisters:

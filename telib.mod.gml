@@ -23,7 +23,7 @@
 		"tetrench"    : ["Angler", "Eel", "EelSkull", "ElectroPlasma", "ElectroPlasmaImpact", "Jelly", "JellyElite", "Kelp", "LightningDisc", "LightningDiscEnemy", "PitSpark", "PitSquid", "PitSquidArm", "PitSquidBomb", "PitSquidDeath", "QuasarBeam", "QuasarRing", "TeslaCoil", "TopDecalWaterMine", "TrenchFloorChunk", "Vent", "WantEel"],
 		"tesewers"    : ["AlbinoBolt", "AlbinoGator", "AlbinoGrenade", "BabyGator", "Bat", "BatBoss", "BatCloud", "BatDisc", "BatScreech", "BoneGator", /*"BossHealFX",*/ "Cabinet", "Cat", "CatBoss", "CatBossAttack", "CatDoor", "CatDoorDebris", "CatGrenade", "CatHole", "CatHoleBig", "CatHoleOpen", "CatLight", "ChairFront", "ChairSide", "Couch", "GatorStatue", "GatorStatueFlak", "Manhole", "NewTable", "Paper", "PizzaDrain", "PizzaManholeCover", "PizzaRubble", "PizzaTV", "SewerDrain", "SewerRug", "TurtleCool"],
 		"tescrapyard" : ["BoneRaven", "SawTrap", "SludgePool", "TopRaven", "TrapSpin", "Tunneler"],
-		"tecaves"     : ["ChaosHeart", "CrystalBrain", "CrystalClone", "CrystalHeart", "CrystalHeartBullet", "CrystalPropRed", "CrystalPropWhite", "EnergyBatSlash", "InvMortar", "MinerBandit", "Mortar", "MortarPlasma", "NewCocoon", "PlasmaImpactSmall", "RedBullet", "RedExplosion", "RedShank", "RedSlash", "RedSpider", "Spiderling", "TwinOrbital", "VlasmaBullet", "VlasmaCannon", "WallFake", "Warp", "WarpPortal"],
+		"tecaves"     : ["ChaosHeart", "CrystalBrain", "CrystalBrainDeath", "CrystalClone", "CrystalHeart", "CrystalHeartBullet", "CrystalPropRed", "CrystalPropWhite", "EnergyBatSlash", "InvMortar", "MinerBandit", "Mortar", "MortarPlasma", "NewCocoon", "PlasmaImpactSmall", "RedBullet", "RedExplosion", "RedShank", "RedSlash", "RedSpider", "Spiderling", "TwinOrbital", "VlasmaBullet", "VlasmaCannon", "WallFake", "Warp", "WarpPortal"],
 		"telabs"      : ["Button", "ButtonChest", "ButtonOld", "ButtonPickup", "ButtonReviveArea", "FreakChamber", "MutantVat", "PickupReviveArea", "PopoSecurity", "WallSlide"]
 	};
 	
@@ -461,7 +461,7 @@
 			var _clear = true;
 			if(_isDraw){
 				with(ds_map_values(lq_get(ntte_obj_bind, _type))){
-					if(array_length(inst) > 0){
+					if(array_length(_bind.inst) > 0){
 						_clear = false;
 						break;
 					}
@@ -838,10 +838,10 @@
 	motion_add(_hitdir, _hitvel);  // Knockback
 	nexthurt = current_frame + 6;  // I-Frames
 	sound_play_hit(snd_hurt, 0.3); // Sound
-
+	
 	 // Hurt Sprite:
 	sprite_index = spr_hurt;
-	image_index = 0;
+	image_index  = 0;
 
 #define enemy_death
 	pickup_drop(16, 0); // Bandit drop-ness

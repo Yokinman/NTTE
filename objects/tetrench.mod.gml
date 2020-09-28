@@ -1653,8 +1653,8 @@
 		eye_laser_delay -= current_time_scale;
 		if(eye_laser > 0){
 			if(bite <= 0 && eye_laser_delay < 30) bite = 1.2;
-			var s = sound_play_pitchvol(sndNothing2Appear, 0.7, 1.5);
-			audio_sound_set_track_position(s, audio_sound_length_nonsync(s) * clamp(eye_laser_delay / 40, 0, 0.8));
+			var _s = sound_play_pitchvol(sndNothing2Appear, 0.7, 1.5);
+			audio_sound_set_track_position(_s, audio_sound_length_nonsync(_s) * clamp(eye_laser_delay / 40, 0, 0.8));
 		}
 	}
 	if(eye_laser > 0){

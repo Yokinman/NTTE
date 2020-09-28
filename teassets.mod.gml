@@ -432,6 +432,8 @@
 			CrystalCloneOverlayAlly   = sprite(p + "sprCrystalCloneOverlayAlly",    8,  0,  0);
 			CrystalCloneOverlayPopo   = sprite(p + "sprCrystalCloneOverlayPopo",    8,  0,  0);
 			CrystalCloneOverlayCorpse = sprite(p + "sprCrystalCloneOverlayCorpse",  8,  0,  0);
+			CrystalCloneGun           = sprite_duplicate_ext(sprRevolver,   0, 1);
+			CrystalCloneGunTB         = sprite_duplicate_ext(sprMachinegun, 0, 1);
 			
 			 // Crystal Heart:
 			p = m + "CrystalHeart/";

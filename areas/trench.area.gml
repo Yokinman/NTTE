@@ -746,7 +746,7 @@
 			}
 			
 			/// Tentacle Outlines:
-				var	_arms = instances_seen_nonsync(instances_matching_le(instances_matching(instances_matching(CustomEnemy, "name", "PitSquidArm"), "visible", true), "nexthurt", current_frame), 32, 32),
+				var	_arms  = instances_seen_nonsync(instances_matching_le(instances_matching(instances_matching(CustomEnemy, "name", "PitSquidArm"), "visible", true), "nexthurt", current_frame), 32, 32),
 					_alpha = 0.3 + (0.25 * sin(current_frame / 10));
 					
 				 // Anti-Aliasing:
@@ -790,26 +790,26 @@
 				
 			 // Pit Squid:
 			with(instances_matching(CustomEnemy, "name", "PitSquid")){
-				var	_hurt = (nexthurt > current_frame + 3),
-					_xsc = image_xscale * max(pit_height, 0) * _surfScale,
-					_ysc = image_yscale * max(pit_height, 0) * _surfScale,
-					_ang = image_angle,
-					_col = merge_color(c_black, image_blend, clamp(pit_height, 0, 1) * (intro ? 1 : 1/3)),
-					_alp = image_alpha;
+				var	_xsc  = image_xscale * max(pit_height, 0) * _surfScale,
+					_ysc  = image_yscale * max(pit_height, 0) * _surfScale,
+					_ang  = image_angle,
+					_col  = merge_color(c_black, image_blend, clamp(pit_height, 0, 1) * (intro ? 1 : 1/3)),
+					_alp  = image_alpha,
+					_hurt = (nexthurt > current_frame + 3);
 					
 				 // Eyes:
 				with(eye){
 					var	_x = (x - _surfX) * _surfScale,
 						_y = (y - _surfY) * _surfScale,
-						l = dis * max(other.pit_height, 0) * _surfScale,
-						d = dir;
+						_l = dis * max(other.pit_height, 0) * _surfScale,
+						_d = dir;
 						
 					with(other){
 						 // Cornea + Pupil:
 						if(_hurt) draw_set_fog(true, _col, 0, 0);
 						if(other.blink_img < sprite_get_number(spr.PitSquidEyelid) - 1){
-							draw_sprite_ext(spr.PitSquidCornea, image_index, _x,                                    _y,                                    _xsc, _ysc, _ang, _col, _alp);
-							draw_sprite_ext(spr.PitSquidPupil,  image_index, _x + lengthdir_x(l * image_xscale, d), _y + lengthdir_y(l * image_yscale, d), _xsc, _ysc, _ang, _col, _alp);
+							draw_sprite_ext(spr.PitSquidCornea, image_index, _x,                                      _y,                                      _xsc, _ysc, _ang, _col, _alp);
+							draw_sprite_ext(spr.PitSquidPupil,  image_index, _x + lengthdir_x(_l * image_xscale, _d), _y + lengthdir_y(_l * image_yscale, _d), _xsc, _ysc, _ang, _col, _alp);
 						}
 						if(_hurt) draw_set_fog(false, 0, 0, 0);
 						

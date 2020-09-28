@@ -53,6 +53,12 @@
 	);
 	return sndSwapSword;
 	
+#define weapon_ntte_eat
+	 // Wtf:
+	with(obj_create(x, y, "CrystalClone")){
+		clone = other;
+	}
+	
 #define weapon_fire(_wep)
 	var _fire = weapon_fire_init(_wep);
 	_wep = _fire.wep;

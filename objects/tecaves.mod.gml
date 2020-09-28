@@ -79,17 +79,12 @@
 		Mastermind. Clones enemies.
 		
 		Vars:
-			target_x/target_y     - Coordinates the brain will try to navigate to
-			motion_obj            - Separate object for avoiding wall collision. Trades motion and position data with the brain
-			clone_max             - Max clone count
-			teleport              - Boolean. Indicates if the brain is currently teleporting
-			teleport_x/teleport_y - Position to draw at during teleportation. Doubles as a destination coordinate
-			min_tele_dist         - Minimum distance from the player the brain can teleport to
-			max_tele_dist         - Maximum distance from the player the brain can teleport to
-			dying                 - Boolean. Tracks if the brain has entered its death phase
-			death_throes          - The remaining number of throes in the death phase
-			death_time			  - Time until the next death throe
-			parts                 - Used in death anim
+			target_x/y           - Coordinates the brain will try to navigate to
+			motion_obj           - Separate object for avoiding wall collision. Trades motion and position data with the brain
+			clone_max            - Max clone count
+			teleport             - Boolean. Indicates if the brain is currently teleporting
+			teleport_x/y         - Position to draw at during teleportation
+			teleport_dis_min/max - The distance from the player that the brain can teleport within
 	*/
 	
 	with(instance_create(_x, _y, CustomEnemy)){
@@ -110,31 +105,27 @@
 		
 		 // Sounds:
 		snd_hurt = sndLightningCrystalHit;
-		snd_dead = sndLightningCrystalDeath;
+		snd_dead = sndLightningCrystalCharge;
 		
 		 // Vars:
-		mask_index    = mskBanditBoss;
-		direction     = random(360);
-		friction      = 0.1;
-		maxhealth     = 80;
-		raddrop       = 20;
-		size          = 3;
-		walk          = 0;
-		walkspeed     = 0.3;
-		maxspeed      = 1.2;
-		minspeed      = 0.4;
-		meleedamage   = 4;
-		clone_max     = 3;
-		teleport      = false;
-		teleport_x    = x;
-		teleport_y    = y;
-		min_tele_dist = 80;
-		max_tele_dist = 160;
-		candie        = false;
-		dying         = false;
-		death_throes  = irandom_range(3, 4);
-		death_time    = 0;
-		parts         = [];
+		mask_index       = mskBanditBoss;
+		direction        = random(360);
+		friction         = 0.1;
+		maxhealth        = 80;
+		raddrop          = 20;
+		size             = 3;
+		walk             = 0;
+		walkspeed        = 0.3;
+		maxspeed         = 1.2;
+		minspeed         = 0.4;
+		meleedamage      = 4;
+		clone_max        = 3;
+		teleport         = false;
+		teleport_x       = x;
+		teleport_y       = y;
+		teleport_dis_min = 80;
+		teleport_dis_max = 160;
+		corpse           = false;
 		
 		 // Alarms:
 		alarm1 = 90;
@@ -148,154 +139,37 @@
 	
 	 // Movement:
 	enemy_walk(walkspeed, maxspeed);
+	if(speed < minspeed){
+		speed = minspeed;
+	}
 	
 	 // Animate:
-	if(teleport){
+	if(sprite_index == spr_disappear){
 		if(anim_end){
-			if(sprite_index == spr_appear){
-				teleport = false;
-				x = teleport_x;
-				y = teleport_y;
-				sprite_index = enemy_sprite;
-				
-				 // For Safety:
-				wall_clear(x, y);
-			}
-			if(sprite_index == spr_disappear){
-				image_index -= image_speed_raw;
-			}
+			image_index -= image_speed_raw;
 		}
 	}
-	else{
-		if(!dying){
-			sprite_index = enemy_sprite;
-		}
-		else{
-			if(anim_end){
-				sprite_index = spr_hurt;
-			}
-		}
+	else if(sprite_index != spr_appear || anim_end){
+		sprite_index = enemy_sprite;
 	}
 	
-	 // Effects:
-	if(chance_ct(teleport, 4)){
-		CrystalBrain_effect(x + orandom(32), y + orandom(32));
-	}
-	
-	 // Dying:
-	if(my_health <= 0){
+	 // Teleporting:
+	if(teleport){
+		x      = 0;
+		y      = 0;
+		canfly = true;
 		
-		 // Begin Death:
-		if(!dying){
-			dying = true;
-			
-			 // Visual:
-			sprite_index = spr_hurt;
-			image_index = 0;
-			
-			 // Vars:
-			friction = 0.5;
-			speed = 0;
-			minspeed = 0;
-			maxspeed = 8;
-			
-			 // Parts:
-			parts = [];
-			repeat(sprite_get_number(spr_part)){
-				array_push(parts, {
-					angle : 0,
-					x_off : 0,
-					y_off : 0
-				});
-			}
-			
-			sound_play_hit(sndLightningCrystalCharge, 0.3);
-		}
-		
-		alarm1 = -1;
-		walk = 0;
-		
-		 // Mid Death:
-		death_time -= current_time_scale;
-		if(death_time <= 0){
-			
-			 // Effects:
-			if(chance_ct(2, 5)){
-				instance_create(x + orandom(12), y + orandom(12), Smoke);
-			}
-			
-			if(death_throes > 0){
-				death_time = random_range(10, 20);
-				death_throes--;
-				
-				 // Jerk Around:
-				speed     = random_range(3, 8);
-				direction = point_direction(x, y, xstart, ystart) + orandom(30);
-				move_contact_solid(direction, 4);
-				
-				 // Desperation Clone:
-				with(obj_create(x, y, "CrystalClone")){
-					creator = other;
-					clone   = instances_matching(instances_matching_lt(clone, "size", 3), "intro", null);
-				}
-				
-				 // Effects:
-				sound_play_hit(snd_hurt, 0.3);
-				view_shake_at(x, y, 15);
-				repeat(2){
-					with(scrFX(x, y, [random(360), random_range(2, 5)], Shell)){
-						sprite_index = spr.CrystalBrainChunk;
-						image_index = irandom(image_number - 1);
-						image_speed = 0;
-					}
-				}
-				
-				 // Falling Apart:
-				with(parts){
-					x_off += orandom(8);
-					y_off += orandom(8);
-					angle += orandom(4);
-				}
-			}
-			
-			 // Perish:
-			else{
-				candie = true;
-			}
+		 // Effects:
+		if(chance_ct(teleport, 4)){
+			CrystalBrain_effect(teleport_x + orandom(32), teleport_y + orandom(32));
 		}
 	}
-	
-#define CrystalBrain_end_step
-	speed = max(speed, minspeed);
-	canfly = teleport;
 	
 #define CrystalBrain_draw
+	var	_x = (teleport ? teleport_x : x),
+		_y = (teleport ? teleport_y : y);
 		
-	if(dying){
-		var _hurt = (sprite_index == spr_hurt && image_index < 1);
-			
-		if(_hurt) draw_set_fog(true, image_blend, 0, 0);
-		for(var i = 0; i < array_length(parts); i++){
-			var p = parts[i];
-			
-			 // Ghost:
-			if(i == floor(sprite_get_number(spr_part) / 2)){
-				draw_set_blend_mode(bm_add);
-				draw_sprite_ext(sprite_index, image_index, x, y, image_xscale, image_yscale, image_angle, image_blend, image_alpha * 2/3);
-				draw_set_blend_mode(bm_normal);
-			}
-			
-			 // Fragments:
-			draw_sprite_ext(spr_part, i, x + p.x_off + orandom(2), y + p.y_off + orandom(2), image_xscale * right, image_yscale, image_angle + p.angle, image_blend, image_alpha);
-		}
-		if(_hurt) draw_set_fog(false, c_white, 0, 0);
-	}
-	else{
-		var	_x = (teleport ? teleport_x : x),
-			_y = (teleport ? teleport_y : y);
-			
-		draw_sprite_ext(sprite_index, image_index, _x, _y, image_xscale * right, image_yscale, image_angle, image_blend, image_alpha);
-	}
+	draw_sprite_ext(sprite_index, image_index, _x, _y, image_xscale * right, image_yscale, image_angle, image_blend, image_alpha);
 	
 	/* DEPRICATED - FUNKY DRAW EFFECT
 	var _yoff = sin(wave / 20);
@@ -351,10 +225,9 @@
 	if(!teleport){
 		if(enemy_target(x, y)){
 			var _targetDir = point_direction(x, y, target.x, target.y),
-				_canWarp = true; // (my_health < maxhealth);
-			
-			if(instance_seen(x, y, target)){
-			
+				_canWarp   = true; // (my_health < maxhealth);
+				
+			if(instance_seen(x, y, target) || chance(1, 3)){
 				 // Attempt Cloning:
 				var _cloneNum = 0;
 				with(instances_matching(instances_matching(CustomObject, "name", "CrystalClone"), "creator", id)){
@@ -362,9 +235,9 @@
 				}
 				if(!chance(_cloneNum, clone_max)){
 					with(obj_create(x, y, "CrystalClone")){
-						_canWarp = false;
 						creator = other;
 					}
+					_canWarp = false;
 				}
 				
 				 // Get Back, Bro:
@@ -376,21 +249,20 @@
 			
 			 // Warp Out:
 			if(_canWarp && chance(1, 4)){
-				alarm1 = 30;
-				
-				teleport = true;
+				alarm1     = 30;
+				teleport   = true;
 				teleport_x = x;
 				teleport_y = y;
-				x = 0;
-				y = 0;
 				
 				 // Visual:
 				sprite_index = spr_disappear;
-				image_index = 0;
+				image_index  = 0;
 				
 				 // Effects:
+				sound_play_hit_ext(sndTVOn,          1.4 + random(0.2), 0.4);
+				sound_play_hit_ext(sndCrystalShield, 1.3 + random(0.2), 1);
 				repeat(8){
-					with(scrFX(teleport_x, teleport_y, [random(360), random(2)], CrystTrail)){
+					with(scrFX(teleport_x, teleport_y, random(2), CrystTrail)){
 						sprite_index = spr.CrystalRedTrail;
 					}
 				}
@@ -410,60 +282,104 @@
 	}
 	
 	 // Warp In:
-	else{
-		if(enemy_target(x, y)){
-			var _floor = noone,
-				_enemy = instances_matching(CustomEnemy, "name", "RedSpider");
-				
-			if(my_health < maxhealth || array_length(_enemy) <= 0){
-				var _minDis = min_tele_dist,
-					_maxDis = max_tele_dist;
+	else if(enemy_target(x, y)){
+		var _floor  = noone;
+		
+		 // Teleport Near Target:
+		if(my_health < maxhealth || !instance_exists(enemy)){
+			with(array_shuffle(FloorNormal)){
+				var _x = bbox_center_x,
+					_y = bbox_center_y;
 					
-				with(array_shuffle(FloorNormal)){
-					if(!instance_exists(_floor) && !place_meeting(x, y, Wall)){
-						var _x = bbox_center_x,
+				with(other){
+					if(instance_near(_x, _y, target, [teleport_dis_min, teleport_dis_max])){
+						if(!place_meeting(_x, _y, Wall)){
+							_floor = other;
+						}
+					}
+				}
+				if(instance_exists(_floor)){
+					break;
+				}
+			}
+		}
+		
+		 // Teleport Near Enemy:
+		if(!instance_exists(_floor)){
+			with(array_shuffle(enemy)){
+				with(other){
+					with(instance_nearest_bbox(other.x, other.y, FloorNormal)){
+						var	_x = bbox_center_x,
 							_y = bbox_center_y;
 							
-						if(instance_near(_x, _y, other.target, [_minDis, _maxDis])){
-							_floor = id;
+						with(other){
+							if(!instance_near(_x, _y, target, teleport_dis_min)){
+								if(!place_meeting(_x, _y, Wall)){
+									_floor = other;
+								}
+							}
 						}
 					}
 				}
-			}
-			else{
-				with(array_shuffle(_enemy)){
-					with(instance_nearest_array(x, y, FloorNormal)){
-						if(!instance_exists(_floor) && !place_meeting(x, y, Wall)){
-							_floor = id;
-						}
-					}
+				if(instance_exists(_floor)){
+					break;
 				}
 			}
-			if(instance_exists(_floor)){
-				with(_floor){
-					other.teleport_x = bbox_center_x;
-					other.teleport_y = bbox_center_y;
-				}
-				
-				 // Visual:
-				sprite_index = spr_appear;
-				image_index  = 0;
+		}
+		
+		 // Rematerialize:
+		if(instance_exists(_floor)){
+			teleport = false;
+			
+			 // Move:
+			with(_floor){
+				other.x = bbox_center_x;
+				other.y = bbox_center_y;
 			}
+			
+			 // Visual:
+			sprite_index = spr_appear;
+			image_index  = 0;
+			
+			 // Sound:
+			sound_play_hit_ext(sndHyperCrystalSpawn, 2.1 + random(0.3), 0.8);
 		}
 	}
 	
 #define CrystalBrain_death
-	pickup_drop(100, 0);
-	pickup_drop(50,  0);
+	 // Clear Space:
+	with(instance_create(x, y, PortalClear)){
+		image_xscale *= 0.8;
+		image_yscale *= 0.8;
+	}
+	
+	 // Epic Death:
+	with(obj_create(x, y, "CrystalBrainDeath")){
+		spr_dead     = other.spr_dead;
+		spr_shadow   = other.spr_shadow;
+		spr_shadow_x = other.spr_shadow_x;
+		spr_shadow_y = other.spr_shadow_y;
+		image_xscale = other.image_xscale * other.right;
+		image_yscale = other.image_yscale;
+		image_angle  = other.image_angle;
+		image_blend  = other.image_blend;
+		image_alpha  = other.image_alpha;
+		depth        = other.depth;
+		mask_index   = other.mask_index;
+		snd_hurt     = other.snd_hurt;
+		raddrop      = other.raddrop;
+		size         = other.size;
+		direction    = other.direction;
+		speed        = min(other.speed / 1.5, 8);
+	}
+	raddrop = 0;
 	
 	 // Effects:
-	view_shake_at(x, y, 30);
-	repeat(5){
-		with(scrFX(x, y, random_range(3, 7), Shell)){
-			sprite_index = spr.CrystalBrainChunk;
-			image_index  = irandom(image_number - 1);
-			image_speed  = 0;
-		}
+	with(instance_create(x, y, PortalL)){
+		depth = other.depth - 1;
+	}
+	repeat(8){
+		scrFX(x, y, 3, Smoke);
 	}
 	
 #define CrystalBrain_effect(_x, _y)
@@ -479,6 +395,186 @@
 	}
 	
 	return noone;
+	
+	
+#define CrystalBrainDeath_create(_x, _y)
+	/*
+		The death sequence for the CrystalBrain enemy
+		
+		Vars:
+			throes - The remaining number of throes before dying
+			broken - If the brain has broken into fragments or not
+			flash  - A timer that flashes the brain white when above 0
+			alarm0 - Time until the next death throe
+	*/
+	
+	with(instance_create(_x, _y, CustomObject)){
+		 // Visual:
+		spr_part     = spr.CrystalBrainPart;
+		spr_dead     = spr.CrystalBrainDead;
+		spr_shadow   = shd32;
+		spr_shadow_x = 0;
+		spr_shadow_y = 6;
+		image_index  = 2;
+		image_speed  = 0;
+		depth        = -2;
+		
+		 // Sound:
+		snd_hurt = sndLightningCrystalHit;
+		snd_dead = sndLightningCrystalDeath;
+		
+		 // Vars:
+		mask_index = mskBanditBoss;
+		friction   = 0.5;
+		size       = 3;
+		raddrop    = 20;
+		throes     = irandom_range(2, 3);
+		broken     = false;
+		flash      = 3;
+		
+		 // Alarms:
+		alarm0 = 15;
+		
+		return id;
+	}
+	
+#define CrystalBrainDeath_begin_step
+	 // Flash:
+	if(flash > 0){
+		flash -= current_time_scale;
+	}
+	
+#define CrystalBrainDeath_step
+	 // Alarms:
+	if(alarm0_run) exit;
+	
+	 // Wall Collision:
+	motion_step(1);
+	if(place_meeting(x, y, Wall)){
+		x = xprevious;
+		y = yprevious;
+		move_bounce_solid(true);
+	}
+	motion_step(-1);
+	
+#define CrystalBrainDeath_alrm0
+	alarm0 = 15;
+	
+	 // Fragment:
+	if(!broken){
+		broken = true;
+		sound_play_hit_ext(sndCrystalPropBreak, 1.4 + orandom(0.1), 4);
+	}
+	
+	 // Effects:
+	if(chance_ct(2, 5)){
+		instance_create(x + orandom(12), y + orandom(12), Smoke);
+	}
+	
+	 // Agony:
+	if(throes > 0){
+		throes--;
+		flash = 3;
+		
+		 // Jerk Around:
+		speed     = random_range(3, 6);
+		direction = point_direction(x, y, xstart, ystart) + orandom(30);
+		move_contact_solid(direction, 4);
+		
+		 // Desperation Clone:
+		with(obj_create(x, y, "CrystalClone")){
+			creator = other;
+			clone   = instances_matching(instances_matching_lt(clone, "size", 3), "intro", null);
+		}
+		
+		 // Chunk Off:
+		repeat(2){
+			with(scrFX(x, y, random_range(2, 5), Shell)){
+				sprite_index = spr.CrystalBrainChunk;
+				image_index  = irandom(image_number - 1);
+				image_speed  = 0;
+			}
+		}
+		
+		 // FX:
+		sound_play_hit(snd_hurt, 0.3);
+		view_shake_at(x, y, 15);
+	}
+	
+	 // Perish:
+	else instance_destroy();
+	
+#define CrystalBrainDeath_draw
+	if(flash > 0){
+		draw_set_fog(true, image_blend, 0, 0);
+	}
+	
+	var	_img = image_index,
+		_x   = x,
+		_y   = y,
+		_xsc = image_xscale,
+		_ysc = image_yscale,
+		_ang = image_angle,
+		_col = image_blend,
+		_alp = image_alpha;
+		
+	 // Fragments:
+	if(broken){
+		var	_offset   = 10 / max(1, 1 + throes),
+			_lastSeed = random_get_seed();
+			
+		for(var i = 0; i < sprite_get_number(spr_part); i++){
+			var	_ox = orandom(2),
+				_oy = orandom(2);
+				
+			random_set_seed(id + throes + i);
+			
+			draw_sprite_ext(
+				spr_part,
+				i,
+				_x + orandom(_offset) + _ox,
+				_y + orandom(_offset) + _oy,
+				_xsc,
+				_ysc,
+				_ang,
+				_col,
+				_alp
+			);
+			
+			random_set_seed(_lastSeed);
+		}
+	}
+	
+	 // Normal:
+	else draw_sprite_ext(spr_dead, _img, _x + orandom(2), _y + orandom(2), _xsc, _ysc, _ang, _col, _alp);
+	
+	if(flash > 0){
+		draw_set_fog(false, 0, 0, 0);
+	}
+	
+#define CrystalBrainDeath_destroy
+	 // Corpse:
+	with(corpse_drop(direction, speed)){
+		image_index = 3;
+	}
+	
+	 // Pickups:
+	pickup_drop(100, 0);
+	pickup_drop(50,  0);
+	rad_drop(x, y, raddrop, direction, speed);
+	
+	 // Sound:
+	sound_play_hit_big(snd_dead, 0.2);
+	
+	 // Effects:
+	view_shake_at(x, y, 30);
+	repeat(5){
+		with(scrFX(x, y, random_range(3, 7), Shell)){
+			sprite_index = spr.CrystalBrainChunk;
+			image_index  = irandom(image_number - 1);
+			image_speed  = 0;
+		}
+	}
 	
 	
 #define CrystalClone_create(_x, _y)
@@ -561,14 +657,27 @@
 						spr_walk     = other.spr_walk;
 						spr_hurt     = other.spr_hurt;
 						spr_dead     = other.spr_dead;
-						gunspr       = ((skill_get(mut_throne_butt) > 0) ? sprMachinegun : sprRevolver);
+						spr_shadow   = other.spr_shadow;
+						spr_shadow_x = other.spr_shadow_x;
+						spr_shadow_y = other.spr_shadow_y;
+						gunspr       = ((skill_get(mut_throne_butt) > 0) ? spr.CrystalCloneGunTB : spr.CrystalCloneGun);
 						sprite_index = spr_idle;
+						image_xscale = other.image_xscale;
+						image_yscale = other.image_yscale;
+						image_angle  = other.image_angle;
+						image_blend  = other.image_blend;
+						image_alpha  = other.image_alpha;
 						
 						 // Sounds:
 						snd_hurt = other.snd_hurt;
 						snd_dead = other.snd_dead;
 						sound_stop(sndAllySpawn);
 						sound_play(other.snd_wrld);
+						
+						 // Vars:
+						mask_index = other.mask_index;
+						maxhealth  = other.maxhealth;
+						my_health  = maxhealth;
 						
 						 // No Bleed:
 						alarm2 = -1;
@@ -613,8 +722,14 @@
 				with(other){
 					CrystalClone_effect(x, y, other.x, other.y);
 				}
-				sound_play_hit_ext(sndHyperCrystalSearch, 0.8 + random(0.3), 0.5);
+				sound_play_hit_ext(sndHyperCrystalSearch, 1.3 + random(0.4), 0.4);
 			}
+		}
+		
+		 // Failed:
+		else{
+			instance_destroy();
+			exit;
 		}
 	}
 	
@@ -623,7 +738,9 @@
 		appear -= (current_time_scale / 24);
 		with(target){
 			speed = 0;
-			visible = (other.appear <= 0);
+			if(other.appear <= 0){
+				visible = true;
+			}
 		}
 	}
 	
@@ -634,7 +751,7 @@
 		y = target.y;
 		
 		 // Visual:
-		depth = target.depth - 1;
+		depth      = target.depth - 1;
 		mask_index = target.sprite_index;
 		if(appear > 0){
 			target.visible = false;
@@ -699,45 +816,48 @@
 					with(_inst){
 						if(time > 60 || (time % 6) < 3){
 							with(target){
-								 // Self:
-								with(self) event_perform(ev_draw, 0);
-								
-								 // Appearing Visual:
 								if(other.appear > 0){
 									visible = true;
+								}
+								if(visible){
+									 // Self:
+									with(self) event_perform(ev_draw, 0);
 									
-									 // Set Hitbox to Sprite:
-									var	_lastMask   = mask_index,
-										_lastXScale = image_xscale;
+									 // Appearing Visual:
+									if(other.appear > 0){
+										 // Set Hitbox to Sprite:
+										var	_lastMask   = mask_index,
+											_lastXScale = image_xscale;
+											
+										mask_index = sprite_index;
+										if("right" in self){
+											image_xscale *= right;
+										}
 										
-									mask_index = sprite_index;
-									if("right" in self){
-										image_xscale *= right;
-									}
-									
-									 // Cool Wavy Cut:
-									var	_x1 = bbox_left,
-										_y1 = bbox_top,
-										_x2 = bbox_right  + 1,
-										_y2 = bbox_bottom + 1,
-										_h  = (_y2 - _y1) / 16,
-										_y  = lerp(_y1 - (_h * 2), _y2, min(1, other.appear));
+										 // Cool Wavy Cut:
+										var	_x1 = bbox_left,
+											_y1 = bbox_top,
+											_x2 = bbox_right  + 1,
+											_y2 = bbox_bottom + 1,
+											_h  = (_y2 - _y1) / 16,
+											_y  = lerp(_y1 - (_h * 2), _y2, min(1, other.appear));
+											
+										draw_set_blend_mode_ext(bm_zero, bm_zero);
+										draw_primitive_begin(pr_trianglestrip);
 										
-									draw_set_blend_mode_ext(bm_zero, bm_zero);
-									draw_primitive_begin(pr_trianglestrip);
-									
-									draw_vertex(_x1, _y1);
-									for(var _x = _x1; _x <= _x2; _x++){
-										draw_vertex(_x, max(_y1, _y + (_h * sin((_x - _x1 + current_frame) / (2 * _h))) + (_h * cos((_x - _x1 - current_frame) / (4 * _h)))));
-										draw_vertex(_x, _y1);
+										draw_vertex(_x1, _y1);
+										for(var _x = _x1; _x <= _x2; _x++){
+											draw_vertex(_x, max(_y1, _y + (_h * sin((_x - _x1 + current_frame) / (2 * _h))) + (_h * cos((_x - _x1 - current_frame) / (4 * _h)))));
+											draw_vertex(_x, _y1);
+										}
+										
+										draw_primitive_end();
+										draw_set_blend_mode(bm_normal);
+										
+										 // Reset Hitbox:
+										mask_index   = _lastMask;
+										image_xscale = _lastXScale;
 									}
-									
-									draw_primitive_end();
-									draw_set_blend_mode(bm_normal);
-									
-									 // Reset Hitbox:
-									mask_index   = _lastMask;
-									image_xscale = _lastXScale;
 								}
 							}
 						}
@@ -2151,7 +2271,7 @@
 		spr_dead     = spr.RedSpiderDead;
 		sprite_index = spr_idle;
 		spr_shadow   = shd24;
-		hitid        = [spr_idle, `@(color:${area_get_back_color("red")})RED SPIDER`];
+		hitid        = [spr_idle, "RED SPIDER"];
 		depth        = -2;
 		
 		 // Sounds:
@@ -3209,6 +3329,11 @@
 				
 			draw_ellipse(_x - (_w / 2), _y - (_h / 2), _x + (_w / 2), _y + (_h / 2), false);
 		}
+	}
+	
+	 // Crystal Brain Death:
+	with(instances_matching(instances_matching(CustomObject, "name", "CrystalBrainDeath"), "visible", true)){
+		draw_sprite(spr_shadow, 0, x + spr_shadow_x, y + spr_shadow_y);
 	}
 	
 #define ntte_bloom
