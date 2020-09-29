@@ -705,6 +705,18 @@
 			
 	}
 	
+#define BlockedRoom_cleanup
+	 // Play B-Theme on Next Level:
+	if(type == "Dummy" && dummy_spawn <= 0){
+		with(MusCont){
+			var _lastArea = GameCont.area;
+			GameCont.area = -1;
+			event_perform(ev_alarm, 11);
+			GameCont.area = _lastArea;
+			alarm_set(11, 1);
+		}
+		GameCont.proto = true;
+	}
 	
 #define MaggotPark_text    return `THE SOUND OF ${event_tip}FLIES`;
 #define MaggotPark_area    return area_desert;

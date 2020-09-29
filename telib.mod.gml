@@ -1511,9 +1511,9 @@
 	 // Return:
 	if(array_length(_instVars) > 0){
 		return (
-			(array_length(_inst) == 1)
-			? _instVars[0]
-			: _instVars
+			(is_array(_inst) || array_length(_instVars) > 1)
+			? _instVars
+			: _instVars[0]
 		);
 	}
 	

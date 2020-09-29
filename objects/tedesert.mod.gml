@@ -297,12 +297,11 @@
 #define BanditTent_create(_x, _y)
 	with(instance_create(_x, _y, CustomProp)){
 		 // Visual:
-		spr_idle     = spr.BanditTentIdle;
-		spr_hurt     = spr.BanditTentHurt;
-		spr_dead     = spr.BanditTentDead;
-		spr_shadow   = shd32;
-		spr_shadow_y = 2;
-		depth        = -1;
+		spr_idle   = spr.BanditTentIdle;
+		spr_hurt   = spr.BanditTentHurt;
+		spr_dead   = spr.BanditTentDead;
+		spr_shadow = spr.shd.BanditTent;
+		depth      = -1;
 		
 		 // Sound:
 		snd_hurt = sndHitPlant;

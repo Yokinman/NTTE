@@ -779,6 +779,7 @@
 				BanditTentWallIdle = sprite(p + "sprBanditTentWall",     1, 24, 24);
 				BanditTentWallHurt = sprite(p + "sprBanditTentWallHurt", 3, 24, 24);
 				BanditTentWallDead = sprite(p + "sprBanditTentWallDead", 3, 24, 24);
+				shd.BanditTent     = sprite(p + "shdBanditTent",         1, 24, 24);
 				
 				 // Big Cactus:
 				BigCactusIdle = sprite(p + "sprBigCactus",     1, 16, 16);
