@@ -159,17 +159,19 @@
 	*/
 	
 	switch(GameCont.subarea){
-		 // Small Pit Boy:
-		case 1:
+		
+		case 1: // Small Pit Boy
+			
 			with(instance_random(Floor)){
 				with(pet_spawn(bbox_center_x, bbox_center_y, "Octo")){
 					hiding = true;
 				}
 			}
+			
 			break;
 			
-		 // Big Pit Boy:
-		case 3:
+		case 3: // Big Pit Boy
+			
 			var	_x = 10016,
 				_y = 10016;
 				
@@ -187,7 +189,9 @@
 			}
 			
 			obj_create(_x + orandom(8), _y + random(8), "PitSquid");
+			
 			break;
+			
 	}
 	
 	 // Fix Props:
@@ -220,7 +224,7 @@
 		
 		/* fun fact trench used to exit at 4-1 woah
 		 // Cursed Caves:
-		with(Player) if(curse || bcurse){
+		with(Player) if(curse > 0 || bcurse > 0){
 			other.area = area_cursed_caves;
 		}
 		*/
@@ -407,8 +411,9 @@
 	alarm0 = irandom_range(30, 50);
 	
 	 // Pet Bubbles:
-	if(chance(1, 4)){
-		with(instances_matching(CustomHitme, "name", "Pet")){
+	if(chance(1, 4) && instance_exists(CustomHitme)){
+		var _inst = instances_matching(CustomHitme, "name", "Pet");
+		if(array_length(_inst)) with(_inst){
 			instance_create(x, y, Bubble);
 		}
 	}
@@ -439,36 +444,39 @@
 #define ntte_step
 	if(instance_exists(global.pit_bind.id) && global.pit_bind.id.visible){
 		 // Player Above Pits:
-		with(Player){
-			var _pit = pit_get(x, bbox_bottom);
-			
-			 // Do a spin:
-			if(speed < maxspeed - friction){
-				if(_pit){
-					var	_x = x + cos(wave / 10) * 0.25 * right,
-						_y = y + sin(wave / 10) * 0.25 * right;
-						
-					if(!place_meeting(_x, y, Wall)) x = _x;
-					if(!place_meeting(x, _y, Wall)) y = _y;
+		if(instance_exists(Player)){
+			with(Player){
+				var _pit = pit_get(x, bbox_bottom);
+				
+				 // Do a spin:
+				if(speed < maxspeed - friction){
+					if(_pit){
+						var	_x = x + cos(wave / 10) * 0.25 * right,
+							_y = y + sin(wave / 10) * 0.25 * right;
+							
+						if(!place_meeting(_x, y, Wall)) x = _x;
+						if(!place_meeting(x, _y, Wall)) y = _y;
+					}
 				}
-			}
-			
-			 // Pit Transition FX:
-			if(speed > 0 && _pit != pit_get(x - hspeed_raw, bbox_bottom - vspeed_raw)){
-				repeat(3) with(instance_create(x, y, Smoke)){
-					motion_add(other.direction, other.speed / (_pit ? 2 : 3));
-					if(!_pit) sprite_index = sprDust;
+				
+				 // Pit Transition FX:
+				if(speed > 0 && _pit != pit_get(x - hspeed_raw, bbox_bottom - vspeed_raw)){
+					repeat(3) with(instance_create(x, y, Smoke)){
+						motion_add(other.direction, other.speed / (_pit ? 2 : 3));
+						if(!_pit) sprite_index = sprDust;
+					}
+					sound_play_pitchvol(
+						asset_get_index("sndFootPlaRock" + choose("1", "3", "4", "5", "6")),
+						0.5 + orandom(0.1),
+						(_pit ? 0.8 : 0.5)
+					);
 				}
-				sound_play_pitchvol(
-					asset_get_index("sndFootPlaRock" + choose("1", "3", "4", "5", "6")),
-					0.5 + orandom(0.1),
-					(_pit ? 0.8 : 0.5)
-				);
 			}
 		}
 		
 		 // Floaty Effects Above Pits:
-		with(instances_matching([WepPickup, chestprop, RadChest], "speed", 0)){
+		var _inst = instances_matching([WepPickup, chestprop, RadChest], "speed", 0);
+		if(array_length(_inst)) with(_inst){
 			if(pit_get(x, bbox_bottom)){
 				var	_x = x + cos((current_frame + x + y) / 10) * 0.15,
 					_y = y + sin((current_frame + x + y) / 10) * 0.15;
@@ -479,43 +487,58 @@
 		}
 		
 		 // No Props Above Pits:
-		with(instances_matching_le(instances_matching_gt(prop, "my_health", 0), "size", 2)){
-			if(pit_get(x, y)){
-				if(
-					!instance_is(self, RadChest)      &&
-					!instance_is(self, Car)           &&
-					!instance_is(self, CarVenus)      &&
-					!instance_is(self, CarVenusFixed) &&
-					!instance_is(self, CarThrow)
-				){
-					my_health = 0;
+		if(instance_exists(prop)){
+			var _inst = instances_matching_le(instances_matching_gt(prop, "my_health", 0), "size", 2);
+			if(array_length(_inst)) with(_inst){
+				if(pit_get(x, y)){
+					if(
+						!instance_is(self, RadChest)      &&
+						!instance_is(self, Car)           &&
+						!instance_is(self, CarVenus)      &&
+						!instance_is(self, CarVenusFixed) &&
+						!instance_is(self, CarThrow)
+					){
+						my_health = 0;
+					}
 				}
 			}
 		}
 		
 		 // Stuff Falling Into Pits:
-		with(instances_matching_ne(instances_matching(instances_matching(Corpse, "trenchpit_check", null), "image_speed", 0), "sprite_index", sprPStatDead)){
-			if(instance_exists(enemy) || instance_exists(Portal)){
-				if(speed <= 0) trenchpit_check = true;
+		if(instance_exists(Corpse) && (instance_exists(enemy) || instance_exists(Portal))){
+			var _inst = instances_matching_ne(instances_matching(instances_matching(Corpse, "trenchpit_check", null), "image_speed", 0), "sprite_index", sprPStatDead);
+			if(array_length(_inst)) with(_inst){
+				if(speed <= 0){
+					trenchpit_check = true;
+				}
 				if(pit_get(x, y)){
 					pit_sink(x, y, sprite_index, image_index, image_xscale, image_yscale, image_angle, direction, speed, orandom(0.6))
 					instance_destroy();
 				}
 			}
 		}
-		with(instances_matching_le(instances_matching([ChestOpen, Debris, Shell, Feather], "trenchpit_check", null), "speed", 1)){
-			if(speed <= 0) trenchpit_check = true;
-			if(pit_get(x, bbox_bottom)){
-				pit_sink(x, y, sprite_index, image_index, image_xscale, image_yscale, image_angle, direction, speed, orandom(1));
-				instance_destroy();
+		if(instance_exists(ChestOpen) || instance_exists(Debris) || instance_exists(Shell) || instance_exists(Feather)){
+			var _inst = instances_matching_le(instances_matching([ChestOpen, Debris, Shell, Feather], "trenchpit_check", null), "speed", 1);
+			if(array_length(_inst)) with(_inst){
+				if(speed <= 0){
+					trenchpit_check = true;
+				}
+				if(pit_get(x, bbox_bottom)){
+					pit_sink(x, y, sprite_index, image_index, image_xscale, image_yscale, image_angle, direction, speed, orandom(1));
+					instance_destroy();
+				}
 			}
 		}
 		
 		 // Destroy PitSink Objects, Lag Helper:
-		var	s = instances_matching(CustomObject, "name", "PitSink"),
-			m = array_length(s);
+		var	_max  = 80,
+			_inst = instances_matching(CustomObject, "name", "PitSink");
 			
-		while(m > 80) with(s[--m]) instance_destroy();
+		if(array_length(_inst) > _max){
+			with(array_slice(_inst, _max, array_length(_inst) - _max)){
+				instance_destroy();
+			}
+		}
 	}
 	
 #define ntte_end_step
@@ -637,8 +660,10 @@
 			with(draw){
 				for(var j = 0; j < array_length(self); j++){
 					var _spr = self[j];
-					with(_inst[j]){
-						draw_sprite_ext(_spr, image_index, (x - _surfX) * _surfScale, (y - _surfY) * _surfScale, _surfScale, _surfScale, 0, c_white, 1);
+					if(array_length(_inst[j])){
+						with(_inst[j]){
+							draw_sprite_ext(_spr, image_index, (x - _surfX) * _surfScale, (y - _surfY) * _surfScale, _surfScale, _surfScale, 0, c_white, 1);
+						}
 					}
 				}
 			}
@@ -664,16 +689,20 @@
 			draw_set_color(c_black);
 			
 			 // Draw Pit Floors:
-			with(instance_rectangle_bbox(x, y, x + w, y + h, instances_matching(FloorPit, "visible", true))){
+			var _inst = instance_rectangle_bbox(x, y, x + w, y + h, instances_matching(FloorPit, "visible", true));
+			if(array_length(_inst)) with(_inst){
 				draw_sprite_ext(sprite_index, image_index, (x - _surfX) * _surfScale, (y - _surfY) * _surfScale, _surfScale, _surfScale, 0, c_white, 1);
 			}
 			
 			 // Cut Out Non-Pit Floors:
-			draw_set_blend_mode_ext(bm_zero, bm_inv_src_alpha);
-			with(instance_rectangle_bbox(x, y, x + w, y + h, instances_matching_le(instances_matching(FloorPitless, "visible", true), "depth", 8))){
-				draw_sprite_ext(sprite_index, image_index, (x - _surfX) * _surfScale, (y - _surfY) * _surfScale, _surfScale, _surfScale, 0, c_white, 1);
+			var _inst = instance_rectangle_bbox(x, y, x + w, y + h, instances_matching_le(instances_matching(FloorPitless, "visible", true), "depth", 8));
+			if(array_length(_inst)){
+				draw_set_blend_mode_ext(bm_zero, bm_inv_src_alpha);
+				with(_inst){
+					draw_sprite_ext(sprite_index, image_index, (x - _surfX) * _surfScale, (y - _surfY) * _surfScale, _surfScale, _surfScale, 0, c_white, 1);
+				}
+				draw_set_blend_mode(bm_normal);
 			}
-			draw_set_blend_mode(bm_normal);
 		}
 		
 		 // DRAW YOUR PIT SHIT HERE:
@@ -682,7 +711,8 @@
 		draw_rectangle(0, 0, w * scale, h * scale, false);
 			
 			 // Pit Spark:
-			with(instances_matching(instances_matching(CustomObject, "name", "PitSpark"), "tentacle_visible", true)){
+			var _inst = instances_matching(instances_matching(CustomObject, "name", "PitSpark"), "tentacle_visible", true);
+			if(array_length(_inst)) with(_inst){
 				var	_sparkRadius = [[25, 20], [20, 10]],
 					_sparkBright = (floor(image_index) % 2),
 					_sparkNum    = (dark ? 1 : array_length(_surfSpark));
@@ -745,94 +775,102 @@
 				}
 			}
 			
-			/// Tentacle Outlines:
-				var	_arms  = instances_seen_nonsync(instances_matching_le(instances_matching(instances_matching(CustomEnemy, "name", "PitSquidArm"), "visible", true), "nexthurt", current_frame), 32, 32),
-					_alpha = 0.3 + (0.25 * sin(current_frame / 10));
-					
-				 // Anti-Aliasing:
-				draw_set_fog(true, make_color_rgb(24, 21, 33), 0, 0);
-				var _oy = -1;
-				with(_arms){
-					for(var _ox = -1; _ox <= 1; _ox += 2){
-						draw_sprite_ext(
-							sprite_index,
-							image_index,
-							(x + _ox - _surfX) * _surfScale,
-							(y + _oy - _surfY) * _surfScale,
-							image_xscale * _surfScale * right,
-							image_yscale * _surfScale,
-							image_angle,
-							image_blend,
-							image_alpha * _alpha * 2
-						);
-					}
-				}
-				
-				 // Outlines:
-				draw_set_fog(true, make_color_rgb(235, 0, 67), 0, 0);
-				with(_arms){
-					for(var d = 0; d <= 180; d += 90){
-						draw_sprite_ext(
-							sprite_index,
-							image_index,
-							(x + dcos(d) - _surfX) * _surfScale,
-							(y - dsin(d) - _surfY) * _surfScale,
-							image_xscale * _surfScale * right,
-							image_yscale * _surfScale,
-							image_angle,
-							image_blend,
-							image_alpha * _alpha
-						);
-					}
-				}
-				
-				draw_set_fog(false, c_white, 0, 0);
-				
 			 // Pit Squid:
-			with(instances_matching(CustomEnemy, "name", "PitSquid")){
-				var	_xsc  = image_xscale * max(pit_height, 0) * _surfScale,
-					_ysc  = image_yscale * max(pit_height, 0) * _surfScale,
-					_ang  = image_angle,
-					_col  = merge_color(c_black, image_blend, clamp(pit_height, 0, 1) * (intro ? 1 : 1/3)),
-					_alp  = image_alpha,
-					_hurt = (nexthurt > current_frame + 3);
+			if(instance_exists(CustomEnemy)){
+				 // Tentacle Outlines:
+				var _inst = instances_seen_nonsync(instances_matching_le(instances_matching(instances_matching(CustomEnemy, "name", "PitSquidArm"), "visible", true), "nexthurt", current_frame), 32, 32);
+				if(array_length(_inst)){
+					var _alpha = 0.3 + (0.25 * sin(current_frame / 10));
 					
-				 // Eyes:
-				with(eye){
-					var	_x = (x - _surfX) * _surfScale,
-						_y = (y - _surfY) * _surfScale,
-						_l = dis * max(other.pit_height, 0) * _surfScale,
-						_d = dir;
-						
-					with(other){
-						 // Cornea + Pupil:
-						if(_hurt) draw_set_fog(true, _col, 0, 0);
-						if(other.blink_img < sprite_get_number(spr.PitSquidEyelid) - 1){
-							draw_sprite_ext(spr.PitSquidCornea, image_index, _x,                                      _y,                                      _xsc, _ysc, _ang, _col, _alp);
-							draw_sprite_ext(spr.PitSquidPupil,  image_index, _x + lengthdir_x(_l * image_xscale, _d), _y + lengthdir_y(_l * image_yscale, _d), _xsc, _ysc, _ang, _col, _alp);
+					 // Anti-Aliasing:
+					draw_set_fog(true, make_color_rgb(24, 21, 33), 0, 0);
+					var _oy = -1;
+					with(_inst){
+						for(var _ox = -1; _ox <= 1; _ox += 2){
+							draw_sprite_ext(
+								sprite_index,
+								image_index,
+								(x + _ox - _surfX) * _surfScale,
+								(y + _oy - _surfY) * _surfScale,
+								image_xscale * _surfScale * right,
+								image_yscale * _surfScale,
+								image_angle,
+								image_blend,
+								image_alpha * _alpha * 2
+							);
 						}
-						if(_hurt) draw_set_fog(false, 0, 0, 0);
-						
-						 // Eyelid:
-						draw_sprite_ext(spr.PitSquidEyelid, other.blink_img, _x, _y, _xsc, _ysc, _ang, _col, _alp);
 					}
+					
+					 // Outlines:
+					draw_set_fog(true, make_color_rgb(235, 0, 67), 0, 0);
+					with(_inst){
+						for(var d = 0; d <= 180; d += 90){
+							draw_sprite_ext(
+								sprite_index,
+								image_index,
+								(x + dcos(d) - _surfX) * _surfScale,
+								(y - dsin(d) - _surfY) * _surfScale,
+								image_xscale * _surfScale * right,
+								image_yscale * _surfScale,
+								image_angle,
+								image_blend,
+								image_alpha * _alpha
+							);
+						}
+					}
+					
+					draw_set_fog(false, c_white, 0, 0);
 				}
 				
-				/// Mouth:
-					var	_x = (xpos - _surfX) * _surfScale,
-						_y = (ypos - _surfY) * _surfScale;
+				 // Pit Squid:
+				with(instances_matching(CustomEnemy, "name", "PitSquid")){
+					var	_xsc  = image_xscale * max(pit_height, 0) * _surfScale,
+						_ysc  = image_yscale * max(pit_height, 0) * _surfScale,
+						_ang  = image_angle,
+						_col  = merge_color(c_black, image_blend, clamp(pit_height, 0, 1) * (intro ? 1 : 1/3)),
+						_alp  = image_alpha,
+						_hurt = (nexthurt > current_frame + 3);
 						
-					 // Bite:
-					if(bite > 0 && bite <= 1){
-						draw_sprite_ext(spr_bite, (1 - bite) * sprite_get_number(spr_bite), _x, _y, _xsc, _ysc, _ang, _col, _alp);
+					 // Eyes:
+					with(eye){
+						var	_x = (x - _surfX) * _surfScale,
+							_y = (y - _surfY) * _surfScale,
+							_l = dis * max(other.pit_height, 0) * _surfScale,
+							_d = dir;
+							
+						with(other){
+							 // Cornea + Pupil:
+							if(_hurt) draw_set_fog(true, _col, 0, 0);
+							if(other.blink_img < sprite_get_number(spr.PitSquidEyelid) - 1){
+								draw_sprite_ext(spr.PitSquidCornea, image_index, _x,                                      _y,                                      _xsc, _ysc, _ang, _col, _alp);
+								draw_sprite_ext(spr.PitSquidPupil,  image_index, _x + lengthdir_x(_l * image_xscale, _d), _y + lengthdir_y(_l * image_yscale, _d), _xsc, _ysc, _ang, _col, _alp);
+							}
+							if(_hurt) draw_set_fog(false, 0, 0, 0);
+							
+							 // Eyelid:
+							draw_sprite_ext(spr.PitSquidEyelid, other.blink_img, _x, _y, _xsc, _ysc, _ang, _col, _alp);
+						}
 					}
 					
-					 // Spit:
-					else if(spit > 0 && spit <= 1){
-						draw_sprite_ext(spr_fire, (1 - spit) * sprite_get_number(spr_fire), _x, _y, _xsc, _ysc, _ang, _col, _alp);
-					}
+					/// Mouth:
+						var	_x = (xpos - _surfX) * _surfScale,
+							_y = (ypos - _surfY) * _surfScale;
+							
+						 // Bite:
+						if(bite > 0 && bite <= 1){
+							draw_sprite_ext(spr_bite, (1 - bite) * sprite_get_number(spr_bite), _x, _y, _xsc, _ysc, _ang, _col, _alp);
+						}
+						
+						 // Spit:
+						else if(spit > 0 && spit <= 1){
+							draw_sprite_ext(spr_fire, (1 - spit) * sprite_get_number(spr_fire), _x, _y, _xsc, _ysc, _ang, _col, _alp);
+						}
+				}
 			}
-			with(instances_matching(CustomObject, "name", "PitSquidDeath")){
+			
+			 // Pit Squid Death:
+			var _inst = instances_matching(CustomObject, "name", "PitSquidDeath");
+			if(array_length(_inst)) with(_inst){
 				var	_xsc = image_xscale * max(pit_height, 0) * _surfScale,
 					_ysc = image_yscale * max(pit_height, 0) * _surfScale,
 					_ang = image_angle,
@@ -858,8 +896,11 @@
 			}
 			
 			 // Octo pet:
-			with(instances_matching(instances_matching(instances_matching(CustomHitme, "name", "Pet"), "pet", "Octo"), "hiding", true)){
-				draw_sprite_ext(sprite_index, image_index, (x - _surfX) * _surfScale, (y - _surfY) * _surfScale, image_xscale * _surfScale, image_yscale * _surfScale, image_angle, image_blend, visible);
+			if(instance_exists(CustomHitme)){
+				var _inst = instances_matching(instances_matching(instances_matching(CustomHitme, "name", "Pet"), "pet", "Octo"), "hiding", true);
+				if(array_length(_inst)) with(_inst){
+					draw_sprite_ext(sprite_index, image_index, (x - _surfX) * _surfScale, (y - _surfY) * _surfScale, image_xscale * _surfScale, image_yscale * _surfScale, image_angle, image_blend, visible);
+				}
 			}
 			
 			 // Pit Walls:
@@ -873,7 +914,8 @@
 			}
 			
 			 // WantEel:
-			with(instances_matching(instances_matching(CustomObject, "name", "WantEel"), "visible", true)){
+			var _inst = instances_matching(instances_matching(CustomObject, "name", "WantEel"), "visible", true);
+			if(array_length(_inst)) with(_inst){
 				draw_sprite_ext(
 					sprite_index,
 					image_index,
@@ -888,57 +930,63 @@
 			}
 			
 			 // Make Proto Statues Cooler:
-			with(ProtoStatue){
-				if(pit_get(x, bbox_bottom)){
-					spr_shadow = -1;
-					
-					var _spr = ((sprite_index == spr_hurt) ? spr.PStatTrenchHurt : spr.PStatTrenchIdle);
-					draw_sprite_ext(_spr,                  image_index, (x - _surfX) * _surfScale, (y - _surfY) * _surfScale, _surfScale, _surfScale, 0, c_white, 1);
-					draw_sprite_ext(spr.PStatTrenchLights, anim,        (x - _surfX) * _surfScale, (y - _surfY) * _surfScale, _surfScale, _surfScale, 0, c_white, 1);
+			if(instance_exists(ProtoStatue)){
+				with(ProtoStatue){
+					if(pit_get(x, bbox_bottom)){
+						spr_shadow = -1;
+						
+						var _spr = ((sprite_index == spr_hurt) ? spr.PStatTrenchHurt : spr.PStatTrenchIdle);
+						draw_sprite_ext(_spr,                  image_index, (x - _surfX) * _surfScale, (y - _surfY) * _surfScale, _surfScale, _surfScale, 0, c_white, 1);
+						draw_sprite_ext(spr.PStatTrenchLights, anim,        (x - _surfX) * _surfScale, (y - _surfY) * _surfScale, _surfScale, _surfScale, 0, c_white, 1);
+					}
 				}
 			}
-			with(instances_matching(Corpse, "sprite_index", sprPStatDead)){
-				if(pit_get(x, bbox_bottom)){
-					var	_spr = spr.PStatTrenchIdle,
-						_img = image_index,
-						_x   = (x - _surfX) * _surfScale,
-						_y   = (y - _surfY) * _surfScale,
-						_xsc = image_xscale * _surfScale,
-						_ysc = image_yscale * _surfScale,
-						_ang = image_angle,
-						_col = image_blend,
-						_alp = image_alpha;
+			if(instance_exists(Corpse)){
+				var _inst = instances_matching(Corpse, "sprite_index", sprPStatDead);
+				if(array_length(_inst)) with(_inst){
+					if(pit_get(x, bbox_bottom)){
+						var	_spr = spr.PStatTrenchIdle,
+							_img = image_index,
+							_x   = (x - _surfX) * _surfScale,
+							_y   = (y - _surfY) * _surfScale,
+							_xsc = image_xscale * _surfScale,
+							_ysc = image_yscale * _surfScale,
+							_ang = image_angle,
+							_col = image_blend,
+							_alp = image_alpha;
+							
+						draw_sprite_ext(_spr, _img, _x, _y, _xsc, _ysc, _ang, _col, _alp);
 						
-					draw_sprite_ext(_spr, _img, _x, _y, _xsc, _ysc, _ang, _col, _alp);
-					
-					if(place_meeting(x, y, Portal)){
-						_spr = spr.PStatTrenchLights;
-						_img = 0;
-						
-						var	n = instance_nearest(x, y, Portal);
-						switch(n.sprite_index){
-							case sprPortalSpawn:
-							case sprProtoPortal:
-								_img = (sprite_get_number(_spr) - 1) - 2 + (2 * sin(current_frame / 16));
-								break;
-								
-							case sprProtoPortalDisappear:
-								_img = (sprite_get_number(_spr) - 1) * (1 - (n.image_index / n.image_number));
-								break;
-								
-							default:
-								_img = 0;
-						}
-						
-						if(_img > 0){
-							draw_sprite_ext(_spr, _img, _x, _y, _xsc, _ysc, _ang, _col, _alp);
+						if(place_meeting(x, y, Portal)){
+							_spr = spr.PStatTrenchLights;
+							_img = 0;
+							
+							var	n = instance_nearest(x, y, Portal);
+							switch(n.sprite_index){
+								case sprPortalSpawn:
+								case sprProtoPortal:
+									_img = (sprite_get_number(_spr) - 1) - 2 + (2 * sin(current_frame / 16));
+									break;
+									
+								case sprProtoPortalDisappear:
+									_img = (sprite_get_number(_spr) - 1) * (1 - (n.image_index / n.image_number));
+									break;
+									
+								default:
+									_img = 0;
+							}
+							
+							if(_img > 0){
+								draw_sprite_ext(_spr, _img, _x, _y, _xsc, _ysc, _ang, _col, _alp);
+							}
 						}
 					}
 				}
 			}
 			
 			 // Stuff that fell in pit:
-			with(instances_matching(CustomObject, "name", "PitSink")){
+			var _inst = instances_matching(CustomObject, "name", "PitSink");
+			if(array_length(_inst)) with(_inst){
 				draw_sprite_ext(sprite_index, image_index, (x - _surfX) * _surfScale, (y - _surfY) * _surfScale, image_xscale * _surfScale, image_yscale * _surfScale, image_angle, image_blend, image_alpha);
 			}
 			
@@ -1118,7 +1166,6 @@
 #define area_get_back_color(_area)                                                      return  mod_script_call_nc  ('mod', 'telib', 'area_get_back_color', _area);
 #define area_border(_y, _area, _color)                                                  return  mod_script_call_nc  ('mod', 'telib', 'area_border', _y, _area, _color);
 #define area_generate(_area, _sub, _loops, _x, _y, _setArea, _overlapFloor, _scrSetup)  return  mod_script_call_nc  ('mod', 'telib', 'area_generate', _area, _sub, _loops, _x, _y, _setArea, _overlapFloor, _scrSetup);
-#define floor_get(_x, _y)                                                               return  mod_script_call_nc  ('mod', 'telib', 'floor_get', _x, _y);
 #define floor_set(_x, _y, _state)                                                       return  mod_script_call_nc  ('mod', 'telib', 'floor_set', _x, _y, _state);
 #define floor_set_style(_style, _area)                                                  return  mod_script_call_nc  ('mod', 'telib', 'floor_set_style', _style, _area);
 #define floor_set_align(_alignX, _alignY, _alignW, _alignH)                             return  mod_script_call_nc  ('mod', 'telib', 'floor_set_align', _alignX, _alignY, _alignW, _alignH);

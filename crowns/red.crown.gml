@@ -37,15 +37,17 @@
 	
 #define step
 	 // Smaller Levels:
-	with(instances_matching(FloorMaker, "crownredsmallerlevels", null)){
-		crownredsmallerlevels = true;
-		goal = round(goal * 0.4);
-		
-		 // Fix:
-		if(instance_number(Floor) > goal){
-			with(GenCont){
-				if(alarm0 < 0) alarm0 = 3;
-				if(alarm2 < 0) alarm2 = 2;
+	if(instance_exists(FloorMaker)){
+		with(instances_matching(FloorMaker, "crownredsmallerlevels", null)){
+			crownredsmallerlevels = true;
+			goal = round(goal * 0.4);
+			
+			 // Fix:
+			if(instance_number(Floor) > goal){
+				with(GenCont){
+					if(alarm0 < 0) alarm0 = 3;
+					if(alarm2 < 0) alarm2 = 2;
+				}
 			}
 		}
 	}

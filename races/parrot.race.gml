@@ -501,8 +501,7 @@
 			array_push(other.ntte_pet, id);
 			
 			 // Special:
-			bskin = other.bskin;
-			if(bskin == 1){
+			if(other.bskin == 1){
 				spr_idle = spr.PetParrotBIdle;
 				spr_walk = spr.PetParrotBWalk;
 				spr_hurt = spr.PetParrotBHurt;
@@ -536,7 +535,8 @@
 				
 			if(array_length(_feathersTargeting) < _featherNum){
 				 // Retrieve Feathers:
-				with(instances_matching(_feathers, "canhold", false)){
+				var _inst = instances_matching(_feathers, "canhold", false);
+				if(array_length(_inst)) with(_inst){
 					 // Remove Charm Time:
 					if(target != creator){
 						if("ntte_charm" in target && (lq_defget(target.ntte_charm, "time", 0) >= 0 || creator != other)){
@@ -583,31 +583,36 @@
 			}
 			
 			 // Targeting:
-			if(array_length(_feathersTargeting) > 0){
-				with(_feathersTargeting) canhold = true;
+			if(array_length(_feathersTargeting)){
+				with(_feathersTargeting){
+					canhold = true;
+				}
 				
 				if(feather_targ_delay <= 0){
 					var	_targ       = [],
 						_targX      = mouse_x[index],
 						_targY      = mouse_y[index],
 						_targRadius = feather_targ_radius,
+						_targSearch = instances_matching_lt(instance_rectangle_bbox(_targX - _targRadius, _targY - _targRadius, _targX + _targRadius, _targY + _targRadius, [enemy, RadMaggotChest, FrogEgg]), "size", 6),
 						_featherMax = array_length(_feathersTargeting);
 						
 					 // Gather All Potential Targets:
-					with(instances_matching_lt(instance_rectangle_bbox(_targX - _targRadius, _targY - _targRadius, _targX + _targRadius, _targY + _targRadius, [enemy, RadMaggotChest, FrogEgg]), "size", 6)){
+					if(array_length(_targSearch)) with(_targSearch){
 						if(collision_circle(_targX, _targY, _targRadius, id, true, false)){
 							 // Intro played OR is not a boss:
 							if(("intro" in self && intro) || !enemy_boss){
 								array_push(_targ, id);
-								if(array_length(_targ) >= _featherMax) break;
+								if(array_length(_targ) >= _featherMax){
+									break;
+								}
 							}
 						}
 					}
 					
 					 // Spread Feathers Out Evenly:
-					if(array_length(_targ) > 0){
+					if(array_length(_targ)){
 						var	_featherNum = 0,
-							_spreadMax = max(1, ceil(_featherMax / array_length(_targ)));
+							_spreadMax  = max(1, ceil(_featherMax / array_length(_targ)));
 							
 						with(_targ){
 							var _spreadNum = 0;
@@ -622,15 +627,17 @@
 					}
 					
 					 // Nothing to Target, Return to Parrot:
-					else{
-						with(_feathersTargeting) target = other;
+					else with(_feathersTargeting){
+						target = other;
 					}
 				}
 				
 				 // Minor targeting delay so you can just click to return feathers:
 				else{
 					feather_targ_delay -= current_time_scale;
-					with(_feathers) target = creator;
+					with(_feathers){
+						target = creator;
+					}
 				}
 			}
 			
@@ -643,10 +650,12 @@
 	
 	 // Feather FX:
 	if(lsthealth > my_health && (chance_ct(1, 10) || my_health <= 0)){
-		repeat((my_health <= 0) ? 5 : 1) with(instance_create(x, y, Feather)){
-			image_blend = c_gray;
-			bskin = other.bskin;
-			sprite_index = race_get_sprite(other.race, sprite_index);
+		repeat((my_health <= 0) ? 5 : 1){
+			with(instance_create(x, y, Feather)){
+				image_blend = c_gray;
+				bskin = other.bskin;
+				sprite_index = race_get_sprite(other.race, sprite_index);
+			}
 		}
 	}
 	
@@ -668,76 +677,251 @@
 	
 #define ntte_end_step
 	 /// ULTRA B : Flock Together / HP Link
-	with(instances_matching(Player, "race", mod_current)){
-		if(ultra_get(mod_current, ultShare)){
-			 // Gather Charmed Bros:
-			var _HPList = ds_list_create();
-			with(instances_matching_gt(instances_matching_ne([hitme, becomenemy], "ntte_charm", null), "my_health", 0)){
-				if(lq_defget(ntte_charm, "index", -1) == other.index){
-					ds_list_add(_HPList, id);
+	if(instance_exists(Player)){
+		var _inst = instances_matching(Player, "race", mod_current);
+		if(array_length(_inst)) with(_inst){
+			if(ultra_get(mod_current, ultShare) > 0){
+				var	_HPList     = ds_list_create(),
+					_instSearch = instances_matching_gt(instances_matching_ne([hitme, becomenemy], "ntte_charm", null), "my_health", 0);
+					
+				 // Gather Charmed Bros:
+				if(array_length(_instSearch)){
+					with(_instSearch){
+						if(lq_defget(ntte_charm, "index", -1) == other.index){
+							ds_list_add(_HPList, id);
+						}
+					}
 				}
-			}
-			
-			if(ds_list_size(_HPList) > 0){
-				var _HPListSave = ds_list_to_array(_HPList);
 				
 				 // Steal Charmed Bro HP:
-				if(nexthurt > current_frame && my_health < charm_hplink_lock){
-					ds_list_shuffle(_HPList);
+				if(ds_list_size(_HPList) > 0){
+					var _HPListSave = ds_list_to_array(_HPList);
 					
-					while(my_health < charm_hplink_lock){
-						if(ds_list_size(_HPList) > 0){
-							with(ds_list_to_array(_HPList)){
-								with(other){
-									var a = min(1, charm_hplink_lock - my_health);
-									if(a > 0){
-										my_health += a;
-										projectile_hit_raw(other, a, true);
-										if(!instance_exists(other) || other.my_health <= 0){
-											ds_list_remove(_HPList, other);
+					 // Steal:
+					if(nexthurt > current_frame && my_health < charm_hplink_lock){
+						ds_list_shuffle(_HPList);
+						
+						while(my_health < charm_hplink_lock){
+							if(ds_list_size(_HPList) > 0){
+								with(ds_list_to_array(_HPList)){
+									with(other){
+										var _diff = min(1, charm_hplink_lock - my_health);
+										if(_diff > 0){
+											my_health += _diff;
+											projectile_hit_raw(other, _diff, true);
+											if(!instance_exists(other) || other.my_health <= 0){
+												ds_list_remove(_HPList, other);
+											}
 										}
-									}
-									else{
-										my_health = charm_hplink_lock;
-										break;
+										else{
+											my_health = charm_hplink_lock;
+											break;
+										}
 									}
 								}
 							}
+							else break;
 						}
-						else break;
+						my_health = charm_hplink_lock;
 					}
-					my_health = charm_hplink_lock;
+					
+					 // HUD Drawn Health:
+					var _canChangeMax = (charm_hplink_hud_hp_lst <= charm_hplink_hud_hp[0]);
+					for(var i = 0; i < array_length(charm_hplink_hud_hp); i++){
+						if(i != 1 || _canChangeMax){
+							charm_hplink_hud_hp[i] = 0;
+						}
+					}
+					with(_HPListSave){
+						other.charm_hplink_hud_hp[0] += my_health;
+						if(_canChangeMax){
+							other.charm_hplink_hud_hp[1] += maxhealth;
+						}
+					}
 				}
 				
-				 // HUD Drawn Health:
-				var _canChangeMax = (charm_hplink_hud_hp_lst <= charm_hplink_hud_hp[0]);
-				for(var i = 0; i < array_length(charm_hplink_hud_hp); i++){
-					if(i != 1 || _canChangeMax) charm_hplink_hud_hp[i] = 0;
-				}
-				with(_HPListSave){
-					other.charm_hplink_hud_hp[0] += my_health;
-					if(_canChangeMax) other.charm_hplink_hud_hp[1] += maxhealth;
+				 // No Health to Steal:
+				else{
+					charm_hplink_hud_hp[0]  -= ceil(charm_hplink_hud_hp[0]  /  5) * current_time_scale;
+					charm_hplink_hud_hp_lst -= ceil(charm_hplink_hud_hp_lst / 10) * current_time_scale;
 				}
 			}
-			else{
-				charm_hplink_hud_hp[0] -= ceil(charm_hplink_hud_hp[0] / 5) * current_time_scale;
-				charm_hplink_hud_hp_lst -= ceil(charm_hplink_hud_hp_lst / 10) * current_time_scale;
+			else charm_hplink_hud_hp_lst = 0;
+			
+			charm_hplink_lock = my_health;
+			
+			 // HUD Related:
+			var _add = 0.5 * current_time_scale;
+			charm_hplink_hud_hp_lst += clamp(charm_hplink_hud_hp[0] - charm_hplink_hud_hp_lst, -_add, _add);
+			
+			var _hudGoal = (charm_hplink_hud_hp_lst >= 1);
+			charm_hplink_hud += (_hudGoal - charm_hplink_hud) * 0.2 * current_time_scale;
+			if(abs(_hudGoal - charm_hplink_hud) < 0.01){
+				charm_hplink_hud = _hudGoal;
 			}
-		}
-		else charm_hplink_hud_hp_lst = 0;
-		
-		charm_hplink_lock = my_health;
-		
-		 // HUD Related:
-		var _add = 0.5 * current_time_scale;
-		charm_hplink_hud_hp_lst += clamp(charm_hplink_hud_hp[0] - charm_hplink_hud_hp_lst, -_add, _add);
-		
-		var _hudGoal = (charm_hplink_hud_hp_lst >= 1);
-		charm_hplink_hud += (_hudGoal - charm_hplink_hud) * 0.2 * current_time_scale;
-		if(abs(_hudGoal - charm_hplink_hud) < 0.01){
-			charm_hplink_hud = _hudGoal;
 		}
 	}
+	
+#define charm_instance_raw(_inst, _charm)
+	/*
+		Charms or uncharms the given instance(s) and returns a LWO containing their charm-related vars
+		
+		Ex:
+			with(charm_instance(Bandit, true)){
+				time = 300;
+			}
+	*/
+	
+	var _instVars = [];
+	
+	with(instances_matching(_inst, "", null)){
+		if("ntte_charm" not in self){
+			ntte_charm = {
+				"charmed"    : false,
+				"target"     : noone,
+				"on_step"    : [],     // Custom object step event
+				"index"      : -1,     // Player who charmed
+				"team"       : -1,     // Original team before charming
+				"time"       : -1,     // Charm duration in frames
+				"time_speed" : 1,      // Charm duration decrement speed
+				"boss"       : false,  // Instance is a boss
+				"kill"       : false,  // Kill when uncharmed (For dudes who were spawned by charmed dudes)
+				"feather"    : false   // Was charmed using feathers
+			};
+		}
+		
+		var _vars = ntte_charm;
+		
+		if(_charm ^^ _vars.charmed){
+			_vars.charmed = _charm;
+			_vars.target  = noone;
+			_vars.index   = -1;
+			_vars.time    = -1;
+			_vars.feather = false;
+			
+			 // Charm:
+			if(_charm){
+				 // Frienderize Team:
+				_vars.team = variable_instance_get(self, "team", -1);
+				if("team" in self){
+					team = 2;
+					
+					 // Teamerize Nearby Projectiles:
+					if(place_meeting(x, y, projectile)){
+						with(instances_meeting(x, y, instances_matching(instances_matching(projectile, "creator", id), "team", _vars.team))){
+							if(place_meeting(x, y, other)){
+								team = other.team;
+								if(sprite_get_team(sprite_index) != 3){
+									team_instance_sprite(team, self);
+								}
+							}
+						}
+					}
+				}
+				
+				 // Delay Alarms:
+				for(var i = 0; i <= 10; i++){
+					if(alarm_get(i) > 0){
+						alarm_set(i, alarm_get(i) + 1);
+					}
+				}
+				
+				 // Boss Check:
+				_vars.boss = enemy_boss;
+				
+				 // Charm Duration Speed:
+				_vars.time_speed = (_vars.boss ? 2 : 1);
+				
+				 // Necromancer Charm:
+				switch(sprite_index){
+					case sprReviveArea      : sprite_index = spr.AllyReviveArea;      break;
+					case sprNecroReviveArea : sprite_index = spr.AllyNecroReviveArea; break;
+				}
+			}
+			
+			 // Uncharm:
+			else{
+				target = noone;
+				
+				 // I-Frames:
+				if("nexthurt" in self){
+					nexthurt = current_frame + 12;
+				}
+				
+				 // Delay Contact Damage:
+				if("canmelee" in self && canmelee){
+					alarm11 = 30;
+					canmelee = false;
+				}
+				
+				 // Reset Team:
+				if(_vars.team != -1){
+					if(fork()){
+						while("team" not in self && instance_is(self, becomenemy)){
+							wait 0;
+						}
+						if("team" in self){
+							 // Teamerize Nearby Projectiles:
+							if(place_meeting(x, y, projectile)){
+								with(instances_meeting(x, y, instances_matching(instances_matching(projectile, "creator", self), "team", team))){
+									if(place_meeting(x, y, other)){
+										team = _vars.team;
+										if(sprite_get_team(sprite_index) != 3){
+											team_instance_sprite(team, self);
+										}
+									}
+								}
+							}
+							
+							team = _vars.team;
+							_vars.team = -1;
+						}
+						exit;
+					}
+				}
+				
+				 // Reset Step:
+				if(array_length(_vars.on_step) > 0){
+					on_step = _vars.on_step;
+					_vars.on_step = [];
+				}
+				
+				 // Kill:
+				if(_vars.kill){
+					my_health = 0;
+					sound_play_pitchvol(sndEnemyDie, 2 + orandom(0.3), 3);
+				}
+				
+				 // Effects:
+				else instance_create(x, bbox_top, AssassinNotice);
+				sound_play_pitchvol(sndAssassinGetUp, random_range(1.2, 1.5), 0.5);
+				var _num = 10 * max(variable_instance_get(self, "size", 0), 0.5);
+				for(var a = direction; a < direction + 360; a += (360 / _num)){
+					scrFX(x, y, [a, 3], Dust);
+				}
+			}
+		}
+		
+		array_push(_instVars, _vars);
+	}
+	
+	 // Activate Step:
+	if(_charm){
+		with(mod_variable_get("race", "parrot", "charm_bind").step.id){
+			visible = true;
+		}
+	}
+	
+	 // Return:
+	if(array_length(_instVars) > 0){
+		return (
+			(is_array(_inst) || array_length(_instVars) > 1)
+			? _instVars
+			: _instVars[0]
+		);
+	}
+	
+	return noone;
 	
 #define charm_target(_vars)
 	/*
@@ -756,7 +940,9 @@
 		_search = instances_matching_ne(_search, "team", team);
 	}
 	
-	with(instances_matching_ne(instances_matching_ne(_search, "team", 0), "mask_index", mskNone)){
+	var _inst = instances_matching_ne(instances_matching_ne(_search, "team", 0), "mask_index", mskNone);
+	
+	if(array_length(_inst)) with(_inst){
 		var _dis = point_distance(x, y, other.x, other.y);
 		if(_dis < _disMax){
 			if(!instance_is(self, prop)){
@@ -801,14 +987,18 @@
 	
 	if(GameObject.id > _minID){
 		 // Set Creator:
-		with(instances_matching(instances_matching_gt(charm_object, "id", _minID), "creator", null, noone)){
+		var _inst = instances_matching(instances_matching_gt(charm_object, "id", _minID), "creator", null, noone);
+		if(array_length(_inst)) with(_inst){
 			creator = other;
 		}
 		
 		 // Ally-ify Projectiles:
-		with(instances_matching(instances_matching_gt([projectile, LaserCannon], "id", _minID), "creator", self, noone)){
-			if(sprite_get_team(sprite_index) != 3){
-				team_instance_sprite(team, self);
+		if(instance_exists(projectile) || instance_exists(LaserCannon)){
+			var _inst = instances_matching(instances_matching_gt([projectile, LaserCannon], "id", _minID), "creator", self, noone);
+			if(array_length(_inst)) with(_inst){
+				if(sprite_get_team(sprite_index) != 3){
+					team_instance_sprite(team, self);
+				}
 			}
 		}
 	}
@@ -828,7 +1018,8 @@
 		}
 		
 		 // Collect Charmed Instances:
-		with(instances_matching_ne(charm_object, "ntte_charm", null)){
+		var _inst = instances_matching_ne(charm_object, "ntte_charm", null);
+		if(array_length(_inst)) with(_inst){
 			if(ntte_charm.charmed && array_find_index(other.inst, id) < 0){
 				array_push(other.inst, id);
 				array_push(other.vars, ntte_charm);
@@ -840,7 +1031,7 @@
 			_instList = array_clone(inst),
 			_varsList = array_clone(vars);
 			
-		with(_instList){
+		if(array_length(_instList)) with(_instList){
 			var _vars = _varsList[_instNum++];
 			
 			if(_vars.charmed){
@@ -970,7 +1161,8 @@
 							
 							 // Contact Damage:
 							if(place_meeting(x, y, enemy)){
-								with(instances_meeting(x, y, instances_matching_ne(instances_matching_ne(enemy, "team", team), "creator", self))){
+								var _inst = instances_meeting(x, y, instances_matching_ne(instances_matching_ne(enemy, "team", team), "creator", self));
+								if(array_length(_inst)) with(_inst){
 									if(place_meeting(x, y, other)) with(other){
 										 // Disable Freeze Frames:
 										var _freeze = UberCont.opt_freeze;
@@ -1109,7 +1301,8 @@
 								case EliteShielder:
 									
 									 // Fix Shield Team:
-									with(instances_matching(PopoShield, "creator", self)){
+									var _inst = instances_matching(PopoShield, "creator", self);
+									if(array_length(_inst)) with(_inst){
 										team = other.team;
 									}
 									
@@ -1120,15 +1313,18 @@
 									
 									 // Fix Telekinesis Pull:
 									if(control == true){
-										var _dis = (1 + (object_index == EliteInspector)) * current_time_scale;
-										with(instances_matching([Player, Ally], "team", team)){
-											if(point_distance(x, y, other.x, other.y) < 160){
-												var	_dir = point_direction(x, y, other.x, other.y),
-													_ox  = lengthdir_x(_dis, _dir),
-													_oy  = lengthdir_y(_dis, _dir);
-													
-												if(place_free(x + _ox, y)) x -= _ox;
-												if(place_free(x, y + _oy)) y -= _oy;
+										var _inst = instances_matching([Player, Ally], "team", team);
+										if(array_length(_inst)){
+											var _dis = (1 + (object_index == EliteInspector)) * current_time_scale;
+											with(_inst){
+												if(point_distance(x, y, other.x, other.y) < 160){
+													var	_dir = point_direction(x, y, other.x, other.y),
+														_ox  = lengthdir_x(_dis, _dir),
+														_oy  = lengthdir_y(_dis, _dir);
+														
+													if(place_free(x + _ox, y)) x -= _ox;
+													if(place_free(x, y + _oy)) y -= _oy;
+												}
 											}
 										}
 									}
@@ -1190,7 +1386,8 @@
 				
 				 // Charm Spawned Enemies:
 				if(_vars.charmed){
-					with(instances_matching(instances_matching(charm_object, "creator", self), "ntte_charm", null)){
+					var _inst = instances_matching(instances_matching(charm_object, "creator", self), "ntte_charm", null);
+					if(array_length(_inst)) with(_inst){
 						var _hitme = (instance_is(self, hitme) || instance_is(self, becomenemy));
 						if(!_hitme || !instance_exists(other) || place_meeting(x, y, other)){
 							var _charm = charm_instance(id, true);
@@ -1484,7 +1681,6 @@
 #define area_get_back_color(_area)                                                      return  mod_script_call_nc  ('mod', 'telib', 'area_get_back_color', _area);
 #define area_border(_y, _area, _color)                                                  return  mod_script_call_nc  ('mod', 'telib', 'area_border', _y, _area, _color);
 #define area_generate(_area, _sub, _loops, _x, _y, _setArea, _overlapFloor, _scrSetup)  return  mod_script_call_nc  ('mod', 'telib', 'area_generate', _area, _sub, _loops, _x, _y, _setArea, _overlapFloor, _scrSetup);
-#define floor_get(_x, _y)                                                               return  mod_script_call_nc  ('mod', 'telib', 'floor_get', _x, _y);
 #define floor_set(_x, _y, _state)                                                       return  mod_script_call_nc  ('mod', 'telib', 'floor_set', _x, _y, _state);
 #define floor_set_style(_style, _area)                                                  return  mod_script_call_nc  ('mod', 'telib', 'floor_set_style', _style, _area);
 #define floor_set_align(_alignX, _alignY, _alignW, _alignH)                             return  mod_script_call_nc  ('mod', 'telib', 'floor_set_align', _alignX, _alignY, _alignW, _alignH);

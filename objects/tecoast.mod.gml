@@ -4970,102 +4970,106 @@
 #define ntte_step
 	 // Harpoon Connections:
 	var _ropeDraw = [[], []];
-	with(global.harpoon_rope){
-		var	_rope  = self,
-			_link1 = _rope.link1,
-			_link2 = _rope.link2;
-			
-		if(instance_exists(_link1) && instance_exists(_link2)){
-			if(_rope.broken < 0) _rope.length = 0; // Deteriorate Rope
-			
-			var	_length  = _rope.length,
-				_linkDis = point_distance(_link1.x, _link1.y, _link2.x, _link2.y) - _length,
-				_linkDir = point_direction(_link1.x, _link1.y, _link2.x, _link2.y);
+	if(array_length(global.harpoon_rope)){
+		with(global.harpoon_rope){
+			var	_rope  = self,
+				_link1 = _rope.link1,
+				_link2 = _rope.link2;
 				
-			 // Pull Link:
-			if(_linkDis > 0){
-				var	_pullLink = [_link1, _link2],
-					_pullInst = [];
+			if(instance_exists(_link1) && instance_exists(_link2)){
+				if(_rope.broken < 0) _rope.length = 0; // Deteriorate Rope
+				
+				var	_length  = _rope.length,
+					_linkDis = point_distance(_link1.x, _link1.y, _link2.x, _link2.y) - _length,
+					_linkDir = point_direction(_link1.x, _link1.y, _link2.x, _link2.y);
 					
-				for(var i = 0; i < array_length(_pullLink); i++){
-					with(_pullLink[i]) if(!instance_is(self, projectile)){
-						var _inst = noone;
+				 // Pull Link:
+				if(_linkDis > 0){
+					var	_pullLink = [_link1, _link2],
+						_pullInst = [];
 						
-						 // Rope Attached to Harpoon:
-						if(instance_is(self, BoltStick)){
-							if(pull_speed != 0 && !instance_is(target, becomenemy)){
-								_inst = target;
+					for(var i = 0; i < array_length(_pullLink); i++){
+						with(_pullLink[i]) if(!instance_is(self, projectile)){
+							var _inst = noone;
+							
+							 // Rope Attached to Harpoon:
+							if(instance_is(self, BoltStick)){
+								if(pull_speed != 0 && !instance_is(target, becomenemy)){
+									_inst = target;
+								}
+							}
+							
+							 // Rope Directly Attached:
+							else if(_link1 != _link2){
+								if(
+									(!instance_is(self, prop) && team != 0)
+									|| instance_is(self, RadChest)
+									|| instance_is(self, Car)
+									|| instance_is(self, CarVenus)
+									|| instance_is(self, CarVenusFixed)
+								){
+									_inst = id;
+								}
+							}
+							
+							 // Add to Pull List:
+							if(instance_exists(_inst)){
+								array_push(_pullInst, {
+									inst : _inst,
+									pull : (instance_is(_inst, Player) ? 0.5 : (("pull_speed" in self) ? pull_speed : 2)),
+									drag : min(_linkDis / 3, 10 / (("size" in _inst) ? (max(_inst.size, 0.5) * 2) : 2)),
+									dir  : _linkDir + (i * 180)
+								});
 							}
 						}
-						
-						 // Rope Directly Attached:
-						else if(_link1 != _link2){
-							if(
-								(!instance_is(self, prop) && team != 0)
-								|| instance_is(self, RadChest)
-								|| instance_is(self, Car)
-								|| instance_is(self, CarVenus)
-								|| instance_is(self, CarVenusFixed)
-							){
-								_inst = id;
+					}
+					
+					 // Pull:
+					if(array_length(_pullInst)){
+						with(_pullInst){
+							var	_pull = pull,
+								_drag = drag,
+								_dir  = dir;
+								
+							with(inst){
+								hspeed += lengthdir_x(_pull, _dir);
+								vspeed += lengthdir_y(_pull, _dir);
+								x      += lengthdir_x(_drag, _dir);
+								y      += lengthdir_y(_drag, _dir);
 							}
-						}
-						
-						 // Add to Pull List:
-						if(instance_exists(_inst)){
-							array_push(_pullInst, {
-								inst : _inst,
-								pull : (instance_is(_inst, Player) ? 0.5 : (("pull_speed" in self) ? pull_speed : 2)),
-								drag : min(_linkDis / 3, 10 / (("size" in _inst) ? (max(_inst.size, 0.5) * 2) : 2)),
-								dir  : _linkDir + (i * 180)
-							});
 						}
 					}
 				}
 				
-				 // Pull:
-				with(_pullInst){
-					var	_pull = pull,
-						_drag = drag,
-						_dir  = dir;
-						
-					with(inst){
-						hspeed += lengthdir_x(_pull, _dir);
-						vspeed += lengthdir_y(_pull, _dir);
-						x += lengthdir_x(_drag, _dir);
-						y += lengthdir_y(_drag, _dir);
-					}
+				 // Draw Rope:
+				with(other){
+					array_push(_ropeDraw[instance_exists(collision_line(_link1.x, _link1.y, _link2.x, _link2.y, Wall, false, false))], _rope);
 				}
-			}
-			
-			 // Draw Rope:
-			with(other){
-				array_push(_ropeDraw[instance_exists(collision_line(_link1.x, _link1.y, _link2.x, _link2.y, Wall, false, false))], _rope);
-			}
-			
-			 // Rope Stretching:
-			with(_rope){
-				break_force = max(_linkDis, 0);
 				
-				 // Break:
-				if(break_timer <= 0 || break_force > 1000){
-					if(break_force > 100 || (_rope.broken < 0 && _length <= 1)){
-						if(_rope.broken >= 0){
-							sound_play_pitch(sndHammerHeadEnd, 2);
+				 // Rope Stretching:
+				with(_rope){
+					break_force = max(_linkDis, 0);
+					
+					 // Break:
+					if(break_timer <= 0 || break_force > 1000){
+						if(break_force > 100 || (_rope.broken < 0 && _length <= 1)){
+							if(_rope.broken >= 0){
+								sound_play_pitch(sndHammerHeadEnd, 2);
+							}
+							Harpoon_unrope(_rope);
 						}
-						Harpoon_unrope(_rope);
 					}
+					else break_timer -= current_time_scale;
 				}
-				else break_timer -= current_time_scale;
 			}
+			else Harpoon_unrope(_rope);
 		}
-		else Harpoon_unrope(_rope);
 	}
 	var i = 0;
 	with(global.harpoon_rope_bind){
 		with(id){
 			inst = _ropeDraw[i++];
-			if(array_length(inst) > 0){
+			if(array_length(inst)){
 				visible = true;
 				depth++;
 				depth--;
@@ -5075,25 +5079,39 @@
 	
 #define ntte_shadows
 	 // Shield Shadows:
-	with(instances_matching(instances_matching(CustomSlash, "name", "ClamShield"), "visible", true)){
-		var	_l = -8 - (1 * image_yscale),
-			_d = image_angle,
-			_x = x + lengthdir_x(_l, _d) + spr_shadow_x,
-			_y = y + lengthdir_y(_l, _d) + spr_shadow_y;
+	if(instance_exists(CustomSlash)){
+		var _inst = instances_matching(instances_matching(CustomSlash, "name", "ClamShield"), "visible", true)
+		if(array_length(_inst)) with(_inst){
+			var	_l = -8 - (1 * image_yscale),
+				_d = image_angle,
+				_x = x + lengthdir_x(_l, _d) + spr_shadow_x,
+				_y = y + lengthdir_y(_l, _d) + spr_shadow_y;
+				
+			draw_sprite_ext(spr_shadow, 0, _x, _y, image_yscale, image_xscale, image_angle + 90, c_white, 1);
+		}
+	}
+	
+#define ntte_dark(_type)
+	switch(_type){
+		
+		case "normal":
+		case "end":
 			
-		draw_sprite_ext(spr_shadow, 0, _x, _y, image_yscale, image_xscale, image_angle + 90, c_white, 1);
-	}
-	
-#define ntte_dark // Drawing Grays
-	 // Divers:
-	with(instances_matching(instances_matching(CustomEnemy, "name", "Diver"), "visible", true)){
-		draw_circle(x, y, 40 + orandom(1), false);
-	}
-	
-#define ntte_dark_end // Drawing Clear
-	 // Divers:
-	with(instances_matching(instances_matching(CustomEnemy, "name", "Diver"), "visible", true)){
-		draw_circle(x, y, 16 + orandom(1), false);
+			var _gray = (_type == "normal");
+			
+			 // Divers:
+			if(instance_exists(CustomEnemy)){
+				var _inst = instances_matching(instances_matching(CustomEnemy, "name", "Diver"), "visible", true);
+				if(array_length(_inst)){
+					var _r = 16 + (24 * _gray);
+					with(_inst){
+						draw_circle(x, y, _r + orandom(1), false);
+					}
+				}
+			}
+			
+			break;
+			
 	}
 	
 #define draw_gui_end
@@ -5106,7 +5124,7 @@
 	}
 	
 #define draw_harpoon_rope
-	if("inst" in self && array_length(inst) > 0){
+	if("inst" in self && array_length(inst)){
 		if(lag) trace_time();
 		
 		with(inst){
@@ -5257,7 +5275,6 @@
 #define area_get_back_color(_area)                                                      return  mod_script_call_nc  ('mod', 'telib', 'area_get_back_color', _area);
 #define area_border(_y, _area, _color)                                                  return  mod_script_call_nc  ('mod', 'telib', 'area_border', _y, _area, _color);
 #define area_generate(_area, _sub, _loops, _x, _y, _setArea, _overlapFloor, _scrSetup)  return  mod_script_call_nc  ('mod', 'telib', 'area_generate', _area, _sub, _loops, _x, _y, _setArea, _overlapFloor, _scrSetup);
-#define floor_get(_x, _y)                                                               return  mod_script_call_nc  ('mod', 'telib', 'floor_get', _x, _y);
 #define floor_set(_x, _y, _state)                                                       return  mod_script_call_nc  ('mod', 'telib', 'floor_set', _x, _y, _state);
 #define floor_set_style(_style, _area)                                                  return  mod_script_call_nc  ('mod', 'telib', 'floor_set_style', _style, _area);
 #define floor_set_align(_alignX, _alignY, _alignW, _alignH)                             return  mod_script_call_nc  ('mod', 'telib', 'floor_set_align', _alignX, _alignY, _alignW, _alignH);

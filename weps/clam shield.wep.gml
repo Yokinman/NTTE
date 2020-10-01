@@ -94,8 +94,11 @@
 			}
 		}
 	}
-	else with(instances_matching(instances_matching(CustomSlash, "name", "ClamShield"), "wep", _wep)){
-		instance_destroy();
+	else if(instance_exists(CustomSlash)){
+		var _inst = instances_matching(instances_matching(CustomSlash, "name", "ClamShield"), "wep", _wep);
+		if(array_length(_inst)) with(_inst){
+			instance_destroy();
+		}
 	}
 	
 	

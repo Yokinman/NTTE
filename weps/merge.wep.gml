@@ -2951,7 +2951,8 @@
 			_vars    = vars;
 			
 		 // Add New:
-		with(instances_matching_ne(projectile, _flag, null)){
+		var _instNew = instances_matching_ne(projectile, _flag, null);
+		if(array_length(_instNew)) with(_instNew){
 			if(array_find_index(_inst, id) < 0){
 				var o = lq_clone(variable_instance_get(id, _flag));
 				variable_instance_set(id, _flag, o);
@@ -2963,7 +2964,7 @@
 		
 		 // Main:
 		var	i = 0;
-		with(_inst){
+		if(array_length(_inst)) with(_inst){
 			var _end = true;
 			
 			 // Call Projectile Events:
@@ -3439,7 +3440,7 @@
 					var	d = pround(depth, 0.1),
 						c = instances_matching(instances_matching(CustomDraw, "name", "proj_explo_draw"), "depth_mark", d);
 						
-					if(array_length(c) > 0) with(c){
+					if(array_length(c)) with(c){
 						if(!array_exists(inst, other)) array_push(inst, other);
 					}
 					else with(script_bind_draw(proj_explo_draw, d - 0.001)){
@@ -3568,18 +3569,20 @@
 	}
 	
 #define proj_explo_draw
-	with(inst){
-		if(instance_exists(self)){
-			 // Nade Blink:
-			draw_set_fog(true, ((current_frame * 0.4) % 2) ? c_white : c_black, 0, 0);
-			draw_self();
+	if(array_length(inst)){
+		with(inst){
+			if(instance_exists(self)){
+				 // Nade Blink:
+				draw_set_fog(true, ((current_frame * 0.4) % 2) ? c_white : c_black, 0, 0);
+				draw_self();
+			}
+			else other.inst = array_delete_value(other.inst, self);
 		}
-		else other.inst = array_delete_value(other.inst, self);
+		draw_set_fog(false, 0, 0, 0);
 	}
-	draw_set_fog(false, 0, 0, 0);
 	
 	 // Nothing left to draw:
-	if(array_length(inst) <= 0) instance_destroy();
+	else instance_destroy();
 	
 #define proj_explosmall(_event, o)
 	if(proj_explo(_event, o)) return true;
@@ -3646,14 +3649,16 @@
 						}
 					}
 					
-					var b = 16;
-					with(instance_rectangle_bbox(
-						bbox_left   + hspeed_raw - b,
-						bbox_top    + vspeed_raw - b,
-						bbox_right  + hspeed_raw + b,
-						bbox_bottom + vspeed_raw + b,
-						instances_matching_ne(hitme, "team", team)
-					)){
+					var	_border = 16,
+						_inst   = instance_rectangle_bbox(
+							bbox_left   + hspeed_raw - _border,
+							bbox_top    + vspeed_raw - _border,
+							bbox_right  + hspeed_raw + _border,
+							bbox_bottom + vspeed_raw + _border,
+							instances_matching_ne(hitme, "team", team)
+						);
+						
+					if(array_length(_inst)) with(_inst){
 						if(place_meeting(x + hspeed_raw - other.hspeed_raw, y + vspeed_raw - other.vspeed_raw, other)){
 							if(my_health > 1) with(other){
 								var f = force / 3;
@@ -3842,7 +3847,7 @@
 	}
 	
 #define proj_rocket_trail
-	with(inst){
+	if(array_length(inst)) with(inst){
 		if(instance_exists(self)){
 			var	_spr = ((sprite_get_height(sprite_index) > 16) ? sprNukeFlame : sprRocketFlame),
 				_img = ((current_frame + id) * 0.4),
@@ -3877,7 +3882,7 @@
 	}
 	
 	 // Nothing left to draw:
-	if(array_length(inst) <= 0) instance_destroy();
+	else instance_destroy();
 	
 #define proj_nuke(_event, o)
 	switch(_event){
@@ -4573,7 +4578,6 @@
 #define area_get_back_color(_area)                                                      return  mod_script_call_nc  ('mod', 'telib', 'area_get_back_color', _area);
 #define area_border(_y, _area, _color)                                                  return  mod_script_call_nc  ('mod', 'telib', 'area_border', _y, _area, _color);
 #define area_generate(_area, _sub, _loops, _x, _y, _setArea, _overlapFloor, _scrSetup)  return  mod_script_call_nc  ('mod', 'telib', 'area_generate', _area, _sub, _loops, _x, _y, _setArea, _overlapFloor, _scrSetup);
-#define floor_get(_x, _y)                                                               return  mod_script_call_nc  ('mod', 'telib', 'floor_get', _x, _y);
 #define floor_set(_x, _y, _state)                                                       return  mod_script_call_nc  ('mod', 'telib', 'floor_set', _x, _y, _state);
 #define floor_set_style(_style, _area)                                                  return  mod_script_call_nc  ('mod', 'telib', 'floor_set_style', _style, _area);
 #define floor_set_align(_alignX, _alignY, _alignW, _alignH)                             return  mod_script_call_nc  ('mod', 'telib', 'floor_set_align', _alignX, _alignY, _alignW, _alignH);

@@ -67,25 +67,29 @@
 	
 #define step
 	 // Reduce Counters Between Levels:
-	with(instances_matching(GenCont, "annihilation_check", null)){
-		annihilation_check = true;
-		
-		var _num = 0;
-		
-		with(annihilation_list){
-			if(ammo > 0 && --ammo <= 0){
-				GameCont.annihilation_list = mod_script_call_nc("mod", "telib", "array_delete_value", annihilation_list, self);
+	if(instance_exists(GenCont)){
+		var _inst = instances_matching(GenCont, "annihilation_check", null);
+		if(array_length(_inst)) with(_inst){
+			annihilation_check = true;
+			
+			var _num = 0;
+			
+			with(annihilation_list){
+				if(ammo > 0 && --ammo <= 0){
+					GameCont.annihilation_list = mod_script_call_nc("mod", "telib", "array_delete_value", annihilation_list, self);
+				}
+				_num = max(_num, ammo);
 			}
-			_num = max(_num, ammo);
-		}
-		
-		if(skill_get(mod_current) > 0){
-			skill_set(mod_current, max(0, _num));
+			
+			if(skill_get(mod_current) > 0){
+				skill_set(mod_current, max(0, _num));
+			}
 		}
 	}
 	
 	 // Kill:
-	with(annihilation_list){
+	var _list = annihilation_list
+	if(array_length(_list)) with(_list){
 		with(instances_matching((custom ? instances_matching(object_index, "name", name) : object_index), "annihilation_check", null)){
 			annihilation_check = true;
 			

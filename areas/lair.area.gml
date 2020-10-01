@@ -7,20 +7,20 @@
 	var L = true;
 	room_center = [10000, 10000];
 	room_list = [];
-	room_type = {
-		 // SPECIAL:
-		"Start" : {
-			w : 3,
-			h : 3,
-			carpet : 1,
-			special : true
-		},
+	room_type = ds_map_create();
 		
-		"Boss" : {
-			w : 12,
-			h : 12,
+		 // SPECIAL Rooms:
+		room_type[? "Start"] = {
+			w       : 3,
+			h       : 3,
+			carpet  : 1,
+			special : true
+		};
+		room_type[? "Boss"] = {
+			w       : 12,
+			h       : 12,
 			special : true,
-			layout : [
+			layout  : [
 				[0,0,0,L,L,L,L,L,L,0,0,0],
 				[0,0,0,L,L,L,L,L,L,0,0,0],
 				[0,0,L,L,L,L,L,L,L,L,0,0],
@@ -34,79 +34,69 @@
 				[0,0,0,L,L,L,L,L,L,0,0,0],
 				[0,0,0,L,L,L,L,L,L,0,0,0]
 			]
-		},
+		};
 		
-		 // SMALL:
-		"SmallClutter" : {
+		 // SMALL Rooms:
+		room_type[? "SmallClutter"] = {
 			w : 2,
 			h : 2
-		},
-		
-		"MediumClutter" : {
+		};
+		room_type[? "MediumClutter"] = {
 			w : 3,
 			h : 3
-		},
-		
-		"SmallPillars" : {
+		};
+		room_type[? "SmallPillars"] = {
 			w : 3,
 			h : 3
-		},  
-		
-		"SmallRing" : {
+		};
+		room_type[? "SmallRing"] = {
 			w : 2,
 			h : 2
-		},
-		
-		"WideSmallRing" : {
+		};
+		room_type[? "WideSmallRing"] = {
 			w : 3,
 			h : 2
-		},
-		
-		"TallSmallRing" : {
+		};
+		room_type[? "TallSmallRing"] = {
 			w : 2,
 			h : 3
-		},
-		
-		"MediumRing" : {
-			w : 3,
-			h : 3,
+		};
+		room_type[? "MediumRing"] = {
+			w      : 3,
+			h      : 3,
 			layout : [
 				[L,L,L],
 				[L,0,L],
 				[L,L,L]
 			]
-		},
-		
-		"Table" : {
+		};
+		room_type[? "Table"] = {
 			w : 3,
 			h : 3
-			// carpet : 0.40
-		},
-		
-		"Toilet" : {
+			// carpet : 2/5
+		};
+		room_type[? "Toilet"] = {
 			w : 3,
 			h : 2,
-		},
-		
-		"SmallTriangle" : {
-			h : 3,
-			w : 3,
+		};
+		room_type[? "SmallTriangle"] = {
+			h      : 3,
+			w      : 3,
 			layout : [
 				[L,0,0],
 				[L,L,0],
 				[L,L,L]
 			]
-		},
-		
-		"Vault" : {
+		};
+		room_type[? "Vault"] = {
 			w : 3,
 			h : 3
-		},
-
-		 // LARGE:
-		"SmallAtrium" : {
-			w : 6,
-			h : 6,
+		};
+		
+		 // LARGE Rooms:
+		room_type[? "SmallAtrium"] = {
+			w      : 6,
+			h      : 6,
 			layout : [
 				[0,0,L,L,0,0],
 				[0,0,L,L,0,0],
@@ -115,28 +105,25 @@
 				[0,0,L,L,0,0],
 				[0,0,L,L,0,0]
 			]
-		},
-		
-		"Lounge" : {
-			w : 5,
-			h : 4,
+		};
+		room_type[? "Lounge"] = {
+			w      : 5,
+			h      : 4,
 			layout : [
 				[L,L,L,L,L],
 				[L,L,L,L,L],
 				[L,L,L,L,L],
 				[L,0,0,0,L]
 			]
-		},
-		 
-		"Dining" : {
-			w : 4,
-			h : 3,
-			carpet : 0.33
-		},
-		
-		"Cafeteria" : {
-			w : 4,
-			h : 6,
+		};
+		room_type[? "Dining"] = {
+			w      : 4,
+			h      : 3,
+			carpet : 1/3
+		};
+		room_type[? "Cafeteria"] = {
+			w      : 4,
+			h      : 6,
 			layout : [
 				[0,L,0,0],
 				[L,L,L,L],
@@ -145,27 +132,24 @@
 				[L,L,L,L],
 				[L,L,L,L]
 			]
-		},
-		
-		"Office" : {
-			w : 6,
-			h : 4,
+		};
+		room_type[? "Office"] = {
+			w      : 6,
+			h      : 4,
 			layout : [
 				[0,0,L,L,0,0],
 				[L,L,L,L,L,L],
 				[L,L,L,L,L,L],
 				[L,L,L,L,L,L]
 			]
-		},
-		
-		"Garage" : {
+		};
+		room_type[? "Garage"] = {
 			w : 4,
 			h : 3
-		},
-		
-		"LargeRing" : {
-			w : 6,
-			h : 6,
+		};
+		room_type[? "LargeRing"] = {
+			w      : 6,
+			h      : 6,
 			layout : [
 				[L,L,L,L,L,L],
 				[L,L,L,L,L,L],
@@ -174,19 +158,20 @@
 				[L,L,L,L,L,L],
 				[L,L,L,L,L,L]
 			]
-		}
+		};
 		
-	};
-	
 	 // Set Room Defaults:
-	for(var i = 0; i < lq_size(room_type); i++){
-		var	t = lq_get_value(room_type, i),
-			_default = { w : 1, h : 1, carpet : 0, special : 0 };
-			
-		for(var j = 0; j < lq_size(_default); j++){
-			var k = lq_get_key(_default, j);
-			if(k not in t){
-				lq_set(t, k, lq_get(_default, k));
+	with(ds_map_values(room_type)){
+		var _default = {
+			w       : 1,
+			h       : 1,
+			carpet  : 0,
+			special : false
+		};
+		for(var i = 0; i < lq_size(_default); i++){
+			var _key = lq_get_key(_default, i);
+			if(_key not in self){
+				lq_set(self, _key, lq_get(_default, _key));
 			}
 		}
 	}
@@ -295,7 +280,6 @@
 	}
 	
 #define area_finish
-	
 	 // Next Subarea:
 	if(subarea < area_subarea()){
 		subarea++;
@@ -308,38 +292,9 @@
 		subarea = _next[1];
 		
 		 // Silver Tongue:
-		var _skill = "silver tongue";
-		if(mod_exists("skill", _skill) && skill_get(_skill) <= 0){
-			
-			var _wepMuted = wepmuted;
-				
+		if("ntte_lairmut" not in self){
 			skillpoints++;
-			endpoints++;
-			
-			if(fork()){
-				wait(0){
-					with(GameCont){
-						endpoints--;
-						wepmuted = _wepMuted;
-						
-						with(SkillIcon) instance_destroy();
-						with(LevCont)	maxselect = 0;
-						
-						 // Star of the Show:
-						with(instance_create(0, 0, SkillIcon)){
-							creator = LevCont;
-							num 	= 0;
-							alarm0	= 3;
-							
-							skill = _skill;
-							name  = skill_get_name(_skill);
-							text  = skill_get_text(_skill);
-							mod_script_call("skill", _skill, "skill_button");
-						}
-					}
-				}
-				exit;
-			}
+			ntte_lairmut = true; // Change this system later if you add secret area mutations
 		}
 	}
 	
@@ -366,10 +321,13 @@
 	
 	 // Spawn Rooms:
 	if(array_length(room_list) < floor(4 * (goal / 100))){
-		var k = "";
-		do k = lq_get_key(room_type, irandom(lq_size(room_type) - 1));
-		until (lq_get(room_type, k).special == false);
-		room_create(irandom_range(-1, 1), irandom_range(-1, 1), k);
+		with(array_shuffle(ds_map_keys(room_type))){
+			var _name = self;
+			if(!room_type[? _name].special){
+				room_create(irandom_range(-1, 1), irandom_range(-1, 1), _name);
+				break;
+			}
+		}
 	}
 	
 	 // Build Rooms:
@@ -469,14 +427,13 @@
 			
 			if(!room_debug || button_pressed(0, "east")){
 				 // Make Rooms:
-				var o = 32;
 				styleb = false;
 				with(room_list){
 					for(var _fy = 0; _fy < array_length(layout); _fy++){
 						var l = layout[_fy];
 						for(var _fx = 0; _fx < array_length(l); _fx++){
 							if(l[_fx]){
-								array_push(floors, instance_create(_x + ((x + _fx) * o), _y + ((y + _fy) * o), Floor));
+								array_push(floors, instance_create(_x + ((x + _fx) * 32), _y + ((y + _fy) * 32), Floor));
 							}
 						}
 					}
@@ -485,27 +442,27 @@
 				 // Make Hallways:
 				styleb = true;
 				with(room_list) with(link){
-					var	_fx = x + floor(w / 2),
-						_fy = y + floor(h / 2),
-						_tx = other.x + floor(other.w / 2),
-						_ty = other.y + floor(other.h / 2),
-						_dir = pround(point_direction(_fx, _fy, _tx, _ty), 90),
+					var	_fx    = x + floor(w / 2),
+						_fy    = y + floor(h / 2),
+						_tx    = other.x + floor(other.w / 2),
+						_ty    = other.y + floor(other.h / 2),
+						_dir   = pround(point_direction(_fx, _fy, _tx, _ty), 90),
 						_tries = 100;
 						
 					while(_tries-- > 0){
-						instance_create(_x + (_fx * o), _y + (_fy * o), Floor);
+						instance_create(_x + (_fx * 32), _y + (_fy * 32), Floor);
 						
 						 // Turn Corner:
 						if(_fx == _tx || _fy == _ty) _dir = point_direction(_fx, _fy, _tx, _ty);
 						
 						 // End Hallway & Spawn Door:
-						for(var a = _dir; a < _dir + 360; a += 90){
-							var	_dx = _fx - other.x + lengthdir_x(1, a),
-								_dy = _fy - other.y + lengthdir_y(1, a);
+						for(var _ang = _dir; _ang < _dir + 360; _ang += 90){
+							var	_dx = _fx - other.x + lengthdir_x(1, _ang),
+								_dy = _fy - other.y + lengthdir_y(1, _ang);
 								
 							if(point_in_rectangle(_dx, _dy, 0, 0, other.w - 1, other.h - 1)){
 								if(other.layout[_dy, _dx]){
-									door_create(_x + 16 + (_fx * o), _y + 16 + (_fy * o), a);
+									door_create(_x + 16 + (_fx * 32), _y + 16 + (_fy * 32), _ang);
 									_tries = 0;
 									break;
 								}
@@ -656,81 +613,120 @@
 		}
 	}
 	
-#define ntte_step
-	 // Resprite turrets iam smash brother and i dont want to recode turrets:
-	with(instances_matching(Turret, "ntte_lairturret", null)){
-		ntte_lairturret = area_active;
-		if(ntte_lairturret){
-			spr_idle     = spr.LairTurretAppear;
-			spr_walk     = spr.LairTurretIdle;
-			spr_hurt     = spr.LairTurretHurt;
-			spr_dead     = spr.LairTurretDead;
-			spr_fire     = spr.LairTurretFire;
-			hitid        = [spr_idle, "LAIR TURRET"];
-			sprite_index = enemy_sprite;
-		}
-	}
-	with(instances_matching(Turret, "spr_idle", spr.LairTurretAppear)){
-		if(anim_end || sprite_index != spr_idle){
-			event_perform(ev_other, ev_animation_end);
-			spr_idle = spr.LairTurretIdle;
-			spr_walk = spr.LairTurretIdle;
-			spr_hurt = spr.LairTurretHurt;
-		}
-	}
-	with(instances_matching(EnemyBullet1, "ntte_lairturret", null)){
-		ntte_lairturret = (
-			object_index == EnemyBullet1
-			&& is_array(hitid)
-			&& array_length(hitid) > 1
-			&& hitid[1] == "LAIR TURRET"
-		);
-		if(ntte_lairturret){
-			with(projectile_create(x, y, EnemyBullet2, direction, speed)){
-				 // Effects:
-				with(instance_create(x, y, AcidStreak)){
-					sprite_index = spr.AcidPuff;
-					image_angle  = other.direction + orandom(30);
-					depth        = other.depth - (image_angle >= 180);
-					
-					with(instance_create(x, y, AcidStreak)){
-						motion_set(other.image_angle, 2 + random(2));
-						image_angle = direction;
-						depth       = other.depth;
+#define ntte_begin_step
+	 // Silver Tongue:
+	if(instance_exists(SkillIcon) && "ntte_lairmut" in GameCont && GameCont.ntte_lairmut){
+		GameCont.ntte_lairmut = false;
+		
+		var _skill = "silver tongue";
+		if(mod_exists("skill", _skill) && skill_get(_skill) == 0){
+			with(LevCont){
+				 // Clear:
+				with(instances_matching(SkillIcon, "creator", id)){
+					if(skill_get_avail(skill)){
+						other.maxselect--;
+						with(instances_matching_gt(mutbutton, "num", num)){
+							num--;
+						}
+						instance_destroy();
 					}
 				}
 				
-				 // Sounds:
-				sound_play_hit(sndFrogEggSpawn3, 0.4);
+				 // Star of the Show:
+				with(instance_create(0, 0, SkillIcon)){
+					creator = other;
+					num     = ++other.maxselect;
+					alarm0	= num + 1;
+					
+					skill = _skill;
+					name  = skill_get_name(_skill);
+					text  = skill_get_text(_skill);
+					mod_script_call("skill", _skill, "skill_button");
+				}
 			}
-			instance_delete(id);
 		}
 	}
 	
+#define ntte_step
+	 // Resprite turrets iam smash brother and i dont want to recode turrets:
+	if(instance_exists(Turret)){
+		var _inst = instances_matching(Turret, "ntte_lairturret", null);
+		if(array_length(_inst)) with(_inst){
+			ntte_lairturret = area_active;
+			if(ntte_lairturret){
+				spr_idle     = spr.LairTurretAppear;
+				spr_walk     = spr.LairTurretIdle;
+				spr_hurt     = spr.LairTurretHurt;
+				spr_dead     = spr.LairTurretDead;
+				spr_fire     = spr.LairTurretFire;
+				hitid        = [spr_idle, "LAIR TURRET"];
+				sprite_index = enemy_sprite;
+			}
+		}
+		var _inst = instances_matching(Turret, "spr_idle", spr.LairTurretAppear);
+		if(array_length(_inst)) with(_inst){
+			if(anim_end || sprite_index != spr_idle){
+				event_perform(ev_other, ev_animation_end);
+				spr_idle = spr.LairTurretIdle;
+				spr_walk = spr.LairTurretIdle;
+				spr_hurt = spr.LairTurretHurt;
+			}
+		}
+	}
+	if(instance_exists(EnemyBullet1)){
+		var _inst = instances_matching(EnemyBullet1, "ntte_lairturret", null);
+		if(array_length(_inst)) with(_inst){
+			ntte_lairturret = (
+				object_index == EnemyBullet1
+				&& is_array(hitid)
+				&& array_length(hitid) > 1
+				&& hitid[1] == "LAIR TURRET"
+			);
+			if(ntte_lairturret){
+				with(projectile_create(x, y, EnemyBullet2, direction, speed)){
+					 // Effects:
+					with(instance_create(x, y, AcidStreak)){
+						sprite_index = spr.AcidPuff;
+						image_angle  = other.direction + orandom(30);
+						depth        = other.depth - (image_angle >= 180);
+						
+						with(instance_create(x, y, AcidStreak)){
+							motion_set(other.image_angle, 2 + random(2));
+							image_angle = direction;
+							depth       = other.depth;
+						}
+					}
+					
+					 // Sounds:
+					sound_play_hit(sndFrogEggSpawn3, 0.4);
+				}
+				instance_delete(id);
+			}
+		}
+	}
 	
 /// ROOMS
 #define room_create(_x, _y, _type)
 	with({}){
-		x = _x;
-		y = _y;
-		type = _type;
-		link = noone;
+		x      = _x;
+		y      = _y;
+		type   = _type;
+		link   = noone;
 		floors = [];
 		
 		 // Grab Room Vars:
-		if(lq_exists(room_type, type)){
-			var t = lq_get(room_type, type);
-			for(var i = 0; i < lq_size(t); i++){
-				var k = lq_get_key(t, i);
-				lq_set(self, k, lq_get(t, k));
+		if(ds_map_exists(room_type, type)){
+			var _room = room_type[? type];
+			for(var i = 0; i < lq_size(_room); i++){
+				lq_set(self, lq_get_key(_room, i), lq_get_value(_room, i));
 			}
 		}
 		
 		 // Randomize Room:
 		else{
-			w = irandom_range(3, 6);
-			h = irandom_range(3, 6);
-			carpet = 1/4;
+			w       = irandom_range(3, 6);
+			h       = irandom_range(3, 6);
+			carpet  = 1/4;
 			special = false;
 		}
 		
@@ -739,8 +735,7 @@
 		y -= floor(h / 2);
 		
 		 // Carpet Chance:
-		if(chance(carpet, 1)) carpeted = true;
-		else carpeted = false;
+		carpeted = chance(carpet, 1);
 		
 		 // Floor Layout:
 		if("layout" not in self){
@@ -752,7 +747,9 @@
 			}
 		}
 		
+		 // Add:
 		array_push(room_list, self);
+		
 		return self;
 	}
 	
@@ -1235,7 +1232,7 @@
 		draw_set_color(c_black);
 		draw_rectangle(0, 0, game_width, game_height, 0);
 		
-		var	o = 4,
+		var	_o = 4,
 			_x = game_width / 2,
 			_y = game_height / 2;
 			
@@ -1256,7 +1253,7 @@
 					}
 					
 					draw_set_color(c_dkgray);
-					draw_rectangle(_x + (_fx * o), _y + (_fy * o), _x + (_fx * o) + o - 1, _y + (_fy * o) + o - 1, 0);
+					draw_rectangle(_x + (_fx * _o), _y + (_fy * _o), _x + (_fx * _o) + _o - 1, _y + (_fy * _o) + _o - 1, 0);
 					
 					 // End Hallway & Spawn Door:
 					for(var a = 0; a < 360; a += 90){
@@ -1266,7 +1263,7 @@
 						if(point_in_rectangle(_dx, _dy, 0, 0, other.w - 1, other.h - 1)){
 							if(other.layout[_dy, _dx]){
 								draw_set_color(c_orange);
-								draw_rectangle(_x + (_fx * o), _y + (_fy * o), _x + (_fx * o) + o - 1, _y + (_fy * o) + o - 1, 0);
+								draw_rectangle(_x + (_fx * _o), _y + (_fy * _o), _x + (_fx * _o) + _o - 1, _y + (_fy * _o) + _o - 1, 0);
 								_tries = 0;
 							}
 						}
@@ -1276,10 +1273,10 @@
 					_fy += lengthdir_y(1, _dir);
 					if(_fx == _tx && _fy == _ty) break;
 				}
-				/*var	_lx1 = _x + ((x + floor(w / 2)) * o),
-					_ly1 = _y + ((y + floor(h / 2)) * o),
-					_lx2 = _x + ((other.x + floor(other.w / 2)) * o),
-					_ly2 = _y + ((other.y + floor(other.h / 2)) * o),
+				/*var	_lx1 = _x + ((x + floor(w / 2)) * _o),
+					_ly1 = _y + ((y + floor(h / 2)) * _o),
+					_lx2 = _x + ((other.x + floor(other.w / 2)) * _o),
+					_ly2 = _y + ((other.y + floor(other.h / 2)) * _o),
 					_dir = pround(point_direction(_lx1, _ly1, _lx2, _ly2), 90),
 					_mx = 0,
 					_my = 0;
@@ -1287,21 +1284,21 @@
 				if(_dir == 0 || _dir == 180){
 					_mx = _lx1;
 					_my = _ly2;
-					if(_lx1 > _lx2) _lx1 += o;
+					if(_lx1 > _lx2) _lx1 += _o;
 					//draw_set_color((_lx2 < _lx1) ? c_purple : c_blue);
 				}
 				else{
 					_mx = _lx2;
 					_my = _ly1;
-					if(_ly1 > _ly2) _ly1 += o;
+					if(_ly1 > _ly2) _ly1 += _o;
 					//draw_set_color((_ly2 < _ly1) ? c_orange : c_red);
 				}
 				
-				for(var _fx = min(_lx1, _lx2); _fx < max(_lx1, _lx2); _fx += o){
-					draw_rectangle(_fx, _my, _fx + o - 1, _my + o - 1, 0);
+				for(var _fx = min(_lx1, _lx2); _fx < max(_lx1, _lx2); _fx += _o){
+					draw_rectangle(_fx, _my, _fx + _o - 1, _my + _o - 1, 0);
 				}
-				for(var _fy = min(_ly1, _ly2); _fy < max(_ly1, _ly2); _fy += o){
-					draw_rectangle(_mx, _fy, _mx + o - 1, _fy + o - 1, 0);
+				for(var _fy = min(_ly1, _ly2); _fy < max(_ly1, _ly2); _fy += _o){
+					draw_rectangle(_mx, _fy, _mx + _o - 1, _fy + _o - 1, 0);
 				}*/
 			}
 		}
@@ -1314,7 +1311,7 @@
 				var l = layout[_fy];
 				for(var _fx = 0; _fx < array_length(l); _fx++){
 					if(l[_fx]){
-						draw_rectangle(_x + ((x + _fx) * o), _y + ((y + _fy) * o), _x + ((x + _fx) * o) + (o - 1), _y + ((y + _fy) * o) + (o - 1), 0);
+						draw_rectangle(_x + ((x + _fx) * _o), _y + ((y + _fy) * _o), _x + ((x + _fx) * _o) + (_o - 1), _y + ((y + _fy) * _o) + (_o - 1), 0);
 					}
 				}
 			}
@@ -1457,7 +1454,6 @@
 #define area_get_back_color(_area)                                                      return  mod_script_call_nc  ('mod', 'telib', 'area_get_back_color', _area);
 #define area_border(_y, _area, _color)                                                  return  mod_script_call_nc  ('mod', 'telib', 'area_border', _y, _area, _color);
 #define area_generate(_area, _sub, _loops, _x, _y, _setArea, _overlapFloor, _scrSetup)  return  mod_script_call_nc  ('mod', 'telib', 'area_generate', _area, _sub, _loops, _x, _y, _setArea, _overlapFloor, _scrSetup);
-#define floor_get(_x, _y)                                                               return  mod_script_call_nc  ('mod', 'telib', 'floor_get', _x, _y);
 #define floor_set(_x, _y, _state)                                                       return  mod_script_call_nc  ('mod', 'telib', 'floor_set', _x, _y, _state);
 #define floor_set_style(_style, _area)                                                  return  mod_script_call_nc  ('mod', 'telib', 'floor_set_style', _style, _area);
 #define floor_set_align(_alignX, _alignY, _alignW, _alignH)                             return  mod_script_call_nc  ('mod', 'telib', 'floor_set_align', _alignX, _alignY, _alignW, _alignH);

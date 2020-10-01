@@ -176,8 +176,9 @@
 		}
 		
 		 // Pickup Bones:
-		if(place_meeting(x, y, WepPickup)){
-			with(instances_meeting(x, y, instances_matching_le(instances_matching(WepPickup, "visible", true), "curse", wep_get(_primary, "curse", 0)))){
+		if(instance_exists(WepPickup) && place_meeting(x, y, WepPickup)){
+			var _inst = instances_meeting(x, y, instances_matching_le(instances_matching(WepPickup, "visible", true), "curse", wep_get(_primary, "curse", 0)));
+			if(array_length(_inst)) with(_inst){
 				if(place_meeting(x, y, other)){
 					if(wep_raw(wep) == mod_current){
 						var _num = lq_defget(wep, "ammo", 1);
@@ -231,7 +232,9 @@
 			
 			 // Bro 10 bones dont fit in a 3x3 square
 			if(player_is_active(prompt_scythe.pick)){
-				with(prompt_scythe) instance_destroy();
+				with(prompt_scythe){
+					instance_destroy();
+				}
 				
 				 // Give Scythe:
 				mod_script_call("weapon", "scythe", "scythe_swap", _primary);
@@ -248,8 +251,10 @@
 				}
 			}
 		}
-		else with(variable_instance_get(id, "prompt_scythe", noone)){
-			instance_destroy();
+		else if("prompt_scythe" in self && instance_exists(prompt_scythe)){
+			with(prompt_scythe){
+				instance_destroy();
+			}
 		}
 	}
 	

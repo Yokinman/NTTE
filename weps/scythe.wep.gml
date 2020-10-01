@@ -258,7 +258,7 @@
 				
 				 // Slug Bolt:
 				with(projectile_create(x, y, "BoneArrow", _dir, 20)){
-					big		= true;
+					big = true;
 				}
 				
 				 // Sounds:
@@ -296,8 +296,9 @@
 	}
 	
 	 // Big Ammo:
-	if(place_meeting(x, y, WepPickup)){
-		with(instances_meeting(x, y, instances_matching_le(instances_matching(WepPickup, "visible", true), "curse", wep_get(_primary, "curse", 0)))){
+	if(instance_exists(WepPickup) && place_meeting(x, y, WepPickup)){
+		var _inst = instances_meeting(x, y, instances_matching_le(instances_matching(WepPickup, "visible", true), "curse", wep_get(_primary, "curse", 0)));
+		if(array_length(_inst)) with(_inst){
 			if(place_meeting(x, y, other)){
 				if(wep_raw(wep) == "crabbone"){
 					var _num = lq_defget(wep, "ammo", 1);

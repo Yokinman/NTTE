@@ -17,6 +17,9 @@
 	global.floor_top    = 0;
 	global.floor_bottom = 0;
 	
+	 // Pet History (MutantVats Event):
+	global.pet_history = ds_list_create();
+	
 #macro spr global.spr
 #macro msk spr.msk
 #macro snd global.snd
@@ -696,6 +699,75 @@
 				break;
 				
 		}
+	}
+	
+	
+#define BigIDPDSpawn_create(_x, _y)
+	with(instance_create(_x, _y, IDPDSpawn)){
+		 // Visual:
+		depth = -3;
+		
+		 // Vars:
+		elite = true;
+		num   = 2 * (1 + GameCont.loops);
+		
+		 // Vars:
+		alarm0 += 30;
+		sound_stop(sndIDPDPortalSpawn);
+		sound_play(sndEliteIDPDPortalSpawn);
+		
+		return id;
+	}
+	
+#define BigIDPDSpawn_end_step
+	 // Effects:
+	if(sprite_index == sprVanPortalCharge){
+		if(chance_ct(2, 3)){
+			var	l = 64,
+				d = random(360);
+			
+			with(instance_create(x + lengthdir_x(l, d), y + lengthdir_y(l, d), IDPDPortalCharge)){
+				alarm0 = 20 + random(20);
+				speed = l / alarm0;
+				direction = d + 180;
+			}
+		}
+		if(chance_ct(1, 4)){
+			with(scrFX(x, y, [random(360), 1 + random(1)], PlasmaTrail)){
+				sprite_index = sprPopoPlasmaTrail;
+			}
+		}
+	}
+	
+	 // Force Spawns:
+	if(alarm1 > 0 && alarm1 <= ceil(current_time_scale)){
+		depth = 0;
+		repeat(num){
+			event_perform(ev_alarm, 1);
+			with(instance_create(x, y, PortalClear)){
+				image_xscale = 2;
+				image_yscale = image_xscale;
+			}
+		}
+		alarm1 = -1;
+	}
+	
+	 // Animate:
+	if(anim_end){
+		switch(sprite_index){
+			case sprVanPortalStart:
+				sprite_index = sprVanPortalCharge;
+				break;
+				
+			case sprVanPortalClose:
+				instance_destroy();
+				break;
+		}
+	}
+	else switch(sprite_index){
+		case sprIDPDPortalClose  : sprite_index = sprVanPortalClose;  break;
+		case sprIDPDPortalCharge : sprite_index = sprVanPortalCharge; break;
+		case sprIDPDPortalStart  : sprite_index = sprVanPortalStart;  break;
 	}
 	
 	
@@ -2375,11 +2447,13 @@
 		corpse       = true;
 		corpse_inst  = noone;
 		revive       = noone;
+		history      = ["spr_idle", "spr_walk", "spr_hurt", "spr_dead", "spr_icon", "spr_shadow", "spr_shadow_x", "spr_shadow_y", "spr_bubble", "spr_bubble_pop", "spr_bubble_x", "spr_bubble_y", "hitid", "snd_hurt", "snd_dead", "team", "stat_found"];
 		
 		 // Prompt:
 		prompt = prompt_create("");
 		with(prompt){
 			mask_index = mskShield;
+			icon       = other.spr_icon;
 		}
 		
 		 // Scripts:
@@ -2773,6 +2847,12 @@
 	}
 	with(prompt){
 		visible = other.can_take;
+		
+		 // Update Icon:
+		if("icon" in self && icon != other.spr_icon){
+			text = string_replace(text, string(icon), string(other.spr_icon));
+			icon = other.spr_icon;
+		}
 	}
 	
 	if(visible || instance_exists(revive)){
@@ -3028,6 +3108,18 @@
 		}
 	}
 	
+#define Pet_cleanup
+	 // Add to Pet History (MutantVats Event):
+	if(!stat_found && array_length(history) > 0){
+		var _vars = {};
+		with(history){
+			if(self in other){
+				lq_set(_vars, self, variable_instance_get(other, self));
+			}
+		}
+		ds_list_add(global.pet_history, [pet, mod_type, mod_name, _vars]);
+	}
+	
 	
 #define PetRevive_create(_x, _y)
 	/*
@@ -3190,6 +3282,7 @@
 		stat = stat_get(s);
 		
 		 // Base Code:
+		history = [];
 		mod_script_call("mod", "petlib", "Weapon_create");
 		
 		 // Visual:
@@ -5313,158 +5406,27 @@
 	with(instances_matching_lt(instances_matching(CustomObject, "name", "ReviveNTTE"), "id", GameCont.id)) instance_delete(id);
 	with(instances_matching_lt(instances_matching(CustomObject, "name", "UnlockCont"), "id", GameCont.id)) instance_destroy();
 	
+	 // Reset Pet History:
+	ds_list_clear(global.pet_history);
+	
 #define ntte_step
 	 // Pet Leveling Up FX:
-	with(instances_matching(LevelUp, "nttepet_levelup", null)){
-		nttepet_levelup = true;
-		if(instance_is(creator, Player)){
-			if("ntte_pet" in creator) with(creator.ntte_pet){
-				if(instance_exists(self)) with(other){
-					instance_copy(false).creator = other;
-				}
-			}
-		}
-	}
-	
-	 // Auto-Topify New Objects:
-	with(TopObjectSearch){
-		var _object = self;
-		if(instance_exists(_object)){
-			var _lastID = TopObjectSearchMap[? _object];
-			if(_object.id > _lastID){
-				TopObjectSearchMap[? _object] = _object.id;
-				
-				var _inst  = instances_matching(instances_matching_gt(_object, "id", _lastID), "z", null),
-					_break = false;
-					
-				 // Object-Specifics:
-				switch(_object){
-					case hitme: // Avoid Wall-Breaking Bros (Big Bandit)
-						with(instances_matching(_inst, "top_object_wallcheck", null)){
-							if(instance_exists(self)){
-								top_object_wallcheck = false;
-								
-								motion_step(1);
-								
-								if(place_meeting(x, y, Wall)){
-									 // Check for Wall-Breaking Capabilities:
-									if(position_meeting(x, y, PortalClear)){
-										top_object_wallcheck = true;
-									}
-									else{
-										var	_x = x,
-											_y = y;
-											
-										with(instances_meeting(x, y, Wall)){
-											if(instance_exists(self) && place_meeting(x, y, other)){
-												with(other){
-													if(other.solid || solid){
-														x = xprevious;
-														y = yprevious;
-														other.x = other.xprevious;
-														other.y = other.yprevious;
-													}
-													
-													event_perform(ev_collision, Wall);
-													
-													if(instance_exists(self)){
-														x = _x;
-														y = _y;
-														if(!instance_exists(other)){
-															top_object_wallcheck = true;
-															break;
-														}
-													}
-													else break;
-												}
-											}
-										}
-									}
-									
-									 // Cancel Topification:
-									if(!instance_exists(self) || top_object_wallcheck){
-										_inst = instances_matching_ne(_inst, "id", self);
-										if(!instance_exists(self)){
-											continue;
-										}
-									}
-								}
-								
-								motion_step(-1);
-							}
-						}
-						break;
-						
-					case Effect: // Anti-Lag
-						_inst = instances_matching_ne(_inst, "object_index", RainSplash, RainDrop, SnowFlake, Bubble);
-						if(instance_number(Smoke) >= 100){
-							_inst = instances_matching_ne(_inst, "object_index", Smoke);
-						}
-						if(instance_number(Dust) >= 100){
-							_inst = instances_matching_ne(_inst, "object_index", Dust);
-						}
-						break;
-				}
-				
-				 // Topify:
-				if(array_length(_inst) > 0){
-					with(instances_matching(CustomObject, "name", "TopObject")){
-						with(
-							instances_matching(
-							instances_matching_le(
-							instances_matching_ge(
-							instances_matching_le(
-							instances_matching_ge(
-							_inst,
-							"xstart", search_x1),
-							"xstart", search_x2),
-							"ystart", search_y1),
-							"ystart", search_y2),
-							"creator", null, noone, target)
-						){
-							_inst = array_delete_value(_inst, self);
-							
-							switch(_object){
-								case Effect:
-									if(!position_meeting(x, y, Floor)){
-										switch(object_index){
-											case ChestOpen:
-											case Debris:
-											case Scorchmark:
-												top_create(x, y, id, 0, 0);
-												break;
-												
-											case MeltSplat:
-												instance_destroy();
-												break;
-												
-											default:
-												depth = min(depth, -6.01);
-										}
-									}
-									break;
-									
-								case SharpTeeth:
-									depth = min(depth, -8);
-									break;
-									
-								default:
-									if(place_meeting(x, y, Wall) || !position_meeting(x, y, Floor)){
-										top_create(x, y, id, 0, 0);
-									}
-							}
-						}
-						if(array_length(_inst) <= 0){
-							break;
-						}
+	if(instance_exists(LevelUp)){
+		var _inst = instances_matching(LevelUp, "nttepet_levelup", null);
+		if(array_length(_inst)) with(_inst){
+			nttepet_levelup = true;
+			if(instance_is(creator, Player)){
+				if("ntte_pet" in creator) with(creator.ntte_pet){
+					if(instance_exists(self)) with(other){
+						instance_copy(false).creator = other;
 					}
 				}
 			}
 		}
 	}
 	
+	 // Floor Update:
 	if(instance_exists(Floor)){
-		 // Floor Update:
 		if(global.floor_num != instance_number(Floor) || global.floor_min < Floor.id){
 			global.floor_num = instance_number(Floor);
 			
@@ -5482,257 +5444,414 @@
 			
 			 // Tiny TopSmall Fix:
 			if(global.floor_min < Floor.id){
-				with(instances_matching_gt(FloorExplo, "id", global.floor_min)){
-					with(instances_matching(instances_matching(TopSmall, "x", x), "y", y)){
+				var _inst = instances_matching_gt(FloorExplo, "id", global.floor_min);
+				if(array_length(_inst)) with(_inst){
+					var _instSmall = instances_matching(instances_matching(TopSmall, "x", x), "y", y);
+					if(array_length(_instSmall)) with(_instSmall){
 						instance_destroy();
 					}
 				}
 				global.floor_min = GameObject.id;
 			}
 		}
-		
-		 // Top Object Floor Collision:
-		var _topObject = instances_matching(instances_matching(instances_matching(instances_matching(CustomObject, "name", "TopObject"), "zspeed", 0), "zfriction", 0), "speed", 0);
-		with(instance_rectangle_bbox(global.floor_left - 16, global.floor_top - 16, global.floor_right + 16, global.floor_bottom + 16, _topObject)){
-			if(place_meeting(x + mask_x, y + mask_y, Floor) && (jump != 0 || grav > 0)){
-				 // Wobble:
-				if(wobble != 0 && place_meeting(x + mask_x, y + mask_y, Wall)){
-					var	_wobWest = position_meeting(bbox_left, y, Floor),
-						_wobEast = position_meeting(bbox_right, y, Floor);
+	}
+	
+	 // Auto-Topify New Objects:
+	with(TopObjectSearch){
+		var _object = self;
+		if(instance_exists(_object)){
+			var _lastID = TopObjectSearchMap[? _object];
+			if(_object.id > _lastID){
+				TopObjectSearchMap[? _object] = _object.id;
+				
+				var _instTop = instances_matching(CustomObject, "name", "TopObject");
+				
+				if(array_length(_instTop)){
+					var _inst  = instances_matching(instances_matching_gt(_object, "id", _lastID), "z", null),
+						_break = false;
 						
-					if(_wobWest || _wobEast){
-						var _wobMove = ((_wobWest - _wobEast) - wobble_num) * 0.1 * current_time_scale;
-						wobble_num += _wobMove;
-						
-						with(target){
-							image_angle += other.wobble * _wobMove;
-							image_angle += (other.wobble / 16) * sin(current_frame / 10) * other.wobble_num;
+					 // Object-Specifics:
+					switch(_object){
+						case hitme: // Avoid Wall-Breaking Bros (Big Bandit)
+							with(instances_matching(_inst, "top_object_wallcheck", null)){
+								if(instance_exists(self)){
+									top_object_wallcheck = false;
+									
+									motion_step(1);
+									
+									if(place_meeting(x, y, Wall)){
+										 // Check for Wall-Breaking Capabilities:
+										if(position_meeting(x, y, PortalClear)){
+											top_object_wallcheck = true;
+										}
+										else with(instances_meeting(x, y, Wall)){
+											if(instance_exists(self) && place_meeting(x, y, other)){
+												with(other){
+													if(other.solid || solid){
+														x = xprevious;
+														y = yprevious;
+														other.x = other.xprevious;
+														other.y = other.yprevious;
+													}
+													event_perform(ev_collision, Wall);
+													
+													 // Check for Wall Breakage:
+													if(instance_exists(self)){
+														if(!instance_exists(other)){
+															top_object_wallcheck = true;
+															break;
+														}
+													}
+													else break;
+												}
+											}
+										}
+										
+										 // Cancel Topification:
+										if(!instance_exists(self) || top_object_wallcheck){
+											_inst = instances_matching_ne(_inst, "id", self);
+											if(!instance_exists(self)){
+												continue;
+											}
+										}
+									}
+									
+									motion_step(-1);
+								}
+							}
+							break;
+							
+						case Effect: // Anti-Lag
+							_inst = instances_matching_ne(_inst, "object_index", RainSplash, RainDrop, SnowFlake, Bubble);
+							if(instance_number(Smoke) >= 100){
+								_inst = instances_matching_ne(_inst, "object_index", Smoke);
+							}
+							if(instance_number(Dust) >= 100){
+								_inst = instances_matching_ne(_inst, "object_index", Dust);
+							}
+							break;
+					}
+					
+					 // Topify:
+					if(array_length(_inst)){
+						with(_instTop){
+							with(
+								instances_matching(
+								instances_matching_le(
+								instances_matching_ge(
+								instances_matching_le(
+								instances_matching_ge(
+								_inst,
+								"xstart", search_x1),
+								"xstart", search_x2),
+								"ystart", search_y1),
+								"ystart", search_y2),
+								"creator", null, noone, target)
+							){
+								_inst = array_delete_value(_inst, self);
+								
+								switch(_object){
+									case Effect:
+										if(!position_meeting(x, y, Floor)){
+											switch(object_index){
+												case ChestOpen:
+												case Debris:
+												case Scorchmark:
+													top_create(x, y, id, 0, 0);
+													break;
+													
+												case MeltSplat:
+													instance_destroy();
+													break;
+													
+												default:
+													depth = min(depth, -6.01);
+											}
+										}
+										break;
+										
+									case SharpTeeth:
+										depth = min(depth, -8);
+										break;
+										
+									default:
+										if(place_meeting(x, y, Wall) || !position_meeting(x, y, Floor)){
+											top_create(x, y, id, 0, 0);
+										}
+								}
+							}
+							if(array_length(_inst) <= 0){
+								break;
+							}
 						}
 					}
 				}
-				
-				 // Jump to Ground:
-				else if(type != RavenFly || !canmove || !position_meeting(x + mask_x, y + mask_y + 8, Wall)){
-					if(instance_exists(target)){
-						jump_x = x;
-						jump_y = y;
-						zspeed = jump;
-						zfriction = grav;
-						
-						if(type != RavenFly){
-							 // Find Open Space to Jump, if Possible:
-							if(unstick) with(target){
-								var	_disMin = 5 * max(speed, other.maxspeed),
-									_disMax = 4 * _disMin,
-									_dir = other.direction,
-									_sx = x + lengthdir_x(_disMin, _dir),
-									_sy = y + lengthdir_y(_disMin, _dir),
-									_tx = _sx,
-									_ty = _sy,
-									_saveMask = mask_index;
-									
-								mask_index = lq_defget(other.target_save, "mask_index", mask_index);
+			}
+		}
+	}
+	
+	 // Top Objects:
+	if(instance_exists(CustomObject)){
+		var _instTop = instances_matching(instances_matching(instances_matching(instances_matching(CustomObject, "name", "TopObject"), "zspeed", 0), "zfriction", 0), "speed", 0);
+		if(array_length(_instTop)){
+			 // Top Object Floor Collision:
+			if(instance_exists(Floor)){
+				var _instTopFloor = instance_rectangle_bbox(global.floor_left - 16, global.floor_top - 16, global.floor_right + 16, global.floor_bottom + 16, _instTop);
+				if(array_length(_instTopFloor)) with(_instTopFloor){
+					if(place_meeting(x + mask_x, y + mask_y, Floor) && (jump != 0 || grav > 0)){
+						 // Wobble:
+						if(wobble != 0 && place_meeting(x + mask_x, y + mask_y, Wall)){
+							var	_wobWest = position_meeting(bbox_left, y, Floor),
+								_wobEast = position_meeting(bbox_right, y, Floor);
 								
-								if(!place_meeting(_tx, _ty, Floor) || place_meeting(_tx, _ty, Wall)){
-									with(instance_rectangle_bbox(x - _disMax - 1, y - _disMax - 1, x + _disMax, y + _disMax, Floor)){
-										with(other){
-											for(var _fx = other.bbox_left; _fx < other.bbox_right + 1; _fx += 8){
-												for(var _fy = other.bbox_top; _fy < other.bbox_bottom + 1; _fy += 8){
-													if(!place_meeting(_fx, _fy, Wall)){
-														var _dis = point_distance(x, y, _fx, _fy);
-														if(_dis < _disMax || (_dis > _disMin && _disMax < _disMin)){
-															if(abs(angle_difference(point_direction(x, y, _fx, _fy), _dir)) < 90){
-																_disMax = _dis;
-																_tx = _fx;
-																_ty = _fy;
+							if(_wobWest || _wobEast){
+								var _wobMove = ((_wobWest - _wobEast) - wobble_num) * 0.1 * current_time_scale;
+								wobble_num += _wobMove;
+								
+								with(target){
+									image_angle += other.wobble * _wobMove;
+									image_angle += (other.wobble / 16) * sin(current_frame / 10) * other.wobble_num;
+								}
+							}
+						}
+						
+						 // Jump to Ground:
+						else if(type != RavenFly || !canmove || !position_meeting(x + mask_x, y + mask_y + 8, Wall)){
+							if(instance_exists(target)){
+								jump_x    = x;
+								jump_y    = y;
+								zspeed    = jump;
+								zfriction = grav;
+								
+								if(type != RavenFly){
+									 // Find Open Space to Jump, if Possible:
+									if(unstick) with(target){
+										var	_disMin = 5 * max(speed, other.maxspeed),
+											_disMax = 4 * _disMin,
+											_dir = other.direction,
+											_sx = x + lengthdir_x(_disMin, _dir),
+											_sy = y + lengthdir_y(_disMin, _dir),
+											_tx = _sx,
+											_ty = _sy,
+											_saveMask = mask_index;
+											
+										mask_index = lq_defget(other.target_save, "mask_index", mask_index);
+										
+										if(!place_meeting(_tx, _ty, Floor) || place_meeting(_tx, _ty, Wall)){
+											with(instance_rectangle_bbox(x - _disMax - 1, y - _disMax - 1, x + _disMax, y + _disMax, Floor)){
+												with(other){
+													for(var _fx = other.bbox_left; _fx < other.bbox_right + 1; _fx += 8){
+														for(var _fy = other.bbox_top; _fy < other.bbox_bottom + 1; _fy += 8){
+															if(!place_meeting(_fx, _fy, Wall)){
+																var _dis = point_distance(x, y, _fx, _fy);
+																if(_dis < _disMax || (_dis > _disMin && _disMax < _disMin)){
+																	if(abs(angle_difference(point_direction(x, y, _fx, _fy), _dir)) < 90){
+																		_disMax = _dis;
+																		_tx = _fx;
+																		_ty = _fy;
+																	}
+																}
 															}
 														}
 													}
 												}
 											}
 										}
+										
+										mask_index = _saveMask;
+										
+										other.jump_x = _tx;
+										other.jump_y = _ty;
 									}
-								}
-								
-								mask_index = _saveMask;
-								
-								other.jump_x = _tx;
-								other.jump_y = _ty;
-							}
-							
-							 // Jump to Target Position:
-							if(target.speed == 0) zspeed *= 2/3;
-							direction = point_direction(x, y, jump_x, jump_y);
-							var d = point_distance(x, y, jump_x, jump_y);
-							speed = min(maxspeed + target.friction, (sqrt(max(0, sqr(d) * ((2 * zfriction * z) + sqr(zspeed)))) - (d * zspeed)) / (2 * z));
-							
-							 // Facing:
-							if(speed > 0){
-								with(target){
-									if("gunangle" in self) gunangle = other.direction;
-									if("right" in self) scrRight(other.direction);
+									
+									 // Jump to Target Position:
+									if(target.speed == 0) zspeed *= 2/3;
+									direction = point_direction(x, y, jump_x, jump_y);
+									var d = point_distance(x, y, jump_x, jump_y);
+									speed = min(maxspeed + target.friction, (sqrt(max(0, sqr(d) * ((2 * zfriction * z) + sqr(zspeed)))) - (d * zspeed)) / (2 * z));
+									
+									 // Facing:
+									if(speed > 0){
+										with(target){
+											if("gunangle" in self) gunangle = other.direction;
+											if("right" in self) scrRight(other.direction);
+										}
+									}
+									
+									 // Sound:
+									sound_play_hit_ext(sndAssassinAttack, 1 + orandom(0.4), abs(zspeed) / 3);
 								}
 							}
-							
-							 // Sound:
-							sound_play_hit_ext(sndAssassinAttack, 1 + orandom(0.4), abs(zspeed) / 3);
+						}
+					}
+					
+					 // Unwobble:
+					else if(wobble_num != 0){
+						wobble_num -= wobble_num * 0.5 * current_time_scale;
+						with(target) image_angle -= image_angle * 0.5 * current_time_scale;
+						
+						if(abs(wobble_num) < 0.5){
+							wobble_num = 0;
+							with(target) image_angle = 0;
 						}
 					}
 				}
 			}
 			
-			 // Unwobble:
-			else if(wobble_num != 0){
-				wobble_num -= wobble_num * 0.5 * current_time_scale;
-				with(target) image_angle -= image_angle * 0.5 * current_time_scale;
-				
-				if(abs(wobble_num) < 0.5){
-					wobble_num = 0;
-					with(target) image_angle = 0;
+			 // Emergency Activation:
+			if(!instance_exists(NothingSpiral)){
+				var _instTopIdle = instances_matching_gt(_instTop, "jump_time", 60);
+				if(array_length(_instTopIdle)){
+					if(instance_number(enemy) - array_length(_instTopIdle) < 5 * (1 + GameCont.loops) * (1 + (crown_current == crwn_blood))){
+						with(instance_random(_instTopIdle)){
+							jump_time = random_range(1, 60);
+						}
+					}
 				}
-			}
-		}
-	}
-	
-	 // Top Object Emergency Activation:
-	if(instance_exists(NothingSpiral)){ /* Throne II Abyss */
-		with(_topObject){
-			 // Delete if directly above any floors cause the portal background & floor stalactites draw at the same depth :(
-			if(type != RavenFly && array_length(instances_matching_gt(instances_matching_lt(instances_matching_gt(Floor, "bbox_top", y), "bbox_left", x), "bbox_right", x)) > 0){
-				if(instance_exists(target)) instance_delete(target);
 			}
 			
-			 // Fall Into Abyss:
-			else{
-				zspeed = jump;
-				zfriction = grav;
-				if(type == enemy){
-					motion_add(random(360), 2);
+			 // Throne II Abyss:
+			else with(_instTop){
+				 // Delete if directly above any floors cause the portal background & floor stalactites draw at the same depth :(
+				if(type != RavenFly && array_length(instances_matching_gt(instances_matching_lt(instances_matching_gt(Floor, "bbox_top", y), "bbox_left", x), "bbox_right", x)) > 0){
+					if(instance_exists(target)){
+						instance_delete(target);
+					}
+				}
+				
+				 // Fall Into Abyss:
+				else{
+					zspeed    = jump;
+					zfriction = grav;
+					if(type == enemy){
+						motion_add(random(360), 2);
+					}
 				}
 			}
 		}
 	}
-	else{ /* Not Many Enemies */
-		var _idleTopObject = instances_matching_gt(_topObject, "jump_time", 60);
-		if(instance_number(enemy) - array_length(_idleTopObject) < 5 * (1 + GameCont.loops) * (1 + (crown_current == crwn_blood))){
-			with(instance_random(_idleTopObject)){
-				jump_time = random_range(1, 60);
+	
+#define ntte_dark(_type)
+	switch(_type){
+		
+		case "normal":
+		case "end":
+			
+			var _gray = (_type == "normal");
+			
+			 // Big Decals:
+			var _inst = instances_matching(instances_matching(CustomObject, "name", "BigDecal"), "area", area_caves, area_cursed_caves);
+			if(array_length(_inst)){
+				var _r = 40 + (56 * _gray);
+				with(_inst){
+					draw_circle(x, y - 8, _r, false);
+				}
 			}
-		}
-	}
-	
-#define ntte_dark // Drawing Grays
-	 // Big Decals:
-	with(instances_matching(instances_matching(CustomObject, "name", "BigDecal"), "area", area_caves, area_cursed_caves)){
-		draw_circle(x, y - 8, 96, false);
-	}
-	
-	 // Pets:
-	with(instances_matching(instances_matching(CustomHitme, "name", "Pet"), "visible", true)){
-		if(light && light_radius[1] > 0){
-			draw_circle(x, y, light_radius[1] + orandom(1), false);
-		}
-	}
-	
-	 // Portal Guardians:
-	with(instances_matching(CustomEnemy, "name", "PortalGuardian")){
-		draw_circle(x, y, 92 + random(6), false);
-	}
-	
-#define ntte_dark_end // Drawing Clear
-	 // Big Decals:
-	with(instances_matching(instances_matching(CustomObject, "name", "BigDecal"), "area", area_caves, area_cursed_caves)){
-		draw_circle(x, y - 8, 40, false);
-	}
-	
-	 // Pets:
-	with(instances_matching(instances_matching(CustomHitme, "name", "Pet"), "visible", true)){
-		if(light && light_radius[0] > 0){
-			draw_circle(x, y, light_radius[0] + orandom(1), false);
-		}
-	}
-	
-	 // Portal Guardians:
-	with(instances_matching(CustomEnemy, "name", "PortalGuardian")){
-		draw_circle(x, y, 24 + random(4), false);
+			
+			 // Pets:
+			if(instance_exists(CustomHitme)){
+				var _inst = instances_matching(instances_matching(CustomHitme, "name", "Pet"), "visible", true);
+				if(array_length(_inst)) with(_inst){
+					if(light && light_radius[_gray] > 0){
+						draw_circle(x, y, light_radius[_gray] + orandom(1), false);
+					}
+				}
+			}
+			
+			 // Portal Guardians:
+			if(instance_exists(CustomEnemy)){
+				var _inst = instances_matching(CustomEnemy, "name", "PortalGuardian");
+				if(array_length(_inst)){
+					var _r = 24 + (68 * _gray),
+						_o = 4  + (2  * _gray);
+						
+					with(_inst){
+						draw_circle(x, y, _r + random(_o), false);
+					}
+				}
+			}
+			
+			break;
 	}
 	
 #define ntte_bloom
-	 // Custom Bullets/Plasma:
-	with(instances_matching(CustomProjectile, "name", "CustomBullet", "CustomPlasma")){
-		draw_sprite_ext(sprite_index, image_index, x, y, 2 * image_xscale, 2 * image_yscale, image_angle, image_blend, 0.1 * image_alpha);
-	}
-	
-	 // Custom Shells/Flak:
-	with(instances_matching(CustomProjectile, "name", "CustomFlak", "CustomShell")){
-		if(bonus > 0){
-			draw_sprite_ext(sprite_index, image_index, x, y, 2 * image_xscale, 2 * image_yscale, image_angle, image_blend, 0.3 * bonus * image_alpha);
-		}
-		draw_sprite_ext(sprite_index, image_index, x, y, 2 * image_xscale, 2 * image_yscale, image_angle, image_blend, 0.1 * image_alpha);
-	}
-	
-	 // Crab Venom:
-	with(instances_matching(CustomProjectile, "name", "VenomPellet")){
-		draw_sprite_ext(sprite_index, image_index, x, y, 2 * image_xscale, 2 * image_yscale, image_angle, image_blend, 0.2 * image_alpha);
-	}
-	
-	 // Merged Flak Ball:
-	with(instances_matching(CustomProjectile, "name", "MergeFlak")){
-		var	_scale = 1.5,
-			_alpha = 0.1 * clamp(array_length(inst) / 12, 1, 2);
-			
-		if(array_length(instances_matching(inst, "name", name)) > 0){
-			_alpha *= 1.5;
+	if(instance_exists(CustomProjectile)){
+		 // Custom Bullets/Plasma:
+		var _inst = instances_matching(CustomProjectile, "name", "CustomBullet", "CustomPlasma");
+		if(array_length(_inst)) with(_inst){
+			draw_sprite_ext(sprite_index, image_index, x, y, 2 * image_xscale, 2 * image_yscale, image_angle, image_blend, 0.1 * image_alpha);
 		}
 		
-		draw_sprite_ext(sprite_index, image_index, x, y, image_xscale * _scale, image_yscale * _scale, rotation, image_blend, image_alpha * _alpha);
+		 // Custom Shells/Flak:
+		var _inst = instances_matching(CustomProjectile, "name", "CustomFlak", "CustomShell");
+		if(array_length(_inst)) with(_inst){
+			if(bonus > 0){
+				draw_sprite_ext(sprite_index, image_index, x, y, 2 * image_xscale, 2 * image_yscale, image_angle, image_blend, 0.3 * bonus * image_alpha);
+			}
+			draw_sprite_ext(sprite_index, image_index, x, y, 2 * image_xscale, 2 * image_yscale, image_angle, image_blend, 0.1 * image_alpha);
+		}
+		
+		 // Crab Venom:
+		var _inst = instances_matching(CustomProjectile, "name", "VenomPellet");
+		if(array_length(_inst)) with(_inst){
+			draw_sprite_ext(sprite_index, image_index, x, y, 2 * image_xscale, 2 * image_yscale, image_angle, image_blend, 0.2 * image_alpha);
+		}
+		
+		 // Portal Ball:
+		var _inst = instances_matching(CustomProjectile, "name", "PortalBullet");
+		if(array_length(_inst)) with(_inst){
+			draw_sprite_ext(sprite_index, image_index, x, y, 2 * image_xscale, 2 * image_yscale, image_angle, image_blend, 0.1 * image_alpha);
+		}
+		
+		 // Merged Flak Ball:
+		var _inst = instances_matching(CustomProjectile, "name", "MergeFlak");
+		if(array_length(_inst)) with(_inst){
+			var	_scale = 1.5,
+				_alpha = 0.1 * clamp(array_length(inst) / 12, 1, 2);
+				
+			if(array_length(instances_matching(inst, "name", name))){
+				_alpha *= 1.5;
+			}
+			
+			draw_sprite_ext(sprite_index, image_index, x, y, image_xscale * _scale, image_yscale * _scale, rotation, image_blend, image_alpha * _alpha);
+		}
 	}
 	
 	 // GunCont (Laser Cannon):
-	with(instances_matching(CustomObject, "name", "GunCont")){
-		if(bloom){
+	if(instance_exists(CustomObject)){
+		var _inst = instances_matching_gt(instances_matching(CustomObject, "name", "GunCont"), "bloom", 0);
+		if(array_length(_inst)) with(_inst){
 			var _scr = on_draw;
 			if(array_length(_scr) >= 3){
-				image_xscale *= 2;
-				image_yscale *= 2;
-				image_alpha *= 0.1;
+				var	_xsc = 2,
+					_ysc = 2,
+					_alp = 0.1 * bloom;
+					
+				image_xscale *= _xsc;
+				image_yscale *= _ysc;
+				image_alpha  *= _alp;
 				
 				mod_script_call(_scr[0], _scr[1], _scr[2]);
 				
-				image_xscale /= 2;
-				image_yscale /= 2;
-				image_alpha /= 0.1;
+				image_xscale /= _xsc;
+				image_yscale /= _ysc;
+				image_alpha  /= _alp;
 			}
 		}
 	}
 	
-	 // Portal Ball:
-	with(instances_matching(CustomProjectile, "name", "PortalBullet")){
-		draw_sprite_ext(sprite_index, image_index, x, y, 2 * image_xscale, 2 * image_yscale, image_angle, image_blend, 0.1 * image_alpha);
-	}
-	
 #define ntte_shadows
-	 // Bubble Bombs:
-	with(instances_matching(instances_matching(CustomProjectile, "name", "BubbleBomb"), "big", true)) if(visible){
-		var	_f = min((z / 6) - 4, 6),
-			_w = max(6 + _f, 0) + sin((x + y + z) / 8),
-			_h = max(4 + _f, 0) + cos((x + y + z) / 8),
-			_x = x,
-			_y = y + 6;
-			
-		draw_ellipse(_x - _w, _y - _h, _x + _w, _y + _h, false);
-	}
-	
 	 // Top Objects:
-	if(!instance_exists(NothingSpiral)){
-		with(instance_rectangle_bbox(global.floor_left, global.floor_top, global.floor_right, global.floor_bottom, instances_matching_ne(instances_matching(CustomObject, "name", "TopObject"), "spr_shadow", -1))){
+	if(!instance_exists(NothingSpiral) && instance_exists(CustomObject)){
+		var _inst = instances_matching(instances_matching_ne(instance_rectangle_bbox(global.floor_left, global.floor_top, global.floor_right, global.floor_bottom, instances_matching(CustomObject, "name", "TopObject")), "spr_shadow", -1), "visible", true);
+		if(array_length(_inst)) with(_inst){
 			var	_xsc = image_xscale,
 				_ysc = image_yscale;
 				
 			image_xscale = 1;
 			image_yscale = 1;
 			
-			if(place_meeting(x + spr_shadow_x, y + spr_shadow_y, Floor) && visible && variable_instance_get(target, "visible", false)){
+			if(place_meeting(x + spr_shadow_x, y + spr_shadow_y, Floor) && "visible" in target && target.visible){
 				draw_sprite(spr_shadow, 0, x + spr_shadow_x, y + spr_shadow_y);
 			}
 			
@@ -5868,7 +5987,6 @@
 #define area_get_back_color(_area)                                                      return  mod_script_call_nc  ('mod', 'telib', 'area_get_back_color', _area);
 #define area_border(_y, _area, _color)                                                  return  mod_script_call_nc  ('mod', 'telib', 'area_border', _y, _area, _color);
 #define area_generate(_area, _sub, _loops, _x, _y, _setArea, _overlapFloor, _scrSetup)  return  mod_script_call_nc  ('mod', 'telib', 'area_generate', _area, _sub, _loops, _x, _y, _setArea, _overlapFloor, _scrSetup);
-#define floor_get(_x, _y)                                                               return  mod_script_call_nc  ('mod', 'telib', 'floor_get', _x, _y);
 #define floor_set(_x, _y, _state)                                                       return  mod_script_call_nc  ('mod', 'telib', 'floor_set', _x, _y, _state);
 #define floor_set_style(_style, _area)                                                  return  mod_script_call_nc  ('mod', 'telib', 'floor_set_style', _style, _area);
 #define floor_set_align(_alignX, _alignY, _alignW, _alignH)                             return  mod_script_call_nc  ('mod', 'telib', 'floor_set_align', _alignX, _alignY, _alignW, _alignH);

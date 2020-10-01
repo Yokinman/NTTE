@@ -2477,93 +2477,115 @@
 /// GENERAL
 #define ntte_begin_step
 	 // Baby Scorpion Spawn:
-	with(instances_matching_gt(instances_matching_le(MaggotSpawn, "my_health", 0), "babyscorp_drop", 0)){
-		repeat(babyscorp_drop){
-			obj_create(x, y, "BabyScorpion");
+	if(instance_exists(MaggotSpawn)){
+		var _inst = instances_matching_gt(instances_matching_le(MaggotSpawn, "my_health", 0), "babyscorp_drop", 0);
+		if(array_length(_inst)) with(_inst){
+			repeat(babyscorp_drop){
+				obj_create(x, y, "BabyScorpion");
+			}
 		}
 	}
 	
 	 // Hiker Backpack:
-	with(instances_matching_le(instances_matching(Bandit, "name", "BanditHiker"), "my_health", 0)){
-		speed /= 2;
-		with(obj_create(x, y, "BackpackPickup")){
-			target = chest_create(x, y, "Backpack", false);
-			direction = other.direction + orandom(10);
-			event_perform(ev_step, ev_step_end);
+	if(instance_exists(Bandit)){
+		var _inst = instances_matching_le(instances_matching(Bandit, "name", "BanditHiker"), "my_health", 0);
+		if(array_length(_inst)) with(_inst){
+			speed /= 2;
+			with(obj_create(x, y, "BackpackPickup")){
+				target = chest_create(x, y, "Backpack", false);
+				direction = other.direction + orandom(10);
+				event_perform(ev_step, ev_step_end);
+			}
+			repeat(5) scrFX(x, y, 4, Dust);
+			sound_play_pitchvol(sndMenuASkin, 1.2, 0.6);
 		}
-		repeat(5) scrFX(x, y, 4, Dust);
-		sound_play_pitchvol(sndMenuASkin, 1.2, 0.6);
 	}
 	
 	 // Big Fish Train Pickups:
-	with(instances_matching_le(BoneFish, "my_health", 0)){
-		if("creator" in self && instance_is(creator, CustomEnemy) && variable_instance_get(creator, "name") == "CoastBoss"){
-			pickup_drop(10, 0);
+	if(instance_exists(BoneFish)){
+		var _inst = instances_matching_le(BoneFish, "my_health", 0);
+		if(array_length(_inst)) with(_inst){
+			if("creator" in self && "name" in creator && creator.name == "CoastBoss"){
+				pickup_drop(10, 0);
+			}
 		}
 	}
 	
 #define ntte_step
 	 // Separate Bones:
-	with(instances_matching(WepPickup, "crabbone_splitcheck", null)){
-		if(
-			is_object(wep)
-			&& wep_raw(wep) == "crabbone"
-			&& lq_defget(wep, "ammo", 1) > 1
-		){
-			wep.ammo--;
-			with(instance_create(x, y, WepPickup)){
-				wep = wep_raw(other.wep);
+	if(instance_exists(WepPickup)){
+		var _inst = instances_matching(WepPickup, "crabbone_splitcheck", null);
+		if(array_length(_inst)) with(_inst){
+			if(
+				is_object(wep)
+				&& wep_raw(wep) == "crabbone"
+				&& lq_defget(wep, "ammo", 1) > 1
+			){
+				wep.ammo--;
+				with(instance_create(x, y, WepPickup)){
+					wep = wep_raw(other.wep);
+				}
 			}
+			else crabbone_splitcheck = true;
 		}
-		else crabbone_splitcheck = true;
 	}
 	
 #define ntte_end_step
 	 // Skeletons Drop Bones:
-	with(instances_matching_le([BonePile, BonePileNight, BigSkull], "my_health", 0)){
-		 // Enter the bone zone:
-		with(instance_create(x, y, WepPickup)){
-			wep = "crabbone";
-			motion_add(random(360), 3);
+	if(instance_exists(BonePile) || instance_exists(BonePileNight) || instance_exists(BigSkull)){
+		var _inst = instances_matching_le([BonePile, BonePileNight, BigSkull], "my_health", 0);
+		if(array_length(_inst)) with(_inst){
+			 // Enter the bone zone:
+			with(instance_create(x, y, WepPickup)){
+				wep = "crabbone";
+				motion_add(random(360), 3);
+			}
+			
+			 // Effects:
+			repeat(2) scrFX(x, y, 3, Dust);
 		}
-		
-		 // Effects:
-		repeat(2) scrFX(x, y, 3, Dust);
 	}
 	
 #define ntte_bloom
-	 // Silver Scorpion Pet Attack:
-	with(instances_matching(CustomProjectile, "name", "VenomBlast")){
-		draw_sprite_ext(sprite_index, image_index, x, y, image_xscale * 2, image_yscale * 2, image_angle, image_blend, image_alpha * (charge ? (image_xscale / charge_goal) : 1) * 0.2);
-	}
-	
-	 // Silver Scorpion Flak:
-	with(instances_matching(CustomProjectile, "name", "VenomFlak")){
-		var	_xsc = 2,
-			_ysc = 2,
-			_alp = 0.2;
-			
-		image_xscale *= _xsc;
-		image_yscale *= _ysc;
-		image_alpha  *= _alp;
-		event_perform(ev_draw, 0);
-		image_xscale /= _xsc;
-		image_yscale /= _ysc;
-		image_alpha  /= _alp;
-	}
-	with(instances_matching(CustomProjectile, "name", "SilverScorpionFlak")){
-		draw_sprite_ext(sprite_index, image_index, x, y, 2 * image_xscale, 2 * image_yscale, image_angle, image_blend, 0.2 * image_alpha);
+	if(instance_exists(CustomProjectile)){
+		 // Silver Scorpion Pet Attack:
+		var _inst = instances_matching(CustomProjectile, "name", "VenomBlast");
+		if(array_length(_inst)) with(_inst){
+			draw_sprite_ext(sprite_index, image_index, x, y, image_xscale * 2, image_yscale * 2, image_angle, image_blend, image_alpha * (charge ? (image_xscale / charge_goal) : 1) * 0.2);
+		}
+		
+		 // Silver Scorpion Flak:
+		var _inst = instances_matching(CustomProjectile, "name", "VenomFlak");
+		if(array_length(_inst)) with(_inst){
+			var	_xsc = 2,
+				_ysc = 2,
+				_alp = 0.2;
+				
+			image_xscale *= _xsc;
+			image_yscale *= _ysc;
+			image_alpha  *= _alp;
+			event_perform(ev_draw, 0);
+			image_xscale /= _xsc;
+			image_yscale /= _ysc;
+			image_alpha  /= _alp;
+		}
+		var _inst = instances_matching(CustomProjectile, "name", "SilverScorpionFlak");
+		if(array_length(_inst)) with(_inst){
+			draw_sprite_ext(sprite_index, image_index, x, y, 2 * image_xscale, 2 * image_yscale, image_angle, image_blend, 0.2 * image_alpha);
+		}
 	}
 	
 #define ntte_shadows
 	 // SharkBoss Loop Train:
-	with(instances_matching(CustomEnemy, "name", "CoastBoss")){
-		var _fishIndex = 0;
-		with(fish_train){
-			if(instance_exists(self) && other.fish_swim[_fishIndex]){
-				draw_sprite(spr_shadow, 0, x + spr_shadow_x, y + spr_shadow_y);
+	if(instance_exists(CustomEnemy)){
+		var _inst = instances_matching(CustomEnemy, "name", "CoastBoss");
+		if(array_length(_inst)) with(_inst){
+			var _fishIndex = 0;
+			with(fish_train){
+				if(instance_exists(self) && other.fish_swim[_fishIndex++]){
+					draw_sprite(spr_shadow, 0, x + spr_shadow_x, y + spr_shadow_y);
+				}
 			}
-			_fishIndex++;
 		}
 	}
 	
@@ -2694,7 +2716,6 @@
 #define area_get_back_color(_area)                                                      return  mod_script_call_nc  ('mod', 'telib', 'area_get_back_color', _area);
 #define area_border(_y, _area, _color)                                                  return  mod_script_call_nc  ('mod', 'telib', 'area_border', _y, _area, _color);
 #define area_generate(_area, _sub, _loops, _x, _y, _setArea, _overlapFloor, _scrSetup)  return  mod_script_call_nc  ('mod', 'telib', 'area_generate', _area, _sub, _loops, _x, _y, _setArea, _overlapFloor, _scrSetup);
-#define floor_get(_x, _y)                                                               return  mod_script_call_nc  ('mod', 'telib', 'floor_get', _x, _y);
 #define floor_set(_x, _y, _state)                                                       return  mod_script_call_nc  ('mod', 'telib', 'floor_set', _x, _y, _state);
 #define floor_set_style(_style, _area)                                                  return  mod_script_call_nc  ('mod', 'telib', 'floor_set_style', _style, _area);
 #define floor_set_align(_alignX, _alignY, _alignW, _alignH)                             return  mod_script_call_nc  ('mod', 'telib', 'floor_set_align', _alignX, _alignY, _alignW, _alignH);

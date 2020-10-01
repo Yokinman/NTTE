@@ -8,13 +8,12 @@
 	
 	 // Bind Events:
 	script_bind("NTTEMenuDraw", CustomDraw, script_ref_create(draw_menu), object_get_depth(Menu) - 1, true);
-	global.loadout_bind = {
-		"behind"  : script_bind("LoadoutDrawBehind",  CustomDraw, script_ref_create(draw_loadout_behind),  object_get_depth(Loadout) + 1,      false),
-		"above"   : script_bind("LoadoutDrawAbove",   CustomDraw, script_ref_create(draw_loadout_above),   object_get_depth(Loadout) - 1,      false),
-		"crown"   : script_bind("LoadoutCrownDraw",   CustomDraw, script_ref_create(draw_loadout_crown),   object_get_depth(LoadoutCrown) - 1, false),
-		"weapon"  : script_bind("LoadoutWepDraw",     CustomDraw, script_ref_create(draw_loadout_weapon),  object_get_depth(LoadoutWep) - 1,   false),
-		"tooltip" : script_bind("LoadoutTooltipDraw", CustomDraw, script_ref_create(draw_loadout_tooltip), -100000,                            false)
-	};
+	global.loadout_bind = ds_map_create();
+	global.loadout_bind[? "behind" ] = script_bind("LoadoutDrawBehind",  CustomDraw, script_ref_create(draw_loadout_behind),  object_get_depth(Loadout) + 1,      false);
+	global.loadout_bind[? "above"  ] = script_bind("LoadoutDrawAbove",   CustomDraw, script_ref_create(draw_loadout_above),   object_get_depth(Loadout) - 1,      false);
+	global.loadout_bind[? "crown"  ] = script_bind("LoadoutCrownDraw",   CustomDraw, script_ref_create(draw_loadout_crown),   object_get_depth(LoadoutCrown) - 1, false);
+	global.loadout_bind[? "weapon" ] = script_bind("LoadoutWepDraw",     CustomDraw, script_ref_create(draw_loadout_weapon),  object_get_depth(LoadoutWep) - 1,   false);
+	global.loadout_bind[? "tooltip"] = script_bind("LoadoutTooltipDraw", CustomDraw, script_ref_create(draw_loadout_tooltip), -100000,                            false);
 	
 	 // Menu Layout:
 	NTTEMenu = {
@@ -266,8 +265,8 @@
 	 // Loadout Crown System:
 	crownLoadout = {
 		compare : [],
-		race : {},
-		camp : crwn_none
+		race    : {},
+		camp    : crwn_none
 	};
 	global.clock_fix = false;
 	if(instance_exists(LoadoutCrown)){
@@ -412,7 +411,8 @@
 	 // NTTE Character Selection Stuff:
 	if(instance_exists(Menu)){
 		 // Campfire Crown Boy:
-		with(instances_matching(Menu, "ntte_campcrown_check", null)){
+		var _inst = instances_matching(Menu, "ntte_campcrown_check", null);
+		if(array_length(_inst)) with(_inst){
 			ntte_campcrown_check = (crownCamp != crwn_none);
 			if(ntte_campcrown_check){
 				var _inst = instance_create(0, 0, Crown);
@@ -458,9 +458,12 @@
 		}
 		
 		 // LoadoutSkin Offset:
-		with(instances_matching(LoadoutSkin, "ntte_crown_xoffset", null)){
-			ntte_crown_xoffset = -22;
-			xstart += ntte_crown_xoffset;
+		if(instance_exists(LoadoutSkin)){
+			var _inst = instances_matching(LoadoutSkin, "ntte_crown_xoffset", null);
+			if(array_length(_inst)) with(_inst){
+				ntte_crown_xoffset = -22;
+				xstart += ntte_crown_xoffset;
+			}
 		}
 		
 		 // Custom Loadout Weapons:
@@ -540,10 +543,7 @@
 				lq_set(crownRace, _race, {
 					icon   : [],
 					slct   : crwn_none,
-					custom : {
-						icon : [],
-						slct : -1
-					}
+					custom : { icon : [], slct : -1 }
 				});
 			}
 		}
@@ -562,16 +562,14 @@
 	else crownCamp = crown_current;
 	
 	 // Loadout Drawing Visibility:
-	with(global.loadout_bind){
-		for(var i = 0; i < lq_size(self); i++){
-			with(lq_get_value(self, i).id){
-				visible = _visible;
-			}
+	with(ds_map_values(global.loadout_bind)){
+		if(instance_exists(id)){
+			id.visible = _visible;
 		}
-		if(_visible && instance_exists(Loadout)){
-			with(behind.id) depth = Loadout.depth + 1;
-			with( above.id) depth = Loadout.depth - 1;
-		}
+	}
+	if(_visible && instance_exists(Loadout)){
+		with(global.loadout_bind[? "behind"].id) depth = Loadout.depth + 1;
+		with(global.loadout_bind[? "above" ].id) depth = Loadout.depth - 1;
 	}
 	
 #define draw_gui_end
@@ -791,7 +789,7 @@
 		_cx    = game_width - 102,
 		_cy    = 75;
 		
-	if(!is_undefined(_crown)){
+	if(!is_undefined(_crown) && instance_exists(Loadout)){
 		if(array_length(instances_matching(Loadout, "selected", true)) > 0){
 			 // Loadout Reset:
 			with(_crown.icon){
@@ -1119,7 +1117,7 @@
 			
 			 // Custom Crown Tooltip:
 			with(_crown.custom.icon) if(visible && hover){
-				with(global.loadout_bind.tooltip.id){
+				with(global.loadout_bind[? "tooltip"].id){
 					x    = other.x;
 					y    = other.y - 5 - other.hover;
 					text = (other.locked ? "LOCKED" : (crown_get_name(other.crwn) + "#@s" + crown_get_text(other.crwn)));
@@ -1166,7 +1164,7 @@
 						 // Tooltip:
 						with(other){
 							if(hover){
-								with(global.loadout_bind.tooltip.id){
+								with(global.loadout_bind[? "tooltip"].id){
 									x    = _x;
 									y    = _y - 7 + other.overy;
 									text = weapon_get_name(_wep);
@@ -1182,174 +1180,178 @@
 	}
 	
 #define draw_loadout_behind
-	 // Fix Haste Hands:
-	if(global.clock_fix){
-		with(Loadout) if(selected == false){
-			global.clock_fix = false;
-			sprite_restore(sprClockParts);
-		}
-	}
-	
-	 // Cool Unused Splat:
-	with(instances_matching(Loadout, "visible", true)){
-		if(selected == true){
-			closeanim = 0;
-		}
-		else{
-			var _spr = sprLoadoutClose;
-			if("closeanim" in self && closeanim < sprite_get_number(_spr)){
-				draw_sprite(_spr, closeanim, view_xview_nonsync + game_width, view_yview_nonsync + game_height - 36);
-				closeanim += current_time_scale;
-				
-				image_index = 0;
-				image_speed_raw = image_number - 1;
+	if(instance_exists(Loadout)){
+		 // Fix Haste Hands:
+		if(global.clock_fix){
+			if(array_length(instances_matching(Loadout, "selected", false))){
+				global.clock_fix = false;
+				sprite_restore(sprClockParts);
 			}
 		}
-	}
-	
-	 // Hiding Crown/Weapon Icons Setup:
-	var	_p     = loadoutPlayer,
-		_race  = player_get_race_fix(_p),
-		_crown = lq_get(crownRace, _race);
 		
-	with(surface_setup("LoadoutHide", 64, 64, game_scale_nonsync)){
-		with(Loadout){
-			var	_x         = view_xview_nonsync + game_width,
-				_y         = view_yview_nonsync + game_height - 36 + introsettle,
-				_surf      = other.surf,
-				_surfW     = other.w,
-				_surfH     = other.h,
-				_surfScale = other.scale,
-				_surfX     = _x - 32 - _surfW,
-				_surfY     = _y +  4 - _surfH;
-				
-			with(surface_setup("LoadoutHideScreen", game_width, game_height, _surfScale)){
-				x = view_xview_nonsync;
-				y = view_yview_nonsync;
-				
-				 // Capture Screen:
-				surface_set_target(surf);
-				draw_clear(c_black);
-				surface_reset_target();
-				draw_set_blend_mode_ext(bm_one, bm_inv_src_alpha);
-				surface_screenshot(surf);
-				draw_set_blend_mode(bm_normal);
-				
-				with(other){
-					surface_set_target(_surf);
-					draw_clear_alpha(0, 0);
+		 // Cool Unused Splat:
+		with(instances_matching(Loadout, "visible", true)){
+			if(selected == true){
+				closeanim = 0;
+			}
+			else{
+				var _spr = sprLoadoutClose;
+				if("closeanim" in self && closeanim < sprite_get_number(_spr)){
+					draw_sprite(_spr, closeanim, view_xview_nonsync + game_width, view_yview_nonsync + game_height - 36);
+					closeanim += current_time_scale;
 					
-					 // Offset:
-					var _off = 0;
-					if(player_is_active(_p) && position_meeting(mouse_x[_p], mouse_y[_p], self)){
-						_off = 1;
-					}
-					if(selected == true){
-						if(openanim <= 0) _off = 2;
-						if(openanim == 1) _off = 1;
-					}
-					
-					/// Draw Mask of What to Hide:
-					
-						draw_set_fog(true, c_black, 0, 0);
-						
-						 // The Currently Selected Crown:
-						if(!is_undefined(_crown) && _crown.custom.slct != -1 && _crown.slct != crwn_none){
-							draw_sprite_ext(sprLoadoutCrown, _crown.slct, (_x - _surfX - 60 - _off) * _surfScale, (_y - _surfY - 39 - _off) * _surfScale, _surfScale, _surfScale, 0, c_white, 1);
-						}
-						
-						 // The Character's Starting Weapon:
-						if(unlock_get(`loadout:wep:${_race}:${save_get(`loadout:wep:${_race}`, "")}`) != wep_none){
-							var _wep = wep_revolver;
-							
-							 // Determine Starting Wep:
-							switch(race_get_id(_race)){
-								case char_random   : _wep = wep_none;               break;
-								case char_venuz    : _wep = wep_golden_revolver;    break;
-								case char_chicken  : _wep = wep_chicken_sword;      break;
-								case char_rogue    : _wep = wep_rogue_rifle;        break;
-								case char_bigdog   : _wep = wep_dog_spin_attack;    break;
-								case char_skeleton : _wep = wep_rusty_revolver;     break;
-								case char_frog     : _wep = wep_golden_frog_pistol; break;
-								
-								default: // Custom
-									if(is_string(_race) && mod_script_exists("race", _race, "race_swep")){
-										_wep = mod_script_call_self("race", _race, "race_swep");
-									}
-							}
-							
-							 // Draw:
-							draw_loadoutwep(_wep, 0, (_x - _surfX - 60 - _off) * _surfScale, (_y - _surfY - 14 + _off) * _surfScale, _surfScale, _surfScale, 0, c_white, 1);
-						}
-						
-						draw_set_fog(false, 0, 0, 0);
-						
-					/// Overlay Screen + Loadout Splat Over Mask:
-						
-						draw_set_color_write_enable(true, true, true, false);
-						
-						 // Screen:
-						with(other){
-							draw_surface_scale(surf, (x - _surfX) * _surfScale, (y - _surfY) * _surfScale, _surfScale / scale);
-						}
-						
-						 // Loadout:
-						draw_sprite_ext(sprLoadoutSplat, image_index, (_x - _surfX) * _surfScale, ((_y - introsettle) - _surfY) * _surfScale, _surfScale, _surfScale, 0, c_white, 1);
-						if(selected == true){
-							draw_sprite_ext(sprLoadoutOpen, openanim, (_x - _surfX) * _surfScale, ((_y - introsettle) - _surfY) * _surfScale, _surfScale, _surfScale, 0, c_white, 1);
-						}
-						if(_race == "steroids"){
-							draw_loadoutwep(wep_revolver, 0, ((_x - 40 - _off) - _surfX) * _surfScale, ((_y - introsettle - 14) - _surfY + _off) * _surfScale, _surfScale, _surfScale, 0, c_ltgray, 1);
-						}
-						
-						draw_set_color_write_enable(true, true, true, true);
-						
-					surface_reset_target();
+					image_index = 0;
+					image_speed_raw = image_number - 1;
 				}
 			}
+		}
+		
+		 // Hiding Crown/Weapon Icons Setup:
+		var	_p     = loadoutPlayer,
+			_race  = player_get_race_fix(_p),
+			_crown = lq_get(crownRace, _race);
 			
-			other.x = _surfX;
-			other.y = _surfY;
+		with(surface_setup("LoadoutHide", 64, 64, game_scale_nonsync)){
+			with(Loadout){
+				var	_x         = view_xview_nonsync + game_width,
+					_y         = view_yview_nonsync + game_height - 36 + introsettle,
+					_surf      = other.surf,
+					_surfW     = other.w,
+					_surfH     = other.h,
+					_surfScale = other.scale,
+					_surfX     = _x - 32 - _surfW,
+					_surfY     = _y +  4 - _surfH;
+					
+				with(surface_setup("LoadoutHideScreen", game_width, game_height, _surfScale)){
+					x = view_xview_nonsync;
+					y = view_yview_nonsync;
+					
+					 // Capture Screen:
+					surface_set_target(surf);
+					draw_clear(c_black);
+					surface_reset_target();
+					draw_set_blend_mode_ext(bm_one, bm_inv_src_alpha);
+					surface_screenshot(surf);
+					draw_set_blend_mode(bm_normal);
+					
+					with(other){
+						surface_set_target(_surf);
+						draw_clear_alpha(0, 0);
+						
+						 // Offset:
+						var _off = 0;
+						if(player_is_active(_p) && position_meeting(mouse_x[_p], mouse_y[_p], self)){
+							_off = 1;
+						}
+						if(selected == true){
+							if(openanim <= 0) _off = 2;
+							if(openanim == 1) _off = 1;
+						}
+						
+						/// Draw Mask of What to Hide:
+						
+							draw_set_fog(true, c_black, 0, 0);
+							
+							 // The Currently Selected Crown:
+							if(!is_undefined(_crown) && _crown.custom.slct != -1 && _crown.slct != crwn_none){
+								draw_sprite_ext(sprLoadoutCrown, _crown.slct, (_x - _surfX - 60 - _off) * _surfScale, (_y - _surfY - 39 - _off) * _surfScale, _surfScale, _surfScale, 0, c_white, 1);
+							}
+							
+							 // The Character's Starting Weapon:
+							if(unlock_get(`loadout:wep:${_race}:${save_get(`loadout:wep:${_race}`, "")}`) != wep_none){
+								var _wep = wep_revolver;
+								
+								 // Determine Starting Wep:
+								switch(race_get_id(_race)){
+									case char_random   : _wep = wep_none;               break;
+									case char_venuz    : _wep = wep_golden_revolver;    break;
+									case char_chicken  : _wep = wep_chicken_sword;      break;
+									case char_rogue    : _wep = wep_rogue_rifle;        break;
+									case char_bigdog   : _wep = wep_dog_spin_attack;    break;
+									case char_skeleton : _wep = wep_rusty_revolver;     break;
+									case char_frog     : _wep = wep_golden_frog_pistol; break;
+									
+									default: // Custom
+										if(is_string(_race) && mod_script_exists("race", _race, "race_swep")){
+											_wep = mod_script_call_self("race", _race, "race_swep");
+										}
+								}
+								
+								 // Draw:
+								draw_loadoutwep(_wep, 0, (_x - _surfX - 60 - _off) * _surfScale, (_y - _surfY - 14 + _off) * _surfScale, _surfScale, _surfScale, 0, c_white, 1);
+							}
+							
+							draw_set_fog(false, 0, 0, 0);
+							
+						/// Overlay Screen + Loadout Splat Over Mask:
+							
+							draw_set_color_write_enable(true, true, true, false);
+							
+							 // Screen:
+							with(other){
+								draw_surface_scale(surf, (x - _surfX) * _surfScale, (y - _surfY) * _surfScale, _surfScale / scale);
+							}
+							
+							 // Loadout:
+							draw_sprite_ext(sprLoadoutSplat, image_index, (_x - _surfX) * _surfScale, ((_y - introsettle) - _surfY) * _surfScale, _surfScale, _surfScale, 0, c_white, 1);
+							if(selected == true){
+								draw_sprite_ext(sprLoadoutOpen, openanim, (_x - _surfX) * _surfScale, ((_y - introsettle) - _surfY) * _surfScale, _surfScale, _surfScale, 0, c_white, 1);
+							}
+							if(_race == "steroids"){
+								draw_loadoutwep(wep_revolver, 0, ((_x - 40 - _off) - _surfX) * _surfScale, ((_y - introsettle - 14) - _surfY + _off) * _surfScale, _surfScale, _surfScale, 0, c_ltgray, 1);
+							}
+							
+							draw_set_color_write_enable(true, true, true, true);
+							
+						surface_reset_target();
+					}
+				}
+				
+				other.x = _surfX;
+				other.y = _surfY;
+			}
 		}
 	}
 	
 #define draw_loadout_above
-	 // Drawing Custom Loadout Icons (Collapsed Loadout):
-	var	_p     = loadoutPlayer,
-		_race  = player_get_race_fix(_p),
-		_crown = lq_get(crownRace, _race);
-		
-	with(surface_setup("LoadoutHide", null, null, null)){
-		with(Loadout) if(visible && (selected == false || openanim <= 2)){
-			var	_x = view_xview_nonsync + game_width,
-				_y = view_yview_nonsync + game_height - 36 + introsettle;
-				
-			 // Hide Normal Icons:
-			with(other){
-				draw_surface_scale(surf, x, y, 1 / scale);
-			}
+	if(instance_exists(Loadout)){
+		 // Drawing Custom Loadout Icons (Collapsed Loadout):
+		var	_p     = loadoutPlayer,
+			_race  = player_get_race_fix(_p),
+			_crown = lq_get(crownRace, _race);
 			
-			 // Offset:
-			var _off = 0;
-			if(player_is_active(_p) && position_meeting(mouse_x[_p], mouse_y[_p], self)){
-				_off = 1;
-			}
-			if(selected == true){
-				if(openanim <= 0) _off = 2;
-				if(openanim == 1) _off = 1;
-			}
-			
-			 // Custom Crown:
-			if(!is_undefined(_crown) && _crown.custom.slct != -1){
-				with(_crown.custom.icon) if(crwn == _crown.custom.slct){
-					with(other) draw_sprite(other.sprite_index, other.image_index, _x - 60 - _off, _y - 39 - _off);
+		with(surface_setup("LoadoutHide", null, null, null)){
+			with(Loadout) if(visible && (selected == false || openanim <= 2)){
+				var	_x = view_xview_nonsync + game_width,
+					_y = view_yview_nonsync + game_height - 36 + introsettle;
+					
+				 // Hide Normal Icons:
+				with(other){
+					draw_surface_scale(surf, x, y, 1 / scale);
 				}
-			}
-			
-			 // Custom Weapon:
-			var _wep = unlock_get(`loadout:wep:${_race}:${save_get(`loadout:wep:${_race}`, "")}`);
-			if(_wep != wep_none){
-				draw_loadoutwep(_wep, 0, _x - 60 - _off, _y - 14 + _off, 1, 1, 0, c_white, 1);
+				
+				 // Offset:
+				var _off = 0;
+				if(player_is_active(_p) && position_meeting(mouse_x[_p], mouse_y[_p], self)){
+					_off = 1;
+				}
+				if(selected == true){
+					if(openanim <= 0) _off = 2;
+					if(openanim == 1) _off = 1;
+				}
+				
+				 // Custom Crown:
+				if(!is_undefined(_crown) && _crown.custom.slct != -1){
+					with(_crown.custom.icon) if(crwn == _crown.custom.slct){
+						with(other) draw_sprite(other.sprite_index, other.image_index, _x - 60 - _off, _y - 39 - _off);
+					}
+				}
+				
+				 // Custom Weapon:
+				var _wep = unlock_get(`loadout:wep:${_race}:${save_get(`loadout:wep:${_race}`, "")}`);
+				if(_wep != wep_none){
+					draw_loadoutwep(_wep, 0, _x - 60 - _off, _y - 14 + _off, 1, 1, 0, c_white, 1);
+				}
 			}
 		}
 	}
@@ -2505,51 +2507,49 @@
 								
 							if(is_object(_statDraw)) _statDraw = [_statDraw];
 							
-							if(array_length(_statDraw) > 0){
-								with(_statDraw){
-									if(_pop >= _appear){
-										if(_pop == _appear) _x--;
-										
-										 // Category Name:
-										draw_set_halign(fa_center);
-										draw_text_nt(_x, _y, name);
-										_y += string_height(name);
-										
-										 // Stats:
-										with(list){
-											var	_name = self[0],
-												_stat = self[1],
-												_type = self[2];
-												
-											if(_type != stat_display){
-												_stat = stat_get(_stat);
-											}
-											switch(_type){
-												case stat_time:
-													var t = "";
-													t += string_lpad(string(floor((_stat / power(60, 2))     )), "0", 1); // Hours
-													t += ":";
-													t += string_lpad(string(floor((_stat / power(60, 1)) % 60)), "0", 2); // Minutes
-													t += ":";
-													t += string_lpad(string(floor((_stat / power(60, 0)) % 60)), "0", 2); // Seconds
-													_stat = t;
-													break;
-											}
-											_stat = string(_stat);
+							if(array_length(_statDraw)) with(_statDraw){
+								if(_pop >= _appear){
+									if(_pop == _appear) _x--;
+									
+									 // Category Name:
+									draw_set_halign(fa_center);
+									draw_text_nt(_x, _y, name);
+									_y += string_height(name);
+									
+									 // Stats:
+									with(list){
+										var	_name = self[0],
+											_stat = self[1],
+											_type = self[2];
 											
-											draw_set_halign(fa_right);
-											draw_text_nt(_x - 1, _y, "@s" + _name);
-											
-											draw_set_halign(fa_left);
-											draw_text_nt(_x + 1, _y, _stat);
-											
-											_y += max(string_height(_name), string_height(_stat));
+										if(_type != stat_display){
+											_stat = stat_get(_stat);
 										}
+										switch(_type){
+											case stat_time:
+												var t = "";
+												t += string_lpad(string(floor((_stat / power(60, 2))     )), "0", 1); // Hours
+												t += ":";
+												t += string_lpad(string(floor((_stat / power(60, 1)) % 60)), "0", 2); // Minutes
+												t += ":";
+												t += string_lpad(string(floor((_stat / power(60, 0)) % 60)), "0", 2); // Seconds
+												_stat = t;
+												break;
+										}
+										_stat = string(_stat);
 										
-										_y += string_height("A");
+										draw_set_halign(fa_right);
+										draw_text_nt(_x - 1, _y, "@s" + _name);
+										
+										draw_set_halign(fa_left);
+										draw_text_nt(_x + 1, _y, _stat);
+										
+										_y += max(string_height(_name), string_height(_stat));
 									}
-									_appear += 2;
+									
+									_y += string_height("A");
 								}
+								_appear += 2;
 							}
 							
 							 // No Stats to Display:
@@ -2849,7 +2849,6 @@
 #define area_get_back_color(_area)                                                      return  mod_script_call_nc  ('mod', 'telib', 'area_get_back_color', _area);
 #define area_border(_y, _area, _color)                                                  return  mod_script_call_nc  ('mod', 'telib', 'area_border', _y, _area, _color);
 #define area_generate(_area, _sub, _loops, _x, _y, _setArea, _overlapFloor, _scrSetup)  return  mod_script_call_nc  ('mod', 'telib', 'area_generate', _area, _sub, _loops, _x, _y, _setArea, _overlapFloor, _scrSetup);
-#define floor_get(_x, _y)                                                               return  mod_script_call_nc  ('mod', 'telib', 'floor_get', _x, _y);
 #define floor_set(_x, _y, _state)                                                       return  mod_script_call_nc  ('mod', 'telib', 'floor_set', _x, _y, _state);
 #define floor_set_style(_style, _area)                                                  return  mod_script_call_nc  ('mod', 'telib', 'floor_set_style', _style, _area);
 #define floor_set_align(_alignX, _alignY, _alignW, _alignH)                             return  mod_script_call_nc  ('mod', 'telib', 'floor_set_align', _alignX, _alignY, _alignW, _alignH);

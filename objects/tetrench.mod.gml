@@ -1075,13 +1075,13 @@
 	
 	 // Charge Up:
 	if(image_xscale < charge){
-		var s = charge_spd;
-		if(instance_is(creator, Player)) with(creator){
-			s *= reloadspeed;
-			s *= 1 + ((1 - (my_health / maxhealth)) * skill_get(mut_stress));
-		}
+		var _spd = charge_spd;
+		/*if(instance_is(creator, Player)) with(creator){
+			_spd *= reloadspeed;
+			_spd *= 1 + ((1 - (my_health / maxhealth)) * skill_get(mut_stress));
+		}*/
 		
-		image_xscale += (charge / 20) * s * current_time_scale;
+		image_xscale += (charge / 20) * _spd * current_time_scale;
 		image_yscale = image_xscale;
 		
 		if(creator_follow){
@@ -4058,9 +4058,9 @@
 	
 	
 /// GENERAL
-#define ntte_begin_step
+//#define ntte_begin_step
 	 // Lightring Trigger Fingers Interaction:
-	if(skill_get(mut_trigger_fingers) > 0){
+	/*if(skill_get(mut_trigger_fingers) > 0){
 		var n = array_length(instances_matching_le(enemy, "my_health", 0));
 		if(n > 0){
 			with(instances_matching(instances_matching(CustomProjectile, "name", "LightningDisc"), "is_enemy", false)){
@@ -4071,296 +4071,303 @@
 				}
 			}
 		}
-	}
+	}*/
 
 #define ntte_bloom
 	 // Canister Bloom:
-	with(instances_matching(instances_matching(CustomEnemy, "name", "Angler"), "hiding", true)){
-		draw_sprite_ext(sprRadChestGlow, image_index, x + (6 * right), y + 8, image_xscale * 2 * right, image_yscale * 2, image_angle, image_blend, image_alpha * 0.1);
+	if(instance_exists(CustomEnemy)){
+		var _inst = instances_matching(instances_matching(CustomEnemy, "name", "Angler"), "hiding", true);
+		if(array_length(_inst)) with(_inst){
+			draw_sprite_ext(sprRadChestGlow, image_index, x + (6 * right), y + 8, image_xscale * 2 * right, image_yscale * 2, image_angle, image_blend, image_alpha * 0.1);
+		}
 	}
 	
-	 // Lightning Discs:
-	with(instances_matching(CustomProjectile, "name", "LightningDisc")){
-		scrDrawLightningDisc(sprite_index, image_index, x, y, ammo, radius, 2 * stretch, image_xscale, image_yscale, image_angle + rotation, image_blend, 0.1 * image_alpha);
-	}
-	
-	 // Quasar Beams:
-	with(instances_matching(CustomProjectile, "name", "QuasarBeam", "QuasarRing")){
-		var	_alp = 0.1 * (1 + (skill_get(mut_laser_brain) * 0.5)),
-			_xsc = 2,
-			_ysc = 2;
-			
-		if(blast_hit) _alp *= 1.5 / image_yscale;
+	 // Projectiles:
+	if(instance_exists(CustomProjectile)){
+		 // Lightning Discs:
+		var _inst = instances_matching(CustomProjectile, "name", "LightningDisc");
+		if(array_length(_inst)) with(_inst){
+			scrDrawLightningDisc(sprite_index, image_index, x, y, ammo, radius, 2 * stretch, image_xscale, image_yscale, image_angle + rotation, image_blend, 0.1 * image_alpha);
+		}
 		
-		QuasarBeam_draw_laser(_xsc * image_xscale, _ysc * image_yscale, _alp * image_alpha);
-		
-		/*if(ring){
-			with(ring_lasers) if(instance_exists(self) && !visible){
-				QuasarBeam_draw_laser(_xsc * image_xscale, _ysc * image_yscale, _alp * image_alpha);
+		 // Quasar Beams:
+		var _inst = instances_matching(CustomProjectile, "name", "QuasarBeam", "QuasarRing");
+		if(array_length(_inst)) with(_inst){
+			var	_alp = 0.1 * (1 + (skill_get(mut_laser_brain) * 0.5)),
+				_xsc = 2,
+				_ysc = 2;
+				
+			if(blast_hit){
+				_alp *= 1.5 / image_yscale;
 			}
-		}*/
-	}
-	
-	 // Electroplasma:
-	with(instances_matching(CustomProjectile, "name", "ElectroPlasma")){
-		draw_sprite_ext(sprite_index, image_index, x, y, image_xscale * 2, image_yscale * 2, image_angle, image_blend, image_alpha * 0.1);
+			
+			QuasarBeam_draw_laser(_xsc * image_xscale, _ysc * image_yscale, _alp * image_alpha);
+			
+			/*if(ring && array_length(ring_lasers)){
+				with(instances_matching(ring_lasers, "visible", false)){
+					QuasarBeam_draw_laser(_xsc * image_xscale, _ysc * image_yscale, _alp * image_alpha);
+				}
+			}*/
+		}
+		
+		 // Electroplasma:
+		var _inst = instances_matching(CustomProjectile, "name", "ElectroPlasma");
+		if(array_length(_inst)) with(_inst){
+			draw_sprite_ext(sprite_index, image_index, x, y, image_xscale * 2, image_yscale * 2, image_angle, image_blend, image_alpha * 0.1);
+		}
 	}
 	
 	 // Hot Quasar Weapons:
-	if(!instance_exists(PlayerSit)){
-		draw_set_color_write_enable(true, false, false, true);
-		
-		var _player = instances_matching(Player, "visible", true);
-		
-		for(var i = 0; i < 2; i++){
-			var	_b    = ((i == 1) ? "b" : ""),
-				_inst = instances_matching_gt(_player, _b + "reload", 0);
-				
-			with((i == 1) ? instances_matching(_inst, "race", "steroids") : _inst){
-				var	_wep    = variable_instance_get(self, _b + "wep", wep_none),
-					_wepRaw = wep_raw(_wep);
+	if(instance_exists(Player) && !instance_exists(PlayerSit)){
+		var _instPlayer = instances_matching(Player, "visible", true);
+		if(array_length(_instPlayer)){
+			draw_set_color_write_enable(true, false, false, true);
+			
+			for(var i = 0; i < 2; i++){
+				var	_b    = ((i == 1) ? "b" : ""),
+					_inst = instances_matching_gt(_instPlayer, _b + "reload", 0);
 					
-				if(is_string(_wepRaw)){
-					var _quasar = mod_script_call("weapon", _wepRaw, "weapon_ntte_quasar", _wep);
-					if(is_real(_quasar) && _quasar > 0){
-						var	_ang  = variable_instance_get(self, _b + "wepangle", 0),
-							_kick = variable_instance_get(self, _b + "wkick",    0),
-							_flip = (weapon_is_melee(_wep) ? variable_instance_get(self, _b + "wepflip", 1) : right) * ((i == 1) ? -1 : 1),
-							_alp  = image_alpha * (variable_instance_get(self, _b + "reload", 0) / weapon_get_load(_wep)) * (1 + (0.2 * skill_get(mut_laser_brain))) * _quasar,
-							_dis  = ((i == 1) ? -1 : -2) * sign(_flip),
-							_dir  = gunangle + (_ang * (1 - (_kick / 20))) - 90;
-							
-						draw_weapon(
-							weapon_get_sprt(_wep),
-							x + lengthdir_x(_dis, _dir),
-							y + lengthdir_y(_dis, _dir) + swapmove - (4 * i),
-							gunangle,
-							_ang,
-							_kick,
-							_flip,
-							image_blend,
-							_alp
-						);
+				if(i == 1){
+					if(!array_length(_inst)){
+						continue;
+					}
+					_inst = instances_matching(_inst, "race", "steroids");
+				}
+				
+				if(array_length(_inst)) with(_inst){
+					var	_wep    = variable_instance_get(self, _b + "wep", wep_none),
+						_wepRaw = wep_raw(_wep);
+						
+					if(is_string(_wepRaw)){
+						var _quasar = mod_script_call("weapon", _wepRaw, "weapon_ntte_quasar", _wep);
+						if(is_real(_quasar) && _quasar > 0){
+							var	_ang  = variable_instance_get(self, _b + "wepangle", 0),
+								_kick = variable_instance_get(self, _b + "wkick",    0),
+								_flip = (weapon_is_melee(_wep) ? variable_instance_get(self, _b + "wepflip", 1) : right) * ((i == 1) ? -1 : 1),
+								_alp  = image_alpha * (variable_instance_get(self, _b + "reload", 0) / weapon_get_load(_wep)) * (1 + (0.2 * skill_get(mut_laser_brain))) * _quasar,
+								_dis  = ((i == 1) ? -1 : -2) * sign(_flip),
+								_dir  = gunangle + (_ang * (1 - (_kick / 20))) - 90;
+								
+							draw_weapon(
+								weapon_get_sprt(_wep),
+								x + lengthdir_x(_dis, _dir),
+								y + lengthdir_y(_dis, _dir) + swapmove - (4 * i),
+								gunangle,
+								_ang,
+								_kick,
+								_flip,
+								image_blend,
+								_alp
+							);
+						}
 					}
 				}
 			}
+			
+			draw_set_color_write_enable(true, true, true, true);
 		}
-		
-		draw_set_color_write_enable(true, true, true, true);
 	}
 	
 	 // Pit Spark:
-	with(instances_matching(instances_matching(CustomObject, "name", "PitSpark"), "visible", true)){
-		draw_sprite_ext(sprite_index, image_index, x, y, image_xscale * 2, image_yscale * 2, image_angle, image_blend, image_alpha * 0.2);
+	if(instance_exists(CustomObject)){
+		var _inst = instances_matching(instances_matching(CustomObject, "name", "PitSpark"), "visible", true);
+		if(array_length(_inst)) with(_inst){
+			draw_sprite_ext(sprite_index, image_index, x, y, image_xscale * 2, image_yscale * 2, image_angle, image_blend, image_alpha * 0.2);
+		}
 	}
-	with(instances_matching(PortalL, "name", "PitSquidL")){
-		draw_sprite_ext(sprite_index, image_index, x, y, image_xscale * 2, image_yscale * 2, image_angle, image_blend, image_alpha * 0.1);
+	if(instance_exists(PortalL)){
+		var _inst = instances_matching(PortalL, "name", "PitSquidL");
+		if(array_length(_inst)) with(_inst){
+			draw_sprite_ext(sprite_index, image_index, x, y, image_xscale * 2, image_yscale * 2, image_angle, image_blend, image_alpha * 0.1);
+		}
 	}
 	
 #define ntte_shadows
 	 // Squid-Launched Floor Chunks:
-	with(instances_matching(instances_matching(CustomObject, "name", "TrenchFloorChunk"), "visible", true)){
-		if(place_meeting(x, y, Floor)){
-			var _scale = clamp(1 / ((z / 200) + 1), 0.1, 0.8);
-			draw_sprite_ext(sprite_index, image_index, x, y, _scale * image_xscale, _scale * image_yscale, image_angle, image_blend, 1);
+	if(instance_exists(CustomObject)){
+		var _inst = instances_matching(instances_matching(CustomObject, "name", "TrenchFloorChunk"), "visible", true);
+		if(array_length(_inst)) with(_inst){
+			if(place_meeting(x, y, Floor)){
+				var _scale = clamp(1 / ((z / 200) + 1), 0.1, 0.8);
+				draw_sprite_ext(sprite_index, image_index, x, y, _scale * image_xscale, _scale * image_yscale, image_angle, image_blend, 1);
+			}
 		}
 	}
 	
-#define ntte_dark // Drawing Grays
-	 // Electroplasma:
-	with(instances_matching(instances_matching(CustomProjectile, "name", "ElectroPlasma"), "visible", true)){
-		draw_circle(x, y, 48, false);
-	}
-	
-	 // Lightning Discs:
-	with(instances_matching(instances_matching(CustomProjectile, "name", "LightningDisc", "LightningDiscEnemy"), "visible", true)){
-		draw_circle(x - 1, y - 1, (radius * image_xscale * 3) + 8 + orandom(1), false);
-	}
-	
-	 // Anglers:
-	draw_set_fog(true, draw_get_color(), 0, 0);
-	with(instances_matching(instances_matching(CustomEnemy, "name", "Angler"), "visible", true)){
-		var _img = image_index;
+#define ntte_dark(_type)
+	switch(_type){
 		
-		if(sprite_index != spr_appear){
-			_img = sprite_get_number(spr_appear) - 1;
-		}
-		
-		 // Manual buzziness since it's a sprite:
-		var o = random(2);
-		for(var a = 0; a < 360; a += 45){
-			draw_sprite_ext(spr.AnglerLight, _img, x + lengthdir_x(o, a), y + lengthdir_y(o, a), right, 1, 0, c_white, 1);
-		}
-	}
-	draw_set_fog(false, 0, 0, 0);
-	
-	 // Jellies:
-	with(instances_matching(instances_matching(CustomEnemy, "name", "Jelly", "JellyElite"), "visible", true)){
-		var	o = 0,
-			_frame = floor(image_index);
+		case "normal":
+		case "end":
 			
-		if(
-			sprite_index == spr_fire
-			|| (sprite_index == spr_hurt && _frame != 1)
-			|| (sprite_index == spr_idle && (_frame == 1 || _frame == 3))
-		){
-			o = 5;
-		}
-		
-		draw_circle(x, y, 80 + o + orandom(1), false);
-	}
-	
-	 // Elite Eels:
-	with(instances_matching(instances_matching_gt(instances_matching(CustomEnemy, "name", "Eel"), "elite", 0), "visible", true)){
-		draw_circle(x, y, 48 + orandom(2), false);
-	}
-	
-	 // Kelp:
-	with(instances_matching(instances_matching(CustomProp, "name", "Kelp"), "visible", true)){
-		draw_circle(x, y, 32 + orandom(1), false);
-	}
-	
-	 // Squid Arms:
-	with(instances_matching(instances_matching(CustomEnemy, "name", "PitSquidArm"), "visible", true)){
-		draw_circle(x, y - 12, 72 + orandom(1), false);
-	}
-	
-	 // Pit Squid:
-	with(instances_matching(instances_matching_ge(instances_matching(CustomEnemy, "name", "PitSquid"), "pit_height", 1), "visible", true)){
-		with(eye){
-			draw_circle(x, y, ((blink ? 48 : 64) + orandom(1)), false);
-		}
-	}
-	
-	 // Quasar Beams:
-	draw_set_fog(true, draw_get_color(), 0, 0);
-	with(instances_matching(instances_matching(CustomProjectile, "name", "QuasarBeam", "QuasarRing"), "visible", true)){
-		var	_scale = 5,
-			_xscale = _scale * image_xscale,
-			_yscale = _scale * image_yscale;
+			var _gray = (_type == "normal");
 			
-		if(!ring){
-			QuasarBeam_draw_laser(_xscale, _yscale, 1);
-			
-			 // Rounded Ends:
-			var	_x = x,
-				_y = y,
-				r = (12 + (1 * ((image_number - 1) - floor(image_index)))) * _yscale;
-				
-			draw_circle(_x - lengthdir_x(16 * _xscale, image_angle), _y - lengthdir_y(16 * _xscale, image_angle), r * 1.5, false);
-			
-			if(array_length(line_seg) > 0){
-				with(line_seg[array_length(line_seg) - 1]){
-					_x = x - 1 + lengthdir_x(8 * _xscale, dir);
-					_y = y - 1 + lengthdir_y(8 * _xscale, dir);
+			 // Kelp:
+			if(_gray && instance_exists(CustomProp)){
+				var _inst = instances_matching(instances_matching(CustomProp, "name", "Kelp"), "visible", true);
+				if(array_length(_inst)) with(_inst){
+					draw_circle(x, y, 32 + orandom(1), false);
 				}
 			}
 			
-			draw_circle(_x, _y, r, false);
-		}
-		else{
-			draw_circle(x, y, (280 * ring_size) + random(4), false);
-		}
-	}
-	draw_set_fog(false, 0, 0, 0);
-	
-#define ntte_dark_end // Drawing Clear
-	 // Electroplasma:
-	with(instances_matching(instances_matching(CustomProjectile, "name", "ElectroPlasma"), "visible", true)){
-		draw_circle(x, y, 24, false);
-	}
-	
-	 // Lightning Discs:
-	with(instances_matching(instances_matching(CustomProjectile, "name", "LightningDisc", "LightningDiscEnemy"), "visible", true)){
-		draw_circle(x - 1, y - 1, (radius * image_xscale * 1.5) + 4 + orandom(1), false);
-	}
-	
-	 // Anglers:
-	draw_set_blend_mode(bm_subtract);
-	with(instances_matching(instances_matching(CustomEnemy, "name", "Angler"), "visible", true)){
-		var _img = image_index;
-		
-		if(sprite_index != spr_appear){
-			_img = sprite_get_number(spr_appear) - 1;
-		}
-		
-		 // Manual buzziness since it's a sprite:
-		var o = random(2);
-		for(var a = 0; a < 360; a += 45){
-			draw_sprite_ext(spr.AnglerLight, _img, x + lengthdir_x(o, a), y + lengthdir_y(o, a), right, 1, 0, c_white, 1);
-		}
-	}
-	draw_set_blend_mode(bm_normal);
-	
-	 // Jellies:
-	with(instances_matching(instances_matching(CustomEnemy, "name", "Jelly", "JellyElite"), "visible", true)){
-		var	o = 0,
-			_frame = floor(image_index);
-			
-		if(
-			sprite_index == spr_fire
-			|| (sprite_index == spr_hurt && _frame != 1)
-			|| (sprite_index == spr_idle && (_frame == 1 || _frame == 3))
-		){
-			o = 5;
-		}
-		
-		draw_circle(x, y, 40 + o + orandom(1), false);
-	}
-	
-	 // Elite Eels:
-	with(instances_matching(instances_matching_gt(instances_matching(CustomEnemy, "name", "Eel"), "elite", 0), "visible", true)){
-		draw_circle(x, y, (elite / 2) + 3 + orandom(2), false);
-	}
-	
-	 // Squid Arms:
-	with(instances_matching(instances_matching(CustomEnemy, "name", "PitSquidArm"), "visible", true)){
-		draw_circle(x, y - 12, 24 + orandom(1), false);
-	}
-	
-	 // Pit Squid:
-	with(instances_matching(instances_matching_ge(instances_matching(CustomEnemy, "name", "PitSquid"), "pit_height", 1), "visible", true)){
-		with(eye) if(!blink){
-			draw_circle(x, y, 32 + orandom(1), false);
-		}
-	}
-	
-	 // Quasar Beams:
-	draw_set_fog(true, draw_get_color(), 0, 0);
-	with(instances_matching(instances_matching(CustomProjectile, "name", "QuasarBeam", "QuasarRing"), "visible", true)){
-		var	_scale = 2,
-			_xscale = _scale * image_xscale,
-			_yscale = _scale * image_yscale;
-			
-		if(!ring){
-			QuasarBeam_draw_laser(_xscale, _yscale, 1);
-			
-			 // Rounded Ends:
-			var	_x = x,
-				_y = y,
-				r = (12 + (1 * ((image_number - 1) - floor(image_index)))) * _yscale;
+			 // Projectiles:
+			if(instance_exists(CustomProjectile)){
+				 // Electroplasma:
+				var _inst = instances_matching(instances_matching(CustomProjectile, "name", "ElectroPlasma"), "visible", true);
+				if(array_length(_inst)){
+					var _r = 24 + (24 * _gray);
+					with(_inst){
+						draw_circle(x, y, _r, false);
+					}
+				}
 				
-			draw_circle(_x - lengthdir_x(16 * _xscale, image_angle), _y - lengthdir_y(16 * _xscale, image_angle), r * 1.5, false);
-			
-			if(array_length(line_seg) > 0){
-				with(line_seg[array_length(line_seg) - 1]){
-					_x = x - 1 + lengthdir_x(8 * _xscale, dir);
-					_y = y - 1 + lengthdir_y(8 * _xscale, dir);
+				 // Lightning Discs:
+				var _inst = instances_matching(instances_matching(CustomProjectile, "name", "LightningDisc", "LightningDiscEnemy"), "visible", true);
+				if(array_length(_inst)){
+					var _scale  = 1.5 + (1.5 * _gray),
+						_border = 4;
+						
+					with(_inst){
+						draw_circle(x - 1, y - 1, (((radius * image_xscale) + _border) * _scale) + orandom(1), false);
+					}
+				}
+				
+				 // Quasar Beams:
+				var _inst = instances_matching(instances_matching(CustomProjectile, "name", "QuasarBeam", "QuasarRing"), "visible", true);
+				if(array_length(_inst)){
+					var _beamScale  = 2   + (3 * _gray),
+						_ringRadius = 120 + (160 * _gray);
+						
+					draw_set_fog(true, draw_get_color(), 0, 0);
+					
+					with(_inst){
+						 // Normal:
+						if(!ring){
+							var	_xscale = _beamScale * image_xscale,
+								_yscale = _beamScale * image_yscale;
+								
+							QuasarBeam_draw_laser(_xscale, _yscale, 1);
+							
+							 // Rounded Ends:
+							var	_x = x,
+								_y = y,
+								_r = (12 + (1 * ((image_number - 1) - floor(image_index)))) * _yscale;
+								
+							draw_circle(_x - lengthdir_x(16 * _xscale, image_angle), _y - lengthdir_y(16 * _xscale, image_angle), _r * 1.5, false);
+							
+							if(array_length(line_seg)){
+								with(line_seg[array_length(line_seg) - 1]){
+									_x = x - 1 + lengthdir_x(8 * _xscale, dir);
+									_y = y - 1 + lengthdir_y(8 * _xscale, dir);
+								}
+							}
+							
+							draw_circle(_x, _y, _r, false);
+						}
+						
+						 // Ring:
+						else draw_circle(x, y, (_ringRadius * ring_size) + random(4), false);
+					}
+					
+					draw_set_fog(false, 0, 0, 0);
 				}
 			}
 			
-			draw_circle(_x, _y, r, false);
-		}
-		else{
-			draw_circle(x, y, (120 * ring_size) + random(4), false);
-		}
+			 // Enemies:
+			if(instance_exists(CustomEnemy)){
+				 // Anglers:
+				var _inst = instances_matching(instances_matching(CustomEnemy, "name", "Angler"), "visible", true);
+				if(array_length(_inst)){
+					draw_set_fog(true, draw_get_color(), 0, 0);
+					if(!_gray){
+						draw_set_blend_mode(bm_subtract);
+					}
+					with(_inst){
+						var _img = image_index;
+						if(sprite_index != spr_appear){
+							_img = sprite_get_number(spr.AnglerLight) - 1;
+						}
+						
+						 // Funny manual buzziness since it's a sprite:
+						var _off = random(2);
+						for(var _ang = 0; _ang < 360; _ang += 45){
+							draw_sprite_ext(spr.AnglerLight, _img, x + lengthdir_x(_off, _ang), y + lengthdir_y(_off, _ang), right, 1, 0, c_white, 1);
+						}
+					}
+					if(!_gray){
+						draw_set_blend_mode(bm_normal);
+					}
+					draw_set_fog(false, 0, 0, 0);
+				}
+				
+				 // Jellies:
+				var _inst = instances_matching(instances_matching(CustomEnemy, "name", "Jelly", "JellyElite"), "visible", true);
+				if(array_length(_inst)){
+					var _r = 40 + (40 * _gray);
+					with(_inst){
+						var	_off = 0,
+							_img = floor(image_index);
+							
+						if(
+							sprite_index == spr_fire
+							|| (sprite_index == spr_hurt && _img != 1)
+							|| (sprite_index == spr_idle && (_img == 1 || _img == 3))
+						){
+							_off = 5;
+						}
+						
+						draw_circle(x, y, _r + _off + orandom(1), false);
+					}
+				}
+				
+				 // Elite Eels:
+				var _inst = instances_matching(instances_matching_gt(instances_matching(CustomEnemy, "name", "Eel"), "elite", 0), "visible", true);
+				if(array_length(_inst)) with(_inst){
+					var _r = (
+						_gray
+						? 48
+						: ((elite / 2) + 3)
+					);
+					draw_circle(x, y, _r + orandom(2), false);
+				}
+				
+				 // Squid Arms:
+				var _inst = instances_matching(instances_matching(CustomEnemy, "name", "PitSquidArm"), "visible", true);
+				if(array_length(_inst)){
+					var _r = 24 + (48 * _gray);
+					with(_inst){
+						draw_circle(x, y - 12, _r + orandom(1), false);
+					}
+				}
+				
+				 // Pit Squid:
+				var _inst = instances_matching(instances_matching_ge(instances_matching(CustomEnemy, "name", "PitSquid"), "pit_height", 1), "visible", true);
+				if(array_length(_inst)){
+					if(_gray){
+						with(_inst){
+							with(eye){
+								draw_circle(x, y, ((blink ? 48 : 64) + orandom(1)), false);
+							}
+						}
+					}
+					else with(_inst){
+						with(eye){
+							if(!blink){
+								draw_circle(x, y, 32 + orandom(1), false);
+							}
+						}
+					}
+				}
+			}
+			
+			break;
+			
 	}
-	draw_set_fog(false, 0, 0, 0);
 	
 #define draw_anglertrail
 	var _inst = instances_matching(instances_matching(instances_matching(CustomEnemy, "name", "Angler"), "hiding", false), "visible", true);
 	
-	if(array_length(_inst) > 0){
+	if(array_length(_inst)){
 		if(lag) trace_time();
 		
 		var	_vx = view_xview_nonsync,
@@ -4395,7 +4402,8 @@
 			}
 			
 			 // Draw Trails:
-			with(instances_matching_ge(_inst, "ammo", 0)){
+			var _instActive = instances_matching_ge(_inst, "ammo", 0);
+			if(array_length(_instActive)) with(_instActive){
 				if(sprite_index != spr_appear){
 					var	_x1    = xprevious,
 						_y1    = yprevious,
@@ -4410,7 +4418,7 @@
 						_ang   = image_angle,
 						_col   = image_blend,
 						_alp   = image_alpha,
-						_charm = (_col == c_white && "charm" in self && lq_defget(charm, "charmed", true));
+						_charm = (_col == c_white && "ntte_charm" in self && ntte_charm.charmed);
 						
 					if(_charm) draw_set_fog(true, make_color_rgb(56, 252, 0), 0, 0);
 					
@@ -4568,7 +4576,6 @@
 #define area_get_back_color(_area)                                                      return  mod_script_call_nc  ('mod', 'telib', 'area_get_back_color', _area);
 #define area_border(_y, _area, _color)                                                  return  mod_script_call_nc  ('mod', 'telib', 'area_border', _y, _area, _color);
 #define area_generate(_area, _sub, _loops, _x, _y, _setArea, _overlapFloor, _scrSetup)  return  mod_script_call_nc  ('mod', 'telib', 'area_generate', _area, _sub, _loops, _x, _y, _setArea, _overlapFloor, _scrSetup);
-#define floor_get(_x, _y)                                                               return  mod_script_call_nc  ('mod', 'telib', 'floor_get', _x, _y);
 #define floor_set(_x, _y, _state)                                                       return  mod_script_call_nc  ('mod', 'telib', 'floor_set', _x, _y, _state);
 #define floor_set_style(_style, _area)                                                  return  mod_script_call_nc  ('mod', 'telib', 'floor_set_style', _style, _area);
 #define floor_set_align(_alignX, _alignY, _alignW, _alignH)                             return  mod_script_call_nc  ('mod', 'telib', 'floor_set_align', _alignX, _alignY, _alignW, _alignH);

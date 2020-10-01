@@ -40,12 +40,11 @@
 	//teevent_add("ButtonGame");
 	teevent_add("PopoAmbush");
 	teevent_add("PalaceShrine");
+	teevent_add("SeaCreature");
 	teevent_add("EelGrave");
 	teevent_add("BuriedVault");
 	
 	 // Pet History:
-	global.livePets = {};
-	global.pastPets = {};
 	
 #macro spr global.spr
 #macro msk spr.msk
@@ -829,7 +828,7 @@
 						move_contact_solid(point_direction(_cx, _cy, x, y) + orandom(120), random(16));
 						with(instance_create(x, y, Maggot)){
 							with(obj_create(x, y, "FlySpin")){
-								target = other;
+								target   = other;
 								target_x = orandom(8);
 								target_y = -random(4);
 							}
@@ -917,7 +916,7 @@
 	
 	 // More Scorpions:
 	with(instances_matching_lt(enemy, "size", 4)){
-		if(!floor_get(x, y).styleb){
+		if(array_length(instances_matching(instances_at(x, y, Floor), "styleb", true)) <= 0){
 			if(!instance_is(self, Bandit) || chance(1, 2)){
 				var	_scorp = [[Scorpion, "BabyScorpion"], [GoldScorpion, "BabyScorpionGold"]],
 					_gold  = chance(size, 5),
@@ -1320,7 +1319,7 @@
 	inst = _inst;
 	
 #define GatorDen_step
-	if(array_length(inst) > 0){
+	if(array_length(inst)){
 		with(inst){
 			 // Deactivate:
 			if(instance_exists(self) && !instance_near(x, y, Player, 96) && sprite_index != spr_hurt){
@@ -1388,13 +1387,15 @@
 					}
 					
 					 // ?
-					else with(inst) if(instance_is(self, enemy) && my_health > 0){
-						with(alert_create(self, -1)){
-							alert.spr = spr.AlertIndicatorMystery;
-							alert.col = c_yellow;
-							target_y -= 2;
-							alarm0 = irandom_range(50, 70);
-							blink = irandom_range(6, 15);
+					else with(inst){
+						if(instance_is(self, enemy) && my_health > 0){
+							with(alert_create(self, -1)){
+								alert.spr = spr.AlertIndicatorMystery;
+								alert.col = c_yellow;
+								target_y -= 2;
+								alarm0    = irandom_range(50, 70);
+								blink     = irandom_range(6, 15);
+							}
 						}
 					}
 					
@@ -1563,26 +1564,31 @@
 	
 #define RavenArena_step
 	 // Hold Enemies:
-	with(inst_idle){
-		if(instance_exists(self) && sprite_index != spr_hurt){
-			if("walk" in self){
-				if(walk > 0) walk -= 4 * current_time_scale;
+	if(array_length(inst_idle)){
+		with(inst_idle){
+			if(instance_exists(self) && sprite_index != spr_hurt){
+				if("walk" in self){
+					if(walk > 0){
+						walk -= 4 * current_time_scale;
+					}
+				}
+				else{
+					direction = angle_lerp(direction, point_direction(x, y, other.x, other.y), 0.04 * current_time_scale);
+				}
 			}
-			else{
-				direction = angle_lerp(direction, point_direction(x, y, other.x, other.y), 0.04 * current_time_scale);
-			}
+			else other.inst_idle = array_delete_value(other.inst_idle, self);
 		}
-		else other.inst_idle = array_delete_value(other.inst_idle, self);
 	}
 	
 	 // Activate Ravens:
-	if(instance_near(x, y, Player, 96)){
+	if(array_length(inst_top) && instance_near(x, y, Player, 96)){
 		var _time = 60;
 		with(instances_matching_lt(inst_top, "jump_time", 0)){
 			jump_time = _time * (128 / point_distance(x, y, other.x, other.y));
 			_time += random_range(15 + (2400 / _time), 60);
 		}
-		instance_destroy();
+		inst_idle = [];
+		inst_top  = [];
 	}
 	
 	
@@ -1651,26 +1657,32 @@
 #define FirePit_step
 	/*
 	 // Arcing Traps:
-	with(instances_matching(TrapFire, "firepitevent_check", null)){
-		firepitevent_check = (instance_exists(creator) ? instance_is(creator, Trap) : 57);
-		
-		if(firepitevent_check){
-			with(instance_exists(creator) ? creator : instance_nearest(xstart, ystart, Trap)){
-				other.direction += 5 * dsin(360 * (fire / 45));
+	if(instance_exists(TrapFire){
+		var _inst = instances_matching(TrapFire, "firepitevent_check", null);
+		if(array_length(_inst)) with(_inst){
+			firepitevent_check = (instance_exists(creator) ? instance_is(creator, Trap) : 57);
+			
+			if(firepitevent_check){
+				with(instance_exists(creator) ? creator : instance_nearest(xstart, ystart, Trap)){
+					other.direction += 5 * dsin(360 * (fire / 45));
+				}
 			}
 		}
 	}
 	*/
 	
 	 // Rain Turns to Steam:
-	with(instances_matching(RainSplash, "firepitevent_check", null)){
-		firepitevent_check = true;
-		
-		with(instance_create(x, y, Breath)){
-			image_yscale = choose(-1, 1);
-			image_angle  = random(90);
-			if(!place_meeting(x, y + 8, Floor)){
-				depth = -8;
+	if(instance_exists(RainSplash)){
+		var _inst = instances_matching(RainSplash, "firepitevent_check", null);
+		if(array_length(_inst)) with(_inst){
+			firepitevent_check = true;
+			
+			with(instance_create(x, y, Breath)){
+				image_yscale = choose(-1, 1);
+				image_angle  = random(90);
+				if(!place_meeting(x, y + 8, Floor)){
+					depth = -8;
+				}
 			}
 		}
 	}
@@ -1875,12 +1887,13 @@
 		area            = area_city;
 	}
 	
-
+	
 #define MutantVats_text    return `${event_tip}SPECIMENS`;
 #define MutantVats_area    return area_labs;
-#define MutantVats_chance  return lq_size(global.pastPets);
+#define MutantVats_chance  return (mod_exists("mod", "tegeneral") ? (ds_list_size(mod_variable_get("mod", "tegeneral", "pet_history")) / 3) : 0);
+
 #define MutantVats_create
-	var _spawnX     = spawn_x,
+	var	_spawnX     = spawn_x,
 		_spawnY     = spawn_y,
 		_spawnDis   = 128,
 		_spawnFloor = FloorNormal,
@@ -1893,7 +1906,7 @@
 	floor_set_align(null, null, 32, 32);
 	
 	with(floor_room(_spawnX, _spawnY, _spawnDis, _spawnFloor, _w, _h, _type, _dirOff, _floorDis)){
-		var _petList = global.pastPets,
+		var	_petList = mod_variable_get("mod", "tegeneral", "pet_history"),
 			_vatList = [];
 			
 		/*
@@ -1911,38 +1924,34 @@
 		array_push(_vatList, obj_create(x - 64, y - 24, "MutantVat"));
 		array_push(_vatList, obj_create(x + 64, y - 24, "MutantVat"));
 		_vatList = array_combine([obj_create(x, y - 40, "MutantVat")], array_shuffle(_vatList));
-
+		
 		 // Props:
 		with(_vatList){
-			var r = choose(1, -1);
-			with(instance_create(x + (16 * r) + orandom(2), y + 32 + orandom(2), Terminal)){
-				depth = other.depth - 1/100;
+			var	_l = 32,
+				_d = point_direction(x, y, other.x, other.y + random_range(64, 128));
+				
+			with(instance_create(x + lengthdir_x(_l, _d), y + lengthdir_y(_l, _d), Terminal)){
+				depth = other.depth - 1;
+				with(instance_create(x + lengthdir_x(16, _d), y + lengthdir_y(24, _d), Necromancer)){
+					alarm1 = 600 + random(150);
+					scrAim(_d + 180);
+				}
 			}
 		}
 		
 		 // Petify:
 		var _numVats = array_length(_vatList);
-		for(var i = 0; (i < _numVats && i < lq_size(_petList)); i++){
-			var _petData = lq_get_value(_petList, i);
-			
+		for(var i = min(_numVats, ds_list_size(_petList)) - 1; i >= 0; i--){
 			if(chance(1 - (i / _numVats), 1)){
 				with(_vatList[i]){
-					with(thing){
-						type = "Pet";
-						sprite = _petData.sprite;
-						
-						with(pet_data){
-							pet_name = _petData.pet_name;
-							mod_type = _petData.mod_type;
-							mod_name = _petData.mod_name;
-							pet_vars = _petData.pet_vars;
-						}
-					}
+					type     = "Pet";
+					pet_data = _petList[| i];
+					spr_dude = lq_defget(pet_data[3], "spr_idle", spr.PetParrotIdle);
 				}
+				
+				 // Remove From Pool:
+				ds_list_delete(_petList, i);
 			}
-			
-			 // Remove From Pool:
-			lq_set(_petData, "cull", true);
 		}
 		
 		 // Ring:
@@ -2237,16 +2246,18 @@
 
 #define PopoAmbush_create
 	 // Ambush:
-	repeat(2 + irandom(2)) instance_create(x, y, IDPDSpawn);
+	repeat(2 + irandom(2)){
+		instance_create(x, y, IDPDSpawn);
+	}
 	with(instance_nearest(spawn_x, spawn_y, IDPDSpawn)){
 		with(obj_create(x, y, "BigIDPDSpawn")){
 			instance_create(x, y, PortalClear);
 			with(alert_create(id, (freak ? spr.PopoFreakAlert : spr.PopoEliteAlert))){
 				image_speed = 0.1;
-				alert = { spr:spr.AlertIndicatorPopo, x:-5, y:5 };
-				target_x = -3;
-				target_y = -24;
-				alarm0 = other.alarm0;
+				alert       = { spr:spr.AlertIndicatorPopo, x:-5, y:5 };
+				target_x    = -3;
+				target_y    = -24;
+				alarm0      = other.alarm0;
 			}
 		}
 		instance_delete(id);
@@ -2266,6 +2277,36 @@
 	with(AmmoChest){
 		chest_create(x, y, IDPDChest, true);
 		instance_delete(id);
+	}
+	
+	
+#define SeaCreature_text    return "SOMETHING IN THE DISTANCE";
+#define SeaCreature_area    return "coast";
+#define SeaCreature_chance  return ((player_get_alias(0) == "blaac") ? (GameCont.subarea == 2) : ((GameCont.subarea != 3) ? 1/25 : 0));
+
+#define SeaCreature_create
+	var	_l = 400,
+		_d = random(360);
+		
+	 // Find Spawn Vector:
+	with(Floor){
+		var _dis = point_distance(other.spawn_x, other.spawn_y, bbox_center_x, bbox_center_y);
+		if(_l < _dis){
+			_l = _dis;
+			_d = point_direction(other.spawn_x, other.spawn_y, bbox_center_x, bbox_center_y) + 180;
+		}
+	}
+	_l *= 1.75;
+	
+	 // Loch Ness:
+	obj_create(spawn_x + lengthdir_x(_l, _d), spawn_y + lengthdir_y(_l, _d), "Creature");
+	
+	 // Friend:
+	with(array_shuffle(FloorNormal)){
+		if(point_distance(bbox_center_x, bbox_center_y, other.spawn_x, other.spawn_y) > 200){
+			instance_create(bbox_center_x, bbox_center_y, Gator);
+			break;
+		}
 	}
 	
 	
@@ -2413,96 +2454,17 @@
 	
 	
 /// GENERAL
-#define game_start
-	 // Reset:
-	global.livePets = {};
-	global.pastPets = {};
-	
 #define ntte_begin_step
 	 // No Infinite Rads:
-	with(instances_matching(PopoFreak, "ntte_raddrop", null)){
-		ntte_raddrop = (kills == 0 && GameCont.loops <= 0);
-		if(ntte_raddrop){
-			raddrop = 0;
-		}
-	}
-	
-	 // Pet History:
-	var _livePets = global.livePets,
-		_pastPets = global.pastPets,
-		_newLive  = {},
-		_newPast  = {};
-		
-	with(instances_matching(CustomHitme, "name", "Pet")){
-		var _id = string(id);
-		
-		 // Case Specific Pet Variables:
-		var _petVars = {};
-		with(_petVars){
-			var _varList = [];
-			switch(other.pet){
-				case "Mimic":
-					_varList = ["wep"];
-					break;
-					
-				case "Parrot":
-					_varList = ["bskin", "spr_idle", "spr_walk", "spr_hurt", "spr_icon"];
-					break;
-					
-				case "Spider":
-					_varList = ["cursed", "spr_idle", "spr_walk", "spr_hurt", "spr_icon"];
-					break;
-					
-				case "Weapon":
-					_varList = ["curse", "wep", "bwep"];
-					break;
-			}
-			for(var i = 0; i < array_length(_varList); i++){
-				var o = _varList[i];
-				lq_set(self, o, variable_instance_get(other, o));
+	if(instance_exists(PopoFreak)){
+		var _inst = instances_matching(PopoFreak, "ntte_raddrop", null);
+		if(array_length(_inst)) with(_inst){
+			ntte_raddrop = (kills == 0 && GameCont.loops <= 0);
+			if(ntte_raddrop){
+				raddrop = 0;
 			}
 		}
-		
-		lq_set(_newLive, _id, {"pet_name" : pet, "mod_type" : mod_type, "mod_name" : mod_name, "pet_vars" : _petVars});
-		// trace(`added '${pet}' to live pets`);
 	}
-	
-	for(var i = 0; i < lq_size(_livePets); i++){
-		var _id  = lq_get_key(_livePets, i),
-			_pet = lq_get(_livePets, _id);
-			
-		 // Lost But Not Forgotten:
-		if(!instance_exists(real(_id))){
-			var _scr = `${_pet.pet_name}_stat`,
-				_spr = mskNone;
-				
-			 // Find Stats Sprite:
-			if(mod_script_exists(_pet.mod_type, _pet.mod_name, _scr)){
-				_spr = mod_script_call(_pet.mod_type, _pet.mod_name, _scr, "");
-			}
-			
-			lq_set(_pastPets, _id, {"pet_name" : _pet.pet_name, "mod_type" : _pet.mod_type, "mod_name" : _pet.mod_name, "sprite" : _spr, "pet_vars" : _pet.pet_vars, "cull" : false});
-			// trace(`added '${_pet.pet_name}' to past pets`);
-		}
-	}
-	
-	 // Cull:
-	for(var i = 0; i < lq_size(_pastPets); i++){
-		var _petID = lq_get_key(_pastPets, i),
-			_pet = lq_get(_pastPets, _petID);
-		if(!lq_get(_pet, "cull")){
-			lq_set(_newPast, _petID, _pet);
-		}
-		/*
-		else{
-			trace(`removed '${_pet.pet_name}' from past pets`);
-		}
-		*/
-	}
-	global.pastPets = _newPast;
-	global.livePets = _newLive;
-	
-	// trace(lq_size(global.livePets), lq_size(global.pastPets));
 	
 	
 /// SCRIPTS
@@ -2631,7 +2593,6 @@
 #define area_get_back_color(_area)                                                      return  mod_script_call_nc  ('mod', 'telib', 'area_get_back_color', _area);
 #define area_border(_y, _area, _color)                                                  return  mod_script_call_nc  ('mod', 'telib', 'area_border', _y, _area, _color);
 #define area_generate(_area, _sub, _loops, _x, _y, _setArea, _overlapFloor, _scrSetup)  return  mod_script_call_nc  ('mod', 'telib', 'area_generate', _area, _sub, _loops, _x, _y, _setArea, _overlapFloor, _scrSetup);
-#define floor_get(_x, _y)                                                               return  mod_script_call_nc  ('mod', 'telib', 'floor_get', _x, _y);
 #define floor_set(_x, _y, _state)                                                       return  mod_script_call_nc  ('mod', 'telib', 'floor_set', _x, _y, _state);
 #define floor_set_style(_style, _area)                                                  return  mod_script_call_nc  ('mod', 'telib', 'floor_set_style', _style, _area);
 #define floor_set_align(_alignX, _alignY, _alignW, _alignH)                             return  mod_script_call_nc  ('mod', 'telib', 'floor_set_align', _alignX, _alignY, _alignW, _alignH);

@@ -789,7 +789,7 @@
 	if(_inst[0] == id){
 		_inst = instances_seen(_inst, 24, 24, -1);
 		
-		if(array_length(_inst) > 0){
+		if(array_length(_inst)){
 			var	_vx = view_xview_nonsync,
 				_vy = view_yview_nonsync,
 				_gw = game_width,
@@ -1725,7 +1725,6 @@
 		spr_weap     = mskNone;
 		spr_shadow   = shd48;
 		spr_shadow_y = 4;
-		mask_index   = mskSpider;
 		hitid        = [spr_idle, "MORTAR"];
 		depth        = -3;
 		
@@ -1734,18 +1733,19 @@
 		snd_dead = sndLaserCrystalDeath;
 		
 		 // Vars:
-		maxhealth = 75;
-		raddrop   = 30;
-		size      = 3;
-		walk      = 0;
-		walkspeed = 0.8;
-		maxspeed  = 2;
-		ammo      = 4;
-		target_x  = x;
-		target_y  = y;
-		gunangle  = random(360);
-		direction = gunangle;
-		inv       = false;
+		mask_index = mskDogGuardian;
+		maxhealth  = 75;
+		raddrop    = 30;
+		size       = 3;
+		walk       = 0;
+		walkspeed  = 0.8;
+		maxspeed   = 2;
+		ammo       = 4;
+		target_x   = x;
+		target_y   = y;
+		gunangle   = random(360);
+		direction  = gunangle;
+		inv        = false;
 		
 		 // Alarms:
 		alarm1 = 100 + irandom(40);
@@ -3166,30 +3166,35 @@
 /// GENERAL
 #define ntte_end_step
 	 // Spider Cocoons:
-	with(Cocoon){
-		obj_create(x, y, "NewCocoon");
-		instance_delete(id);
+	if(instance_exists(Cocoon)){
+		with(Cocoon){
+			obj_create(x, y, "NewCocoon");
+			instance_delete(id);
+		}
 	}
 	
 	 // Scramble Cursed Caves Weapons:
-	with(instances_matching(WepPickup, "cursedcavescramble_check", null)){
-		cursedcavescramble_check = false;
-		
-		if(GameCont.area == area_cursed_caves){
-			if(roll && wep_raw(wep) != "merge"){
-				if(!position_meeting(xstart, ystart, ChestOpen) || chance(1, 3)){
-					cursedcavescramble_check = true;
-					
-					 // Reset Merged Weapon Text:
-					mergewep_indicator = null;
-					
-					 // Curse:
-					curse = max(1, curse);
-					
-					 // Scramble:
-					var _part = wep_merge_decide(0, GameCont.hard + (2 * curse));
-					if(array_length(_part) >= 2){
-						wep = wep_merge(_part[0], _part[1]);
+	if(instance_exists(WepPickup)){
+		var _inst = instances_matching(WepPickup, "cursedcavescramble_check", null);
+		if(array_length(_inst)) with(_inst){
+			cursedcavescramble_check = false;
+			
+			if(GameCont.area == area_cursed_caves){
+				if(roll && wep_raw(wep) != "merge"){
+					if(!position_meeting(xstart, ystart, ChestOpen) || chance(1, 3)){
+						cursedcavescramble_check = true;
+						
+						 // Reset Merged Weapon Text:
+						mergewep_indicator = null;
+						
+						 // Curse:
+						curse = max(1, curse);
+						
+						 // Scramble:
+						var _part = wep_merge_decide(0, GameCont.hard + (2 * curse));
+						if(array_length(_part) >= 2){
+							wep = wep_merge(_part[0], _part[1]);
+						}
 					}
 				}
 			}
@@ -3218,18 +3223,22 @@
 				}
 			}
 		}
-		with(instances_matching(wall_inst, "visible", false)){
-			visible = true;
-		}
 		
-		 // Player Reveal Circles:
-		if(array_length(wall_inst) > 0){
+		 // Walls Active:
+		if(array_length(wall_inst)){
+			 // Visual Fix:
+			var _inst = instances_matching(wall_inst, "visible", false);
+			if(array_length(_inst)) with(_inst){
+				visible = true;
+			}
+			
+			 // Player Reveal Circles:
 			with(Player){
 				if("red_wall_fake" not in self){
 					red_wall_fake = 0;
 				}
 				
-				var _grow = (place_meeting(x, y, Wall) && array_length(instances_meeting(x, y, other.wall_inst)) > 0);
+				var _grow = (place_meeting(x, y, Wall) && array_length(instances_meeting(x, y, other.wall_inst)));
 				red_wall_fake = clamp(red_wall_fake + ((_grow ? 0.1 : -0.1) * current_time_scale), 0, 1);
 				
 				if(red_wall_fake > 0){
@@ -3239,8 +3248,11 @@
 		}
 		
 		 // Reset Player Circles:
-		else with(instances_matching_gt(Player, "red_wall_fake", 0)){
-			red_wall_fake = 0;
+		else{
+			var _inst = instances_matching_gt(Player, "red_wall_fake", 0);
+			if(array_length(_inst)) with(_inst){
+				red_wall_fake = 0;
+			}
 		}
 	}
 	with(global.wall_fake_bind){
@@ -3275,7 +3287,7 @@
 		}
 		
 		 // Time to Shine:
-		if(array_length(wall_inst) > 0 || array_length(tops_inst) > 0){
+		if(array_length(wall_inst) || array_length(tops_inst)){
 			_visible = true;
 			
 			 // Crystal Tunnel Particles:
@@ -3319,180 +3331,191 @@
 	
 #define ntte_shadows
 	 // Mortar Plasma:
-	with(instances_matching(instances_matching(CustomProjectile, "name", "MortarPlasma"), "visible", true)){
-		if(position_meeting(x, y, Floor)){
-			var	_percent = clamp(96 / z, 0.1, 1),
-				_w = ceil(18 * _percent),
-				_h = ceil(6 * _percent),
-				_x = x,
-				_y = y;
-				
-			draw_ellipse(_x - (_w / 2), _y - (_h / 2), _x + (_w / 2), _y + (_h / 2), false);
+	if(instance_exists(CustomProjectile)){
+		var _inst = instances_matching(instances_matching(CustomProjectile, "name", "MortarPlasma"), "visible", true);
+		if(array_length(_inst)) with(_inst){
+			if(position_meeting(x, y, Floor)){
+				var	_percent = clamp(96 / z, 0.1, 1),
+					_w = ceil(18 * _percent),
+					_h = ceil(6 * _percent),
+					_x = x,
+					_y = y;
+					
+				draw_ellipse(_x - (_w / 2), _y - (_h / 2), _x + (_w / 2), _y + (_h / 2), false);
+			}
 		}
 	}
 	
 	 // Crystal Brain Death:
-	with(instances_matching(instances_matching(CustomObject, "name", "CrystalBrainDeath"), "visible", true)){
-		draw_sprite(spr_shadow, 0, x + spr_shadow_x, y + spr_shadow_y);
+	if(instance_exists(CustomObject)){
+		var _inst = instances_matching(instances_matching(CustomObject, "name", "CrystalBrainDeath"), "visible", true);
+		if(array_length(_inst)) with(_inst){
+			draw_sprite(spr_shadow, 0, x + spr_shadow_x, y + spr_shadow_y);
+		}
 	}
 	
 #define ntte_bloom
-	 // Red:
-	with(instances_matching(CustomProjectile, "name", "RedBullet")){
-		if(bonus > 0){
-			draw_sprite_ext(sprite_index, image_index, x, y, 2 * image_xscale, 2 * image_yscale, image_angle, image_blend, 0.3 * bonus * image_alpha);
-		}
-		draw_sprite_ext(sprite_index, image_index, x, y, 2 * image_xscale, 2 * image_yscale, image_angle, image_blend, 0.1 * image_alpha);
-	}
-	with(instances_matching(CustomProjectile, "name", "RedSlash")){
-		draw_sprite_ext(sprite_index, image_index, x, y, 1.2 * image_xscale, 1.2 * image_yscale, image_angle, image_blend, 0.1 * image_alpha);
-	}
-	with(instances_matching(Shank, "name", "RedShank")){
-		draw_sprite_ext(sprite_index, image_index, x, y, 1.2 * image_xscale, 1.2 * image_yscale, image_angle, image_blend, 0.1 * image_alpha);
-	}
-
-	 // Crystal Heart Projectile:
-	with(instances_matching(projectile, "name", "CrystalHeartBullet")){
-		var	_scale = 2,
-			_alpha = 0.1;
+	if(instance_exists(projectile)){
+		if(instance_exists(CustomProjectile)){
+			 // Red Bullets:
+			var _inst = instances_matching(CustomProjectile, "name", "RedBullet");
+			if(array_length(_inst)) with(_inst){
+				if(bonus > 0){
+					draw_sprite_ext(sprite_index, image_index, x, y, 2 * image_xscale, 2 * image_yscale, image_angle, image_blend, 0.3 * bonus * image_alpha);
+				}
+				draw_sprite_ext(sprite_index, image_index, x, y, 2 * image_xscale, 2 * image_yscale, image_angle, image_blend, 0.1 * image_alpha);
+			}
 			
-		 // Copy pasting code is truly so epic:
-		image_xscale *= _scale;
-		image_yscale *= _scale;
-		image_alpha  *= _alpha;
-		event_perform(ev_draw, 0);
-		image_xscale /= _scale;
-		image_yscale /= _scale;
-		image_alpha  /= _alpha;
-	}
-	
-	 // Teleport FX:
-	with(instances_matching(CustomObject, "name", "WarpPortal")){
-		var	_scale = 2,
-			_alpha = 0.1;
+			 // Red Slashes:
+			var _inst = instances_matching(CustomProjectile, "name", "RedSlash");
+			if(array_length(_inst)) with(_inst){
+				draw_sprite_ext(sprite_index, image_index, x, y, 1.2 * image_xscale, 1.2 * image_yscale, image_angle, image_blend, 0.1 * image_alpha);
+			}
 			
-		image_xscale *= _scale;
-		image_yscale *= _scale;
-		image_alpha  *= _alpha;
-		event_perform(ev_draw, 0);
-		image_xscale /= _scale;
-		image_yscale /= _scale;
-		image_alpha  /= _alpha;
-	}
-	
-#define ntte_dark // Drawing Grays
-	 // Crystal Heart:
-	with(instances_matching(instances_matching(CustomEnemy, "name", "CrystalHeart", "ChaosHeart"), "visible", true)){
-		draw_crystal_heart_dark(45, 72 + random(2), 3);
-	}
-	
-	 // Miner Bandit:
-	with(instances_matching(instances_matching(Bandit, "name", "MinerBandit"), "visible", true)){
-		 // Light Beam:
-		if(light_visible == true){
-			var _l  = 120,
-				_d  = 20 + orandom(1),
-				_x2 = x + lengthdir_x(_l, light_angle + _d),
-				_y2 = y + lengthdir_y(_l, light_angle + _d),
-				_x3 = x + lengthdir_x(_l, light_angle - _d),
-				_y3 = y + lengthdir_y(_l, light_angle - _d);
-				
-			draw_triangle(x, y, _x2, _y2, _x3, _y3, false);
-			draw_circle(
-				x + lengthdir_x(_l, light_angle), 
-				y + lengthdir_y(_l, light_angle), 
-				point_distance(_x2, _y2, _x3, _y3) / 2, 
-				false
-			);
+			 // Crystal Heart Projectiles:
+			var _inst = instances_matching(CustomProjectile, "name", "CrystalHeartBullet");
+			if(array_length(_inst)) with(_inst){
+				var	_scale = 2,
+					_alpha = 0.1;
+					
+				 // Copy pasting code is truly so epic:
+				image_xscale *= _scale;
+				image_yscale *= _scale;
+				image_alpha  *= _alpha;
+				event_perform(ev_draw, 0);
+				image_xscale /= _scale;
+				image_yscale /= _scale;
+				image_alpha  /= _alpha;
+			}
 		}
 		
-		 // Helmet Glow:
-		var _cl = 9,
-			_cr = 24;
-			
-		draw_circle(
-			x + lengthdir_x(_cl, light_angle), 
-			y + lengthdir_y(_cl, light_angle), 
-			_cr + orandom(1), 
-			false
-		);
-	}
-	
-	 // Mortar:
-	with(instances_matching(instances_matching(CustomEnemy, "name", "Mortar", "InvMortar"), "visible", true)){
-		if(sprite_index == spr_fire){
-			draw_circle(x + (6 * right), y - 16, 48 - alarm1 + orandom(4), false)
-		}
-	}
-
-	 // Mortar Plasma:
-	with(instances_matching(instances_matching(CustomProjectile, "name", "MortarPlasma"), "visible", true)){
-		draw_circle(x, y - z, 64 + orandom(1), false);
-	}
-	
-#define ntte_dark_end // Drawing Clear
-	 // Crystal Heart:
-	with(instances_matching(instances_matching(CustomEnemy, "name", "CrystalHeart", "ChaosHeart"), "visible", true)){
-		draw_crystal_heart_dark(15, 24 + random(2), 2);
-	}
-	
-	 // Miner Bandit:
-	with(instances_matching(instances_matching(instances_matching(Bandit, "name", "MinerBandit"), "visible", true), "light_visible", true)){
-		 // Light Beam:
-		var _l  = 60,
-			_d  = 15 + orandom(1),
-			_x2 = x + lengthdir_x(_l, light_angle + _d),
-			_y2 = y + lengthdir_y(_l, light_angle + _d),
-			_x3 = x + lengthdir_x(_l, light_angle - _d),
-			_y3 = y + lengthdir_y(_l, light_angle - _d);
-			
-		draw_triangle(x, y, _x2, _y2, _x3, _y3, false);
-		draw_circle(
-			x + lengthdir_x(_l, light_angle), 
-			y + lengthdir_y(_l, light_angle), 
-			point_distance(_x2, _y2, _x3, _y3) / 2, 
-			false
-		);
-		
-		 // Helmet Glow:
-		var _cl = 6,
-			_cr = 12;
-			
-		draw_circle(
-			x + lengthdir_x(_cl, light_angle), 
-			y + lengthdir_y(_cl, light_angle), 
-			_cr + orandom(1), 
-			false
-		);
-	}
-	
-	 // Mortar:
-	with(instances_matching(instances_matching(CustomEnemy, "name", "Mortar", "InvMortar"), "visible", true)){
-		if(sprite_index == spr_fire){
-			draw_circle(x + (6 * right), y - 16, 24 - alarm1 + orandom(4), false)
+		 // Red Shanks:
+		if(instance_exists(Shank)){
+			var _inst = instances_matching(Shank, "name", "RedShank");
+			if(array_length(_inst)) with(_inst){
+				draw_sprite_ext(sprite_index, image_index, x, y, 1.2 * image_xscale, 1.2 * image_yscale, image_angle, image_blend, 0.1 * image_alpha);
+			}
 		}
 	}
 	
-	 // Mortar Plasma:
-	with(instances_matching(instances_matching(CustomProjectile, "name", "MortarPlasma"), "visible", true)){
-		draw_circle(x, y - z, 32 + orandom(1), false);
-	}
-	
-	/*
-	 // Client-Side Darkness:
-	if(array_length(clientDarknessFloor) > 0){
-		var _local = player_find_local_nonsync();
-		if(_local >= 0 && _local < array_length(clientDarknessCoeff)){
-			var	_alp = draw_get_alpha(),
-				_vx  = view_xview_nonsync,
-				_vy  = view_yview_nonsync;
+	 // Warp Portal:
+	if(instance_exists(CustomObject)){
+		var _inst = instances_matching(CustomObject, "name", "WarpPortal");
+		if(array_length(_inst)) with(_inst){
+			var	_scale = 2,
+				_alpha = 0.1;
 				
-			draw_set_alpha(clientDarknessCoeff[_local]);
-			draw_rectangle(_vx, _vy, _vx + game_width, _vy + game_height, false);
-			draw_set_alpha(_alp);
+			image_xscale *= _scale;
+			image_yscale *= _scale;
+			image_alpha  *= _alpha;
+			event_perform(ev_draw, 0);
+			image_xscale /= _scale;
+			image_yscale /= _scale;
+			image_alpha  /= _alpha;
 		}
 	}
-	*/
+	
+#define ntte_dark(_type)
+	switch(_type){
+		
+		case "normal":
+		case "end":
+			
+			var _gray = (_type == "normal");
+			
+			 // Enemies:
+			if(instance_exists(enemy)){
+				if(instance_exists(CustomEnemy)){
+					 // Mortar:
+					var _inst = instances_matching(instances_matching(CustomEnemy, "name", "Mortar", "InvMortar"), "visible", true);
+					if(array_length(_inst)) with(_inst){
+						if(sprite_index == spr_fire){
+							draw_circle(x + (6 * right), y - 16, abs(24 - alarm1 + orandom(4)) + (24 * _gray), false);
+						}
+					}
+					
+					 // Crystal Heart:
+					var _inst = instances_matching(instances_matching(CustomEnemy, "name", "CrystalHeart", "ChaosHeart"), "visible", true);
+					if(array_length(_inst)){
+						var	_ver = 15 + (30 * _gray),
+							_rad = 24 + (48 * _gray),
+							_coe = 2  + (1  * _gray);
+							
+						with(_inst){
+							draw_crystal_heart_dark(_ver, _rad + random(2), _coe);
+						}
+					}
+				}
+				
+				 // Miner Bandit:
+				if(instance_exists(Bandit)){
+					var _inst = instances_matching(instances_matching(Bandit, "name", "MinerBandit"), "visible", true);
+					if(array_length(_inst)){
+						var	_lightDis  = 60 + (60 * _gray),
+							_lightAng  = 15 + (5  * _gray),
+							_circleDis = 6  + (3  * _gray),
+							_circleRad = 12 + (12 * _gray);
+							
+						with(_inst){
+							 // Light Beam:
+							if(light_visible == true){
+								var _off = _lightAng + orandom(1),
+									_x2  = x + lengthdir_x(_lightDis, light_angle + _off),
+									_y2  = y + lengthdir_y(_lightDis, light_angle + _off),
+									_x3  = x + lengthdir_x(_lightDis, light_angle - _off),
+									_y3  = y + lengthdir_y(_lightDis, light_angle - _off);
+									
+								draw_triangle(x, y, _x2, _y2, _x3, _y3, false);
+								draw_circle(
+									x + lengthdir_x(_lightDis, light_angle), 
+									y + lengthdir_y(_lightDis, light_angle), 
+									point_distance(_x2, _y2, _x3, _y3) / 2, 
+									false
+								);
+							}
+							
+							 // Helmet Glow:
+							draw_circle(
+								x + lengthdir_x(_circleDis, light_angle), 
+								y + lengthdir_y(_circleDis, light_angle), 
+								_circleRad + orandom(1), 
+								false
+							);
+						}
+					}
+				}
+			}
+			
+			 // Mortar Plasma:
+			if(instance_exists(CustomProjectile)){
+				var _inst = instances_matching(instances_matching(CustomProjectile, "name", "MortarPlasma"), "visible", true);
+				if(array_length(_inst)){
+					var _r = 32 + (32 * _gray);
+					with(_inst){
+						draw_circle(x, y - z, _r + orandom(1), false);
+					}
+				}
+			}
+			
+			/*
+			 // Client-Side Darkness:
+			if(_type == "end" && array_length(clientDarknessFloor) > 0){
+				var _local = player_find_local_nonsync();
+				if(_local >= 0 && _local < array_length(clientDarknessCoeff)){
+					var	_alp = draw_get_alpha(),
+						_vx  = view_xview_nonsync,
+						_vy  = view_yview_nonsync;
+						
+					draw_set_alpha(clientDarknessCoeff[_local]);
+					draw_rectangle(_vx, _vy, _vx + game_width, _vy + game_height, false);
+					draw_set_alpha(_alp);
+				}
+			}
+			*/
+			
+			break;
+			
+	}
 	
 #define draw_crystal_heart_dark(_vertices, _radius, _coefficient)
 	draw_primitive_begin(pr_trianglefan);
@@ -3600,22 +3623,28 @@
 						_surfScale / scale
 					);
 				}
-				with(other){
-					with(instances_matching(instances_matching(CustomEnemy, "name", "RedSpider"), "visible", true)){
-						x -= _surfX;
-						y -= _surfY;
-						image_xscale *= _surfScale;
-						image_yscale *= _surfScale;
-						event_perform(ev_draw, 0);
-						x += _surfX;
-						y += _surfY;
-						image_xscale /= _surfScale;
-						image_yscale /= _surfScale;
+				/*with(other){
+					if(instance_exists(CustomEnemy)){
+						var _inst = instances_matching(instances_matching(CustomEnemy, "name", "RedSpider"), "visible", true);
+						if(array_length(_inst)) with(_inst){
+							x -= _surfX;
+							y -= _surfY;
+							image_xscale *= _surfScale;
+							image_yscale *= _surfScale;
+							event_perform(ev_draw, 0);
+							x += _surfX;
+							y += _surfY;
+							image_xscale /= _surfScale;
+							image_yscale /= _surfScale;
+						}
 					}
-					with(instances_matching(instances_matching(CrystalProp, "name", "CrystalPropRed"), "visible", true)){
-						draw_sprite_ext(sprite_index, image_index, (x - _surfX) * _surfScale, (y - _surfY) * _surfScale, image_xscale * _surfScale, image_yscale * _surfScale, image_angle, image_blend, image_alpha);
+					if(instance_exists(CrystalProp)){
+						var _inst = instances_matching(instances_matching(CrystalProp, "name", "CrystalPropRed"), "visible", true);
+						if(array_length(_inst)) with(_inst){
+							draw_sprite_ext(sprite_index, image_index, (x - _surfX) * _surfScale, (y - _surfY) * _surfScale, image_xscale * _surfScale, image_yscale * _surfScale, image_angle, image_blend, image_alpha);
+						}
 					}
-				}
+				}*/
 				draw_set_fog(false, 0, 0, 0);
 				
 				 // Shine:
@@ -3711,7 +3740,8 @@
 		draw_clear_alpha(0, 0);
 		
 		 // Circles:
-		with(instances_matching_ne(Player, "red_wall_fake", 0)){
+		var _inst = instances_matching_ne(Player, "red_wall_fake", 0);
+		if(array_length(_inst)) with(_inst){
 			draw_circle(
 				(x - other.x) * other.scale,
 				(y - other.y + ((_type == "Top") ? -4 : 4)) * other.scale,
@@ -3890,7 +3920,6 @@
 #define area_get_back_color(_area)                                                      return  mod_script_call_nc  ('mod', 'telib', 'area_get_back_color', _area);
 #define area_border(_y, _area, _color)                                                  return  mod_script_call_nc  ('mod', 'telib', 'area_border', _y, _area, _color);
 #define area_generate(_area, _sub, _loops, _x, _y, _setArea, _overlapFloor, _scrSetup)  return  mod_script_call_nc  ('mod', 'telib', 'area_generate', _area, _sub, _loops, _x, _y, _setArea, _overlapFloor, _scrSetup);
-#define floor_get(_x, _y)                                                               return  mod_script_call_nc  ('mod', 'telib', 'floor_get', _x, _y);
 #define floor_set(_x, _y, _state)                                                       return  mod_script_call_nc  ('mod', 'telib', 'floor_set', _x, _y, _state);
 #define floor_set_style(_style, _area)                                                  return  mod_script_call_nc  ('mod', 'telib', 'floor_set_style', _style, _area);
 #define floor_set_align(_alignX, _alignY, _alignW, _alignH)                             return  mod_script_call_nc  ('mod', 'telib', 'floor_set_align', _alignX, _alignY, _alignW, _alignH);

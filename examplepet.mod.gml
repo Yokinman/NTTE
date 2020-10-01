@@ -82,7 +82,7 @@
 	
 #define step
 	 // Spawn Pet:
-	if(!instance_exists(GenCont)){
+	if(!instance_exists(GenCont) && instance_exists(RadChest)){
 		with(instances_matching(RadChest, "has_baby", undefined)){
 			has_baby = true;
 			

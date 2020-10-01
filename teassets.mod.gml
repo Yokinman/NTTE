@@ -16,9 +16,9 @@
 		BigTopDecal     = ds_map_create();
 		msk.BigTopDecal = ds_map_create();
 		TopTiny         = ds_map_create();
-		MergeWep        = {};
-		MergeWepLoadout = {};
-		MergeWepText    = {};
+		MergeWep        = ds_map_create();
+		MergeWepLoadout = ds_map_create();
+		MergeWepText    = ds_map_create();
 		
 		 // Shine Overlay:
 		p = "sprites/shine/";
@@ -1892,12 +1892,10 @@
 		exit;
 	}
 	
-	 // Surface/Shader Storage:
-	global.surf = {};
-	global.shad = {};
-	
-	 // Script Binding Storage:
-	global.bind = {};
+	 // Surface, Shader, Script Binding Storage:
+	global.surf = ds_map_create();
+	global.shad = ds_map_create();
+	global.bind = ds_map_create();
 	
 	 // Compile Mod Lists:
 	ntte_mods = {
@@ -1911,8 +1909,11 @@
 	};
 	if(fork()){
 		var _find = [];
+		
 		file_find_all(".", _find, 1);
-		while(array_length(_find) <= 0) wait 0;
+		while(array_length(_find) <= 0){
+			wait 0;
+		}
 		
 		with(_find){
 			if(!is_dir && ext == ".gml"){
@@ -2349,45 +2350,38 @@
 	
 	 // Retrieve Surface:
 	if(!mod_variable_exists("mod", mod_current, "surf")){
-		global.surf = {};
+		global.surf = ds_map_create();
 	}
-	var _surf = lq_defget(global.surf, _name, noone);
+	var _surf = global.surf[? _name];
 	
 	 // Initialize Surface:
-	if(!is_object(_surf)){
+	if(is_undefined(_surf)){
 		_surf = {
-			name  : _name,
-			surf  : -1,
-			time  : 0,
-			reset : false,
-			free  : false,
-			scale : 1,
-			w     : 1,
-			h     : 1,
-			x     : 0,
-			y     : 0
+			"name"  : _name,
+			"surf"  : -1,
+			"time"  : 0,
+			"reset" : false,
+			"free"  : false,
+			"scale" : 1,
+			"w"     : 1,
+			"h"     : 1,
+			"x"     : 0,
+			"y"     : 0
 		};
-		lq_set(global.surf, _name, _surf);
+		global.surf[? _name] = _surf;
 		
 		 // Auto-Management:
 		with(_surf){
 			if(fork()){
 				while(true){
 					 // Deactivate Unused Surfaces:
-					if(time >= 0 && --time <= 0){
-						time = -1;
+					if((time > 0 || free) && --time <= 0){
+						time = 0;
 						surface_destroy(surf);
 						
 						 // Remove From List:
 						if(free){
-							var	_new = {};
-							for(var i = 0; i < lq_size(global.surf); i++){
-								var _key = lq_get_key(global.surf, i);
-								if(_key != name){
-									lq_set(_new, _key, lq_get_value(global.surf, i));
-								}
-							}
-							global.surf = _new;
+							ds_map_delete(global.surf, name);
 							break;
 						}
 					}
@@ -2414,14 +2408,20 @@
 		if(is_real(_scale)) scale = _scale;
 		
 		 // Create / Resize Surface:
-		if(!surface_exists(surf) || surface_get_width(surf) != max(1, w * scale) || surface_get_height(surf) != max(1, h * scale)){
+		if(
+			!surface_exists(surf)
+			|| surface_get_width(surf)  != max(1, w * scale)
+			|| surface_get_height(surf) != max(1, h * scale)
+		){
 			surface_destroy(surf);
 			surf = surface_create(max(1, w * scale), max(1, h * scale));
 			reset = true;
 		}
 		
 		 // Active For 30 Frames:
-		if(time >= 0) time = max(time, 30);
+		if(time >= 0){
+			time = max(time, 30);
+		}
 	}
 	
 	return _surf;
@@ -2444,8 +2444,8 @@
 			}
 	*/
 	
-	if(mod_variable_exists("mod", mod_current, "shad")){
-		with(lq_defget(global.shad, _name, noone)){
+	if(mod_variable_exists("mod", mod_current, "shad") && ds_map_exists(global.shad, _name)){
+		with(global.shad[? _name]){
 			if(shad != -1){
 				 // Matrix:
 				shader_set_vertex_constant_f(0, matrix_multiply(matrix_multiply(matrix_get(matrix_world), matrix_get(matrix_view)), matrix_get(matrix_projection)));
@@ -2503,19 +2503,19 @@
 	
 	 // Retrieve Shader:
 	if(!mod_variable_exists("mod", mod_current, "shad")){
-		global.shad = {};
+		global.shad = ds_map_create();
 	}
-	var _shad = lq_defget(global.shad, _name, noone);
+	var _shad = global.shad[? _name];
 	
 	 // Initialize Shader:
-	if(_shad == noone){
+	if(is_undefined(_shad)){
 		_shad = {
-			name : _name,
-			shad : -1,
-			vert : "",
-			frag : ""
+			"name" : _name,
+			"shad" : -1,
+			"vert" : "",
+			"frag" : ""
 		};
-		lq_set(global.shad, _name, _shad);
+		global.shad[? _name] = _shad;
 		
 		 // Auto-Management:
 		with(_shad){
@@ -2570,17 +2570,17 @@
 	*/
 	
 	var _bind = {
-		name    : _name,
-		object  : _scriptObj,
-		script  : _scriptRef,
-		depth   : _depth,
-		visible : _visible,
-		id      : noone
+		"name"    : _name,
+		"object"  : _scriptObj,
+		"script"  : _scriptRef,
+		"depth"   : _depth,
+		"visible" : _visible,
+		"id"      : noone
 	};
 	
 	 // Fetch Old Controller:
-	if(_name in global.bind){
-		with(lq_get(global.bind, _name)){
+	if(ds_map_exists(global.bind, _name)){
+		with(global.bind[? _name]){
 			_bind.id = id;
 			with(id){
 				script = _bind.script;
@@ -2601,7 +2601,7 @@
 	}
 	
 	 // Store:
-	lq_set(global.bind, _name, _bind);
+	global.bind[? _name] = _bind;
 	
 	return _bind;
 	
@@ -2613,10 +2613,10 @@ var _shine = argument_count > 4 ? argument[4] : shnNone;
 	
 	return {
 		path  : "sprites/" + _path,
-		img	  : _img,
+		img   : _img,
 		x     : _x,
 		y     : _y,
-		ext	  : "png",
+		ext   : "png",
 		mask  : [],
 		shine : _shine
 	};
@@ -2736,14 +2736,13 @@ var _shine = argument_count > 4 ? argument[4] : shnNone;
 	}
 	
 	 // Ensure Script Bindings Exist:
-	for(var i = 0; i < lq_size(global.bind); i++){
-		var _bind = lq_get_value(global.bind, i);
-		if(!instance_exists(_bind.id)){
-			_bind.id = instance_create(0, 0, _bind.object);
-			with(_bind.id){
-				script     = _bind.script;
-				depth      = _bind.depth;
-				visible    = _bind.visible;
+	with(ds_map_values(global.bind)){
+		if(!instance_exists(id)){
+			id = instance_create(0, 0, object);
+			with(id){
+				script     = other.script;
+				depth      = other.depth;
+				visible    = other.visible;
 				persistent = true;
 			}
 		}
@@ -2924,8 +2923,9 @@ var _shine = argument_count > 4 ? argument[4] : shnNone;
 	*/
 	
 	var _sprName = sprite_get_name(_stock) + "|" + sprite_get_name(_front);
-	if(lq_exists(spr.MergeWep, _sprName)){
-		return lq_get(spr.MergeWep, _sprName);
+	
+	if(ds_map_exists(spr.MergeWep, _sprName)){
+		return spr.MergeWep[? _sprName];
 	}
 	
 	 // Initial Setup:
@@ -2995,9 +2995,9 @@ var _shine = argument_count > 4 ? argument[4] : shnNone;
 			
 			 // Add Sprite:
 			surface_save(surf, name + ".png");
-			var _sprNew = sprite_add_weapon(name + ".png", 2, h / 3);
-			lq_set(spr.MergeWep, _sprName, _sprNew);
-			return _sprNew;
+			spr.MergeWep[? _sprName] = sprite_add_weapon(name + ".png", 2, h / 3);
+			
+			return spr.MergeWep[? _sprName];
 		}
 	}
 	
@@ -3011,8 +3011,9 @@ var _shine = argument_count > 4 ? argument[4] : shnNone;
 	*/
 	
 	var _sprName = sprite_get_name(_stock) + "|" + sprite_get_name(_front);
-	if(lq_exists(spr.MergeWepLoadout, _sprName)){
-		return lq_get(spr.MergeWepLoadout, _sprName);
+	
+	if(ds_map_exists(spr.MergeWepLoadout, _sprName)){
+		return spr.MergeWepLoadout[? _sprName];
 	}
 	
 	 // Initial Setup:
@@ -3085,9 +3086,9 @@ var _shine = argument_count > 4 ? argument[4] : shnNone;
 			
 			 // Add Sprite:
 			surface_save(surf, name + ".png");
-			var _sprNew = sprite_add_weapon(name + ".png", w / 2, h / 2);
-			lq_set(spr.MergeWepLoadout, _sprName, _sprNew);
-			return _sprNew;
+			spr.MergeWepLoadout[? _sprName] = sprite_add_weapon(name + ".png", w / 2, h / 2);
+			
+			return spr.MergeWepLoadout[? _sprName];
 		}
 	}
 	
@@ -3101,8 +3102,9 @@ var _shine = argument_count > 4 ? argument[4] : shnNone;
 	*/
 	
 	var _sprName = sprite_get_name(_stock) + "|" + sprite_get_name(_front);
-	if(lq_exists(spr.MergeWepText, _sprName)){
-		return lq_get(spr.MergeWepText, _sprName);
+	
+	if(ds_map_exists(spr.MergeWepText, _sprName)){
+		return spr.MergeWepText[? _sprName];
 	}
 	
 	 // Initial Setup:
@@ -3140,9 +3142,9 @@ var _shine = argument_count > 4 ? argument[4] : shnNone;
 			
 			 // Add Sprite:
 			surface_save(surf, name + ".png");
-			var _sprNew = sprite_add(name + ".png", 1, w / 2, h / 2);
-			lq_set(spr.MergeWepText, _sprName, _sprNew);
-			return _sprNew;
+			spr.MergeWepText[? _sprName] = sprite_add(name + ".png", 1, w / 2, h / 2);
+			
+			return spr.MergeWepText[? _sprName];
 		}
 	}
 	
@@ -3241,26 +3243,13 @@ var _shine = argument_count > 4 ? argument[4] : shnNone;
 		save_ntte();
 	}
 	
-	 // Clear Surfaces/Shaders:
-	for(var i = 0; i < lq_size(global.surf); i++){
-		var _surf = lq_get_value(global.surf, i).surf;
-		if(_surf != -1){
-			surface_destroy(_surf);
-		}
-	}
-	for(var i = 0; i < lq_size(global.shad); i++){
-		var _shad = lq_get_value(global.shad, i).shad;
-		if(_shad != -1){
-			surface_destroy(_shad);
-		}
-	}
-	
-	 // Clear Script Bindings:
-	for(var i = 0; i < lq_size(global.bind); i++){
-		with(lq_get_value(global.bind, i).id){
-			instance_destroy();
-		}
-	}
+	 // Clear Surfaces, Shaders, Script Bindings:
+	with(ds_map_values(global.surf)) if(surf != -1) surface_destroy(surf);
+	with(ds_map_values(global.shad)) if(shad != -1) surface_destroy(shad);
+	with(ds_map_values(global.bind)) with(id) instance_destroy();
+	ds_map_destroy(global.surf);
+	ds_map_destroy(global.shad);
+	ds_map_destroy(global.bind);
 	
 	 // No Crash:
 	with(ntte_mods.race){

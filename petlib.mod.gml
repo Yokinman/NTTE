@@ -3,6 +3,11 @@
 	snd = mod_variable_get("mod", "teassets", "snd");
 	lag = false;
 	
+	 // Bind Scripts:
+	//script_bind("OctoBubbleDraw", CustomDraw, script_ref_create(octobubble_draw), -3, true);
+	script_bind("WebDraw",        CustomDraw, script_ref_create(web_draw),         6, true);
+	script_bind("WebDrawPost",    CustomDraw, script_ref_create(web_draw_post),    1, true);
+	
 	 // Pet Parrot Bobbing:
 	global.parrot_bob = ds_map_create();
 	
@@ -353,11 +358,16 @@
 	wep          = wep_none;
 	wep_inst     = noone;
 	ammo         = true;
-	curse        = false;
+	curse        = 0;
 	open         = false;
 	hush         = 0;
 	hushtime     = 0;
 	prompt_mimic = prompt_create("DROP");
+	
+	 // Remember:
+	with(["wep", "curse"]){
+		array_push(other.history, self);
+	}
 	
 	 // Stat:
 	if("weapons" not in stat){
@@ -462,7 +472,7 @@
 				 // Place Weapon:
 				with(player_find(prompt_mimic.pick)){
 					if(canpick && wep != wep_none){
-						if(!curse){
+						if(curse <= 0){
 							with(other){
 								wep_inst = instance_create(x, y, WepPickup);
 								wep_inst.wep = other.wep;
@@ -500,8 +510,8 @@
 				if(place_meeting(x, y, WepPickup)){
 					with(instance_nearest_array(x, y, instances_matching(WepPickup, "visible", true))){
 						if(place_meeting(x, y, other)){
-							other.wep = wep;
-							other.ammo = ammo;
+							other.wep   = wep;
+							other.ammo  = ammo;
 							other.curse = curse;
 							instance_destroy();
 						}
@@ -572,9 +582,8 @@
 	spr_shadow   = shd16;
 	spr_shadow_y = 4;
 	spr_bubble_y = -2;
-	bskin        = false;
 	depth        = -3;
-
+	
 	 // Vars:
 	maxspeed    = 3.5;
 	perched     = noone;
@@ -613,6 +622,7 @@
 	}
 	
 #define Parrot_step
+	 // In Water:
 	if("wading" in self && (speed > 0 || (instance_exists(perched) && ("wading" not in perched || perched.wading <= 0)))){
 		canwade = false;
 		wading = 0;
@@ -776,24 +786,29 @@
 			pickup_held = false;
 			
 			 // Find Pickup:
-			var	_pickup = noone,
-				_disMax = 400;
-				
-			with(instances_matching(Pickup, "mask_index", mskPickup)){
-				if(array_length(instances_matching(CustomHitme, "pickup", id)) <= 0){
-					var _dis = point_distance(x, y, other.x, other.y);
-					if(_dis < _disMax){
-						if(instance_seen(x, y, other)){
-							_pickup = id;
-							_disMax = _dis;
+			if(instance_exists(Pickup)){
+				var _inst = instances_matching(Pickup, "mask_index", mskPickup);
+				if(array_length(_inst)){
+					var	_pickup = noone,
+						_disMax = 400;
+						
+					with(_inst){
+						var _dis = point_distance(x, y, other.x, other.y);
+						if(_dis < _disMax){
+							if(instance_seen(x, y, other)){
+								if(array_length(instances_matching(Pet, "pickup", id)) <= 0){
+									_pickup = id;
+									_disMax = _dis;
+								}
+							}
 						}
 					}
+					
+					if(instance_exists(_pickup)){
+						pickup = _pickup;
+						return 1;
+					}
 				}
-			}
-			
-			if(instance_exists(_pickup)){
-				pickup = _pickup;
-				return 1;
 			}
 		}
 
@@ -1251,10 +1266,10 @@
 		}
 		
 		 // Offset:
-		var m = leader.mask_index;
+		var _lastMask = leader.mask_index;
 		leader.mask_index = -1;
 		mount_y = lerp(mount_y, 2 + pfloor(round(leader.bbox_bottom - leader.y), 2), 0.25 * current_time_scale);
-		leader.mask_index = m;
+		leader.mask_index = _lastMask;
 		
 		var _yAdd = 0;
 		while(_yAdd != mount_y && place_free(leader.x, leader.y + _yAdd + sign(mount_y))){
@@ -1359,6 +1374,9 @@
 	target        = noone;
 	my_venom      = noone;
 	scorpion_city = true;
+	
+	 // Remember:
+	array_push(history, "scorpion_city");
 	
 	 // Stat:
 	if("blocked" not in stat){
@@ -1836,10 +1854,13 @@
 	web_timer     = web_timer_max;
 	web_frame     = 0;
 	web_bits      = 0;
-	cursed        = false;
+	curse         = 0;
 	
 	 // Alarms:
 	//alarm1 = -1;
+	
+	 // Remember:
+	array_push(history, "curse");
 	
 	 // Stat:
 	if("webbed" not in stat){
@@ -1889,29 +1910,25 @@
 	 // Sparkle:	 
 	if(chance_ct(1, 20)){
 		with(instance_create(x + orandom(8), y + orandom(8), CaveSparkle)){
-			sprite_index = (other.cursed ? sprCaveSparkle : spr.PetSparkle);
+			sprite_index = ((other.curse > 0) ? sprCaveSparkle : spr.PetSparkle);
 			depth = other.depth - 1;
 		}
 	}
 	
 	 // Encurse:
-	if(!cursed && GameCont.area == 104){
+	if(curse <= 0 && GameCont.area == 104){
 		if(!instance_exists(GenCont) && !instance_exists(LevCont)){
-			cursed = true;
+			curse = 1;
 			
 			 // Stat:
 			stat.cursed = lq_defget(stat, "cursed", 0) + 1;
 			
 			 // Swap Sprites:
-			var _lastIcon = spr_icon;
 			spr_idle = spr.PetSpiderCursedIdle;
 			spr_walk = spr.PetSpiderCursedWalk;
 			spr_hurt = spr.PetSpiderCursedHurt;
 			spr_icon = spr.PetSpiderCursedIcon;
 			sprite_index = spr_idle;
-			with(prompt){
-				text = string_replace(text, string(_lastIcon), string(other.spr_icon));
-			}
 			
 			 // Alert:
 			with(alert_create(id, spr_icon)){
@@ -2041,6 +2058,11 @@
 	setup       = true;
 	//team        = 1;
 	
+	 // Remember:
+	with(["white", "partner"]){
+		array_push(other.history, self);
+	}
+	
 	 // Stat:
 	if("diverted" not in stat){
 		stat.diverted = 0;
@@ -2055,24 +2077,24 @@
 	
 #define Twins_stat(_name, _value)
 	if(_name == ""){
-		return spr.PetTwinsStat;
+		return [spr.PetTwinsStat];
 	}
 	
 #define Twins_icon
-	return spr.PetTwinsIcon;
+	return (
+		(("partner" in self && instance_exists(partner)) || "spr_icon" not in self)
+		? spr.PetTwinsIcon
+		: spr_icon
+	);
 	
 #define Twins_setup
 	setup = false;
 	
 	 // Spriterize:
-	var _lastIcon = spr_icon;
 	spr_icon = (white ? spr.PetTwinsWhiteIcon : spr.PetTwinsRedIcon);
 	spr_idle = (white ? spr.PetTwinsWhite     : spr.PetTwinsRed);
 	spr_walk = spr_idle;
 	spr_hurt = spr_idle;
-	with(prompt){
-		text = string_replace(text, string(_lastIcon), string(other.spr_icon));
-	}
 	
 #define Twins_step
 	if(setup) Twins_setup();
@@ -2086,8 +2108,10 @@
 	if(partner == noone){
 		partner = pet_spawn(x, y, "Twins");
 		with(partner){
-			partner = other;
-			white   = !other.white;
+			partner    = other;
+			team       = other.team;
+			stat_found = other.stat_found;
+			white      = !other.white;
 		}
 	}
 	if(instance_exists(leader) && instance_exists(partner)){
@@ -2495,7 +2519,7 @@
 			
 			return [_name, _time];
 	}
-
+	
 #define Octo_anim
 	sprite_index = (hiding ? spr_hide : enemy_sprite);
 	
@@ -2640,16 +2664,8 @@
 	
 	 // Hiding:
 	if(hiding){
-		light = false;
+		light      = false;
 		spr_shadow = -1;
-		
-		 // Icon:
-		if(spr_icon == spr.PetOctoIcon){
-			spr_icon = spr.PetOctoHideIcon;
-			with(prompt){
-				text = string_replace(text, string(spr.PetOctoIcon), string(other.spr_icon));
-			}
-		}
 		
 		 // Hop to New Pit:
 		if(image_index < 1) image_index -= image_speed_raw * 0.95;
@@ -2664,16 +2680,7 @@
 		speed = clamp(speed, 0, maxspeed - 0.4);
 		
 		 // Can't be Grabbed Under Floors:
-		can_take = (floor_get(x, y - 4).sprite_index == spr.FloorTrenchB);
-	}
-	else{
-		 // Icon:
-		if(spr_icon == spr.PetOctoHideIcon){
-			spr_icon = spr.PetOctoIcon;
-			with(prompt){
-				text = string_replace(text, string(spr.PetOctoHideIcon), string(other.spr_icon));
-			}
-		}
+		can_take = (array_length(instances_matching(instances_at(x, y - 4, Floor), "sprite_index", spr.FloorTrenchB)) > 0);
 	}
 
 #define Octo_draw(_spr, _img, _x, _y, _xsc, _ysc, _ang, _col, _alp)
@@ -2715,10 +2722,8 @@
 	else{
 		 // Find trench pit:
 		if(GameCont.area == "trench" && !hiding){
-			var f = floor_get(x, y - 4);
-			
 			 // Hide:
-			if(f.sprite_index == spr.FloorTrenchB){
+			if(array_length(instances_matching(instances_at(x, y - 4, Floor), "sprite_index", spr.FloorTrenchB))){
 				hiding = true;
 				
 				sprite_index = spr_hide;
@@ -2850,7 +2855,7 @@
 					other.flash_frame = max(other.flash_frame, current_frame + max(1, sprite_height / 16));
 					
 					 // Curse:
-					var _cursed = ("curse" in self && !curse);
+					var _cursed = ("curse" in self && curse <= 0);
 					if(_cursed){
 						curse = true;
 						
@@ -3088,7 +3093,7 @@
 	shootdis_min  = 0;
 	shootdis_max  = 192;
 	target        = noone;
-	curse         = false;
+	curse         = 0;
 	setup         = true;
 	
 	 // Weapons:
@@ -3103,6 +3108,11 @@
 			variable_instance_set(self, _b + "can_shoot", false);
 			variable_instance_set(self, _b + "wep_laser", 0);
 		}
+	}
+	
+	 // Remember:
+	with(["type", "curse", "wep", "bwep"]){
+		array_push(other.history, self);
 	}
 	
 	 // Stat:
@@ -3132,7 +3142,7 @@
 		 // Auto-Wep:
 		if(wep == wep_none){
 			 // Cursed:
-			if(curse){
+			if(curse > 0){
 				wep  = wep_super_disc_gun;
 				type = type_shell;
 			}
@@ -3204,7 +3214,7 @@
 	bwepangle = -_ang * weapon_is_melee(bwep);
 	
 	 // Cursed Sprites:
-	if(curse){
+	if(curse > 0){
 		with(["idle", "walk", "hurt", "dead", "spwn", "hide", "icon"]){
 			var	_type    = self,
 				_spr     = variable_instance_get(other, "spr_" + _type, -1),
@@ -3286,50 +3296,34 @@
 		gunangle_goal = point_direction(x, y, mouse_x[leader.index], mouse_y[leader.index]);
 		
 		 // Fire:
-		if(button_check(leader.index, "fire")){
-			if(
-				leader.reload > 0
-				||
-				(
-					weapon_get_load(leader.wep) <= leader.reloadspeed * current_time_scale
-					&&
-					array_length(instances_matching(projectile, "creator", leader)) > 0
-				)
-			){
-				var _shot = false;
-				with(["", "b"]){
-					var _b = self;
-					with(other){
-						var	_wep      = variable_instance_get(self, _b + "wep"),
-							_reload   = variable_instance_get(self, _b + "reload"),
-							_canShoot = variable_instance_get(self, _b + "can_shoot");
-							
-						if(_canShoot <= 0 && _wep != wep_none && _reload <= 0){
-							if(
-								button_pressed(leader.index, "fire")
-								||
-								(
-									(weapon_get_load(leader.wep) <= weapon_get_load(_wep) || weapon_get_auto(leader.wep) >= (leader.race != "steroids"))
-									&&
-									weapon_get_cost(leader.wep) > 0
-								)
-							){
-								_shot = true;
-								_canShoot = 1;
-								
-								 // Fire Multiple Times:
-								var _wepLoad = weapon_get_load(_wep);
-								if(weapon_get_auto(_wep) || _wepLoad <= 10){
-									_canShoot += floor(random(15) / _wepLoad);
-								}
-								
-								variable_instance_set(self, _b + "reload",    _reload);
-								variable_instance_set(self, _b + "can_shoot", _canShoot);
-							}
+		if(
+			((weapon_get_auto(leader.wep) || leader.race == "steroids") && leader.can_shoot && leader.canfire && (leader.ammo[weapon_get_type(leader.wep)] >= weapon_get_cost(leader.wep) || leader.infammo != 0))
+			? button_check(leader.index, "fire")
+			: button_pressed(leader.index, "fire")
+		){
+			var _shot = false;
+			with(["", "b"]){
+				var _b = self;
+				with(other){
+					var	_wep      = variable_instance_get(self, _b + "wep"),
+						_reload   = variable_instance_get(self, _b + "reload"),
+						_canShoot = variable_instance_get(self, _b + "can_shoot");
+						
+					if(_canShoot <= 0 && _wep != wep_none && _reload <= 0){
+						_shot = true;
+						_canShoot = 1;
+						
+						 // Fire Multiple Times:
+						var _wepLoad = weapon_get_load(_wep);
+						if(weapon_get_auto(_wep) || _wepLoad <= 10){
+							_canShoot += floor(random(15) / _wepLoad);
 						}
+						
+						variable_instance_set(self, _b + "reload",    _reload);
+						variable_instance_set(self, _b + "can_shoot", _canShoot);
 					}
-					if(_shot) break;
 				}
+				if(_shot) break;
 			}
 		}
 	}
@@ -3541,17 +3535,16 @@
 					_wepDir  = gunangle + _wepAng;
 					
 				array_push(_wepDraw, {
-					"sprt" : weapon_get_sprt(_wep),
-					"x"    : _x + lengthdir_x(_wepOffX, _wepDir) + lengthdir_x(_wepOffY,       _wepDir - 90),
-					"y"    : _y + lengthdir_y(_wepOffX, _wepDir) + lengthdir_y(_wepOffY * 2/3, _wepDir - 90),
-					"gang" : gunangle,
-					"wang" : _wepAng,
-					"kick" : variable_instance_get(self, _b + "wkick"),
-					"flip" : ((_wepAng != 0) ? variable_instance_get(self, _b + "wepflip") : 1) * ((_wepOffY == 0) ? right : sign(_wepOffY)),
-					"blnd" : merge_color(_col, c_black, 0.15 * (_wepLoad > 0) * weapon_is_melee(_wep)),
-					"alph" : _alp,
-					"load" : _wepLoad,
-					"lasr" : min(1, weapon_get_laser_sight(_wep) * variable_instance_get(self, _b + "wep_laser"))
+					"sprite_index" : weapon_get_sprt(_wep),
+					"x"            : _x + lengthdir_x(_wepOffX, _wepDir) + lengthdir_x(_wepOffY,       _wepDir - 90),
+					"y"            : _y + lengthdir_y(_wepOffX, _wepDir) + lengthdir_y(_wepOffY * 2/3, _wepDir - 90),
+					"gunangle"     : gunangle,
+					"wepangle"     : _wepAng,
+					"wkick"        : variable_instance_get(self, _b + "wkick"),
+					"wepflip"      : ((_wepAng != 0) ? variable_instance_get(self, _b + "wepflip") : 1) * ((_wepOffY == 0) ? right : sign(_wepOffY)),
+					"image_blend"  : merge_color(_col, c_black, 0.15 * (_wepLoad > 0) * weapon_is_melee(_wep)),
+					"image_alpha"  : _alp,
+					"laser_sight"  : min(1, weapon_get_laser_sight(_wep) * variable_instance_get(self, _b + "wep_laser"))
 				});
 				
 				_wepOffY *= -1;
@@ -3562,14 +3555,14 @@
 	 // Guns in Back:
 	with(_wepDraw){
 		 // Laser Sight:
-		if(lasr > 0){
+		if(laser_sight > 0){
 			draw_set_color(make_color_rgb(250, 54, 0));
-			draw_lasersight(x, y, gang, 1000, lasr);
+			draw_lasersight(x, y, gunangle, 1000, laser_sight);
 		}
 		
 		 // Gun:
 		if(y < _y){
-			draw_weapon(sprt, x, y, gang, wang, kick, flip, blnd, alph);
+			draw_weapon(sprite_index, x, y, gunangle, wepangle, wkick, wepflip, image_blend, image_alpha);
 		}
 	}
 	
@@ -3581,7 +3574,7 @@
 	
 	 // Guns in Front:
 	with(_wepDraw) if(y >= _y){
-		draw_weapon(sprt, x, y, gang, wang, kick, flip, blnd, alph);
+		draw_weapon(sprite_index, x, y, gunangle, wepangle, wkick, wepflip, image_blend, image_alpha);
 	}
 	
 #define Weapon_alrm0(_leaderDir, _leaderDis)
@@ -3663,261 +3656,257 @@
 #define ntte_step
 	var _petInst = Pet;
 	
-	 // Spider Webs:
-	var _inst = instances_matching(_petInst, "pet", "Spider");
-	if(array_length(_inst) > 0){
-		 // Bind Events:
-		if(!instance_exists(GenCont)){
-			script_bind_end_step(web_end_step, 0, _inst);
-			script_bind_draw(web_draw,		5);
-			script_bind_draw(web_draw_post,	0);
+	if(array_length(_petInst)){
+		 // Mantis Rad Attraction:
+		if(instance_exists(Rad) || instance_exists(BigRad)){
+			var _targetInst = instances_matching(instances_matching(_petInst, "pet", "Orchid"), "visible", true);
+			if(array_length(_targetInst)){
+				var _inst = instances_matching([Rad, BigRad], "orchidmantisradattract_check", null);
+				if(array_length(_inst)) with(_inst){
+					orchidmantisradattract_check = true;
+					
+					var	_target = noone,
+						_disMax = infinity;
+						
+					with(_targetInst){
+						if(instance_exists(leader) && array_length(skill_inst) <= 0){
+							var _dis = point_distance(x, y, other.x, other.y);
+							if(_dis < _disMax){
+								_disMax = _dis;
+								_target = id;
+							}
+						}
+					}
+					
+					 // Grab:
+					if(instance_exists(_target)){
+						with(scrFX(x + (hspeed / 2), y + (vspeed / 2), [direction, 0.4], "VaultFlowerSparkle")){
+							alarm0 = random_range(20, 30);
+							image_alpha *= 2;
+						}
+						rad_path(self, _target);
+					}
+				}
+			}
 		}
 		
+		 // Salamander Throne Butt Text:
+		if(instance_exists(SkillIcon) && array_length(instances_matching(_petInst, "pet", "Salamander"))){
+			var _inst = instances_matching(instances_matching(SkillIcon, "skill", mut_throne_butt), "petsalamander_check", null);
+			if(array_length(_inst)) with(_inst){
+				petsalamander_check = true;
+				
+				 // Append Player's Name:
+				for(var i = 0; i < maxp; i++){
+					if(player_is_active(i)){
+						var _title = race_get_title(player_get_race(i));
+						if(string_pos(_title, text) != 1){
+							text = _title + " - " + text;
+						}
+						break;
+					}
+				}
+				
+				 // Add Salamander:
+				text += "@s#SALAMANDER - @wPUNTED @sENEMIES @rEXPLODE@s";
+			}
+		}
+	}
+	
+#define ntte_end_step
+	 // Spider Webbing:
+	var _instSpider = instances_matching(Pet, "pet", "Spider");
+	if(instance_exists(GenCont)){
 		 // Reset Webs:
-		else with(_inst){
-			web_list = [];
-			web_timer = web_timer_max;
+		if(array_length(_instSpider)) with(_instSpider){
+			web_list    = [];
+			web_timer   = web_timer_max;
 			web_list_x1 = +infinity;
 			web_list_y1 = +infinity;
 			web_list_x2 = -infinity;
 			web_list_y2 = -infinity;
 		}
 	}
-	
-	 // Octo Air Bubble:
-	if(!area_get_underwater(GameCont.area) && (GameCont.area != 100 || !area_get_underwater(GameCont.lastarea))){
-		script_bind_draw(octobubble_draw, -3);
-	}
-	
-	 // Mantis Rad Attraction:
-	var _targetInst = instances_matching(instances_matching(_petInst, "pet", "Orchid"), "visible", true);
-	if(array_length(_targetInst) > 0){
-		with(instances_matching([Rad, BigRad], "orchidmantisradattract_check", null)){
-			orchidmantisradattract_check = true;
-			
-			var	_target = noone,
-				_disMax = infinity;
-				
-			with(_targetInst){
-				if(instance_exists(leader) && array_length(skill_inst) <= 0){
-					var _dis = point_distance(x, y, other.x, other.y);
-					if(_dis < _disMax){
-						_disMax = _dis;
-						_target = id;
-					}
-				}
-			}
-			
-			 // Grab:
-			if(instance_exists(_target)){
-				with(scrFX(x + (hspeed / 2), y + (vspeed / 2), [direction, 0.4], "VaultFlowerSparkle")){
-					alarm0 = random_range(20, 30);
-					image_alpha *= 2;
-				}
-				rad_path(self, _target);
-			}
-		}
-	}
-	
-	 // Salamander Throne Butt Text:
-	if(array_length(instances_matching(_petInst, "pet", "Salamander")) > 0){
-		with(instances_matching(instances_matching(SkillIcon, "skill", mut_throne_butt), "petsalamander_check", null)){
-			petsalamander_check = true;
-			
-			 // Append Player's Name:
-			for(var i = 0; i < maxp; i++){
-				if(player_is_active(i)){
-					var _title = race_get_title(player_get_race(i));
-					if(string_pos(_title, text) != 1){
-						text = _title + " - " + text;
-					}
-					break;
-				}
-			}
-			
-			 // Add Salamander:
-			text += "@s#SALAMANDER - @wPUNTED @sENEMIES @rEXPLODE@s";
-		}
-	}
-	
-#define octobubble_draw
-	instance_destroy();
-	
-	 // Octo Bubble Draw:
-	with(instances_matching(instances_matching(instances_matching(Pet, "pet", "Octo"), "visible", true), "hiding", false)){
-		draw_sprite(sprPlayerBubble, -1, x + spr_bubble_x, y + spr_bubble_y);
-	}
-	
-#define web_end_step(_inst)
-	if(lag) trace_time();
-	
-	_inst = instances_matching(_inst, "", null);
-	
 	with(surface_setup("PetWeb", game_width, game_height, option_get("quality:main"))){
 		x = view_xview_nonsync;
 		y = view_yview_nonsync;
 		
-		var	_surfX = x,
-			_surfY = y,
-			_surfScale = scale,
-			_slowInst = [],
-			_cursed = false;
+		var	_surfX     = x,
+			_surfY     = y,
+			_surfScale = scale;
 			
-		with(_inst) if(cursed){
-			_cursed = true;
-			break;
-		}
-		
 		surface_set_target(surf);
 		draw_clear_alpha(0, 0);
 		draw_set_color(c_black);
 		
-		with(_inst){
-			web_frame += current_time_scale;
-			
-			var	_webInst = instance_rectangle_bbox(web_list_x1, web_list_y1, web_list_x2, web_list_y2, instances_matching_ne(hitme, "team", team)),
-				_x1, _x2, _x3,
-				_y1, _y2, _y3,
-				_vertexNum = 0;
+		if(array_length(_instSpider)){
+			with(_instSpider){
+				web_frame += current_time_scale;
 				
-			draw_primitive_begin(pr_trianglestrip);
-			
-			with(web_list){
-				_x3 = _x2;
-				_y3 = _y2;
-				_x2 = _x1;
-				_y2 = _y1;
-				_x1 = x;
-				_y1 = y;
+				var	_instWeb   = instance_rectangle_bbox(web_list_x1, web_list_y1, web_list_x2, web_list_y2, instances_matching_ne(hitme, "team", team)),
+					_instSlow  = [],
+					_vertexNum = 0,
+					_x1, _x2, _x3,
+					_y1, _y2, _y3;
+					
+				draw_primitive_begin(pr_trianglestrip);
 				
-				/*
-				 // Curse Effect:
-				if(_cursed && chance_ct(1, 60)){
-					instance_create(x + orandom(8), y + orandom(8), Curse);
-				}
-				*/
-				
-				 // Drawing Web Mask:
-				draw_vertex((x - _surfX) * _surfScale, (y - _surfY) * _surfScale);
-				
-				 // Slow Enemies:
-				if(_vertexNum++ >= 2){
-					with(instances_matching_le(instances_matching_ge(instances_matching_le(instances_matching_ge(
-						_webInst,
-						"bbox_right",  min(_x1, _x2, _x3)),
-						"bbox_left",   max(_x1, _x2, _x3)),
-						"bbox_bottom", min(_y1, _y2, _y3)),
-						"bbox_top",    max(_y1, _y2, _y3))
-					){
-						//if(point_in_triangle(x, bbox_bottom, _x1, _y1, _x2, _y2, _x3, _y3)){
-							if(!collision_line(x, y, xprevious, yprevious, Wall, false, false)){
-								array_push(_slowInst, id);
+				with(web_list){
+					_x3 = _x2;
+					_y3 = _y2;
+					_x2 = _x1;
+					_y2 = _y1;
+					_x1 = x;
+					_y1 = y;
+					
+					 // Drawing Web Mask:
+					draw_vertex(
+						(x - _surfX) * _surfScale,
+						(y - _surfY) * _surfScale
+					);
+					
+					 // Slow Enemies:
+					if(_vertexNum++ >= 2){
+						var _inst = _instWeb;
+						if(array_length(_inst)){
+							_inst = instances_matching_ge(_inst, "bbox_right", min(_x1, _x2, _x3));
+							if(array_length(_inst)){
+								_inst = instances_matching_le(_inst, "bbox_left", max(_x1, _x2, _x3));
+								if(array_length(_inst)){
+									_inst = instances_matching_ge(_inst, "bbox_bottom", min(_y1, _y2, _y3));
+									if(array_length(_inst)){
+										_inst = instances_matching_le(_inst, "bbox_top", max(_y1, _y2, _y3));
+										if(array_length(_inst)) with(_inst){
+											//if(point_in_triangle(x, bbox_bottom, _x1, _y1, _x2, _y2, _x3, _y3)){
+												if(!collision_line(x, y, xprevious, yprevious, Wall, false, false)){
+													array_push(_instSlow, id);
+												}
+												_instWeb = array_delete_value(_instWeb, id);
+											//}
+										}
+									}
+								}
 							}
-							_webInst = array_delete_value(_webInst, id);
-						//}
-					}
-				}
-				
-				 // Dissipate:
-				if(frame < other.web_frame){
-					 // Shrink Towards Next Point:
-					var	_x = x,
-						_y = y;
-						
-					if(_vertexNum + 1 < array_length(other.web_list)){
-						with(other.web_list[_vertexNum + 1]){
-							_x = x;
-							_y = y;
 						}
 					}
 					
-					x = lerp(x, _x, 0.2 * current_time_scale);
-					y = lerp(y, _y, 0.2 * current_time_scale);
-					
-					 // Delete:
-					if(point_distance(_x, _y, x, y) < 1){
-						with(other) Spider_web_delete(--_vertexNum);
-					}
-				}
-				
-				 // In Coast Water:
-				else if(wading){
-					var o = sin((current_frame + frame) / 10) * current_time_scale;
-					x += o * 0.1;
-					y += o * 0.15;
-				}
-			}
-			
-			 // Finish Web Mask:
-			if(instance_exists(leader)){
-				var	l = web_add_l * (1 - (web_timer / web_timer_max)),
-					d = web_add_d;
-					
-				draw_vertex((x + lengthdir_x(l, d) - _surfX) * _surfScale, (bbox_bottom + lengthdir_y(l, d) - _surfY) * _surfScale);
-			}
-			draw_primitive_end();
-			
-			 // Particles:
-			if(web_bits > 0) web_bits -= current_time_scale;
-			else{
-				web_bits = 10 + random(20);
-				if(array_length(web_list) > 0) with(web_list[0]){
+					 // Dissipate:
 					if(frame < other.web_frame){
-						with(instance_create(x, y, Dust)){
-							image_xscale /= 2;
-							image_yscale /= 2;
+						var	_x = x,
+							_y = y;
+							
+						 // Shrink Towards Next Point:
+						if(_vertexNum + 1 < array_length(other.web_list)){
+							with(other.web_list[_vertexNum + 1]){
+								_x = x;
+								_y = y;
+							}
 						}
-						with(instance_create(x, y, Feather)){
-							sprite_index = spr.PetSpiderWebBits;
-							image_index = irandom(image_number - 1);
-							image_angle = orandom(30);
-							image_speed = 0;
-							speed *= 0.5;
-							rot *= 0.5;
-							alarm0 = 60 + random(30);
+						x = lerp(x, _x, 0.2 * current_time_scale);
+						y = lerp(y, _y, 0.2 * current_time_scale);
+						
+						 // Delete:
+						if(point_distance(_x, _y, x, y) < 1){
+							with(other){
+								Spider_web_delete(--_vertexNum);
+							}
+						}
+					}
+					
+					 // In Coast Water:
+					else if(wading){
+						var _off = sin((current_frame + frame) / 10) * current_time_scale;
+						x += _off * 0.1;
+						y += _off * 0.15;
+					}
+				}
+				
+				 // Finish Web Mask:
+				if(instance_exists(leader)){
+					var	_l = web_add_l * (1 - (web_timer / web_timer_max)),
+						_d = web_add_d;
+						
+					draw_vertex(
+						(x           + lengthdir_x(_l, _d) - _surfX) * _surfScale,
+						(bbox_bottom + lengthdir_y(_l, _d) - _surfY) * _surfScale
+					);
+				}
+				draw_primitive_end();
+				
+				 // Particles:
+				if(web_bits > 0){
+					web_bits -= current_time_scale;
+				}
+				else{
+					web_bits = 10 + random(20);
+					if(array_length(web_list) > 0) with(web_list[0]){
+						if(frame < other.web_frame){
+							with(instance_create(x, y, Dust)){
+								image_xscale /= 2;
+								image_yscale /= 2;
+							}
+							with(instance_create(x, y, Feather)){
+								sprite_index = spr.PetSpiderWebBits;
+								image_index  = irandom(image_number - 1);
+								image_angle  = orandom(30);
+								image_speed  = 0;
+								speed       *= 0.5;
+								rot         *= 0.5;
+								alarm0       = 60 + random(30);
+							}
+						}
+					}
+				}
+				
+				 // Slow Enemies on Web:
+				if(array_length(_instSlow)){
+					var _slow = 2/3 * current_time_scale;
+					with(_instSlow){
+						x = lerp(x, xprevious, _slow);
+						y = lerp(y, yprevious, _slow);
+						
+						 // Special Stat:
+						if("ntte_statspider" not in self){
+							ntte_statspider = true;
+							other.stat.webbed++;
+						}
+						
+						 // Maybe Kill:
+						if(other.curse > 0 && my_health <= ceil(maxhealth * 0.2 * other.curse) && my_health > 0){
+							projectile_hit(id, my_health, 0, 0);
+							sound_play_hit(sndPlantTBKill, 0.2);
+							with(instance_create(x, y, TangleKill)){
+								sprite_index = spr.PetSpiderCursedKill;
+							}
 						}
 					}
 				}
 			}
 			
-			 // Special Stat:
-			with(instances_matching(_slowInst, "ntte_statspider", null)){
-				ntte_statspider = true;
-				other.stat.webbed++;
+			 // Draw Web Sprite Over Web Mask:
+			draw_set_blend_mode_ext(bm_inv_dest_alpha, bm_inv_dest_alpha);
+			draw_rectangle(0, 0, w * scale, h * scale, false);
+			with(other){
+				draw_sprite_tiled_ext(spr.PetSpiderWeb, 0, (0 - _surfX) * _surfScale, (0 - _surfY) * _surfScale, _surfScale, _surfScale, c_white, 1);
 			}
+			draw_set_blend_mode(bm_normal);
 		}
 		
-		 // Draw Web Sprite Over Web Mask:
-		draw_set_blend_mode_ext(bm_inv_dest_alpha, bm_inv_dest_alpha);
-		draw_rectangle(0, 0, w * scale, h * scale, false);
-		with(other) draw_sprite_tiled_ext(spr.PetSpiderWeb, 0, (0 - _surfX) * _surfScale, (0 - _surfY) * _surfScale, _surfScale, _surfScale, c_white, 1);
-		draw_set_blend_mode(bm_normal);
-		
 		surface_reset_target();
-		
-		 // Slow Enemies on Web:
-		with(_slowInst){
-			x = lerp(xprevious, x, current_time_scale / 3);
-			y = lerp(yprevious, y, current_time_scale / 3);
-			
-			 // Maybe Kill:
-			if(_cursed && my_health <= ceil(maxhealth * 0.2)){
-				projectile_hit(id, my_health, 0, 0);
-				sound_play_hit(sndPlantTBKill, 0.2);
-				with(instance_create(x, y, TangleKill)){
-					sprite_index = spr.PetSpiderCursedKill;
-				}
+	}
+	
+#define octobubble_draw
+	 // Octo Bubble Draw:
+	if(instance_exists(CustomHitme)){
+		if(!area_get_underwater(GameCont.area) && (GameCont.area != 100 || !area_get_underwater(GameCont.lastarea))){
+			var _inst = instances_matching(instances_matching(instances_matching(Pet, "pet", "Octo"), "visible", true), "hiding", false);
+			if(array_length(_inst)) with(_inst){
+				draw_sprite(sprPlayerBubble, -1, x + spr_bubble_x, y + spr_bubble_y);
 			}
 		}
 	}
 	
-	if(lag) trace_time("petlib_web_end_step");
-	
-	instance_destroy();
-	
 #define web_draw
-	instance_destroy();
-	
 	 // Drawing Web Surface:
 	with(surface_setup("PetWeb", null, null, null)){
 		draw_set_fog(true, make_color_rgb(50, 41, 71), 0, 0);
@@ -3927,8 +3916,6 @@
 	}
 	
 #define web_draw_post
-	instance_destroy();
-	
 	 // Web Bloom:
 	with(surface_setup("PetWeb", null, null, null)){
 		draw_set_alpha(1/3);
@@ -4065,7 +4052,6 @@
 #define area_get_back_color(_area)                                                      return  mod_script_call_nc  ('mod', 'telib', 'area_get_back_color', _area);
 #define area_border(_y, _area, _color)                                                  return  mod_script_call_nc  ('mod', 'telib', 'area_border', _y, _area, _color);
 #define area_generate(_area, _sub, _loops, _x, _y, _setArea, _overlapFloor, _scrSetup)  return  mod_script_call_nc  ('mod', 'telib', 'area_generate', _area, _sub, _loops, _x, _y, _setArea, _overlapFloor, _scrSetup);
-#define floor_get(_x, _y)                                                               return  mod_script_call_nc  ('mod', 'telib', 'floor_get', _x, _y);
 #define floor_set(_x, _y, _state)                                                       return  mod_script_call_nc  ('mod', 'telib', 'floor_set', _x, _y, _state);
 #define floor_set_style(_style, _area)                                                  return  mod_script_call_nc  ('mod', 'telib', 'floor_set_style', _style, _area);
 #define floor_set_align(_alignX, _alignY, _alignW, _alignH)                             return  mod_script_call_nc  ('mod', 'telib', 'floor_set_align', _alignX, _alignY, _alignW, _alignH);

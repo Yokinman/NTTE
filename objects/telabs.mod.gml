@@ -672,7 +672,7 @@
 								floor_set_style(styleb, area);
 								floor_set_align(null, null, 16, 16);
 								
-								var	_minID = GameObject.id,
+								var	_minID     = GameObject.id,
 									_floorHall = floor_fill(_hallX, _hallY, _hallW, _hallH, ""),
 									_floorMain = floor_fill(_x, _y, _w, _h, "");
 									
@@ -902,7 +902,7 @@
 										with(obj_create(x, y, "WallSlide")){
 											slide_inst = [other];
 											slide_path = data_clone(_slidePath, 1);
-											smoke = 1/5;
+											smoke      = 1/5;
 											
 											 // Adjust Direction:
 											with(other){
@@ -941,14 +941,17 @@
 	
 	with(instance_create(_x, _y, CustomProp)){
 		 // Visual:
-		spr_idle = spr.MutantVatIdle;
-		spr_hurt = spr.MutantVatHurt;
-		spr_dead = spr.MutantVatDead;
-		spr_back = spr.MutantVatBack;
-		spr_shadow = shd64B;
+		spr_idle     = spr.MutantVatIdle;
+		spr_hurt     = spr.MutantVatHurt;
+		spr_dead     = spr.MutantVatDead;
+		spr_back     = spr.MutantVatBack;
+		spr_dude     = mskNone;
+		spr_shadow   = shd64B;
 		spr_shadow_y = 12;
 		sprite_index = spr_idle;
-		depth = -1;
+		depth        = -1;
+		color        = make_color_rgb(40, 87, 9);
+		face         = choose(-1, 1);
 		
 		 // Sounds:
 		snd_hurt = sndLabsTubeBreak;
@@ -956,12 +959,14 @@
 		
 		 // Vars:
 		mask_index = -1;
-		maxhealth = 50;
-		raddrop = 4;
-		size = 3;
-		team = 1;
-		wave = random(100);
-		setup = true;
+		maxhealth  = 50;
+		raddrop    = 4;
+		size       = 3;
+		team       = 1;
+		wave       = random(100);
+		setup      = true;
+		wep        = wep_none;
+		pet_data   = ["", "", "", {}];
 		
 		 // Vat Pool:
 		var _pool = [
@@ -981,23 +986,7 @@
 		if(unlock_get("crown:crime")){
 			array_push(_pool, [choose("CatChest", "BatChest"), 1]);
 		}
-		
-		 // :
-		thing = {};
-		with(thing){
-			type = pool(_pool);
-			color = make_color_rgb(40, 87, 9);
-			index = -1;
-			sprite = mskNone;
-			right = choose(1, -1);
-			wep = wep_none;
-			pet_data = {};
-			with(pet_data){
-				pet_name = "";
-				mod_type = "mod";
-				mod_name = "petlib";
-			}
-		}
+		type = pool(_pool);
 		
 		 // Alarms:
 		alarm1 = -1;
@@ -1013,72 +1002,70 @@
 		_y = y,
 		_canWatch = false;
 		
-	with(thing){
-		switch(type){
-			case "MergedWep":
-				wep = wep_revolver;
-				var _part = wep_merge_decide(0, GameCont.hard);
-				if(array_length(_part) >= 2){
-					wep = wep_merge(_part[0], _part[1]);
-				}
-				sprite = weapon_get_sprite(wep);
-				break;
-				
-			case Freak:
-				sprite = sprFreak1Idle;
-				_canWatch = true;
-				break;
-				
-			case "FishFreak":
-				sprite = spr.FishFreakIdle;
-				_canWatch = true;
-				break;
-				
-			case "Angler":
-				sprite = sprRadChest;
-				break;
-				
-			case "PortalGuardian":
-				sprite = spr.PortalGuardianIdle;
-				_canWatch = true;
-				break;
-				
-			case PopoFreak:
-				sprite = sprPopoFreakIdle;
-				_canWatch = true;
-				break;
-				
-			case "CrystalHeart":
-				sprite = spr.CrystalHeartIdle;
-				break;
-				
-			case Bandit:
-				sprite = sprBanditHurt;
-				break;
-				
-			case WeaponChest:
-				sprite = sprWeaponChest;
-				break;
-				
-			case "Backpack":
-			case "CatChest":
-			case "BatChest":
-				sprite = lq_get(spr, type);
-				break;
-				
-			 // Labs Event Exclusive:
-			case "Pet":
-				_canWatch = true;
-				/*
-				with(obj_create(_x, _y - 20, "CatLight")){
-					w1 *= 2;
-					w2 *= 3/2;
-					h1 *= 7/6;
-					h2 *= 2;
-				}
-				*/
-				break;
-		}
+	switch(type){
+		case "MergedWep":
+			wep = wep_revolver;
+			var _part = wep_merge_decide(0, GameCont.hard);
+			if(array_length(_part) >= 2){
+				wep = wep_merge(_part[0], _part[1]);
+			}
+			spr_dude = weapon_get_sprite(wep);
+			break;
+			
+		case Freak:
+			spr_dude = sprFreak1Idle;
+			_canWatch = true;
+			break;
+			
+		case "FishFreak":
+			spr_dude = spr.FishFreakIdle;
+			_canWatch = true;
+			break;
+			
+		case "Angler":
+			spr_dude = sprRadChest;
+			break;
+			
+		case "PortalGuardian":
+			spr_dude = spr.PortalGuardianIdle;
+			_canWatch = true;
+			break;
+			
+		case PopoFreak:
+			spr_dude = sprPopoFreakIdle;
+			_canWatch = true;
+			break;
+			
+		case "CrystalHeart":
+			spr_dude = spr.CrystalHeartIdle;
+			break;
+			
+		case Bandit:
+			spr_dude = sprBanditHurt;
+			break;
+			
+		case WeaponChest:
+			spr_dude = sprWeaponChest;
+			break;
+			
+		case "Backpack":
+		case "CatChest":
+		case "BatChest":
+			spr_dude = lq_get(spr, type);
+			break;
+			
+		 // Labs Event Exclusive:
+		case "Pet":
+			_canWatch = true;
+			/*
+			with(obj_create(_x, _y - 20, "CatLight")){
+				w1 *= 2;
+				w2 *= 3/2;
+				h1 *= 7/6;
+				h2 *= 2;
+			}
+			*/
+			break;
 	}
 	
 	 // Ever Vigilant:
@@ -1105,26 +1092,25 @@
 	
 #define MutantVat_draw_back(_inst)
 	with(_inst){
-		var _imageIndex = (wave * image_speed);
-		draw_sprite_ext(spr_back, _imageIndex, x, y, image_xscale, image_yscale, image_angle, image_blend, image_alpha);
+		var _img = (wave * image_speed);
+		draw_sprite_ext(spr_back, _img, x, y, image_xscale, image_yscale, image_angle, image_blend, image_alpha);
 		
-		 // Draw Thing:
+		 // Draw Thing Inside:
 		var _oc  = chance(1, 30),
 			_ol  = 2,
 			_od  = random(360),
 			_ox  = _oc * lengthdir_x(_ol, _od),
 			_oy  = _oc * lengthdir_y(_ol, _od),
-			_spr = thing.sprite,
-			_img = ((thing.index == -1) ? _imageIndex : thing.index),
+			_spr = spr_dude,
 			_x   = x + _ox + (sin(wave / 10) * 2),
 			_y   = y + _oy + (cos(wave / 10) * 3),
-			_xsc = (image_xscale * thing.right),
+			_xsc = abs(image_xscale) * face,
 			_ysc = image_yscale,
 			_ang = image_angle + sin(wave / 30) * 30,
 			_col = c_white,
 			_alp = image_alpha;
 			
-		draw_set_fog(true, thing.color, 0, 0);
+		draw_set_fog(true, color, 0, 0);
 		draw_sprite_ext(_spr, _img, _x, _y, _xsc, _ysc, _ang, _col, _alp);
 		draw_set_fog(false, c_white, 0, 0);
 	}
@@ -1150,7 +1136,7 @@
 	alarm2 = 30 + random(60);
 	
 	with(instance_seen(x, y, Player)){
-		other.thing.right = ((other.x > x) ? -1 : 1);
+		other.face = ((other.x > x) ? -1 : 1);
 	}
 	
 #define MutantVat_death
@@ -1192,99 +1178,78 @@
 	}
 	
 	 // Drops:
-	var _x = x,
-		_y = y,
-		_minID = GameObject.id;
-		
-	with(thing){
-		var _wep = wep;
-		
-		switch(type){
-			case Bandit:
-			case Freak:
-			case PopoFreak:
-			case "PortalGuardian":
-				obj_create(_x, _y, type);
-				break;
-				
-			case WeaponChest:
-			case "OrchidChest":
-			case "Backpack":
-			case "CatChest":
-			case "BatChest":
-				chest_create(_x, _y, type, false);
-				break;
-				
-			case "MergedWep":
-				with(instance_create(_x, _y, WepPickup)){
-					wep = _wep;
-				}
-				break;
-				
-			case "FishFreak":
-				with(instance_create(_x, _y, Freak)){
-					fish_freak = true;
-					spr_idle = spr.FishFreakIdle;
-					spr_walk = spr.FishFreakWalk;
-					spr_hurt = spr.FishFreakHurt;
-					spr_dead = spr.FishFreakDead;
-				}
-				break;
-				
-			/*
-			case PopoFreak:
-				instance_create(_x, _y, type);
-				repeat(2) instance_create(_x, _y, IDPDSpawn);
-				with(instance_create(_x, _y - 16, type)){
-					my_health = 0;
-					with(self) event_perform(ev_destroy, 0);
-				}
-				
-				 // Quality Assurance:
-				with(instances_matching_gt(WantRevivePopoFreak, "id", _minID)){
-					alarm0 = 120;
-				}
-				with(instances_matching_gt([PopoNade, IDPDPortalCharge], "id", _minID)){
-					instance_delete(id);
-				}
-				break;
-				*/
-				
-			case "Angler":
-				with(obj_create(_x, _y, type)){
-					with(self){
-						event_perform(ev_step, ev_step_normal);
-					}
-				}
-				break;
-				
-			case "CrystalHeart":
-				with(obj_create(_x, _y - 16, type)){
-					my_health = 0;
-					with(self) event_perform(ev_destroy, 0);
-				}
-				break;
-				
-			 // Labs Event Exclusive:
-			case "Pet":
-				with(pet_data){
-					var _petVars = pet_vars;
-					with(mod_script_call_nc("mod", "telib", "pet_create", _x, _y, pet_name, mod_type, mod_name)){
-						var _lastIcon = spr_icon;
-						variable_instance_set_list(id, _petVars);
-						
-						 // New Icon:
-						var _newIcon = string(spr_icon);
-						with(prompt){
-							text = string_replace(text, string(_lastIcon), _newIcon);
-						}
-						
-						 // Quality Assurance:
-						team = 2;
-					}
-				}
-				break;
-		}
+	switch(type){
+		case Bandit:
+		case Freak:
+		case PopoFreak:
+		case "PortalGuardian":
+			obj_create(x, y, type);
+			break;
+			
+		case WeaponChest:
+		case "OrchidChest":
+		case "Backpack":
+		case "CatChest":
+		case "BatChest":
+			chest_create(x, y, type, false);
+			break;
+			
+		case "MergedWep":
+			with(instance_create(x, y, WepPickup)){
+				wep = other.wep;
+			}
+			break;
+			
+		case "FishFreak":
+			with(instance_create(x, y, Freak)){
+				fish_freak = true;
+				spr_idle = spr.FishFreakIdle;
+				spr_walk = spr.FishFreakWalk;
+				spr_hurt = spr.FishFreakHurt;
+				spr_dead = spr.FishFreakDead;
+			}
+			break;
+			
+		/*
+		case PopoFreak:
+			var _minID = GameObject.id;
+			instance_create(x, y, type);
+			repeat(2) instance_create(x, y, IDPDSpawn);
+			with(instance_create(x, y - 16, type)){
+				my_health = 0;
+				with(self) event_perform(ev_destroy, 0);
+			}
+			
+			 // Quality Assurance:
+			with(instances_matching_gt(WantRevivePopoFreak, "id", _minID)){
+				alarm0 = 120;
+			}
+			with(instances_matching_gt([PopoNade, IDPDPortalCharge], "id", _minID)){
+				instance_delete(id);
+			}
+			break;
+			*/
+			
+		case "Angler":
+			with(obj_create(x, y, type)){
+				with(self) event_perform(ev_step, ev_step_normal);
+			}
+			break;
+			
+		case "CrystalHeart":
+			with(obj_create(x, y - 16, type)){
+				my_health = 0;
+				with(self) event_perform(ev_destroy, 0);
+			}
+			break;
+			
+		 // Labs Event Exclusive:
+		case "Pet":
+			with(mod_script_call_nc("mod", "telib", "pet_create", x, y, pet_data[0], pet_data[1], pet_data[2])){
+				variable_instance_set_list(id, other.pet_data[3]);
+				history  = [];
+			}
+			break;
 	}
 	
 	/*
@@ -1771,49 +1736,52 @@
 /// GENERAL
 #define ntte_begin_step
 	 // Custom Necromancy:
-	with(instances_matching_gt(instances_matching_le(ReviveArea, "alarm0", ceil(current_time_scale)), "alarm0", 0)){
-		 // Skeals:
-		if(place_meeting(x, y, Corpse)){
-			with(instances_meeting(x, y, instances_matching_lt(Corpse, "size", 3))){
-				var _sealType = array_find_index(spr.SealDead, sprite_index);
-				if(_sealType >= 0){
-					if(place_meeting(x, y, other)){
-						with(obj_create(x, y, "Seal")){
-							type  = _sealType;
-							skeal = true;
-							//kills = 0; !!! i mean it's only 1 extra kill
-							
-							 // Effects:
-							instance_create(x, y, ReviveFX);
-							sound_play_hit_big(sndNecromancerRevive, 0.2);
+	if(instance_exists(ReviveArea) && (instance_exists(Corpse) || instance_exists(WepPickup))){
+		var _inst = instances_matching_gt(instances_matching_le(ReviveArea, "alarm0", ceil(current_time_scale)), "alarm0", 0);
+		if(array_length(_inst)) with(_inst){
+			 // Skeals:
+			if(place_meeting(x, y, Corpse)){
+				with(instances_meeting(x, y, instances_matching_lt(Corpse, "size", 3))){
+					var _sealType = array_find_index(spr.SealDead, sprite_index);
+					if(_sealType >= 0){
+						if(place_meeting(x, y, other)){
+							with(obj_create(x, y, "Seal")){
+								type  = _sealType;
+								skeal = true;
+								kills = 0;
+								
+								 // Effects:
+								instance_create(x, y, ReviveFX);
+								sound_play_hit_big(sndNecromancerRevive, 0.2);
+							}
+							instance_delete(id);
 						}
-						instance_delete(id);
 					}
 				}
 			}
-		}
-		
-		 // Merged Weapons:
-		if(place_meeting(x, y, WepPickup)){
-			with(instances_meeting(x, y, WepPickup)){
-				if(point_distance(x, y, other.x, other.y - 2) < (other.sprite_width * 0.4)){
-					if(weapon_get_area(wep) >= 0 && wep_raw(wep) != "merge"){
-						var _part = wep_merge_decide(0, GameCont.hard + (2 * curse));
-						if(array_length(_part) >= 2){
-							wep = wep_merge(_part[0], _part[1]);
-							mergewep_indicator = null;
-							
-							 // FX:
-							sound_play_hit_ext(sndNecromancerRevive, 1, 1.8);
-							sound_play_pitchvol(sndGunGun, 0.5 + orandom(0.1), 0.5);
-							sound_play_pitchvol(sprEPickup, 0.5 + orandom(0.1), 0.5);
-							sound_play_hit_ext(sndNecromancerDead, 1.5 + orandom(0.1), 1.2);
-							with(instance_create(x, y + 2, ReviveFX)){
-								sprite_index = spr.PickupRevive; // sprPopoRevive;
-								image_xscale = 0.8;
-								image_yscale = image_xscale;
-								// image_blend = make_color_rgb(100, 255, 50);
-								depth = -2;
+			
+			 // Merged Weapons:
+			if(place_meeting(x, y, WepPickup)){
+				with(instances_meeting(x, y, WepPickup)){
+					if(point_distance(x, y, other.x, other.y - 2) < (other.sprite_width * 0.4)){
+						if(weapon_get_area(wep) >= 0 && wep_raw(wep) != "merge"){
+							var _part = wep_merge_decide(0, GameCont.hard + (2 * curse));
+							if(array_length(_part) >= 2){
+								wep = wep_merge(_part[0], _part[1]);
+								mergewep_indicator = null;
+								
+								 // FX:
+								sound_play_hit_ext(sndNecromancerRevive, 1, 1.8);
+								sound_play_pitchvol(sndGunGun, 0.5 + orandom(0.1), 0.5);
+								sound_play_pitchvol(sprEPickup, 0.5 + orandom(0.1), 0.5);
+								sound_play_hit_ext(sndNecromancerDead, 1.5 + orandom(0.1), 1.2);
+								with(instance_create(x, y + 2, ReviveFX)){
+									sprite_index = spr.PickupRevive; // sprPopoRevive;
+									image_xscale = 0.8;
+									image_yscale = image_xscale;
+									// image_blend = make_color_rgb(100, 255, 50);
+									depth = -2;
+								}
 							}
 						}
 					}
@@ -1824,9 +1792,13 @@
 	
 #define ntte_end_step
 	 // Fish Freaks:
-	if(GameCont.loops > 0 && GameCont.area == area_labs){
-		with(instances_matching(Freak, "fish_freak", null)){
-			fish_freak = chance(1, 7);
+	if(instance_exists(Freak)){
+		var _inst = instances_matching(Freak, "fish_freak", null);
+		if(array_length(_inst)) with(_inst){
+			fish_freak = (
+				area_get_underwater(GameCont.area)
+				|| (GameCont.area == area_labs && GameCont.loops > 0 && chance(1, 7))
+			);
 			if(fish_freak){
 				spr_idle = spr.FishFreakIdle;
 				spr_walk = spr.FishFreakWalk;
@@ -1836,14 +1808,27 @@
 		}
 	}
 	
-#define ntte_dark // Drawing Grays
-	with(instances_matching(CustomObject, "name", "ButtonReviveArea")){
-		draw_circle(x, y, 64 + irandom(2), false);
-	}
-	
-#define ntte_dark_end // Drawing Clear
-	with(instances_matching(CustomObject, "name", "ButtonReviveArea")){
-		draw_circle(x, y, 32 + irandom(2), false);
+#define ntte_dark(_type)
+	switch(_type){
+		
+		case "normal":
+		case "end":
+			
+			var _gray = (_type == "normal");
+			
+			 // Button Revive:
+			if(instance_exists(CustomObject)){
+				var _inst = instances_matching(CustomObject, "name", "ButtonReviveArea");
+				if(array_length(_inst)){
+					var _r = 32 + (32 * _gray);
+					with(_inst){
+						draw_circle(x, y, _r + irandom(2), false);
+					}
+				}
+			}
+			
+			break;
+			
 	}
 	
 	
@@ -1973,7 +1958,6 @@
 #define area_get_back_color(_area)                                                      return  mod_script_call_nc  ('mod', 'telib', 'area_get_back_color', _area);
 #define area_border(_y, _area, _color)                                                  return  mod_script_call_nc  ('mod', 'telib', 'area_border', _y, _area, _color);
 #define area_generate(_area, _sub, _loops, _x, _y, _setArea, _overlapFloor, _scrSetup)  return  mod_script_call_nc  ('mod', 'telib', 'area_generate', _area, _sub, _loops, _x, _y, _setArea, _overlapFloor, _scrSetup);
-#define floor_get(_x, _y)                                                               return  mod_script_call_nc  ('mod', 'telib', 'floor_get', _x, _y);
 #define floor_set(_x, _y, _state)                                                       return  mod_script_call_nc  ('mod', 'telib', 'floor_set', _x, _y, _state);
 #define floor_set_style(_style, _area)                                                  return  mod_script_call_nc  ('mod', 'telib', 'floor_set_style', _style, _area);
 #define floor_set_align(_alignX, _alignY, _alignW, _alignH)                             return  mod_script_call_nc  ('mod', 'telib', 'floor_set_align', _alignX, _alignY, _alignW, _alignH);

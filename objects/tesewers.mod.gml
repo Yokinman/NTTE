@@ -3436,7 +3436,7 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 	);
 	
 	/*
-	 // Block Line of Sight:
+	 // Block Line of Sight (no work in GMS2):
 	if(!instance_exists(my_wall)){
 		var _off = 0;
 		while(!instance_exists(my_wall)){
@@ -3535,10 +3535,10 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 	}
 
 #define CatDoor_hurt(_hitdmg, _hitvel, _hitdir)
-	my_health -= _hitdmg;			// Damage
-	motion_add(_hitdir, _hitvel);	// Knockback
-	nexthurt = current_frame + 6;	// I-Frames
-	sound_play_hit(snd_hurt, 0.3);	// Sound
+	my_health -= _hitdmg;          // Damage
+	motion_add(_hitdir, _hitvel);  // Knockback
+	nexthurt = current_frame + 6;  // I-Frames
+	sound_play_hit(snd_hurt, 0.3); // Sound
 	
 	 // Push Open Force:
 	if(instance_exists(other)){
@@ -5624,84 +5624,127 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 /// GENERAL
 #define ntte_step
 	 // Dissipate Cat Gas Faster:
-	with(instances_matching_lt(instances_matching(ToxicGas, "cat_toxic", true), "speed", 0.1)){
-		growspeed -= random(0.002 * current_time_scale);
-	}
-	
-#define ntte_shadows
-	 // Doors:
-	with(instances_matching(instances_matching(CustomHitme, "name", "CatDoor"), "visible", true)){
-		var	_yscale = 0.5 + (0.5 * max(abs(dcos(image_angle + openang)), abs(dsin(image_angle + openang))));
-		with(surface_setup(name + string(id), null, null, null)){
-			draw_surface_ext(surf, x, y + (h / 2) + (((other.image_number - 1) - (h / 2)) * _yscale), 1 / scale, _yscale / scale, 0, c_white, 1);
+	if(instance_exists(ToxicGas)){
+		var _inst = instances_matching_lt(instances_matching(ToxicGas, "cat_toxic", true), "speed", 0.1);
+		if(array_length(_inst)) with(_inst){
+			growspeed -= random(0.002 * current_time_scale);
 		}
 	}
 	
-	 // Fix Pizza Drain Shadows:
-	with(instances_matching(instances_matching(CustomHitme, "name", "PizzaDrain", "SewerDrain"), "visible", true)){
-		draw_sprite_ext(sprite_index, image_index, x, y - 14, image_xscale, -image_yscale, image_angle, c_white, 1);
+#define ntte_shadows
+	if(instance_exists(CustomHitme)){
+		 // Doors:
+		var _inst = instances_matching(instances_matching(CustomHitme, "name", "CatDoor"), "visible", true);
+		if(array_length(_inst)) with(_inst){
+			var	_yscale = 0.5 + (0.5 * max(abs(dcos(image_angle + openang)), abs(dsin(image_angle + openang))));
+			with(surface_setup(name + string(id), null, null, null)){
+				draw_surface_ext(surf, x, y + (h / 2) + (((other.image_number - 1) - (h / 2)) * _yscale), 1 / scale, _yscale / scale, 0, c_white, 1);
+			}
+		}
+		
+		 // Fix Pizza Drain Shadows:
+		var _inst = instances_matching(instances_matching(CustomHitme, "name", "PizzaDrain", "SewerDrain"), "visible", true);
+		if(array_length(_inst)) with(_inst){
+			draw_sprite_ext(sprite_index, image_index, x, y - 14, image_xscale, -image_yscale, image_angle, c_white, 1);
+		}
 	}
 	
-#define ntte_dark // Drawing Grays
-	 // Cat Light:
-	var _border = 2;
-	with(instances_matching(instances_matching(CustomObject, "name", "CatLight"), "visible", true)){
-		draw_catlight(x, y, w1 + _border, w2 + (3 * (2 * _border)), h1 + (2 * _border), h2 + _border, offset);
-	}
-	
-	 // Manhole Cover:
-	with(instances_matching(instances_matching(CustomObject, "name", "PizzaManholeCover"), "visible", true)){
-		draw_circle(xstart, ystart - 16, 40 + random(2), false);
-	}
-	
-	 // TV:
-	with(instances_matching(TV, "visible", true)){
-		draw_circle(x, y, 64 + random(2), false);
-	}
-	
-	 // Big Bat:
-	with(instances_matching(instances_matching(CustomEnemy, "name", "BatBoss", "CatBoss"), "visible", true)){
-		draw_circle(x, y, 64 + random(2), false);
-	}
-	
-	 // Big Manhole:
-	with(instances_matching(instances_matching(CustomObject, "name", "CatHoleBig"), "visible", true)){
-		draw_circle(x, y, 192 + random(2), false);
-	}
-	
-#define ntte_dark_end // Drawing Clear
-	 // Cat Light:
-	with(instances_matching(instances_matching(CustomObject, "name", "CatLight"), "visible", true)){
-		draw_catlight(x, y, w1, w2, h1, h2, offset);
-	}
-	
-	 // Manhole Cover:
-	with(instances_matching(instances_matching(CustomObject, "name", "PizzaManholeCover"), "visible", true)){
-		var o = 0;
-		if(chance(1, 2)) o = orandom(1);
-		draw_catlight(xstart, ystart - 32, 16, 19, 28, 8, o);
-	}
-	
-	 // TV:
-	with(instances_matching(TV, "visible", true)){
-		var o = orandom(1);
-		draw_catlight(x + 1, y - 6, 12 + abs(o), 48 + o, 48, 8 + o, 0);
-	}
-	
-	 // Big Bat:
-	with(instances_matching(instances_matching(CustomEnemy, "name", "BatBoss", "CatBoss"), "visible", true)){
-		draw_circle(x, y, 28 + random(2), false);
+#define ntte_dark(_type)
+	switch(_type){
+		
+		case "normal":
+		case "end":
+			
+			var _gray = (_type == "normal");
+			
+			if(instance_exists(CustomObject)){
+				 // Cat Light:
+				var _inst = instances_matching(instances_matching(CustomObject, "name", "CatLight"), "visible", true);
+				if(array_length(_inst)){
+					var _border = 2 * _gray;
+					with(_inst){
+						draw_catlight(x, y, w1 + _border, w2 + (6 * _border), h1 + (2 * _border), h2 + _border, offset);
+					}
+				}
+				
+				 // Manhole Cover:
+				var _inst = instances_matching(instances_matching(CustomObject, "name", "PizzaManholeCover"), "visible", true);
+				if(array_length(_inst)){
+					 // Circle:
+					if(_gray){
+						with(_inst){
+							draw_circle(xstart, ystart - 16, 40 + random(2), false);
+						}
+					}
+					
+					 // Hole in Ceiling:
+					else with(_inst){
+						var _off = (
+							chance(1, 2)
+							? orandom(1)
+							: 0
+						);
+						draw_catlight(xstart, ystart - 32, 16, 19, 28, 8, _off);
+					}
+				}
+				
+				 // Boss Manhole:
+				if(_gray){
+					var _inst = instances_matching(instances_matching(CustomObject, "name", "CatHoleBig"), "visible", true);
+					if(array_length(_inst)) with(_inst){
+						draw_circle(x, y, 192 + random(2), false);
+					}
+				}
+			}
+			
+			 // TV:
+			if(instance_exists(TV)){
+				var _inst = instances_matching(TV, "visible", true);
+				if(array_length(_inst)){
+					 // Circle:
+					if(_gray){
+						with(_inst){
+							draw_circle(x, y, 64 + random(2), false);
+						}
+					}
+					
+					 // TV Beam:
+					else with(_inst){
+						var _off = orandom(1);
+						draw_catlight(x + 1, y - 6, 12 + abs(_off), 48 + _off, 48, 8 + _off, 0);
+					}
+				}
+			}
+			
+			 // Big Bat:
+			if(instance_exists(CustomEnemy)){
+				var _inst = instances_matching(instances_matching(CustomEnemy, "name", "BatBoss", "CatBoss"), "visible", true);
+				if(array_length(_inst)){
+					var _r = 28 + (36 * _gray);
+					with(_inst){
+						draw_circle(x, y, _r + random(2), false);
+					}
+				}
+			}
+			
+			break;
 	}
 	
 #define ntte_bloom
 	 // Flame Spark:
-	with(instances_matching(Sweat, "name", "FlameSpark")){
-		draw_sprite_ext(sprite_index, image_index, x, y, image_xscale * 3, image_yscale * 3, image_angle, image_blend, image_alpha * 0.1);
+	if(instance_exists(Sweat)){
+		var _inst = instances_matching(Sweat, "name", "FlameSpark");
+		if(array_length(_inst)) with(_inst){
+			draw_sprite_ext(sprite_index, image_index, x, y, image_xscale * 3, image_yscale * 3, image_angle, image_blend, image_alpha * 0.1);
+		}
 	}
 	
 	 // Gator Statue Flak:
-	with(instances_matching(CustomProjectile, "name", "GatorStatueFlak")){
-		draw_sprite_ext(sprite_index, image_index, x, y, image_xscale * 2, image_yscale * 2, image_angle, image_blend, image_alpha * 0.1);
+	if(instance_exists(CustomProjectile)){
+		var _inst = instances_matching(CustomProjectile, "name", "GatorStatueFlak");
+		if(array_length(_inst)) with(_inst){
+			draw_sprite_ext(sprite_index, image_index, x, y, image_xscale * 2, image_yscale * 2, image_angle, image_blend, image_alpha * 0.1);
+		}
 	}
 	
 	
@@ -5831,7 +5874,6 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 #define area_get_back_color(_area)                                                      return  mod_script_call_nc  ('mod', 'telib', 'area_get_back_color', _area);
 #define area_border(_y, _area, _color)                                                  return  mod_script_call_nc  ('mod', 'telib', 'area_border', _y, _area, _color);
 #define area_generate(_area, _sub, _loops, _x, _y, _setArea, _overlapFloor, _scrSetup)  return  mod_script_call_nc  ('mod', 'telib', 'area_generate', _area, _sub, _loops, _x, _y, _setArea, _overlapFloor, _scrSetup);
-#define floor_get(_x, _y)                                                               return  mod_script_call_nc  ('mod', 'telib', 'floor_get', _x, _y);
 #define floor_set(_x, _y, _state)                                                       return  mod_script_call_nc  ('mod', 'telib', 'floor_set', _x, _y, _state);
 #define floor_set_style(_style, _area)                                                  return  mod_script_call_nc  ('mod', 'telib', 'floor_set_style', _style, _area);
 #define floor_set_align(_alignX, _alignY, _alignW, _alignH)                             return  mod_script_call_nc  ('mod', 'telib', 'floor_set_align', _alignX, _alignY, _alignW, _alignH);

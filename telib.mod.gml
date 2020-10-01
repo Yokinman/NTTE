@@ -4,38 +4,36 @@
 	lag = false;
 	
 	 // Bind Events:
-	lag_bind = {
-		"begin_step" : script_bind("LagBeginStep", CustomBeginStep, script_ref_create(obj_step, "begin_step"), 0, false),
-		"step"       : script_bind("LagStep",      CustomStep,      script_ref_create(obj_step, "step"),       0, false),
-		"end_step"   : script_bind("LagEndStep",   CustomEndStep,   script_ref_create(obj_step, "end_step"),   0, false)
-	};
-	global.portal_pickups_bind = script_bind("PortalPickups", CustomStep,    script_ref_create(portal_pickups_step),  0, false);
-	global.floor_reveal_bind   = script_bind("FloorReveal",   CustomDraw,    script_ref_create(floor_reveal_draw),   -8, false);
-	global.rad_path_bind       = script_bind("RadPath",       CustomEndStep, script_ref_create(rad_path_step),        0, false);
+	lag_bind = ds_map_create();
+	lag_bind[? "begin_step"]   = script_bind("LagBeginStep",  CustomBeginStep, script_ref_create(obj_step, "begin_step"), 0, false);
+	lag_bind[? "step"      ]   = script_bind("LagStep",       CustomStep,      script_ref_create(obj_step, "step"),       0, false);
+	lag_bind[? "end_step"  ]   = script_bind("LagEndStep",    CustomEndStep,   script_ref_create(obj_step, "end_step"),   0, false);
+	global.portal_pickups_bind = script_bind("PortalPickups", CustomStep,      script_ref_create(portal_pickups_step),    0, false);
+	global.floor_reveal_bind   = script_bind("FloorReveal",   CustomDraw,      script_ref_create(floor_reveal_draw),     -8, false);
+	global.rad_path_bind       = script_bind("RadPath",       CustomEndStep,   script_ref_create(rad_path_step),          0, false);
 	
 	 // Object List (Used for cheats mod, basically):
-	ntte_obj_list = {
-		"tegeneral"   : ["AlertIndicator", "BigDecal", "BoneArrow", "BoneSlash", "BoneFX", "BuriedVault", "BuriedShrine", "CustomBullet", "CustomFlak", "CustomShell", "CustomPlasma", "GroundFlameGreen", "Igloo", "MergeFlak", "Pet", "PetRevive", "PetWeaponBecome", "PetWeaponBoss", "PortalBullet", "PortalGuardian", "PortalPrevent", "ReviveNTTE", "SmallGreenExplosion", "TopDecal", "TopObject", "TopTiny", "WallDecal", "WallEnemy"],
-		"tepickups"   : ["Backpack", "Backpacker", "BackpackPickup", "BatChest", "BigIDPDSpawn", "BloodLustPickup", "BoneBigPickup", "BonePickup", "BonusAmmoChest", "BonusAmmoMimic", "BonusAmmoPickup", "BonusHealthChest", "BonusHealthMimic", "BonusHealthPickup", "BuriedVaultChest", "BuriedVaultChestDebris", "BuriedVaultPedestal", "CatChest", "ChestShop", "CursedAmmoChest", "CursedMimic", "CustomChest", "CustomPickup", "HammerHeadPickup", "HarpoonPickup", "OrchidBall", "OrchidChest", "OrchidSkill", "PalaceAltar", "PalankingStatue", "ParrotFeather", "ParrotChester", "Pizza", "PizzaChest", "PizzaStack", "Prompt", "RedAmmoChest", "RedAmmoPickup", "SpiritPickup", "SunkenChest", "SunkenCoin", "VaultFlower", "VaultFlowerSparkle", "WepPickupGrounded", "WepPickupStick"],
-		"tedesert"    : ["BabyScorpion", "BabyScorpionGold", "BanditCamper", "BanditHiker", "BanditTent", "BigCactus", "BigMaggotSpawn", "Bone", "CoastBossBecome", "CoastBoss", "CowSkull", "FlySpin", "VenomBlast", "ScorpionRock", "SilverScorpion", "SilverScorpionDevastator", "SilverScorpionFlak", "VenomFlak", "VenomPellet", "VenomPelletBack", "WantBigMaggot"],
-		"tecoast"     : ["BloomingAssassin", "BloomingAssassinHide", "BloomingBush", "BloomingCactus", "BuriedCar", "ClamShield", "ClamShieldSlash", "CoastBigDecal", "CoastDecal", "CoastDecalCorpse", "Creature", "Diver", "DiverHarpoon", "Gull", "Harpoon", "HarpoonStick", "NetNade", "Palanking", "PalankingDie", "PalankingSlash", "PalankingSlashGround", "PalankingToss", "Palm", "Pelican", "Seal", "SealAnchor", "SealDisc", "SealHeavy", "SealMine", "TrafficCrab", "Trident"],
-		"teoasis"     : ["BubbleBomb", "BubbleExplosion", "BubbleExplosionSmall", "BubbleSlash", "CrabTank", "HammerShark", "HyperBubble", "OasisPetBecome", "Puffer", "SunkenRoom", "SunkenSealSpawn", "WaterStreak"],
-		"tetrench"    : ["Angler", "Eel", "EelSkull", "ElectroPlasma", "ElectroPlasmaImpact", "Jelly", "JellyElite", "Kelp", "LightningDisc", "LightningDiscEnemy", "PitSpark", "PitSquid", "PitSquidArm", "PitSquidBomb", "PitSquidDeath", "QuasarBeam", "QuasarRing", "TeslaCoil", "TopDecalWaterMine", "TrenchFloorChunk", "Vent", "WantEel"],
-		"tesewers"    : ["AlbinoBolt", "AlbinoGator", "AlbinoGrenade", "BabyGator", "Bat", "BatBoss", "BatCloud", "BatDisc", "BatScreech", "BoneGator", /*"BossHealFX",*/ "Cabinet", "Cat", "CatBoss", "CatBossAttack", "CatDoor", "CatDoorDebris", "CatGrenade", "CatHole", "CatHoleBig", "CatHoleOpen", "CatLight", "ChairFront", "ChairSide", "Couch", "GatorStatue", "GatorStatueFlak", "Manhole", "NewTable", "Paper", "PizzaDrain", "PizzaManholeCover", "PizzaRubble", "PizzaTV", "SewerDrain", "SewerRug", "TurtleCool"],
-		"tescrapyard" : ["BoneRaven", "SawTrap", "SludgePool", "TopRaven", "TrapSpin", "Tunneler"],
-		"tecaves"     : ["ChaosHeart", "CrystalBrain", "CrystalBrainDeath", "CrystalClone", "CrystalHeart", "CrystalHeartBullet", "CrystalPropRed", "CrystalPropWhite", "EnergyBatSlash", "InvMortar", "MinerBandit", "Mortar", "MortarPlasma", "NewCocoon", "PlasmaImpactSmall", "RedBullet", "RedExplosion", "RedShank", "RedSlash", "RedSpider", "Spiderling", "TwinOrbital", "VlasmaBullet", "VlasmaCannon", "WallFake", "Warp", "WarpPortal"],
-		"telabs"      : ["Button", "ButtonChest", "ButtonOld", "ButtonPickup", "ButtonReviveArea", "FreakChamber", "MutantVat", "PickupReviveArea", "PopoSecurity", "WallSlide"]
-	};
+	ntte_obj_list = ds_map_create();
+	ntte_obj_list[? "tegeneral"  ] = ["AlertIndicator", "BigDecal", "BigIDPDSpawn", "BoneArrow", "BoneSlash", "BoneFX", "BuriedVault", "BuriedShrine", "CustomBullet", "CustomFlak", "CustomShell", "CustomPlasma", "GroundFlameGreen", "Igloo", "MergeFlak", "Pet", "PetRevive", "PetWeaponBecome", "PetWeaponBoss", "PortalBullet", "PortalGuardian", "PortalPrevent", "ReviveNTTE", "SmallGreenExplosion", "TopDecal", "TopObject", "TopTiny", "WallDecal", "WallEnemy"];
+	ntte_obj_list[? "tepickups"  ] = ["Backpack", "Backpacker", "BackpackPickup", "BatChest", /*"BloodLustPickup",*/ "BoneBigPickup", "BonePickup", "BonusAmmoChest", "BonusAmmoMimic", "BonusAmmoPickup", "BonusHealthChest", "BonusHealthMimic", "BonusHealthPickup", "BuriedVaultChest", "BuriedVaultChestDebris", "BuriedVaultPedestal", "CatChest", "ChestShop", "CursedAmmoChest", "CursedMimic", "CustomChest", "CustomPickup", "HammerHeadPickup", "HarpoonPickup", "OrchidBall", "OrchidChest", "OrchidSkill", "PalaceAltar", "PalankingStatue", "ParrotFeather", "ParrotChester", "Pizza", "PizzaChest", "PizzaStack", "Prompt", "RedAmmoChest", "RedAmmoPickup", "SpiritPickup", "SunkenChest", "SunkenCoin", "VaultFlower", "VaultFlowerSparkle", "WepPickupGrounded", "WepPickupStick"];
+	ntte_obj_list[? "tedesert"   ] = ["BabyScorpion", "BabyScorpionGold", "BanditCamper", "BanditHiker", "BanditTent", "BigCactus", "BigMaggotSpawn", "Bone", "CoastBossBecome", "CoastBoss", "CowSkull", "FlySpin", "VenomBlast", "ScorpionRock", "SilverScorpion", "SilverScorpionDevastator", "SilverScorpionFlak", "VenomFlak", "VenomPellet", "VenomPelletBack", "WantBigMaggot"];
+	ntte_obj_list[? "tecoast"    ] = ["BloomingAssassin", "BloomingAssassinHide", "BloomingBush", "BloomingCactus", "BuriedCar", "ClamShield", "ClamShieldSlash", "CoastBigDecal", "CoastDecal", "CoastDecalCorpse", "Creature", "Diver", "DiverHarpoon", "Gull", "Harpoon", "HarpoonStick", "NetNade", "Palanking", "PalankingDie", "PalankingSlash", "PalankingSlashGround", "PalankingToss", "Palm", "Pelican", "Seal", "SealAnchor", "SealDisc", "SealHeavy", "SealMine", "TrafficCrab", "Trident"];
+	ntte_obj_list[? "teoasis"    ] = ["BubbleBomb", "BubbleExplosion", "BubbleExplosionSmall", "BubbleSlash", "CrabTank", "HammerShark", "HyperBubble", "OasisPetBecome", "Puffer", "SunkenRoom", "SunkenSealSpawn", "WaterStreak"];
+	ntte_obj_list[? "tetrench"   ] = ["Angler", "Eel", "EelSkull", "ElectroPlasma", "ElectroPlasmaImpact", "Jelly", "JellyElite", "Kelp", "LightningDisc", "LightningDiscEnemy", "PitSpark", "PitSquid", "PitSquidArm", "PitSquidBomb", "PitSquidDeath", "QuasarBeam", "QuasarRing", "TeslaCoil", "TopDecalWaterMine", "TrenchFloorChunk", "Vent", "WantEel"];
+	ntte_obj_list[? "tesewers"   ] = ["AlbinoBolt", "AlbinoGator", "AlbinoGrenade", "BabyGator", "Bat", "BatBoss", "BatCloud", "BatDisc", "BatScreech", "BoneGator", /*"BossHealFX",*/ "Cabinet", "Cat", "CatBoss", "CatBossAttack", "CatDoor", "CatDoorDebris", "CatGrenade", "CatHole", "CatHoleBig", "CatHoleOpen", "CatLight", "ChairFront", "ChairSide", "Couch", "GatorStatue", "GatorStatueFlak", "Manhole", "NewTable", "Paper", "PizzaDrain", "PizzaManholeCover", "PizzaRubble", "PizzaTV", "SewerDrain", "SewerRug", "TurtleCool"];
+	ntte_obj_list[? "tescrapyard"] = ["BoneRaven", "SawTrap", "SludgePool", "TopRaven", "TrapSpin", "Tunneler"];
+	ntte_obj_list[? "tecaves"    ] = ["ChaosHeart", "CrystalBrain", "CrystalBrainDeath", "CrystalClone", "CrystalHeart", "CrystalHeartBullet", "CrystalPropRed", "CrystalPropWhite", "EnergyBatSlash", "InvMortar", "MinerBandit", "Mortar", "MortarPlasma", "NewCocoon", "PlasmaImpactSmall", "RedBullet", "RedExplosion", "RedShank", "RedSlash", "RedSpider", "Spiderling", "TwinOrbital", "VlasmaBullet", "VlasmaCannon", "WallFake", "Warp", "WarpPortal"];
+	ntte_obj_list[? "telabs"     ] = ["Button", "ButtonChest", "ButtonOld", "ButtonPickup", "ButtonReviveArea", "FreakChamber", "MutantVat", "PickupReviveArea", "PopoSecurity", "WallSlide"];
 	
 	 // Object Create Event Script References:
-	ntte_obj_scrt = {};
-	for(var i = 0; i < lq_size(ntte_obj_list); i++){
-		var	_modName = lq_get_key(ntte_obj_list, i),
-			_modObjs = lq_get_value(ntte_obj_list, i);
+	ntte_obj_scrt = ds_map_create();
+	with(ds_map_keys(ntte_obj_list)){
+		var	_modName = self,
+			_modObjs = ntte_obj_list[? _modName];
 			
 		with(_modObjs){
 			var _name = self;
-			lq_set(ntte_obj_scrt, _name, script_ref_create_ext("mod", _modName, _name + "_create"));
+			ntte_obj_scrt[? _name] = script_ref_create_ext("mod", _modName, _name + "_create");
 		}
 	}
 	
@@ -60,13 +58,12 @@
 	}
 	
 	 // Object Script Binding:
-	ntte_obj_bind = {
-		"begin_step" : script_bind("ObjectBeginStep", CustomBeginStep, script_ref_create(obj_bind, "begin_step"), 0, true),
-		"step"       : script_bind("ObjectStep",      CustomStep,      script_ref_create(obj_bind, "step"),       0, true),
-		"end_step"   : script_bind("ObjectEndStep",   CustomEndStep,   script_ref_create(obj_bind, "end_step"),   0, true),
-		"draw"       : ds_map_create()
-	};
-	ntte_obj_bind_list = {};
+	ntte_obj_bind      = ds_map_create();
+	ntte_obj_bind_list = ds_map_create();
+	ntte_obj_bind[? "begin_step"] = script_bind("ObjectBeginStep", CustomBeginStep, script_ref_create(obj_bind, "begin_step"), 0, true);
+	ntte_obj_bind[? "step"      ] = script_bind("ObjectStep",      CustomStep,      script_ref_create(obj_bind, "step"),       0, true);
+	ntte_obj_bind[? "end_step"  ] = script_bind("ObjectEndStep",   CustomEndStep,   script_ref_create(obj_bind, "end_step"),   0, true);
+	ntte_obj_bind[? "draw"      ] = ds_map_create();
 	
 	 // Projectile Team Variants:
 	var _teamGrid = [
@@ -120,8 +117,8 @@
 		// Hyper Slug (kinda)
 	];
 	
-	sprite_team_map = ds_map_create();
-	team_sprite_map = ds_map_create();
+	sprite_team_map     = ds_map_create();
+	team_sprite_map     = ds_map_create();
 	team_sprite_obj_map = ds_map_create();
 	
 	with(_teamGrid){
@@ -252,19 +249,20 @@
 	}
 	
 	 // Search for Create Event if Unstored:
-	if(!lq_exists(ntte_obj_scrt, _name) && is_string(_name)){
-		for(var i = 0; i < lq_size(ntte_obj_list); i++){
-			var _modName = lq_get_key(ntte_obj_list, i);
+	if(!ds_map_exists(ntte_obj_scrt, _name) && is_string(_name)){
+		with(ds_map_keys(ntte_obj_list)){
+			var _modName = self;
 			if(mod_script_exists("mod", _modName, _name + "_create")){
-				lq_set(ntte_obj_scrt, _name, script_ref_create_ext("mod", _modName, _name + "_create"));
+				ntte_obj_scrt[? _name] = script_ref_create_ext("mod", _modName, _name + "_create");
+				break;
 			}
 		}
 	}
 	
 	 // Creating Object:
-	if(lq_exists(ntte_obj_scrt, _name)){
+	if(ds_map_exists(ntte_obj_scrt, _name)){
 		 // Call Create Event:
-		var	_scrt = array_combine(lq_get(ntte_obj_scrt, _name), [_x, _y]),
+		var	_scrt = array_combine(ntte_obj_scrt[? _name], [_x, _y]),
 			_inst = script_ref_call(_scrt);
 			
 		if(is_undefined(_inst) || _inst == 0){
@@ -297,8 +295,8 @@
 								
 								 // Auto Script Binding:
 								if(!_isCustom){
-									if(lq_exists(ntte_obj_bind, _event)){
-										var	_bind   = lq_get(ntte_obj_bind, _event),
+									if(ds_map_exists(ntte_obj_bind, _event)){
+										var	_bind   = ntte_obj_bind[? _event],
 											_depth  = _inst.depth,
 											_isDraw = ds_map_valid(_bind);
 											
@@ -323,23 +321,31 @@
 											
 											 // Add to Object List:
 											var _obj     = _inst.object_index,
-												_objList = lq_defget(ntte_obj_bind_list, _event, []);
+												_objList = [];
 												
-											for(var i = _obj; object_exists(i); i = object_get_parent(i)){
-												if(array_exists(_objList, i)){
-													_obj = -1;
-													break;
+											if(ds_map_exists(ntte_obj_bind_list, _event)){
+												_objList = ntte_obj_bind_list[? _event];
+												
+												 // Object/Parents Already in List:
+												for(var i = _obj; object_exists(i); i = object_get_parent(i)){
+													if(array_exists(_objList, i)){
+														_obj = -1;
+														break;
+													}
 												}
 											}
 											if(object_exists(_obj)){
+												 // Remove Children From List:
 												with(_objList){
 													if(object_is_ancestor(self, _obj)){
 														_objList = array_delete_value(_objList, self);
 													}
 												}
+												
+												 // Add:
 												array_push(_objList, _obj);
+												ntte_obj_bind_list[? _event] = _objList;
 											}
-											lq_set(ntte_obj_bind_list, _event, _objList);
 										}
 									}
 								}
@@ -400,8 +406,8 @@
 	else if(is_undefined(_name)){
 		var _list = [];
 		
-		for(var i = 0; i < lq_size(ntte_obj_list); i++){
-			_list = array_combine(_list, lq_get_value(ntte_obj_list, i));
+		with(ds_map_values(ntte_obj_list)){
+			_list = array_combine(_list, self);
 		}
 		
 		return _list;
@@ -414,12 +420,12 @@
 		A script bind controller that calls scripts for NTTE's non-"Custom" objects
 	*/
 	
-	var _objList = lq_defget(ntte_obj_bind_list, _type, []);
-	
-	if(array_length(_objList) > 0){
+	if(ds_map_exists(ntte_obj_bind_list, _type)){
+		var _objList = ntte_obj_bind_list[? _type];
+		
 		if(lag) trace_time();
 		
-		var	_bind    = lq_get(ntte_obj_bind, _type),
+		var	_bind    = ntte_obj_bind[? _type],
 			_isDraw  = ds_map_valid(_bind),
 			_varName = "ntte_bind_" + _type;
 			
@@ -449,18 +455,20 @@
 		}
 		
 		 // Call Scripts:
-		with(_isDraw ? instances_matching(_bind.inst, "visible", true) : _bind.inst){
-			var _scrt = variable_instance_get(self, _varName);
-			if(array_length(_scrt) > 2){
-				mod_script_call(_scrt[0], _scrt[1], _scrt[2]);
+		if(array_length(_bind.inst)){
+			with(_isDraw ? instances_matching(_bind.inst, "visible", true) : _bind.inst){
+				var _scrt = variable_instance_get(self, _varName);
+				if(array_length(_scrt) > 2){
+					mod_script_call(_scrt[0], _scrt[1], _scrt[2]);
+				}
 			}
 		}
 		
 		 // Done, Clear Object List:
-		if(array_length(_bind.inst) <= 0){
+		else{
 			var _clear = true;
 			if(_isDraw){
-				with(ds_map_values(lq_get(ntte_obj_bind, _type))){
+				with(ds_map_values(ntte_obj_bind[? _type])){
 					if(array_length(_bind.inst) > 0){
 						_clear = false;
 						break;
@@ -468,7 +476,7 @@
 				}
 			}
 			if(_clear){
-				lq_set(ntte_obj_bind_list, _type, []);
+				ds_map_delete(ntte_obj_bind_list, _type);
 			}
 		}
 		
@@ -495,7 +503,7 @@
 			
 			 // Call Events:
 			var _inst = instances_matching_ne(_obj, "on_" + _type, null);
-			if(array_length(_inst) > 0){
+			if(array_length(_inst)){
 				trace_time();
 				switch(object_index){
 					case CustomBeginStep : with(_inst) event_perform(ev_step, ev_step_begin);  break;
@@ -533,8 +541,8 @@
 	
 	 // Lag Debugging:
 	if(lag){
-		for(var i = 0; i < lq_size(lag_bind); i++){
-			with(lq_get_value(lag_bind, i).id){
+		with(ds_map_values(lag_bind)){
+			with(id){
 				visible = true;
 			}
 		}
@@ -1361,7 +1369,7 @@
 	}
 	
 	return noone;
-
+	
 #define charm_instance(_inst, _charm)
 	/*
 		Charms or uncharms the given instance(s) and returns a LWO containing their charm-related vars
@@ -1372,158 +1380,15 @@
 			}
 	*/
 	
-	var _instVars = [];
-	
-	with(instances_matching(_inst, "", null)){
-		if("ntte_charm" not in self){
-			ntte_charm = {
-				"charmed"    : false,
-				"target"     : noone,
-				"on_step"    : [],     // Custom object step event
-				"index"      : -1,     // Player who charmed
-				"team"       : -1,     // Original team before charming
-				"time"       : -1,     // Charm duration in frames
-				"time_speed" : 1,      // Charm duration decrement speed
-				"boss"       : false,  // Instance is a boss
-				"kill"       : false,  // Kill when uncharmed (For dudes who were spawned by charmed dudes)
-				"feather"    : false   // Was charmed using feathers
-			};
-		}
-		
-		var _vars = ntte_charm;
-		
-		if(_charm ^^ _vars.charmed){
-			_vars.charmed = _charm;
-			_vars.target  = noone;
-			_vars.index   = -1;
-			_vars.time    = -1;
-			_vars.feather = false;
-			
-			 // Charm:
-			if(_charm){
-				 // Frienderize Team:
-				_vars.team = variable_instance_get(self, "team", -1);
-				if("team" in self){
-					team = 2;
-					
-					 // Teamerize Nearby Projectiles:
-					with(instances_matching(instances_matching(projectile, "creator", id), "team", _vars.team)){
-						if(place_meeting(x, y, other)){
-							team = other.team;
-							if(sprite_get_team(sprite_index) != 3){
-								team_instance_sprite(team, self);
-							}
-						}
-					}
-				}
-				
-				 // Delay Alarms:
-				for(var i = 0; i <= 10; i++){
-					if(alarm_get(i) > 0){
-						alarm_set(i, alarm_get(i) + 1);
-					}
-				}
-				
-				 // Boss Check:
-				_vars.boss = enemy_boss;
-				
-				 // Charm Duration Speed:
-				_vars.time_speed = (_vars.boss ? 2 : 1);
-				
-				 // Necromancer Charm:
-				switch(sprite_index){
-					case sprReviveArea      : sprite_index = spr.AllyReviveArea;      break;
-					case sprNecroReviveArea : sprite_index = spr.AllyNecroReviveArea; break;
-				}
-			}
-			
-			 // Uncharm:
-			else{
-				target = noone;
-				
-				 // I-Frames:
-				if("nexthurt" in self){
-					nexthurt = current_frame + 12;
-				}
-				
-				 // Delay Contact Damage:
-				if("canmelee" in self && canmelee){
-					alarm11 = 30;
-					canmelee = false;
-				}
-				
-				 // Reset Team:
-				if(_vars.team != -1){
-					if(fork()){
-						while("team" not in self && instance_is(self, becomenemy)){
-							wait 0;
-						}
-						if("team" in self){
-							 // Teamerize Nearby Projectiles:
-							with(instances_matching(instances_matching(projectile, "creator", self), "team", team)){
-								if(place_meeting(x, y, other)){
-									team = _vars.team;
-									if(sprite_get_team(sprite_index) != 3){
-										team_instance_sprite(team, self);
-									}
-								}
-							}
-							
-							team = _vars.team;
-							_vars.team = -1;
-						}
-						exit;
-					}
-				}
-				
-				 // Reset Step:
-				if(array_length(_vars.on_step) > 0){
-					on_step = _vars.on_step;
-					_vars.on_step = [];
-				}
-				
-				 // Kill:
-				if(_vars.kill){
-					my_health = 0;
-					sound_play_pitchvol(sndEnemyDie, 2 + orandom(0.3), 3);
-				}
-				
-				 // Effects:
-				else instance_create(x, bbox_top, AssassinNotice);
-				sound_play_pitchvol(sndAssassinGetUp, random_range(1.2, 1.5), 0.5);
-				var _num = 10 * max(variable_instance_get(self, "size", 0), 0.5);
-				for(var a = direction; a < direction + 360; a += (360 / _num)){
-					scrFX(x, y, [a, 3], Dust);
-				}
-			}
-		}
-		
-		array_push(_instVars, _vars);
-	}
-	
-	 // Activate Step:
-	if(_charm){
-		with(mod_variable_get("race", "parrot", "charm_bind").step.id){
-			visible = true;
-		}
-	}
-	
-	 // Return:
-	if(array_length(_instVars) > 0){
-		return (
-			(is_array(_inst) || array_length(_instVars) > 1)
-			? _instVars
-			: _instVars[0]
-		);
-	}
-	
-	return noone;
+	return mod_script_call_nc("race", "parrot", "charm_instance_raw", _inst, _charm);
 	
 #define boss_hp(_hp)
-	var n = 0;
-	for(var i = 0; i < maxp; i++) n += player_is_active(i);
-	return round(_hp * (1 + ((1/3) * GameCont.loops)) * (1 + (0.5 * (n - 1))));
-
+	var _players = 0;
+	for(var i = 0; i < maxp; i++){
+		_players += player_is_active(i);
+	}
+	return round(_hp * (1 + (1/3 * GameCont.loops)) * (1 + (0.5 * (_players - 1))));
+	
 #define boss_intro(_name)
 	/*
 		Plays a given boss's intro and their music
@@ -1743,40 +1608,44 @@
 		visible = false;
 		
 		 // Attract Pickups:
-		if(instance_exists(Player) && !instance_exists(Portal)){
+		if(instance_exists(Pickup) && !instance_exists(Portal) && instance_exists(Player)){
 			var _pluto = skill_get(mut_plutonium_hunger);
 			
 			 // Normal Pickups:
-			var _attractDis = 30 + (40 * _pluto);
-			with(instances_matching([AmmoPickup, HPPickup, RoguePickup], "", null)){
-				var _p = instance_nearest(x, y, Player);
-				if(point_distance(x, y, _p.x, _p.y) >= _attractDis){
-					var	_dis = 6 * current_time_scale,
-						_dir = point_direction(x, y, _p.x, _p.y),
-						_x = x + lengthdir_x(_dis, _dir),
-						_y = y + lengthdir_y(_dis, _dir);
-						
-					if(place_free(_x, y)) x = _x;
-					if(place_free(x, _y)) y = _y;
-				}
-			}
-			
-			 // Rads:
-			var	_attractDis = 80 + (60 * _pluto),
-				_attractDisProto = 170;
-				
-			with(instances_matching([Rad, BigRad], "speed", 0)){
-				var s = instance_nearest(x, y, ProtoStatue);
-				if(distance_to_object(s) >= _attractDisProto || !instance_seen(x, y, s)){
-					if(distance_to_object(Player) >= _attractDis){
-						var	p = instance_nearest(x, y, Player),
-							_dis = 12 * current_time_scale,
-							_dir = point_direction(x, y, p.x, p.y),
+			if(instance_exists(AmmoPickup) || instance_exists(HPPickup) || instance_exists(RoguePickup)){
+				var _attractDis = 30 + (40 * _pluto);
+				with(instances_matching([AmmoPickup, HPPickup, RoguePickup], "", null)){
+					var _p = instance_nearest(x, y, Player);
+					if(point_distance(x, y, _p.x, _p.y) >= _attractDis){
+						var	_dis = 6 * current_time_scale,
+							_dir = point_direction(x, y, _p.x, _p.y),
 							_x = x + lengthdir_x(_dis, _dir),
 							_y = y + lengthdir_y(_dis, _dir);
 							
 						if(place_free(_x, y)) x = _x;
 						if(place_free(x, _y)) y = _y;
+					}
+				}
+			}
+			
+			 // Rads:
+			if(instance_exists(Rad) || instance_exists(BigRad)){
+				var	_attractDis      = 80 + (60 * _pluto),
+					_attractDisProto = 170;
+					
+				with(instances_matching([Rad, BigRad], "speed", 0)){
+					var _proto = instance_nearest(x, y, ProtoStatue);
+					if(distance_to_object(_proto) >= _attractDisProto || !instance_seen(x, y, _proto)){
+						if(distance_to_object(Player) >= _attractDis){
+							var	_p   = instance_nearest(x, y, Player),
+								_dis = 12 * current_time_scale,
+								_dir = point_direction(x, y, _p.x, _p.y),
+								_x   = x + lengthdir_x(_dis, _dir),
+								_y   = y + lengthdir_y(_dis, _dir);
+								
+							if(place_free(_x, y)) x = _x;
+							if(place_free(x, _y)) y = _y;
+						}
 					}
 				}
 			}
@@ -1836,8 +1705,20 @@
 	return (array_find_index(_array, _value) >= 0);
 	
 #define array_count(_array, _value)
+	/*
+		Returns the number of times a given value was found in the given array
+	*/
+	
 	var _count = 0;
-	with(_array) if(self == _value) _count++;
+	
+	if(array_find_index(_array, _value) >= 0){
+		with(_array){
+			if(self == _value){
+				_count++;
+			}
+		}
+	}
+	
 	return _count;
 	
 #define array_flip(_array)
@@ -2448,11 +2329,11 @@
 	*/
 	
 	var _fire = {
-		wep     : _wep,
-		creator : noone,
-		wepheld : false,
-		roids   : false,
-		spec    : false
+		"wep"     : _wep,
+		"creator" : noone,
+		"wepheld" : false,
+		"roids"   : false,
+		"spec"    : false
 	};
 	
 	 // Melee:
@@ -2627,7 +2508,11 @@
 	*/
 	
 	if(skill_get_active(_skill)){
-		if(_skill != mut_heavy_heart || GameCont.wepmuts >= 3){
+		if(
+			_skill != mut_heavy_heart
+			|| skill_get(mut_heavy_heart) != 0
+			|| (GameCont.wepmuts >= 3 && GameCont.wepmuted == false)
+		){
 			if(
 				!is_string(_skill)
 				|| !mod_script_exists("skill", _skill, "skill_avail")
@@ -2726,17 +2611,15 @@
 			_lastViewShk[i] = view_shake[i];
 		}
 		with([BackCont, TopCont]){
-			var	_obj = self,
-				_vars = {};
+			var	_obj  = self,
+				_vars = [];
 				
-			if(instance_exists(_obj)){
-				with(variable_instance_get_names(_obj)){
-					if(array_find_index(["id", "object_index", "bbox_bottom", "bbox_top", "bbox_right", "bbox_left", "image_number", "sprite_yoffset", "sprite_xoffset", "sprite_height", "sprite_width"], self) < 0){
-						lq_set(_vars, self, variable_instance_get(_obj, self));
-					}
+			with(variable_instance_get_names(_obj)){
+				if(array_find_index(["id", "object_index", "bbox_bottom", "bbox_top", "bbox_right", "bbox_left", "image_number", "sprite_yoffset", "sprite_xoffset", "sprite_height", "sprite_width"], self) < 0){
+					array_push(_vars, [self, variable_instance_get(_obj, self)]);
 				}
-				array_push(_lastObjVars, [_obj, _vars]);
 			}
+			array_push(_lastObjVars, [_obj, _vars]);
 		}
 		
 		 // Fix Ghost Collision:
@@ -2984,22 +2867,29 @@
 			GameCont.loops   = _lastLoops;
 			background_color = _lastBackgroundColor;
 			with(_lastObjVars){
-				var	_obj = self[0],
+				var	_obj  = self[0],
 					_vars = self[1];
 					
 				with(_obj){
-					for(var i = 0; i < lq_size(_vars); i++){
-						variable_instance_set(self, lq_get_key(_vars, i), lq_get_value(_vars, i));
+					with(_vars){
+						variable_instance_set(other, self[0], self[1]);
 					}
 				}
 			}
 		}
 		with(_lastObjVars){
-			var	_obj = self[0],
+			var	_obj  = self[0],
 				_vars = self[1];
 				
-			if(_obj == TopCont && "fogscroll" in _vars){
-				with(_obj) fogscroll = _vars.fogscroll;
+			if(_obj == TopCont){
+				with(_vars){
+					if(self[0] == "fogscroll"){
+						with(_obj){
+							variable_instance_set(self, other[0], other[1]);
+						}
+						break;
+					}
+				}
 			}
 		}
 		
@@ -3532,18 +3422,18 @@
 
 #define floor_reveal(_x1, _y1, _x2, _y2, _time)
 	var _reveal = {
-		creator     : global.floor_reveal_bind.id,
-		x1          : _x1,
-		y1          : _y1,
-		x2          : _x2,
-		y2          : _y2,
-		ox          : 0,
-		oy          : -8,
-		time        : _time,
-		time_max    : _time,
-		color       : background_color,
-		flash       : true,
-		flash_color : c_white
+		"creator"     : global.floor_reveal_bind.id,
+		"x1"          : _x1,
+		"y1"          : _y1,
+		"x2"          : _x2,
+		"y2"          : _y2,
+		"ox"          : 0,
+		"oy"          : -8,
+		"time"        : _time,
+		"time_max"    : _time,
+		"color"       : background_color,
+		"flash"       : true,
+		"flash_color" : c_white
 	};
 	
 	 // Add to List:
@@ -3590,75 +3480,6 @@
 	}
 	
 	if(lag) trace_time(script[2]);
-	
-#define floor_get(_x, _y)
-	 // Find Floor:
-	with(instances_matching_le(instances_matching_ge(instances_matching_le(instances_matching_ge(Floor, "bbox_right", _x), "bbox_left", _x), "bbox_bottom", _y), "bbox_top", _y)){
-		return id;
-	}
-
-	 // Default to LWO Floor:
-	return {
-		x					: _x,
-		y					: _y,
-		xprevious			: _x,
-		yprevious			: _y,
-		xstart				: _x,
-		ystart				: _y,
-		hspeed				: 0,
-		vspeed				: 0,
-		direction			: 0,
-		speed				: 0,
-		friction			: 0,
-		gravity				: 0,
-		gravity_direction	: 270,
-		visible				: true,
-		sprite_index		: -1,
-		sprite_width		: 0,
-		sprite_height		: 0,
-		sprite_xoffset		: 0,
-		sprite_yoffset		: 0,
-		image_number		: 1,
-		image_index			: 0,
-		image_speed			: 0,
-		depth				: 10,
-		image_xscale		: 1,
-		image_yscale		: 1,
-		image_angle			: 0,
-		image_alpha			: 1,
-		image_blend			: c_white,
-		bbox_left			: _x,
-		bbox_right			: _x,
-		bbox_top			: _y,
-		bbox_bottom			: _y,
-		object_index		: Floor,
-		id					: noone,
-		solid				: false,
-		persistent			: false,
-		mask_index			: mskFloor,
-		image_speed_raw		: 0,
-		hspeed_raw			: 0,
-		vspeed_raw			: 0,
-		speed_raw			: 0,
-		friction_raw		: 0,
-		gravity_raw			: 0,
-		alarm0				: -1,
-		alarm1				: -1,
-		alarm2				: -1,
-		alarm3				: -1,
-		alarm4				: -1,
-		alarm5				: -1,
-		alarm6				: -1,
-		alarm7				: -1,
-		alarm8				: -1,
-		alarm9				: -1,
-		alarm10				: -1,
-		alarm11				: -1,
-		styleb				: false,
-		traction			: 0.45,
-		area				: GameCont.area,
-		material			: 0
-	};
 	
 #define floor_set_style(_style, _area)
 	global.floor_style = _style;
@@ -4147,15 +3968,15 @@
 	
 	 // Done:
 	return {
-		floors : _floors,
-		x      : (_x1 + _x2) / 2,
-		y      : (_y1 + _y2) / 2,
-		x1     : _x1,
-		y1     : _y1,
-		x2     : _x2,
-		y2     : _y2,
-		xstart : _sx,
-		ystart : _sy
+		"floors" : _floors,
+		"x"      : (_x1 + _x2) / 2,
+		"y"      : (_y1 + _y2) / 2,
+		"x1"     : _x1,
+		"y1"     : _y1,
+		"x2"     : _x2,
+		"y2"     : _y2,
+		"xstart" : _sx,
+		"ystart" : _sy
 	};
 	
 #define floor_room(_spawnX, _spawnY, _spawnDis, _spawnFloor, _w, _h, _type, _dirOff, _floorDis)
@@ -5137,7 +4958,8 @@
 		 // Auto-set Stuff:
 		if(instance_exists(self)){
 			with(prompt) if(text == ""){
-				text = `@2(${other.spr_icon})` + other.pet;
+				icon = other.spr_icon;
+				text = `@2(${icon})` + other.pet;
 			}
 			if(sprite_index == spr.PetParrotIdle) sprite_index = spr_idle;
 			if(maxhealth > 0 && my_health == 0) my_health = maxhealth;
@@ -5943,10 +5765,10 @@
 			if(array_find_index(other.inst, self) < 0){
 				array_push(other.inst, self);
 				array_push(other.vars, {
-					targ     : _target,
-					path     : [],
-					can_path : true,
-					heal     : 0
+					"targ"     : _target,
+					"path"     : [],
+					"can_path" : true,
+					"heal"     : 0
 				});
 			}
 		}
@@ -6232,7 +6054,7 @@
 													for(var i = 0; i < array_length(flak); i++){
 														flak[i] = {
 															object_index : EnemyBullet3,
-															speed : random_range(9, 12)
+															speed        : random_range(9, 12)
 														};
 													}
 													break;

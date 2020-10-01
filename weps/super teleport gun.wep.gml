@@ -85,7 +85,7 @@
 	
 	 // Portal Bullet Control:
 	_wep.inst = instances_matching(_wep.inst, "", null);
-	if(array_length(_wep.inst) > 0){
+	if(array_length(_wep.inst)){
 		 // Dynamic Reload:
 		wep_set(_primary, "reload",    max(wep_get(_primary, "reload", 0), weapon_get_load(_wep)));
 		wep_set(_primary, "can_shoot", false);
