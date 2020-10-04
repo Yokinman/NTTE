@@ -269,11 +269,17 @@
 				 // Lay Flat:
 				if(other.area == area_scrapyards){
 					depth = -6;
-					with(SubTopCont){
-						with(instance_create(0, 0, GameObject)){
-							instance_change(SubTopCont, true);
+					if(fork()){
+						wait 0;
+						with(SubTopCont){
+							with(instance_create(0, 0, TopCont)){
+								darkness = true;
+								event_perform(ev_other, ev_room_end);
+								instance_destroy();
+							}
+							instance_destroy();
 						}
-						instance_destroy();
+						exit;
 					}
 				}
 				

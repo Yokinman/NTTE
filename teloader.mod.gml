@@ -287,7 +287,6 @@
 			_text  = "",
 			_index = 0;
 			
-		_fileText = string_replace_all(_fileText, chr(9),            " ");
 		_fileText = string_replace_all(_fileText, chr(13) + chr(10), chr(10));
 		_fileText = string_replace_all(_fileText, chr(10),           chr(13) + chr(10));
 		
@@ -295,7 +294,7 @@
 			var _line = self;
 			
 			 // New Changelog:
-			if(_line != "" && string_char_at(_line, 1) != " "){
+			if(_line != "" && string_char_at(_line, 1) != chr(9)){
 				if(_name != ""){
 					changelog_add(_name, _text);
 				}
@@ -347,6 +346,23 @@
 				
 				wait 10;
 				
+				 // Unload Mods:
+				with(global.load.list){
+					var	_path      = self[0],
+						_pathSplit = string_split(_path, "/"),
+						_fileSplit = string_split(_pathSplit[array_length(_pathSplit) - 1], ".");
+						
+					if(array_length(_fileSplit) >= 3){
+						var	_type = _fileSplit[array_length(_fileSplit) - 2],
+							_name = array_join(array_slice(_fileSplit, 0, array_length(_fileSplit) - 2), ".");
+							
+						if(mod_exists(_type, _name)){
+							mod_unload(_path);
+						}
+					}
+				}
+				
+				 // Load Mods:
 				with(global.load.list){
 					var	_path = self[0],
 						_wait = self[1];
@@ -1667,13 +1683,14 @@
 		with(string_split(_text, chr(13) + chr(10))){
 			var	_textList = [],
 				_raw      = string_delete_nt(self),
+				_rawSpace = string_replace_all(_raw, chr(9), " "),
 				_font     = fntChat,
-				_type     = string_copy(_raw, 1, string_pos(" ", _raw + " ") - 1),
+				_type     = string_copy(_raw, 1, string_pos(" ", _rawSpace + " ") - 1),
 				_title    = false,
 				_indent   = "";
 				
 			 // Determine Line Type (Filter):
-			if(_raw != "" && string_letters(_type) == ""){
+			if(_raw != "" && string_lettersdigits(_type) == ""){
 				if(_type == ""){
 					_type = _lastType;
 				}
@@ -1681,7 +1698,6 @@
 					lq_set(_filter, _type, true);
 				}
 			}
-			else _type = "";
 			_lastType = _type;
 			
 			 // Title Line:
@@ -1690,15 +1706,15 @@
 					_title = true;
 					_font  = fntM;
 				}
-			}
+			}	
 			
 			 // Determine Line Wrapping Indent:
 			for(var i = 1; i <= string_length(_raw); i++){
-				if(string_char_at(_raw, i) == " "){
-					_indent += " ";
+				if(string_char_at(_rawSpace, i) == " "){
+					_indent += string_char_at(_raw, i);
 				}
 				else{
-					var _add = string_copy(_raw, 1, string_pos(" ", string_delete(_raw, 1, string_length(_indent)) + " "));
+					var _add = string_copy(_raw, 1, string_pos(" ", string_delete(_rawSpace, 1, string_length(_indent)) + " "));
 					if(string_letters(_add) == ""){
 						_indent += _add;
 					}
@@ -1706,8 +1722,8 @@
 				}
 			}
 			for(var i = 1 + string_length(_indent); i <= string_length(_raw); i++){
-				if(string_char_at(_raw, i) == " "){
-					_indent += " ";
+				if(string_char_at(_rawSpace, i) == " "){
+					_indent += string_char_at(_raw, i);
 				}
 				else break;
 			}
@@ -1797,15 +1813,17 @@
 					
 					 // Add Words:
 					if(_add != ""){
+						_add = string_replace_all(_add, chr(9), chr(9) + " ");
 						if(_formatIndex < array_length(_formatSplit) - 1){
 							if(string_char_at(_add, string_length(_add)) == " "){
 								_add = string_copy(_add, 1, string_length(_add) - 1);
 							}
 						}
 						with(string_split(_add, " ")){
+							var _tab = (string_char_at(self, string_length(self)) == chr(9));
 							array_push(_textList, {
-								"text"   : self,
-								"space"  : 1,
+								"text"   : (_tab ? string_copy(self, 1, string_length(self) - 1) : self),
+								"space"  : (_tab ? 2 : 1),
 								"width"  : 0,
 								"height" : 0
 							});
@@ -1917,12 +1935,23 @@
 				other.filter = filter;
 				with(list){
 					if(lq_defget(other.filter, type, true)){
-						var	_text   = "",
-							_font   = font,
-							_title  = title,
-							_indent = indent;
+						var	_text    = "",
+							_font    = font,
+							_title   = title,
+							_indent  = "",
+							_tabSize = 3;
 							
 						draw_set_font(_font);
+						
+						 // Generate Indentation Text:
+						for(var i = 1; i <= string_length(indent); i++){
+							var _char = string_char_at(indent, i);
+							if(_char == chr(9)){
+								var _tabLevel = string_width(_indent) / (string_width(" ") * _tabSize);
+								_char = string_repeat(" ", ceil(_tabSize * ((floor(_tabLevel) + 1) - _tabLevel)));
+							}
+							_indent += _char;
+						}
 						
 						 // Line Wrapping:
 						var	_line       = "",
@@ -1940,9 +1969,20 @@
 									_lineHeight = 0;
 								}
 							}
-							
-							_line += _lineAdd + string_repeat(" ", space);
 							_lineHeight = max(_height, _lineHeight);
+							
+							 // Add:
+							_line += _lineAdd;
+							switch(space){
+								case 1: // Space
+									_line += " ";
+									break;
+									
+								case 2: // Tab
+									var _tabLevel = string_width(string_delete_nt(_line)) / (string_width(" ") * _tabSize);
+									_line += string_repeat(" ", ceil(_tabSize * ((floor(_tabLevel) + 1) - _tabLevel)));
+									break;
+							}
 						}
 						
 						_text += string_repeat("#", _lineHeight) + _line + string_repeat("#", _lineHeight);

@@ -1270,11 +1270,11 @@
 #define SunkenRoom_create(_x, _y)
 	with(instance_create(_x, _y, CustomObject)){
 		 // Vars:
-		mask_index = mskFloor;
+		mask_index   = mskFloor;
 		image_xscale = 1;
 		image_yscale = 1;
-		floors = [];
-		size = 1;
+		floors       = [];
+		size         = 1;
 		
 		return id;
 	}
@@ -1302,11 +1302,11 @@
 			
 			 // Tunnel to Main Level:
 			if(_tunnel){
-				var	_x = bbox_center_x,
-					_y = bbox_center_y,
-					_spawnX = 10016,
-					_spawnY = 10016,
-					_tunnelSize = size,
+				var	_x           = bbox_center_x,
+					_y           = bbox_center_y,
+					_spawnX      = 10016,
+					_spawnY      = 10016,
+					_tunnelSize  = size,
 					_tunnelFloor = [];
 					
 				 // Get Position of Oldest Floor & Sort Floors by Closest First:

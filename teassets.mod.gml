@@ -1456,6 +1456,12 @@
 			BatChestBigCursedOpen = sprite(p + "sprBatChestBigCursedOpen", 1, 12, 12);
 			CatChestOpen          = sprite(p + "sprCatChestOpen",          1, 10, 10);
 			
+			 // Cat Crates:
+			WallCrateBot = sprite(p + "sprWallCrateBot", 2,  2,  2);
+			WallCrateTop = sprite(p + "sprWallCrateTop", 4,  4,  4);
+			WallCrateOut = sprite(p + "sprWallCrateTop", 4,  4, 12);
+			FloorCrate   = sprite(p + "sprFloorCrate",   1, 18, 18);
+			
 			 // Bone:
 			BonePickup    = [sprite(p + "sprBonePickup0",    1, 4, 4, shn8),
 			                 sprite(p + "sprBonePickup1",    1, 4, 4, shn8),

@@ -115,13 +115,13 @@
 	 // Secret Chest Room:
 	if(variable_instance_get(GameCont, "sunkenchests", 0) <= GameCont.loops){
 		with(instance_random(Floor)){
-			var	_x = bbox_center_x,
-				_y = bbox_center_y,
-				_w = 3,
-				_h = 3,
-				_type = "round",
+			var	_x        = bbox_center_x,
+				_y        = bbox_center_y,
+				_w        = 3,
+				_h        = 3,
+				_type     = "round",
 				_dirStart = random(360),
-				_dirOff = [30, 60],
+				_dirOff   = [30, 60],
 				_floorDis = 64;
 				
 			with(floor_room_create(_x, _y, _w, _h, _type, _dirStart, _dirOff, _floorDis)){

@@ -3003,7 +3003,7 @@
 		return 3;
 	}
 	
-	return 0;
+	return 1;
 	
 #define area_get_secret(_area)
 	/*

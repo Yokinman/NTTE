@@ -1899,219 +1899,241 @@
 		}
 		
 		 // Take Item:
+		var _p = noone;
 		if(instance_exists(prompt)){
-			var p = player_find(prompt.pick);
-			if(instance_exists(p)){
-				var	_x = x,
-					_y = y,
-					_num = num,
-					_numDec = 1;
+			_p = player_find(prompt.pick);
+		}
+		if(!instance_exists(_p) && place_meeting(x, y, PortalShock)){
+			with(instances_meeting(x, y, PortalShock)){
+				if(place_meeting(x, y, other)){
+					var	_disMax  = infinity,
+						_nearest = other;
+						
+					with(instances_meeting(x, y, instances_matching_gt(instances_matching(other.object_index, "name", other.name), "open", 0))){
+						var _dis = point_distance(x, y, other.x, other.y);
+						if(_dis < _disMax){
+							_disMax = _dis;
+							_nearest = id;
+						}
+					}
 					
-				 // Spawn From ChestOpen:
-				if(instance_exists(creator)){
-					_x = creator.x;
-					_y = creator.y - 4;
-				}
-				
-				 // Ambidextrous:
-				if(type == ChestShop_wep){
-					_num += ultra_get("steroids", 1);
-				}
-				
-				while(_num > 0){
-					_numDec = 1;
-					switch(type){
-						case ChestShop_basic:
-							switch(drop){
-								case "ammo":
-									instance_create(_x + orandom(2), _y + orandom(2), AmmoPickup);
-									break;
-									
-								case "health":
-									instance_create(_x + orandom(2), _y + orandom(2), HPPickup);
-									break;
-									
-								case "rads":
-									_numDec = _num;
-									with(rad_drop(_x, _y, _num, random(360), 4)){
-										depth--;
-									}
-									break;
-									
-								case "ammo_chest":
-									instance_create(_x, _y - 2, AmmoChest);
-									repeat(3) scrFX(_x, _y, [90 + orandom(60), 4], Dust);
-									instance_create(_x, _y, FXChestOpen);
-									sound_play_pitchvol(sndChest, 0.6 + random(0.2), 3);
-									break;
-									
-								case "health_chest":
-									instance_create(_x, _y - 2, HealthChest);
-									repeat(3) scrFX(_x, _y, [90 + orandom(60), 4], Dust);
-									instance_create(_x, _y, FXChestOpen);
-									sound_play_pitchvol(sndHealthChest, 0.8 + random(0.2), 1.5);
-									break;
-									
-								case "rads_chest":
-									with(instance_create(_x, _y - 6, RadChest)){
-										spr_idle = sprRadChestBig;
-										spr_hurt = sprRadChestBigHurt;
-										spr_dead = sprRadChestBigDead;
-										instance_create(x, y, ExploderExplo);
-									}
-									sound_play_pitch(sndRadMaggotDie, 0.6 + random(0.2));
-									break;
-									
-								case "bonus_ammo":
-									with(obj_create(_x, _y, "BonusAmmoPickup")) pull_delay = 0;
-									instance_create(_x, _y, GunWarrantEmpty);
-									break;
-									
-								case "bonus_ammo_chest":
-									obj_create(_x, _y - 2, "BonusAmmoChest");
-									repeat(3) scrFX(_x, _y, [90 + orandom(60), 4], Dust);
-									instance_create(_x, _y, GunWarrantEmpty);
-									sound_play_pitchvol(sndChest, 0.6 + random(0.2), 3);
-									break;
-									
-								case "bonus_health":
-									with(obj_create(_x, _y, "BonusHealthPickup")) pull_delay = 0;
-									instance_create(_x, _y, GunWarrantEmpty);
-									break;
-									
-								case "bonus_health_chest":
-									obj_create(_x, _y - 2, "BonusHealthChest");
-									repeat(3) scrFX(_x, _y, [90 + orandom(60), 4], Dust);
-									instance_create(_x, _y, GunWarrantEmpty);
-									sound_play_pitchvol(sndHealthChest, 0.8 + random(0.2), 1.5);
-									break;
-									
-								case "rogue":
-									with(instance_create(_x + orandom(2), _y + orandom(2), RoguePickup)){
-										motion_add(point_direction(x, y, p.x, p.y), 3);
-									}
-									break;
-									
-								case "parrot":
-									_numDec = _num;
-									with(obj_create(_x, _y, "ParrotChester")){
-										num = _num;
-									}
-									break;
-									
-								case "infammo":
-									_numDec = _num;
-									with(p){
-										infammo = _num;
-										reload = max(reload, 1);
-									}
-									break;
-									
-								case "hammerhead":
-									obj_create(_x, _y, "HammerHeadPickup");
-									instance_create(_x, _y, Hammerhead);
-									break;
-									
-								case "spirit":
-									obj_create(_x, _y, "SpiritPickup");
-									instance_create(_x, _y, ImpactWrists);
-									break;
-									
-								case "bone":
-									with(instance_create(_x, _y, WepPickup)){
-										motion_set(point_direction(x, y, p.x, p.y) + orandom(8), 4);
-										wep  = "crabbone";
-										ammo = true;
-									}
-									instance_create(_x, _y, Dust);
-									sound_play_pitchvol(sndBloodGamble, 0.8, 1);
-									break;
-									
-								case "bones":
-									_numDec = ((_num > 10) ? 10 : 1);
-									with(obj_create(_x, _y, ((_num > 10) ? "BoneBigPickup" : "BonePickup"))){
-										motion_set(random(360), 3 + random(1));
-									}
-									break;
-									
-								case "soda":
-									with(instance_create(_x, _y, WepPickup)){
-										motion_set(point_direction(x, y, p.x, p.y) + orandom(8), 5);
-										wep  = other.soda;
-										ammo = true;
-									}
-									repeat(16) with(instance_create(_x, _y, Shell)){
-										sprite_index = sprSodaCan;
-										image_index = irandom(image_number - 1);
-										image_speed = 0;
-										depth = -1;
-										motion_add(random(360), 2 + random(3));
-									}
-									sound_play_pitch(sndSodaMachineBreak, 1 + orandom(0.3));
-									break;
-									
-								case "turret":
-									with(instance_create(_x, _y - 4, Turret)){
-										x = xstart;
-										y = ystart;
-										maxhealth *= 2;
-										my_health = maxhealth;
-										depth = -3;
-										
-										with(charm_instance(id, true)){
-											time = 900;
-											kill = true;
-										}
-									}
-									break;
-							}
-							
-							 // Effects:
-							instance_create(_x, _y, WepSwap);
-							sound_play_pitchvol(sndGunGun,    1.2 + random(0.4), 0.5);
-							sound_play_pitchvol(sndAmmoChest, 0.5 + random(0.2), 0.8);
-							break;
-							
-						case ChestShop_wep:
-							with(instance_create(_x, _y, WepPickup)){
-								motion_set(point_direction(x, y, p.x, p.y) + orandom(8), 5);
-								wep   = other.drop;
-								curse = other.curse;
-								ammo  = true;
-							}
-							
-							 // Effects:
-							sound_play(weapon_get_swap(drop));
-							sound_play_pitchvol(sndGunGun,           0.8 + random(0.4), 0.6);
-							sound_play_pitchvol(sndPlasmaBigExplode, 0.6 + random(0.2), 0.8);
-							if(curse){
-								sound_play_pitchvol(sndCursedPickup, 1 + orandom(0.2), 1.4);
-							}
-							instance_create(_x, _y, GunGun);
-							break;
+					if(_nearest == other){
+						_p = instance_nearest(other.x, other.y, Player);
+						break;
 					}
-					_num -= _numDec;
 				}
-
-				instance_create(p.x, p.y, PopupText).text = text;
-				instance_create(p.x, p.y, PopupText).text = desc;
-
-				 // Sounds:
-				sound_play_pitchvol(sndGammaGutsProc, 1.4 + random(0.1), 0.6);
-
-				 // Remove other options:
-				with(instances_matching(instances_matching(object_index, "name", name), "creator", creator)){
-					if(--open <= 0) open_state += random(1/3);
-				}
-				open_state = 3/4;
-				open = 0;
+			}
+		}
+		if(instance_exists(_p)){
+			var	_x = x,
+				_y = y,
+				_num = num,
+				_numDec = 1;
 				
-				 // Crown Time:
-				if(crown_current == "crime"){
-					with(instances_matching(Crown, "ntte_crown", crown_current)){
-						enemy_time = 30;
-						enemies += (1 + GameCont.loops) + irandom(min(3, GameCont.hard - 1));
-					}
+			 // Spawn From ChestOpen:
+			if(instance_exists(creator)){
+				_x = creator.x;
+				_y = creator.y - 4;
+			}
+			
+			 // Ambidextrous:
+			if(type == ChestShop_wep){
+				_num += ultra_get("steroids", 1);
+			}
+			
+			while(_num > 0){
+				_numDec = 1;
+				switch(type){
+					case ChestShop_basic:
+						switch(drop){
+							case "ammo":
+								instance_create(_x + orandom(2), _y + orandom(2), AmmoPickup);
+								break;
+								
+							case "health":
+								instance_create(_x + orandom(2), _y + orandom(2), HPPickup);
+								break;
+								
+							case "rads":
+								_numDec = _num;
+								with(rad_drop(_x, _y, _num, random(360), 4)){
+									depth--;
+								}
+								break;
+								
+							case "ammo_chest":
+								instance_create(_x, _y - 2, AmmoChest);
+								repeat(3) scrFX(_x, _y, [90 + orandom(60), 4], Dust);
+								instance_create(_x, _y, FXChestOpen);
+								sound_play_pitchvol(sndChest, 0.6 + random(0.2), 3);
+								break;
+								
+							case "health_chest":
+								instance_create(_x, _y - 2, HealthChest);
+								repeat(3) scrFX(_x, _y, [90 + orandom(60), 4], Dust);
+								instance_create(_x, _y, FXChestOpen);
+								sound_play_pitchvol(sndHealthChest, 0.8 + random(0.2), 1.5);
+								break;
+								
+							case "rads_chest":
+								with(instance_create(_x, _y - 6, RadChest)){
+									spr_idle = sprRadChestBig;
+									spr_hurt = sprRadChestBigHurt;
+									spr_dead = sprRadChestBigDead;
+									instance_create(x, y, ExploderExplo);
+								}
+								sound_play_pitch(sndRadMaggotDie, 0.6 + random(0.2));
+								break;
+								
+							case "bonus_ammo":
+								with(obj_create(_x, _y, "BonusAmmoPickup")) pull_delay = 0;
+								instance_create(_x, _y, GunWarrantEmpty);
+								break;
+								
+							case "bonus_ammo_chest":
+								obj_create(_x, _y - 2, "BonusAmmoChest");
+								repeat(3) scrFX(_x, _y, [90 + orandom(60), 4], Dust);
+								instance_create(_x, _y, GunWarrantEmpty);
+								sound_play_pitchvol(sndChest, 0.6 + random(0.2), 3);
+								break;
+								
+							case "bonus_health":
+								with(obj_create(_x, _y, "BonusHealthPickup")) pull_delay = 0;
+								instance_create(_x, _y, GunWarrantEmpty);
+								break;
+								
+							case "bonus_health_chest":
+								obj_create(_x, _y - 2, "BonusHealthChest");
+								repeat(3) scrFX(_x, _y, [90 + orandom(60), 4], Dust);
+								instance_create(_x, _y, GunWarrantEmpty);
+								sound_play_pitchvol(sndHealthChest, 0.8 + random(0.2), 1.5);
+								break;
+								
+							case "rogue":
+								with(instance_create(_x + orandom(2), _y + orandom(2), RoguePickup)){
+									motion_add(point_direction(x, y, _p.x, _p.y), 3);
+								}
+								break;
+								
+							case "parrot":
+								_numDec = _num;
+								with(obj_create(_x, _y, "ParrotChester")){
+									num = _num;
+								}
+								break;
+								
+							case "infammo":
+								_numDec = _num;
+								with(_p){
+									infammo = _num;
+									reload = max(reload, 1);
+								}
+								break;
+								
+							case "hammerhead":
+								obj_create(_x, _y, "HammerHeadPickup");
+								instance_create(_x, _y, Hammerhead);
+								break;
+								
+							case "spirit":
+								obj_create(_x, _y, "SpiritPickup");
+								instance_create(_x, _y, ImpactWrists);
+								break;
+								
+							case "bone":
+								with(instance_create(_x, _y, WepPickup)){
+									motion_set(point_direction(x, y, _p.x, _p.y) + orandom(8), 4);
+									wep  = "crabbone";
+									ammo = true;
+								}
+								instance_create(_x, _y, Dust);
+								sound_play_pitchvol(sndBloodGamble, 0.8, 1);
+								break;
+								
+							case "bones":
+								_numDec = ((_num > 10) ? 10 : 1);
+								with(obj_create(_x, _y, ((_num > 10) ? "BoneBigPickup" : "BonePickup"))){
+									motion_set(random(360), 3 + random(1));
+								}
+								break;
+								
+							case "soda":
+								with(instance_create(_x, _y, WepPickup)){
+									motion_set(point_direction(x, y, _p.x, _p.y) + orandom(8), 5);
+									wep  = other.soda;
+									ammo = true;
+								}
+								repeat(16) with(instance_create(_x, _y, Shell)){
+									sprite_index = sprSodaCan;
+									image_index = irandom(image_number - 1);
+									image_speed = 0;
+									depth = -1;
+									motion_add(random(360), 2 + random(3));
+								}
+								sound_play_pitch(sndSodaMachineBreak, 1 + orandom(0.3));
+								break;
+								
+							case "turret":
+								with(instance_create(_x, _y - 4, Turret)){
+									x = xstart;
+									y = ystart;
+									maxhealth *= 2;
+									my_health = maxhealth;
+									depth = -3;
+									
+									with(charm_instance(id, true)){
+										time = 900;
+										kill = true;
+									}
+								}
+								break;
+						}
+						
+						 // Effects:
+						instance_create(_x, _y, WepSwap);
+						sound_play_pitchvol(sndGunGun,    1.2 + random(0.4), 0.5);
+						sound_play_pitchvol(sndAmmoChest, 0.5 + random(0.2), 0.8);
+						break;
+						
+					case ChestShop_wep:
+						with(instance_create(_x, _y, WepPickup)){
+							motion_set(point_direction(x, y, _p.x, _p.y) + orandom(8), 5);
+							wep   = other.drop;
+							curse = other.curse;
+							ammo  = true;
+						}
+						
+						 // Effects:
+						sound_play(weapon_get_swap(drop));
+						sound_play_pitchvol(sndGunGun,           0.8 + random(0.4), 0.6);
+						sound_play_pitchvol(sndPlasmaBigExplode, 0.6 + random(0.2), 0.8);
+						if(curse){
+							sound_play_pitchvol(sndCursedPickup, 1 + orandom(0.2), 1.4);
+						}
+						instance_create(_x, _y, GunGun);
+						break;
+				}
+				_num -= _numDec;
+			}
+			
+			instance_create(x, y, PopupText).text = text;
+			instance_create(x, y, PopupText).text = desc;
+			
+			 // Sounds:
+			sound_play_pitchvol(sndGammaGutsProc, 1.4 + random(0.1), 0.6);
+			
+			 // Remove other options:
+			with(instances_matching(instances_matching(object_index, "name", name), "creator", creator)){
+				if(--open <= 0) open_state += random(1/3);
+			}
+			open_state = 3/4;
+			open = 0;
+			
+			 // Crown Time:
+			if(crown_current == "crime"){
+				with(instances_matching(Crown, "ntte_crown", crown_current)){
+					enemy_time = 30;
+					enemies += (1 + GameCont.loops) + irandom(min(3, GameCont.hard - 1));
 				}
 			}
 		}

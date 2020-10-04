@@ -660,7 +660,7 @@
 										array_push(_tops, variable_instance_get_list(self));
 										instance_delete(id);
 									}
-									with(instance_rectangle_bbox(bbox_left - 1, bbox_top - 1, bbox_right, bbox_bottom, TopSmall)){
+									with(instance_rectangle_bbox(bbox_left - 1, bbox_top - 1, bbox_right + 1, bbox_bottom + 1, TopSmall)){
 										array_push(_tops, variable_instance_get_list(self));
 										instance_delete(id);
 									}

@@ -3,7 +3,7 @@
 	global.sprSkillHUD  = sprite_add("../sprites/skills/Silver Tongue/sprSkillSilverTongueHUD.png",  1,  8,  8);
 	
 #define skill_name    return "SILVER TONGUE";
-#define skill_text    return `@wCHANCE @sTO FIND @wSMUGGLED GOODS#@(color:${make_color_rgb(175, 143, 106)})THE FAMILY CONCEDES`;
+#define skill_text    return `FIND @wSMUGGLED GOODS#@(color:${make_color_rgb(175, 143, 106)})THE FAMILY CONCEDES`;
 #define skill_tip     return "DIPLOMACY";
 #define skill_icon    return global.sprSkillHUD;
 #define skill_button  sprite_index = global.sprSkillIcon;
@@ -15,6 +15,7 @@
 	 // Sound:
 	if(_num > 0 && instance_exists(LevCont)){
 		sound_play(sndMut);
+		sound_play_pitch(sndFishUltraA, 1.2);
 	}
 	
 /// SCRIPTS

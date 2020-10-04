@@ -970,6 +970,76 @@
 		}
 	}
 	
+	 // Silver Tongue Crates:
+	if(skill_get("silver tongue") > 0 && _normalArea && GameCont.subarea == 1){
+		var _roomList = [];
+		
+		 // Rooms:
+		var _spawnFloor = FloorNormal
+		repeat(skill_get("silver tongue")){
+			var _w = irandom_range(1, 2),
+				_h = _w;
+				
+			with(array_shuffle(_spawnFloor)){
+				var	_x = bbox_center_x,
+					_y = bbox_center_y;
+					
+				if(point_distance(_spawnX, _spawnY, _x, _y) > 32){
+					var _dirStart = pround(point_direction(_spawnX, _spawnY, _x, _y) + choose(-90, 90), 90);
+					array_push(_roomList, floor_room_create(_x, _y, _w, _h, "", _dirStart, 0, 0));
+					break;
+				}
+			}
+		}
+		
+		 // Spawn Crate:
+		var	_minID    = GameObject.id,
+			_lastArea = GameCont.area;
+			
+		GameCont.area = area_campfire;
+		
+		with(_roomList){
+			 // Pallet:
+			with(instance_create(x, y, FloorMiddle)){
+				mask_index   = -1;
+				sprite_index = spr.FloorCrate;
+				depth        = 5;
+			}
+			
+			 // Loot:
+			chest_create(x, y - 4, choose("CatChest", "BatChest"), true);
+			
+			 // Crate Walls:
+			var _img = 0;
+			for(var _y = y - 16; _y < y + 16; _y += 16){
+				for(var _x = x - 16; _x < x + 16; _x += 16){
+					with(instance_create(_x, _y, Wall)){
+						sprite_index = spr.WallCrateBot;
+						topspr       = spr.WallCrateTop;
+						outspr       = spr.WallCrateOut;
+						image_index  = _img;
+						topindex     = _img;
+						outindex     = _img;
+					}
+					_img++;
+				}
+			}
+		}
+		
+		GameCont.area = _lastArea;
+		
+		 // Wall Drawing Order Fix:
+		var	_wallLast  = instances_matching_lt(Wall, "id", _minID),
+			_wallCrate = instances_matching_gt(Wall, "id", _minID);
+			
+		with(_wallCrate){
+			with(instance_rectangle_bbox(bbox_left - 1, bbox_top - 1, bbox_right + 1, bbox_bottom + 1, _wallLast)){
+				instance_copy(false);
+				instance_delete(id);
+			}
+		}
+	}
+	
 	 // Wall Enemies / Props:
 	var	_spiderMain     = true,
 		_spiderMainX    = 0,
@@ -1367,43 +1437,6 @@
 			}
 			instance_delete(id);
 		}
-	}
-	
-	 // Silver Tongue:
-	if(skill_get("silver tongue") > 0){
-		floor_set_style(1, "lair");
-		repeat(skill_get("silver tongue")){
-			with(instance_random(FloorNormal)){
-				with(floor_room_create(bbox_center_x, bbox_center_y, 1, 1, "", pround(random(360), 90), 0, 0)){
-					chest_create(x, y, "CatChest", true);
-					
-					for(var _x = x1; _x < x2; _x += 16){
-						for(var _y = y1; _y < y2; _y += 16){
-							with(instance_create(_x, _y, Wall)){
-								sprite_index = area_get_sprite("lair", sprWall1Bot);
-								outspr       = area_get_sprite("lair", sprWall1Out);
-								topspr       = area_get_sprite("lair", sprWall1Top);
-							}
-						}
-					}
-					
-					if(fork()){
-						while(point_distance(x, y, 0.x, 0.y) > 128) wait 0;
-						wait 30;
-						trace("???");
-						with(instance_create(x, y, Explosion)){
-							alarm0 = -1;
-						}
-						wait 6;
-						repeat(5){
-							scrFX(x, y, 6, "CatDoorDebris");
-						}
-						exit;
-					}
-				}
-			}
-		}
-		floor_reset_style();
 	}
 	
 	 // Red Ammo Canisters:
@@ -1903,6 +1936,20 @@
 							obj_create(x, y, "RedAmmoPickup");
 						}
 					}
+				}
+			}
+		}
+	}
+	
+	 // Fix Throne 2 Not Deleting All Lone Walls:
+	if(instance_exists(Nothing2)){
+		var _inst = instances_matching(Nothing2, "destroylonewall_fix", null);
+		if(array_length(_inst)) with(_inst){
+			destroylonewall_fix = true;
+			with(Wall){
+				if(place_meeting(x, y, Floor)){
+					instance_create(x, y, FloorExplo);
+					instance_destroy();
 				}
 			}
 		}

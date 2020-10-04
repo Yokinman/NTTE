@@ -487,6 +487,45 @@
 	
 #define ntte_step
 	if(area_active){
+		 // Push Stuff to Shore:
+		if(instance_exists(Floor)){
+			var _instPush = array_combine(
+				array_combine(
+					instances_matching(instances_matching_ge(hitme, "wading", 80), "visible", true),
+					instances_matching_ge(Pickup, "wading", 80)
+				),
+				instances_matching_ge(chestprop, "wading", 192)
+			);
+			if(array_length(_instPush)) with(_instPush){
+				if(distance_to_object(Portal) > 96){
+					if(object_index != Player || !instance_exists(Portal) || array_length(instances_matching_lt(Portal, "endgame", 100)) > 0){
+						if(!instance_is(self, hitme) || (team != 0 && !instance_is(self, prop))){
+							var _player = instance_is(self, Player),
+								_target = instance_nearest(x - 16, y - 16, Floor),
+								_dir    = point_direction(x, y, _target.x, _target.y),
+								_spd    = (_player ? (3 + ((wading - 80) / 16)) : 0.8);
+								
+							motion_add_ct(_dir, _spd);
+							
+							 // Extra Player Push:
+							if(_player && wading > 120){
+								if(array_length(instances_matching_ge(Portal, "endgame", 100)) <= 0){
+									var _dis = ((wading - 120) / 10) * current_time_scale;
+									x += lengthdir_x(_dis, _dir);
+									y += lengthdir_y(_dis, _dir);
+									
+									 // FX:
+									if(chance_ct(1, 2)){
+										instance_create(x, y, Dust);
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+		
 		 // Water Wading:
 		var	_depthMax = global.sea_bind[? "visible_max"].depth,
 			_depthMin = global.sea_bind[? "visible_min"].depth;
@@ -568,47 +607,6 @@
 							if(array_length(_inst)) with(_inst){
 								if(wading_sink++ >= 120){
 									instance_destroy();
-								}
-							}
-						}
-					}
-				}
-			}
-		}
-		
-		 // Push Stuff to Shore:
-		if(instance_exists(Floor)){
-			var _instPush = array_combine(
-				array_combine(
-					instances_matching(instances_matching_ge(hitme, "wading", 80), "visible", true),
-					instances_matching_ge(Pickup, "wading", 80)
-				),
-				instances_matching_ge(chestprop, "wading", 192)
-			);
-			if(array_length(_instPush)) with(_instPush){
-				if(
-					distance_to_object(Portal) > 96
-					&&
-					(object_index != Player || !instance_exists(Portal) || array_length(instances_matching_lt(Portal, "endgame", 100)) > 0)
-				){
-					if(!instance_is(self, hitme) || (team != 0 && !instance_is(self, prop))){
-						var _player = instance_is(self, Player),
-							_target = instance_nearest(x - 16, y - 16, Floor),
-							_dir    = point_direction(x, y, _target.x, _target.y),
-							_spd    = (_player ? (3 + ((wading - 80) / 16)) : 0.8);
-							
-						motion_add_ct(_dir, _spd);
-						
-						 // Extra Player Push:
-						if(_player && wading > 120){
-							if(array_length(instances_matching_ge(Portal, "endgame", 100)) <= 0){
-								var _dis = ((wading - 120) / 10) * current_time_scale;
-								x += lengthdir_x(_dis, _dir);
-								y += lengthdir_y(_dis, _dir);
-								
-								 // FX:
-								if(chance_ct(1, 2)){
-									instance_create(x, y, Dust);
 								}
 							}
 						}
