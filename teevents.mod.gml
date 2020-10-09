@@ -1867,10 +1867,10 @@
 		}
 		
 		 // Corner Walls:
-		if(!place_meeting(x - 32, y, Floor) && !place_meeting(x, y - 32, Floor) && !place_meeting(x, y, hitme)) instance_create(x,      y,      Wall);
-		if(!place_meeting(x + 32, y, Floor) && !place_meeting(x, y - 32, Floor) && !place_meeting(x, y, hitme)) instance_create(x + 16, y,      Wall);
-		if(!place_meeting(x - 32, y, Floor) && !place_meeting(x, y + 32, Floor) && !place_meeting(x, y, hitme)) instance_create(x,      y + 16, Wall);
-		if(!place_meeting(x + 32, y, Floor) && !place_meeting(x, y + 32, Floor) && !place_meeting(x, y, hitme)) instance_create(x + 16, y + 16, Wall);
+		if(!place_meeting(x - 32, y, Floor) && !place_meeting(x, y - 32, Floor)/* && !place_meeting(x, y, hitme)*/) instance_create(x,      y,      Wall);
+		if(!place_meeting(x + 32, y, Floor) && !place_meeting(x, y - 32, Floor)/* && !place_meeting(x, y, hitme)*/) instance_create(x + 16, y,      Wall);
+		if(!place_meeting(x - 32, y, Floor) && !place_meeting(x, y + 32, Floor)/* && !place_meeting(x, y, hitme)*/) instance_create(x,      y + 16, Wall);
+		if(!place_meeting(x + 32, y, Floor) && !place_meeting(x, y + 32, Floor)/* && !place_meeting(x, y, hitme)*/) instance_create(x + 16, y + 16, Wall);
 	}
 	
 	
