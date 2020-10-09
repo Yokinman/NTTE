@@ -169,7 +169,7 @@
 						link : [[cred_twitter, "JDubbsishere"], [cred_soundcloud, "jdubmmusic"], [cred_discord, "Mista Jub\#8521"]]
 						},
 					{	name : "Wildebee", // formerly BioOnPc
-						role : [[cred_music, "Sound Design"], [cred_coder, "Programmer"], "Trailer"],
+						role : [[cred_music, "Sound Design"], [cred_coder, "Programmer"], "Trailers"],
 						link : [[cred_twitter, "Wilde_bee"], [cred_discord, "Wildebee\#6521"]]
 						},
 					{	name : "Special Thanks",

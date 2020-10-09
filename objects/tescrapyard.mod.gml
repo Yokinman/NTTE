@@ -248,7 +248,12 @@
 	 // Return That Which You Stole:
 	if(instance_exists(creator)){
 		creator.num--;
-		rad_path(rad_drop(x, y, raddrop, direction, speed), creator);
+		
+		 // Rads:
+		rad_path(
+			rad_drop(x, y, raddrop, direction, speed),
+			creator
+		);
 		raddrop = 0;
 		
 		 // More Time:
@@ -647,28 +652,30 @@
 	 // Big:
 	if(num >= 0){
 		 // Raven Time:
-		if(num > 0 && instance_exists(CustomEnemy)){
-			var _ravens = instances_matching(instances_matching(CustomEnemy, "name", "BoneRaven"), "creator", id);
-			if(array_length(_ravens)){
-				 // Wait for Player:
-				if(alarm0 < 0){
-					if(
-						(instance_seen(x, y, Player) && instance_near(x, y, Player, 96))
-						|| array_length(instances_matching(_ravens, "active", true))
-					){
-						alarm0 = 120;
+		if(num > 0){
+			if(instance_exists(CustomEnemy)){
+				var _ravens = instances_matching(instances_matching(CustomEnemy, "name", "BoneRaven"), "creator", id);
+				if(array_length(_ravens)){
+					 // Wait for Player:
+					if(alarm0 < 0){
+						if(
+							(instance_seen(x, y, Player) && instance_near(x, y, Player, 96))
+							|| array_length(instances_matching(_ravens, "active", true))
+						){
+							alarm0 = 120;
+						}
 					}
-				}
-				
-				 // Take Flight:
-				if(alarm0 > 0){
-					var _inst = instances_matching(_ravens, "active", false);
-					if(array_length(_inst)){
-						var _dis = 96;
-						with(_inst){
-							active = true;
-							BoneRaven_fly(_dis, _dis + 64);
-							_dis += 64;
+					
+					 // Take Flight:
+					if(alarm0 > 0){
+						var _inst = instances_matching(_ravens, "active", false);
+						if(array_length(_inst)){
+							var _dis = 96;
+							with(_inst){
+								active = true;
+								BoneRaven_fly(_dis, _dis + 64);
+								_dis += 64;
+							}
 						}
 					}
 				}

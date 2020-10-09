@@ -411,7 +411,9 @@
 						
 					 // Display Changelog:
 					if(!changelog_exists(changelog_get_display())){
+						wait 15;
 						changelog_set_display(0);
+						wait 30;
 					}
 					
 					 // Clear Version While Updating:
@@ -1914,14 +1916,22 @@
 					"title"  : _title,
 					"indent" : _indent
 				});
+				
+				 // Update Displayed Changelog:
+				if(current_frame != _lastFrame){
+					_lastFrame = current_frame;
+					if(changelog_get_display() == _index && changelog_exists(_index)){
+						if(_lineList == changelog_get(_index).list){
+							changelog_update();
+						}
+					}
+				}
 			}
 			
 			 // Update Displayed Changelog:
-			if(current_frame != _lastFrame){
-				if(changelog_get_display() == _index && changelog_exists(_index)){
-					if(_lineList == changelog_get(_index).list){
-						changelog_update();
-					}
+			if(changelog_get_display() == _index && changelog_exists(_index)){
+				if(_lineList == changelog_get(_index).list){
+					changelog_update();
 				}
 			}
 			

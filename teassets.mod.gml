@@ -1840,6 +1840,19 @@
 	if(fork()){
 		var _path = save_path;
 		
+		 // Defaulterize Options:
+		with([
+			["option:shaders",       true],
+			["option:reminders",     true],
+			["option:intros",        2],
+			["option:outline:pets",  2],
+			["option:outline:charm", 2],
+			["option:quality:main",  1],
+			["option:quality:minor", 1]
+		]){
+			save_set(self[0], self[1]);
+		}
+		
 		 // Load Existing Save:
 		file_load(_path);
 		while(!file_loaded(_path)){
@@ -1848,31 +1861,11 @@
 		if(file_exists(_path)){
 			var _save = json_decode(string_load(_path));
 			
-			if(_save != json_error){
-				 // Copy Loaded Save's Vars:
+			 // Copy Loaded Save's Values:
+			if(is_object(_save)){
 				for(var i = 0; i < lq_size(_save); i++){
 					lq_set(save_data, lq_get_key(_save, i), lq_get_value(_save, i));
 				}
-				
-				 // Defaulterize Options:
-				with([
-					["option:shaders",       true],
-					["option:reminders",     true],
-					["option:intros",        2],
-					["option:outline:pets",  2],
-					["option:outline:charm", 2],
-					["option:quality:main",  1],
-					["option:quality:minor", 1]
-				]){
-					if(is_undefined(save_get(self[0], null))){
-						save_set(self[0], self[1]);
-					}
-				}
-				
-				 // Enable Auto Saving:
-				save_auto = true;
-				
-				exit;
 			}
 			
 			 // Save File Corrupt:

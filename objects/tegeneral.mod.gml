@@ -266,7 +266,7 @@
 				image_angle  = other.image_angle;
 				image_blend  = other.image_blend;
 				image_alpha  = other.image_alpha;
-				depth        = other.depth;
+				//depth        = other.depth;
 				
 				 // Lay Flat:
 				/*if(depth == object_get_depth(SubTopCont)){

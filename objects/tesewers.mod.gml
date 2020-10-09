@@ -1519,12 +1519,13 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 		if(instance_exists(other.target)){
 			scrAim(point_direction(x, y, other.target.x, other.target.y));
 		}
-
+		
 		 // Effects:
-		for(var a = 0; a < 360; a += (360 / 12)){
-			with(scrFX(x, y + 6, [a, 2], Smoke)){
+		var _col = other.image_blend;
+		for(var _dir = 0; _dir < 360; _dir += (360 / 12)){
+			with(scrFX(x, y + 6, [_dir, 2], Smoke)){
 				motion_add(other.direction, 1);
-				image_blend = other.image_blend;
+				image_blend = _col;
 				growspeed  *= -10;
 				depth       = -3;
 			}
@@ -4355,7 +4356,6 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 			with(instance_create(x + orandom(4), y + orandom(4), WepPickup)){
 				wep  = wep_merge(_part[0], _part[1]);
 				ammo = true;
-				roll = true;
 			}
 		}
 	}

@@ -27,7 +27,7 @@
 	 // Visual:
 	spr_shadow   = shd16;
 	spr_shadow_y = 4;
-
+	
 	 // Vars:
 	maxspeed    = 3.5;
 	poop        = 1;
@@ -42,7 +42,7 @@
 	if("combo" not in stat){
 		stat.combo = 0;
 	}
-
+	
 #define CoolGuy_ttip
 	return [
 		"JUST A COOL GUY",
@@ -50,12 +50,12 @@
 		"HIGH SCORE!",
 		"BACKWARD CAPS ARE COOL"
 	];
-
+	
 #define CoolGuy_stat(_name, _value)
 	if(_name == ""){
 		return spr.PetCoolGuyIdle;
 	}
-
+	
 #define CoolGuy_step
 	 // Kill Combos:
 	if(instance_exists(leader) && GameCont.kills > kills_last){
@@ -2301,7 +2301,7 @@
 										}
 										
 										 // Divert:
-										with(team_instance_sprite(team, _inst)){
+										with(team_instance_sprite(((team == 2) ? team : 1), _inst)){
 											x         = other.x;
 											y         = other.y;
 											xprevious = x;
@@ -2354,6 +2354,11 @@
 							
 							 // Send to the Warp Zone:
 							else instance_delete(_inst);
+							
+							 // Stat:
+							if(instance_exists(leader)){
+								stat.diverted++;
+							}
 						}
 					}
 				}
