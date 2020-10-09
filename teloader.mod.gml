@@ -405,131 +405,129 @@
 			
 			case load_type_updating: // UPDATE DA MOD
 				
-				if(global.version != git_version){
-					var	_pathList = [""],
-						_fileList = [];
-						
-					 // Display Changelog:
-					if(!changelog_exists(changelog_get_display())){
-						wait 15;
-						changelog_set_display(0);
-						wait 30;
-					}
+				var	_pathList = [""],
+					_fileList = [];
 					
-					 // Clear Version While Updating:
-					string_save("", path_download + path_version);
-					
-					 // Only Download Changed Files:
-					if(global.version != ""){
-						try{
-							global.load.text = "Searching";
-							if(global.version == github_repo_request(git_user, git_repo, git_token, "commits/" + global.version).sha){
-								var	_page    = 1,
-									_pagePer = 30,
-									_search  = true;
-									
-								_pathList = [];
+				 // Display Changelog:
+				if(!changelog_exists(changelog_get_display())){
+					wait 15;
+					changelog_set_display(0);
+					wait 30;
+				}
+				
+				 // Clear Version While Updating:
+				string_save("", path_download + path_version);
+				
+				 // Only Download Changed Files:
+				if(global.version != ""){
+					try{
+						global.load.text = "Searching";
+						if(global.version == github_repo_request(git_user, git_repo, git_token, "commits/" + global.version).sha){
+							var	_page    = 1,
+								_pagePer = 30,
+								_search  = true;
 								
-								while(_search){
-									var _list = github_repo_request(git_user, git_repo, git_token, `commits?sha=${git_branch}&page=${_page}&per_page=${_pagePer}`);
-									if(!is_undefined(_list)){
-										with(_list){
-											global.load.num++;
-											
-											 // Stop Searching at the Local Version:
-											with(parents){
-												if(sha == global.version){
-													_search = false;
-												}
-											}
-											if(!_search){
-												break;
-											}
-											
-											 // Gather Files:
-											with(github_repo_request(git_user, git_repo, git_token, "commits/" + sha).files){
-												if(array_find_index(_fileList, filename) < 0){
-													array_push(_fileList, filename);
-													
-													 // Specifics:
-													switch(status){
-														case "removed":
-															file_delete(path_download + filename);
-															break;
-															
-														case "renamed":
-															file_delete(path_download + previous_filename);
-															break;
-													}
-													
-													 // New / Changed File:
-													if(status != "removed"){
-														var	_pathSplit = string_split(filename, "/");
-															_path      = array_join(array_slice(_pathSplit, 0, array_length(_pathSplit) - 1), "/");
-															
-														if(array_find_index(_pathList, _path) < 0){
-															array_push(_pathList, _path);
-														}
-													}
-												}
-											}
-										}
-										_page++;
-									}
-									else _search = false;
-								}
-							}
-						}
-						catch(_error){
-							_pathList = [""];
-						}
-					}
-					
-					 // Search Directories & Download Files:
-					for(var i = 0; i < array_length(_pathList); i++){
-						var	_path = `contents/${_pathList[i]}?ref=${git_branch}`,
-							_list = [];
+							_pathList = [];
 							
-						with(github_repo_request(git_user, git_repo, git_token, _path)){
-							if(array_length(_fileList) <= 0 || array_find_index(_fileList, path) >= 0){
-								switch(type){
-									case "dir":
-										array_push(_pathList, path);
-										break;
+							while(_search){
+								var _list = github_repo_request(git_user, git_repo, git_token, `commits?sha=${git_branch}&page=${_page}&per_page=${_pagePer}`);
+								if(!is_undefined(_list)){
+									with(_list){
+										global.load.num++;
 										
-									case "file":
-										if(path != path_version){
-											array_push(_list, path);
-											file_download(download_url, path_download + path);
+										 // Stop Searching at the Local Version:
+										with(parents){
+											if(sha == global.version){
+												_search = false;
+											}
 										}
-										break;
+										if(!_search){
+											break;
+										}
+										
+										 // Gather Files:
+										with(github_repo_request(git_user, git_repo, git_token, "commits/" + sha).files){
+											if(array_find_index(_fileList, filename) < 0){
+												array_push(_fileList, filename);
+												
+												 // Specifics:
+												switch(status){
+													case "removed":
+														file_delete(path_download + filename);
+														break;
+														
+													case "renamed":
+														file_delete(path_download + previous_filename);
+														break;
+												}
+												
+												 // New / Changed File:
+												if(status != "removed"){
+													var	_pathSplit = string_split(filename, "/");
+														_path      = array_join(array_slice(_pathSplit, 0, array_length(_pathSplit) - 1), "/");
+														
+													if(array_find_index(_pathList, _path) < 0){
+														array_push(_pathList, _path);
+													}
+												}
+											}
+										}
+									}
+									_page++;
 								}
+								else _search = false;
 							}
 						}
+					}
+					catch(_error){
+						_pathList = [""];
+					}
+				}
+				
+				 // Search Directories & Download Files:
+				for(var i = 0; i < array_length(_pathList); i++){
+					var	_path = `contents/${_pathList[i]}?ref=${git_branch}`,
+						_list = [];
 						
-						 // Advance Loading Bar:
-						global.load.num   = 0;
-						global.load.total = array_length(_list);
-						with(_list){
-							while(!file_loaded(path_download + self)){
-								wait 0;
+					with(github_repo_request(git_user, git_repo, git_token, _path)){
+						if(array_length(_fileList) <= 0 || array_find_index(_fileList, path) >= 0){
+							switch(type){
+								case "dir":
+									array_push(_pathList, path);
+									break;
+									
+								case "file":
+									if(path != path_version){
+										array_push(_list, path);
+										file_download(download_url, path_download + path);
+									}
+									break;
 							}
-							file_unload(path_download + self);
-							
-							var _split = string_split(self, "/");
-							global.load.text = array_join(array_slice(_split, 0, max(1, array_length(_split) - 1)), "/");
-							global.load.num++;
 						}
 					}
 					
-					 // Save Version:
-					string_save(git_version, path_download + path_version);
-					
-					 // Just in Case:
-					if(global.load.total == 0){
-						global.load.total = 1;
-						global.load.num   = global.load.total;
+					 // Advance Loading Bar:
+					global.load.num   = 0;
+					global.load.total = array_length(_list);
+					with(_list){
+						while(!file_loaded(path_download + self)){
+							wait 0;
+						}
+						file_unload(path_download + self);
+						
+						var _split = string_split(self, "/");
+						global.load.text = array_join(array_slice(_split, 0, max(1, array_length(_split) - 1)), "/");
+						global.load.num++;
 					}
+				}
+				
+				 // Save Version:
+				string_save(git_version, path_download + path_version);
+				
+				 // Just in Case:
+				if(global.load.total == 0){
+					global.load.total = 1;
+					global.load.num   = global.load.total;
 				}
 				
 				break;
