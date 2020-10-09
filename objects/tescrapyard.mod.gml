@@ -13,14 +13,14 @@
 		/* Vertex Shader */"
 		struct VertexShaderInput
 		{
-			float4 vPosition : POSITION;
 			float2 vTexcoord : TEXCOORD0;
+			float4 vPosition : POSITION;
 		};
 		
 		struct VertexShaderOutput
 		{
-			float4 vPosition : SV_POSITION;
 			float2 vTexcoord : TEXCOORD0;
+			float4 vPosition : SV_POSITION;
 		};
 		
 		uniform float4x4 matrix_world_view_projection;
@@ -29,8 +29,8 @@
 		{
 			VertexShaderOutput OUT;
 			
-			OUT.vPosition = mul(matrix_world_view_projection, INPUT.vPosition); // (x,y,z,w)
 			OUT.vTexcoord = INPUT.vTexcoord; // (x,y)
+			OUT.vPosition = mul(matrix_world_view_projection, INPUT.vPosition); // (x,y,z,w)
 			
 			return OUT;
 		}
@@ -43,12 +43,13 @@
 		};
 		
 		sampler2D s0;
+		
 		uniform float2 pixelSize;
 		uniform float3 sludgeRGB;
 		
 		float4 main(PixelShaderInput INPUT) : SV_TARGET
 		{
-			 // Return if Above Sludge Pool Pixel:
+			 // Return Color if Above Sludge Pool Pixel:
 			float4 RGBA = tex2D(s0, INPUT.vTexcoord);
 			if(RGBA.r == sludgeRGB.r && RGBA.g == sludgeRGB.g && RGBA.b == sludgeRGB.b){
 				float4 southRGBA = tex2D(s0, INPUT.vTexcoord + float2(0.0, pixelSize.y));
@@ -97,7 +98,6 @@
 		maxhealth  = 10;
 		raddrop    = 5;
 		size       = 1;
-		max_kills  = -1;
 		walk       = 0;
 		walkspeed  = 0.6;
 		maxspeed   = 2.5;
@@ -108,7 +108,6 @@
 		
 		 // Alarms:
 		alarm1 = -1;
-		alarm2 = -1;
 		
 		return id;
 	}
@@ -116,7 +115,6 @@
 #define BoneRaven_step
 	 // Alarms:
 	if(alarm1_run) exit;
-	if(alarm2_run) exit;
 	
 	 // Movement:
 	enemy_walk(walkspeed, maxspeed);
@@ -126,11 +124,6 @@
 		 // Stay Still:
 		if(!active){
 			speed = 0;
-		}
-		
-		 // Setup Kills:
-		else if(max_kills < 0){
-			max_kills = GameCont.kills;
 		}
 		
 		 // Animate:
@@ -174,7 +167,7 @@
 				sound_play_hit_ext(sndMutant14LowA, 1.8 + orandom(0.2), 2);
 			}
 			with(scrFX(x, y, [270, 2], Dust)){
-				depth = -6.01;
+				depth = -7;
 			}
 		}
 		
@@ -205,8 +198,7 @@
 	alarm1 = 30 + random(30);
 	
 	 // You Lose:
-	if((max_kills >= 0 && GameCont.kills > max_kills) || failed){
-		failed = true;
+	if(failed){
 		BoneRaven_fly(-1, -1);
 	}
 	
@@ -233,36 +225,36 @@
 		}
 	}
 	
-#define BoneRaven_alrm2
-	 // Activate:
-	active = true;
-	
-	 // Fly Away:
-	var _disMin = 96;
-	if(enemy_target(x, y)){
-		_disMin += point_distance(x, y, target.x, target.y);
-		scrRight(point_direction(x, y, target.x, target.y));
-	}
-	BoneRaven_fly(_disMin, _disMin + 160);
-	
 #define BoneRaven_hurt(_hitdmg, _hitvel, _hitdir)
-	if(!active) alarm2 = 1;
-	with(creator) active = true;
+	 // Fly Away:
+	if(!active){
+		active = true;
+		
+		 // Fly Away:
+		var _disMin = 96;
+		if(enemy_target(x, y)){
+			_disMin += point_distance(x, y, target.x, target.y);
+			scrRight(point_direction(x, y, target.x, target.y));
+		}
+		BoneRaven_fly(_disMin, _disMin + 160);
+	}
+	
+	 // Damage:
 	enemy_hurt(_hitdmg, _hitvel, _hitdir);
 	
 #define BoneRaven_death
 	with(top_object) instance_destroy();
-	
-	 // Kills Fix:
-	with(instances_matching(object_index, "name", name)){
-		max_kills += other.kills;
-	}
 	
 	 // Return That Which You Stole:
 	if(instance_exists(creator)){
 		creator.num--;
 		rad_path(rad_drop(x, y, raddrop, direction, speed), creator);
 		raddrop = 0;
+		
+		 // More Time:
+		if(creator.alarm0 > 0){
+			creator.alarm0 += 60;
+		}
 	}
 	
 #define BoneRaven_fly(_disMin, _disMax)
@@ -281,9 +273,9 @@
 				with(other){
 					with(top_create(x, y, self, 0, 0)){
 						jump_time = 0;
-						jump_x = _tx;
-						jump_y = _ty;
-						zspeed = jump;
+						jump_x    = _tx;
+						jump_y    = _ty;
+						zspeed    = jump;
 						zfriction = grav;
 					}
 					scrRight(point_direction(x, y, _tx, _ty));
@@ -576,12 +568,12 @@
 		fx_color   = make_color_rgb(130 - 40, 189, 5);
 		my_alert   = noone;
 		right      = choose(-1, 1);
-		active     = false;
 		setup      = true;
 		num        = -1;
 		
 		 // Alarms:
 		alarm0 = -1;
+		alarm1 = -1;
 		
 		return id;
 	}
@@ -650,77 +642,96 @@
 	
 	 // Alarms:
 	if(alarm0_run) exit;
+	if(alarm1_run) exit;
 	
 	 // Big:
-	if(sprite_index == msk.SludgePool){
+	if(num >= 0){
 		 // Raven Time:
-		if(!active){
-			if(instance_seen(x, y, Player) && instance_near(x, y, Player, 96)){
-				active = true;
-			}
-		}
-		if(active){
+		if(num > 0 && instance_exists(CustomEnemy)){
 			var _ravens = instances_matching(instances_matching(CustomEnemy, "name", "BoneRaven"), "creator", id);
-			with(instances_matching_lt(instances_matching(_ravens, "active", false), "alarm2", 0)){
-				alarm2 = 1 + random(5);
+			if(array_length(_ravens)){
+				 // Wait for Player:
+				if(alarm0 < 0){
+					if(
+						(instance_seen(x, y, Player) && instance_near(x, y, Player, 96))
+						|| array_length(instances_matching(_ravens, "active", true))
+					){
+						alarm0 = 120;
+					}
+				}
+				
+				 // Take Flight:
+				if(alarm0 > 0){
+					var _inst = instances_matching(_ravens, "active", false);
+					if(array_length(_inst)){
+						var _dis = 96;
+						with(_inst){
+							active = true;
+							BoneRaven_fly(_dis, _dis + 64);
+							_dis += 64;
+						}
+					}
+				}
 			}
 		}
 		
-		 // Alert:
-		if(num == 0){
-			num = -1;
+		 // Activate Saladman:
+		else{
+			num    = -1;
+			alarm1 = 150;
+			
+			 // Face Player:
+			with(instance_nearest(x, y, Player)){
+				with(other){
+					scrRight(point_direction(x, y, other.x, other.y));
+				}
+			}
 			
 			 // Alert:
-			with(my_alert) instance_destroy();
+			with(my_alert){
+				instance_destroy();
+			}
 			my_alert = alert_create(self, spr.SludgePoolAlert);
 			with(my_alert){
 				alert.spr = spr.AlertIndicatorMystery;
 				alert.col = c_yellow;
 				target_y -= 4;
-				alarm0 = -1;
+				alarm0    = -1;
 			}
 		}
 	}
 	
 	 // Bubblin'
-	if(instance_exists(my_alert) && my_alert.sprite_index == spr.SludgePoolAlert){
-		my_alert.alert.ang = sin(current_frame * 0.1) * 20;
-		
-		 // Bubbles:
+	if(alarm1 > 0){
 		if(chance_ct(1, 30) || frame_active(15)){
-			var	l = random_range(1/10, 1/3) * choose(-1, 1),
-				d = current_frame * 10,
-				_x = x + lengthdir_x(l * sprite_width,        d),
-				_y = y + lengthdir_y(l * sprite_height * 2/3, d);
+			var	_l = random_range(1/10, 1/3) * choose(-1, 1),
+				_d = current_frame * 10,
+				_x = x + lengthdir_x(_l * sprite_width,        _d),
+				_y = y + lengthdir_y(_l * sprite_height * 2/3, _d);
 				
 			with(instance_create(_x, _y, RainSplash)){
 				image_blend = merge_color(other.fx_color, c_black, random(0.1));
 				with(instance_create(x, y, Bubble)){
-					gravity *= random_range(0.5, 0.8);
+					gravity    *= random_range(0.5, 0.8);
 					image_blend = other.image_blend;
 					image_index = irandom(2);
-					hspeed /= 3;
-					vspeed = 0;
+					hspeed     /= 3;
+					vspeed      = 0;
 				}
 			}
 		}
 		
 		 // Sounds:
-		var	_sndInterval = (point_seen(x, y, -1) ? 8 : 12),
-			_snd = [sndOasisMelee, sndOasisCrabAttack, sndOasisChest];
+		var	_snd         = [sndOasisMelee, sndOasisCrabAttack, sndOasisChest],
+			_sndInterval = (point_seen(x, y, -1) ? 8 : 12);
 			
 		if(frame_active(_sndInterval) || chance(1, 12)){
 			sound_play_hit(_snd[((current_frame / _sndInterval) / 1.5) % array_length(_snd)], 0.4);
 		}
 		
-		 // Activate Saladman:
-		if(alarm0 < 0){
-			if(instance_exists(Portal) || (instance_seen(x, y, Player) && (point_seen_ext(x, y, -32, -32, -1) || instance_near(x, y, Player, 64)))){
-				alarm0 = 150;
-				with(instance_nearest(x, y, Player)){
-					with(other) scrRight(point_direction(x, y, other.x, other.y));
-				}
-			}
+		 // Alert Wobble:
+		if(instance_exists(my_alert)){
+			my_alert.alert.ang = sin(current_frame * 0.1) * 20;
 		}
 	}
 	
@@ -737,7 +748,7 @@
 			y = lerp(yprevious, y, 2/3);
 			
 			 // Somethins comin up bro:
-			if(other.alarm0 > 0){
+			if(other.alarm1 > 0){
 				motion_add_ct(point_direction(other.x, other.y, x, y), 0.6);
 			}
 			
@@ -773,16 +784,16 @@
 	
 #define SludgePool_draw
 	 // Silhouette:
-	if(alarm0 > 0){
+	if(alarm1 > 0){
 		var	_spr = spr.PetSalamanderIdle,
 			_img = 0.4 * current_frame,
-			_x = x,
-			_y = y + (max(0, alarm0 - 60) / 8) + (min(1, alarm0 / 10) * sin(current_frame / 10)),
+			_x   = x,
+			_y   = y + (max(0, alarm1 - 60) / 8) + (min(1, alarm1 / 10) * sin(current_frame / 10)),
 			_xsc = image_xscale * right,
 			_ysc = image_yscale,
 			_ang = image_angle,
 			_col = image_blend,
-			_alp = image_alpha / max(1, 0.1 * (alarm0 - 50));
+			_alp = image_alpha / max(1, 0.1 * (alarm1 - 50));
 			
 		draw_set_fog(true, fx_color, 0, 0);
 		draw_sprite_ext(_spr, _img, _x, _y, _xsc, _ysc, _ang, _col, _alp);
@@ -790,6 +801,13 @@
 	}
 	
 #define SludgePool_alrm0
+	 // Mishin Failed:
+	with(instances_matching(instances_matching(CustomEnemy, "name", "BoneRaven"), "creator", id)){
+		failed = true;
+	}
+	
+#define SludgePool_alrm1
+	 // DUDE:
 	with(pet_spawn(x, y, "Salamander")){
 		right = other.right;
 	}
@@ -809,14 +827,14 @@
 	sound_play_pitch(sndCorpseExplo, 1 + orandom(0.1));
 	sound_play(sndOasisMelee);
 	
-	 // Alert:
+	 // Update Alert:
 	with(my_alert){
 		sprite_index = spr.PetSalamanderIcon;
-		alert.spr = spr.AlertIndicator;
-		alert.ang = 0;
-		alarm0 = 90;
-		flash = 3;	
-		snd_flash = sndSalamanderEndFire;
+		alert.spr    = spr.AlertIndicator;
+		alert.ang    = 0;
+		alarm0       = 90;
+		flash        = 3;	
+		snd_flash    = sndSalamanderEndFire;
 	}
 	
 	

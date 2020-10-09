@@ -74,6 +74,9 @@
 			
 		<Name>_death - Runs on pet death, only used if the pet takes damage.
 		
+		<Name>_cleanup - Runs when the pet is permanently deleted.
+			Use to free surfaces, destroy data structures, etc.
+			
 	SPRITES:
 		If you're worried about consistency, the effect on the first frame of the pet
 		dodge sprite is achieved by adding opaque white to the sprite on a layer with

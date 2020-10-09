@@ -1949,7 +1949,7 @@
 			wait 0;
 		}
 		
-		trace_color("NTTE | Finished loading!", c_yellow);
+		trace_color("NT:TE | Finished loading!", c_yellow);
 		repeat(20 * (game_height / 240)) trace("");
 		
 		if(option_get("reminders")){
@@ -1982,9 +1982,18 @@
 				_text = "make sure music is on";
 			}
 			if(_text != ""){
-				trace_color("NTTE | For the full experience - " + _text + "!", c_yellow);
+				trace_color("NT:TE | For the full experience - " + _text + "!", c_yellow);
 			}
 		}
+		
+		 // GMS2 Warning:
+		try{
+			if(!null){
+				trace_color("NT:TE | WARNING - NTT beta versions (9942+) may cause issues!", c_red);
+			}
+		}
+		catch(_error){}
+		
 		exit;
 	}
 	
@@ -2453,6 +2462,10 @@
 	if(mod_variable_exists("mod", mod_current, "shad") && ds_map_exists(global.shad, _name)){
 		with(global.shad[? _name]){
 			if(shad != -1){
+				 // Enable Shader & Stage Texture:
+				shader_set(shad);
+				texture_set_stage(0, _texture);
+				
 				 // Matrix:
 				shader_set_vertex_constant_f(0, matrix_multiply(matrix_multiply(matrix_get(matrix_world), matrix_get(matrix_view)), matrix_get(matrix_projection)));
 				
@@ -2466,18 +2479,14 @@
 						break;
 						
 					case "SludgePool":
-						var	_w = _args[0],
-							_h = _args[1],
+						var	_w     = _args[0],
+							_h     = _args[1],
 							_color = _args[2];
 							
 						shader_set_fragment_constant_f(0, [1 / _w, 1 / _h]);
 						shader_set_fragment_constant_f(1, [color_get_red(_color) / 255, color_get_green(_color) / 255, color_get_blue(_color) / 255]);
 						break;
 				}
-				
-				 // Enable Shader & Stage Texture:
-				shader_set(shad);
-				texture_set_stage(0, _texture);
 				
 				return true;
 			}
@@ -2518,8 +2527,8 @@
 		_shad = {
 			"name" : _name,
 			"shad" : -1,
-			"vert" : "",
-			"frag" : ""
+			"vert" : _vertex,
+			"frag" : _fragment
 		};
 		global.shad[? _name] = _shad;
 		
@@ -2530,7 +2539,19 @@
 					 // Create Shaders:
 					if(option_get("shaders")){
 						if(shad == -1 && !instance_exists(Menu)){
-							shad = shader_create(vert, frag);
+							try{
+								// GMS2
+								shad = script_execute(
+									shader_create,
+									string_replace_all(string_replace_all(vert, "matrix_world_view_projection;", "_gm_Matrices[5];"), "matrix_world_view_projection", "transpose(_gm_Matrices[4])"),
+									frag,
+									shader_kind_hlsl
+								);
+							}
+							catch(_error){
+								// GMS1
+								shad = shader_create(vert, frag);
+							}
 						}
 					}
 					
@@ -2547,8 +2568,8 @@
 		}
 	}
 	
-	 // Shader Setup:
-	with(_shad){
+	 // Shader Reset:
+	else with(_shad){
 		if(shad != -1){
 			shader_destroy(shad);
 			shad = -1;
@@ -2780,14 +2801,16 @@ var _shine = argument_count > 4 ? argument[4] : shnNone;
 #define draw_pause
 	 // Remind Player:
 	if(option_get("reminders")){
-		draw_set_projection(0);
-		
-		var _timeTick = 1;
-		
+		var	_vx       = view_xview_nonsync,
+			_vy       = view_yview_nonsync,
+			_gw       = game_width,
+			_gh       = game_height,
+			_timeTick = 1;
+			
 		with(global.remind){
 			if(active){
-				var	_x = (game_width  / 2),
-					_y = (game_height / 2) - 40;
+				var	_x = (_gw / 2),
+					_y = (_gh / 2) - 40;
 					
 				 // Reminding:
 				if(instance_exists(object)){
@@ -2854,7 +2877,7 @@ var _shine = argument_count > 4 ? argument[4] : shnNone;
 				
 				 // Draw Icon:
 				with(other){
-					draw_sprite(sprNew, 0, _x, _y + sin(current_frame / 10));
+					draw_sprite(sprNew, 0, _vx + _x, _vy + _y + sin(current_frame / 10));
 				}
 			}
 			
@@ -2866,12 +2889,10 @@ var _shine = argument_count > 4 ? argument[4] : shnNone;
 				draw_set_halign(fa_center);
 				draw_set_valign(fa_top);
 				with(instances_matching(text_inst, "visible", true)){
-					draw_text_nt(x, y, text);
+					draw_text_nt(_vx + x, _vy + y, text);
 				}
 			}
 		}
-		
-		draw_reset_projection();
 	}
 	
 #define sprite_shine(_spr, _shine)
@@ -3251,7 +3272,7 @@ var _shine = argument_count > 4 ? argument[4] : shnNone;
 	
 	 // Clear Surfaces, Shaders, Script Bindings:
 	with(ds_map_values(global.surf)) if(surf != -1) surface_destroy(surf);
-	with(ds_map_values(global.shad)) if(shad != -1) surface_destroy(shad);
+	with(ds_map_values(global.shad)) if(shad != -1) shader_destroy(shad);
 	with(ds_map_values(global.bind)) with(id) instance_destroy();
 	ds_map_destroy(global.surf);
 	ds_map_destroy(global.shad);

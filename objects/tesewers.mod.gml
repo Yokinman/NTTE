@@ -1075,7 +1075,7 @@
 					_x = other.x + (cos(_o) * ((_w / 2) * right));
 					
 				 // Visual:
-				var _depth = other.depth + sin(_o);
+				var _depth = other.depth + ((sin(_o) < 0) ? -1 : 1);
 				repeat(3) with(scrFX([_x, 4], [_y, 4], 0, Dust)){
 					image_blend = c_black;
 					depth       = _depth;
@@ -1441,6 +1441,10 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 	
 #define BatCloud_create(_x, _y)
 	with(instance_create(_x, _y, CustomObject)){
+		 // Visual:
+		image_blend = c_black;
+		depth       = -9;
+		
 		 // Vars:
 		friction      = 0.5;
 		direction     = random(360);
@@ -1455,47 +1459,47 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 
 #define BatCloud_step
 	if(speed > 6) speed -= 2 * current_time_scale;
-
+	
 	if(current_frame_active){
 		 // Visual:
 		repeat(4) with(scrFX([x, 4], [y, 4], 0, Dust)){
-			image_blend = c_black;
-			depth = -8;
+			image_blend = other.image_blend;
+			depth       = other.depth;
 		}
-
+		
 		 // Wobblin:
 		direction += orandom(16);
 	}
-
+	
 	if(instance_exists(target)){
 		 // Get Landing Position:
 		var	_dis = target_offdis,
 			_dir = target_offdir;
-
+			
 		do{
 			var	_tx = target.x + lengthdir_x(_dis, _dir),
 				_ty = target.y + lengthdir_y(_dis, _dir);
-
+				
 			_dis -= 8;
 		}
 		until (_dis <= 0 || (!position_meeting(_tx, _ty, Wall) && position_meeting(_tx, _ty, Floor)));
-
+		
 		 // Moving:
 		var	_dis = point_distance(x, y, _tx, _ty),
 			_dir = point_direction(x, y, _tx, _ty);
-
+			
 		if(speed < 8){
 			if(_dis > 96){
 				_dir = point_direction(x, y, _tx, _ty - 96);
 			}
 			motion_add_ct(_dir, random_range(1, 4));
 		}
-
+		
 		 // Land:
 		if(_dis < 8) instance_destroy();
 	}
 	else instance_destroy();
-
+	
 #define BatCloud_destroy
 	instance_create(x, y, PortalClear);
 	with(obj_create(x, y, "Bat")){
@@ -1520,16 +1524,16 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 		for(var a = 0; a < 360; a += (360 / 12)){
 			with(scrFX(x, y + 6, [a, 2], Smoke)){
 				motion_add(other.direction, 1);
-				image_blend = c_black;
-				growspeed *= -10;
-				depth = -3;
+				image_blend = other.image_blend;
+				growspeed  *= -10;
+				depth       = -3;
 			}
 		}
 	}
 	
 	 // Effects:
-	sound_play_pitchvol(sndBouncerSmg, 0.2 + random(0.2), 0.6);
-	sound_play_pitchvol(sndBloodHammer,  1.6 + random(0.4), 0.4);
+	sound_play_pitchvol(sndBouncerSmg,  0.2 + random(0.2), 0.6);
+	sound_play_pitchvol(sndBloodHammer, 1.6 + random(0.4), 0.4);
 
 
 #define BatDisc_create(_x, _y)
@@ -1609,7 +1613,9 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 		
 		 // Dust trail:
 		if(chance_ct(1, 3)){
-			with(instance_create(x, y, Dust)) depth = -6.01;
+			with(instance_create(x, y, Dust)){
+				depth = -7;
+			}
 		}
 		
 		 // Exit wall:
@@ -1771,7 +1777,7 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 		repeat(irandom_range(1, 2)){
 			with(scrFX(x, y, random(6), Smoke)){
 				if(other.in_wall){
-					depth = -6.01;
+					depth = -7;
 					speed /= 2;
 				}
 			}
@@ -1866,7 +1872,7 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 		sprite_index = spr.BatScreech;
 		image_speed  = 0.4;
 		image_alpha  = 0.4;
-		depth        = -7;
+		depth        = -9;
 		hitid        = [sprite_index, "SOUND"];
 		
 		 // Vars:
@@ -3023,7 +3029,9 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 				sound_play_pitch(sndStrongSpiritLost, 1.2);
 				
 				 // Effects:
-				with(instance_create(x, y, ImpactWrists)) depth = -3;
+				with(instance_create(x, y, ImpactWrists)){
+					depth = -3;
+				}
 				repeat(2 + irandom(2)){
 					with(instance_create(x, y, Rad)){
 						motion_set(_hitdir + orandom(30), 4 + random(4));
@@ -3338,7 +3346,7 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 		sprite_index = spr.CatDoor;
 		spr_shadow   = mskNone;
 		image_speed  = 0;
-		depth        = -3 - (y / 20000);
+		depth        = -3;
 		
 		 // Sound:
 		snd_hurt = sndHitMetal;
@@ -4952,7 +4960,7 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 		spr_shadow = mskNone;
 		image_xscale = choose(-1, 1);
 		image_speed = 0.4;
-		depth = -6.0001;
+		depth = -7;
 		
 		 // Sound:
 		snd_hurt = sndHitRock;

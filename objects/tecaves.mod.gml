@@ -1590,7 +1590,7 @@
 		force      = 12;
 		setup      = true;
 		walled     = false;
-		hit_list   = {};
+		hit_list   = {}; // when you do true entangler, dont use LWO
 		cancharm   = false;
 		red_ammo   = 0;
 		
@@ -2043,7 +2043,7 @@
 		
 		 // Over Wall:
 		if(position_meeting(x, y + 8, Wall) || !position_meeting(x, y + 8, Floor)){
-			depth = -8;
+			depth = -9;
 		}
 	}
 	
@@ -2558,12 +2558,13 @@
 	var _player = variable_instance_get(parent, "leader", noone),
 		_team	= variable_instance_get(team,	"team",	  0);
 	
+	
 #define VlasmaBullet_create(_x, _y)
 	with(instance_create(_x, _y, CustomProjectile)){
 		 // Visual:
 		sprite_index = spr.VlasmaBullet;
 		image_speed  = 0.4;
-		depth        = -8;
+		depth        = -9;
 		
 		 // Vars:
 		mask_index = mskEnemyBullet1;
@@ -2642,9 +2643,8 @@
 	 // Target Acquired, Sweet Prince:
 	if(image_speed == 0){
 		if(
-			(instance_exists(target) && team != variable_instance_get(target, "team"))
-			? place_meeting(x, y, target)
-			: point_distance(x, y, target_x, target_y) <= 8 + speed_raw
+			point_distance(x, y, target_x, target_y) <= 8 + speed_raw
+			|| (instance_exists(target) && ("team" not in target || team != target.team) && place_meeting(x, y, target))
 		){
 			instance_destroy();
 		}
@@ -2723,6 +2723,9 @@
 				target_y = other.target_y;
 			}
 		}
+		
+		 // Sound:
+		sound_play_hit_ext(sndPlasmaHit, 0.6 + random(0.2), 4);
 	}
 	
 	 // Explo:
@@ -2790,7 +2793,7 @@
 		image_speed  = 0.4;
 		image_angle  = random(360);
 		image_alpha  = -1;
-		depth        = -8;
+		depth        = -9;
 		
 		 // Vars:
 		mask_index = -1;
@@ -2919,9 +2922,7 @@
 	}
 	
 	 // No Portals:
-	if(!instance_exists(enemy)){
-		portal_poof();
-	}
+	portal_poof();
 	
 	 // Warp:
 	with(prompt){
@@ -3018,7 +3019,7 @@
 	with(instance_create(_x, _y, CustomObject)){
 		 // Visual:
 		sprite_index = sprPortalClear;
-		depth        = -8;
+		depth        = -9;
 		
 		 // Vars:
 		mask_index   = sprPortalShock;
@@ -3108,7 +3109,7 @@
 				image_angle  = other.sprite_angle + other.angle + orandom(30);
 				image_blend  = other.image_blend;
 				image_alpha  = other.image_alpha;
-				depth        = -9;
+				depth        = -10;
 				growspeed   *= 2/3;
 				
 				 // Pink Flash:

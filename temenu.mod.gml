@@ -382,9 +382,9 @@
 					}
 					
 					 // Pick Random Crown:
-					var m = ((array_length(_list) > 0) ? _list[irandom(array_length(_list) - 1)] : crwn_none);
-					if(m != crown_current){
-						crown_current = m;
+					var _m = ((array_length(_list) > 0) ? _list[irandom(array_length(_list) - 1)] : crwn_none);
+					if(_m != crown_current){
+						crown_current = _m;
 						
 						 // Destiny Fix:
 						if(crown_current == crwn_destiny){
@@ -580,8 +580,6 @@
 	}
 	
 #define draw_pause
-	draw_set_projection(0);
-	
 	 // NTTE Options Button:
 	if(!MenuOpen){
 		if(instance_exists(OptionMenuButton)){
@@ -591,8 +589,12 @@
 				break;
 			}
 			if(_draw){
-				var	_x     = (game_width / 2),
-					_y     = (game_height / 2) + 59,
+				var	_vx    = view_xview_nonsync,
+					_vy    = view_yview_nonsync,
+					_gw    = game_width,
+					_gh    = game_height,
+					_x     = (_gw / 2),
+					_y     = (_gh / 2) + 59,
 					_hover = false;
 					
 				 // Button Clicking:
@@ -611,14 +613,14 @@
 				 // Splat:
 				MenuSplatOptions += (_hover ? 1 : -1) * current_time_scale;
 				MenuSplatOptions = clamp(MenuSplatOptions, 0, sprite_get_number(sprMainMenuSplat) - 1);
-				draw_sprite(sprMainMenuSplat, MenuSplatOptions, (game_width / 2), _y);
+				draw_sprite(sprMainMenuSplat, MenuSplatOptions, _vx + (_gw / 2), _vy + _y);
 				
 				 // Gray Out Other Options:
 				if(MenuSplatOptions > 0){
 					var _spr = sprOptionsButtons;
 					for(var j = 0; j < sprite_get_number(_spr); j++){
-						var	_dx = (game_width / 2),
-							_dy = (game_height / 2) - 36 + (j * 24);
+						var	_dx = _vx + (_gw / 2),
+							_dy = _vy + (_gh / 2) - 36 + (j * 24);
 							
 						draw_sprite_ext(_spr, j, _dx, _dy, 1, 1, 0, make_color_hsv(0, 0, 155), 1);
 					}
@@ -626,11 +628,11 @@
 				
 				 // Button:
 				draw_set_fog(true, c_black, 0, 0);
-				draw_sprite(spr.OptionNTTE, 0, _x + 1, _y);
-				draw_sprite(spr.OptionNTTE, 0, _x,     _y + 1);
-				draw_sprite(spr.OptionNTTE, 0, _x + 1, _y + 1);
+				draw_sprite(spr.OptionNTTE, 0, _vx + _x + 1, _vy + _y);
+				draw_sprite(spr.OptionNTTE, 0, _vx + _x,     _vy + _y + 1);
+				draw_sprite(spr.OptionNTTE, 0, _vx + _x + 1, _vy + _y + 1);
 				draw_set_fog(false, 0, 0, 0);
-				draw_sprite_ext(spr.OptionNTTE, 0, _x, _y, 1, 1, 0, (_hover ? c_white : make_color_hsv(0, 0, 155)), 1);
+				draw_sprite_ext(spr.OptionNTTE, 0, _vx + _x, _vy + _y, 1, 1, 0, (_hover ? c_white : make_color_hsv(0, 0, 155)), 1);
 			}
 			else MenuSplatOptions = 0;
 		}
@@ -638,8 +640,6 @@
 	else if(instance_exists(menubutton)){
 		MenuOpen = false;
 	}
-	
-	draw_reset_projection();
 	
 	 // Main Code:
 	ntte_menu();
@@ -659,8 +659,11 @@
 	 // Campfire Menu Button:
 	if(instance_exists(Menu)){
 		if(Menu.mode == 1){
-			draw_set_projection(0);
-			
+			var	_vx = view_xview_nonsync,
+				_vy = view_yview_nonsync,
+				_gw = game_width,
+				_gh = game_height;
+				
 			if(MenuOpen){
 				 // Hide Things:
 				with(Menu){
@@ -680,7 +683,7 @@
 				 // Dim Screen:
 				draw_set_color(c_black);
 				draw_set_alpha(0.75);
-				draw_rectangle(0, 0, game_width, game_height, 0);
+				draw_rectangle(_vx, _vy, _vx + _gw, _vy + _gh, 0);
 				draw_set_alpha(1);
 				
 				 // Leave:
@@ -721,7 +724,7 @@
 			
 			 // Open:
 			else if(MenuSplat > 0){
-				var	_x = game_width - 40,
+				var	_x = _gw - 40,
 					_y = 40,
 					_w = 40,
 					_h = 24;
@@ -734,7 +737,7 @@
 					}
 				}
 				if(_max >= 2){
-					_x = (game_width / 2) - 20;
+					_x = (_gw / 2) - 20;
 					_y += 2;
 				}
 				
@@ -755,12 +758,12 @@
 				}
 				
 				 // Button Visual:
-				draw_sprite_ext(sprBossNameSplat, MenuSplat, _x + 17, _y + 12 + MenuSplat, 1, 1, 90, c_white, 1);
+				draw_sprite_ext(sprBossNameSplat, MenuSplat, _vx + _x + 17, _vy + _y + 12 + MenuSplat, 1, 1, 90, c_white, 1);
 				if(!MenuOpen){
 					var _wave = (MenuSplatBlink % 300) - 60,
 						_col  = ((_hover || in_range(_wave, 0, 5) || in_range(_wave, 8, 10)) ? c_white : c_silver);
 						
-					draw_sprite_ext(spr.MenuNTTE, 0, _x + (_w / 2), _y + 8 + _hover, 1, 1, 0, _col, 1);
+					draw_sprite_ext(spr.MenuNTTE, 0, _vx + _x + (_w / 2), _vy + _y + 8 + _hover, 1, 1, 0, _col, 1);
 				}
 				if(MenuSplatBlink >= 0){
 					MenuSplatBlink += current_time_scale;
@@ -769,8 +772,6 @@
 					}
 				}
 			}
-			
-			draw_reset_projection();
 		}
 		else MenuOpen = false;
 	}
@@ -956,20 +957,24 @@
 					
 					 // Selection:
 					if(instance_exists(inst)){
-						if(player_is_active(_p) && position_meeting(mouse_x[_p], mouse_y[_p], inst)){
-							 // Select:
-							if(!locked && button_pressed(_p, "fire")){
-								if(_crown.custom.slct != -1 && crwn == _crown.slct){
-									sound_play(sndMenuCrown);
+						if(player_is_active(_p)){
+							with(UberCont) if(position_meeting(mouse_x[_p], mouse_y[_p], other.inst)){
+								with(other){
+									 // Select:
+									if(!locked && button_pressed(_p, "fire")){
+										if(_crown.custom.slct != -1 && crwn == _crown.slct){
+											sound_play(sndMenuCrown);
+										}
+										_crown.slct = crwn;
+										_crown.custom.slct = -1;
+									}
+									
+									 // Hovering Over Button:
+									if(crwn != _crown.slct || _crown.custom.slct != -1){
+										_y -= 1;
+										_col = merge_color(c_gray, c_white, 0.6);
+									}
 								}
-								_crown.slct = crwn;
-								_crown.custom.slct = -1;
-							}
-							
-							 // Hovering Over Button:
-							if(crwn != _crown.slct || _crown.custom.slct != -1){
-								_y -= 1;
-								_col = merge_color(c_gray, c_white, 0.6);
 							}
 						}
 						
@@ -982,7 +987,9 @@
 					
 					 // Dull Normal Crown Selection:
 					if(crwn == _crown.slct && _crown.custom.slct != -1){
-						draw_sprite_ext(_spr, _img, _x, _y, 1, 1, 0, _col, 1);
+						with(UberCont){
+							draw_sprite_ext(_spr, _img, _x, _y, 1, 1, 0, _col, 1);
+						}
 					}
 					
 					 // Haste Fix:
@@ -993,9 +1000,11 @@
 						if(crwn == _crown.slct && _crown.custom.slct == -1){
 							time += current_time_scale / 12;
 						}
-						draw_sprite_ext(spr.ClockParts, 0, _x - 2, _y - 1, 1, 1, time,      _col, 1);
-						draw_sprite_ext(spr.ClockParts, 0, _x - 2, _y - 1, 1, 1, time * 12, _col, 1);
-						draw_sprite_ext(spr.ClockParts, 1, _x - 2, _y - 1, 1, 1, 0,         _col, 1);
+						with(UberCont){
+							draw_sprite_ext(spr.ClockParts, 0, _x - 2, _y - 1, 1, 1, other.time,      _col, 1);
+							draw_sprite_ext(spr.ClockParts, 0, _x - 2, _y - 1, 1, 1, other.time * 12, _col, 1);
+							draw_sprite_ext(spr.ClockParts, 1, _x - 2, _y - 1, 1, 1, 0,               _col, 1);
+						}
 					}
 				}
 			}
@@ -1181,6 +1190,11 @@
 	
 #define draw_loadout_behind
 	if(instance_exists(Loadout)){
+		var	_vx = view_xview_nonsync,
+			_vy = view_yview_nonsync,
+			_gw = game_width,
+			_gh = game_height;
+			
 		 // Fix Haste Hands:
 		if(global.clock_fix){
 			if(array_length(instances_matching(Loadout, "selected", false))){
@@ -1197,7 +1211,7 @@
 			else{
 				var _spr = sprLoadoutClose;
 				if("closeanim" in self && closeanim < sprite_get_number(_spr)){
-					draw_sprite(_spr, closeanim, view_xview_nonsync + game_width, view_yview_nonsync + game_height - 36);
+					draw_sprite(_spr, closeanim, _vx + _gw, _vy + _gh - 36);
 					closeanim += current_time_scale;
 					
 					image_index = 0;
@@ -1213,8 +1227,8 @@
 			
 		with(surface_setup("LoadoutHide", 64, 64, game_scale_nonsync)){
 			with(Loadout){
-				var	_x         = view_xview_nonsync + game_width,
-					_y         = view_yview_nonsync + game_height - 36 + introsettle,
+				var	_x         = _vx + _gw,
+					_y         = _vy + _gh - 36 + introsettle,
 					_surf      = other.surf,
 					_surfW     = other.w,
 					_surfH     = other.h,
@@ -1222,9 +1236,9 @@
 					_surfX     = _x - 32 - _surfW,
 					_surfY     = _y +  4 - _surfH;
 					
-				with(surface_setup("LoadoutHideScreen", game_width, game_height, _surfScale)){
-					x = view_xview_nonsync;
-					y = view_yview_nonsync;
+				with(surface_setup("LoadoutHideScreen", _gw, _gh, _surfScale)){
+					x = _vx;
+					y = _vy;
 					
 					 // Capture Screen:
 					surface_set_target(surf);
@@ -1459,19 +1473,19 @@
 					draw_set_visible_all(false);
 					draw_set_visible(_index, true);
 					
-					draw_set_projection(0);
-					
 					var	_menuCurrent = MenuSlct[_index],
 						_vx          = view_xview[_index],
 						_vy          = view_yview[_index],
 						_mx          = mouse_x[_index],
 						_my          = mouse_y[_index],
+						_gw          = game_width,
+						_gh          = game_height,
 						_local       = player_is_local_nonsync(_index),
 						_tooltip     = "";
 						
 					/// Menu Swap:
-						var	_tx = game_width - 3,
-							_ty = 35 + min(3, 2 * MenuSplat);
+						var	_tx = _vx + _gw - 3,
+							_ty = _vy + 35 + min(3, 2 * MenuSplat);
 							
 						draw_set_halign(fa_right);
 						draw_set_valign(fa_top);
@@ -1486,16 +1500,16 @@
 						}
 						
 						 // Menu List:
-						for(var m = 0; m < lq_size(MenuList); m++){
-							var	_text = lq_get_key(MenuList, m),
-								_hover = false,
-								_current = (MenuSlct[_index] == m);
+						for(var _m = 0; _m < lq_size(MenuList); _m++){
+							var	_text    = lq_get_key(MenuList, _m),
+								_hover   = false,
+								_current = (MenuSlct[_index] == _m);
 								
 							 // Selecting:
 							if(!_current){
 								if(point_in_rectangle(
-									_mx - _vx,
-									_my - _vy,
+									_mx,
+									_my,
 									_tx - 40,
 									_ty,
 									_tx + 2,
@@ -1503,13 +1517,14 @@
 								)){
 									_hover = true;
 									if(MenuPop[_index] >= 3 && button_pressed(_index, "fire")){
-										_menuCurrent = m;
+										_menuCurrent = _m;
 									}
 								}
 							}
 							
 							 // Text:
 							draw_text_nt(_tx - _current, _ty, (_current ? "" : (_hover ? "@s" : "@d")) + _text);
+							
 							_ty += string_height(_text) + 2;
 						}
 						
@@ -1519,19 +1534,19 @@
 							
 							 // Sound:
 							switch(_menuCurrent){
-								case menu_options:	sound_play(sndMenuOptions);	break;
-								case menu_stats:	sound_play(sndMenuStats);	break;
-								case menu_credits:	sound_play(sndMenuCredits);	break;
-								default:			sound_play(sndClick);
+								case menu_options : sound_play(sndMenuOptions); break;
+								case menu_stats   : sound_play(sndMenuStats);   break;
+								case menu_credits : sound_play(sndMenuCredits); break;
+								default           : sound_play(sndClick);
 							}
 						}
 						
 					 // Menu Code:
-					var	_menu = lq_get_value(MenuList, _menuCurrent),
+					var	_menu     = lq_get_value(MenuList, _menuCurrent),
 						_menuList = lq_defget(_menu, "list", []),
 						_menuSlct = lq_defget(_menu, "slct", []),
-						_menuX = (game_width  / 2) + lq_defget(_menu, "x", 0),
-						_menuY = (game_height / 2) + lq_defget(_menu, "y", 0);
+						_menuX    = _vx + (_gw / 2) + lq_defget(_menu, "x", 0),
+						_menuY    = _vy + (_gh / 2) + lq_defget(_menu, "y", 0);
 						
 					draw_set_font(fntM);
 					
@@ -1546,22 +1561,24 @@
 							 // Arrow Key Selection Change:
 							var _moveOption = sign(button_pressed(_index, "sout") - button_pressed(_index, "nort"));
 							if(_moveOption != 0){
-								var m = _menuSlct[_index];
+								var _m = _menuSlct[_index];
 								do{
-									m += _moveOption;
-									m = ((m + array_length(_menuList)) % array_length(_menuList));
+									_m += _moveOption;
+									_m = ((_m + array_length(_menuList)) % array_length(_menuList));
 								}
-								until (_menuList[m].type >= 0);
-								_menuSlct[_index] = m;
+								until (_menuList[_m].type >= 0);
+								_menuSlct[_index] = _m;
 							}
 							
 							 // Option Selecting & Splat:
 							for(var i = 0; i < array_length(_menuList); i++){
 								var _option = _menuList[i];
-								with(_option) appear = (i + 3);
+								with(_option){
+									appear = i + 3;
+								}
 								
 								 // Select:
-								var	_hover = (point_in_rectangle(_mx - _vx, _my - _vy, _menuX - 80, _menuY - 8, _menuX + 159, _menuY + 6) && (_mx < _vx + game_width - 48 || _my > _vy + 64)),
+								var	_hover    = (point_in_rectangle(_mx, _my, _menuX - 80, _menuY - 8, _menuX + 159, _menuY + 6) && (_mx < _vx + _gw - 48 || _my > _vy + 64)),
 									_selected = (_menuSlct[_index] == i);
 									
 								if(_hover || _selected){
@@ -1576,61 +1593,69 @@
 									}
 									
 									with(_option) if(_pop >= appear){
-										var	_click = button_pressed(_index, "fire"),
+										var	_click   = button_pressed(_index, "fire"),
 											_confirm = ((_click && _hover) || button_pressed(_index, "okay"));
 											
 										 // Click:
 										if(type >= 0){
 											if(!clicked[_index]){
 												if(_confirm){
-													if(_click) clicked[_index] = true;
-													if(_selected) switch(type){
-														case opt_slider:
-															if(_click) sound_play(sndSlider);
-															break;
-															
-														default:
-															sound_play(sndClick);
-															break;
+													if(_click){
+														clicked[_index] = true;
+													}
+													if(_selected){
+														switch(type){
+															case opt_slider:
+																if(_click) sound_play(sndSlider);
+																break;
+																
+															default:
+																sound_play(sndClick);
+																break;
+														}
 													}
 												}
 											}
 											else if(!button_check(_index, "fire")){
 												clicked[_index] = false;
-												if(_selected) switch(type){
-													case opt_slider:
-														sound_play(sndSliderLetGo);
-														break;
+												if(_selected){
+													switch(type){
+														case opt_slider:
+															sound_play(sndSliderLetGo);
+															break;
+													}
 												}
 											}
 										}
 										
 										 // Option Specifics:
-										if(_selected && (sync || _local)) switch(type){
-											case opt_toggle:
-												if(_confirm){
-													save_set(save, (save_get(save, 1) + 1) % array_length(pick));
-												}
-												break;
-												
-											case opt_slider:
-												if(_hover && button_check(_index, "fire") && clicked[_index]){
-													var _slider = clamp(round((_mx - _vx) - (_menuX + 40)) / 100, 0, 1);
-													save_set(save, _slider);
-												}
-												else{
-													var _adjust = 0.1 * sign(button_pressed(_index, "east") - button_pressed(_index, "west"));
-													if(_adjust != 0){
-														save_set(save, clamp(save_get(save, 1) + _adjust, pick[0], pick[1]));
+										if(_selected && (sync || _local)){
+											switch(type){
+												case opt_toggle:
+													if(_confirm){
+														save_set(save, (save_get(save, 1) + 1) % array_length(pick));
 													}
-												}
-												break;
+													break;
+													
+												case opt_slider:
+													if(_hover && button_check(_index, "fire") && clicked[_index]){
+														var _slider = clamp(round(_mx - (_menuX + 40)) / 100, 0, 1);
+														save_set(save, _slider);
+													}
+													else{
+														var _adjust = 0.1 * sign(button_pressed(_index, "east") - button_pressed(_index, "west"));
+														if(_adjust != 0){
+															save_set(save, clamp(save_get(save, 1) + _adjust, pick[0], pick[1]));
+														}
+													}
+													break;
+											}
 										}
 										
 										 // Description on Hover:
 										if(_hover && "text" in self){
 											//if(!button_check(_index, "fire") || type == opt_title){
-												if(_mx < _vx + (game_width / 2) + 32){
+												if(_mx < _vx + (_gw / 2) + 32){
 													_tooltip = text;
 												}
 											//}
@@ -1640,7 +1665,9 @@
 								else _option.clicked[_index] = false;
 								
 								with(_option){
-									if(type == opt_title) _menuY += 2;
+									if(type == opt_title){
+										_menuY += 2;
+									}
 									x = _menuX;
 									y = _menuY;
 									
@@ -1656,7 +1683,11 @@
 												splat += ((_menuSlct[_index] == i) ? 1 : -1) * current_time_scale;
 												splat = clamp(splat, 0, sprite_get_number(sprMainMenuSplat) - 1);
 											}
-											if(splat > 0) with(other) draw_sprite(sprMainMenuSplat, other.splat, _menuX, _menuY);
+											if(splat > 0){
+												with(UberCont){
+													draw_sprite(sprMainMenuSplat, other.splat, other.x, other.y);
+												}
+											}
 										}
 									}
 								}
@@ -1667,13 +1698,13 @@
 							if(_local){
 								var _titleFound = false;
 								for(var i = 0; i < array_length(_menuList); i++){
-									var	_option = _menuList[i],
+									var	_option   = _menuList[i],
 										_selected = (_local && _menuSlct[_index] == i);
 										
 									with(_option) if(_pop >= appear){
 										 // Option Name:
-										var	_x = x - 80,
-											_y = y,
+										var	_x    = x - 80,
+											_y    = y,
 											_name = name;
 											
 										if(type == opt_title){
@@ -1689,7 +1720,9 @@
 											draw_set_color(c_white);
 										}
 										else draw_set_color(make_color_rgb(125, 131, 141));
-										if(_pop < (appear + 1)) _y++;
+										if(_pop < appear + 1){
+											_y++;
+										}
 										
 										draw_text_shadow(_x, _y, _name);
 										
@@ -1705,8 +1738,8 @@
 												case opt_slider:
 													var	_dx = _x - 5,
 														_dy = _y - 2,
-														_w = 6 + (100 * _value),
-														_h = sprite_get_height(sprOptionSlider);
+														_w  = 6 + (100 * _value),
+														_h  = sprite_get_height(sprOptionSlider);
 														
 													 // Slider:
 													draw_sprite(sprOptionSlider,      0,               _dx,            _dy);
@@ -1723,12 +1756,12 @@
 												
 												case "Visual Quality :": // Surface Quality Visual
 													
-													var	_active = in_range(_menuSlct[_index], i, i + 2),
-														_spr = spr.GullIdle,
-														_img = (current_frame * 0.4),
-														_col = (_active ? c_white : c_gray),
-														_surfW = sprite_get_width(_spr),
-														_surfH = sprite_get_height(_spr),
+													var	_active    = in_range(_menuSlct[_index], i, i + 2),
+														_spr       = spr.GullIdle,
+														_img       = (current_frame * 0.4),
+														_col       = (_active ? c_white : c_gray),
+														_surfW     = sprite_get_width(_spr),
+														_surfH     = sprite_get_height(_spr),
 														_surfScale = [
 															option_get("quality:minor"),
 															option_get("quality:main")
@@ -1757,7 +1790,6 @@
 																if(s == 0) draw_set_fog(false, 0, 0, 0);
 															}
 															surface_reset_target();
-															draw_set_projection(0);
 															
 															 // Draw Clipped Surface:
 															if(s == 0){ // Bottom
@@ -1787,8 +1819,8 @@
 							var _statSlct = _menuSlct[_index];
 							
 							/// Stat Menu Swap:
-								var	_tx = game_width,
-									_ty = game_height - 36;
+								var	_tx = _vx + _gw,
+									_ty = _vy + _gh - 36;
 									
 								 // Splat:
 								var _spr = sprLoadoutSplat;
@@ -1811,8 +1843,8 @@
 									
 									 // Selecting:
 									if(!_selected && point_in_rectangle(
-										_mx - _vx,
-										_my - _vy,
+										_mx,
+										_my,
 										_tx - 68,
 										_ty - string_height(_text) - 1,
 										_tx + 4,
@@ -1883,8 +1915,8 @@
 									/// Character Swap:
 										
 										 // Splat:
-										var	_x = 0,
-											_y = 36,
+										var	_x   = _vx,
+											_y   = _vy + 36,
 											_spr = sprUnlockPopupSplat;
 											
 										if(!instance_exists(BackMainMenu)){
@@ -1908,15 +1940,17 @@
 													}
 													
 													var	_selected = (_raceSlct[_index] == i && _avail),
-														_sprt = mod_script_call("race", _race, "race_mapicon", _index, 0);
+														_sprt     = mod_script_call("race", _race, "race_mapicon", _index, 0);
 														
-													if(!is_real(_sprt) || !sprite_exists(_sprt)) _sprt = sprMapIconChickenHeadless;
+													if(!is_real(_sprt) || !sprite_exists(_sprt)){
+														_sprt = sprMapIconChickenHeadless;
+													}
 													
 													 // Selection:
 													var _hover = false;
 													if(!_selected && point_in_rectangle(
-														_mx - _vx,
-														_my - _vy,
+														_mx,
+														_my,
 														_x - 8,
 														_y - 8,
 														_x + 8,
@@ -1954,7 +1988,7 @@
 											if(instance_exists(Menu) && unlock_get("race:parrot")){
 												_y -= 2;
 												
-												var _hover = point_in_rectangle(_mx - _vx, _my - _vy, _x - 12, _y - 8, _x + 12, _y + 8);
+												var _hover = point_in_rectangle(_mx, _my, _x - 12, _y - 8, _x + 12, _y + 8);
 												
 												if(_hover && button_pressed(_index, "fire")){
 													sound_play(sndNoSelect);
@@ -1982,9 +2016,9 @@
 										}
 										
 									/// Portrait:
-										var	_sprt = sprBigPortraitChickenHeadless,
-											_x = 0,
-											_y = game_height,
+										var	_sprt  = sprBigPortraitChickenHeadless,
+											_x     = _vx,
+											_y     = _vy + _gh,
 											_portX = (90 * min(0, _pop - 5)) - min(2, (_pop - 5) * 2);
 											
 										if(mod_script_exists("race", _raceCurrent, "race_portrait")){
@@ -2031,14 +2065,16 @@
 										_list = array_clone(_statMenu.list);
 										
 									for(var i = 0; i < lq_size(_petStatList); i++){
-										var k = lq_get_key(_petStatList, i);
-										if(!array_exists(_list, k)) array_push(_list, k);
+										var _key = lq_get_key(_petStatList, i);
+										if(!array_exists(_list, _key)){
+											array_push(_list, _key);
+										}
 									}
 									
 									 // Compile Pet List:
 									var _petList = {};
 									with(_list){
-										var	_pet = self,
+										var	_pet   = self,
 											_split = string_split(_pet, ".");
 											
 										if(array_length(_split) >= 3){
@@ -2067,19 +2103,19 @@
 									}
 									
 									 // Splat:
-									var	_x = (instance_exists(BackMainMenu) ? -48 : -96),
-										_y = game_height - 36,
+									var	_x   = _vx + (instance_exists(BackMainMenu) ? -48 : -96),
+										_y   = _vy + _gh - 36,
 										_spr = sprLoadoutOpen;
 										
-									draw_sprite_ext(_spr, clamp(_pop - 1, 0, (instance_exists(BackMainMenu) ? 1 : sprite_get_number(_spr) - 1)), _x, _y, -1, (game_height - 72) / (240 - 72), 0, c_white, 1);
+									draw_sprite_ext(_spr, clamp(_pop - 1, 0, (instance_exists(BackMainMenu) ? 1 : sprite_get_number(_spr) - 1)), _x, _y, -1, (_gh - 72) / (240 - 72), 0, c_white, 1);
 									
 									 // Icons:
 									if(_pop >= 3){
 										var	_col = min(4, floor(sqrt(lq_size(_petList)))),
-											_w = 13,
-											_h = 13,
-											_x = 40 - round(_w * ((_col - 1) / 2)) - (2 * (_pop <= 3)) + (_pop == 4),
-											_y = 96;
+											_w   = 13,
+											_h   = 13,
+											_x   = _vx + 40 - round(_w * ((_col - 1) / 2)) - (2 * (_pop <= 3)) + (_pop == 4),
+											_y   = _vy + 96;
 											
 										 // Arrow Key Selection:
 										var	_swaph = (button_pressed(_index, "east") - button_pressed(_index, "west")),
@@ -2129,8 +2165,8 @@
 												
 											 // Selecting:
 											if(!_selected && point_in_rectangle(
-												_mx - _vx,
-												_my - _vy,
+												_mx,
+												_my,
 												_x - 6,
 												_y - 6,
 												_x + 6,
@@ -2181,8 +2217,8 @@
 										draw_set_halign(fa_left);
 										draw_set_valign(fa_top);
 										draw_text_bn(
-											28 + (2 * max(0, (_appear + 1) - _pop)),
-											46,
+											_vx + 28 + (2 * max(0, (_appear + 1) - _pop)),
+											_vy + 46,
 											(_pet != null ? (_pet.avail ? _pet.name : "UNKNOWN") : "NONE"),
 											1.5
 										);
@@ -2190,8 +2226,8 @@
 									
 									 // Get Stats to Display:
 									if(_pet != null && _pet.avail){
-										var	_stat = { name : "", list : [] },
-											_scrt = _pet.name + "_stat",
+										var	_stat     = { name : "", list : [] },
+											_scrt     = _pet.name + "_stat",
 											_statPath = `pet:${_pet.name}.${_pet.mod_name}.${_pet.mod_type}:`;
 											
 										for(var i = -1; i < lq_size(_pet.stat); i++){
@@ -2204,7 +2240,9 @@
 												var s = mod_script_call(_pet.mod_type, _pet.mod_name, _scrt, _name, _value);
 												if(s != 0){
 													if(is_array(s)){
-														if(array_length(s) > 0) _name = s[0];
+														if(array_length(s) > 0){
+															_name = s[0];
+														}
 														if(array_length(s) > 1){
 															_value = s[1];
 															_type = stat_display;
@@ -2242,16 +2280,16 @@
 									var _otherList = _statMenu.list;
 									
 									 // Splat:
-									var	_x   = -64,
-										_y   = game_height - 36,
+									var	_x   = _vx - 64,
+										_y   = _vy + _gh - 36,
 										_spr = sprLoadoutOpen;
 										
-									draw_sprite_ext(_spr, clamp(_pop - 1, 0, sprite_get_number(_spr) - 1), _x, _y, -1, (game_height - 72) / (240 - 72), 0, c_white, 1);
+									draw_sprite_ext(_spr, clamp(_pop - 1, 0, sprite_get_number(_spr) - 1), _x, _y, -1, (_gh - 72) / (240 - 72), 0, c_white, 1);
 									
 									 // Draw Categories:
 									var	_appear = 5,
-										_sx     = 6 + (2 * max(0, (_appear + 1) - _pop)),
-										_sy     = 44;
+										_sx     = _vx + 6 + (2 * max(0, (_appear + 1) - _pop)),
+										_sy     = _vy + 44;
 										
 									draw_set_halign(fa_left);
 									draw_set_valign(fa_top);
@@ -2387,7 +2425,7 @@
 																			}
 																			
 																			 // Loop Over:
-																			if(_dx + sprite_get_width(_modIcon) > game_width){
+																			if(_dx + sprite_get_width(_modIcon) > _vx + _gw){
 																				_dx = _sx + 124;
 																				_dy += 16;
 																			}
@@ -2436,7 +2474,7 @@
 																_x   = _sx + 24 + _ox,
 																_y   = _sy + 12;
 																
-															if(point_in_rectangle(_mx - _vx + sprite_get_xoffset(_spr), _my - _vy + sprite_get_yoffset(_spr), _x, _y, _x + sprite_get_width(_spr), _y + sprite_get_height(_spr))){
+															if(point_in_rectangle(_mx + sprite_get_xoffset(_spr), _my + sprite_get_yoffset(_spr), _x, _y, _x + sprite_get_width(_spr), _y + sprite_get_height(_spr))){
 																_hover = true;
 																
 																 // Tooltip:
@@ -2483,9 +2521,12 @@
 												
 											case "OTHER":
 												
-												_statX = _sx + 44;
-												_statY = _sy;
-												_statDraw = { name : "", list : ((_pop >= _appear) ? list : []) };
+												_statX    = _sx + 44;
+												_statY    = _sy;
+												_statDraw = {
+													"name" : "",
+													"list" : ((_pop >= _appear) ? list : [])
+												};
 												
 												break;
 												
@@ -2501,15 +2542,17 @@
 							draw_set_font(fntM);
 							draw_set_valign(fa_top);
 							
-							var	_x = _statX,
-								_y = _statY,
+							var	_x      = _statX,
+								_y      = _statY,
 								_appear = 5;
 								
 							if(is_object(_statDraw)) _statDraw = [_statDraw];
 							
 							if(array_length(_statDraw)) with(_statDraw){
 								if(_pop >= _appear){
-									if(_pop == _appear) _x--;
+									if(_pop == _appear){
+										_x--;
+									}
 									
 									 // Category Name:
 									draw_set_halign(fa_center);
@@ -2527,13 +2570,13 @@
 										}
 										switch(_type){
 											case stat_time:
-												var t = "";
-												t += string_lpad(string(floor((_stat / power(60, 2))     )), "0", 1); // Hours
-												t += ":";
-												t += string_lpad(string(floor((_stat / power(60, 1)) % 60)), "0", 2); // Minutes
-												t += ":";
-												t += string_lpad(string(floor((_stat / power(60, 0)) % 60)), "0", 2); // Seconds
-												_stat = t;
+												var _t = "";
+												_t += string_lpad(string(floor((_stat / power(60, 2))     )), "0", 1); // Hours
+												_t += ":";
+												_t += string_lpad(string(floor((_stat / power(60, 1)) % 60)), "0", 2); // Minutes
+												_t += ":";
+												_t += string_lpad(string(floor((_stat / power(60, 0)) % 60)), "0", 2); // Seconds
+												_stat = _t;
 												break;
 										}
 										_stat = string(_stat);
@@ -2547,7 +2590,7 @@
 										_y += max(string_height(_name), string_height(_stat));
 									}
 									
-									_y += string_height("A");
+									_y += string_height(" ");
 								}
 								_appear += 2;
 							}
@@ -2556,7 +2599,7 @@
 							else if(_pop >= _appear){
 								draw_set_halign(fa_center);
 								draw_set_valign(fa_middle);
-								draw_text_nt(_x - 4 - (_pop == _appear), (game_height / 2), "@sNOTHING TO# DISPLAY YET!")
+								draw_text_nt(_x - 4 - (_pop == _appear), _vy + (_gh / 2), "@sNOTHING TO# DISPLAY YET!")
 							}
 							
 							break;
@@ -2569,8 +2612,8 @@
 								var _appear = 1 + floor(i / 2);
 								if(_pop >= _appear){
 									var	_side = ((i & 1) ? 1 : -1),
-										_tx = _menuX + (_side * 8),
-										_ty = _menuY + (32 * floor(i / 2)) - (_pop == _appear);
+										_tx   = _menuX + (_side * 8),
+										_ty   = _menuY + (32 * floor(i / 2)) - (_pop == _appear);
 										
 									draw_set_halign(_side ? fa_left : fa_right);
 									draw_set_valign(fa_top);
@@ -2628,8 +2671,8 @@
 										 // Hovering:
 										var _hover = false;
 										if(point_in_rectangle(
-											mouse_x[_index] - view_xview[_index],
-											mouse_y[_index] - view_yview[_index],
+											_mx,
+											_my,
 											_tx - 32,
 											_ty - 20,
 											_tx + 32,
@@ -2663,8 +2706,6 @@
 							break;
 					}
 					
-					draw_reset_projection();
-					
 					 // Tooltips:
 					if(_local && _tooltip != ""){
 						draw_tooltip(mouse_x_nonsync, mouse_y_nonsync, _tooltip);
@@ -2676,7 +2717,6 @@
 		}
 		
 		draw_set_visible_all(true);
-		draw_reset_projection();
 		
 		if(lag) trace_time("ntte_menu");
 	}

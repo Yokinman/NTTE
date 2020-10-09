@@ -127,6 +127,7 @@
 			sprite_index = spr.BigTopDecal[? _area];
 			image_xscale = choose(-1, 1);
 			image_speed  = 0.4;
+			depth        = object_get_depth(SubTopCont) - 1;
 			
 			 // Vars:
 			mask_index = msk.BigTopDecal[? (ds_map_exists(msk.BigTopDecal, _area) ? _area : area_desert)];
@@ -265,10 +266,10 @@
 				image_angle  = other.image_angle;
 				image_blend  = other.image_blend;
 				image_alpha  = other.image_alpha;
+				depth        = other.depth;
 				
 				 // Lay Flat:
-				if(other.area == area_scrapyards){
-					depth = -6;
+				/*if(depth == object_get_depth(SubTopCont)){
 					if(fork()){
 						wait 0;
 						with(SubTopCont){
@@ -281,7 +282,7 @@
 						}
 						exit;
 					}
-				}
+				}*/
 				
 				 // Override Top Decals:
 				with(instances_meeting(x, y, [TopPot, Bones])){
@@ -2818,7 +2819,7 @@
 										image_xscale = choose(-1, 1);
 										image_speed = 0.5;
 										friction = 1/8;
-										depth = -8;
+										depth = -9;
 									}
 								}
 								ntte_pet = array_delete(ntte_pet, i);
@@ -3115,6 +3116,12 @@
 	}
 	
 #define Pet_cleanup
+	 // Custom Cleanup Event:
+	var _scrt = pet + "_cleanup";
+	if(mod_script_exists(mod_type, mod_name, _scrt)){
+		mod_script_call(mod_type, mod_name, _scrt);
+	}
+	
 	 // Add to Pet History (MutantVats Event):
 	if(!stat_found && array_length(history) > 0){
 		var _vars = {};
@@ -4269,10 +4276,10 @@
 	
 	with(instance_create(_x, _y, CustomObject)){
 		 // Visual:
-		spr_shadow = -1;
+		spr_shadow   = -1;
 		spr_shadow_x = 0;
 		spr_shadow_y = 0;
-		depth = -6 - (y / 10000);
+	//	depth        = -6 - (y / 10000);
 		
 		 // Vars:
 		mask_index       = -1;
@@ -4300,7 +4307,7 @@
 		wobble           = 0;
 		wobble_num       = 0;
 		override_mask    = true;
-		override_depth   = true;
+	//	override_depth   = true;
 		unstick          = false;
 		search_x1        = x - 8;
 		search_x2        = x + 8;
@@ -4327,11 +4334,13 @@
 					other.y += (y - yprevious);
 					
 					 // Depth:
-					if(other.override_depth){
-						if(depth != other.depth) other.target_save.depth = depth;
+					/*if(other.override_depth){
+						if(depth != other.depth){
+							other.target_save.depth = depth;
+						}
 						other.depth = -6 - ((other.y - 8) / 10000);
 						depth = other.depth;
-					}
+					}*/
 				}
 				
 				var _spd = point_distance(xprevious, yprevious, x, y);
@@ -4349,7 +4358,7 @@
 								sprite_index = sprLeaf;
 								speed *= random_range(0.5, 1);
 							}
-							depth = other.depth + 0.1;
+							depth = other.depth/* + 0.1*/;
 						}
 					}
 					
@@ -4417,10 +4426,10 @@
 			}
 			
 			 // Depth:
-			if(depth != other.depth){
+			/*if(depth != other.depth){
 				other.target_save.depth = depth;
 				depth = other.depth;
-			}
+			}*/
 			
 			 // Disable Death:
 			if("canfly" in self && !canfly){
@@ -4439,8 +4448,7 @@
 			 // Depth:
 			if(z > 0){
 				if(!collision_rectangle(bbox_left + 4, bbox_top + 8 - z, bbox_right - 4, bbox_bottom - z, Wall, false, false)){
-					depth = min(-1, lq_defget(target_save, "depth", 0));
-					target.depth = depth;
+					target.depth = min(-1, lq_defget(target_save, "depth", 0));
 				}
 			}
 			
@@ -4452,8 +4460,7 @@
 				
 				 // Abyss Time:
 				else{
-					depth = max(12, depth);
-					target.depth = depth;
+					target.depth = max(12, target.depth);
 					if(!point_seen(x, bbox_top - z, -1)){
 						with(target) instance_delete(id);
 						instance_delete(id);
@@ -4520,7 +4527,7 @@
 								if(GameCont.area == area_city && chance(2, 3)){
 									with(instance_create(x, y, Breath)){
 										image_xscale = sign(other.image_xscale) * variable_instance_get(other, "right", 1);
-										depth = -8;
+										depth = other.depth - 1;
 									}
 								}
 							}
@@ -5010,40 +5017,43 @@
 	}
 	
 #define UnlockCont_draw
-	draw_set_projection(0);
-	
+	var	_vx = view_xview_nonsync,
+		_vy = view_yview_nonsync,
+		_gw = game_width,
+		_gh = game_height;
+		
 	 // Game Over Splash:
 	if(unlock_delay <= 0){
 		if(unlock_image > 0){
 			var	_unlock = unlock[unlock_index],
-				_nam = _unlock.nam[1],
-				_spr = _unlock.spr,
-				_img = _unlock.img,
-				_x = game_width / 2,
-				_y = game_height - 20;
+				_nam    = _unlock.nam[1],
+				_spr    = _unlock.spr,
+				_img    = _unlock.img,
+				_x      = _gw / 2,
+				_y      = _gh - 20;
 				
 			 // Unlock Portrait:
-			var	_px = _x - 60,
-				_py = _y + 9 + unlock_porty;
+			var	_px = _vx + _x - 60,
+				_py = _vy + _y + 9 + unlock_porty;
 				
 			draw_sprite(_spr, _img, _px, _py);
 			
 			 // Splash:
-			draw_sprite(unlock_sprit, unlock_image, _x, _y);
+			draw_sprite(unlock_sprit, unlock_image, _vx + _x, _vy + _y);
 			
 			 // Unlock Name:
-			var	_tx = _x,
-				_ty = _y - 92 + (unlock_porty < 2);
+			var	_tx = _vx + _x,
+				_ty = _vy + _y - 92 + (unlock_porty < 2);
 				
 			draw_set_font(fntBigName);
 			draw_set_halign(fa_center);
 			draw_set_valign(fa_top);
 			
-			var t = string_upper(_nam);
-			draw_text_nt(_tx, _ty, t);
+			var _t = string_upper(_nam);
+			draw_text_nt(_tx, _ty, _t);
 			
 			 // Unlocked!
-			_ty += string_height(t) + 3;
+			_ty += string_height(_t) + 3;
 			if(unlock_porty >= 3){
 				d3d_set_fog(1, 0, 0, 0);
 				draw_sprite(sprTextUnlocked, 4, _tx + 1, _ty);
@@ -5055,8 +5065,8 @@
 			
 			 // Continue Button:
 			if(unlock_delay_continue <= 0){
-				var	_cx = _x,
-					_cy = _y - 4,
+				var	_cx    = _x,
+					_cy    = _y - 4,
 					_blend = make_color_rgb(102, 102, 102);
 					
 				for(var i = 0; i < maxp; i++){
@@ -5066,7 +5076,7 @@
 					}
 				}
 				
-				draw_sprite_ext(sprUnlockContinue, 0, _cx, _cy, 1, 1, 0, _blend, 1);
+				draw_sprite_ext(sprUnlockContinue, 0, _vx + _cx, _vy + _cy, 1, 1, 0, _blend, 1);
 			}
 		}
 	}
@@ -5074,18 +5084,18 @@
 	 // Corner Popup:
 	if(splash_image > 0){
 		 // Splash:
-		var	_x = game_width,
-			_y = game_height;
+		var	_x = _vx + _gw,
+			_y = _vy + _gh;
 			
 		draw_sprite(splash_sprit, splash_image, _x, _y);
 		
 		 // Unlock Text:
 		if(splash_texty < 2){
 			var	_unlock = unlock[splash_index],
-				_nam = _unlock.nam[0],
-				_txt = _unlock.txt,
-				_tx = _x - 4,
-				_ty = _y - 16 + splash_texty;
+				_nam    = _unlock.nam[0],
+				_txt    = _unlock.txt,
+				_tx     = _x - 4,
+				_ty     = _y - 16 + splash_texty;
 				
 			draw_set_font(fntM);
 			draw_set_halign(fa_right);
@@ -5103,8 +5113,6 @@
 			}
 		}
 	}
-	
-	draw_reset_projection();
 	
 	
 #define WallDecal_create(_x, _y)
@@ -5571,13 +5579,13 @@
 													break;
 													
 												default:
-													depth = min(depth, -6.01);
+													depth = object_get_depth(SubTopCont) + min(-1, depth);
 											}
 										}
 										break;
 										
 									case SharpTeeth:
-										depth = min(depth, -8);
+										depth = object_get_depth(SubTopCont) + min(-1, depth);
 										break;
 										
 									default:

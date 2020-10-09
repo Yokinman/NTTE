@@ -1659,7 +1659,7 @@
 			sprite_index = spr.SlaughterBite;
 			image_index = other.image_index;
 			image_xscale = other.right;
-			depth = other.depth - 0.1;
+			depth = other.depth - 1;
 		}
 	}
 	else if(!instance_exists(target)){
@@ -1853,6 +1853,7 @@
 	web_timer_max = 9;
 	web_timer     = web_timer_max;
 	web_frame     = 0;
+	web_hit_list  = -1;
 	web_bits      = 0;
 	curse         = 0;
 	
@@ -2003,11 +2004,16 @@
 		scrWalk(random(360), [5, 10]);
 	}
 	
+#define Spider_cleanup
+	if(ds_map_valid(web_hit_list)){
+		ds_map_destroy(web_hit_list);
+	}
+	
 #define Spider_web_add(_x, _y)
 	array_push(web_list, {
 		x      : _x,
 		y      : _y,
-		frame  : other.web_frame + 120,
+		frame  : web_frame + 120,
 		wading : (GameCont.area == "coast" && !position_meeting(_x, _y, Floor))
 	});
 	
@@ -2077,7 +2083,7 @@
 	
 #define Twins_stat(_name, _value)
 	if(_name == ""){
-		return [spr.PetTwinsStat];
+		return spr.PetTwinsStat;
 	}
 	
 #define Twins_icon
@@ -3743,7 +3749,7 @@
 			with(_instSpider){
 				web_frame += current_time_scale;
 				
-				var	_instWeb   = instance_rectangle_bbox(web_list_x1, web_list_y1, web_list_x2, web_list_y2, instances_matching_ne(hitme, "team", team)),
+				var	_instWeb   = instance_rectangle_bbox(web_list_x1, web_list_y1, web_list_x2, web_list_y2, pet_target_inst),
 					_instSlow  = [],
 					_vertexNum = 0,
 					_x1, _x2, _x3,
@@ -3776,13 +3782,15 @@
 									_inst = instances_matching_ge(_inst, "bbox_bottom", min(_y1, _y2, _y3));
 									if(array_length(_inst)){
 										_inst = instances_matching_le(_inst, "bbox_top", max(_y1, _y2, _y3));
-										if(array_length(_inst)) with(_inst){
-											//if(point_in_triangle(x, bbox_bottom, _x1, _y1, _x2, _y2, _x3, _y3)){
-												if(!collision_line(x, y, xprevious, yprevious, Wall, false, false)){
-													array_push(_instSlow, id);
-												}
-												_instWeb = array_delete_value(_instWeb, id);
-											//}
+										if(array_length(_inst)){
+											with(_inst){
+												//if(point_in_triangle(x, bbox_bottom, _x1, _y1, _x2, _y2, _x3, _y3)){
+													if(!collision_line(x, y, xprevious, yprevious, Wall, false, false)){
+														array_push(_instSlow, id);
+													}
+													_instWeb = array_delete_value(_instWeb, id);
+												//}
+											}
 										}
 									}
 								}
@@ -3839,9 +3847,12 @@
 				}
 				else{
 					web_bits = 10 + random(20);
-					if(array_length(web_list) > 0) with(web_list[0]){
+					if(array_length(web_list)) with(web_list[0]){
 						if(frame < other.web_frame){
-							with(instance_create(x, y, Dust)){
+							if(other.curse > 0){
+								instance_create(x, y, Curse);
+							}
+							else with(instance_create(x, y, Dust)){
 								image_xscale /= 2;
 								image_yscale /= 2;
 							}
@@ -3859,8 +3870,15 @@
 				}
 				
 				 // Slow Enemies on Web:
+				if(curse != 0 && !ds_map_valid(web_hit_list)){
+					web_hit_list = ds_map_create();
+				}
 				if(array_length(_instSlow)){
-					var _slow = 2/3 * current_time_scale;
+					var	_slow    = 2/3 * current_time_scale,
+						_damage  = 10 * curse,
+						_hitList = web_hit_list,
+						_hitTime = web_frame;
+						
 					with(_instSlow){
 						x = lerp(x, xprevious, _slow);
 						y = lerp(y, yprevious, _slow);
@@ -3871,12 +3889,23 @@
 							other.stat.webbed++;
 						}
 						
-						 // Maybe Kill:
-						if(other.curse > 0 && my_health <= ceil(maxhealth * 0.2 * other.curse) && my_health > 0){
-							projectile_hit(id, my_health, 0, 0);
-							sound_play_hit(sndPlantTBKill, 0.2);
-							with(instance_create(x, y, TangleKill)){
-								sprite_index = spr.PetSpiderCursedKill;
+						 // Curse Damage:
+						if(_damage != 0 && my_health > 0){
+							if(!ds_map_exists(_hitList, id) || _hitList[? id] <= _hitTime){
+								_hitList[? id] = _hitTime + 30;
+								
+								 // Damage:
+								with(other){
+									projectile_hit(other, _damage);
+								}
+								
+								 // Killed:
+								if(instance_exists(self) && my_health <= 0){
+									sound_play_hit(sndPlantTBKill, 0.2);
+									with(instance_create(x, y, TangleKill)){
+										sprite_index = spr.PetSpiderCursedKill;
+									}
+								}
 							}
 						}
 					}

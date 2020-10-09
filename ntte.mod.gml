@@ -729,8 +729,8 @@
 			}
 			with(Wolf) if(chance(1, ((GameCont.loops > 0) ? 5 : 200))){
 				with(obj_create(x, y, "Cat")){
-					sit = other; // It fits
-					depth = other.depth - 0.1;
+					sit   = other; // It fits
+					depth = other.depth - 1;
 				}
 			}
 			
@@ -926,7 +926,7 @@
 			}
 			
 			 // Security Guards:
-			with(instance_random(instances_matching([Grunt, Shielder, Inspector], "", null))){
+			with(instance_random([Grunt, Shielder, Inspector])){
 				obj_create(x, y, "PopoSecurity");
 				instance_delete(id);
 			}
@@ -1491,7 +1491,7 @@
 	
 	 // Baby Sludge Pools:
 	with(instances_matching(instances_matching(Floor, "sprite_index", sprFloor3), "image_index", 3)){
-		if(array_length(instances_meeting(CustomObject, "name", "SludgePool")) <= 0){
+		if(array_length(instances_meeting(x, y, instances_matching(CustomObject, "name", "SludgePool"))) <= 0){
 			with(obj_create(bbox_center_x, bbox_center_y, "SludgePool")){
 				sprite_index = msk.SludgePoolSmall;
 				spr_floor    = other.sprite_index;
@@ -1639,7 +1639,7 @@
 					
 					 // New:
 					else if(stat_get("race:" + _name + ":runs") <= 0){
-						script_bind_draw(CharSelect_draw_new, depth - 0.001, id);
+						script_bind_draw(CharSelect_draw_new, depth - 1, id);
 					}
 				}
 			}
@@ -1922,17 +1922,48 @@
 			}
 		}
 		
-		 // Robot Eating:
+		 // Robot:
 		var _inst = instances_matching(Player, "race", "robot");
-		if(array_length(_inst)) with(_inst){
-			if(canspec && button_pressed(index, "spec") && bwep != wep_none){
-				if(player_active){
-					var _name = wep_raw(wep);
-					if(is_string(_name)){
-						mod_script_call("weapon", _name, "weapon_ntte_eat", wep);
+		if(array_length(_inst)){
+			var _eatList = [];
+			
+			 // Normal Eating:
+			with(_inst){
+				if(canspec && button_pressed(index, "spec") && bwep != wep_none){
+					if(player_active){
+						array_push(_eatList, [id, id]);
+					}
+				}
+			}
+			
+			 // Auto Eating:
+			if(instance_exists(Portal) && GameCont.endskill != 0){
+				var _instPortal = instances_matching(Portal, "endgame", 30);
+				if(array_length(_instPortal)) with(_instPortal){
+					with(instances_matching_le(instances_matching(WepPickup, "persistent", false), "curse", 0)){
+						if(position_meeting(x, y, RobotEat)){
+							array_push(_eatList, [id, other]);
+						}
+					}
+				}
+			}
+			
+			 // Eat:
+			if(array_length(_eatList)) with(_eatList){
+				var	_wepInst = self[0],
+					_eatInst = self[1];
+					
+				with(_wepInst){
+					var _wep = wep;
+					with(_eatInst){
+						 // Custom:
+						var _name = wep_raw(_wep);
+						if(is_string(_name)){
+							mod_script_call("weapon", _name, "weapon_ntte_eat", _wep);
+						}
 						
 						 // Red:
-						if(weapon_get_red(wep) > 0){
+						if(weapon_get_red(_wep) > 0){
 							obj_create(x, y, "RedAmmoPickup");
 						}
 					}
@@ -2915,7 +2946,7 @@
 			}
 		}
 		
-		script[4] = 4 - min(2, _stage);
+		script[4] = 4 - min(2, _stage + current_time_scale);
 		script[5] = _anim;
 	}
 	
@@ -3125,10 +3156,15 @@
 	}
 	
 #define draw_pause
-	global.paused = true;
-	
 	 // Pause Map Drawing:
-	if(!instance_exists(global.map_bind[? "pause"])){
+	var _start = false;
+	for(var i = 0; i < maxp; i++){
+		if(button_pressed(i, "paus")){
+			_start = true;
+			break;
+		}
+	}
+	if(!instance_exists(global.map_bind[? "pause"]) && !_start){
 		with(script_bind_draw(ntte_map_pause, UberCont.depth - 1)){
 			global.map_bind[? "pause"] = id;
 			event_perform(ev_draw, 0);
@@ -3296,13 +3332,11 @@
 #define ntte_hud(_visible)
 	if(lag) trace_time();
 	
-	var	_local   = player_find_local_nonsync(),
-		_vx      = view_xview_nonsync,
-		_vy      = view_yview_nonsync,
-		_gw      = game_width,
-		_gh      = game_height,
-		_ox      = _vx,
-		_oy      = _vy;
+	var	_local = player_find_local_nonsync(),
+		_vx    = view_xview_nonsync,
+		_vy    = view_yview_nonsync,
+		_gw    = game_width,
+		_gh    = game_height;
 		
 	 // Pause Imminent:
 	var _pause = false;
@@ -3315,24 +3349,19 @@
 		}
 	}
 	
-	/// Co-op:
-		var _players = 0;
-		for(var i = 0; i < maxp; i++){
-			_players += player_is_active(i);
-		}
+	 // Count Players:
+	var _players = 0;
+	for(var i = 0; i < maxp; i++){
+		_players += player_is_active(i);
+	}
+	
+	 // Determine which side of the screen each player's HUD is on:
+	var	_hudNum  = 0,
+		_hudSide = array_create(maxp, 0);
 		
-		 // Rad Canister Offset:
-		if(_players > 1){
-			_ox -= 17;
-		}
-		
-		 // Determine which side of the screen each player's HUD is on:
-		var	_hudNum  = 0,
-			_hudSide = array_create(maxp, 0);
-			
-		for(var i = 0; i < maxp; i++) if( player_is_local_nonsync(i)) _hudSide[i] = (_hudNum++ & 1);
-		for(var i = 0; i < maxp; i++) if(!player_is_local_nonsync(i)) _hudSide[i] = (_hudNum++ & 1);
-		
+	for(var i = 0; i < maxp; i++) if( player_is_local_nonsync(i)) _hudSide[i] = (_hudNum++ & 1);
+	for(var i = 0; i < maxp; i++) if(!player_is_local_nonsync(i)) _hudSide[i] = (_hudNum++ & 1);
+	
 	/// Surface Setup:
 		var	_surfScreen = surface_setup("HUDScreen", _gw, _gh, game_scale_nonsync),
 			_surfMain   = surface_setup("HUDMain",   _gw, _gh, game_scale_nonsync),
@@ -3359,171 +3388,181 @@
 		}
 		
 	 // Mutation HUD:
-	var	_skillType = [],
-		_skillList = [];
-		
-	if(instance_exists(CustomObject)){
-		var _inst = instances_matching(CustomObject, "name", "OrchidSkill");
-		if(array_length(_inst)) with(_inst){
-			if(skill_get(skill) != 0){
-				array_push(_skillType, "orchid");
-				array_push(_skillList, skill);
-			}
-		}
-	}
-	if(skill_get(global.hud_reroll) != 0){
-		array_push(_skillType, "reroll");
-		array_push(_skillList, ((global.hud_reroll == mut_patience && skill_get(GameCont.hud_patience) != 0) ? GameCont.hud_patience : global.hud_reroll));
-	}
-	
-	if(array_length(_skillList) > 0){
-		var	_sx = _gw - 11,
-			_sy = 12,
-			_x = _sx,
-			_y = _sy,
-			_addx = -16,
-			_addy = 16,
-			_minx = 110;
+	if(_players <= 1 || instance_exists(Player)){
+		var	_skillType = [],
+			_skillList = [];
 			
-		 // Co-op Offset:
-		if(!_pause && instance_exists(Player)){
-			if(_players >= 2){
-				_minx = 10;
-				_addy *= -1;
-				_sy = _gh - 12;
-				if(_players >= 3) _minx = 100;
-				if(_players >= 4) _sx = _gw - 100;
+		 // Compile Stuff to Draw:
+		if(instance_exists(CustomObject)){
+			var _inst = instances_matching(CustomObject, "name", "OrchidSkill");
+			if(array_length(_inst)) with(_inst){
+				if(skill_get(skill) != 0){
+					array_push(_skillType, "orchid");
+					array_push(_skillList, skill);
+				}
 			}
 		}
+		if(skill_get(global.hud_reroll) != 0){
+			array_push(_skillType, "reroll");
+			array_push(_skillList, ((global.hud_reroll == mut_patience && skill_get(GameCont.hud_patience) != 0) ? GameCont.hud_patience : global.hud_reroll));
+		}
 		
-		 // Ultras Offset:
-		var _raceMods = mod_get_names("race");
-		for(var i = 0; i < 17 + array_length(_raceMods); i++){
-			var _race = ((i < 17) ? i : _raceMods[i - 17]);
-			for(var j = 1; j <= ultra_count(_race); j++){
-				if(ultra_get(_race, j) != 0){
+		 // Draw Stuff:
+		if(array_length(_skillList)){
+			var	_sx   = _gw - 11,
+				_sy   = 12,
+				_addx = -16,
+				_addy = 16,
+				_minx = 110 - (17 * (_players > 1));
+				
+			 // Co-op Offset:
+			if(!_pause && instance_exists(Player)){
+				if(_players >= 2){
+					_minx = 10;
+					_addy *= -1;
+					_sy = _gh - 12;
+					if(instance_exists(LevCont)){
+						_sy -= 34;
+					}
+					else{
+						if(_players >= 3) _minx = 100;
+						if(_players >= 4) _sx = _gw - 100;
+					}
+				}
+			}
+			
+			var	_x = _sx,
+				_y = _sy;
+				
+			 // Ultras Offset:
+			var _raceMods = mod_get_names("race");
+			for(var i = 0; i < 17 + array_length(_raceMods); i++){
+				var _race = ((i < 17) ? i : _raceMods[i - 17]);
+				for(var j = 1; j <= ultra_count(_race); j++){
+					if(ultra_get(_race, j) != 0){
+						_x += _addx;
+						if(_x < _minx){
+							_x = _sx;
+							_y += _addy;
+						}
+					}
+				}
+			}
+			
+			 // Draw:
+			for(var i = 0; !is_undefined(skill_get_at(i)); i++){
+				var	_skill      = skill_get_at(i),
+					_skillIndex = array_find_index(_skillList, _skill);
+					
+				if(_skillIndex >= 0){
+					var	_dx = _x + _vx,
+						_dy = _y + _vy;
+						
+					while(_skillIndex >= 0){
+						switch(_skillType[_skillIndex]){
+							
+							case "reroll": // VAULT FLOWER
+								
+								draw_sprite(
+									spr.SkillRerollHUDSmall,
+									0,
+									_dx + ((_skill == mut_patience && skill_get(GameCont.hud_patience) != 0) ? -4 : 5),
+									_dy + 5
+								);
+								
+								break;
+								
+							case "orchid": // ORCHID MANTIS
+								
+								var	_icon = skill_get_icon(_skill),
+									_spr  = _icon[0],
+									_img  = _icon[1];
+									
+								if(sprite_exists(_spr)){
+									var	_time    = infinity,
+										_timeMax = infinity,
+										_colSub  = c_dkgray,
+										_colTop  = c_white,
+										_flash   = false;
+										
+									 // Get Orchid Skill With Least Time:
+									with(instances_matching(instances_matching(CustomObject, "name", "OrchidSkill"), "skill", _skill)){
+										if(time < _time){
+											_time    = time;
+											_timeMax = time_max;
+											_colSub  = color2;
+											_colTop  = color1;
+										}
+										if(flash) _flash = true;
+									}
+									
+									 // Orchid Skill Drawing:
+									if(_time > current_time_scale){
+										var	_uvs = sprite_get_uvs(_spr, _img),
+											_x1 = max(sprite_get_bbox_left  (_spr),     _uvs[4]                                      ),
+											_y1 = max(sprite_get_bbox_top   (_spr),     _uvs[5]                                      ),
+											_x2 = min(sprite_get_bbox_right (_spr) + 1, _uvs[4] + (_uvs[6] * sprite_get_width (_spr))),
+											_y2 = min(sprite_get_bbox_bottom(_spr) + 1, _uvs[5] + (_uvs[7] * sprite_get_height(_spr)));
+											
+										 // Outline:
+										draw_set_fog(true, _colSub, 0, 0);
+										for(var d = 0; d < 360; d += 90){
+											draw_sprite(_spr, _img, _dx + dcos(d), _dy - dsin(d));
+										}
+										
+										 // Timer Outline:
+										draw_set_fog(true, _colTop, 0, 0);
+										var _num =  1 - (_time / _timeMax);
+										for(var d = 0; d < 360; d += 90){
+											var	_l = _x1,
+												_t = max(_y1, lerp(_y1 - 1, _y2 + 1, _num) + dsin(d)),
+												_w = _x2 - _l,
+												_h = _y2 + 1 - _t;
+												
+											draw_sprite_part(_spr, _img, _l, _t, _w, _h, _dx + _l - sprite_get_xoffset(_spr) + dcos(d), _dy + _t - sprite_get_yoffset(_spr) - dsin(d));
+										}
+										
+										 // Star Flash:
+										var	_wave = current_frame + (i * 1000),
+											_frames = 60,
+											_scale = max(0, (1.1 + (0.1 * sin(_wave / 15))) * ((_time - (_timeMax - _frames)) / _frames)),
+											_angle = _wave / 10;
+											
+										if(_scale > 0){
+											if(_flash) draw_set_fog(true, c_white, 0, 0);
+											draw_sprite_ext(spr.PetOrchidBall, _wave, _dx, _dy, _scale, _scale, _angle, c_white, 1);
+										}
+									}
+									
+									 // Skill Icon:
+									draw_set_fog(_flash, c_white, 0, 0);
+									draw_sprite(_spr, _img, _dx, _dy);
+									draw_set_fog(false, 0, 0, 0);
+									draw_set_blend_mode(bm_add);
+									draw_sprite_ext(_spr, _img, _dx, _dy, 1, 1, 0, c_white, 0.1 + (0.1 * cos((_timeMax - _time) / 20)));
+									draw_set_blend_mode(bm_normal);
+								}
+								
+								break;
+								
+						}
+						
+						_skillList = array_delete(_skillList, _skillIndex);
+						_skillType = array_delete(_skillType, _skillIndex);
+						
+						_skillIndex = array_find_index(_skillList, _skill);
+					}
+					
+					if(array_length(_skillList) <= 0) break;
+				}
+				
+				 // Keep it movin:
+				if(_skill != mut_patience || GameCont.hud_patience == 0 || GameCont.hud_patience == null){
 					_x += _addx;
 					if(_x < _minx){
 						_x = _sx;
 						_y += _addy;
 					}
-				}
-			}
-		}
-		
-		 // Draw:
-		for(var i = 0; !is_undefined(skill_get_at(i)); i++){
-			var	_skill = skill_get_at(i),
-				_skillIndex = array_find_index(_skillList, _skill);
-				
-			if(_skillIndex >= 0){
-				var	_dx = _x + _ox,
-					_dy = _y + _oy;
-					
-				while(_skillIndex >= 0){
-					switch(_skillType[_skillIndex]){
-						
-						case "reroll": // VAULT FLOWER
-							
-							draw_sprite(
-								spr.SkillRerollHUDSmall,
-								0,
-								_dx + ((_skill == mut_patience && skill_get(GameCont.hud_patience) != 0) ? -4 : 5),
-								_dy + 5
-							);
-							
-							break;
-							
-						case "orchid": // ORCHID MANTIS
-							
-							var	_icon = skill_get_icon(_skill),
-								_spr = _icon[0],
-								_img = _icon[1];
-								
-							if(sprite_exists(_spr)){
-								var	_time    = infinity,
-									_timeMax = infinity,
-									_colSub  = c_dkgray,
-									_colTop  = c_white,
-									_flash   = false;
-									
-								 // Get Orchid Skill With Least Time:
-								with(instances_matching(instances_matching(CustomObject, "name", "OrchidSkill"), "skill", _skill)){
-									if(time < _time){
-										_time    = time;
-										_timeMax = time_max;
-										_colSub  = color2;
-										_colTop  = color1;
-									}
-									if(flash) _flash = true;
-								}
-								
-								 // Orchid Skill Drawing:
-								if(_time > current_time_scale){
-									var	_uvs = sprite_get_uvs(_spr, _img),
-										_x1 = max(sprite_get_bbox_left  (_spr),     _uvs[4]                                      ),
-										_y1 = max(sprite_get_bbox_top   (_spr),     _uvs[5]                                      ),
-										_x2 = min(sprite_get_bbox_right (_spr) + 1, _uvs[4] + (_uvs[6] * sprite_get_width (_spr))),
-										_y2 = min(sprite_get_bbox_bottom(_spr) + 1, _uvs[5] + (_uvs[7] * sprite_get_height(_spr)));
-										
-									 // Outline:
-									draw_set_fog(true, _colSub, 0, 0);
-									for(var d = 0; d < 360; d += 90){
-										draw_sprite(_spr, _img, _dx + dcos(d), _dy - dsin(d));
-									}
-									
-									 // Timer Outline:
-									draw_set_fog(true, _colTop, 0, 0);
-									var _num =  1 - (_time / _timeMax);
-									for(var d = 0; d < 360; d += 90){
-										var	_l = _x1,
-											_t = max(_y1, lerp(_y1 - 1, _y2 + 1, _num) + dsin(d)),
-											_w = _x2 - _l,
-											_h = _y2 + 1 - _t;
-											
-										draw_sprite_part(_spr, _img, _l, _t, _w, _h, _dx + _l - sprite_get_xoffset(_spr) + dcos(d), _dy + _t - sprite_get_yoffset(_spr) - dsin(d));
-									}
-									
-									 // Star Flash:
-									var	_wave = current_frame + (i * 1000),
-										_frames = 60,
-										_scale = max(0, (1.1 + (0.1 * sin(_wave / 15))) * ((_time - (_timeMax - _frames)) / _frames)),
-										_angle = _wave / 10;
-										
-									if(_scale > 0){
-										if(_flash) draw_set_fog(true, c_white, 0, 0);
-										draw_sprite_ext(spr.PetOrchidBall, _wave, _dx, _dy, _scale, _scale, _angle, c_white, 1);
-									}
-								}
-								
-								 // Skill Icon:
-								draw_set_fog(_flash, c_white, 0, 0);
-								draw_sprite(_spr, _img, _dx, _dy);
-								draw_set_fog(false, 0, 0, 0);
-								draw_set_blend_mode(bm_add);
-								draw_sprite_ext(_spr, _img, _dx, _dy, 1, 1, 0, c_white, 0.1 + (0.1 * cos((_timeMax - _time) / 20)));
-								draw_set_blend_mode(bm_normal);
-							}
-							
-							break;
-							
-					}
-					
-					_skillList = array_delete(_skillList, _skillIndex);
-					_skillType = array_delete(_skillType, _skillIndex);
-					
-					_skillIndex = array_find_index(_skillList, _skill);
-				}
-				
-				if(array_length(_skillList) <= 0) break;
-			}
-			
-			 // Keep it movin:
-			if(_skill != mut_patience || GameCont.hud_patience == 0 || GameCont.hud_patience == null){
-				_x += _addx;
-				if(_x < _minx){
-					_x = _sx;
-					_y += _addy;
 				}
 			}
 		}
@@ -3542,7 +3581,10 @@
 		draw_set_blend_mode(bm_normal);
 	}
 	
-	 // Player HUD:
+	 // Player HUD:,
+	var	_ox = _vx - (17 * (_players > 1)),
+		_oy = _vy;
+		
 	for(var _index = 0; _index < maxp; _index++){
 		var _player = player_find(_index);
 		
@@ -3550,7 +3592,7 @@
 			var	_side       = _hudSide[_index],
 				_flip       = (_side ? -1 : 1),
 				_HUDMain    = (_local == _index),
-				_HUDVisible = (_visible && player_is_active(_local) && player_get_show_hud(_index, _local)),
+				_HUDVisible = (_visible && player_is_active(_local) && player_get_show_hud(_index, _local) && (_index < 2 || !instance_exists(LevCont))),
 				_HUDDraw    = (_HUDMain || _HUDVisible);
 				
 			draw_set_projection(2, _index);
@@ -3767,17 +3809,17 @@
 						
 						 // Ultra B:
 						if(charm_hplink_hud > 0){
-							var	_HPCur = max(0, my_health),
-								_HPMax = max(0, maxhealth),
-								_HPLst = max(0, lsthealth),
+							var	_HPCur      = max(0, my_health),
+								_HPMax      = max(0, maxhealth),
+								_HPLst      = max(0, lsthealth),
 								_HPCurCharm = max(0, charm_hplink_hud_hp[0]),
 								_HPMaxCharm = max(0, charm_hplink_hud_hp[1]),
 								_HPLstCharm = max(0, charm_hplink_hud_hp_lst),
-								_w = 83,
-								_h = 7,
-								_x = _ox + 22,
-								_y = _oy + 7,
-								_HPw = floor(_w * (1 - (0.7 * charm_hplink_hud)));
+								_w          = 83,
+								_h          = 7,
+								_x          = _ox + 22,
+								_y          = _oy + 7,
+								_HPw        = floor(_w * (1 - (0.7 * charm_hplink_hud)));
 								
 							draw_set_halign(fa_center);
 							draw_set_valign(fa_middle);
@@ -4206,8 +4248,6 @@
 		|| (is_real(_mapPos.area) && _mapPos.area >= 0)
 		|| (is_string(_mapPos.area) && mod_exists("area", _mapPos.area))
 	){
-		draw_set_projection(0);
-		
 		 // Determine Max Players:
 		var _playerMax = 0;
 		for(var i = 0; i < maxp; i++){
@@ -4218,8 +4258,8 @@
 		
 		 // Draw:
 		for(var i = 0; i < _playerMax; i++){
-			var	_x       = (game_width  / 2) + _mapX + _mapPos.x,
-				_y       = (game_height / 2) + _mapY + _mapPos.y,
+			var	_x       = view_xview_nonsync + (game_width  / 2) + _mapX + _mapPos.x,
+				_y       = view_yview_nonsync + (game_height / 2) + _mapY + _mapPos.y,
 				_iconAng = 30,
 				_iconDir = 0,
 				_iconDis = 10;
@@ -4264,8 +4304,6 @@
 				}
 			}
 		}
-		
-		draw_reset_projection();
 	}
 	
 	if(_lag) trace_time(script[2]);

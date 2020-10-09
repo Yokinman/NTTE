@@ -1010,8 +1010,8 @@
 			obj - An object, instance, or array of instances
 	*/
 	
-	var	_inst   = noone,
-		_disMax = infinity;
+	var	_disMax = infinity,
+		_inst   = noone;
 		
 	with(_obj){
 		if(!collision_line(_x, _y, x, y, Wall, false, false)){
@@ -1534,63 +1534,69 @@
 		Get rid of normal portals, but make it look cool
 	*/
 	
-	with(instances_matching_ge(instances_matching(instances_matching(instances_matching(Portal, "object_index", Portal), "type", 1, 3), "endgame", 100), "image_alpha", 1)){
-		if(!place_meeting(x, y, Player)){
-			//sound_stop(sndPortalClose);
-			sound_stop(sndPortalLoop);
-			
-			 // Guardian:
-			if(
-				visible
-				&& type == 1
-				&& endgame >= 100
-				&& !position_meeting(x, y, PortalShock)
-				&& point_seen_ext(x, y, -8, -8, -1)
-				&& chance(1, 2)
-			){
-				with(obj_create(x, y, "PortalGuardian")){
-					x = xstart;
-					y = ystart;
-					sprite_index = spr_appear;
-					right = other.image_xscale;
-					portal = true;
+	if(instance_exists(Portal)){
+		var _inst = instances_matching_ge(instances_matching(instances_matching(instances_matching(Portal, "object_index", Portal), "type", 1, 3), "endgame", 100), "image_alpha", 1);
+		if(array_length(_inst)) with(_inst){
+			if(!place_meeting(x, y, Player)){
+				//sound_stop(sndPortalClose);
+				sound_stop(sndPortalLoop);
+				
+				 // Guardian:
+				if(
+					visible
+					&& type == 1
+					&& endgame >= 100
+					&& !position_meeting(x, y, PortalShock)
+					&& point_seen_ext(x, y, -8, -8, -1)
+					&& chance(1, 2)
+				){
+					with(obj_create(x, y, "PortalGuardian")){
+						x = xstart;
+						y = ystart;
+						sprite_index = spr_appear;
+						right = other.image_xscale;
+						portal = true;
+					}
+					sound_play_hit_ext(
+						asset_get_index(`sndPortalFlyby${irandom_range(1, 4)}`),
+						2 + orandom(0.1),
+						3
+					);
 				}
-				sound_play_hit_ext(
-					asset_get_index(`sndPortalFlyby${irandom_range(1, 4)}`),
-					2 + orandom(0.1),
-					3
-				);
-			}
-			
-			 // Normal:
-			else with(instance_create(x, y, BulletHit)){
-				name         = "PortalPoof";
-				sprite_index = [mskNone, sprPortalDisappear, sprProtoPortalDisappear, sprPopoPortalDisappear][other.type];
-				image_xscale = other.image_xscale;
-				image_yscale = other.image_yscale;
-				image_angle  = other.image_angle;
-				image_blend  = other.image_blend;
-				image_alpha  = other.image_alpha;
-				depth        = other.depth;
-			}
-			
-			 // Rescue Players:
-			if(timer > 30){
-				with(instances_matching(instances_matching_ne(Player, "angle", 0), "roll", 0)){
-					if(instance_near(x, y, instance_seen(x, y, other), 48)){
-						if(skill_get(mut_throne_butt) > 0) angle = 0;
-						else roll = true;
+				
+				 // Normal:
+				else with(instance_create(x, y, BulletHit)){
+					name         = "PortalPoof";
+					sprite_index = [mskNone, sprPortalDisappear, sprProtoPortalDisappear, sprPopoPortalDisappear][other.type];
+					image_xscale = other.image_xscale;
+					image_yscale = other.image_yscale;
+					image_angle  = other.image_angle;
+					image_blend  = other.image_blend;
+					image_alpha  = other.image_alpha;
+					depth        = other.depth;
+				}
+				
+				 // Rescue Players:
+				if(timer > 30){
+					with(instances_matching(instances_matching_ne(Player, "angle", 0), "roll", 0)){
+						if(instance_near(x, y, instance_seen(x, y, other), 48)){
+							if(skill_get(mut_throne_butt) > 0) angle = 0;
+							else roll = true;
+						}
 					}
 				}
+				
+				instance_destroy();
 			}
-			
-			instance_destroy();
 		}
 	}
 	
 	 // Prevent Corpse Portal:
-	with(instances_matching_gt(Corpse, "alarm0", 0)){
-		alarm0 = -1;
+	if(instance_exists(Corpse)){
+		var _inst = instances_matching_gt(Corpse, "alarm0", 0);
+		if(array_length(_inst)) with(_inst){
+			alarm0 = -1;
+		}
 	}
 
 #define portal_pickups()
@@ -3145,7 +3151,7 @@
 	return -1;
 	
 #define area_border(_y, _area, _color)
-	with(script_bind_draw(area_border_step, infinity, _y, _area, _color)){
+	with(script_bind_draw(area_border_step, 1000, _y, _area, _color)){
 		cavein      = false;
 		cavein_dis  = 800;
 		cavein_inst = [];
@@ -4568,8 +4574,8 @@
 	if(!is_array(_wall)) _wall = [_wall];
 	
 	 // Find Nearest Unobstructed Point on Path:
-	var	_nearest = -1,
-		_disMax = infinity;
+	var	_disMax  = infinity,
+		_nearest = -1;
 		
 	for(var i = 0; i < array_length(_path); i++){
 		var	_px = _path[i, 0],
@@ -4632,11 +4638,9 @@
 	 // Custom:
 	var _scrt = "race_sprite";
 	if(is_string(_race) && mod_script_exists("race", _race, _scrt)){
-		if(!instance_is(self, Player) || race != _race){
-			var _new = mod_script_call("race", _race, _scrt, _sprite);
-			if(is_real(_new) && sprite_exists(_new)){
-				_sprite = _new;
-			}
+		var _new = mod_script_call("race", _race, _scrt, _sprite);
+		if(is_real(_new) && sprite_exists(_new)){
+			_sprite = _new;
 		}
 	}
 	
@@ -5087,17 +5091,17 @@
 						}
 					}
 				}
-				else if(instance_is(target, Effect) || instance_is(target, Corpse)){
+				/*else if(instance_is(target, Effect) || instance_is(target, Corpse)){
 					override_depth = false;
 					depth = -6.01;
 					if(instance_is(target, Corpse)) depth -= 0.001;
-				}
+				}*/
 				else if(instance_is(target, chestprop) || instance_is(target, Pickup)){
 					wobble = 8;
 					spawn_dis = 8;
 					if(instance_is(target, Pickup)){
-						override_depth = false;
-						depth = -6.0111;
+						//override_depth = false;
+						//depth = -6.0111;
 						jump = 0;
 					}
 					if(instance_is(target, chestprop) || instance_is(target, WepPickup)){
@@ -5113,21 +5117,21 @@
 					grav = 0;
 					type = projectile;
 					override_mask = false;
-					override_depth = false;
-					depth = -8;
+					//override_depth = false;
+					//depth = -8;
 				}
 				else if(instance_is(target, ReviveArea) || instance_is(target, NecroReviveArea) || instance_is(target, RevivePopoFreak)){
 					jump = 0;
 					grav = 0;
 					override_mask = false;
-					override_depth = false;
-					depth = -6.01;
+					//override_depth = false;
+					//depth = -6.01;
 				}
 				else if(instance_is(target, IDPDSpawn) || instance_is(target, VanSpawn)){
 					jump = 0;
 					grav = 0;
-					override_depth = false;
-					depth = -6.01;
+					//override_depth = false;
+					//depth = -6.01;
 				}
 				
 				 // Object-Specific Setup:
@@ -5214,8 +5218,8 @@
 						
 					case BigFlower:
 					case IceFlower:
-						override_depth = false;
-						depth = -6.01;
+						//override_depth = false;
+						//depth = -6.01;
 						spr_shadow = target.spr_idle;
 						spr_shadow_y = 1;
 						break;
@@ -5487,11 +5491,14 @@
 					image_xscale = _xsc;
 				}
 				
-				 // Depth:
-				if(override_depth) depth = -6 - ((y - 8) / 10000);
 				
-				 // Search Zone:
 				with(target){
+					 // Depth:
+					//if(override_depth) depth = -6 - ((y - 8) / 10000);
+					other.target_save.depth = depth;
+					depth = object_get_depth(SubTopCont) + min(-1, depth);
+					
+					 // Search Zone:
 					var m = mask_index;
 					mask_index = -1;
 					other.search_x1 = min(x - 8, bbox_left);
@@ -5592,12 +5599,16 @@
 			}
 	*/
 	
-	var	_dx = _x + lengthdir_x(16 - 2, _dir),
-		_dy = _y + lengthdir_y(16 - 2, _dir) + 1,
+	var	_dx      = _x + lengthdir_x(16 - 2, _dir),
+		_dy      = _y + lengthdir_y(16 - 2, _dir) + 1,
 		_partner = noone,
-		_inst = [];
+		_inst    = [];
 		
-	for(var _side = -1; _side <= 1; _side += 2){
+	for(var i = -1; i <= 1; i += 2){
+		var _side = i;
+		if(_dir < 90 || _dir > 270){
+			_side *= -1; // Depth fix, create bottom door first
+		}
 		with(obj_create(_dx + lengthdir_x(16 * _side, _dir - 90), _dy + lengthdir_y(16 * _side, _dir - 90), "CatDoor")){
 			image_angle  = _dir;
 			image_yscale = -_side;

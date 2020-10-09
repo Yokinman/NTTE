@@ -2427,6 +2427,7 @@
 		return id;
 	}
 	
+	
 #define WantBigMaggot_create(_x, _y)
 	with(instance_create(_x, _y, BigMaggot)){
 		instance_change(BigMaggotBurrow, false);

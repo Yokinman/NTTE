@@ -28,14 +28,14 @@
 		/* Vertex Shader */"
 		struct VertexShaderInput
 		{
-			float4 vPosition : POSITION;
 			float2 vTexcoord : TEXCOORD0;
+			float4 vPosition : POSITION;
 		};
 		
 		struct VertexShaderOutput
 		{
-			float4 vPosition : SV_POSITION;
 			float2 vTexcoord : TEXCOORD0;
+			float4 vPosition : SV_POSITION;
 		};
 		
 		uniform float4x4 matrix_world_view_projection;
@@ -44,8 +44,8 @@
 		{
 			VertexShaderOutput OUT;
 			
-			OUT.vPosition = mul(matrix_world_view_projection, INPUT.vPosition); // (x,y,z,w)
 			OUT.vTexcoord = INPUT.vTexcoord; // (x,y)
+			OUT.vPosition = mul(matrix_world_view_projection, INPUT.vPosition); // (x,y,z,w)
 			
 			return OUT;
 		}
@@ -58,10 +58,13 @@
 		};
 		
 		sampler2D s0;
+		
 		uniform float2 pixelSize;
 		
-		bool isEyeColor(in float3 RGB)
+		bool isEyeColor(float3 RGB)
 		{
+			bool isEye = false;
+			
 			if(RGB.r > RGB.g + RGB.b){
 				float R = round(RGB.r * 255.0);
 				float G = round(RGB.g * 255.0);
@@ -83,10 +86,11 @@
 					R == 210.0 && G ==  32.0 && B == 71.0 || //  Jungle fly eye color
 					R == 179.0 && G ==  27.0 && B == 60.0    //  Jungle fly eye color
 				){
-					return true;
+					isEye = true;
 				}
 			}
-			return false;
+			
+			return isEye;
 		}
 		
 		float4 main(PixelShaderInput INPUT) : SV_TARGET

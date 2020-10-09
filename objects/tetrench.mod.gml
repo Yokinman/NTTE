@@ -2265,7 +2265,7 @@
 		spr_dead      = spr.TentacleDead;
 		spr_appear    = spr.TentacleSpwn;
 		spr_disappear = spr.TentacleTele;
-		depth         = -2 - (y / 20000);
+		depth         = -2;
 		hitid         = [spr_idle, "PIT SQUID"];
 		image_speed   = 0.4 + orandom(0.1);
 		sprite_index  = spr_appear;
@@ -2429,7 +2429,7 @@
 	}
 	
 	 // Depth:
-	depth = -2 - (y / 20000);
+	//depth = -2 - (y / 20000);
 	
 #define PitSquidArm_alrm1
 	alarm1 = 20 + irandom(20);
@@ -2916,7 +2916,7 @@
 			loop_snd       - The index of the beam's looping sound, used to stop the sound when destroyed
 			roids          - Created by steroids' secondary weapon, true/false
 			hit_time       - Custom frame count for custom invincibility frames system
-			hit_list       - LWO of hit enemies and what 'hit_time' they were hit at
+			hit_list       - ds_map of hit enemies and what 'hit_time' they were hit at
 			blast_hit      - Initial hit, true/false, does more damage and effects
 			flash_frame    - Visually flash white, used to give it more impact
 			line_seg       - Array of LWOs containing the laser's drawing information
@@ -2948,7 +2948,7 @@
 		spr_strt     = spr.QuasarBeamStart;
 		spr_stop     = spr.QuasarBeamEnd;
 		image_speed  = 0.5;
-		depth        = -1.5;
+		depth        = -2;
 		
 		 // Vars:
 		friction       = 0.02;
@@ -2962,7 +2962,7 @@
 		typ            = 0;
 		loop_snd       = -1;
 		hit_time       = 0;
-		hit_list       = {};
+		hit_list       = -1;
 		blast_hit      = true;
 		flash_frame    = current_frame + 2;
 		line_seg       = [];
@@ -3266,7 +3266,10 @@
 				if(place_meeting(x - (_cx - other.x), y - (_cy - other.y), other)){
 					if(!instance_is(self, Player) || (!_walled && !collision_line(x, y, _lx, _ly, Wall, false, false))){
 						with(other){
-							if(lq_defget(hit_list, string(other), 0) <= hit_time){
+							if(!ds_map_valid(hit_list)){
+								hit_list = ds_map_create();
+							}
+							if(!ds_map_exists(hit_list, other) || hit_list[? other] <= hit_time){
 								 // Effects:
 								with(instance_create(_cx + orandom(8), _cy + orandom(8), BulletHit)){
 									sprite_index = spr.QuasarBeamHit;
@@ -3427,7 +3430,10 @@
 	}
 	
 #define QuasarBeam_hit
-	if(lq_defget(hit_list, string(other), 0) <= hit_time){
+	if(!ds_map_valid(hit_list)){
+		hit_list = ds_map_create();
+	}
+	if(!ds_map_exists(hit_list, other) || hit_list[? other] <= hit_time){
 		speed *= 1 - (0.05 * other.size);
 		
 		 // Effects:
@@ -3453,7 +3459,7 @@
 		);
 		
 		 // Set Custom IFrames:
-		lq_set(hit_list, string(other), hit_time + (ring ? 3 : 6));
+		hit_list[? other] = hit_time + (ring ? 3 : 6);
 	}
 	
 #define QuasarBeam_wall
@@ -3461,7 +3467,10 @@
 
 #define QuasarBeam_cleanup
 	audio_stop_sound(loop_snd);
-
+	if(ds_map_valid(hit_list)){
+		ds_map_destroy(hit_list);
+	}
+	
 #define QuasarBeam_draw_laser(_xscale, _yscale, _alpha)
 	var	_lastColor = draw_get_color(),
 		_angle = image_angle,
@@ -3842,7 +3851,9 @@
 					image_angle = other.image_angle;
 				}
 				else speed += 2 + random(1);
-				if(!place_meeting(x, y, Floor)) depth = -8;
+				if(!place_meeting(x, y, Floor)){
+					depth = -7;
+				}
 	
 				 // Dusty:
 				with(instance_create(x + orandom(4), y + orandom(4), Dust)){

@@ -9,7 +9,7 @@
 	 // Harpoon Ropes:
 	global.harpoon_rope_bind = [
 		script_bind("HarpoonRopeDraw",    CustomDraw, script_ref_create(draw_harpoon_rope),  0, false),
-		script_bind("HarpoonRopeDrawTop", CustomDraw, script_ref_create(draw_harpoon_rope), -8, false)
+		script_bind("HarpoonRopeDrawTop", CustomDraw, script_ref_create(draw_harpoon_rope), -9, false)
 	];
 	global.harpoon_rope = [];
 	
@@ -2573,7 +2573,7 @@
 			x = other.x;
 			y = other.y - other.z;
 			mask_index = mskNone;
-			depth = -8;
+			depth = -9;
 			
 			 // Shadow:
 			if("spr_shadow_y" in self){
@@ -4382,7 +4382,7 @@
 	else{
 		friction = 0;
 		mask_index = mskNone;
-		depth = -8;
+		depth = -9;
 	}
 	
 	 // Push:

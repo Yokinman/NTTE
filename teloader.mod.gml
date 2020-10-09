@@ -68,7 +68,7 @@
 			["weps/super teleport gun.wep.gml",       1],
 			["weps/energy bat.wep.gml",               1],
 			["weps/annihilator.wep.gml",              1],
-			["weps/entangler.wep.gml",                1],
+			//["weps/entangler.wep.gml",                1],
 			["weps/tunneller.wep.gml",                1],
 			["weps/bat disc launcher.wep.gml",        1],
 			["weps/bat disc cannon.wep.gml",          1],
@@ -1674,185 +1674,258 @@
 	*/
 	
 	var	_lineList = [],
-		_sprList  = [],
+		_sprList  = ds_map_create(),
 		_filter   = {};
 		
 	 // Compile Lines:
 	if(_text != ""){
-		var _lastType = "";
-		with(string_split(_text, chr(13) + chr(10))){
-			var	_textList = [],
-				_raw      = string_delete_nt(self),
-				_rawSpace = string_replace_all(_raw, chr(9), " "),
-				_font     = fntChat,
-				_type     = string_copy(_raw, 1, string_pos(" ", _rawSpace + " ") - 1),
-				_title    = false,
-				_indent   = "";
-				
-			 // Determine Line Type (Filter):
-			if(_raw != "" && string_lettersdigits(_type) == ""){
-				if(_type == ""){
-					_type = _lastType;
-				}
-				else if(_type not in _filter){
-					lq_set(_filter, _type, true);
-				}
-			}
-			_lastType = _type;
+		var	_lastType  = "",
+			_lastFrame = current_frame;
 			
-			 // Title Line:
-			if(_raw == string_upper(_raw)){
-				if(string_lettersdigits(_raw) != ""){
-					_title = true;
-					_font  = fntM;
-				}
-			}	
-			
-			 // Determine Line Wrapping Indent:
-			for(var i = 1; i <= string_length(_raw); i++){
-				if(string_char_at(_rawSpace, i) == " "){
-					_indent += string_char_at(_raw, i);
-				}
-				else{
-					var _add = string_copy(_raw, 1, string_pos(" ", string_delete(_rawSpace, 1, string_length(_indent)) + " "));
-					if(string_letters(_add) == ""){
-						_indent += _add;
+		if(fork()){
+			with(string_split(_text, chr(13) + chr(10))){
+				var	_textList = [],
+					_raw      = string_delete_nt(self),
+					_rawSpace = string_replace_all(_raw, chr(9), " "),
+					_font     = fntChat,
+					_type     = string_copy(_raw, 1, string_pos(" ", _rawSpace + " ") - 1),
+					_title    = false,
+					_indent   = "";
+					
+				 // Determine Line Type (Filter):
+				if(_raw != "" && string_lettersdigits(_type) == ""){
+					if(_type == ""){
+						_type = _lastType;
 					}
-					break;
+					else if(_type not in _filter){
+						lq_set(_filter, _type, true);
+					}
 				}
-			}
-			for(var i = 1 + string_length(_indent); i <= string_length(_raw); i++){
-				if(string_char_at(_rawSpace, i) == " "){
-					_indent += string_char_at(_raw, i);
+				_lastType = _type;
+				
+				 // Title Line:
+				if(_raw == string_upper(_raw)){
+					if(string_lettersdigits(_raw) != ""){
+						_title = true;
+						_font  = fntM;
+					}
+				}	
+				
+				 // Determine Line Wrapping Indent:
+				for(var i = 1; i <= string_length(_raw); i++){
+					if(string_char_at(_rawSpace, i) == " "){
+						_indent += string_char_at(_raw, i);
+					}
+					else{
+						var _add = string_copy(_raw, 1, string_pos(" ", string_delete(_rawSpace, 1, string_length(_indent)) + " "));
+						if(string_letters(_add) == ""){
+							_indent += _add;
+						}
+						break;
+					}
 				}
-				else break;
-			}
-			
-			 // Compile Words:
-			if(fork()){
-				var	_lastFrame   = current_frame,
-					_formatIndex = 0,
-					_formatSplit = string_split(self, "$");
+				for(var i = 1 + string_length(_indent); i <= string_length(_raw); i++){
+					if(string_char_at(_rawSpace, i) == " "){
+						_indent += string_char_at(_raw, i);
+					}
+					else break;
+				}
+				
+				 // Compile Words:
+				var	_formatIndex  = 0,
+					_formatSplit  = string_split(self, "@"),
+					_formatCancel = false;
 					
 				with(_formatSplit){
 					var _add = self;
 					
 					 // Special Formatting:
-					if(_formatIndex > 0){
-						var	_bgn = string_pos("(", _add),
-							_end = string_pos(")", _add);
+					if(_formatCancel){
+						_formatCancel = false;
+						_add = "@" + _add;
+					}
+					else if(_formatIndex > 0){
+						var _char = string_char_at(_add, 1);
+						
+						_add = string_delete(_add, 1, string_length(_char));
+						
+						switch(_char){
 							
-						if(_bgn == 1 && _bgn < _end){
-							var _args = string_split(string_copy(_add, 2, _end - 2), ":");
-							
-							_add = string_delete(_add, _bgn, 1 + (_end - _bgn));
-							
-							switch(_args[0]){
+							 /// CANCEL
+							case "":
 								
-								case "rgb":
+								_add = "@" + _add;
+								_formatCancel = true;
+								
+								break;
+							
+							 /// BASIC
+							case "w": _add = "@w" + _add; break; // WHITE
+							case "s": _add = "@s" + _add; break; // SILVER
+							case "d": _add = "@d" + _add; break; // DARK GRAY
+							case "r": _add = `@(color:${make_color_rgb(235,   0,  67)})` + _add; break; // RED
+							case "g": _add = `@(color:${make_color_rgb(100, 255,   0)})` + _add; break; // GREEN
+							case "b": _add = `@(color:${make_color_rgb( 24, 126, 242)})` + _add; break; // BLUE
+							case "p": _add = `@(color:${make_color_rgb(169,  36, 179)})` + _add; break; // PURPLE
+							case "y": _add = "@y" + _add; break; // YELLOW
+							case "q": _add = "@q" + _add; break; // QUAKE
+							
+							 /// ADVANCED
+							case "(":
+								
+								var _end = string_pos(")", _add);
+								
+								if(_end > 0){
+									var _args = string_split(string_copy(_add, 1, _end - 1), ":");
 									
-									if(array_length(_args) > 3){
-										_add = `@(color:${make_color_rgb(real(_args[1]), real(_args[2]), real(_args[3]))})` + _add;
-									}
+									_add = string_delete(_add, 1, _end);
 									
-									break;
-									
-								case "sprite":
-									
-									if(array_length(_args) > 1){
-										var _path = `sprites/${_args[1]}`;
+									switch(_args[0]){
 										
-										 // Load Sprite:
-										if(!file_loaded(_path)){
-											if(global.version != git_version){
-												try{
-													file_download(
-														github_repo_request(git_user, git_repo, git_token, `contents/${_path}?ref=${git_branch}`).download_url,
-														_path
-													);
-												}
-												catch(_error){
-													file_load(_path);
-												}
-											}
-											else file_load(_path);
+										case "rgb":
 											
-											while(!file_loaded(_path)){
-												wait 0;
+											if(array_length(_args) > 3){
+												_add = `@(color:${make_color_rgb(real(_args[1]), real(_args[2]), real(_args[3]))})` + _add;
 											}
-										}
-										
-										 // Add Sprite:
-										if(file_exists(_path)){
-											var	_spr = sprite_add(
-													_path,
-													((array_length(_args) > 2) ? real(_args[2]) : 1),
-													((array_length(_args) > 3) ? real(_args[3]) : 0),
-													((array_length(_args) > 4) ? real(_args[4]) : 0)
-												),
-												_img = ((array_length(_args) > 5) ? real(_args[5]) : -1);
+											
+											break;
+											
+										case "sprite":
+											
+											if(array_length(_args) > 1 && ds_map_valid(_sprList)){
+												var	_spr = -1,
+													_num = ((array_length(_args) > 2) ? real(_args[2]) :  0);
+													
+												 // Normal Sprite:
+												if(_num <= 0){
+													_spr = asset_get_index(_args[1]);
+												}
 												
-											array_push(_textList, {
-												"text"   : `@(${_spr}:${_img})`,
-												"space"  : 0,
-												"width"  : sprite_get_xoffset(_spr) * 2,
-												"height" : sprite_get_yoffset(_spr) * 2
-											});
-											array_push(_sprList, _spr);
-										}
+												 // Load Sprite:
+												else{
+													var	_path = `sprites/${_args[1]}`,
+														_key  = _path + ":" + string(_num);
+														
+													if(!ds_map_exists(_sprList, _key)){
+														_sprList[? _path] = -1;
+														
+														 // Load File Manually & Make Sure it Exists:
+														if(file_loaded(_path)){
+															file_unload(_path);
+														}
+														if(global.version != git_version){
+															try{
+																file_download(
+																	github_repo_request(git_user, git_repo, git_token, `contents/${_path}?ref=${git_branch}`).download_url,
+																	_path
+																);
+															}
+															catch(_error){
+																file_load(_path);
+															}
+														}
+														else file_load(_path);
+														while(!file_loaded(_path)){
+															wait 0;
+														}
+														
+														 // Load Sprite:
+														if(file_exists(_path)){
+															_sprList[? _key] = sprite_add(_path, _num, 0, 0);
+														}
+														
+														file_unload(_path);
+													}
+													if(ds_map_exists(_sprList, _key)){
+														_spr = _sprList[? _key];
+													}
+												}
+												
+												 // Add Sprite:
+												if(sprite_exists(_spr)){
+													var	_img    = ((array_length(_args) > 3) ? real(_args[3]) : -0.4),
+														_width  = ((array_length(_args) > 4) ? real(_args[4]) : -1),
+														_height = ((array_length(_args) > 5) ? real(_args[5]) : -1);
+														
+													 // Find Sprite's Bounding Box:
+													if(_width < 0 || _height < 0){
+														if(_img < 0){
+															if(_width  < 0) _width  = (sprite_get_bbox_right(_spr) + 1) - sprite_get_bbox_left(_spr);
+															if(_height < 0) _height = ((sprite_get_bbox_bottom(_spr) + 1) - (sprite_get_height(_spr) / 2)) * 2;
+														}
+														else{
+															var _sprCut = sprite_duplicate_ext(_spr, _img, 1);
+															if(_width  < 0) _width  = (sprite_get_bbox_right(_sprCut) + 1) - sprite_get_bbox_left(_sprCut);
+															if(_height < 0) _height = ((sprite_get_bbox_bottom(_sprCut) + 1) - (sprite_get_height(_sprCut) / 2)) * 2;
+															sprite_delete(_sprCut);
+														}
+													}
+													
+													 // Add:
+													array_push(_textList, {
+														"text"   : `@(${_spr}:${_img})`,
+														"space"  : 0,
+														"width"  : _width,
+														"height" : _height
+													});
+												}
+											}
+											
+											break;
+											
 									}
-									
-									break;
-									
-							}
-						}
-						else{
-							_add = "$" + _add;
+								}
+								
+								break;
+								
 						}
 					}
 					
 					 // Add Words:
 					if(_add != ""){
-						_add = string_replace_all(_add, chr(9), chr(9) + " ");
-						if(_formatIndex < array_length(_formatSplit) - 1){
-							if(string_char_at(_add, string_length(_add)) == " "){
-								_add = string_copy(_add, 1, string_length(_add) - 1);
+						var _wordList = string_split(string_replace_all(_add, chr(9), chr(9) + " "), " ");
+						for(var i = 0; i < array_length(_wordList); i++){
+							var	_word  = _wordList[i],
+								_space = (
+									(i < array_length(_wordList) - 1 || _formatIndex >= array_length(_formatSplit) - 1)
+									? ((string_pos(chr(9), _word) > 0) ? 2 : 1)
+									: 0
+								);
+								
+							if(_word != "" || _space > 0){
+								array_push(_textList, {
+									"text"   : string_replace_all(_word, chr(9), ""),
+									"space"  : _space,
+									"width"  : 0,
+									"height" : 0
+								});
 							}
-						}
-						with(string_split(_add, " ")){
-							var _tab = (string_char_at(self, string_length(self)) == chr(9));
-							array_push(_textList, {
-								"text"   : (_tab ? string_copy(self, 1, string_length(self) - 1) : self),
-								"space"  : (_tab ? 2 : 1),
-								"width"  : 0,
-								"height" : 0
-							});
 						}
 					}
 					
 					_formatIndex++;
 				}
 				
-				 // Update Displayed Changelog:
-				if(current_frame != _lastFrame){
-					if(changelog_get_display() == _index && changelog_exists(_index)){
-						if(_lineList == changelog_get(_index).list){
-							changelog_update();
-						}
-					}
-				}
-				
-				exit;
+				 // Add Line:
+				array_push(_lineList, {
+					"list"   : _textList,
+					"font"   : _font,
+					"type"   : _type,
+					"title"  : _title,
+					"indent" : _indent
+				});
 			}
 			
-			 // Add Line:
-			array_push(_lineList, {
-				"list"   : _textList,
-				"font"   : _font,
-				"type"   : _type,
-				"title"  : _title,
-				"indent" : _indent
-			});
+			 // Update Displayed Changelog:
+			if(current_frame != _lastFrame){
+				if(changelog_get_display() == _index && changelog_exists(_index)){
+					if(_lineList == changelog_get(_index).list){
+						changelog_update();
+					}
+				}
+			}
+			
+			exit;
 		}
 	}
 	
@@ -1883,9 +1956,10 @@
 	if(changelog_exists(_index)){
 		 // Unload Sprites:
 		with(changelog_get(_index)){
-			with(sprites){
+			with(ds_map_values(sprites)){
 				sprite_delete(self);
 			}
+			ds_map_destroy(sprites);
 		}
 		
 		 // Delete Changelog:
@@ -1962,6 +2036,7 @@
 								_height  = ceil(((height - _lines.offset) / 2) / string_height(" ")),
 								_lineAdd = string_repeat(" ", _width) + text + string_repeat(" ", _width);
 								
+							 // Auto Line Breaking:
 							if(string_width(string_delete_nt(_line + _lineAdd)) > _lines.width){
 								if(string_delete_nt(_line) != _indent){
 									_text += string_repeat("#", _lineHeight) + _line + string_repeat("#", _lineHeight);

@@ -24,15 +24,17 @@
 	
 #define weapon_ntte_eat
 	 // Unleash da Portal:
-	with(projectile_create(x, y, "PortalBullet", random(360), 20)){
-		event_perform(ev_other, ev_animation_end);
-		move_contact_solid(direction, random_range(32, 160));
-		instance_destroy();
+	if(!instance_is(self, Portal)){
+		with(projectile_create(x, y, "PortalBullet", random(360), 20)){
+			event_perform(ev_other, ev_animation_end);
+			move_contact_solid(direction, random_range(32, 160));
+			instance_destroy();
+		}
+		
+		 // Effects:
+		view_shake_at(x, y, 30);
+		sound_play_pitch(sndGuardianDead, 0.6);
 	}
-	
-	 // Effects:
-	view_shake_at(x, y, 30);
-	sound_play_pitch(sndGuardianDead, 0.6);
 	
 #define weapon_fire(_wep)
 	var _fire = weapon_fire_init(_wep);

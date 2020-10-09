@@ -1197,7 +1197,7 @@
 		
 		if(position_meeting(x, y + 8, Wall) || place_meeting(x, y + 8, TopSmall)){
 			z = 8;
-			depth = -6 - (y / 10000);
+			depth = -7;
 			_land = true;
 		}
 		else if(z <= 0){
@@ -1234,7 +1234,7 @@
 		}
 	}
 	else{
-		depth = -8;
+		depth = -9;
 		speed += friction_raw;
 	}
 	
@@ -2831,7 +2831,7 @@
 								image_xscale = 0.8;
 								image_yscale = image_xscale;
 								image_angle  = random(360);
-								depth        = other.depth + 0.1;
+								depth        = other.depth + 1;
 								// image_speed  = 0.4;
 							}
 						}
@@ -3787,7 +3787,7 @@
 	}
 	else{
 		visible = true;
-		depth = -8;
+		depth   = -8;
 	}
 	
 #define ParrotFeather_draw // Code below is 2x faster than using a draw_sprite_ext so
@@ -3802,7 +3802,7 @@
 		sprite_index = other.sprite_index;
 		image_angle  = other.image_angle;
 		image_blend  = other.image_blend_fade;
-		depth        = ((!position_meeting(x, y, Floor) && !instance_seen(x, y, other.creator)) ? -6.01 : 0);
+		depth        = ((!position_meeting(x, y, Floor) && !instance_seen(x, y, other.creator)) ? -7 : 0);
 	}
 	
 	 // Sound:
@@ -3879,12 +3879,12 @@
 		 // Vars:
 		mask_index = mskWepPickup;
 		persistent = true;
-		creator = noone;
-		nearwep = noone;
-		depth = 0; // Priority (0==WepPickup)
-		pick = -1;
-		xoff = 0;
-		yoff = 0;
+		creator    = noone;
+		nearwep    = noone;
+		depth      = 0; // Priority (0==WepPickup)
+		pick       = -1;
+		xoff       = 0;
+		yoff       = 0;
 		
 		 // Events:
 		on_meet = null;
@@ -4474,7 +4474,9 @@
 			}
 		}
 		/*if(chance_ct(1, 10)){
-			with(scrFX([x, 12], [(y - 4), 8], [90, 0.1], "VaultFlowerSparkle")) depth = other.depth + choose(-1, -1, 1);
+			with(scrFX([x, 12], [(y - 4), 8], [90, 0.1], "VaultFlowerSparkle")){
+				depth = other.depth + choose(-1, -1, 1);
+			}
 		}*/
 	}
 	

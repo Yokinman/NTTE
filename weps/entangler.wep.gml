@@ -55,8 +55,10 @@
 	
 #define weapon_ntte_eat
 	 // Wtf:
-	with(obj_create(x, y, "CrystalClone")){
-		clone = other;
+	if(!instance_is(self, Portal)){
+		with(obj_create(x, y, "CrystalClone")){
+			clone = other;
+		}
 	}
 	
 #define weapon_fire(_wep)
