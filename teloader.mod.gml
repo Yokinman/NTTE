@@ -604,7 +604,7 @@
 #macro path_changelog "NTTE-Changelog.txt"
 
 #macro git_user    "Yokinman"
-#macro git_repo    "NTTE"
+#macro git_repo    "NTTE-public"
 #macro git_token   "d5bc40c0fb8964158bfa99577f3e2c823c553aa5"
 #macro git_branch  global.git_branch
 #macro git_version global.git_version

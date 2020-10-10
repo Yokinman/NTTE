@@ -1,5 +1,5 @@
 #define init
-	ntte_version = 2.0;
+	ntte_version = 2.01;
 	
 	 // Debug Lag:
 	lag = false;
@@ -1573,7 +1573,7 @@
 					]
 				},
 					
-				"bee" : {
+				"???" : {
 					skin : 2,
 					sprt : [
 						["Loadout",   2, 16,  16, true],
