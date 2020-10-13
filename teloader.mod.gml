@@ -83,7 +83,7 @@
 			"weps/hyper bubbler.wep.gml",
 			"weps/bubble bat.wep.gml",
 			"weps/lightring launcher.wep.gml",
-			"weps/super lightring launcher.wep.gml"
+			"weps/super lightring launcher.wep.gml",
 			"weps/tesla coil.wep.gml",
 			"weps/electroplasma rifle.wep.gml",
 			"weps/electroplasma shotgun.wep.gml",
@@ -479,7 +479,6 @@
 								if(is_array(_list) && array_length(_list) > 0){
 									with(_list){
 										global.load.num++;
-										
 										
 										 // Stop Searching at the Local Version:
 										with(parents){
