@@ -621,7 +621,12 @@
 		tether_y     = y;
 		tether_inst  = noone;
 		tether_range = 80;
+		big			 = false;
 		setup        = true;
+		
+		 // Alarms:
+		alarm0 = -1;
+		alarm1 = -1;
 		
 		return id;
 	}
@@ -632,6 +637,22 @@
 	 // Not Tethered:
 	if(tether == 0 && tether_inst == noone){
 		tether = -1;
+	}
+	
+	if(big){
+		 // Visual:
+		sprite_index = spr.ElectroPlasmaBig;
+		image_index	 = 1 - image_speed;
+		
+		 // Vars:
+		mask_index = mskPlasma;
+		damage = 12;
+		force = 2;
+		typ = 1; // standard cannon business:
+		
+		 // Alarms:
+		alarm0 = 5;
+		alarm1 = 20;
 	}
 	
 	 // Laser Brain:
@@ -646,8 +667,14 @@
 	if(instance_exists(self)) image_index = 1;
 	
 #define ElectroPlasma_step
+	 // Alarms:
+	if(alarm0_run) exit;
+	if(alarm1_run) exit;
+
+	 // Increment Wave:
 	wave += current_time_scale;
 
+	 // Setup:
 	if(setup) ElectroPlasma_setup();
 
 	 // Tether:
@@ -734,13 +761,32 @@
 	
 	 // Trail:
 	if(chance_ct(1, 8)){
-		with(instance_create(x + orandom(6), y + orandom(6), PlasmaTrail)){
+		with(
+			instance_create(
+				random_range(bbox_left, bbox_right), 
+				random_range(bbox_top, bbox_bottom), 
+				PlasmaTrail
+			)
+		){
 			sprite_index = spr.ElectroPlasmaTrail;
 		}
 	}
 	
 	 // Goodbye:
-	if(image_xscale <= 0.8 || image_yscale <= 0.8) instance_destroy();
+	if((image_xscale <= 0.8 || image_yscale <= 0.8) || (speed <= friction)) instance_destroy();
+	
+#define ElectroPlasma_alrm0
+	alarm0 = random_range(5, 10);
+	with(projectile_create(x, y, "TeslaCoil", 0, 0)){
+		direction    = random(360);
+		purple		 = true;
+		creator 	 = other;
+		creator_offx = 0;
+		creator_offy = 0;
+	}
+	
+#define ElectroPlasma_alrm1
+	friction = 0.3;
 	
 #define ElectroPlasma_hit
 	if(setup) ElectroPlasma_setup();
@@ -748,7 +794,7 @@
 	var p = instance_is(other, Player);
 	if(projectile_canhit(other) && (!p || projectile_canhit_melee(other))){
 		projectile_hit(other, damage);
-		
+			
 		 // Effects:
 		sleep_max(10);
 		view_shake_max_at(x, y, 2);
@@ -758,16 +804,75 @@
 		y -= vspeed * 0.8;
 		
 		 // Shrink:
-		image_xscale -= 0.05;
-		image_yscale -= 0.05;
+		var n = lerp(0.05, 0.03, skill_get(mut_laser_brain));
+		image_xscale -= n;
+		image_yscale -= n;
 	}
 	
 #define ElectroPlasma_wall
-	image_xscale -= 0.03;
-	image_yscale -= 0.03;
+	var n = 0.03;
+	image_xscale -= n;
+	image_yscale -= n;
+	
+	if(big){
+		with(other){
+			instance_create(x, y, FloorExplo);
+			instance_destroy();
+		}
+	}
 	
 #define ElectroPlasma_destroy
-	projectile_create(x, y, "ElectroPlasmaImpact", direction, 0);
+	if(big){
+		 // Projectiles:
+		var n = 6,
+			a = [];
+		
+		for(var i = 0; i < n; i++){
+			var d = direction + (i * (360 / n));
+			array_push(a, projectile_create(x, y, "ElectroPlasma", d + orandom(4), 4));
+			
+			 // Woah:
+			if((i % 2) < 1){
+				with(projectile_create(x, y, "ElectroPlasma", d + orandom(8), 2.5)){
+					tether_inst = a[i];
+				}
+				
+				var l = 16;
+				projectile_create(x + lengthdir_x(l, d), y + lengthdir_y(l, d), "ElectroPlasmaImpact", d, 0);
+			}
+		}
+		
+		 // Please forgive me for using a second for loop, Yokin:
+		for(var i = 0; i < n; i++){
+			a[i].tether_inst = a[(i + 1) % n];
+		}
+			
+		 // Effects:
+		sleep(60);
+		view_shake_at(x, y, 24);
+		with(instance_create(x, y, PortalClear)){
+			image_xscale = 5/3;
+			image_yscale = 5/3;
+		}
+		
+		 // Sounds:
+		if(skill_get(mut_laser_brain) > 0){
+			sound_play_hit_ext(sndPlasmaBigExplodeUpg, 0.6, 0.8);
+			sound_play_hit_ext(sndLightningCannonUpg,  1.0, 0.6);
+		}
+		else{
+			sound_play_hit_ext(sndPlasmaBigExplode, 0.6, 0.8);
+			sound_play_hit_ext(sndLightningCannon,  1.0, 0.6);
+		}
+		sound_play_pitchvol(sndLightningCannonEnd, 1.4, 0.6);
+	}
+	else{
+		
+		 // Exploding:
+		projectile_create(x, y, "ElectroPlasmaImpact", direction, 0);
+	}
+	
+	 // Untether FX:
 	ElectroPlasma_untether();
 	
 #define ElectroPlasma_untether
@@ -3609,7 +3714,7 @@
 		target_y     = y;
 		dist_max     = 96;
 		roids        = false;
-		bat          = false;
+		purple		 = false;
 		
 		 // Alarms:
 		alarm0 = 1;
@@ -3690,21 +3795,34 @@
 		 // Arc Lightning:
 		var	_tx = target_x,
 			_ty = target_y,
-			_bat = bat;
+			_p  = purple;
 			
 		if((instance_exists(target) || point_distance(x, y, _tx, _ty) < dist_max + 32) && !collision_line(x, y, _tx, _ty, Wall, false, false)){
 			with(creator){
 				var _inst = lightning_connect(other.x, other.y, _tx, _ty, (point_distance(other.x, other.y, _tx, _ty) / 4) * sin(other.wave / 90), false);
-				if(_bat) with(_inst) sprite_index = spr.BatLightning;
+				
+				 // Purpify:
+				if(_p){
+					with(_inst){
+						damage       = (instance_is(other, projectile) ? floor(other.damage * 7/3) : damage);
+						sprite_index = spr.ElectroPlasmaTether;
+						depth        = -3;
+						
+						 // Effects:
+						if(chance_ct(1, 16)){
+							with(instance_create(x, y, PlasmaTrail)){
+								sprite_index = spr.ElectroPlasmaTrail;
+								motion_set(other.direction, 1);
+							}
+						}
+					}
+				}
 			}
 			
 			 // Hit FX:
 			if(!place_meeting(_tx, _ty, LightningHit)){
 				with(instance_create(_tx, _ty, LightningHit)){
 					image_speed = 0.2 + random(0.2);
-					
-					 // Bat Effect:
-					if(_bat) sprite_index = spr.BatLightningHit;
 				}
 			}
 		}
@@ -3723,23 +3841,6 @@
 		}
 	}
 	else instance_destroy();
-	
-#define TeslaCoil_end_step
-	if(bat && instance_is(creator, hitme)){
-		var c = creator;
-		with(instances_matching_le(target, "my_health", 0)){
-			with(c) if(my_health < maxhealth){
-				my_health = min(my_health + 1, maxhealth);
-				
-				 // Effects:
-				instance_create(x, y, HealFX);
-				
-				 // Sounds:
-				sound_play_pitchvol(sndBloodlustProc, 0.8 + random(0.4), 1.0);
-				sound_play_pitchvol(sndLightningCrystalHit, 0.4 + random(0.4), 1.2);
-			}
-		}
-	}
 	
 	
 #define TopDecalWaterMine_create(_x, _y)

@@ -134,6 +134,7 @@
 			
 			 // Electroplasma:
 			ElectroPlasma       = sprite(p + "sprElectroPlasma",       7, 12, 12);
+			ElectroPlasmaBig	= sprite(p + "sprElectroPlasmaBig",	   7, 12, 12);
 			ElectroPlasmaTrail  = sprite(p + "sprElectroPlasmaTrail",  3,  4,  4);
 			ElectroPlasmaImpact = sprite(p + "sprElectroPlasmaImpact", 7, 12, 12);
 			ElectroPlasmaTether = sprite(p + "sprElectroPlasmaTether", 4,  0,  1);
