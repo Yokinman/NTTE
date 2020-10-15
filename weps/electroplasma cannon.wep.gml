@@ -9,7 +9,7 @@
 #define weapon_sprt       return (weapon_avail() ? global.sprWep : global.sprWepLocked);
 #define weapon_area       return (weapon_avail() ? 9 : -1); // 4-1
 #define weapon_type       return type_energy;
-#define weapon_cost       return 10;
+#define weapon_cost       return 12;
 #define weapon_load       return 50; // 1.66 Seconds
 #define weapon_avail      return unlock_get("pack:" + weapon_ntte_pack());
 #define weapon_ntte_pack  return "trench";

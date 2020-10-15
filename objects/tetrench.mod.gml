@@ -646,7 +646,7 @@
 		
 		 // Vars:
 		mask_index = mskPlasma;
-		damage = 12;
+		damage = 6;
 		force = 2;
 		typ = 1; // standard cannon business:
 		
