@@ -783,6 +783,7 @@
 		creator 	 = other;
 		creator_offx = 0;
 		creator_offy = 0;
+		dist_max	 = 64;
 	}
 	
 #define ElectroPlasma_alrm1
@@ -804,9 +805,11 @@
 		y -= vspeed * 0.8;
 		
 		 // Shrink:
-		var n = lerp(0.05, 0.03, skill_get(mut_laser_brain));
-		image_xscale -= n;
-		image_yscale -= n;
+		if(!big){
+			var n = lerp(0.05, 0.03, skill_get(mut_laser_brain));
+			image_xscale -= n;
+			image_yscale -= n;
+		}
 	}
 	
 #define ElectroPlasma_wall
@@ -824,27 +827,28 @@
 #define ElectroPlasma_destroy
 	if(big){
 		 // Projectiles:
-		var n = 6,
+		var n = 5,
 			a = [];
 		
 		for(var i = 0; i < n; i++){
 			var d = direction + (i * (360 / n));
-			array_push(a, projectile_create(x, y, "ElectroPlasma", d + orandom(4), 4));
-			
-			 // Woah:
-			if((i % 2) < 1){
-				with(projectile_create(x, y, "ElectroPlasma", d + orandom(8), 2.5)){
-					tether_inst = a[i];
-				}
-				
-				var l = 16;
-				projectile_create(x + lengthdir_x(l, d), y + lengthdir_y(l, d), "ElectroPlasmaImpact", d, 0);
+			for(var j = -1; j <= 1; j++){
+				array_push(a, projectile_create(x, y, "ElectroPlasma", (d + (j * 15)) + orandom(2), (j == 0 ? 5 : 4) + random(0.4)));
 			}
 		}
 		
 		 // Please forgive me for using a second for loop, Yokin:
+		var n = array_length(a);
 		for(var i = 0; i < n; i++){
 			a[i].tether_inst = a[(i + 1) % n];
+		}
+		
+		 // And a third one, sorry bro:
+		var n = 3,
+			l = 16;
+		for(var i = 0; i < n; i++){
+			var d = direction + (i * (360 / n));
+			projectile_create(x + lengthdir_x(l, d), y + lengthdir_y(l, d), "ElectroPlasmaImpact", d, 0);
 		}
 			
 		 // Effects:
@@ -3820,9 +3824,19 @@
 			}
 			
 			 // Hit FX:
-			if(!place_meeting(_tx, _ty, LightningHit)){
-				with(instance_create(_tx, _ty, LightningHit)){
-					image_speed = 0.2 + random(0.2);
+			if(purple){
+				if(chance_ct(1, 15)){
+					scrFX(_tx, _ty, [random(360), 1], PortalL)
+				}
+				if(!place_meeting(_tx, _ty, Smoke)){
+					instance_create(_tx, _ty, Smoke);
+				}
+			}
+			else{
+				if(!place_meeting(_tx, _ty, LightningHit)){
+					with(instance_create(_tx, _ty, LightningHit)){
+						image_speed = 0.2 + random(0.2);
+					}
 				}
 			}
 		}
