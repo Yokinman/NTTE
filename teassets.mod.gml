@@ -1201,8 +1201,10 @@
 			];
 			
 			 // Sewer Pool:
-			SewerPool     = sprite(p + "sprSewerPool", 8,  0,  0);
-			msk.SewerPool = sprite(p + "mskSewerPool", 1, 32, 64);
+			SewerPool   	 = sprite(p + "sprSewerPool",	 8,  0,  0);
+			msk.SewerPool	 = sprite(p + "mskSewerPool",	 1,  32, 64);
+			SewerPoolBig	 = sprite(p + "sprSewerPoolBig", 25, 0,  0);
+			msk.SewerPoolBig = sprite(p + "mskSewerPoolBig", 1,  80, 80);
 			
 			 // Secret:
 			FloorSewerWeb   = sprite(p + "sprFloorSewerWeb",   1, 0, 0);

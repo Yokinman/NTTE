@@ -497,47 +497,71 @@
 			}
 			
 			 // Frog Nest:
-			with(FrogQueen){
-				var	_total = 0,
-					_queen = self;
+			if(instance_exists(FrogQueen)){
+				var	_size = 7,
+					_type = "round",
+					_floorDis = -32,
+					_spaFloor = FloorNormal,
+					_dirOff = 0,
+					_spaDis = 256;
 					
-				with(array_shuffle(floor_fill(x, y, 5, 5, "round"))){
-					var _chance = 0;
+				floor_set_align(null, null, 32, 32);
+				floor_set_style(0, null);
 					
-					for(var _checkDir = 0; _checkDir < 360; _checkDir += 90){
-						if(!place_meeting(x + lengthdir_x(32, _checkDir), y + lengthdir_y(32, _checkDir), Floor)){
-							_chance++;
-						}
+				with(floor_room(_spawnX, _spawnY, _spaDis, _spaFloor, _size, _size, _type, _dirOff, _floorDis)){
+					
+					 // Bathing:
+					with(obj_create(x, y, "SludgePool")){
+						sprite_index = msk.SewerPoolBig;
+						spr_floor	 = spr.SewerPoolBig;
 					}
 					
-					if(chance(_chance, 1 + _total)){
-						_total++;
+					FrogQueen.x = x;
+					FrogQueen.y = y;
+					
+					/*
+					with(array_shuffle(floors)){
+						var _chance = 0;
 						
-						var	_dis = 8,
-							_ang = random(360),
-							_num = choose(1, 3);
+						for(var _checkDir = 0; _checkDir < 360; _checkDir += 90){
+							if(!place_meeting(x + lengthdir_x(32, _checkDir), y + lengthdir_y(32, _checkDir), Floor)){
+								_chance++;
+							}
+						}
+						
+						if(chance(_chance, 1 + _total)){
+							_total++;
 							
-						for(var _dir = _ang; _dir < _ang + 360; _dir += (360 / _num)){
-							var	_x = bbox_center_x + lengthdir_x(_dis, _dir) + orandom(2),
-								_y = bbox_center_y + lengthdir_y(_dis, _dir) - random(4);
+							var	_dis = 8,
+								_ang = random(360),
+								_num = choose(1, 3);
 								
-							with(instance_create(_x, _y, FrogEgg)){
-								alarm0 *= random_range(1, 2);
-								depth = -1;
-								
-								 // Wait for Boss Intro:
-								if(fork()){
-									var a = alarm0;
-									while(instance_exists(self) && instance_exists(_queen) && _queen.intro == false){
-										alarm0 = a;
-										wait 0;
+							for(var _dir = _ang; _dir < _ang + 360; _dir += (360 / _num)){
+								var	_x = bbox_center_x + lengthdir_x(_dis, _dir) + orandom(2),
+									_y = bbox_center_y + lengthdir_y(_dis, _dir) - random(4);
+									
+								with(instance_create(_x, _y, FrogEgg)){
+									alarm0 *= random_range(1, 2);
+									depth = -1;
+									
+									 // Wait for Boss Intro:
+									if(fork()){
+										var a = alarm0;
+										while(instance_exists(self) && instance_exists(_queen) && _queen.intro == false){
+											alarm0 = a;
+											wait 0;
+										}
+										exit;
 									}
-									exit;
 								}
 							}
 						}
 					}
+					*/
 				}
+				
+				floor_reset_align();
+				floor_reset_style();
 			}
 			
 			 // Loop Spawns:
