@@ -134,6 +134,7 @@
 			
 			 // Electroplasma:
 			ElectroPlasma       = sprite(p + "sprElectroPlasma",       7, 12, 12);
+			ElectroPlasmaBig	= sprite(p + "sprElectroPlasmaBig",	   7, 12, 12);
 			ElectroPlasmaTrail  = sprite(p + "sprElectroPlasmaTrail",  3,  4,  4);
 			ElectroPlasmaImpact = sprite(p + "sprElectroPlasmaImpact", 7, 12, 12);
 			ElectroPlasmaTether = sprite(p + "sprElectroPlasmaTether", 4,  0,  1);
@@ -1201,8 +1202,10 @@
 			];
 			
 			 // Sewer Pool:
-			SewerPool     = sprite(p + "sprSewerPool", 8,  0,  0);
-			msk.SewerPool = sprite(p + "mskSewerPool", 1, 32, 64);
+			SewerPool   	 = sprite(p + "sprSewerPool",	 8,  0,  0);
+			msk.SewerPool	 = sprite(p + "mskSewerPool",	 1,  32, 64);
+			SewerPoolBig	 = sprite(p + "sprSewerPoolBig", 25, 0,  0);
+			msk.SewerPoolBig = sprite(p + "mskSewerPoolBig", 1,  80, 80);
 			
 			 // Secret:
 			FloorSewerWeb   = sprite(p + "sprFloorSewerWeb",   1, 0, 0);
