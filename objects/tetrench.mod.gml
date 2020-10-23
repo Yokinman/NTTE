@@ -607,7 +607,7 @@
 		 // Visuals:
 		sprite_index = spr.ElectroPlasma;
 		image_speed  = 0.4;
-		image_index  = 1 - image_speed;
+		image_index  = 1 - image_speed_raw;
 		depth        = -3;
 		
 		 // Vars:
@@ -621,7 +621,7 @@
 		tether_y     = y;
 		tether_inst  = noone;
 		tether_range = 80;
-		big			 = false;
+		big          = false;
 		setup        = true;
 		
 		 // Alarms:
@@ -639,22 +639,6 @@
 		tether = -1;
 	}
 	
-	if(big){
-		 // Visual:
-		sprite_index = spr.ElectroPlasmaBig;
-		image_index	 = 1 - image_speed;
-		
-		 // Vars:
-		mask_index = mskPlasma;
-		damage = 6;
-		force = 2;
-		typ = 1; // standard cannon business:
-		
-		 // Alarms:
-		alarm0 = 5;
-		alarm1 = 20;
-	}
-	
 	 // Laser Brain:
 	if(instance_is(creator, Player)){
 		var _brain = skill_get(mut_laser_brain);
@@ -664,18 +648,20 @@
 	}
 	
 #define ElectroPlasma_anim
-	if(instance_exists(self)) image_index = 1;
+	if(instance_exists(self)){
+		image_index = 1;
+	}
 	
 #define ElectroPlasma_step
 	 // Alarms:
 	if(alarm0_run) exit;
 	if(alarm1_run) exit;
+	
+	 // Setup:
+	if(setup) ElectroPlasma_setup();
 
 	 // Increment Wave:
 	wave += current_time_scale;
-
-	 // Setup:
-	if(setup) ElectroPlasma_setup();
 
 	 // Tether:
 	if(tether >= 0){
@@ -773,29 +759,37 @@
 	}
 	
 	 // Goodbye:
-	if((image_xscale <= 0.8 || image_yscale <= 0.8) || (speed <= friction)) instance_destroy();
+	if(image_xscale <= 0.8 || image_yscale <= 0.8 || speed <= friction){
+		instance_destroy();
+	}
 	
 #define ElectroPlasma_alrm0
 	alarm0 = random_range(5, 10);
+	
+	 // Zap Nearby:
 	with(projectile_create(x, y, "TeslaCoil", 0, 0)){
 		direction    = random(360);
-		purple		 = true;
-		creator 	 = other;
+		purple       = true;
+		creator      = other;
 		creator_offx = 0;
 		creator_offy = 0;
-		dist_max	 = 64;
+		dist_max     = 64;
 	}
 	
 #define ElectroPlasma_alrm1
 	friction = 0.3;
+	sound_play_hit_ext(sndLightningHit, 0.3 + random(0.2), 1.5);
 	
 #define ElectroPlasma_hit
 	if(setup) ElectroPlasma_setup();
 	
-	var p = instance_is(other, Player);
-	if(projectile_canhit(other) && (!p || projectile_canhit_melee(other))){
-		projectile_hit(other, damage);
-			
+	if(
+		instance_is(other, Player)
+		? projectile_canhit_melee(other)
+		: projectile_canhit(other)
+	){
+		projectile_hit_push(other, damage, force);
+		
 		 // Effects:
 		sleep_max(10);
 		view_shake_max_at(x, y, 2);
@@ -805,18 +799,18 @@
 		y -= vspeed * 0.8;
 		
 		 // Shrink:
-		if(!big){
-			var n = lerp(0.05, 0.03, skill_get(mut_laser_brain));
-			image_xscale -= n;
-			image_yscale -= n;
-		}
+		var _shrink = 0.05;
+		image_xscale -= _shrink;
+		image_yscale -= _shrink;
 	}
 	
 #define ElectroPlasma_wall
-	var n = 0.03;
-	image_xscale -= n;
-	image_yscale -= n;
+	 // Shrink:
+	var _shrink = 0.03;
+	image_xscale -= _shrink;
+	image_yscale -= _shrink;
 	
+	 // Break Walls:
 	if(big){
 		with(other){
 			instance_create(x, y, FloorExplo);
@@ -825,56 +819,63 @@
 	}
 	
 #define ElectroPlasma_destroy
-	if(big){
-		 // Projectiles:
-		var n = 5,
-			a = [];
-		
-		for(var i = 0; i < n; i++){
-			var d = direction + (i * (360 / n));
+	 // Cannon:
+	if(big > 0){
+		var	_num  = 5 * big,
+			_inst = [];
+			
+		 // Balls:
+		for(var i = 0; i < _num; i++){
+			var _ang = direction + (360 * (i / _num));
 			for(var j = -1; j <= 1; j++){
-				array_push(a, projectile_create(x, y, "ElectroPlasma", (d + (j * 15)) + orandom(2), (j == 0 ? 5 : 4) + random(0.4)));
+				var	_dir = _ang + (j * 15) + orandom(2),
+					_spd = ((j == 0) ? 5 : 4) + random(0.4);
+					
+				array_push(
+					_inst,
+					projectile_create(x, y, "ElectroPlasma", _dir, _spd)
+				);
 			}
 		}
 		
-		 // Please forgive me for using a second for loop, Yokin:
-		var n = array_length(a);
-		for(var i = 0; i < n; i++){
-			a[i].tether_inst = a[(i + 1) % n];
+		 // Link Balls:
+		var _link = 0;
+		with(_inst){
+			_link++;
+			if(instance_exists(self)){
+				tether_inst = _inst[_link % array_length(_inst)];
+			}
 		}
 		
-		 // And a third one, sorry bro:
-		var n = 3,
-			l = 16;
-		for(var i = 0; i < n; i++){
-			var d = direction + (i * (360 / n));
-			projectile_create(x + lengthdir_x(l, d), y + lengthdir_y(l, d), "ElectroPlasmaImpact", d, 0);
-		}
+		 // Explo Impact:
+		var _num = 3 * big,
+			_l   = 16;
 			
+		for(var i = 0; i < _num; i++){
+			var _d = direction + (360 * (i / _num));
+			projectile_create(x + lengthdir_x(_l, _d), y + lengthdir_y(_l, _d), "ElectroPlasmaImpact", _d, 0);
+		}
+		
 		 // Effects:
 		sleep(60);
 		view_shake_at(x, y, 24);
 		with(instance_create(x, y, PortalClear)){
 			image_xscale = 5/3;
-			image_yscale = 5/3;
+			image_yscale = image_xscale;
 		}
 		
 		 // Sounds:
-		if(skill_get(mut_laser_brain) > 0){
-			sound_play_hit_ext(sndPlasmaBigExplodeUpg, 0.6, 0.8);
-			sound_play_hit_ext(sndLightningCannonUpg,  1.0, 0.6);
-		}
-		else{
-			sound_play_hit_ext(sndPlasmaBigExplode, 0.6, 0.8);
-			sound_play_hit_ext(sndLightningCannon,  1.0, 0.6);
-		}
-		sound_play_pitchvol(sndLightningCannonEnd, 1.4, 0.6);
+		var	_brain = (skill_get(mut_laser_brain) > 0),
+			_snd   = sound_play_hit_big((_brain ? sndPlasmaBigExplodeUpg : sndPlasmaBigExplode), 0);
+			
+		audio_sound_pitch(_snd, 0.8);
+		audio_sound_gain(_snd, 0.8 * audio_sound_get_gain(_snd), 0);
+		sound_play_hit((_brain ? sndLightningCannonUpg  : sndLightningCannon), 0.1);
+		sound_play_hit_ext(sndLightningCannonEnd, 1.4 + orandom(0.1), 1.5);
 	}
-	else{
-		
-		 // Exploding:
-		projectile_create(x, y, "ElectroPlasmaImpact", direction, 0);
-	}
+	
+	 // Normal:
+	else projectile_create(x, y, "ElectroPlasmaImpact", direction, 0);
 	
 	 // Untether FX:
 	ElectroPlasma_untether();
@@ -911,6 +912,32 @@
 			}
 			instance_delete(id);
 		}
+	}
+	
+	
+#define ElectroPlasmaBig_create(_x, _y)
+	/*
+		The "cannon" variant of ElectroPlasma
+	*/
+	
+	with(obj_create(_x, _y, "ElectroPlasma")){
+		 // Visual:
+		sprite_index = spr.ElectroPlasmaBig;
+		image_speed  = 0.475;
+		image_index  = 1 - image_speed_raw;
+		
+		 // Vars:
+		mask_index = mskPlasma;
+		damage     = 6;
+		force      = 2;
+		typ        = 1;
+		big        = true;
+		
+		 // Alarms:
+		alarm0 = 5;
+		alarm1 = 20;
+		
+		return id;
 	}
 	
 	
@@ -1633,7 +1660,7 @@
 		}
 		
 		 // Loop:
-		var _grow = 0.1 * GameCont.loops
+		var _grow = 0.1 * GameCont.loops;
 		image_xscale += _grow;
 		image_yscale += _grow;
 		
@@ -3718,7 +3745,7 @@
 		target_y     = y;
 		dist_max     = 96;
 		roids        = false;
-		purple		 = false;
+		purple       = false;
 		
 		 // Alarms:
 		alarm0 = 1;
@@ -3732,7 +3759,7 @@
 		_target       = [],
 		_teamPriority = 0; // Higher teams get priority (Always target IDPD first. Props are targeted only when no enemies are around)
 		
-	with(instances_matching_ne(instances_matching_ne(hitme, "team", team), "mask_index", mskNone, sprVoid)){
+	with(instances_matching_ne(instances_matching_ne(hitme, "team", team), "mask_index", mskNone)){
 		if(distance_to_point(other.x, other.y) < _maxDis && instance_seen(x, y, other)){
 			if(team > _teamPriority){
 				_teamPriority = team;
@@ -3798,19 +3825,18 @@
 		
 		 // Arc Lightning:
 		var	_tx = target_x,
-			_ty = target_y,
-			_p  = purple;
+			_ty = target_y;
 			
 		if((instance_exists(target) || point_distance(x, y, _tx, _ty) < dist_max + 32) && !collision_line(x, y, _tx, _ty, Wall, false, false)){
 			with(creator){
 				var _inst = lightning_connect(other.x, other.y, _tx, _ty, (point_distance(other.x, other.y, _tx, _ty) / 4) * sin(other.wave / 90), false);
 				
 				 // Purpify:
-				if(_p){
+				if(other.purple){
 					with(_inst){
 						damage       = (instance_is(other, projectile) ? floor(other.damage * 7/3) : damage);
 						sprite_index = spr.ElectroPlasmaTether;
-						depth        = -3;
+						//depth        = -3;
 						
 						 // Effects:
 						if(chance_ct(1, 16)){
@@ -3826,7 +3852,7 @@
 			 // Hit FX:
 			if(purple){
 				if(chance_ct(1, 15)){
-					scrFX(_tx, _ty, [random(360), 1], PortalL)
+					scrFX(_tx, _ty, 1, PortalL);
 				}
 				if(!place_meeting(_tx, _ty, Smoke)){
 					instance_create(_tx, _ty, Smoke);
@@ -4241,7 +4267,7 @@
 		}
 		
 		 // Electroplasma:
-		var _inst = instances_matching(CustomProjectile, "name", "ElectroPlasma");
+		var _inst = instances_matching(CustomProjectile, "name", "ElectroPlasma", "ElectroPlasmaBig");
 		if(array_length(_inst)) with(_inst){
 			draw_sprite_ext(sprite_index, image_index, x, y, image_xscale * 2, image_yscale * 2, image_angle, image_blend, image_alpha * 0.1);
 		}
@@ -4343,7 +4369,7 @@
 			 // Projectiles:
 			if(instance_exists(CustomProjectile)){
 				 // Electroplasma:
-				var _inst = instances_matching(instances_matching(CustomProjectile, "name", "ElectroPlasma"), "visible", true);
+				var _inst = instances_matching(instances_matching(CustomProjectile, "name", "ElectroPlasma", "ElectroPlasmaBig"), "visible", true);
 				if(array_length(_inst)){
 					var _r = 24 + (24 * _gray);
 					with(_inst){

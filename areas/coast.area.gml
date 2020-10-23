@@ -663,7 +663,7 @@
 			 // Underwater Portal Setup:
 			var _inst = instances_matching(Portal, "coast_portal", null);
 			if(array_length(_inst)) with(_inst){
-				coast_portal = (type == 1);
+				coast_portal = (type == 1 && endgame == 100 && image_alpha == 1);
 				alarm0 = -1;
 				
 				if(coast_portal){

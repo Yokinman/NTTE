@@ -9,36 +9,41 @@
 #define weapon_sprt       return (weapon_avail() ? global.sprWep : global.sprWepLocked);
 #define weapon_area       return (weapon_avail() ? 9 : -1); // 4-1
 #define weapon_type       return type_energy;
-#define weapon_cost       return 12;
+#define weapon_cost       return 10;
 #define weapon_load       return 50; // 1.66 Seconds
 #define weapon_avail      return unlock_get("pack:" + weapon_ntte_pack());
 #define weapon_ntte_pack  return "trench";
 
 #define weapon_reloaded
 	sound_play(sndLightningReload);
+	sound_play_pitch(sndPlasmaReload, 1.5);
 	
 #define weapon_fire(_wep)
 	var _fire = weapon_fire_init(_wep);
 	_wep = _fire.wep;
 	
 	 // Projectile:
-	with(projectile_create(x, y, "ElectroPlasma", gunangle + random_range(-4, 4) * accuracy, 6)){
-		big = true;
-	}
+	projectile_create(x, y, "ElectroPlasmaBig", gunangle + orandom(4 * accuracy), 6);
 	
 	 // Sounds:
 	if(skill_get(mut_laser_brain) > 0){
-		sound_play_gun(sndLightningShotgunUpg, 0.4, 0.6);
-		sound_play_pitch(sndPlasmaRifleUpg, 0.4 + random(0.1));
+		audio_sound_pitch(
+			sound_play_gun(sndLightningShotgunUpg, 0, 0.6),
+			0.6 + random(0.2)
+		);
+		sound_play_pitch(sndPlasmaRifleUpg, 0.5 + random(0.1));
 	}
 	else{
-		sound_play_gun(sndLightningShotgun, 0.3, 0.3);
-		sound_play_pitch(sndPlasmaRifle, 0.4 + random(0.1));
+		audio_sound_pitch(
+			sound_play_gun(sndLightningShotgun, 0, 0.3),
+			0.6 + random(0.2)
+		);
+		sound_play_pitch(sndPlasmaRifle, 0.5 + random(0.1));
 	}
 	
 	 // Effects:
 	weapon_post(12, 30, 0);
-	motion_add(gunangle, -4);
+	motion_add(gunangle + 180, 4);
 	instance_create(x, y, Smoke);
 	
 	
