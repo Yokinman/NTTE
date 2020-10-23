@@ -1670,11 +1670,23 @@
 #define ntte_begin_step
 	if(lag) trace_time();
 	
-	 // Manually Recreating Pause/Loading/GameOver Map:
+	 // New Area:
 	if(global.area_update){
 		global.area_update = false;
 		
 		with(GameCont){
+			 // NTTE Area B-Themes:
+			if(subarea == 1){
+				if(array_exists(ntte_mods.area, area)){
+					if(random(20) < 1 || array_length(instances_matching_le(Player, "my_health", 1))){
+						if(vaults < 3){
+							proto = true;
+						}
+					}
+				}
+			}
+			
+			 // Manually Recreating Pause/Loading/GameOver Map:
 			var i = waypoints - 1;
 			if(i >= 0){
 				global.area_mapdata[i] = [area, subarea, loops];

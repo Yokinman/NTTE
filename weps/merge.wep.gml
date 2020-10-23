@@ -2326,7 +2326,7 @@
 #define weapon_text(_wep)         return wep_stat(_wep, "text");
 #define weapon_swap(_wep)         return wep_stat(_wep, "swap");
 #define weapon_area(_wep)         return -1;
-#define weapon_gold(_wep)         return ((wep_stat(_wep, "gold") != 0) ? -1 : 0);
+#define weapon_gold(_wep)         return ((argument_count > 0 && wep_stat(_wep, "gold") != 0) ? -1 : 0);
 #define weapon_type(_wep)         return wep_stat(_wep, "type");
 #define weapon_cost(_wep)         return wep_stat(_wep, "cost");
 #define weapon_rads(_wep)         return wep_stat(_wep, "rads");

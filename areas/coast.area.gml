@@ -40,7 +40,7 @@
 #define area_subarea           return 3;
 #define area_goal              return 100;
 #define area_next              return ["oasis", 1];
-#define area_music             return mus.Coast;
+#define area_music             return ((GameCont.proto == true) ? mus.CoastB : mus.Coast);
 #define area_music_boss        return mus.SealKing;
 #define area_ambient           return amb0b;
 #define area_background_color  return make_color_rgb(27, 118, 184);
