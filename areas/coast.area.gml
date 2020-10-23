@@ -478,6 +478,26 @@
 				alarm10 = max(alarm10, 90);
 			}
 		}
+		
+		 // Weird fix for ultra bolts destroying themselves when not touching a floor:
+		global.ultraboltfix_floors = [];
+		if(instance_exists(UltraBolt)){
+			with(UltraBolt){
+				if(!place_meeting(x, y, Floor)){
+					with(instance_create(0, 0, Floor)){
+						name       = "UltraBoltCoastFix";
+						mask_index = sprBoltTrail;
+						x          = other.x;
+						y          = other.y;
+						xprevious  = x;
+						yprevious  = y;
+						visible    = false;
+						creator    = other;
+						array_push(global.ultraboltfix_floors, id);
+					}
+				}
+			}
+		}
 	}
 	
 #define ntte_step
@@ -725,26 +745,6 @@
 					if("coast_portal_sound" not in self){
 						coast_portal_sound = true;
 						sound_play(sndOasisPortal);
-					}
-				}
-			}
-		}
-		
-		 // Weird fix for ultra bolts destroying themselves when not touching a floor:
-		global.ultraboltfix_floors = [];
-		if(instance_exists(UltraBolt)){
-			with(UltraBolt){
-				if(!place_meeting(x, y, Floor)){
-					with(instance_create(0, 0, Floor)){
-						name = "UltraBoltCoastFix";
-						mask_index = sprBoltTrail;
-						x = other.x;
-						y = other.y;
-						xprevious = x;
-						yprevious = y;
-						visible = false;
-						creator = other;
-						array_push(global.ultraboltfix_floors, id);
 					}
 				}
 			}
