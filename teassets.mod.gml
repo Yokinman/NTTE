@@ -416,6 +416,22 @@
 			CrabTankHurt = sprCrabHurt;
 			CrabTankDead = sprCrabDead;
 			
+			 // Crystal Bat:
+			p = m + "CrystalBat/";
+			CrystalBatIdle = sprite(p + "sprCrystalBatIdle", 6, 16, 16);
+			CrystalBatHurt = sprite(p + "sprCrystalBatHurt", 3, 16, 16);
+			CrystalBatDead = sprite(p + "sprCrystalBatDead", 8, 16, 16);
+			CrystalBatTell = sprite(p + "sprCrystalBatTell", 2, 16, 16);
+			CrystalBatDash = sprite(p + "sprCrystalBatDash", 4, 16, 16);
+			
+			 // Crystal Bat (Cursed):
+			p = m + "InvCrystalBat/";
+			InvCrystalBatIdle = sprite(p + "sprInvCrystalBatIdle", 6, 16, 16);
+			InvCrystalBatHurt = sprite(p + "sprInvCrystalBatHurt", 3, 16, 16);
+			InvCrystalBatDead = sprite(p + "sprInvCrystalBatDead", 8, 16, 16);
+			InvCrystalBatTell = sprite(p + "sprInvCrystalBatTell", 2, 16, 16);
+			InvCrystalBatDash = sprite(p + "sprInvCrystalBatDash", 4, 16, 16);
+			
 			 // Crystal Brain:
 			p = m + "CrystalBrain/";
 			CrystalBrainIdle          = sprite(p + "sprCrystalBrainIdle",           6, 24, 24);
@@ -838,6 +854,14 @@
 			WallSpiderBot       = sprite(p + "sprWallSpiderBot",       2, 0, 0);
 			WallSpiderling      = sprite(p + "sprWallSpiderling",      4, 8, 8);
 			WallSpiderlingTrans = sprite(p + "sprWallSpiderlingTrans", 4, 8, 8);
+			
+			 // Cave Hole:
+			CaveHole	   = sprite(p + "sprCaveHole",		 1, 64, 64);
+			CaveHoleCursed = sprite(p + "sprCaveHoleCursed", 1, 64, 64);
+			msk.CaveHole   = sprite(p + "mskCaveHole",		 1, 64, 64);
+			with(msk.CaveHole){
+				mask = [false, 0];
+			}
 			
 		//#endregion
 		

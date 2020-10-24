@@ -50,6 +50,248 @@
 #macro clientDarknessCoeff global.clientDarknessCoeff
 #macro clientDarknessFloor global.clientDarknessFloor
 
+#define CaveHole_create(_x, _y)
+	with(instance_create(_x, _y, CustomObject)){
+		 // Visual:
+		sprite_index = (GameCont.area == 104 ? spr.CaveHoleCursed : spr.CaveHole);
+		depth = 6;
+		
+		 // Vars:
+		mask_index = msk.CaveHole;
+		
+		return id;
+	}
+	
+#define CaveHole_step
+	var _obj = [hitme, chestprop, Pickup, Corpse, ChestOpen],
+		_dis = 4 + (min(bbox_width, bbox_height) / 2),
+		_spd = 3,
+		_oy = -6;
+		
+	y += _oy;
+	
+	for(var i = 0; i < array_length(_obj); i++){
+		if(place_meeting(x, y, _obj[i])){
+			with(instances_meeting(x, y, _obj[i])){
+				if(place_meeting(x, y, other)){
+					var _dir = point_direction(other.x, other.y, x, y);
+					
+					if(
+						instance_is(id, hitme) 
+						&& 
+						!(instance_is(id, crystaltype) || instance_is(id, HyperCrystal)) 
+						&& 
+						point_distance(x, y, other.x, other.y) < _dis
+					){
+						x = other.x + lengthdir_x(_dis, _dir);
+						y = other.y + lengthdir_y(_dis, _dir);
+						direction = angle_lerp(direction, _dir, 1/12);
+					}
+					
+					else{
+						if(speed < _spd){
+							if(friction > 0){
+								motion_add_ct(_dir, friction + 0.4);
+							}
+							else{
+								x += lengthdir_x(_spd - 0.4, _dir);
+								y += lengthdir_y(_spd - 0.4, _dir);
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+	
+	y -= _oy;
+
+
+#define CrystalBat_create(_x, _y)
+	with(instance_create(_x, _y, CustomEnemy)){
+		 // Visual:
+		spr_idle	 = spr.CrystalBatIdle;
+		spr_walk	 = spr.CrystalBatIdle;
+		spr_hurt	 = spr.CrystalBatHurt;
+		spr_dead	 = spr.CrystalBatDead;
+		spr_tell	 = spr.CrystalBatTell;
+		spr_dash	 = spr.CrystalBatDash;
+		spr_shadow	 = shd24;
+		spr_shadow_y = 4;
+		sprite_index = spr_idle;
+		hitid		 = [spr_idle, "CRYSTAL BAT"];
+		depth		 = -2;
+		
+		 // Sounds:
+		snd_hurt = sndSpiderHurt;
+		snd_dead = sndSpiderDead;
+		snd_mele = sndSpiderMelee;
+		
+		 // Vars:
+		mask_index	= mskFreak;
+		friction	= 0.6;
+		maxhealth	= 16;
+		raddrop 	= 8;
+		size		= 2;
+		walk		= 0;
+		maxspeed	= 2.4;
+		walkspeed	= 1.2;
+		canmelee	= true;
+		meleedamage = 4;
+		cursed		= false;
+		gunangle	= random(360);
+		dash		= false;
+		
+		 // Alarms:
+		alarm1 = 90;
+		alarm2 = 90;
+		
+		return id;
+	}
+	
+#define CrystalBat_step
+	 // Alarms:
+	if(alarm1_run) exit;
+	if(alarm2_run) exit;
+	if(alarm3_run) exit;
+	
+	 // Animate:
+	if(anim_end && sprite_index != spr_tell && sprite_index != spr_dash){
+		sprite_index = enemy_sprite;
+	}
+	
+	 // Walkin':
+	if(walk > 0){
+		walk -= current_time_scale;
+		motion_add_ct(gunangle, (dash ? (walkspeed + 3) : walkspeed));
+		
+		if(place_meeting(x + hspeed, y + vspeed, Wall)){
+			if(cursed && dash){
+				instance_create(x + hspeed, y + vspeed, Smoke);
+				move_contact_solid(gunangle + 180, 10000);
+			}
+			else{
+				
+				 // Force End Dash:
+				if(dash){
+					walk = 0;
+					instance_create(x + hspeed, y + vspeed, Smoke);
+				}
+				
+				 // Wall Bouncin':
+				move_contact_solid(direction, walkspeed);
+				
+				if(place_meeting(x + hspeed, y, Wall)) hspeed *= -1;
+				if(place_meeting(x, y + vspeed, Wall)) vspeed *= -1;
+				
+				gunangle = pround(direction, 90);
+				if(!dash) scrRight(gunangle);
+			}
+		}
+		
+		 // Dashin':
+		if(dash){
+			image_angle = direction;
+			
+			 // Effects:
+			if(chance_ct(1, 3)){
+				instance_create(x, y, Dust);
+			}
+			 
+			 // Exit Dash:
+			if(walk <= 0){
+				dash = 0;
+				
+				alarm1 = 45;
+				alarm2 = 45;
+				
+				sprite_index = spr_hurt;
+				image_index  = 2;
+				image_angle  = 0;
+				
+				move_contact_solid(direction, walkspeed);
+			}
+		}
+	}
+	
+	var _maxSpeed = (dash ? (maxspeed + 5) : maxspeed);
+	if(speed > _maxSpeed){
+		speed = _maxSpeed;
+	}
+	
+	 // Curse Particles:
+	if(cursed && chance_ct(1, 3)){
+		instance_create(x + orandom(8), y + orandom(6), Curse);
+	}
+	
+#define CrystalBat_draw
+	var h = (sprite_index != spr_hurt && nexthurt > current_frame + 3);
+	
+	if(h) draw_set_fog(true, image_blend, 0, 0);
+	draw_sprite_ext(sprite_index, image_index, x, y, (dash ? image_xscale : (image_xscale * right)), (dash ? (image_yscale * right) : image_yscale), image_angle, image_blend, image_alpha);
+	if(h) draw_set_fog(false, c_white, 0, 0);
+	
+#define CrystalBat_hurt(_hitDmg, _hitVel, _hitDir)
+	my_health -= _hitDmg;          
+	motion_add(_hitDir, _hitVel);  
+	nexthurt = current_frame + 6;  
+	sound_play_hit(snd_hurt, 0.3); 
+	
+	 // Hurt Sprite:
+	if(!dash){
+		sprite_index = spr_hurt;
+		image_index  = 0;
+	}
+	
+#define CrystalBat_alrm1
+	alarm1 = 40 + random(20);
+	
+	 // Walk:
+	gunangle = pround(random(360), 90);
+	direction = gunangle;
+	
+	walk = 30 + random(30);
+	speed = max(speed, friction);
+	
+	scrRight(gunangle);
+	
+#define CrystalBat_alrm2
+	alarm2 = 10;
+	
+	if(enemy_target(x, y)){
+		if(instance_seen(x, y, target)){
+			if(instance_near(x, y, target, 160)){
+				if(place_meeting(x, target.y, target) || place_meeting(target.x, y, target)){
+					alarm3 = 7;
+					
+					 // Sprite:
+					sprite_index = spr_tell;
+					
+					 // Motion:
+					gunangle = pround(point_direction(x, y, target.x, target.y), 90);
+					motion_set(gunangle + (180 + orandom(30)), maxspeed);
+					move_contact_solid(direction, speed);
+					scrRight(gunangle);
+					
+					 // Reset:
+					alarm1 = -1;
+					alarm2 = -1;
+					walk = 0;
+				}
+			}
+		}
+	}
+	
+#define CrystalBat_alrm3
+	sprite_index = spr_dash;
+	
+	dash = true;
+	walk = 60;
+	
+	 // Start Dash:
+	move_contact_solid(gunangle, walkspeed);
+	speed = max(speed, friction);
+	
 #define ChaosHeart_create(_x, _y)
 	/*
 		A special variant of crystal hearts unique to the red crown
@@ -1658,6 +1900,26 @@
 	}
 	
 	
+#define InvCrystalBat_create(_x, _y)
+	with(obj_create(_x, _y, "CrystalBat")){
+		 // Visual:
+		spr_idle	 = spr.InvCrystalBatIdle;
+		spr_walk	 = spr.InvCrystalBatIdle;
+		spr_hurt	 = spr.InvCrystalBatHurt;
+		spr_dead	 = spr.InvCrystalBatDead;
+		spr_tell	 = spr.InvCrystalBatTell;
+		spr_dash	 = spr.InvCrystalBatDash;
+		sprite_index = spr_idle;
+		hitid		 = [spr_idle, "@pC@qU@qR@qS@qE@qD @qC@qR@qY@qS@qT@qA@qL @qB@qA@qT"];
+		
+		 // Sounds:
+		snd_hurt = choose(sndBanditHit, sndBigMaggotHit, sndScorpionHit, sndRatHit, sndGatorHit, sndRavenHit, sndSalamanderHurt, sndSniperHit);
+		snd_dead = choose(sndBanditDie, sndBigMaggotDie, sndScorpionDie, sndRatDie, sndGatorDie, sndRavenDie, sndSalamanderDead);
+		
+		 // Vars:
+		cursed = true;
+	}
+
 #define InvMortar_create(_x, _y)
 	with(obj_create(_x, _y, "Mortar")){
 		 // Visual:
@@ -3453,6 +3715,12 @@
 						with(_inst){
 							draw_crystal_heart_dark(_ver, _rad + random(2), _coe);
 						}
+					}
+					
+					 // Crystal Bat:
+					var _inst = instances_matching(instances_matching(CustomEnemy, "name", "CrystalBat", "InvCrystalBat"), "visible", true);
+					if(array_length(_inst)) with(_inst){
+						draw_circle(x, y, 16 + (20 * _gray) + random(2), false);
 					}
 				}
 				

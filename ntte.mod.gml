@@ -700,6 +700,14 @@
 				}
 			}
 			
+			 // Spawn Crystal Bats:
+			with(instances_matching([Spider, InvSpider], "", null)){
+				if(chance(1, 6)){
+					obj_create(x, y, (instance_is(id, InvSpider) ? "InvCrystalBat" : "CrystalBat"));
+					instance_delete(id);
+				}
+			}
+			
 			 // Preloop Lightning Crystals:
 			if(GameCont.loops <= 0 && GameCont.subarea <= 1){
 				with(LaserCrystal){
@@ -714,6 +722,29 @@
 			if(GameCont.area == area_cursed_caves){
 				with(instance_furthest(_spawnX, _spawnY, BigCursedChest)){
 					pet_spawn(x, y, "Prism");
+				}
+			}
+			
+			 // Hyper Crystal Pit:
+			with(HyperCrystal){
+				var	_size = 5,
+					_type = "",
+					_floorDis = -32,
+					_spaFloor = FloorNormal,
+					_dirOff = 0,
+					_spaDis = 256;
+					
+				 // Arena:
+				with(floor_room(_spawnX, _spawnY, _spaDis, _spaFloor, _size, _size, _type, _dirOff, _floorDis)){
+					floor_fill(x, y, _size + 4, _size - 2, "ring");
+					floor_fill(x, y, _size - 2, _size + 4, "ring");
+					
+					 // Mysterious Pit:
+					obj_create(x, y, "CaveHole");
+					
+					 // Relocation:
+					other.x = x;
+					other.y = y;
 				}
 			}
 			
