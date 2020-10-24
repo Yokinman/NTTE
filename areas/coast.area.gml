@@ -480,7 +480,9 @@
 		}
 		
 		 // Weird fix for ultra bolts destroying themselves when not touching a floor:
-		global.ultraboltfix_floors = [];
+		if(array_length(global.ultraboltfix_floors)){
+			global.ultraboltfix_floors = [];
+		}
 		if(instance_exists(UltraBolt)){
 			with(UltraBolt){
 				if(!place_meeting(x, y, Floor)){
@@ -501,6 +503,13 @@
 	}
 	
 #define ntte_step
+	 // Ultra Bolt Fix Pt.2:
+	if(array_length(global.ultraboltfix_floors)){
+		with(instances_matching_ne(global.ultraboltfix_floors, "id", null)){
+			instance_delete(id);
+		}
+	}
+	
 	if(area_active){
 		 // Push Stuff to Shore:
 		if(instance_exists(Floor)){
@@ -824,13 +833,6 @@
 					}
 					instance_destroy();
 				}
-			}
-		}
-		
-		 // Ultra Bolt Fix Pt.2:
-		if(array_length(global.ultraboltfix_floors)){
-			with(instances_matching_ne(global.ultraboltfix_floors, "id", null)){
-				instance_delete(id);
 			}
 		}
 	}
