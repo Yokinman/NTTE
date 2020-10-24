@@ -7,7 +7,7 @@
 #define weapon_text         return "PULSATING";
 #define weapon_swap         return sndSwapEnergy;
 #define weapon_sprt         return (weapon_avail() ? global.sprWep : global.sprWepLocked);
-#define weapon_area         return (weapon_avail() ? 14 : -1); // 1-1 L1
+#define weapon_area         return (weapon_avail() ? 18 : -1); // 1-1 L1
 #define weapon_type         return type_energy;
 #define weapon_cost         return 16;
 #define weapon_load         return 159; // 5.3 Seconds
