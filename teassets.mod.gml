@@ -1,5 +1,5 @@
 #define init
-	ntte_version = 2.017;
+	ntte_version = 2.018;
 	
 	 // Debug Lag:
 	lag = false;
@@ -134,7 +134,7 @@
 			
 			 // Electroplasma:
 			ElectroPlasma       = sprite(p + "sprElectroPlasma",       7, 12, 12);
-			ElectroPlasmaBig	= sprite(p + "sprElectroPlasmaBig",	   7, 12, 12);
+			ElectroPlasmaBig    = sprite(p + "sprElectroPlasmaBig",    7, 12, 12);
 			ElectroPlasmaTrail  = sprite(p + "sprElectroPlasmaTrail",  3,  4,  4);
 			ElectroPlasmaImpact = sprite(p + "sprElectroPlasmaImpact", 7, 12, 12);
 			ElectroPlasmaTether = sprite(p + "sprElectroPlasmaTether", 4,  0,  1);
@@ -1226,10 +1226,10 @@
 			];
 			
 			 // Sewer Pool:
-			SewerPool   	 = sprite(p + "sprSewerPool",	 8,  0,  0);
-			msk.SewerPool	 = sprite(p + "mskSewerPool",	 1,  32, 64);
-			SewerPoolBig	 = sprite(p + "sprSewerPoolBig", 25, 0,  0);
-			msk.SewerPoolBig = sprite(p + "mskSewerPoolBig", 1,  80, 80);
+			SewerPool        = sprite(p + "sprSewerPool",     8,  0,  0);
+			msk.SewerPool    = sprite(p + "mskSewerPool",     1, 32, 64);
+			SewerPoolBig     = sprite(p + "sprSewerPoolBig", 25,  0,  0);
+			msk.SewerPoolBig = sprite(p + "mskSewerPoolBig",  1, 80, 80);
 			
 			 // Secret:
 			FloorSewerWeb   = sprite(p + "sprFloorSewerWeb",   1, 0, 0);
@@ -1859,6 +1859,7 @@
 			
 			 // Areas:
 			Coast  = sound_add(p + "musCoast.ogg");
+			CoastB = sound_add(p + "musCoastB.ogg");
 			Trench = sound_add(p + "musTrench.ogg");
 			Lair   = sound_add(p + "musLair.ogg");
 			Red    = sound_add(p + "musRed.ogg");
@@ -2016,13 +2017,16 @@
 			}
 		}
 		
-		 // GMS2 Warning:
+		 // Warnings:
 		try{
 			if(!null){
 				trace_color("NT:TE | WARNING - NTT beta versions (9942+) may cause issues!", c_red);
 			}
 		}
 		catch(_error){}
+		if(room_speed > 30){
+			trace_color("NT:TE | WARNING - Playing on higher than 30 FPS will likely cause lag!", c_red);
+		}
 		
 		exit;
 	}
