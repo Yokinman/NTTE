@@ -4459,7 +4459,9 @@
 	}
 	
 #define draw_anglertrail
-	var _inst = instances_matching(instances_matching(instances_matching(CustomEnemy, "name", "Angler"), "hiding", false), "visible", true);
+	var _angler = instances_matching(instances_matching(instances_matching(CustomEnemy, "name", "Angler"), "hiding", false), "visible", true),
+		_player = instances_matching(instances_matching(instances_matching(Player, "race", "fish"), "bskin", "angler fish"), "visible", true),
+		_inst   = array_combine(_angler, _player);
 	
 	if(array_length(_inst)){
 		if(lag) trace_time();
@@ -4496,20 +4498,25 @@
 			}
 			
 			 // Draw Trails:
-			var _instActive = instances_matching_ge(_inst, "ammo", 0);
+			var _anglerActive = instances_matching_ge(_inst, "ammo", 0),
+				_playerActive = instances_matching(instances_matching(_inst, "object_index", Player), "roll", true),
+				_instActive   = array_combine(_anglerActive, _playerActive);
+				
 			if(array_length(_instActive)) with(_instActive){
-				if(sprite_index != spr_appear){
+				var _isPlayer = instance_is(id, Player);
+				
+				if(_isPlayer || sprite_index != spr_appear){
 					var	_x1    = xprevious,
 						_y1    = yprevious,
 						_x2    = x,
 						_y2    = y,
 						_dis   = point_distance(_x1, _y1, _x2, _y2),
 						_dir   = point_direction(_x1, _y1, _x2, _y2),
-						_spr   = spr.AnglerTrail,
+						_spr   = (_isPlayer ? spr.FishAnglerTrail : spr.AnglerTrail),
 						_img   = image_index,
 						_xsc   = image_xscale * _surfScale * right,
 						_ysc   = image_yscale * _surfScale,
-						_ang   = image_angle,
+						_ang   = (_isPlayer ? (image_angle + angle) : image_angle),
 						_col   = image_blend,
 						_alp   = image_alpha,
 						_charm = (_col == c_white && "ntte_charm" in self && ntte_charm.charmed);

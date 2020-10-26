@@ -49,7 +49,7 @@
 #define area_secret            return false;
 
 #define area_name(_subarea, _loops)
-	return "@1(sprInterfaceIcons)1-" + string((_subarea <= 0) ? "?" : _subarea);
+	return `@1(${spr.RouteIcon}:0)1-` + string((_subarea <= 0) ? "?" : _subarea);
 	
 #define area_text
 	return choose(
