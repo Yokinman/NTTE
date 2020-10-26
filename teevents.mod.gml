@@ -806,7 +806,9 @@
 		 // Nests:
 		for(var _d = _nestDir; _d < _nestDir + 360; _d += (360 / _nestNum)){
 			var _l = _nestDis + random(4 * _nestNum);
-			obj_create(round(x + lengthdir_x(_l, _d)), round(y + lengthdir_y(_l, _d)), "BigMaggotSpawn");
+			with(obj_create(round(x + lengthdir_x(_l, _d)), round(y + lengthdir_y(_l, _d)), "BigMaggotSpawn")){
+				maxhealth *= 3/5;
+			}
 		}
 		
 		 // Tendril Floors Setup:
@@ -1040,6 +1042,14 @@
 	with(instance_furthest(_spawnX, _spawnY, Scorpion)){
 		obj_create(x, y, "SilverScorpion");
 		instance_delete(id);
+	}
+	
+	 // Oh No:
+	if(GameCont.loops > 0) repeat(GameCont.loops){
+		with(instance_random(Scorpion)){
+			obj_create(x, y, "SilverScorpion");
+			instance_delete(id);
+		}
 	}
 	
 	
@@ -1608,8 +1618,11 @@
 #define FirePit_chance  return ((GameCont.subarea != 3) ? 1/12 : 0);
 
 #define FirePit_create
+	var _spawnX = spawn_x,
+		_spawnY = spawn_y;
+		
 	 // More Traps:
-	with(Wall) if(place_meeting(x, y, Floor)){
+	with(Wall) if(place_meeting(x, y, Floor) && point_distance(x, y, _spawnX, _spawnY) > 48 && chance(3, 5)){
 		if(array_length(instance_rectangle(bbox_left, bbox_top, bbox_right, bbox_bottom, Trap)) <= 0){
 			var _spawn = true;
 			with(teevent_get_active("RavenArena")){
