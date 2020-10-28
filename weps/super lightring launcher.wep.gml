@@ -3,7 +3,7 @@
 	global.sprWep = sprite_add_weapon("../sprites/weps/sprSuperLightningRingLauncher.png", 7, 4);
 	global.sprWepLocked = mskNone;
 	
-#define weapon_name       return (weapon_avail() ? "SUPER LIGHTRING LAUNCHER" : "LOCKED");
+#define weapon_name       return (weapon_avail() ? "LIGHTRING CANNON" : "LOCKED");
 #define weapon_text       return "EYE OF THE STORM";
 #define weapon_swap       return sndSwapEnergy;
 #define weapon_sprt       return (weapon_avail() ? global.sprWep : global.sprWepLocked);
