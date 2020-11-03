@@ -3188,26 +3188,27 @@
 		}
 		
 		 // Position Beams:
-		var	o = _yoff + (6 * image_yscale),
-			t = 4 * current_time_scale,
-			_x = x + hspeed,
-			_y = y + vspeed,
-			n = 0;
+		if(array_length(ring_lasers)){
+			var	_l = _yoff + (6 * image_yscale),
+				_t = 4 * current_time_scale,
+				_x = x + hspeed,
+				_y = y + vspeed,
+				_n = 0;
+				
+			ring_lasers = instances_matching(ring_lasers, "", null);
 			
-		with(ring_lasers){
-			if(instance_exists(self)){
-				hold_x = _x + lengthdir_x(o, image_angle);
-				hold_y = _y + lengthdir_y(o, image_angle);
-				line_dir_goal += t * sin((wave / 30) + array_length(ring_lasers) + n);
-				n++;
+			with(ring_lasers){
+				hold_x = _x + lengthdir_x(_l, image_angle);
+				hold_y = _y + lengthdir_y(_l, image_angle);
+				line_dir_goal += _t * sin((wave / 30) + array_length(other.ring_lasers) + _n);
+				_n++;
 			}
-			else other.ring_lasers = array_delete_value(other.ring_lasers, self);
 		}
 	}
 	else{
-		var o = (sprite_get_width(spr_strt) / 2) * image_xscale;
-		_lx -= lengthdir_x(o, _dir);
-		_ly -= lengthdir_y(o, _dir);
+		var _l = (sprite_get_width(spr_strt) / 2) * image_xscale;
+		_lx -= lengthdir_x(_l, _dir);
+		_ly -= lengthdir_y(_l, _dir);
 	}
 	
 	line_seg = [];
@@ -3399,13 +3400,16 @@
 
 	 // Visually Connect Laser to Quasar Ring:
 	if(ring){
-		with(ring_lasers) if(instance_exists(self)){
-			draw_set_alpha(image_alpha);
-			draw_set_color(image_blend);
-			draw_circle(x - 1, y - 1, 6 * image_yscale, false);
-		}
-		with(ring_lasers) if(instance_exists(self)){
-			QuasarBeam_draw();
+		if(array_length(ring_lasers)){
+			var _inst = instances_matching(ring_lasers, "", null);
+			with(_inst){
+				draw_set_alpha(image_alpha);
+				draw_set_color(image_blend);
+				draw_circle(x - 1, y - 1, 6 * image_yscale, false);
+			}
+			with(_inst){
+				QuasarBeam_draw();
+			}
 		}
 		draw_set_alpha(1);
 		
@@ -3486,6 +3490,13 @@
 	audio_stop_sound(loop_snd);
 	if(ds_map_valid(hit_list)){
 		ds_map_destroy(hit_list);
+	}
+	
+	 // Clear Ring Beams:
+	if(array_length(ring_lasers)){
+		with(instances_matching(ring_lasers, "", null)){
+			instance_destroy();
+		}
 	}
 	
 #define QuasarBeam_draw_laser(_xscale, _yscale, _alpha)

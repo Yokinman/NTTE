@@ -39,7 +39,7 @@
 	global.kills_last = GameCont.kills;
 	
 	 // HUD:
-	global.hud_bind   = script_bind("NTTEHUDDraw", CustomDraw, script_ref_create(ntte_hud, false), object_get_depth(TopCont) - 1, true);
+	global.hud_bind   = script_bind("NTTEHUDDraw", CustomDraw, script_ref_create(ntte_hud, false, 0), object_get_depth(TopCont) - 1, true);
 	global.hud_reroll = undefined;
 	
 	 // Scythe Tippage:
@@ -1808,58 +1808,134 @@
 	}
 	
 	 // NTTE Player Systems:
-	with(Player){
-		/// Pets:
-			if("ntte_pet" not in self){
-				ntte_pet = [];
-			}
-			if("ntte_pet_max" not in self){
-				ntte_pet_max = global.pet_max;
-			}
-			
-			 // Slots:
-			if(array_length(ntte_pet) != ntte_pet_max){
-				while(array_length(ntte_pet) < ntte_pet_max){
-					array_push(ntte_pet, noone);
+	if(instance_exists(Player)){
+		with(Player){
+			/// Pets:
+				if("ntte_pet"     not in self) ntte_pet     = [];
+				if("ntte_pet_max" not in self) ntte_pet_max = global.pet_max;
+				
+				 // Slots:
+				if(array_length(ntte_pet) != ntte_pet_max){
+					while(array_length(ntte_pet) < ntte_pet_max){
+						array_push(ntte_pet, noone);
+					}
+					while(array_length(ntte_pet) > ntte_pet_max){
+						var _break = true;
+						for(var i = 0; i < array_length(ntte_pet); i++){
+							if(!instance_exists(ntte_pet[i])){
+								ntte_pet = array_delete(ntte_pet, i);
+								_break = false;
+								break;
+							}
+						}
+						if(_break) break;
+					}
 				}
-				while(array_length(ntte_pet) > ntte_pet_max){
-					var _break = true;
-					for(var i = 0; i < array_length(ntte_pet); i++){
-						if(!instance_exists(ntte_pet[i])){
-							ntte_pet = array_delete(ntte_pet, i);
-							_break = false;
-							break;
+				
+				 // Map Icons:
+				var _list = [];
+				with(instances_matching(ntte_pet, "", null)){
+					array_push(_list, pet_get_icon(mod_type, mod_name, pet));
+				}
+				global.pet_mapicon[index] = _list;
+				
+			/// Red Ammo:
+				if("red_ammo"        not in self) red_ammo        = 0;
+				if("red_amax"        not in self) red_amax        = 4;
+				if("red_amax_muscle" not in self) red_amax_muscle = 0;
+				
+				 // Back Muscle:
+				var _muscle = skill_get(mut_back_muscle);
+				if(red_amax_muscle != _muscle){
+					red_amax -= 4 * red_amax_muscle;
+					red_amax_muscle = _muscle;
+					red_amax += 4 * red_amax_muscle;
+				}
+				
+			/// Footprints:
+				if(player_active){
+					var _lastMask = mask_index;
+					mask_index = sprite_index;
+					
+					 // Scuff Marks:
+					if(position_meeting(x, bbox_bottom, ScorchTop)){
+						footprint_give(45, make_color_rgb(23, 13, 13), 1.5);
+					}
+					
+					 // Normal:
+					else if(!position_meeting(x, bbox_bottom, FloorMiddle)){
+						var _floor = instance_position(x, bbox_bottom, Floor);
+						if(instance_exists(_floor)){
+							switch(_floor.sprite_index){
+								case sprFloor2B: // TOXIC
+									footprint_give(20, make_color_rgb(149, 214, 6), 1.1);
+									break;
+									
+								case sprFloor102B: // CHEESE
+									footprint_give(20, make_color_rgb(239, 157, 8), 1.1);
+									break;
+									
+								case sprFloor4B:
+								case sprFloor104B: // WEBS
+									footprint_give(20, make_color_rgb(234, 217, 237), 1.1);
+									break;
+									
+								default: // SOFT
+									if(_floor.material == 1 || _floor.material == 4){
+										if(instance_exists(BackCont)){
+											footprint_give(current_time_scale, BackCont.shadcol, BackCont.shadalpha + 0.05);
+										}
+									}
+							}
 						}
 					}
-					if(_break) break;
+					
+					 // Make Footprints:
+					if("ntte_foot_time" in self && ntte_foot_time > 0){
+						if(sprite_index == spr_walk && speed_raw > max(0, friction_raw)){
+							if(round(image_index) == footstep + 2 /*|| footextra == true*/){
+								if(footkind != 0 && roll == 0){
+									var _side = (((footstep % 2) < 1) ? -1 : 1) * right;
+									with(instance_create(x + (random_range(3, 4) * _side), bbox_bottom, PhantomBolt)){
+										sprite_index = sprBoltTrail;
+										image_blend  = variable_instance_get(other, "ntte_foot_color", c_white);
+										image_alpha  = variable_instance_get(other, "ntte_foot_alpha", 1);
+										depth        = 5;
+										friction     = 0.5;
+										image_xscale = clamp(other.ntte_foot_time / 15, 1, 4);
+										
+										 // Face Direction:
+										image_angle = other.direction;
+										image_angle += 90 * _side * ((abs(other.hspeed) > abs(other.vspeed)) ? sign(other.hspeed * other.right) : sign(other.vspeed));
+										
+										 // Point Outward:
+										image_angle += 20 * _side * ((other.vspeed == 0) ? 1 : sign(other.vspeed * ((other.hspeed == 0) ? 1 : sign(other.hspeed * other.right))));
+										
+										 // Shrink:
+										if(fork()){
+											while(instance_exists(self)){
+												if(image_alpha < 0.3){
+													image_xscale *= power(0.95, current_time_scale);
+													image_yscale *= power(0.95, current_time_scale);
+												}
+												wait 0;
+											}
+											exit;
+										}
+									}
+									ntte_foot_time -= 4;
+								}
+							}
+						}
+						ntte_foot_time -= current_time_scale;
+					}
+					
+					mask_index = _lastMask;
 				}
-			}
-			
-			 // Map Icons:
-			var _list = [];
-			with(instances_matching(ntte_pet, "", null)){
-				array_push(_list, pet_get_icon(mod_type, mod_name, pet));
-			}
-			global.pet_mapicon[index] = _list;
-			
-		/// Red Ammo:
-			if("red_ammo" not in self){
-				red_ammo = 0;
-			}
-			if("red_amax" not in self){
-				red_amax = 4;
-			}
-			if("red_amax_muscle" not in self){
-				red_amax_muscle = 0;
-			}
-			
-			 // Back Muscle:
-			var _muscle = skill_get(mut_back_muscle);
-			if(red_amax_muscle != _muscle){
-				red_amax -= 4 * red_amax_muscle;
-				red_amax_muscle = _muscle;
-				red_amax += 4 * red_amax_muscle;
-			}
+				else if("ntte_foot_time" in self){
+					ntte_foot_time = 0;
+				}
+		}
 	}
 	
 	 // NTTE Music / Ambience:
@@ -2419,12 +2495,12 @@
 			 // Slow:
 			if(roll == false){
 				if(abs(vspeed) > 0.2 && skill_get(mut_extra_feet) <= 0){
-					if(true || !instance_exists(Nothing)){
+					//if(!instance_exists(Nothing)){
 						var _goal = 0.45 + (maxspeed / 4);
 						if(friction < _goal){
 							friction = lerp(friction, _goal, ntte_stairslow / 5);
 						}
-					}
+					//}
 				}
 			}
 			
@@ -3045,8 +3121,9 @@
 		 // Normal:
 		if(instance_exists(TopCont)){
 			with(instances_matching(TopCont, "visible", true)){
-				if(!other.script[3] || depth - 1 < other.depth){
+				if(!other.script[3] || depth - 1 <= other.depth){
 					other.script[3] = true;
+					other.script[4] = fade * (fadeout == true || (instance_exists(PopoScene) && (!instance_exists(LastCutscene) || instance_exists(Spiral)) && !instance_exists(Credits) && !instance_exists(GameOverButton)));
 					other.depth     = depth - 1;
 				}
 			}
@@ -3055,8 +3132,9 @@
 		 // Loading / Level Up Screen:
 		if(instance_exists(GenCont) || instance_exists(LevCont)){
 			with(instances_matching(UberCont, "visible", true)){
-				if(!other.script[3] || depth - 1 < other.depth){
+				if(!other.script[3] || depth - 1 <= other.depth){
 					other.script[3] = true;
+					other.script[4] = 0;
 					other.depth     = depth - 1;
 				}
 			}
@@ -3068,7 +3146,7 @@
 		visible = false;
 		if(instance_exists(GenCont)){
 			with(instances_matching(GenCont, "visible", true)){
-				if(!other.visible || depth + 1 < other.depth){
+				if(!other.visible || depth - 1 <= other.depth){
 					other.visible = true;
 					other.depth   = depth - 1;
 				}
@@ -3083,13 +3161,15 @@
 			
 		visible = false;
 		
-		if(!instance_exists(Player) && instance_exists(TopCont)){
-			with(instances_matching(instances_matching(TopCont, "visible", true), "go_addy1", 0)){
-				if(!other.visible || depth + 1 < other.depth){
-					other.visible = true;
-					other.depth   = depth - 1;
-					_stage        = go_stage;
-					_anim         = mapanim;
+		if(!instance_exists(Player) && instance_exists(TopCont) && !instance_exists(UnlockScreen)){
+			if(!instance_exists(GenCont) || instance_exists(PopoScene) || instance_exists(LastFire)){
+				with(instances_matching(instances_matching(TopCont, "visible", true), "go_addy1", 0)){
+					if(!other.visible || depth - 1 <= other.depth){
+						other.visible = true;
+						other.depth   = depth - 1;
+						_stage        = go_stage;
+						_anim         = mapanim;
+					}
 				}
 			}
 		}
@@ -3330,32 +3410,30 @@
 	}
 	
 	 // Pause HUD:
-	if(instance_exists(PauseButton) || instance_exists(BackMainMenu)){
-		if(UberCont.alarm2 < 0){
-			var _local = player_find_local_nonsync();
-			
-			 // Dim:
-			var _col = c_white;
-			if(instance_exists(BackMainMenu)){
-				_col = merge_color(_col, c_black, 0.9);
+	var _local = player_find_local_nonsync();
+	if(player_is_active(_local)){
+		var _col = c_white;
+		
+		 // Dim:
+		if(instance_exists(BackMainMenu)){
+			_col = merge_color(_col, c_black, 0.9);
+		}
+		
+		 // Skill HUD:
+		if(player_get_show_skills(_local) && UberCont.alarm2 < 0){
+			with(surface_setup("HUDSkill", null, null, null)){
+				x = view_xview_nonsync + (game_width - w);
+				y = view_yview_nonsync;
+				draw_surface_ext(surf, x, y, 1 / scale, 1 / scale, 0, _col, 1);
 			}
-			
-			 // Skill HUD:
-			if(player_is_active(_local) && player_get_show_skills(_local)){
-				with(surface_setup("HUDSkill", null, null, null)){
-					x = view_xview_nonsync + (game_width - w);
-					y = view_yview_nonsync;
-					draw_surface_ext(surf, x, y, 1 / scale, 1 / scale, 0, _col, 1);
-				}
-			}
-			
-			 // Main HUD:
-			if(player_is_active(_local) && player_get_show_hud(_local, _local)){
-				with(surface_setup("HUDMain", null, null, null)){
-					x = view_xview_nonsync;
-					y = view_yview_nonsync;
-					draw_surface_ext(surf, x, y, 1 / scale, 1 / scale, 0, _col, 1);
-				}
+		}
+		
+		 // Main HUD:
+		if(player_get_show_hud(_local, _local)){
+			with(surface_setup("HUDMain", null, null, null)){
+				x = view_xview_nonsync;
+				y = view_yview_nonsync;
+				draw_surface_ext(surf, x, y, 1 / scale, 1 / scale, 0, _col, 1);
 			}
 		}
 	}
@@ -3487,38 +3565,42 @@
 	
 	return _map;
 	
-#define ntte_hud(_visible)
+#define ntte_hud(_visible, _fade)
 	if(lag) trace_time();
 	
-	var	_local = player_find_local_nonsync(),
-		_vx    = view_xview_nonsync,
-		_vy    = view_yview_nonsync,
-		_gw    = game_width,
-		_gh    = game_height;
+	var	_local   = player_find_local_nonsync(),
+		_pause   = false,
+		_players = 0,
+		_hudNum  = 0,
+		_hudSide = array_create(maxp, 0),
+		_fade    = 0,
+		_vx      = view_xview_nonsync,
+		_vy      = view_yview_nonsync,
+		_gw      = game_width,
+		_gh      = game_height;
 		
-	 // Pause Imminent:
-	var _pause = false;
-	if(instance_exists(Player)){
-		for(var i = 0; i < maxp; i++){
+	for(var i = 0; i < maxp; i++){
+		 // Count Players:
+		_players += player_is_active(i);
+		
+		 // Pause Imminent:
+		if(instance_exists(Player)){
 			if(button_pressed(i, "paus")){
 				_pause = true;
-				break;
 			}
 		}
-	}
-	
-	 // Count Players:
-	var _players = 0;
-	for(var i = 0; i < maxp; i++){
-		_players += player_is_active(i);
-	}
-	
-	 // Determine which side of the screen each player's HUD is on:
-	var	_hudNum  = 0,
-		_hudSide = array_create(maxp, 0);
 		
-	for(var i = 0; i < maxp; i++) if( player_is_local_nonsync(i)) _hudSide[i] = (_hudNum++ & 1);
-	for(var i = 0; i < maxp; i++) if(!player_is_local_nonsync(i)) _hudSide[i] = (_hudNum++ & 1);
+		 // Local HUD Screen Sides:
+		if(player_is_local_nonsync(i)){
+			_hudSide[i] = (_hudNum++ & 1);
+		}
+	}
+	for(var i = 0; i < maxp; i++){
+		 // Non-Local HUD Screen Sides:
+		if(!player_is_local_nonsync(i)){
+			_hudSide[i] = (_hudNum++ & 1);
+		}
+	}
 	
 	/// Surface Setup:
 		var	_surfScreen = surface_setup("HUDScreen", _gw, _gh, game_scale_nonsync),
@@ -3746,10 +3828,21 @@
 		}
 	}
 	
-	 // Copy Skill Drawing & Clear Screen:
+	 // Copy Mutation HUD Drawing & Clear Screen:
 	surface_screenshot(_surfSkill.surf);
 	with(_surfScreen){
 		if(_visible && instance_exists(Player) && player_is_active(_local) && player_get_show_skills(_local)){
+			 // Game Win Fade:
+			if(_fade > 0){
+				draw_set_color(c_black);
+				draw_set_color_write_enable(true, true, true, false);
+				draw_set_alpha(_fade);
+				draw_rectangle(_vx, _vy, _vx + _gw, _vy + _gh, false);
+				draw_set_alpha(1);
+				draw_set_color_write_enable(true, true, true, true);
+			}
+			
+			 // Copy Mutation HUD:
 			surface_screenshot(surf);
 		}
 		draw_set_blend_mode_ext(bm_one, bm_zero);
@@ -3759,7 +3852,7 @@
 		draw_set_blend_mode(bm_normal);
 	}
 	
-	 // Player HUD:,
+	 // Player HUD:
 	var	_ox = _vx - (17 * (_players > 1)),
 		_oy = _vy;
 		
@@ -3770,7 +3863,7 @@
 			var	_side       = _hudSide[_index],
 				_flip       = (_side ? -1 : 1),
 				_HUDMain    = (_local == _index),
-				_HUDVisible = (_visible && player_is_active(_local) && player_get_show_hud(_index, _local) && (_index < 2 || !instance_exists(LevCont))),
+				_HUDVisible = (_visible && player_is_active(_local) && player_get_show_hud(_index, _local) && !instance_exists(PopoScene) && (_index < 2 || !instance_exists(LevCont))),
 				_HUDDraw    = (_HUDMain || _HUDVisible);
 				
 			draw_set_projection(2, _index);
@@ -4205,6 +4298,17 @@
 			}
 			with(_surfScreen){
 				if(_HUDVisible){
+					 // Game Win Fade:
+					if(_fade > 0){
+						draw_set_color(c_black);
+						draw_set_color_write_enable(true, true, true, false);
+						draw_set_alpha(_fade);
+						draw_rectangle(_vx, _vy, _vx + _gw, _vy + _gh, false);
+						draw_set_alpha(1);
+						draw_set_color_write_enable(true, true, true, true);
+					}
+					
+					 // Copy HUD:
 					surface_screenshot(surf);
 				}
 				draw_set_blend_mode_ext(bm_one, bm_zero);
@@ -4550,30 +4654,54 @@
 		}
 	}
 	
+#define footprint_give(_time, _color, _alpha)
+	/*
+		Called from a Player to give them footprints for a number of frames, if they don't already have footprints that last longer
+		Returns 'true' if the footprints were set, 'false' otherwise
+		
+		Args:
+			time  - How many frames the Player will have footprints
+			color - The footprint color
+			alpha - The footprint alpha
+	*/
+	
+	if("ntte_foot_time" not in self || ntte_foot_time < _time){
+		ntte_foot_time  = _time;
+		ntte_foot_color = _color;
+		ntte_foot_alpha = _alpha;
+		
+		return true;
+	}
+	
+	return false;
+	
 #define PalaceStairs_begin_step
 	 // Walking Up Stairs:
 	if(place_meeting(x, y, Player)){
-		with(instances_matching_ne(instances_meeting(x, y, Player), "footkind", 0)){
-			 // Footsteps:
-			if(sprite_index == spr_walk && roll == false){
-				if(round(image_index) == footstep || footextra == true){
-					var	_snd = asset_get_index(`sndFoot${place_meeting(x, y, Carpet) ? "Sho" : "Met"}Rock${irandom_range(1, 6)}`),
-						_pit = ((vspeed > 0) ? 0.8 : 1) + orandom(0.1),
-						_vol = 0.3;
-						
-					sound_play_pitchvol(_snd, _pit, _vol);
-				}
-				
-				 // Dust Effect:
-				if("ntte_stairslow" not in self || ntte_stairslow <= 0){
-					with(instance_create(x, y, Dust)){
-						sprite_index = sprSmoke;
+		var _inst = instances_matching_ne(instances_meeting(x, y, Player), "footkind", 0);
+		if(array_length(_inst)) with(_inst){
+			if(player_active){
+				 // Footsteps:
+				if(sprite_index == spr_walk && roll == 0){
+					if(round(image_index) == footstep + 2 || footextra == true){
+						var	_snd = asset_get_index(`sndFoot${place_meeting(x, y, Carpet) ? "Sho" : "Met"}Rock${irandom_range(1, 6)}`),
+							_pit = ((vspeed > 0) ? 0.8 : 1) + orandom(0.1),
+							_vol = 0.3;
+							
+						sound_play_pitchvol(_snd, _pit, _vol);
+					}
+					
+					 // Dust Effect:
+					if("ntte_stairslow" not in self || ntte_stairslow <= 0){
+						with(instance_create(x, y, Dust)){
+							sprite_index = sprSmoke;
+						}
 					}
 				}
+				
+				 // Slow:
+				ntte_stairslow = 5;
 			}
-			
-			 // Slow:
-			ntte_stairslow = 5;
 		}
 	}
 	

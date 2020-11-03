@@ -421,31 +421,33 @@
 	*/
 	
 	if(ds_map_exists(ntte_obj_bind_list, _type)){
-		var _objList = ntte_obj_bind_list[? _type];
-		
 		if(lag) trace_time();
 		
-		var	_bind    = ntte_obj_bind[? _type],
+		var	_objList = ntte_obj_bind_list[? _type],
+			_bind    = ntte_obj_bind[? _type],
 			_isDraw  = ds_map_valid(_bind),
 			_varName = "ntte_bind_" + _type;
 			
 		 // Changed Depth:
 		if(_isDraw){
 			var _bindList = _bind;
-			_bind = _bind[? depth];
-			if("inst" in _bind){
-				with(instances_matching_ne(_bind.inst, "depth", depth)){
-					if(!ds_map_exists(_bindList, depth)){
-						_bindList[? depth] = script_bind(
-							"ObjectDraw" + string(depth),
-							CustomDraw,
-							script_ref_create(obj_bind, _type),
-							depth,
-							true
-						);
+			if(ds_map_exists(_bindList, depth)){
+				_bind = _bindList[? depth];
+				if("inst" in _bind){
+					with(instances_matching_ne(_bind.inst, "depth", depth)){
+						if(!ds_map_exists(_bindList, depth)){
+							_bindList[? depth] = script_bind(
+								"ObjectDraw" + string(depth),
+								CustomDraw,
+								script_ref_create(obj_bind, _type),
+								depth,
+								true
+							);
+						}
 					}
 				}
 			}
+			else exit; // use uhh normal script_bind_draw later maybe
 		}
 		
 		 // Collect Instances:
@@ -469,7 +471,7 @@
 			var _clear = true;
 			if(_isDraw){
 				with(ds_map_values(ntte_obj_bind[? _type])){
-					if(array_length(_bind.inst) > 0){
+					if(array_length(inst)){
 						_clear = false;
 						break;
 					}

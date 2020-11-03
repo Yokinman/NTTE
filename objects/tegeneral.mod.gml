@@ -2711,7 +2711,7 @@
 							
 						if(place_free(_x, y)) x = _x;
 						if(place_free(x, _y)) y = _y;
-						_spin = (30 * right);
+						_spin = 30 * right;
 					}
 				}
 			}
@@ -2738,7 +2738,7 @@
 	}
 	else if(portal_angle != 0){
 		portal_angle = ((portal_angle % 360) + 360) % 360;
-		portal_angle -= portal_angle * 0.2 * current_time_scale;
+		portal_angle *= power(0.2, current_time_scale);
 	}
 	
 	 // Player Owns Pet:

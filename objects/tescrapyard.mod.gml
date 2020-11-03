@@ -769,6 +769,11 @@
 					depth = o.depth - 1;
 				}
 			}
+			
+			 // Footsteps:
+			if(instance_is(self, Player)){
+				mod_script_call("mod", "ntte", "footprint_give", 45, other.fx_color, 1.1);
+			}
 		}
 	}
 	

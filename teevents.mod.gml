@@ -958,7 +958,7 @@
 				sprite_index = spr.FloorScorpion;
 				image_index  = irandom(image_number - 1);
 				depth        = 8;
-				material     = 4;
+				material     = 2;
 				traction     = 0.45;
 				styleb       = false;
 				
@@ -1865,11 +1865,7 @@
 		if(i >= 0){
 			depth    = 8;
 			traction = 0.45;
-			switch(i){
-				case 0: material = 2;                                                  break;
-				case 1: material = 5;                                                  break;
-				case 2: material = (array_exists([0, 4, 20, 24], image_index) ? 2 : 5) break;
-			}
+			material = ((i == 0 || array_exists([0, sqrt(image_number) - 1, image_number - 1, image_number - sqrt(image_number)], image_index)) ? 2 : 1);
 			with(instance_create(x, y - 1, SnowFloor)){
 				sprite_index = _floorSnow[i];
 				image_index  = other.image_index;

@@ -5334,7 +5334,7 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 					if(_num <= 1) _ox = 0;
 					for(var i = 0; i < _num; i++){
 						chest_create(
-							x + orandom(1) + lerp(-_ox, _ox, i / (_num - 1)),
+							x + orandom(1) + lerp(-_ox, _ox, i / max(1, _num - 1)),
 							y + orandom(1),
 							_obj[i % array_length(_obj)],
 							true
@@ -5376,18 +5376,24 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 					
 				case "RedSpider":
 					
-					with(floors){
-						if(chance(2, 3) && !place_meeting(x, y, Wall) && !place_meeting(x, y, hitme)){
-							 // Props:
-							if(chance(1, 3)){
-								obj_create(bbox_center_x + orandom(8), bbox_center_y + orandom(8), "CrystalPropRed");
-							}
-							
-							 // Enemies:
-							else{
-								obj_create(bbox_center_x, bbox_center_y, _roomType);
+					var _num = irandom_range(2, 5);
+					with(array_shuffle(floors)){
+						if(_num > 0){
+							if(!place_meeting(x, y, Wall)){
+								_num--;
+								
+								 // Props:
+								if((_num % 2) == 1){
+									obj_create(bbox_center_x + orandom(8), bbox_center_y + orandom(8), "CrystalPropRed");
+								}
+								
+								 // Enemies:
+								else{
+									obj_create(bbox_center_x, bbox_center_y, _roomType);
+								}
 							}
 						}
+						else break;
 					}
 					
 					break;
@@ -5411,7 +5417,7 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 						var _num = 2 + skill_get(mut_open_mind);
 						for(var i = 0; i < _num; i++){
 							chest_create(
-								x + orandom(1) + lerp(-_ox, _ox, i / (_num - 1)),
+								x + orandom(1) + lerp(-_ox, _ox, i / max(1, _num - 1)),
 								y + orandom(1),
 								choose(AmmoChest, WeaponChest),
 								true

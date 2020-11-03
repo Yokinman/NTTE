@@ -609,6 +609,11 @@
 						scrFX(x, y, [direction, speed], Sweat);
 					}
 					sound_play_hit_ext(choose(sndOasisChest, sndOasisMelee), 1 + random(0.25), 1);
+					
+					 // Footprints:
+					if(instance_is(self, Player)){
+						mod_script_call("mod", "ntte", "footprint_give", 20, background_color, 0.5);
+					}
 				}
 				
 				//_inst[i++] = [id, y];

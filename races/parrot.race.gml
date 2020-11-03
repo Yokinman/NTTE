@@ -459,7 +459,7 @@
 	snd_idpd = race_sound(sndMutant1IDPD);
 	snd_cptn = race_sound(sndMutant1Cptn);
 	snd_thrn = race_sound(sndMutant1Thrn);
-	footkind = 2; // Pla
+	footkind = 1; // Organic
 	
 	 // Feather Related:
 	feather_num            = 12;
