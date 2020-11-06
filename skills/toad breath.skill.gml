@@ -1,46 +1,40 @@
 #define init
-	spr = mod_variable_get("mod", "teassets", "spr");
+	global.sprSkillHUD  = sprite_add("../sprites/skills/Toad Breath/sprToadBreathHUD.png",  1,  8,  8);
 	
-	global.sprSkillHUD  = sprite_add("../sprites/skills/Lead Ribs/sprLeadRibsHUD.png",  1,  8,  8);
-	
-	global.minID = GameObject.id;
-	
-#macro spr global.spr
-	
-#define skill_name    return "LEAD RIBS";
-#define skill_text    return "@sMORE @gRADS";
-#define skill_tip     return "HIGHER THRESHOLD";
+#define skill_name    return "TOAD BREATH";
+#define skill_text    return "@wIMMUNITY @sTO @gTOXIC GAS"; // #@sTOXIC GAS @wHEALS" // maybe??;
+#define skill_tip     return "CORROSION";
 #define skill_icon    return global.sprSkillHUD;
 
 #define skill_avail	 
 	 // No Wild Encounters:
 	return !instance_is(other, LevCont);
 	
-#define skill_take
-	global.minID = GameObject.id;
-	
 #define step
-	if(instance_exists(Rad) || instance_exists(BigRad)){
-		var _inst = instances_matching_gt([Rad, BigRad], "id", global.minID);
-		if(array_length(_inst) > 0){
-			var _skill = skill_get(mod_current);
-			with(_inst){
-				
-				 // 10x Support:
-				if(chance(1, power(5, (1 / _skill)))){
-					rad *= 2;
-					sprite_index = (
-						instance_is(id, BigRad)
-						? spr.BigRadUpg
-						: spr.RadUpg
-					);
+	if(instance_exists(Player)){
+		with(Player){
+			notoxic = true;
+			
+			 // Effects:
+			if(chance_ct(1, 90)){
+				with(instance_create(x, y, Breath)){
+					image_alpha  = 1;
+					image_blend  = make_color_rgb(108, 195, 4);
+					image_xscale = other.right;
 				}
 			}
 		}
 	}
 	
-	 // Keep Up:
-	global.minID = GameObject.id;
+#define skill_lose
+	with(Player){
+		
+		 // Probably a terrible way to do this but:
+		if(race != "frog"){
+			notoxic = false;
+		}
+	}
+	
 	
 /// SCRIPTS
 #macro  current_frame_active                                                                    (current_frame % 1) < current_time_scale

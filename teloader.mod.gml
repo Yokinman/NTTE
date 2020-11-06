@@ -55,6 +55,7 @@
 			"skills/reroll.skill.gml",
 			"skills/annihilation.skill.gml",
 			"skills/lead ribs.skill.gml",
+			"skills/toad breath.skill.gml",
 			"crowns/bonus.crown.gml",
 			"crowns/crime.crown.gml",
 			"crowns/red.crown.gml",
