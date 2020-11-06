@@ -54,6 +54,7 @@
 			"skills/silver tongue.skill.gml",
 			"skills/reroll.skill.gml",
 			"skills/annihilation.skill.gml",
+			"skills/lead ribs.skill.gml",
 			"crowns/bonus.crown.gml",
 			"crowns/crime.crown.gml",
 			"crowns/red.crown.gml",
