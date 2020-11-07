@@ -599,7 +599,7 @@
 		
 		 // Vars:
 		mask_index = mskSlash;
-		damage     = 8;
+		damage     = 16;
 		force      = 12;
 		walled     = false;
 		

@@ -56,6 +56,8 @@
 			"skills/annihilation.skill.gml",
 			"skills/lead ribs.skill.gml",
 			"skills/toad breath.skill.gml",
+			"skills/bat ears.skill.gml",
+			"skills/magnetic pulse.skill.gml",
 			"crowns/bonus.crown.gml",
 			"crowns/crime.crown.gml",
 			"crowns/red.crown.gml",

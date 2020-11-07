@@ -1,45 +1,39 @@
 #define init
-	global.sprSkillHUD  = sprite_add("../sprites/skills/Toad Breath/sprToadBreathHUD.png",  1,  8,  8);
+	global.sprSkillHUD  = sprite_add("../sprites/skills/Bat Ears/sprBatEarsHUD.png",  1,  8,  8);
 	
-#define skill_name    return "TOAD BREATH";
-#define skill_text    return "@wIMMUNITY @sTO @gTOXIC GAS"; // #@sTOXIC GAS @wHEALS" // maybe??;
-#define skill_tip     return "CORROSION";
+#define skill_name    return "BAT EARS";
+#define skill_text    return "@wSEE BETTER @sIN THE @wDARK";
+#define skill_tip     return "ECHOLOCATION IS UNDERRATED";
 #define skill_icon    return global.sprSkillHUD;
 
-#define skill_avail	 
-	var v = false;
-	with(Player){
-		if(!notoxic){
-			v = true;
-		}
-	}
-	
+#define skill_avail
 	 // No Wild Encounters:
-	return !(instance_is(other, LevCont) && v);
+	return (variable_instance_get(TopCont, "darkness", false) && !instance_is(other, LevCont));
 	
-#define step
-	if(instance_exists(Player)){
-		with(Player){
-			notoxic = true;
+#define ntte_dark(_type)
+	switch(_type){
+		case "normal":
+			draw_clear(draw_get_color());
 			
-			 // Effects:
-			if(chance_ct(1, 90)){
-				with(instance_create(x, y, Breath)){
-					image_alpha  = 1;
-					image_blend  = make_color_rgb(108, 195, 4);
-					image_xscale = other.right;
+			break;
+		
+		case "end":
+		
+			 // Extended Radius:
+			var _playerIndex = player_find_local_nonsync();
+			if(player_get_race(_playerIndex) == "eyes"){
+				draw_clear(draw_get_color());
+			}
+			else{
+				var _localPlayer = player_find(_playerIndex);
+				if(instance_exists(_localPlayer)){
+					with(_localPlayer){
+						draw_circle(x, y, (80 + irandom(2)), false);
+					}
 				}
 			}
-		}
-	}
-	
-#define skill_lose
-	with(Player){
-		
-		 // Probably a terrible way to do this but:
-		if(race != "frog"){
-			notoxic = false;
-		}
+			
+			break;
 	}
 	
 	

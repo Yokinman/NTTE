@@ -2157,6 +2157,12 @@
 						
 						break;
 						
+					case wep_incinerator:
+						
+						array_push(_list, mut_shotgun_shoulders);
+						
+						break;
+						
 					case wep_jackhammer:
 						
 						array_push(_list, mut_long_arms);
@@ -2204,7 +2210,12 @@
 							
 							 // Ultra:
 							if(weapon_get_rads(_wep) > 0){
-								array_push(_list, mut_plutonium_hunger);
+								array_push(_list, "lead ribs");
+							}
+							
+							 // Toxic:
+							if(array_exists(_split, "TOXIC")){
+								array_push(_list, "toad breath");
 							}
 							
 							 // Blood:

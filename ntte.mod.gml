@@ -50,6 +50,9 @@
 	heart_spawn  = {};
 	weapon_spawn = [];
 	
+	 // Bat Ears Effect:
+	global.bat_ears = 0;
+	
 #macro spr global.spr
 #macro msk spr.msk
 #macro snd global.snd
@@ -1638,7 +1641,7 @@
 	
 #define ntte_call(_call)
 	/*
-		Calls the given type of script in all NTTE area, object, and race mods
+		Calls the given type of script in all NTTE area, object, race, and skill mods
 		Other mod types can be added if desired in the future
 		
 		Args:
@@ -1658,7 +1661,7 @@
 	 // Compile Mod Calling List:
 	if(array_length(ntte_mods_call) <= 0){
 		 // Compile:
-		with(["mod", "area", "race"]){
+		with(["mod", "area", "race", "skill"]){
 			var _type = self;
 			with(lq_get(ntte_mods, _type)){
 				var _name = self;
@@ -1684,16 +1687,18 @@
 	 // Call Scripts:
 	var _scrt = array_combine(["", ""], _call);
 	with(ntte_mods_call){
-		if(mod_script_exists(self[0], self[1], _scrt[2])){
-			_scrt[0] = self[0];
-			_scrt[1] = self[1];
-			with(UberCont){
-				var _lag = other[2];
-				if(_lag) trace_time();
-				
-				script_ref_call(_scrt);
-				
-				if(_lag) trace_time(array_join(_scrt, "_"));
+		if(self[0] != "skill" || skill_get(self[1]) > 0){
+			if(mod_script_exists(self[0], self[1], _scrt[2])){
+				_scrt[0] = self[0];
+				_scrt[1] = self[1];
+				with(UberCont){
+					var _lag = other[2];
+					if(_lag) trace_time();
+					
+					script_ref_call(_scrt);
+					
+					if(_lag) trace_time(array_join(_scrt, "_"));
+				}
 			}
 		}
 	}

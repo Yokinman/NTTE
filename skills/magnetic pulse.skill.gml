@@ -1,44 +1,24 @@
 #define init
-	global.sprSkillHUD  = sprite_add("../sprites/skills/Toad Breath/sprToadBreathHUD.png",  1,  8,  8);
+	global.sprSkillHUD  = sprite_add("../sprites/skills/Magnetic Pulse/sprMagneticPulseHUD.png",  1,  8,  8);
 	
-#define skill_name    return "TOAD BREATH";
-#define skill_text    return "@wIMMUNITY @sTO @gTOXIC GAS"; // #@sTOXIC GAS @wHEALS" // maybe??;
-#define skill_tip     return "CORROSION";
+#define skill_name    return "MAGNETIC PULSE";
+#define skill_text    return "@bIDPD @sHAVE @wHALF HEALTH";
+#define skill_tip     return "SHORT CIRCUIT";
 #define skill_icon    return global.sprSkillHUD;
 
-#define skill_avail	 
-	var v = false;
-	with(Player){
-		if(!notoxic){
-			v = true;
-		}
-	}
-	
+#define skill_avail
 	 // No Wild Encounters:
-	return !(instance_is(other, LevCont) && v);
+	return false; // (GameCont.loops > 0 && !instance_is(other, LevCont));
 	
 #define step
-	if(instance_exists(Player)){
-		with(Player){
-			notoxic = true;
-			
-			 // Effects:
-			if(chance_ct(1, 90)){
-				with(instance_create(x, y, Breath)){
-					image_alpha  = 1;
-					image_blend  = make_color_rgb(108, 195, 4);
-					image_xscale = other.right;
+	if(instance_exists(enemy)){
+		var _inst = instances_matching(enemy, "team", 3);
+		if(array_length(_inst) > 0){
+			with(_inst){
+				if(my_health <= maxhealth / 2){
+					my_health = 0;
 				}
 			}
-		}
-	}
-	
-#define skill_lose
-	with(Player){
-		
-		 // Probably a terrible way to do this but:
-		if(race != "frog"){
-			notoxic = false;
 		}
 	}
 	
