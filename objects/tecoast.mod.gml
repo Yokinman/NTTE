@@ -5121,7 +5121,7 @@
 			
 			 // Divers:
 			if(instance_exists(CustomEnemy)){
-				var _inst = instances_matching(instances_matching(CustomEnemy, "name", "Diver"), "visible", true);
+				var _inst = instances_matching(CustomEnemy, "name", "Diver");
 				if(array_length(_inst)){
 					var _r = 16 + (24 * _gray);
 					with(_inst){

@@ -4309,7 +4309,7 @@
 			
 			 // Kelp:
 			if(_gray && instance_exists(CustomProp)){
-				var _inst = instances_matching(instances_matching(CustomProp, "name", "Kelp"), "visible", true);
+				var _inst = instances_matching(CustomProp, "name", "Kelp");
 				if(array_length(_inst)) with(_inst){
 					draw_circle(x, y, 32 + orandom(1), false);
 				}
@@ -4318,7 +4318,7 @@
 			 // Projectiles:
 			if(instance_exists(CustomProjectile)){
 				 // Electroplasma:
-				var _inst = instances_matching(instances_matching(CustomProjectile, "name", "ElectroPlasma", "ElectroPlasmaBig"), "visible", true);
+				var _inst = instances_matching(CustomProjectile, "name", "ElectroPlasma", "ElectroPlasmaBig");
 				if(array_length(_inst)){
 					var _r = 24 + (24 * _gray);
 					with(_inst){
@@ -4327,7 +4327,7 @@
 				}
 				
 				 // Lightning Discs:
-				var _inst = instances_matching(instances_matching(CustomProjectile, "name", "LightningDisc", "LightningDiscEnemy"), "visible", true);
+				var _inst = instances_matching(CustomProjectile, "name", "LightningDisc", "LightningDiscEnemy");
 				if(array_length(_inst)){
 					var _scale  = 1.5 + (1.5 * _gray),
 						_border = 4;
@@ -4338,7 +4338,7 @@
 				}
 				
 				 // Quasar Beams:
-				var _inst = instances_matching(instances_matching(CustomProjectile, "name", "QuasarBeam", "QuasarRing"), "visible", true);
+				var _inst = instances_matching(CustomProjectile, "name", "QuasarBeam", "QuasarRing");
 				if(array_length(_inst)){
 					var _beamScale  = 2   + (3 * _gray),
 						_ringRadius = 120 + (160 * _gray);
@@ -4381,7 +4381,7 @@
 			 // Enemies:
 			if(instance_exists(CustomEnemy)){
 				 // Anglers:
-				var _inst = instances_matching(instances_matching(CustomEnemy, "name", "Angler"), "visible", true);
+				var _inst = instances_matching(CustomEnemy, "name", "Angler");
 				if(array_length(_inst)){
 					draw_set_fog(true, draw_get_color(), 0, 0);
 					if(!_gray){
@@ -4406,7 +4406,7 @@
 				}
 				
 				 // Jellies:
-				var _inst = instances_matching(instances_matching(CustomEnemy, "name", "Jelly", "JellyElite"), "visible", true);
+				var _inst = instances_matching(CustomEnemy, "name", "Jelly", "JellyElite");
 				if(array_length(_inst)){
 					var _r = 40 + (40 * _gray);
 					with(_inst){
@@ -4426,7 +4426,7 @@
 				}
 				
 				 // Elite Eels:
-				var _inst = instances_matching(instances_matching_gt(instances_matching(CustomEnemy, "name", "Eel"), "elite", 0), "visible", true);
+				var _inst = instances_matching_gt(instances_matching(CustomEnemy, "name", "Eel"), "elite", 0);
 				if(array_length(_inst)) with(_inst){
 					var _r = (
 						_gray
@@ -4446,7 +4446,7 @@
 				}
 				
 				 // Pit Squid:
-				var _inst = instances_matching(instances_matching_ge(instances_matching(CustomEnemy, "name", "PitSquid"), "pit_height", 1), "visible", true);
+				var _inst = instances_matching_ge(instances_matching(CustomEnemy, "name", "PitSquid"), "pit_height", 1);
 				if(array_length(_inst)){
 					if(_gray){
 						with(_inst){
@@ -4470,87 +4470,104 @@
 	}
 	
 #define draw_anglertrail
-	var _angler = instances_matching(instances_matching(instances_matching(CustomEnemy, "name", "Angler"), "hiding", false), "visible", true),
-		_player = instances_matching(instances_matching(instances_matching(Player, "race", "fish"), "bskin", "angler fish"), "visible", true),
-		_inst   = array_combine(_angler, _player);
-	
-	if(array_length(_inst)){
-		if(lag) trace_time();
+	if(instance_exists(CustomEnemy) || instance_exists(Player)){
+		var _inst = [[], []];
 		
-		var	_vx = view_xview_nonsync,
-			_vy = view_yview_nonsync,
-			_gw = game_width,
-			_gh = game_height;
+		 // Gather Instances:
+		if(instance_exists(CustomEnemy)){
+			_inst[0] = instances_matching(instances_matching(instances_matching(CustomEnemy, "name", "Angler"), "hiding", false), "visible", true);
+		}
+		if(instance_exists(Player)){
+			_inst[1] = instances_matching(instances_matching(Player, "bskin", "angler fish"), "visible", true);
+		}
+		
+		 // Draw:
+		if(array_length(_inst[0]) || array_length(_inst[1])){
+			if(lag) trace_time();
 			
-		with(surface_setup("AnglerTrail", _gw * 2, _gh * 2, option_get("quality:minor"))){
-			x = pfloor(_vx, _gw);
-			y = pfloor(_vy, _gh);
-			
-			var	_surfX     = x,
-				_surfY     = y,
-				_surfScale = scale;
+			var	_vx = view_xview_nonsync,
+				_vy = view_yview_nonsync,
+				_gw = game_width,
+				_gh = game_height;
 				
-			surface_set_target(surf);
-			
-			 // Reset:
-			if(reset){
-				reset = false;
-				draw_clear_alpha(0, 0);
-			}
-			
-			 // Clear Over Time:
-			with(other){
-				var	_x = 32 * dcos(current_frame * 20),
-					_y =  8 * dsin(current_frame * 17);
+			with(surface_setup("AnglerTrail", _gw * 2, _gh * 2, option_get("quality:minor"))){
+				x = pfloor(_vx, _gw);
+				y = pfloor(_vy, _gh);
+				
+				var	_surfX     = x,
+					_surfY     = y,
+					_surfScale = scale;
 					
-				draw_set_blend_mode_ext(bm_zero, bm_inv_src_alpha);
-				draw_sprite_tiled_ext(sprBullet1, 0, (_x - _surfX) * _surfScale, (_y - _surfY) * _surfScale, _surfScale, _surfScale, c_white, 1);
+				surface_set_target(surf);
+				
+				 // Reset:
+				if(reset){
+					reset = false;
+					draw_clear_alpha(0, 0);
+				}
+				
+				 // Clear Over Time:
+				with(other){
+					var	_x = 32 * dcos(current_frame * 20),
+						_y =  8 * dsin(current_frame * 17);
+						
+					draw_set_blend_mode_ext(bm_zero, bm_inv_src_alpha);
+					draw_sprite_tiled_ext(sprBullet1, 0, (_x - _surfX) * _surfScale, (_y - _surfY) * _surfScale, _surfScale, _surfScale, c_white, 1);
+					draw_set_blend_mode(bm_normal);
+				}
+				
+				 // Draw Trails:
+				if(array_length(_inst[0])){
+					_inst[0] = instances_matching_ge(_inst[0], "ammo", 0);
+				}
+				if(array_length(_inst[1])){
+					_inst[1] = instances_matching_ne(_inst[1], "roll", 0);
+				}
+				with(_inst){
+					if(array_length(self)) with(self){
+						var _isPlayer = instance_is(self, Player);
+						
+						if(_isPlayer || sprite_index != spr_appear){
+							var	_x1    = xprevious,
+								_y1    = yprevious,
+								_x2    = x,
+								_y2    = y,
+								_dis   = point_distance(_x1, _y1, _x2, _y2),
+								_dir   = point_direction(_x1, _y1, _x2, _y2),
+								_spr   = (_isPlayer ? spr.FishAnglerTrail : spr.AnglerTrail),
+								_img   = image_index,
+								_xsc   = image_xscale * _surfScale * right,
+								_ysc   = image_yscale * _surfScale,
+								_ang   = (_isPlayer ? (sprite_angle + angle) : image_angle),
+								_col   = image_blend,
+								_alp   = image_alpha,
+								_charm = (_col == c_white && "ntte_charm" in self && ntte_charm.charmed);
+								
+							if(_charm){
+								draw_set_fog(true, make_color_rgb(56, 252, 0), 0, 0);
+							}
+							
+							for(var i = 0; i <= _dis; i++){
+								draw_sprite_ext(_spr, _img, (_x1 - _surfX + lengthdir_x(i, _dir)) * _surfScale, (_y1 - _surfY + lengthdir_y(i, _dir)) * _surfScale, _xsc, _ysc, _ang, _col, _alp);
+							}
+							
+							if(_charm){
+								draw_set_fog(false, 0, 0, 0);
+							}
+						}
+					}
+				}
+				
+				surface_reset_target();
+				
+				 // Draw Surface:
+				draw_set_blend_mode(bm_add);
+				draw_surface_scale(surf, x, y, 1 / scale);
 				draw_set_blend_mode(bm_normal);
 			}
 			
-			 // Draw Trails:
-			var _anglerActive = instances_matching_ge(_inst, "ammo", 0),
-				_playerActive = instances_matching(instances_matching(_inst, "object_index", Player), "roll", true),
-				_instActive   = array_combine(_anglerActive, _playerActive);
-				
-			if(array_length(_instActive)) with(_instActive){
-				var _isPlayer = instance_is(id, Player);
-				
-				if(_isPlayer || sprite_index != spr_appear){
-					var	_x1    = xprevious,
-						_y1    = yprevious,
-						_x2    = x,
-						_y2    = y,
-						_dis   = point_distance(_x1, _y1, _x2, _y2),
-						_dir   = point_direction(_x1, _y1, _x2, _y2),
-						_spr   = (_isPlayer ? spr.FishAnglerTrail : spr.AnglerTrail),
-						_img   = image_index,
-						_xsc   = image_xscale * _surfScale * right,
-						_ysc   = image_yscale * _surfScale,
-						_ang   = (_isPlayer ? (image_angle + angle) : image_angle),
-						_col   = image_blend,
-						_alp   = image_alpha,
-						_charm = (_col == c_white && "ntte_charm" in self && ntte_charm.charmed);
-						
-					if(_charm) draw_set_fog(true, make_color_rgb(56, 252, 0), 0, 0);
-					
-					for(var i = 0; i <= _dis; i++){
-						draw_sprite_ext(_spr, _img, (_x1 - _surfX + lengthdir_x(i, _dir)) * _surfScale, (_y1 - _surfY + lengthdir_y(i, _dir)) * _surfScale, _xsc, _ysc, _ang, _col, _alp);
-					}
-					
-					if(_charm) draw_set_fog(false, 0, 0, 0);
-				}
-			}
-			
-			surface_reset_target();
-			
-			 // Draw Surface:
-			draw_set_blend_mode(bm_add);
-			draw_surface_scale(surf, x, y, 1 / scale);
-			draw_set_blend_mode(bm_normal);
+			if(lag) trace_time(script[2]);
 		}
-		
-		if(lag) trace_time(script[2]);
 	}
 	
 	

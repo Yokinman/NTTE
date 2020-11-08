@@ -1577,7 +1577,22 @@
 	}
 	
 	 // Bonus Chests:
-	mod_script_call("mod", "tepickups", "bonus_pickup_replace", true);
+	with(instances_matching([AmmoPickup, HPPickup, AmmoChest, HealthChest, Mimic, SuperMimic], "bonus_pickup_check", null)){
+		bonus_pickup_check = (chance(1, 6) && _normalArea && GameCont.hard > 8);
+		if(bonus_pickup_check){
+			var _chest = "";
+			if((instance_is(self, AmmoChest) && !instance_is(self, IDPDChest)) || instance_is(self, Mimic)){
+				_chest = "Ammo";
+			}
+			else if(instance_is(self, HealthChest) || instance_is(self, SuperMimic)){
+				_chest = "Health";
+			}
+			if(_chest != ""){
+				chest_create(x, y, "Bonus" + _chest + (instance_is(self, enemy) ? "Mimic" : "Chest"), true);
+				instance_delete(id);
+			}
+		}
+	}
 	
 	 // Flies:
 	with(MaggotSpawn){
@@ -1859,7 +1874,7 @@
 					
 					 // Scuff Marks:
 					if(position_meeting(x, bbox_bottom, ScorchTop)){
-						footprint_give(45, make_color_rgb(23, 13, 13), 1.5);
+						footprint_give(40, make_color_rgb(23, 13, 13), 1.5);
 					}
 					
 					 // Normal:
@@ -3880,7 +3895,7 @@
 							if(_cost > 0){
 								var	_x   = _ox + 43 + (44 * i),
 									_y   = _oy + 20,
-									_max = 4;
+									_max = 4,
 									_low = (
 										red_ammo < _cost
 										&& (wave % 10) < 5
@@ -3902,160 +3917,6 @@
 								draw_sprite(spr.RedAmmoHUDCost, _low, _x + 4 + (4 * (_cost % _max)), _y + 4);
 							}
 						}
-					}
-				}
-				
-				 // Bonus Ammo:
-				if("bonus_ammo" in self){
-					if("bonus_ammo_last" not in self){
-						bonus_ammo_last = 0;
-					}
-					
-					 // Draw:
-					if(bonus_ammo > 0 && _HUDDraw){
-						draw_set_font(fntSmall);
-						draw_set_halign(fa_right);
-						draw_set_valign(fa_top);
-						
-						 // Text Color:
-						var _textCol = c_white;
-						if(bonus_ammo == bonus_ammo_last){
-							if(drawempty > 26 && ammo[weapon_get_type(wep)] + bonus_ammo < weapon_get_cost(wep)){
-								_textCol = c_red;
-							}
-							else{
-								_textCol = merge_color(c_aqua, c_blue, 0.1 + (0.05 * sin((current_frame / 20))));
-							}
-						}
-						
-						 // Draw Text:
-						draw_text_nt(
-							_ox + 66,
-							_oy + 30 - (_players > 1),
-							`@(color:${_textCol})+${bonus_ammo}`
-						);
-					}
-					
-					 // Last Bonus Ammo:
-					var _diff = (bonus_ammo - bonus_ammo_last);
-					if(abs(_diff) > 1/2){
-						_diff *= current_time_scale / 2.5;
-					}
-					bonus_ammo_last += _diff;
-				}
-				
-				 // Bonus HP:
-				if("bonus_health" in self){
-					if("bonus_health_max"  not in self) bonus_health_max = 0;
-					if("bonus_health_last" not in self) bonus_health_last = 0;
-					if("bonus_health_hud"  not in self) bonus_health_hud = 0;
-					
-					 // Max Bonus HP:
-					if(bonus_health > 0){
-						if(bonus_health == bonus_health_last){
-							var _diff = (bonus_health - bonus_health_max);
-							if(abs(_diff) > 1/3){
-								_diff *= 0.25 * current_time_scale;
-							}
-							bonus_health_max += _diff;
-						}
-						bonus_health_max = max(bonus_health, bonus_health_max);
-					}
-					else bonus_health_max = 0;
-					
-					 // Last Bonus HP:
-					bonus_health_last = min(bonus_health_last, bonus_health_max);
-					
-					 // Expand HUD:
-					bonus_health_hud += ((bonus_health > 0) - bonus_health_hud) * 0.5 * current_time_scale;
-					
-					 // Draw:
-					if(_HUDDraw){
-						var	_x1 = _ox + 106 - (85 * _side),
-							_y1 = _oy + 5,
-							_x2 = _x1 + (3 * bonus_health_hud * _flip),
-							_y2 = _y1 + 10;
-							
-						if(_side ? (_x1 > _x2 + 1) : (_x2 > _x1 + 1)){
-							draw_set_color(c_black);
-							draw_rectangle(_x1, _y1 - 1, _x2 + _flip, _y2 + 2, false); // Shadow
-							draw_set_color(c_white);
-							draw_rectangle(_x1, _y1, _x2, _y2, false); // Outline
-							draw_set_color(c_black);
-							draw_rectangle(_x1, _y1 + 1, _x2 - _flip, _y2 - 1, false); // Inset
-							
-							 // Filling:
-							var	_fx = ((_x1 + _x2) / 2) - _flip,
-								_fy = _y2 - 1,
-								_fw = _x2 - _x1,
-								_fh = _fy - (_y1 + 1),
-								_col = merge_color(c_aqua, c_blue, 0.15 + (0.05 * cos(current_frame / 20)));
-								
-							if(bonus_health_last > bonus_health){
-								draw_set_color(merge_color(_col, c_black, 0.5));
-								draw_line_width(_fx, _fy - max(_fh * (bonus_health_last / bonus_health_max), 1 / game_scale_nonsync), _fx, _fy, _fw);
-							}
-							if(bonus_health > 0){
-								var	_fy1 = _fy - max(_fh * (bonus_health / bonus_health_max), 1 / game_scale_nonsync),
-									_fy2 = _fy;
-									
-								draw_set_color(_col);
-								draw_line_width(_fx, _fy1, _fx, _fy2, _fw);
-								
-								 // Flash / Cell Highlight:
-								var	_flashHealth = (current_frame / 6) % (2 + bonus_health_max),
-									_flashHurt   = ((sprite_index == spr_hurt && image_index < 1 && player_active) || (lsthealth < my_health && lsthealth <= 1));
-									
-								if(
-									_flashHurt
-									|| bonus_health_last < bonus_health
-									|| (my_health <= 1 && _flashHealth < bonus_health && bonus_health == bonus_health_max)
-								){
-									var	_flashNum = (_flashHurt ? 0 : clamp(1 - (0.5 * abs(bonus_health - bonus_health_last)), 0, 1)),
-										_flashCol = merge_color(c_white, merge_color(_col, c_white, min(0.8, 1 - frac(_flashHealth))), _flashNum),
-										_flashY   = _fy,
-										_flashH   = max(_fh / bonus_health_max, 1 / game_scale_nonsync);
-										
-									if(_flashHealth < bonus_health){
-										_flashY = _fy - (_fh * ((floor(_flashHealth) + 0.5) / bonus_health_max));
-									}
-									
-									draw_set_color(_flashCol);
-									
-									draw_line_width(
-										_fx,
-										clamp(lerp(_fy1, _flashY - (_flashH / 2), _flashNum), _fy1, _fy2),
-										_fx,
-										clamp(lerp(_fy2, _flashY + (_flashH / 2), _flashNum), _fy1, _fy2),
-										_fw
-									);
-								}
-								
-								 // Text:
-								var _textCol = (
-									(_flashHurt || (bonus_health - bonus_health_last) >= 2/3)
-									? c_white
-									: merge_color(c_aqua, c_blue, 0.1 + (0.05 * cos((current_frame / 20))))
-								);
-								draw_set_font(fntSmall);
-								draw_set_halign(fa_left);
-								draw_set_valign(fa_top);
-								draw_text_nt(
-									_x1 - 3,
-									_y2 + 2,
-									`@(color:${_textCol})+${bonus_health}`
-								);
-							}
-						}
-					}
-					
-					 // Last Bonus HP:
-					if("bonus_health" in self && sprite_index != spr_hurt){
-						var _diff = (bonus_health - bonus_health_last);
-						if(abs(_diff) > 1/5){
-							_diff *= current_time_scale / 3;
-						}
-						bonus_health_last += _diff;
 					}
 				}
 				
@@ -4182,7 +4043,7 @@
 						}
 						
 						 // Parrot Feathers:
-						var	_x        = _ox + 116 - (104 * _side) + (3 * variable_instance_get(id, "bonus_health_hud", 0) * _flip),
+						var	_x        = _ox + 116 - (104 * _side),
 							_y        = _oy + 11,
 							_spr      = race_get_sprite(race, sprChickenFeather),
 							_sprHUD   = race_get_sprite(race, sprRogueAmmoHUD),
@@ -4288,6 +4149,90 @@
 						}
 					}
 				}
+				
+				
+				 // Bonus Ammo:
+				if("bonus_ammo" in self && bonus_ammo > 0){
+					var	_max   = (("bonus_ammo_max"   in self) ? bonus_ammo_max   : bonus_ammo),
+						_tick  = (("bonus_ammo_tick"  in self) ? bonus_ammo_tick  : 0),
+						_flash = (("bonus_ammo_flash" in self) ? bonus_ammo_flash : 0),
+						_spr   = ((_tick == 0) ? spr.BonusAmmoHUDFill : spr.BonusAmmoHUDFillDrain);
+						
+					 // Draw:
+					if(_HUDDraw){
+						var	_img = _flash,
+							_x   = _ox + 5,
+							_y   = _oy + 35,
+							_w   = sprite_get_width(_spr) * clamp(bonus_ammo / _max, 0, 1),
+							_h   = sprite_get_height(_spr);
+							
+						if(bonus_ammo > 2 * _tick * current_time_scale){
+							 // Back:
+							draw_sprite(spr.BonusAmmoHUD, 0, _x, _y);
+							draw_sprite_ext(_spr, 0, _x, _y, 1, 1, 0, make_color_hsv(wave % 256, 80, 80), 1);
+							
+							 // Filling:
+							draw_sprite_part(_spr, _img, 0, 0, _w, _h, _x, _y);
+							
+							 // Text:
+							draw_sprite(spr.BonusHUDText, 0, _x + (sprite_get_width(_spr) / 2), _y + (sprite_get_height(_spr) / 2));
+						}
+						
+						 // Flash Out:
+						else{
+							draw_set_fog(true, c_white, 0, 0);
+							draw_sprite(spr.BonusAmmoHUD, 0, _x, _y);
+							draw_set_fog(false, 0, 0, 0);
+						}
+					}
+					
+					 // Animate:
+					if(_flash > 0){
+						bonus_ammo_flash += 0.4 * current_time_scale;
+						if(bonus_ammo_flash >= sprite_get_number(_spr)){
+							bonus_ammo_flash = 0;
+						}
+					}
+				}
+				
+				 // Bonus HP:
+				if(
+					"bonus_health"     in self &&
+					"bonus_health_max" in self &&
+					bonus_health > 0
+				){
+					var	_max   = (("bonus_health_max"   in self) ? bonus_health_max   : bonus_health),
+						_tick  = (("bonus_health_tick"  in self) ? bonus_health_tick  : 0),
+						_flash = (("bonus_health_flash" in self) ? bonus_health_flash : 0)
+						_spr   = ((_tick == 0) ? spr.BonusHealthHUDFill : spr.BonusHealthHUDFillDrain);
+					
+					 // Draw:
+					if(_HUDDraw){
+						var	_img = ((maxhealth > 0 && lsthealth < my_health && !instance_exists(GenCont) && !instance_exists(LevCont)) ? 1 : _flash),
+							_x   = _ox + 22,
+							_y   = _oy + 7,
+							_w   = sprite_get_width(_spr) * clamp(bonus_health / _max, 0, 1),
+							_h   = sprite_get_height(_spr);
+							
+						 // Back:
+						draw_sprite(sprHealthBar, 0, _x - 2, _y - 3);
+						draw_sprite_ext(_spr, 0, _x, _y, 1, 1, 0, make_color_hsv(wave % 256, 80, 80), 1);
+						
+						 // Filling:
+						draw_sprite_part(_spr, _img, 0, 0, _w, _h, _x, _y);
+						
+						 // Text:
+						draw_sprite(spr.BonusHUDText, 0, _x + (sprite_get_width(_spr) / 2) + 1, _y + (sprite_get_height(_spr) / 2));
+					}
+					
+					 // Animate:
+					if(_flash > 0){
+						bonus_health_flash += 0.4 * current_time_scale;
+						if(bonus_health_flash >= sprite_get_number(_spr)){
+							bonus_health_flash = 0;
+						}
+					}
+				}
 			}
 			
 			draw_reset_projection();
@@ -4352,6 +4297,7 @@
 						
 						 // Draw:
 						_y += sin(current_frame / 8);
+						
 						var	_x1 = _x - (_size / 2),
 							_y1 = _y - (_size / 2),
 							_x2 = _x1 + _size,

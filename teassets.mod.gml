@@ -1503,12 +1503,14 @@
 			FloorCrate   = sprite(p + "sprFloorCrate",   1, 18, 18);
 			
 			 // Bone:
-			BonePickup    = [sprite(p + "sprBonePickup0",    1, 4, 4, shn8),
-			                 sprite(p + "sprBonePickup1",    1, 4, 4, shn8),
-			                 sprite(p + "sprBonePickup2",    1, 4, 4, shn8),
-			                 sprite(p + "sprBonePickup3",    1, 4, 4, shn8)];
-			BonePickupBig = [sprite(p + "sprBoneBigPickup0", 1, 8, 8, shn16),
-			                 sprite(p + "sprBoneBigPickup1", 1, 8, 8, shn16)];
+			BonePickup    = array_create(4, -1);
+			BonePickupBig = array_create(2, -1);
+			for(var i = 0; i < array_length(BonePickup); i++){
+				BonePickup[i] = sprite(p + `sprBonePickup${i}`, 1, 4, 4, shn8);
+			}
+			for(var i = 0; i < array_length(BonePickupBig); i++){
+				BonePickupBig[i] = sprite(p + `sprBoneBigPickup${i}`, 1, 8, 8, shn16);
+			}
 			
 			 // Bonus Pickups:
 			BonusFX                    = sprite(p + "sprBonusFX",                    13,  4, 12);
@@ -1520,6 +1522,12 @@
 			BonusShell                 = sprite(p + "sprBonusShell",                  1,  1,  2);
 			BonusShellHeavy            = sprite(p + "sprBonusShellHeavy",             1,  2,  3);
 			BonusText                  = sprite(p + "sprBonusText",                  12,  0,  0);
+			BonusHUDText               = sprite(p + "sprBonusHUDText",                1,  6,  3);
+			BonusAmmoHUD               = sprite(p + "sprBonusAmmoHUD",                1,  2,  3);
+			BonusAmmoHUDFill           = sprite(p + "sprBonusAmmoHUDFill",            7,  0,  0);
+			BonusAmmoHUDFillDrain      = sprite(p + "sprBonusAmmoHUDFillDrain",       7,  0,  0);
+			BonusHealthHUDFill         = sprite(p + "sprBonusHealthHUDFill",          7,  0,  0);
+			BonusHealthHUDFillDrain    = sprite(p + "sprBonusHealthHUDFillDrain",     7,  0,  0);
 			BonusAmmoPickup            = sprite(p + "sprBonusAmmoPickup",             1,  5,  5, shn10);
 			BonusHealthPickup          = sprite(p + "sprBonusHealthPickup",           1,  5,  5, shn10);
 			BonusAmmoChest             = sprite(p + "sprBonusAmmoChest",             15,  8,  8);

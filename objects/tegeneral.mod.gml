@@ -5804,7 +5804,7 @@
 			
 			 // Pets:
 			if(instance_exists(CustomHitme)){
-				var _inst = instances_matching(instances_matching(CustomHitme, "name", "Pet"), "visible", true);
+				var _inst = instances_matching(CustomHitme, "name", "Pet");
 				if(array_length(_inst)) with(_inst){
 					if(light && light_radius[_gray] > 0){
 						draw_circle(x, y, light_radius[_gray] + orandom(1), false);

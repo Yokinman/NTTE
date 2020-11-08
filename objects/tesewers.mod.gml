@@ -1795,7 +1795,7 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 	
 #define BatDisc_hit
 	if(projectile_canhit(other)){
-		projectile_hit_raw(other, damage, sndDiscHit);
+		projectile_hit_push(other, damage, force);
 		
 		has_hit = true;
 		
@@ -2152,8 +2152,14 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 	 // Explodin':
 	sound_play(sndExplosionL);
 	sound_play(sndFlameCannonEnd);
-	instance_create(x, y, Explosion);
-	repeat(1 + irandom(2)) instance_create(x, y, SmallExplosion);
+	with(projectile_create(x, y, Explosion, 0, 0)){
+		team = -1;
+	}
+	repeat(1 + irandom(2)){
+		with(projectile_create(x, y, SmallExplosion, 0, 0)){
+			team = -1;
+		}
+	}
 	
 	var _l = 12;
 	for(var _d = 0; _d < 360; _d += (360 / 20)){
@@ -5691,7 +5697,7 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 				}
 				
 				 // Manhole Cover:
-				var _inst = instances_matching(instances_matching(CustomObject, "name", "PizzaManholeCover"), "visible", true);
+				var _inst = instances_matching(CustomObject, "name", "PizzaManholeCover");
 				if(array_length(_inst)){
 					 // Circle:
 					if(_gray){
@@ -5713,7 +5719,7 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 				
 				 // Boss Manhole:
 				if(_gray){
-					var _inst = instances_matching(instances_matching(CustomObject, "name", "CatHoleBig"), "visible", true);
+					var _inst = instances_matching(CustomObject, "name", "CatHoleBig");
 					if(array_length(_inst)) with(_inst){
 						draw_circle(x, y, 192 + random(2), false);
 					}
@@ -5722,20 +5728,17 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 			
 			 // TV:
 			if(instance_exists(TV)){
-				var _inst = instances_matching(TV, "visible", true);
-				if(array_length(_inst)){
-					 // Circle:
-					if(_gray){
-						with(_inst){
-							draw_circle(x, y, 64 + random(2), false);
-						}
+				 // Circle:
+				if(_gray){
+					with(TV){
+						draw_circle(x, y, 64 + random(2), false);
 					}
-					
-					 // TV Beam:
-					else with(_inst){
-						var _off = orandom(1);
-						draw_catlight(x + 1, y - 6, 12 + abs(_off), 48 + _off, 48, 8 + _off, 0);
-					}
+				}
+				
+				 // TV Beam:
+				else with(TV){
+					var _off = orandom(1);
+					draw_catlight(x + 1, y - 6, 12 + abs(_off), 48 + _off, 48, 8 + _off, 0);
 				}
 			}
 			

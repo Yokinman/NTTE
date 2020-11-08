@@ -3698,7 +3698,7 @@
 			if(instance_exists(enemy)){
 				if(instance_exists(CustomEnemy)){
 					 // Mortar:
-					var _inst = instances_matching(instances_matching(CustomEnemy, "name", "Mortar", "InvMortar"), "visible", true);
+					var _inst = instances_matching(CustomEnemy, "name", "Mortar", "InvMortar");
 					if(array_length(_inst)) with(_inst){
 						if(sprite_index == spr_fire){
 							draw_circle(x + (6 * right), y - 16, abs(24 - alarm1 + orandom(4)) + (24 * _gray), false);
@@ -3706,7 +3706,7 @@
 					}
 					
 					 // Crystal Heart:
-					var _inst = instances_matching(instances_matching(CustomEnemy, "name", "CrystalHeart", "ChaosHeart"), "visible", true);
+					var _inst = instances_matching(CustomEnemy, "name", "CrystalHeart", "ChaosHeart");
 					if(array_length(_inst)){
 						var	_ver = 15 + (30 * _gray),
 							_rad = 24 + (48 * _gray),
@@ -3718,7 +3718,7 @@
 					}
 					
 					 // Crystal Bat:
-					var _inst = instances_matching(instances_matching(CustomEnemy, "name", "CrystalBat", "InvCrystalBat"), "visible", true);
+					var _inst = instances_matching(CustomEnemy, "name", "CrystalBat", "InvCrystalBat");
 					if(array_length(_inst)) with(_inst){
 						draw_circle(x, y, 16 + (20 * _gray) + random(2), false);
 					}
@@ -3726,7 +3726,7 @@
 				
 				 // Miner Bandit:
 				if(instance_exists(Bandit)){
-					var _inst = instances_matching(instances_matching(Bandit, "name", "MinerBandit"), "visible", true);
+					var _inst = instances_matching(Bandit, "name", "MinerBandit");
 					if(array_length(_inst)){
 						var	_lightDis  = 60 + (60 * _gray),
 							_lightAng  = 15 + (5  * _gray),
@@ -3765,7 +3765,7 @@
 			
 			 // Mortar Plasma:
 			if(instance_exists(CustomProjectile)){
-				var _inst = instances_matching(instances_matching(CustomProjectile, "name", "MortarPlasma"), "visible", true);
+				var _inst = instances_matching(CustomProjectile, "name", "MortarPlasma");
 				if(array_length(_inst)){
 					var _r = 32 + (32 * _gray);
 					with(_inst){
