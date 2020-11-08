@@ -1591,6 +1591,10 @@
 			SunkenCoin      = sprite(p + "sprCoin",            1,  3,  3, shn8);
 			SunkenCoinBig   = sprite(p + "sprCoinBig",         1,  3,  3, shn8);
 			
+			 // Lead Ribs Upgraded Rads:
+			RadUpg	  = sprite(p + "sprRadUpg",    1, 5, 5, shn10);
+			BigRadUpg = sprite(p + "sprBigRadUpg", 1, 8, 8, shn16);
+			
 		//#endregion
 		
 		//#region RACES

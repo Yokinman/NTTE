@@ -81,6 +81,8 @@
 						&& 
 						!(instance_is(id, crystaltype) || instance_is(id, HyperCrystal)) 
 						&& 
+						!(instance_is(id, CustomEnemy) && ("name" in self) && (name == "CrystalBat" || name == "InvCrystalBat"))
+						&&
 						point_distance(x, y, other.x, other.y) < _dis
 					){
 						x = other.x + lengthdir_x(_dis, _dir);
@@ -130,7 +132,7 @@
 		 // Vars:
 		mask_index	= mskFreak;
 		friction	= 0.6;
-		maxhealth	= 16;
+		maxhealth	= 18;
 		raddrop 	= 8;
 		size		= 2;
 		walk		= 0;
@@ -169,6 +171,7 @@
 			if(cursed && dash){
 				instance_create(x + hspeed, y + vspeed, Smoke);
 				move_contact_solid(gunangle + 180, 10000);
+				instance_create(x, y, Smoke);
 			}
 			else{
 				
@@ -176,6 +179,11 @@
 				if(dash){
 					walk = 0;
 					instance_create(x + hspeed, y + vspeed, Smoke);
+					
+					 // Sounds
+					audio_sound_set_track_position(sound_play_hit_ext(sndLaserCrystalHit, random_range(0.9, 1.1), 1),   0.08);
+					audio_sound_set_track_position(sound_play_hit_ext(sndBigDogWalk,	  random_range(0.9, 1.1), 0.1), 0.12);
+					sleep(24);
 				}
 				
 				 // Wall Bouncin':
@@ -273,6 +281,11 @@
 					move_contact_solid(direction, speed);
 					scrRight(gunangle);
 					
+					 // Sounds:
+					audio_sound_set_track_position(sound_play_hit_ext(sndLaserCrystalHit, random_range(0.9, 1.1), 1),   0.08);
+					audio_sound_set_track_position(sound_play_hit_ext(sndLuckyShotProc,   random_range(0.9, 1.1), 1),   0.08); 
+					audio_sound_set_track_position(sound_play_hit_ext(sndMaggotBite, 	  random_range(1,   1.2), 0.8), 0.08);
+					
 					 // Reset:
 					alarm1 = -1;
 					alarm2 = -1;
@@ -291,6 +304,10 @@
 	 // Start Dash:
 	move_contact_solid(gunangle, walkspeed);
 	speed = max(speed, friction);
+	
+	 // Sounds:
+	audio_sound_set_track_position(sound_play_hit_ext(sndLaserCrystalDeath, random_range(0.9, 1.1), 1),   0.4);
+	audio_sound_set_track_position(sound_play_hit_ext(sndBigMaggotBite, 	random_range(1.2, 1.4), 0.8), 0.08);
 	
 #define ChaosHeart_create(_x, _y)
 	/*
@@ -3717,11 +3734,13 @@
 						}
 					}
 					
+					/*
 					 // Crystal Bat:
 					var _inst = instances_matching(CustomEnemy, "name", "CrystalBat", "InvCrystalBat");
 					if(array_length(_inst)) with(_inst){
 						draw_circle(x, y, 16 + (20 * _gray) + random(2), false);
 					}
+					*/
 				}
 				
 				 // Miner Bandit:
