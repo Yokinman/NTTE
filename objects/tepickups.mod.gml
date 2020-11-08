@@ -5188,7 +5188,11 @@
 						with(instances_matching_gt(Player, "bonus_ammo", 0)){
 							_num += bonus_ammo;
 						}
-						if(chance(60, _num)){
+						if(
+							chance(60, _num)
+							|| place_meeting(x, y, Player)
+							|| place_meeting(x, y, Portal)
+						){
 							if(instance_is(self, Pickup)){
 								obj_create(x, y, "BonusAmmoPickup");
 							}
