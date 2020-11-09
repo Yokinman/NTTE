@@ -4351,9 +4351,23 @@
 		skill      = mut_last_wish;
 		alive      = global.VaultFlower_alive;
 		prompt     = noone;
+		unlock     = false;
 		
 		 // Determine Skill:
 		if(alive){
+			
+			 // Orchid Plant Skin Unlock:
+			var _plantExists = false;
+			for(var i = 0; i < maxp; i++){
+				if(player_get_race(i) == "plant"){
+					_plantExists = true;
+				}
+			}
+			if(_plantExists && skill_get(mut_heavy_heart) && !unlock_get("skin:orchid plant")){
+				skill  = mut_heavy_heart;
+				unlock = true;
+			}
+			
 			if(skill_get(skill) == 0){
 				var _skillList = [];
 				for(var i = 0; !is_undefined(skill_get_at(i)); i++){
@@ -4456,6 +4470,11 @@
 			 // Reroll:
 			mod_variable_set("skill", "reroll", "skill", skill);
 			skill_set("reroll", true);
+			
+			 // Orchid Plant Skin Unlock:
+			if(unlock){
+				unlock_set("skin:orchid plant", true);
+			}
 			
 			 // FX:
 			image_index = 0;

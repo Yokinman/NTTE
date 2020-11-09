@@ -12,7 +12,7 @@
 #define skin_lock      return "REROLL ???";
 #define skin_unlock    return "FOR REROLLING HEAVY HEART";
 #define skin_ttip      return choose("YOU LOOK SO GOOD", "MILLION DOLLAR SMILE", "SHINY LIKE A LIMOUSINE");
-#define skin_avail     return true; // unlock_get("skin:" + mod_current); // can't touch tepickups rn bro
+#define skin_avail     return unlock_get("skin:" + mod_current); // can't touch tepickups rn bro
 #define skin_portrait  return spr.PlantOrchidPortrait;
 #define skin_mapicon   return spr.PlantOrchidMapIcon;
 
