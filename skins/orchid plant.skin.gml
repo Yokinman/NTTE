@@ -11,7 +11,7 @@
 #define skin_name      return ((argument_count <= 0 || argument0) ? "GILDED" : skin_lock());
 #define skin_lock      return "REROLL ???";
 #define skin_unlock    return "FOR REROLLING HEAVY HEART";
-#define skin_ttip      return choose("YOU LOOK SO GOOD", "MILLION DOLLAR SMILE", "SHINY LIKE A LIMOUSINE");
+#define skin_ttip      return choose("YOU LOOK SO GOOD", "MILLION DOLLAR SMILE", "SHINY LIKE A LIMOUSINE", "ALL THAT GLITTERS IS GOLD");
 #define skin_avail     return unlock_get("skin:" + mod_current); // can't touch tepickups rn bro
 #define skin_portrait  return spr.PlantOrchidPortrait;
 #define skin_mapicon   return spr.PlantOrchidMapIcon;
