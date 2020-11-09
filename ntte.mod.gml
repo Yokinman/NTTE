@@ -752,6 +752,12 @@
 				}
 			}
 			
+			 // Big Crystal Prop:
+			with(instance_random([CrystalProp, InvCrystal])){
+				obj_create(x, y, "BigCrystalProp");
+				instance_delete(id);
+			}
+			
 			 // Hyper Crystal Pit:
 			with(HyperCrystal){
 				var	_size = 5,
