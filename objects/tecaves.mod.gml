@@ -58,7 +58,7 @@
 		spr_dead	 = spr.BigCrystalPropDead;
 		spr_shadow	 = mskNone;
 		sprite_index = spr_idle;
-		depth		 = 0;
+		depth		 = -1;
 		
 		 // Sounds:
 		snd_hurt = sndHitRock;
@@ -66,8 +66,8 @@
 		
 		 // Vars:
 		mask_index = -1;
-		maxhealth  = 50;
-		size	   = 3;
+		maxhealth  = 48;
+		size	   = 2;
 		
 		 // Spawn Enemies:
 		instance_create(x, y, PortalClear);
@@ -3807,6 +3807,19 @@
 								_circleRad + orandom(1), 
 								false
 							);
+						}
+					}
+				}
+			}
+			
+			if(instance_exists(prop)){
+				if(instance_exists(CustomProp)){
+					
+					 // Big Crystal Prop:
+					var _inst = instances_matching(CustomProp, "name", "BigCrystalProp");
+					if(array_length(_inst)){
+						with(_inst){
+							draw_circle(x, (y - 3), 30 + (60 * _gray) + sin(current_frame / 80), false);
 						}
 					}
 				}
