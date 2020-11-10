@@ -47,7 +47,7 @@
 #define area_subarea           return 3;
 #define area_goal              return 150;
 #define area_next              return [area_city, 1];
-#define area_music             return mus.Trench;
+#define area_music             return ((GameCont.proto == true) ? mus.TrenchB : mus.Trench);
 #define area_music_boss        return mus.PitSquid;
 #define area_ambient           return amb101;
 #define area_background_color  return make_color_rgb(100, 114, 127);

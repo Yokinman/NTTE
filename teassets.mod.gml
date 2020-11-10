@@ -1912,11 +1912,12 @@
 			amb = {};
 			
 			 // Areas:
-			Coast  = sound_add(p + "musCoast.ogg");
-			CoastB = sound_add(p + "musCoastB.ogg");
-			Trench = sound_add(p + "musTrench.ogg");
-			Lair   = sound_add(p + "musLair.ogg");
-			Red    = sound_add(p + "musRed.ogg");
+			Coast   = sound_add(p + "musCoast.ogg");
+			CoastB  = sound_add(p + "musCoastB.ogg");
+			Trench  = sound_add(p + "musTrench.ogg");
+			TrenchB = sound_add(p + "musTrenchB.ogg");
+			Lair    = sound_add(p + "musLair.ogg");
+			Red     = sound_add(p + "musRed.ogg");
 			
 			 // Bosses:
 			SealKing      = sound_add(p + "musSealKing.ogg");

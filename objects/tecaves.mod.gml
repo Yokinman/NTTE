@@ -110,19 +110,23 @@
 
 
 #define CrystalBat_create(_x, _y)
+	/*
+		An enemy for the Crystal Caves, charges at the player in cardinal directions only
+	*/
+	
 	with(instance_create(_x, _y, CustomEnemy)){
 		 // Visual:
-		spr_idle	 = spr.CrystalBatIdle;
-		spr_walk	 = spr.CrystalBatIdle;
-		spr_hurt	 = spr.CrystalBatHurt;
-		spr_dead	 = spr.CrystalBatDead;
-		spr_tell	 = spr.CrystalBatTell;
-		spr_dash	 = spr.CrystalBatDash;
-		spr_shadow	 = shd24;
+		spr_idle     = spr.CrystalBatIdle;
+		spr_walk     = spr.CrystalBatIdle;
+		spr_hurt     = spr.CrystalBatHurt;
+		spr_dead     = spr.CrystalBatDead;
+		spr_tell     = spr.CrystalBatTell;
+		spr_dash     = spr.CrystalBatDash;
+		spr_shadow   = shd24;
 		spr_shadow_y = 4;
+		hitid        = [spr_idle, "CRYSTAL BAT"];
 		sprite_index = spr_idle;
-		hitid		 = [spr_idle, "CRYSTAL BAT"];
-		depth		 = -2;
+		depth        = -2;
 		
 		 // Sounds:
 		snd_hurt = sndSpiderHurt;
@@ -130,19 +134,19 @@
 		snd_mele = sndSpiderMelee;
 		
 		 // Vars:
-		mask_index	= mskFreak;
-		friction	= 0.6;
-		maxhealth	= 18;
-		raddrop 	= 8;
-		size		= 2;
-		walk		= 0;
-		maxspeed	= 2.4;
-		walkspeed	= 1.2;
-		canmelee	= true;
+		mask_index  = mskFreak;
+		friction    = 0.6;
+		maxhealth   = 18;
+		raddrop     = 8;
+		size        = 2;
+		walk        = 0;
+		maxspeed    = 2.4;
+		walkspeed   = 1.2;
+		canmelee    = true;
 		meleedamage = 4;
-		cursed		= false;
-		gunangle	= random(360);
-		dash		= false;
+		curse       = false;
+		gunangle    = random(360);
+		dash        = false;
 		
 		 // Alarms:
 		alarm1 = 90;
@@ -167,35 +171,41 @@
 		walk -= current_time_scale;
 		motion_add_ct(gunangle, (dash ? (walkspeed + 3) : walkspeed));
 		
-		if(place_meeting(x + hspeed, y + vspeed, Wall)){
-			if(cursed && dash){
-				instance_create(x + hspeed, y + vspeed, Smoke);
+		motion_step(1);
+		if(place_meeting(x, y, Wall)){
+			if(curse > 0 && dash){
+				instance_create(x, y, Smoke);
 				move_contact_solid(gunangle + 180, 10000);
 				instance_create(x, y, Smoke);
+				xprevious = x;
+				yprevious = y;
 			}
 			else{
+				x = xprevious;
+				y = yprevious;
 				
 				 // Force End Dash:
 				if(dash){
 					walk = 0;
-					instance_create(x + hspeed, y + vspeed, Smoke);
 					
-					 // Sounds
-					audio_sound_set_track_position(sound_play_hit_ext(sndLaserCrystalHit, random_range(0.9, 1.1), 1),   0.08);
-					audio_sound_set_track_position(sound_play_hit_ext(sndBigDogWalk,	  random_range(0.9, 1.1), 0.1), 0.12);
+					 // Effects:
+					instance_create(x + hspeed_raw, y + vspeed_raw, Smoke);
+					audio_sound_set_track_position(sound_play_hit_ext(sndLaserCrystalHit, 1 + orandom(0.1), 1.0), 0.08);
+					audio_sound_set_track_position(sound_play_hit_ext(sndBigDogWalk,	  1 + orandom(0.1), 0.1), 0.12);
 					sleep(24);
 				}
 				
 				 // Wall Bouncin':
 				move_contact_solid(direction, walkspeed);
-				
-				if(place_meeting(x + hspeed, y, Wall)) hspeed *= -1;
-				if(place_meeting(x, y + vspeed, Wall)) vspeed *= -1;
-				
+				if(place_meeting(x + hspeed_raw, y, Wall)) hspeed_raw *= -1;
+				if(place_meeting(x, y + vspeed_raw, Wall)) vspeed_raw *= -1;
 				gunangle = pround(direction, 90);
-				if(!dash) scrRight(gunangle);
+				if(!dash){
+					scrRight(gunangle);
+				}
 			}
 		}
+		motion_step(-1);
 		
 		 // Dashin':
 		if(dash){
@@ -228,25 +238,24 @@
 	}
 	
 	 // Curse Particles:
-	if(cursed && chance_ct(1, 3)){
+	if(curse > 0 && chance_ct(curse, 3)){
 		instance_create(x + orandom(8), y + orandom(6), Curse);
 	}
 	
 #define CrystalBat_draw
-	var h = (sprite_index != spr_hurt && nexthurt > current_frame + 3);
-	
-	if(h) draw_set_fog(true, image_blend, 0, 0);
+	var _hurt = (sprite_index != spr_hurt && nexthurt > current_frame + 3);
+	if(_hurt) draw_set_fog(true, image_blend, 0, 0);
 	draw_sprite_ext(sprite_index, image_index, x, y, (dash ? image_xscale : (image_xscale * right)), (dash ? (image_yscale * right) : image_yscale), image_angle, image_blend, image_alpha);
-	if(h) draw_set_fog(false, c_white, 0, 0);
+	if(_hurt) draw_set_fog(false, 0, 0, 0);
 	
-#define CrystalBat_hurt(_hitDmg, _hitVel, _hitDir)
-	my_health -= _hitDmg;          
-	motion_add(_hitDir, _hitVel);  
-	nexthurt = current_frame + 6;  
-	sound_play_hit(snd_hurt, 0.3); 
+#define CrystalBat_hurt(_damage, _force, _direction)
+	my_health -= _damage;
+	nexthurt = current_frame + 6;
+	motion_add(_direction, _force);
+	sound_play_hit(snd_hurt, 0.3);
 	
 	 // Hurt Sprite:
-	if(!dash){
+	if(sprite_index != spr_tell && sprite_index != spr_dash){
 		sprite_index = spr_hurt;
 		image_index  = 0;
 	}
@@ -308,6 +317,7 @@
 	 // Sounds:
 	audio_sound_set_track_position(sound_play_hit_ext(sndLaserCrystalDeath, random_range(0.9, 1.1), 1),   0.4);
 	audio_sound_set_track_position(sound_play_hit_ext(sndBigMaggotBite, 	random_range(1.2, 1.4), 0.8), 0.08);
+	
 	
 #define ChaosHeart_create(_x, _y)
 	/*
@@ -1886,7 +1896,6 @@
 		 // Vars:
 		cancharm = true;
 	}
-		
 	
 #define EntanglerSlash_step
 	if(setup) EntanglerSlash_setup();
@@ -1918,6 +1927,10 @@
 	
 	
 #define InvCrystalBat_create(_x, _y)
+	/*
+		Cursed version of the Crystal Bat
+	*/
+	
 	with(obj_create(_x, _y, "CrystalBat")){
 		 // Visual:
 		spr_idle	 = spr.InvCrystalBatIdle;
@@ -1926,18 +1939,25 @@
 		spr_dead	 = spr.InvCrystalBatDead;
 		spr_tell	 = spr.InvCrystalBatTell;
 		spr_dash	 = spr.InvCrystalBatDash;
-		sprite_index = spr_idle;
 		hitid		 = [spr_idle, "@pC@qU@qR@qS@qE@qD @qC@qR@qY@qS@qT@qA@qL @qB@qA@qT"];
+		sprite_index = spr_idle;
 		
 		 // Sounds:
 		snd_hurt = choose(sndBanditHit, sndBigMaggotHit, sndScorpionHit, sndRatHit, sndGatorHit, sndRavenHit, sndSalamanderHurt, sndSniperHit);
 		snd_dead = choose(sndBanditDie, sndBigMaggotDie, sndScorpionDie, sndRatDie, sndGatorDie, sndRavenDie, sndSalamanderDead);
 		
 		 // Vars:
-		cursed = true;
+		curse = true;
+		
+		return id;
 	}
-
+	
+	
 #define InvMortar_create(_x, _y)
+	/*
+		Cursed version of the Crystal Mortar, can randomly swap positions with another enemy when hurt
+	*/
+	
 	with(obj_create(_x, _y, "Mortar")){
 		 // Visual:
 		spr_idle     = spr.InvMortarIdle;
@@ -1945,15 +1965,15 @@
 		spr_fire     = spr.InvMortarFire;
 		spr_hurt     = spr.InvMortarHurt;
 		spr_dead     = spr.InvMortarDead;
-		sprite_index = spr_idle;
 		hitid        = [spr_idle, "@p@qC@qU@qR@qS@qE@qD @qM@qO@qR@qT@qA@qR"];
+		sprite_index = spr_idle;
 		
 		 // Sounds:
 		snd_hurt = choose(sndBanditHit, sndBigMaggotHit, sndScorpionHit, sndRatHit, sndGatorHit, sndRavenHit, sndSalamanderHurt, sndSniperHit);
 		snd_dead = choose(sndBanditDie, sndBigMaggotDie, sndScorpionDie, sndRatDie, sndGatorDie, sndRavenDie, sndSalamanderDead);
 		  
 		 // Vars:
-		inv = true;  
+		curse = true;  
 		
 		return id;
 	}
@@ -2034,7 +2054,7 @@
 		target_y   = y;
 		gunangle   = random(360);
 		direction  = gunangle;
-		inv        = false;
+		curse      = false;
 		
 		 // Alarms:
 		alarm1 = 100 + irandom(40);
@@ -2071,10 +2091,8 @@
 	}
 	
 	 // Curse Particles:
-	if(inv){
-		if(chance_ct(1, 3)){
-			instance_create(x + orandom(8), y + orandom(8), Curse);
-		}
+	if(curse > 0 && chance_ct(curse, 3)){
+		instance_create(x + orandom(8), y + orandom(8), Curse);
 	}
 	
 #define Mortar_draw
@@ -2209,11 +2227,11 @@
 		if(--ammo > 0) alarm2 = 4;
 	}
 
-#define Mortar_hurt(_hitdmg, _hitvel, _hitdir)
-	my_health -= _hitdmg;          // Damage
-	motion_add(_hitdir, _hitvel);  // Knockback
-	nexthurt = current_frame + 6;  // I-Frames
-	sound_play_hit(snd_hurt, 0.3); // Sound
+#define Mortar_hurt(_damage, _force, _direction)
+	my_health -= _damage;
+	nexthurt = current_frame + 6;
+	motion_add(_direction, _force);
+	sound_play_hit(snd_hurt, 0.3);
 	
 	 // Hurt Sprite:
 	if(sprite_index != spr_fire){
@@ -2221,10 +2239,10 @@
 		image_index = 0;
 		
 		 // Cursed Mortar Behavior:
-		if(inv && my_health > 0 && chance(_hitdmg / 25, 1)){
-			var	_enemies = instances_matching_ne(enemy, "name", name),
-				_x = x,
-				_y = y;
+		if(curse > 0 && my_health > 0 && chance(_damage / 25, 1)){
+			var	_x       = x,
+				_y       = y,
+				_enemies = instances_matching_ne(enemy, "name", name);
 				
 			 // Swap places with another dude:
 			if(array_length(_enemies) > 0){
@@ -2649,8 +2667,8 @@
 		alarm1 += walk;
 	}
 	
-#define RedSpider_hurt(_hitdmg, _hitvel, _hitdir)
-	enemy_hurt(_hitdmg, _hitvel, _hitdir);
+#define RedSpider_hurt(_damage, _force, _direction)
+	enemy_hurt(_damage, _force, _direction);
 	target_seen = true;
 	
 #define RedSpider_death
