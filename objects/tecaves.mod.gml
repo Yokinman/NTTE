@@ -50,6 +50,36 @@
 #macro clientDarknessCoeff global.clientDarknessCoeff
 #macro clientDarknessFloor global.clientDarknessFloor
 
+#define BigCrystalProp_create(_x, _y)
+	with(instance_create(_x, _y, CustomProp)){
+		 // Visual:
+		spr_idle	 = spr.BigCrystalPropIdle;
+		spr_hurt	 = spr.BigCrystalPropHurt;
+		spr_dead	 = spr.BigCrystalPropDead;
+		spr_shadow	 = mskNone;
+		sprite_index = spr_idle;
+		depth		 = -1;
+		
+		 // Sounds:
+		snd_hurt = sndHitRock;
+		snd_dead = sndCrystalPropBreak;
+		
+		 // Vars:
+		mask_index = -1;
+		maxhealth  = 48;
+		size	   = 2;
+		
+		 // Spawn Enemies:
+		instance_create(x, y, PortalClear);
+		if(!instance_near(x, y, Player, 96) && place_meeting(x, y, Floor)){
+			repeat(choose(2, 3)){
+				obj_create(x, y, ((GameCont.area == area_cursed_caves) ? "InvCrystalBat" : "CrystalBat"));
+			}
+		}
+		
+		return id;
+	}
+
 #define CaveHole_create(_x, _y)
 	with(instance_create(_x, _y, CustomObject)){
 		 // Visual:
@@ -3795,6 +3825,19 @@
 								_circleRad + orandom(1), 
 								false
 							);
+						}
+					}
+				}
+			}
+			
+			if(instance_exists(prop)){
+				if(instance_exists(CustomProp)){
+					
+					 // Big Crystal Prop:
+					var _inst = instances_matching(CustomProp, "name", "BigCrystalProp");
+					if(array_length(_inst)){
+						with(_inst){
+							draw_circle(x, (y - 3), 30 + (60 * _gray) + sin(current_frame / 80), false);
 						}
 					}
 				}

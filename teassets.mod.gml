@@ -866,6 +866,16 @@
 				mask = [false, 0];
 			}
 			
+			//#region PROPS
+			p = m + "Props/";
+			
+				 // Big Crystal Prop:
+				BigCrystalPropIdle = sprite(p + "sprBigCrystalPropIdle", 1, 16, 16);
+				BigCrystalPropHurt = sprite(p + "sprBigCrystalPropHurt", 3, 16, 16);
+				BigCrystalPropDead = sprite(p + "sprBigCrystalPropDead", 4, 16, 16);
+			
+			//#endregion
+			
 		//#endregion
 		
 		//#region FROZEN CITY
