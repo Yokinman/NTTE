@@ -72,6 +72,7 @@
 			"weps/tunneller.wep.gml",
 			"weps/bat disc launcher.wep.gml",
 			"weps/bat disc cannon.wep.gml",
+			"weps/pizza cutter.wep.gml",
 			"weps/harpoon launcher.wep.gml",
 			"weps/net launcher.wep.gml",
 			"weps/clam shield.wep.gml",

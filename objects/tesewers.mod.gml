@@ -1561,6 +1561,7 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 		key       = "";
 		seek      = 40;
 		in_wall   = false;
+		deflect   = noone;
 		speed     = maxspeed;
 		
 		return id;
@@ -1641,14 +1642,22 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 	
 	else{
 		 // Baseball:
-		if(place_meeting(x, y, projectile)){
+		if(!in_wall && place_meeting(x, y, projectile)){
 			var _inst = instances_meeting(x, y, [Slash, GuitarSlash, BloodSlash, EnergySlash, EnergyHammerSlash, CustomSlash]);
 			if(array_length(_inst)) with(_inst){
-				if(place_meeting(x, y, other)){
+				if(other.deflect != id && place_meeting(x, y, other)){
 					with(other){
 						deflected = true;
+						returning = false;
+						has_hit   = false;
 					    direction = other.direction;
 					    speed     = 16;
+					    deflect   = other;
+					    
+					     // Game Feel:
+					    x -= hspeed;
+					    y -= vspeed;
+					    sleep_max(12);
 					    
 					     // Effects:
 					    sleep(10);
@@ -1796,20 +1805,25 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 #define BatDisc_hit
 	if(projectile_canhit(other)){
 		projectile_hit_push(other, damage, force);
-		
 		has_hit = true;
 		
 		 // Effects:
 		instance_create(x, y, Smoke);
 		
 		var _big = ((instance_exists(other) && other.size >= 3 && big));
-		
 		view_shake_max_at(x, y, (_big ? 12 : 6));
-		
 		if(!instance_exists(other) || other.my_health <= 0){
 			sleep_max(_big ? 48 : 24);
 			view_shake_max_at(x, y, (_big ? 32 : 16))
 		}
+		
+		/*
+		 // Less Bolt Marrow Seeking:
+		var _skill = skill_get(mut_bolt_marrow);
+		if(_skill > 0){
+			seek -= (1 / _skill);
+		}
+		*/
 	}
 	
 #define BatDisc_wall
