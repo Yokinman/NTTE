@@ -4010,6 +4010,7 @@
 		maxspeed   = 2.4;
 		pit_height = 0;
 		elite      = 10;
+		target     = noone;
 		
 		 // Alarms:
 		alarm1 = 30;

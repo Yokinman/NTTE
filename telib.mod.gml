@@ -1132,10 +1132,13 @@
 				}
 				
 				 // Get Unlock Name:
-				var _skinName = race_get_title(_race) + " " + string_upper(skin_get_name(_race, _skin));
-				/*if(string_delete(_skinName, 1, string_length(_skinName) - 4) != "SKIN"){
-					_skinName += " SKIN";
-				}*/
+				var _skinName = string_upper(skin_get_name(_race, _skin));
+				if(string_delete(_skinName, 1, string_length(_skinName) - 5) == " SKIN"){
+					_skinName = race_get_title(_race) + " " + _skinName;
+				}
+				else{
+					_skinName = _skinName + " " + race_get_title(_race);
+				}
 				
 				return _skinName;
 				

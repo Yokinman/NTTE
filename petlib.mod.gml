@@ -1643,12 +1643,24 @@
 			 // Attack:
 			if(instance_is(target, hitme)){
 				sound_play_hit_ext(sndExplosionS, 1.5, 1.2);
-				with(projectile_create(target.x, target.y, "BubbleExplosionSmall", point_direction(x, y, target.x, target.y), 5)){
-					repeat(2) scrFX(x, y, [direction + orandom(30), 3], Smoke);
-					image_angle = 0;
-					friction = 1;
-					x -= hspeed;
-					y -= vspeed;
+				
+				var	_len = 8,
+					_dir = point_direction(x, y, target.x, target.y);
+					
+				for(var _ang = _dir; _ang < _dir + 360; _ang += (360 / 3)){
+					with(projectile_create(
+						target.x - lengthdir_x(8, _dir) + lengthdir_x(_len, _ang),
+						target.y - lengthdir_y(8, _dir) + lengthdir_y(_len, _ang),
+						"BubbleExplosionSmall",
+						_dir + orandom(20),
+						6
+					)){
+						repeat(2) scrFX(x, y, [direction + orandom(30), 3], Smoke);
+						image_angle = 0;
+						friction = 0.75;
+						x -= hspeed;
+						y -= vspeed;
+					}
 				}
 			}
 			
@@ -1814,6 +1826,8 @@
 						_num = 3 + (crown_current == crwn_death),
 						_l   = 8;
 						
+					projectile_create(x, y, "BubbleExplosion", 0, 0);
+					
 					for(var _d = _ang; _d < _ang + 360; _d += (360 / _num)){
 						projectile_create(x + lengthdir_x(_l, _d), y + lengthdir_y(_l, _d), "BubbleExplosionSmall", 0, 0);
 					}
