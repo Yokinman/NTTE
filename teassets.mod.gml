@@ -277,6 +277,14 @@
 			AnglerLight      = sprite(p + "sprAnglerLight",   4, 80, 80);
 			msk.AnglerHidden =[sprite(p + "mskAnglerHidden1", 1, 32, 32),
 			                   sprite(p + "mskAnglerHidden2", 1, 32, 32)];
+			                   
+			 // Angler (Gold):
+			p = m + "GoldAngler/";
+			GoldAnglerIdle   = sprite(p + "sprGoldAnglerIdle",   8, 32, 32);
+			GoldAnglerWalk   = sprite(p + "sprGoldAnglerWalk",   8, 32, 32);
+			GoldAnglerHurt   = sprite(p + "sprGoldAnglerHurt",   3, 32, 32);
+			GoldAnglerDead   = sprite(p + "sprGoldAnglerDead",   7, 32, 32);
+			GoldAnglerAppear = sprite(p + "sprGoldAnglerAppear", 4, 32, 32);
 			
 			 // Baby Gator:
 			p = m + "BabyGator/";

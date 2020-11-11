@@ -9,10 +9,10 @@
 
 #define skin_race      return "fish";
 #define skin_name      return ((argument_count <= 0 || argument0) ? "ABYSSAL" : skin_lock());
-#define skin_lock      return "TBA";
-#define skin_unlock    return "HOW";
+#define skin_lock      return "DEFEAT A @yGOLD ANGLER";
+#define skin_unlock    return "FOR DEFEATING A @yGOLD ANGLER";
 #define skin_ttip      return choose("SO BRIGHT OUT", "MISSED THE SUN", "SHAPED BY THE DEPTHS", "LOST YOUR MIND");
-#define skin_avail     return true; // unlock_get("skin:" + mod_current);
+#define skin_avail     return unlock_get("skin:" + mod_current);
 #define skin_portrait  return spr.FishAnglerPortrait;
 #define skin_mapicon   return spr.FishAnglerMapIcon;
 

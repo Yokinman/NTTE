@@ -1433,12 +1433,19 @@
 	}
 	
 	 // Colorize:
-	var _col = area_get_back_color(area);
-	area_color =  make_color_hsv(
-		color_get_hue(_col),
-		color_get_saturation(_col),
-		lerp(color_get_value(_col), 255, 0.5)
-	);
+	switch(area){
+		case area_hq:
+			area_color = make_color_rgb(0, 255, 255);
+			break;
+		
+		default:
+			var _col = area_get_back_color(area);
+			area_color =  make_color_hsv(
+				color_get_hue(_col),
+				color_get_saturation(_col),
+				lerp(color_get_value(_col), 255, 0.5)
+			);
+	}
 	
 #define CrystalHeartBullet_step
 	if(setup) CrystalHeartBullet_setup();
@@ -1453,8 +1460,8 @@
 	speed = min(speed, maxspeed);
 	
 	 // Effects:
-	if(area == "red" && chance_ct(2, 3)){
-		with(scrFX([x, 6], [y, 6], random(1), LaserCharge)){
+	if((area == "red" || area == area_hq) && chance_ct(2, 3)){
+		with(scrFX([x, 6], [y, 6], random(1), (area == area_hq ? IDPDPortalCharge : LaserCharge))){
 			alarm0 = 5 + random(15);
 		}
 	}
@@ -1471,6 +1478,15 @@
 	 // Coast:
 	if(!place_meeting(x, y, Floor)){
 		instance_destroy();
+	}
+	
+	 // Shielder Interaction:
+	if(deflected && hitid == 58 && team == 3){
+		if(area != area_hq){
+			area = area_hq;
+			subarea  = min(subarea, 2);
+			CrystalHeartBullet_setup();
+		}
 	}
 	
 #define CrystalHeartBullet_draw

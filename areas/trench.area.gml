@@ -138,10 +138,28 @@
 	 // Enable Area:
 	variable_instance_set(GameCont, "ntte_active_" + mod_current, true);
 	
-	 // Anglers:
-	with(RadChest) if(chance(1, 40)){
-		obj_create(x, y, "Angler");
-		instance_delete(id);
+	 // Gold Anglers:
+	if(true || GameCont.norads > 0){
+		floor_set_align(null, null, 32, 32);
+		floor_set_style(0, null);
+		
+		with(RadChest){
+			
+			 // Ensure Land:
+			var o = 32;
+			with(instances_matching(FloorNormal, "styleb", true)){
+				if(instance_near(x + 16, y + 16, other, (random_range(2, 3) * o))){
+					floor_set(x, y, true);
+				}
+			}
+			
+			 // Man of the Hour:
+			obj_create(x, y, "GoldAngler");
+			instance_delete(id);
+		}
+		
+		floor_reset_align();
+		floor_reset_style();
 	}
 	
 	/*

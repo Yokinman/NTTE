@@ -61,6 +61,7 @@
 		maxspeed    = 3;
 		hiding      = true;
 		ammo        = 0;
+		gold		= false;
 		
 		 // Alarms:
 		alarm1 = 30 + irandom(30);
@@ -132,6 +133,11 @@
 			}
 			sprite_index = spr_hurt; // Temporary?
 			image_index = 1;
+			
+			 // Gold:
+			if(gold){
+				
+			}
 		}
 		else if(ammo == 0){
 			ammo = -1;
@@ -224,11 +230,29 @@
 		
 		 // most important part
 		if(raddrop > 0){
-			repeat(raddrop) with(instance_create(_x, _y, Rad)){
-				motion_add(random(360), random(5));
-				motion_add(other.direction, min(other.speed / 3, 3));
+			var _minID = GameObject.id;
+			if(gold){
+				var _numRad = 2,
+					_radVal = 10;
+					
+				while(_numRad > 0 && raddrop >= _radVal){
+					instance_create(_x, _y, BigRad);
+					raddrop -= _radVal;
+					_numRad--;
+				}
 			}
-			raddrop = 0;
+			if(raddrop > 0){
+				repeat(raddrop){
+					instance_create(_x, _y, Rad);
+				}
+				raddrop = 0;
+			}
+			
+			 // Schmove:
+			with(instances_matching_gt([Rad, BigRad], "id", _minID)){
+				motion_add(random(360), random(5));
+				motion_add(other.direction, min(other.speed / 3, 3));				
+			}
 		}
 		
 		 // Effects:
@@ -236,6 +260,9 @@
 		with(instance_create(_x, _y, ExploderExplo)){
 			motion_add(other.direction, 1);
 		}
+		
+	 // Angler Fish Skin Unlock:
+	if(gold && player_count_race("fish") > 0 && !unlock_get("skin:angler fish")) unlock_set("skin:angler fish", true);
 		
 #define scrAnglerAppear()
 	hiding = false;
@@ -969,6 +996,30 @@
 	}
 	
 	
+#define GoldAngler_create(_x, _y)
+	with(obj_create(_x, _y, "Angler")){
+		 // Visual:
+		spr_idle     = spr.GoldAnglerIdle;
+		spr_walk     = spr.GoldAnglerWalk;
+		spr_hurt     = spr.GoldAnglerHurt;
+		spr_dead     = spr.GoldAnglerDead;
+		spr_appear   = spr.GoldAnglerAppear;
+		sprite_index = spr_appear;
+		hitid		 = [spr_idle, "GOLD ANGLER"];
+		
+		 // Sounds:
+		snd_hurt = sndSuperFireballerHurt;
+		
+		 // Vars:
+		meleedamage = 6;
+		maxhealth	= 100;
+		my_health   = maxhealth;
+		raddrop 	= 45;
+		gold		= true;
+		
+		return id;
+	}
+
 #define Jelly_create(_x, _y)
 	/*
 		A standard Trench enemy that floats around and fires lightning rings at the Player
@@ -4475,7 +4526,7 @@
 		
 		 // Gather Instances:
 		if(instance_exists(CustomEnemy)){
-			_inst[0] = instances_matching(instances_matching(instances_matching(CustomEnemy, "name", "Angler"), "hiding", false), "visible", true);
+			_inst[0] = instances_matching(instances_matching(instances_matching(CustomEnemy, "name", "Angler", "GoldAngler"), "hiding", false), "visible", true);
 		}
 		if(instance_exists(Player)){
 			_inst[1] = instances_matching(instances_matching(Player, "bskin", "angler fish"), "visible", true);
