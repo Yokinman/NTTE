@@ -54,6 +54,7 @@
 		mask_index  = -1;
 		maxhealth   = 50;
 		raddrop     = 25;
+		rad_max		= raddrop;
 		meleedamage = 4;
 		size        = 3;
 		walk        = 0;
@@ -62,9 +63,11 @@
 		hiding      = true;
 		ammo        = 0;
 		gold		= false;
+		// rad_paths	= [];
 		
 		 // Alarms:
 		alarm1 = 30 + irandom(30);
+		alarm2 = -1;
 		
 		 // Hide:
 		scrAnglerHide();
@@ -75,6 +78,7 @@
 #define Angler_step
 	 // Alarms:
 	if(alarm1_run) exit;
+	if(alarm2_run) exit;
 	
 	 // Movement:
 	enemy_walk(walkspeed, maxspeed + (8 * (ammo >= 0 && walk > 0)));
@@ -95,6 +99,7 @@
 		 // Charging Up:
 		if(ammo >= 0){
 			speed *= power(0.85, current_time_scale);
+			wall_clear(x + hspeed, y + vspeed);
 		}
 	}
 	
@@ -110,7 +115,7 @@
 	
 	 // Hiding:
 	if(hiding){
-		if(instance_seen(x, y, target) && instance_near(x, y, target, 48)){
+		if(instance_seen(x, y, target) && instance_near(x, y, target, ((gold && my_health < maxhealth) ? 96 : 48))){
 			scrAnglerAppear(); // Unhide
 		}
 	}
@@ -119,11 +124,11 @@
 		 // Charging:
 		if(ammo > 0){
 			ammo--;
-			alarm1 = 8;
+			alarm1 = (gold ? 8 : 8);
 			
 			 // Charge:
-			scrWalk((instance_seen(x, y, target) ? point_direction(x, y, target.x, target.y) : direction) + orandom(40), 5);
-			speed = maxspeed + 10;
+			scrWalk((instance_seen(x, y, target) ? point_direction(x, y, target.x, target.y) : direction) + orandom(40), (gold ? 5 : 5));
+			speed = maxspeed + (gold ? 20 : 10);
 			
 			 // Effects:
 			sound_play_pitchvol(sndRoll, 1.4 + random(0.4), 1.2);
@@ -136,7 +141,7 @@
 			
 			 // Gold:
 			if(gold){
-				
+				wall_clear(x + hspeed, y + vspeed);
 			}
 		}
 		else if(ammo == 0){
@@ -152,10 +157,11 @@
 			alarm1 = 20 + irandom(20);
 			
 			 // Move Toward Player:
-			if(instance_seen(x, y, target) && instance_near(x, y, target, 96)){
+			if((gold || instance_seen(x, y, target)) && instance_near(x, y, target, (gold ? 192 : 96))){
 				scrWalk(point_direction(x, y, target.x, target.y) + orandom(20), [25, 50]);
 				if(chance(1, 2)){
-					ammo = irandom_range(1, 3);
+					ammo = irandom_range(1, 3) + (2 * gold);
+					if(gold) alarm1 /= 3;
 				}
 			}
 			
@@ -173,6 +179,32 @@
 					scrAnglerHide();
 				}
 			}
+		}
+	}
+	
+#define Angler_alrm2
+	alarm2 = 2 + random(4);
+	
+	 // Call Rads to Heal:
+	if(!hiding && my_health <= maxhealth){
+		if(instance_exists(Rad) || instance_exists(BigRad)){
+			var _inst = instances_matching([Rad, BigRad], "goldanglerradattract_check", null);
+			
+			if(array_length(_inst)){
+				with(instance_nearest_array(x, y, _inst)){
+					goldanglerradattract_check = true;
+					rad_path(id, other);
+				}
+			}
+		}
+	}
+	
+	 // Heal Up:
+	if(raddrop > rad_max){
+		repeat(min(irandom_range(1, 3), (raddrop - rad_max))){
+			raddrop--;
+			my_health++;
+			instance_create(x + orandom(16), y + orandom(12), HorrorTB);
 		}
 	}
 	
@@ -194,9 +226,9 @@
 	}
 	
 	 // Emergency:
-	if(my_health < 30 && chance(2, 3) && ammo < 0){
+	if(my_health < (maxhealth * 3/5) && chance(2, 3) && ammo < 0){
 		walk   = 0;
-		ammo   = 1;
+		ammo   = 1 + gold;
 		alarm1 = 4;
 	}
 	
@@ -217,7 +249,7 @@
 		with(corpse_drop(direction + orandom(10), speed + random(2))){
 			x = _x;
 			y = _y;
-			sprite_index = sprRadChestCorpse;
+			sprite_index = (other.gold ? sprRadChestBigDead : sprRadChestCorpse);
 			mask_index = -1;
 			size = 2;
 		}
@@ -260,7 +292,7 @@
 		with(instance_create(_x, _y, ExploderExplo)){
 			motion_add(other.direction, 1);
 		}
-		
+	
 	 // Angler Fish Skin Unlock:
 	if(gold && player_count_race("fish") > 0 && !unlock_get("skin:angler fish")) unlock_set("skin:angler fish", true);
 		
@@ -272,11 +304,11 @@
 	spr_shadow = shd64B;
 	spr_shadow_y = 3;
 	spr_shadow_x = 0;
-	instance_create(x, y, PortalClear);
+	wall_clear(x, y);
 	
 	 // Time 2 Charge
 	alarm1 = 15 + orandom(2);
-	ammo = 3;
+	ammo = 3 + (2 * gold);
 	
 	 // Effects:
 	sound_play_pitch(sndBigBanditMeleeStart, 0.8 + random(0.2));
@@ -288,7 +320,7 @@
 	}
 	
 	 // Call the bros:
-	with(instances_matching(object_index, "name", name)){
+	with(instances_matching(object_index, "name", "Angler")){
 		if(hiding && chance(1, 2) && instance_near(x, y, other, 64)){
 			scrAnglerAppear();
 		}
@@ -1012,10 +1044,15 @@
 		
 		 // Vars:
 		meleedamage = 6;
-		maxhealth	= 100;
+		maxhealth	= 110;
 		my_health   = maxhealth;
 		raddrop 	= 45;
+		rad_max		= raddrop;
 		gold		= true;
+		maxspeed	= 4;
+		
+		 // Alarms:
+		alarm2 = 90;
 		
 		return id;
 	}
