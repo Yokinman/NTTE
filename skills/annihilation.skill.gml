@@ -153,6 +153,14 @@
 			if(_add){
 				array_push(annihilation_list, self);
 			}
+			
+			 // Popup Text:
+			with(Player){
+				with(instance_create(x, y, PopupText)){
+					target = other.index;
+					text   = `${instance_get_name(_inst)} @(color:${area_get_back_color("red")})ANNIHILATED!`;
+				}
+			}
 		}
 	}
 	

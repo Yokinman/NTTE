@@ -71,9 +71,13 @@
 		
 		 // Spawn Enemies:
 		instance_create(x, y, PortalClear);
-		if(!instance_near(x, y, Player, 96) && place_meeting(x, y, Floor)){
+		if(place_meeting(x, y, Floor)){
 			repeat(choose(2, 3)){
-				obj_create(x, y, ((GameCont.area == area_cursed_caves) ? "InvCrystalBat" : "CrystalBat"));
+				obj_create(x, y, 
+					instance_near(x, y, Player, 96)
+					? "Spiderling"
+					: ((GameCont.area == area_cursed_caves) ? "InvCrystalBat" : "CrystalBat")
+				);
 			}
 		}
 		
@@ -208,7 +212,7 @@
 				move_contact_solid(gunangle + 180, 10000);
 				instance_create(x, y, Smoke);
 				xprevious = x;
-				yprevious = y;
+				yprevious = y; // bro what did u do
 			}
 			else{
 				x = xprevious;
