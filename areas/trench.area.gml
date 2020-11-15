@@ -139,7 +139,7 @@
 	variable_instance_set(GameCont, "ntte_active_" + mod_current, true);
 	
 	 // Gold Anglers:
-	if(true || GameCont.norads > 0){
+	if(GameCont.norads > 0){
 		floor_set_align(null, null, 32, 32);
 		floor_set_style(0, null);
 		
