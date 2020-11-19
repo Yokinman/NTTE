@@ -285,6 +285,7 @@
 			GoldAnglerHurt    = sprite(p + "sprGoldAnglerHurt",    3, 32, 32);
 			GoldAnglerDead    = sprite(p + "sprGoldAnglerDead",    7, 32, 32);
 			GoldAnglerAppear  = sprite(p + "sprGoldAnglerAppear",  4, 32, 32);
+			GoldAnglerScreech = sprite(p + "sprGoldAnglerScreech", 8, 48, 48);
 			
 			 // Baby Gator:
 			p = m + "BabyGator/";

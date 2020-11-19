@@ -139,7 +139,7 @@
 	variable_instance_set(GameCont, "ntte_active_" + mod_current, true);
 	
 	 // Gold Anglers:
-	if(true || GameCont.norads > 0){
+	if(GameCont.norads > 0){
 		floor_set_align(null, null, 32, 32);
 		floor_set_style(0, null);
 		
@@ -335,13 +335,21 @@
 	var	_x = x + 16,
 		_y = y + 16;
 		
-	if(GameCont.loops > 0 && chance(1, 3)){
+	if(GameCont.loops > 0 && chance(1, 4)){
+		if(styleb && chance(1, 3)){
+			instance_create(_x, _y, LightningCrystal);
+		}
+		else{
+			obj_create(_x, _y, "CrystalBat");
+		}
+		/*
 		if(chance(1, 5)){
 			instance_create(_x, _y, FireBaller);
 		}
 		else{
 			instance_create(_x, _y, choose(LaserCrystal, Salamander));
 		}
+		*/
 	}
 	else{
 		 // Anglers:

@@ -54,7 +54,7 @@
 		mask_index  = -1;
 		maxhealth   = 50;
 		raddrop     = 25;
-		rad_max		= raddrop;
+		// rad_max		= raddrop;
 		meleedamage = 4;
 		size        = 3;
 		walk        = 0;
@@ -67,7 +67,7 @@
 		
 		 // Alarms:
 		alarm1 = 30 + irandom(30);
-		alarm2 = -1;
+		// alarm2 = -1;
 		
 		 // Hide:
 		scrAnglerHide();
@@ -78,7 +78,7 @@
 #define Angler_step
 	 // Alarms:
 	if(alarm1_run) exit;
-	if(alarm2_run) exit;
+	// if(alarm2_run) exit;
 	
 	 // Movement:
 	enemy_walk(walkspeed, maxspeed + (8 * (ammo >= 0 && walk > 0)));
@@ -142,6 +142,12 @@
 			 // Gold:
 			if(gold){
 				wall_clear(x + hspeed, y + vspeed);
+				with(projectile_create(x, y, "BatScreech", 0, 0)){
+					sprite_index = spr.GoldAnglerScreech;
+					image_xscale = 0.5;
+					image_yscale = 0.5;
+					image_index  = 1;
+				}
 			}
 		}
 		else if(ammo == 0){
@@ -161,7 +167,7 @@
 				scrWalk(point_direction(x, y, target.x, target.y) + orandom(20), [25, 50]);
 				if(chance(1, 2)){
 					ammo = irandom_range(1, 3) + (2 * gold);
-					if(gold) alarm1 /= 3;
+					if(gold) alarm1 *= 2/5;
 				}
 			}
 			
@@ -181,8 +187,9 @@
 			}
 		}
 	}
-	
-#define Angler_alrm2
+
+/*	
+/// #define Angler_alrm2
 	alarm2 = 2 + random(4);
 	
 	 // Call Rads to Heal:
@@ -207,12 +214,20 @@
 			instance_create(x + orandom(16), y + orandom(12), HorrorTB);
 		}
 	}
+*/
 	
 #define Angler_hurt(_hitdmg, _hitvel, _hitdir)
 	my_health -= _hitdmg;          // Damage
 	nexthurt = current_frame + 6;  // I-Frames
 	motion_add(_hitdir, _hitvel);  // Knockback
-	sound_play_hit(snd_hurt, 0.3); // Sound
+	
+	 // Sounds:
+	if(gold){
+		sound_play_hit_ext(sndEnergyHammerUpg, 0.8 + random(0.2), 0.7);
+		sound_play_hit_ext(sndSwapGold, 	   0.9 + random(0.2), 0.4);
+		sound_play_hit_ext(snd_hurt,		   0.7 + random(0.2), 1);
+	}
+	else sound_play_hit(snd_hurt, 0.3);
 	
 	 // Appear:
 	if(my_health > 0 && hiding){
@@ -293,8 +308,17 @@
 			motion_add(other.direction, 1);
 		}
 	
-	 // Angler Fish Skin Unlock:
-	if(gold && player_count_race("fish") > 0 && !unlock_get("skin:angler fish")) unlock_set("skin:angler fish", true);
+	 // Gold:
+	if(gold){
+		
+		 // Sounds:
+		sound_play_hit_ext(sndEnergyHammerUpg, 0.9, 0.9);
+		audio_sound_gain(sound_play_hit_ext(sndLilHunterDeath, 0.5, 1.1), 0, 2500);
+		audio_sound_set_track_position(sound_play_hit_ext(sndNothing2DeadStart, 1, 0.5), 1);
+		
+		 // Angler Fish Skin Unlock:
+		if(player_count_race("fish") > 0 && !unlock_get("skin:angler fish")) unlock_set("skin:angler fish", true);
+	}
 		
 #define scrAnglerAppear()
 	hiding = false;
@@ -321,9 +345,21 @@
 	
 	 // Call the bros:
 	with(instances_matching(object_index, "name", "Angler")){
-		if(hiding && chance(1, 2) && instance_near(x, y, other, 64)){
+		if((hiding && chance(1, 2) && instance_near(x, y, other, 64)) || other.gold){
 			scrAnglerAppear();
 		}
+	}
+	
+	 // Screech:
+	if(gold){
+		with(projectile_create(x, y, "BatScreech", 0, 0)){
+			sprite_index = spr.GoldAnglerScreech;
+		}
+		
+		 // Sounds:	
+		sound_play_hit_ext(sndEnergyHammerUpg, 0.9, 0.9);
+		audio_sound_gain(sound_play_hit_ext(sndLilHunterLaunch, 0.5, 1.1), 0, 750);
+		audio_sound_set_track_position(sound_play_hit_ext(sndNothing2DeadStart, 1, 0.75), 1);
 	}
 	
 #define scrAnglerHide()
@@ -1039,20 +1075,17 @@
 		sprite_index = spr_appear;
 		hitid		 = [spr_idle, "GOLD ANGLER"];
 		
-		 // Sounds:
-		snd_hurt = sndSuperFireballerHurt;
+		// Sounds:
+		snd_hurt = sndFreakPopoHurt;
 		
 		 // Vars:
-		meleedamage = 6;
+		// meleedamage = 6;
 		maxhealth	= 110;
 		my_health   = maxhealth;
 		raddrop 	= 45;
-		rad_max		= raddrop;
+		// rad_max		= raddrop;
 		gold		= true;
 		maxspeed	= 4;
-		
-		 // Alarms:
-		alarm2 = 90;
 		
 		return id;
 	}
