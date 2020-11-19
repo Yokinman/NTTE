@@ -20,9 +20,9 @@
 	ntte_obj_list[? "tecoast"    ] = ["BloomingAssassin", "BloomingAssassinHide", "BloomingBush", "BloomingCactus", "BuriedCar", "ClamShield", "ClamShieldSlash", "CoastBigDecal", "CoastDecal", "CoastDecalCorpse", "Creature", "Diver", "DiverHarpoon", "Gull", "Harpoon", "HarpoonStick", "NetNade", "Palanking", "PalankingDie", "PalankingSlash", "PalankingSlashGround", "PalankingToss", "Palm", "Pelican", "Seal", "SealAnchor", "SealDisc", "SealHeavy", "SealMine", "TrafficCrab", "Trident"];
 	ntte_obj_list[? "teoasis"    ] = ["BubbleBomb", "BubbleExplosion", "BubbleExplosionSmall", "BubbleSlash", "CrabTank", "HammerShark", "HyperBubble", "OasisPetBecome", "Puffer", "SunkenRoom", "SunkenSealSpawn", "WaterStreak"];
 	ntte_obj_list[? "tetrench"   ] = ["Angler", "Eel", "EelSkull", "ElectroPlasma", "ElectroPlasmaBig", "ElectroPlasmaImpact", "GoldAngler", "Jelly", "JellyElite", "Kelp", "LightningDisc", "LightningDiscEnemy", "PitSpark", "PitSquid", "PitSquidArm", "PitSquidBomb", "PitSquidDeath", "QuasarBeam", "QuasarRing", "TeslaCoil", "TopDecalWaterMine", "TrenchFloorChunk", "Vent", "WantEel"];
-	ntte_obj_list[? "tesewers"   ] = ["AlbinoBolt", "AlbinoGator", "AlbinoGrenade", "BabyGator", "Bat", "BatBoss", "BatCloud", "BatDisc", "BatScreech", "BoneGator", /*"BossHealFX",*/ "Cabinet", "Cat", "CatBoss", "CatBossAttack", "CatDoor", "CatDoorDebris", "CatGrenade", "CatHole", "CatHoleBig", "CatHoleOpen", "CatLight", "ChairFront", "ChairSide", "Couch", "GatorStatue", "GatorStatueFlak", "Manhole", "NewTable", "Paper", "PizzaDrain", "PizzaManholeCover", "PizzaRubble", "PizzaTV", "SewerDrain", "SewerRug", "TurtleCool"];
+	ntte_obj_list[? "tesewers"   ] = ["AlbinoBolt", "AlbinoGator", "AlbinoGrenade", "BabyGator", "Bat", "BatBoss", "BatCloud", "BatDisc", "BatScreech", "BoneGator", /*"BossHealFX",*/ "Cabinet", "Cat", "CatBoss", "CatBossAttack", "CatDoor", "CatDoorDebris", "CatGrenade", "CatHole", "CatHoleBig", "CatLight", "ChairFront", "ChairSide", "Couch", "GatorStatue", "GatorStatueFlak", "Manhole", "ManholeOpen", "NewTable", "Paper", "PizzaDrain", "PizzaManholeCover", "PizzaRubble", "PizzaTV", "SewerDrain", "SewerRug", "TurtleCool"];
 	ntte_obj_list[? "tescrapyard"] = ["BoneRaven", "SawTrap", "SludgePool", "TopRaven", "TrapSpin", "Tunneler"];
-	ntte_obj_list[? "tecaves"    ] = ["BigCrystalProp", "CaveHole", "ChaosHeart", "CrystalBat", "CrystalBrain", "CrystalBrainDeath", "CrystalClone", "CrystalHeart", "CrystalHeartBullet", "CrystalPropRed", "CrystalPropWhite", "EnergyBatSlash", "InvCrystalBat", "InvMortar", "MinerBandit", "Mortar", "MortarPlasma", "NewCocoon", "PlasmaImpactSmall", "RedBullet", "RedExplosion", "RedShank", "RedSlash", "RedSpider", "Spiderling", "TwinOrbital", "VlasmaBullet", "VlasmaCannon", "WallFake", "Warp", "WarpPortal"];
+	ntte_obj_list[? "tecaves"    ] = ["BigCrystalProp", "ChaosHeart", "CrystalBat", "CrystalBrain", "CrystalBrainDeath", "CrystalClone", "CrystalHeart", "CrystalHeartBullet", "CrystalPropRed", "CrystalPropWhite", "EnergyBatSlash", "InvCrystalBat", "InvMortar", "MinerBandit", "Mortar", "MortarPlasma", "NewCocoon", "PlasmaImpactSmall", "RedBullet", "RedExplosion", "RedShank", "RedSlash", "RedSpider", "Spiderling", "TwinOrbital", "VlasmaBullet", "VlasmaCannon", "WallFake", "Warp", "WarpPortal"];
 	ntte_obj_list[? "telabs"     ] = ["Button", "ButtonChest", "ButtonOld", "ButtonPickup", "ButtonReviveArea", "FreakChamber", "MutantVat", "PickupReviveArea", "PopoSecurity", "WallSlide"];
 	
 	 // Object Create Event Script References:
@@ -760,10 +760,13 @@
 	return _string;
 	
 #define scrWalk(_dir, _walk)
-	walk = (is_array(_walk) ? random_range(_walk[0], _walk[1]) : _walk);
-	speed = max(speed, friction);
+	walk      = (is_array(_walk) ? random_range(_walk[0], _walk[1]) : _walk);
+	speed     = max(speed, friction);
 	direction = _dir;
-	if("gunangle" not in self) scrRight(direction);
+	
+	if("gunangle" not in self){
+		scrRight(direction);
+	}
 	
 #define scrRight(_dir)
 	_dir = ((_dir % 360) + 360) % 360;
@@ -1542,7 +1545,7 @@
 	*/
 	
 	if(instance_exists(Portal)){
-		var _inst = instances_matching_ge(instances_matching(instances_matching(instances_matching(Portal, "object_index", Portal), "type", 1, 3), "endgame", 100), "image_alpha", 1);
+		var _inst = instances_matching(instances_matching(instances_matching(instances_matching(Portal, "object_index", Portal), "type", 1, 3), "endgame", 100), "image_alpha", 1);
 		if(array_length(_inst)) with(_inst){
 			if(!place_meeting(x, y, Player)){
 				//sound_stop(sndPortalClose);
@@ -1906,8 +1909,8 @@
 				case Bullet1      : _name = "Bullet";            break;
 				case Bullet2      : _name = "Shell";             break;
 				case EnemyBullet1 : _name = "Enemy Bullet";      break;
-				case EnemyBullet2 : _name = "Enemy Shell";       break;
-				case EnemyBullet3 : _name = "Venom";             break;
+				case EnemyBullet2 : _name = "Venom";             break;
+				case EnemyBullet3 : _name = "Enemy Shell";       break;
 				case EnemyBullet4 : _name = "Sniper Bullet";     break;
 				case EFlakBullet  : _name = "Enemy Flak Bullet"; break;
 				case PlasmaBig    : _name = "Big Plasma";        break;
@@ -2823,7 +2826,12 @@
 		 // Call Funny Mod Scripts:
 		if(_setArea){
 			with(mod_get_names("mod")){
-				mod_script_call_nc("mod", self, "level_start");
+				try{
+					mod_script_call_nc("mod", self, "level_start");
+				}
+				catch(_error){
+					trace(_error);
+				}
 			}
 		}
 		
@@ -2958,7 +2966,7 @@
 	
 #define area_get_name(_area, _subarea, _loops)
 	/*
-		Returns the current area's name as it would appear on the map
+		Returns the given area's name as it would appear on the map
 	*/
 	
 	var _name = [_area, "-", _subarea];
@@ -2975,7 +2983,7 @@
 	}
 	
 	 // Secret Area:
-	else if(real(_area) >= 100){
+	else if(area_get_secret(_area)){
 		switch(_area){
 			case area_vault : _name = ["???"];             break;
 			case area_hq    : _name = ["HQ", _subarea];    break;
@@ -2987,7 +2995,7 @@
 	 // Victory:
 	if(GameCont.win == true){
 		if(_area == area_palace || _area == area_hq){
-			_name = ["END", (_area >= 100) ? 2 : 1];
+			_name = ["END", (area_get_secret(_area) ? 2 : 1)];
 		}
 	}
 	

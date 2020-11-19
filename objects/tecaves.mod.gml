@@ -5,14 +5,14 @@
 	
 	 // Bind Events:
 	global.wall_fake_bind = [
-		script_bind("WallFakeBotDraw", CustomDraw, script_ref_create(draw_wall_fake, "Bot"), 4,                            false),
+		script_bind("WallFakeBotDraw", CustomDraw, script_ref_create(draw_wall_fake, "Bot"), 4,                                false),
 		script_bind("WallFakeTopDraw", CustomDraw, script_ref_create(draw_wall_fake, "Top"), object_get_depth(SubTopCont) + 1, false)
 	];
 	global.wall_fake_bind_reveal = [];
 	with(global.wall_fake_bind){
 		array_push(
 			global.wall_fake_bind_reveal,
-			script_bind(name + "Reveal", object, script_ref_create(draw_wall_fake_reveal), depth - 1, visible)
+			script_bind(name + "Reveal", object, script_ref_create(draw_wall_fake_reveal), depth - ((name == "WallFakeBotDraw") ? 2 : 1), visible)
 		);
 	}
 	global.wall_shine_bind = script_bind("WallShineDraw", CustomDraw, script_ref_create(draw_wall_shine), object_get_depth(SubTopCont), false);
@@ -51,302 +51,28 @@
 #macro clientDarknessFloor global.clientDarknessFloor
 
 #define BigCrystalProp_create(_x, _y)
-	with(instance_create(_x, _y, CustomProp)){
+	with(instance_create(_x, _y, CrystalProp)){
 		 // Visual:
-		spr_idle	 = spr.BigCrystalPropIdle;
-		spr_hurt	 = spr.BigCrystalPropHurt;
-		spr_dead	 = spr.BigCrystalPropDead;
-		spr_shadow	 = mskNone;
+		spr_idle     = spr.BigCrystalPropIdle;
+		spr_hurt     = spr.BigCrystalPropHurt;
+		spr_dead     = spr.BigCrystalPropDead;
+		spr_shadow   = -1;
 		sprite_index = spr_idle;
-		depth		 = -1;
-		
-		 // Sounds:
-		snd_hurt = sndHitRock;
-		snd_dead = sndCrystalPropBreak;
+		depth        = -1;
 		
 		 // Vars:
-		mask_index = -1;
-		maxhealth  = 48;
-		size	   = 2;
+		maxhealth = 48;
+		my_health = maxhealth;
+		size      = 2;
 		
-		 // Spawn Enemies:
+		 // Enemies:
 		instance_create(x, y, PortalClear);
-		if(!instance_near(x, y, Player, 96) && place_meeting(x, y, Floor)){
-			repeat(choose(2, 3)){
-				obj_create(x, y, ((GameCont.area == area_cursed_caves) ? "InvCrystalBat" : "CrystalBat"));
-			}
+		repeat(choose(2, 3)){
+			obj_create(x, y, ((GameCont.area == area_cursed_caves) ? "InvCrystalBat" : "CrystalBat"));
 		}
 		
 		return id;
 	}
-
-#define CaveHole_create(_x, _y)
-	with(instance_create(_x, _y, CustomObject)){
-		 // Visual:
-		sprite_index = (GameCont.area == 104 ? spr.CaveHoleCursed : spr.CaveHole);
-		depth = 6;
-		
-		 // Vars:
-		mask_index = msk.CaveHole;
-		
-		return id;
-	}
-	
-#define CaveHole_step
-	var _obj = [hitme, chestprop, Pickup, Corpse, ChestOpen],
-		_dis = 4 + (min(bbox_width, bbox_height) / 2),
-		_spd = 3,
-		_oy = -6;
-		
-	y += _oy;
-	
-	for(var i = 0; i < array_length(_obj); i++){
-		if(place_meeting(x, y, _obj[i])){
-			with(instances_meeting(x, y, _obj[i])){
-				if(place_meeting(x, y, other)){
-					var _dir = point_direction(other.x, other.y, x, y);
-					
-					if(
-						instance_is(id, hitme) 
-						&& 
-						!(instance_is(id, crystaltype) || instance_is(id, HyperCrystal)) 
-						&& 
-						!(instance_is(id, CustomEnemy) && ("name" in self) && (name == "CrystalBat" || name == "InvCrystalBat"))
-						&&
-						point_distance(x, y, other.x, other.y) < _dis
-					){
-						x = other.x + lengthdir_x(_dis, _dir);
-						y = other.y + lengthdir_y(_dis, _dir);
-						direction = angle_lerp(direction, _dir, 1/12);
-					}
-					
-					else{
-						if(speed < _spd){
-							if(friction > 0){
-								motion_add_ct(_dir, friction + 0.4);
-							}
-							else{
-								x += lengthdir_x(_spd - 0.4, _dir);
-								y += lengthdir_y(_spd - 0.4, _dir);
-							}
-						}
-					}
-				}
-			}
-		}
-	}
-	
-	y -= _oy;
-
-
-#define CrystalBat_create(_x, _y)
-	/*
-		An enemy for the Crystal Caves, charges at the player in cardinal directions only
-	*/
-	
-	with(instance_create(_x, _y, CustomEnemy)){
-		 // Visual:
-		spr_idle     = spr.CrystalBatIdle;
-		spr_walk     = spr.CrystalBatIdle;
-		spr_hurt     = spr.CrystalBatHurt;
-		spr_dead     = spr.CrystalBatDead;
-		spr_tell     = spr.CrystalBatTell;
-		spr_dash     = spr.CrystalBatDash;
-		spr_shadow   = shd24;
-		spr_shadow_y = 4;
-		hitid        = [spr_idle, "CRYSTAL BAT"];
-		sprite_index = spr_idle;
-		depth        = -2;
-		
-		 // Sounds:
-		snd_hurt = sndSpiderHurt;
-		snd_dead = sndSpiderDead;
-		snd_mele = sndSpiderMelee;
-		
-		 // Vars:
-		mask_index  = mskFreak;
-		friction    = 0.6;
-		maxhealth   = 18;
-		raddrop     = 8;
-		size        = 2;
-		walk        = 0;
-		maxspeed    = 2.4;
-		walkspeed   = 1.2;
-		canmelee    = true;
-		meleedamage = 4;
-		curse       = false;
-		gunangle    = random(360);
-		dash        = false;
-		
-		 // Alarms:
-		alarm1 = 90;
-		alarm2 = 90;
-		
-		return id;
-	}
-	
-#define CrystalBat_step
-	 // Alarms:
-	if(alarm1_run) exit;
-	if(alarm2_run) exit;
-	if(alarm3_run) exit;
-	
-	 // Animate:
-	if(anim_end && sprite_index != spr_tell && sprite_index != spr_dash){
-		sprite_index = enemy_sprite;
-	}
-	
-	 // Walkin':
-	if(walk > 0){
-		walk -= current_time_scale;
-		motion_add_ct(gunangle, (dash ? (walkspeed + 3) : walkspeed));
-		
-		motion_step(1);
-		if(place_meeting(x, y, Wall)){
-			if(curse > 0 && dash){
-				instance_create(x, y, Smoke);
-				move_contact_solid(gunangle + 180, 10000);
-				instance_create(x, y, Smoke);
-				xprevious = x;
-				yprevious = y;
-			}
-			else{
-				x = xprevious;
-				y = yprevious;
-				
-				 // Force End Dash:
-				if(dash){
-					walk = 0;
-					
-					 // Effects:
-					instance_create(x + hspeed_raw, y + vspeed_raw, Smoke);
-					audio_sound_set_track_position(sound_play_hit_ext(sndLaserCrystalHit, 1 + orandom(0.1), 1.0), 0.08);
-					audio_sound_set_track_position(sound_play_hit_ext(sndBigDogWalk,	  1 + orandom(0.1), 0.1), 0.12);
-					sleep(24);
-				}
-				
-				 // Wall Bouncin':
-				move_contact_solid(direction, walkspeed);
-				if(place_meeting(x + hspeed_raw, y, Wall)) hspeed_raw *= -1;
-				if(place_meeting(x, y + vspeed_raw, Wall)) vspeed_raw *= -1;
-				gunangle = pround(direction, 90);
-				if(!dash){
-					scrRight(gunangle);
-				}
-			}
-		}
-		motion_step(-1);
-		
-		 // Dashin':
-		if(dash){
-			image_angle = direction;
-			
-			 // Effects:
-			if(chance_ct(1, 3)){
-				instance_create(x, y, Dust);
-			}
-			 
-			 // Exit Dash:
-			if(walk <= 0){
-				dash = 0;
-				
-				alarm1 = 45;
-				alarm2 = 45;
-				
-				sprite_index = spr_hurt;
-				image_index  = 2;
-				image_angle  = 0;
-				
-				move_contact_solid(direction, walkspeed);
-			}
-		}
-	}
-	
-	var _maxSpeed = (dash ? (maxspeed + 5) : maxspeed);
-	if(speed > _maxSpeed){
-		speed = _maxSpeed;
-	}
-	
-	 // Curse Particles:
-	if(curse > 0 && chance_ct(curse, 3)){
-		instance_create(x + orandom(8), y + orandom(6), Curse);
-	}
-	
-#define CrystalBat_draw
-	var _hurt = (sprite_index != spr_hurt && nexthurt > current_frame + 3);
-	if(_hurt) draw_set_fog(true, image_blend, 0, 0);
-	draw_sprite_ext(sprite_index, image_index, x, y, (dash ? image_xscale : (image_xscale * right)), (dash ? (image_yscale * right) : image_yscale), image_angle, image_blend, image_alpha);
-	if(_hurt) draw_set_fog(false, 0, 0, 0);
-	
-#define CrystalBat_hurt(_damage, _force, _direction)
-	my_health -= _damage;
-	nexthurt = current_frame + 6;
-	motion_add(_direction, _force);
-	sound_play_hit(snd_hurt, 0.3);
-	
-	 // Hurt Sprite:
-	if(sprite_index != spr_tell && sprite_index != spr_dash){
-		sprite_index = spr_hurt;
-		image_index  = 0;
-	}
-	
-#define CrystalBat_alrm1
-	alarm1 = 40 + random(20);
-	
-	 // Walk:
-	gunangle = pround(random(360), 90);
-	direction = gunangle;
-	
-	walk = 30 + random(30);
-	speed = max(speed, friction);
-	
-	scrRight(gunangle);
-	
-#define CrystalBat_alrm2
-	alarm2 = 10;
-	
-	if(enemy_target(x, y)){
-		if(instance_seen(x, y, target)){
-			if(instance_near(x, y, target, 160)){
-				if(place_meeting(x, target.y, target) || place_meeting(target.x, y, target)){
-					alarm3 = 7;
-					
-					 // Sprite:
-					sprite_index = spr_tell;
-					
-					 // Motion:
-					gunangle = pround(point_direction(x, y, target.x, target.y), 90);
-					motion_set(gunangle + (180 + orandom(30)), maxspeed);
-					move_contact_solid(direction, speed);
-					scrRight(gunangle);
-					
-					 // Sounds:
-					audio_sound_set_track_position(sound_play_hit_ext(sndLaserCrystalHit, random_range(0.9, 1.1), 1),   0.08);
-					audio_sound_set_track_position(sound_play_hit_ext(sndLuckyShotProc,   random_range(0.9, 1.1), 1),   0.08); 
-					audio_sound_set_track_position(sound_play_hit_ext(sndMaggotBite, 	  random_range(1,   1.2), 0.8), 0.08);
-					
-					 // Reset:
-					alarm1 = -1;
-					alarm2 = -1;
-					walk = 0;
-				}
-			}
-		}
-	}
-	
-#define CrystalBat_alrm3
-	sprite_index = spr_dash;
-	
-	dash = true;
-	walk = 60;
-	
-	 // Start Dash:
-	move_contact_solid(gunangle, walkspeed);
-	speed = max(speed, friction);
-	
-	 // Sounds:
-	audio_sound_set_track_position(sound_play_hit_ext(sndLaserCrystalDeath, random_range(0.9, 1.1), 1),   0.4);
-	audio_sound_set_track_position(sound_play_hit_ext(sndBigMaggotBite, 	random_range(1.2, 1.4), 0.8), 0.08);
 	
 	
 #define ChaosHeart_create(_x, _y)
@@ -371,6 +97,252 @@
 		
 		return id;
 	}
+	
+
+#define CrystalBat_create(_x, _y)
+	/*
+		An enemy for the Crystal Caves, charges at the player in cardinal directions only
+	*/
+	
+	with(instance_create(_x, _y, CustomEnemy)){
+		 // Visual:
+		spr_idle     = spr.CrystalBatIdle;
+		spr_walk     = spr.CrystalBatIdle;
+		spr_hurt     = spr.CrystalBatHurt;
+		spr_dead     = spr.CrystalBatDead;
+		spr_chrg     = spr.CrystalBatTell;
+		spr_fire     = spr.CrystalBatDash;
+		spr_shadow   = shd24;
+		spr_shadow_y = 4;
+		hitid        = [spr_idle, "CRYSTAL BAT"];
+		sprite_index = spr_idle;
+		depth        = -2;
+		
+		 // Sounds:
+		snd_hurt = sndSpiderHurt;
+		snd_dead = sndSpiderDead;
+		snd_mele = sndSpiderMelee;
+		
+		 // Vars:
+		mask_index  = mskFreak;
+		friction    = 0.6;
+		maxhealth   = 18;
+		raddrop     = 8;
+		size        = 1;
+		walk        = 0;
+		walkspeed   = 1.2;
+		maxspeed    = 2.4;
+		canmelee    = false;
+		meleedamage = 5;
+		gunangle    = random(360);
+		curse       = false;
+		dash        = false;
+		
+		 // Alarms:
+		alarm1 = 90;
+		alarm2 = 90;
+		
+		return id;
+	}
+	
+#define CrystalBat_step
+	 // Alarms:
+	if(alarm1_run) exit;
+	if(alarm2_run) exit;
+	if(alarm3_run) exit;
+	
+	 // Animate:
+	if(anim_end && sprite_index != spr_chrg && sprite_index != spr_fire){
+		sprite_index = enemy_sprite;
+	}
+	
+	 // Movement:
+	if(walk > 0){
+		walk -= current_time_scale;
+		
+		var _add = walkspeed + (2 * dash);
+		motion_add_ct(gunangle, _add);
+		speed = max(speed, _add);
+		
+		 // Dashin':
+		if(dash){
+			image_angle = direction - 90;
+			
+			 // Contact Damage:
+			if(alarm11 < 0){
+				canmelee = true;
+			}
+			
+			 // Effects:
+			if(chance_ct(1, 3)){
+				if(curse > 0){
+					with(instance_create(x, y, Smoke)){
+						if(position_meeting(x, y, Wall)){
+							y -= 8;
+							depth = -7;
+						}
+					}
+				}
+				else{
+					instance_create(x, y, Dust);
+				}
+			}
+		}
+		
+		 // Wall Collision:
+		motion_step(1);
+		if(place_meeting(x, y, Wall)){
+			var _walled = true;
+			
+			 // Glitch Through Walls:
+			if(curse > 0 && dash){
+				_walled = false;
+				with(instances_meeting(x, y, Wall)){
+					if(place_meeting(x, y, other)){
+						if(collision_rectangle(bbox_left - 1, bbox_top - 1, bbox_right + 1, bbox_bottom + 1, TopSmall, false, false)){
+							_walled = true;
+							break;
+						}
+					}
+				}
+				if(!_walled){
+					xprevious = x;
+					yprevious = y;
+					canfly    = true;
+				}
+			}
+			
+			 // Hit Wall:
+			if(_walled){
+				x = xprevious;
+				y = yprevious;
+				move_contact_solid(direction, speed);
+				
+				 // Force End Dash:
+				if(dash){
+					walk = 0;
+					
+					 // Effects:
+					instance_create(x, y, Smoke);
+					audio_sound_set_track_position(sound_play_hit_ext(sndLaserCrystalHit, 1 + orandom(0.1), 1.0), 0.08);
+					audio_sound_set_track_position(sound_play_hit_ext(sndBigDogWalk,      1 + orandom(0.1), 0.1), 0.12);
+					sleep(24);
+				}
+				
+				 // Wall Bouncin':
+				if(place_meeting(x + hspeed_raw, y, Wall)) hspeed_raw *= -1;
+				if(place_meeting(x, y + vspeed_raw, Wall)) vspeed_raw *= -1;
+				scrAim(pround(direction, 90));
+				if(dash){
+					scrRight(direction + 180);
+				}
+			}
+		}
+		motion_step(-1);
+		
+		 // Dash End:
+		if(walk <= 0 && dash){
+			 // Walled, Try Again:
+			if(curse > 0 && place_meeting(x, y, Wall) && place_meeting(xprevious, yprevious, Wall)){
+				alarm3 = 1;
+			}
+			
+			 // End:
+			else{
+				dash         = false;
+				alarm1       = 45;
+				alarm2       = 45;
+				sprite_index = spr_hurt;
+				image_index  = 2;
+				image_angle  = 0;
+				
+				 // Disable Contact Damage:
+				canmelee = false;
+				alarm11  = -1;
+				
+				 // Unfly:
+				if(curse > 0){
+					canfly = false;
+				}
+			}
+		}
+	}
+	speed = min(speed, maxspeed + (5 * dash));
+	
+	 // Curse Particles:
+	if(curse > 0 && chance_ct(curse, 3)){
+		instance_create(x + orandom(8), y + orandom(6), Curse);
+	}
+	
+#define CrystalBat_draw
+	var _hurt = (sprite_index != spr_hurt && nexthurt > current_frame + 3);
+	if(_hurt) draw_set_fog(true, image_blend, 0, 0);
+	draw_self_enemy();
+	if(_hurt) draw_set_fog(false, 0, 0, 0);
+	
+#define CrystalBat_hurt(_damage, _force, _direction)
+	my_health -= _damage;
+	nexthurt = current_frame + 6;
+	motion_add(_direction, _force);
+	sound_play_hit(snd_hurt, 0.3);
+	
+	 // Hurt Sprite:
+	if(sprite_index != spr_chrg && sprite_index != spr_fire){
+		sprite_index = spr_hurt;
+		image_index  = 0;
+	}
+	
+#define CrystalBat_alrm1
+	alarm1 = 40 + random(20);
+	
+	 // Wander:
+	scrAim(pround(random(360), 90));
+	scrWalk(gunangle, [30, 60]);
+	
+#define CrystalBat_alrm2
+	alarm2 = 10;
+	
+	 // Prepare Dash:
+	if(enemy_target(x, y)){
+		if(curse > 0 || instance_seen(x, y, target)){
+			if(instance_near(x, y, target, 160)){
+				if(place_meeting(x, target.y, target) || place_meeting(target.x, y, target)){
+					alarm3 = 7;
+					
+					 // Sprite:
+					sprite_index = spr_chrg;
+					
+					 // Motion:
+					scrAim(pround(point_direction(x, y, target.x, target.y), 90));
+					motion_set(gunangle + 180 + orandom(30), maxspeed);
+					move_contact_solid(direction, speed);
+					
+					 // Sounds:
+					audio_sound_set_track_position(sound_play_hit_ext(sndLaserCrystalHit, random_range(0.9, 1.1), 1.0), 0.08);
+					audio_sound_set_track_position(sound_play_hit_ext(sndLuckyShotProc,   random_range(0.9, 1.1), 1.0), 0.08);
+					audio_sound_set_track_position(sound_play_hit_ext(sndMaggotBite,      random_range(1.0, 1.2), 0.8), 0.08);
+					
+					 // Reset:
+					alarm1 = -1;
+					alarm2 = -1;
+					walk   = 0;
+				}
+			}
+		}
+	}
+	
+#define CrystalBat_alrm3
+	 // Dash:
+	dash = true;
+	sprite_index = spr_fire;
+	scrWalk(gunangle, 60);
+	
+	 // Sounds:
+	audio_sound_set_track_position(sound_play_hit_ext(sndLaserCrystalDeath, random_range(0.9, 1.1), 1),   0.4);
+	audio_sound_set_track_position(sound_play_hit_ext(sndBigMaggotBite,     random_range(1.2, 1.4), 0.8), 0.08);
+	
+#define CrystalBat_death
+	pickup_drop(25, 0);
 	
 	
 #define CrystalBrain_create(_x, _y)
@@ -1979,13 +1951,13 @@
 	
 	with(obj_create(_x, _y, "CrystalBat")){
 		 // Visual:
-		spr_idle	 = spr.InvCrystalBatIdle;
-		spr_walk	 = spr.InvCrystalBatIdle;
-		spr_hurt	 = spr.InvCrystalBatHurt;
-		spr_dead	 = spr.InvCrystalBatDead;
-		spr_tell	 = spr.InvCrystalBatTell;
-		spr_dash	 = spr.InvCrystalBatDash;
-		hitid		 = [spr_idle, "@pC@qU@qR@qS@qE@qD @qC@qR@qY@qS@qT@qA@qL @qB@qA@qT"];
+		spr_idle     = spr.InvCrystalBatIdle;
+		spr_walk     = spr.InvCrystalBatIdle;
+		spr_hurt     = spr.InvCrystalBatHurt;
+		spr_dead     = spr.InvCrystalBatDead;
+		spr_chrg     = spr.InvCrystalBatTell;
+		spr_fire     = spr.InvCrystalBatDash;
+		hitid        = [spr_idle, "@pC@qU@qR@qS@qE@qD @qC@qR@qY@qS@qT@qA@qL @qB@qA@qT"];
 		sprite_index = spr_idle;
 		
 		 // Sounds:
@@ -3113,7 +3085,7 @@
 		 // Visual:
 		sprite_index = spr.WallRedFake[irandom(array_length(spr.WallRedFake) - 1)];
 		image_index  = 0;
-		image_speed  = 0.2 + (0.1 * sin((x / 16) + (y / 16)));
+		image_speed  = 0.4 + (0.1 * sin((x / 16) + (y / 16)));
 		depth        = 3;
 		visible      = true;
 		
@@ -3122,6 +3094,7 @@
 			solid = false;
 			with(instance_create(x, y, CustomObject)){
 				name         = "WallFakeHelper";
+				creator      = other;
 				solid        = true;
 				visible      = false;
 				sprite_index = other.sprite_index;
@@ -3574,7 +3547,7 @@
 			
 			 // Update Fake Walls:
 			with(instances_matching(CustomObject, "name", "WallFakeHelper")){
-				if(!place_meeting(x, y, Wall)){
+				if(!instance_exists(creator)){
 					instance_destroy();
 				}
 			}
@@ -3588,16 +3561,61 @@
 				visible = true;
 			}
 			
+			 // Fake Wall Collision:
+			var _inst = instances_matching(CustomObject, "name", "WallFakeHelper");
+			if(array_length(_inst)){
+				var _instMeet = [];
+				
+				 // Gather Dudes in Fake Walls:
+				with(hitme){
+					if(place_meeting(x, y, CustomObject) && array_length(instances_meeting(x, y, _inst))){
+						array_push(_instMeet, id);
+					}
+				}
+				
+				 // Disable Collision When Near Dude in a Fake Wall:
+				if(array_length(_instMeet)){
+					with(_inst){
+						var _solid = true;
+						if(distance_to_object(hitme) <= 32){
+							with(_instMeet){
+								if(distance_to_object(other) <= 32){
+									_solid = false;
+									break;
+								}
+							}
+						}
+						if(solid != _solid){
+							solid = _solid;
+							if(instance_exists(creator)){
+								creator.mask_index = (solid ? mask_index : mskNone);
+							}
+							else instance_destroy();
+						}
+					}
+				}
+				
+				 // Enable Collision:
+				else{
+					_inst = instances_matching_ne(_inst, "solid", true);
+					if(array_length(_inst)) with(_inst){
+						solid = true;
+						if(instance_exists(creator)){
+							creator.mask_index = (solid ? mask_index : mskNone);
+						}
+						else instance_destroy();
+					}
+				}
+			}
+			
 			 // Player Reveal Circles:
 			with(Player){
+				var _grow = (array_find_index(_instMeet, id) >= 0);
 				if("red_wall_fake" not in self){
 					red_wall_fake = 0;
 				}
-				
-				var _grow = (place_meeting(x, y, Wall) && array_length(instances_meeting(x, y, other.wall_inst)));
-				red_wall_fake = clamp(red_wall_fake + ((_grow ? 0.1 : -0.1) * current_time_scale), 0, 1);
-				
-				if(red_wall_fake > 0){
+				if(red_wall_fake > 0 || _grow){
+					red_wall_fake = clamp(red_wall_fake + ((_grow ? 0.1 : -0.1) * current_time_scale), 0, 1);
 					_visible = true;
 				}
 			}
@@ -3846,19 +3864,6 @@
 				}
 			}
 			
-			if(instance_exists(prop)){
-				if(instance_exists(CustomProp)){
-					
-					 // Big Crystal Prop:
-					var _inst = instances_matching(CustomProp, "name", "BigCrystalProp");
-					if(array_length(_inst)){
-						with(_inst){
-							draw_circle(x, (y - 3), 30 + (60 * _gray) + sin(current_frame / 80), false);
-						}
-					}
-				}
-			}
-			
 			 // Mortar Plasma:
 			if(instance_exists(CustomProjectile)){
 				var _inst = instances_matching(CustomProjectile, "name", "MortarPlasma");
@@ -3954,7 +3959,7 @@
 				 // Red Crystal Wall Tops:
 				wall_inst = instances_matching(wall_inst, "", null);
 				tops_inst = instances_matching(tops_inst, "", null);
-				with(wall_inst) draw_sprite_ext(topspr,       topindex,    (x - _surfX) * _surfScale, (y - 8 - _surfY) * _surfScale, _surfScale, _surfScale, 0, c_white, image_alpha);
+				with(wall_inst) draw_sprite_ext(topspr,       topindex,    (x - _surfX) * _surfScale, (y - 8 - _surfY) * _surfScale, _surfScale, _surfScale, 0, c_white, (solid ? image_alpha : (image_alpha * 0.9)));
 				with(tops_inst) draw_sprite_ext(sprite_index, image_index, (x - _surfX) * _surfScale, (y - 8 - _surfY) * _surfScale, _surfScale, _surfScale, 0, c_white, image_alpha);
 				
 			surface_reset_target();
@@ -4113,7 +4118,7 @@
 		draw_clear_alpha(0, 0);
 		
 		 // Circles:
-		var _inst = instances_matching_ne(Player, "red_wall_fake", 0);
+		var _inst = instances_matching_gt(Player, "red_wall_fake", 0);
 		if(array_length(_inst)) with(_inst){
 			draw_circle(
 				(x - other.x) * other.scale,

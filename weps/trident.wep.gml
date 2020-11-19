@@ -84,7 +84,7 @@
 		}
 		
 		 // Fully Charged - Blink:
-		else if(frame_active(12)){
+		else if((wave % 12) < current_time_scale){
 			with(_fire.creator) if(instance_is(self, Player)){
 				gunshine = 2;
 			}
@@ -92,10 +92,10 @@
 		
 		 // Pullback:
 		if(_wep.last < current_frame){
-			_wep.last = current_frame;
 			var _num = (_wep.chrg_num / _wep.chrg_max);
 			weapon_post(9 * _num, 8 * _num * current_time_scale, 0);
 		}
+		_wep.last = current_frame;
 		
 		 // Pop Pop, Blood Gamble:
 		if(_fire.spec && !_fire.roids){
@@ -292,5 +292,4 @@
 #define wep_raw(_wep)                                                                   return  mod_script_call_nc  ('mod', 'telib', 'wep_raw', _wep);
 #define wep_get(_primary, _name, _default)                                              return  variable_instance_get(self, (_primary ? '' : 'b') + _name, _default);
 #define wep_set(_primary, _name, _value)                                                        variable_instance_set(self, (_primary ? '' : 'b') + _name, _value);
-#define frame_active(_interval)                                                         return  mod_script_call_nc  ('mod', 'telib', 'frame_active', _interval);
 #define player_swap()                                                                   return  mod_script_call_self('mod', 'telib', 'player_swap');

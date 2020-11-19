@@ -903,6 +903,7 @@
 	with(prompt_mount){
 		image_xscale = 2;
 		image_yscale = 2;
+		depth        = 1;
 		on_meet      = script_ref_create(Salamander_prompt_meet);
 	}
 	
@@ -1011,20 +1012,50 @@
 		if(dash){
 			with((mount && instance_exists(leader)) ? leader : self){
 				 // Movement:
-				direction = angle_lerp(direction, other.dash_direction, 0.2 * current_time_scale);
-				speed = friction + maxspeed + 2 + (2 * other.dash_charge);
+				direction       = angle_lerp(direction, other.dash_direction, 0.2 * current_time_scale);
+				speed           = friction + maxspeed + 2 + (2 * other.dash_charge);
 				other.direction = direction;
-				other.speed = speed;
+				other.speed     = speed;
+				
+				 // Invulnerability:
+				if(instance_is(self, Player)){
+					nexthurt = max(nexthurt, current_frame + 10);
+					angle    = 1.5 * hspeed * -clamp((vspeed + 1) / 2, -1, 1);
+				}
+				
+				 // Melt Projectiles:
+				var _dis = 8;
+				if(distance_to_object(projectile) <= _dis){
+					var _inst = instance_rectangle_bbox(
+						bbox_left   - _dis,
+						bbox_top    - _dis,
+						bbox_right  + _dis,
+						bbox_bottom + _dis,
+						instances_matching_ne(instances_matching_gt(instances_matching_ne(instances_matching_ne(projectile, "team", team), "typ", 0), "damage", 0), "mask_index", mskNone)
+					);
+					if(array_length(_inst)) with(_inst){
+						if(distance_to_object(other) <= _dis && !instance_is(self, Grenade)){
+							with(other){
+								with(projectile_create(other.x, other.y, Flame, random(360), 1)){
+									sprite_index = sprSalamanderBullet;
+								}
+							}
+							instance_create(x, y, Smoke);
+							sound_play_hit(sndBurn, 0.2);
+							instance_destroy();
+						}
+					}
+				}
 				
 				 // Dash Bash:
-				var	_bx = 6,
-					_by = 6,
+				var	_bx   = 6,
+					_by   = 6,
 					_team = team,
 					_inst = instances_matching_ne(instances_matching_ne(instance_rectangle_bbox(bbox_left + hspeed_raw - _bx, bbox_top + vspeed_raw - _by, bbox_right + hspeed_raw + _bx, bbox_bottom + vspeed_raw + _by, hitme), "team", _team), "mask_index", mskNone);
 					
 				if(array_length(_inst) > 0){
 					with(other){
-						var _damage = 4 + ceil(4 * dash_charge);
+						var _damage = 10 + ceil(10 * dash_charge);
 						with(_inst){
 							projectile_hit(self, _damage, (instance_is(self, prop) ? 0 : other.speed * 2/3), other.direction);
 							
@@ -1034,13 +1065,30 @@
 									sound_play_hit_ext(sndBigBanditMeleeHit, max(0.2, 0.7 - (size / 10)) + random(0.1), 0.8);
 								}
 								
+								 // Large Dude, Stops Charge:
+								if(my_health > 0){
+									if((1 + size > other.dash_charge && !instance_is(self, prop)) || maxhealth > _damage){
+										with(other){
+											dash_charge = 0;
+											sprite_index = spr_hurt;
+											image_index = 0;
+										}
+										
+										 // Effects:
+										repeat(5){
+											with(scrFX(x, y, [other.direction + orandom(20), 4], Smoke)){
+												friction *= 2;
+											}
+										}
+									}
+								}
+								
 								 // Punt:
-								if(
-									chance(speed, 12)
-									&& my_health <= 0
+								else if(
+									instance_is(self, enemy)
 									&& size == 1
 									&& team != 0
-									&& !instance_is(self, prop)
+									&& chance(speed * (1 + (0.5 * skill_get(mut_throne_butt))), 12)
 								){
 									with(obj_create(x, y, "PalankingToss")){
 										direction    = other.direction;
@@ -1076,22 +1124,6 @@
 									
 									 // Stat:
 									other.stat.tossed++;
-								}
-								
-								 // Large Dude, Stops Charge:
-								if((1 + size > other.dash_charge && !instance_is(self, prop)) || maxhealth > _damage){
-									with(other){
-										dash_charge = 0;
-										sprite_index = spr_hurt;
-										image_index = 0;
-									}
-									
-									 // Effects:
-									repeat(5){
-										with(scrFX(x, y, [other.direction + orandom(20), 4], Smoke)){
-											friction *= 2;
-										}
-									}
 								}
 							}
 						}
@@ -1234,7 +1266,12 @@
 		}
 	}
 	else{
-		dash = false;
+		if(dash){
+			dash = false;
+			with(leader){
+				angle = 0;
+			}
+		}
 		dash_charge = 0;
 		dash_direction = direction;
 	}

@@ -789,25 +789,27 @@
 		A projectile used for the bone scythe's ranged modes
 	*/
 	
-	var	_shotgunShoulders = skill_get(mut_shotgun_shoulders),
-		_boltMarrow       = skill_get(mut_bolt_marrow);
-		
 	with(instance_create(_x, _y, CustomProjectile)){
 		 // Visual:
 		sprite_index = spr.BoneArrow;
 		
 		 // Vars:
-		mask_index = mskBolt;
-		friction = 0.6;
-		damage = 14;
-		force = 8;
-		typ = 2;
-		damage_falloff = current_frame + 2;
-		wallbounce = 4 * _shotgunShoulders;
-		home_inst = noone;
-		home_dir = 0;
-		setup = true;
-		big = false;
+		mask_index   = mskBolt;
+		friction     = 0.6;
+		damage       = 14;
+		force        = 8;
+		typ          = 2;
+		bonus        = true;
+		bonus_damage = 2;
+		maxspeed     = 18;
+		wallbounce   = 4 * skill_get(mut_shotgun_shoulders);
+		home_inst    = noone;
+		home_dir     = 0;
+		setup        = true;
+		big          = false;
+		
+		 // Alarms:
+		alarm2 = 2;
 		
 		return id;
 	}
@@ -908,6 +910,9 @@
 		image_angle   = _dir;
 	}
 	
+#define BoneArrow_alrm2
+	bonus = false;
+	
 #define BoneArrow_wall
 	 // Movin' Closer:
 	move_contact_solid(direction, speed);
@@ -935,17 +940,19 @@
 	scrFX(x, y, [direction, 2], Dust);
 	repeat(3) scrBoneDust(x, y);
 	
+	 // Reset Bonus Damage:
+	if(wallbounce > 0 && !bonus){
+		bonus = true;
+		alarm2 = 2;
+	}
+	
 	 // Bounce:
-	var d = direction;
-	speed *= 0.8;
+	var _dir = direction;
 	move_bounce_solid(true);
 	image_angle = direction;
-	home_dir += angle_difference(direction, d);
-	
-	 // Shotgun Shoulders:
-	var _skill = skill_get(mut_shotgun_shoulders);
-	speed = min(speed + wallbounce, 18);
-	wallbounce *= 0.9;
+	home_dir += angle_difference(direction, _dir);
+	speed = min((speed * 0.8) + wallbounce, maxspeed);
+	wallbounce *= 0.95;
 	
 	 // Sounds:
 	if(speed > 4){
@@ -957,9 +964,9 @@
 	 // Setup:
 	if(setup) BoneArrow_setup();
 	
+	 // Damage:
 	if(projectile_canhit_melee(other)){
-		var _damage = damage + ((damage_falloff > current_frame) * 2);
-		projectile_hit(other, _damage, force, direction);
+		projectile_hit_push(other, damage + (bonus_damage * bonus), force);
 	}
 	
 #define scrBoneDust(_x, _y)

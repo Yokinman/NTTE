@@ -602,9 +602,11 @@
 			 // Loop Spawns:
 			if(GameCont.loops > 0){
 				 // Traffic Crabs:
-				with(Ratking) if(chance(1, 3) || array_length(instances_matching(instances_at(x, y, Floor), "styleb", true))){
-					obj_create(x, y, "TrafficCrab");
-					instance_delete(id);
+				with(Ratking){
+					if(chance(1, 3) || array_length(instances_matching(instances_at(x, y, Floor), "styleb", true))){
+						obj_create(x, y, "TrafficCrab");
+						instance_delete(id);
+					}
 				}
 			}
 			
@@ -701,18 +703,16 @@
 			}
 			
 			 // Baby:
-			with(instances_matching(Spider, "spiderling_check", null)){
-				spiderling_check = chance(1, 4);
-				if(spiderling_check){
+			with(Spider){
+				if(chance(1, 4)){
 					obj_create(x, y, "Spiderling");
 					instance_delete(id);
 				}
 			}
 			
 			 // Spawn Mortars:
-			with(instances_matching(crystaltype, "mortar_check", null)){
-				mortar_check = chance(1, 4);
-				if(mortar_check){
+			with(crystaltype){
+				if(chance(1, 5) && !array_length(instances_matching(instances_at(x, y, Floor), "styleb", true))){
 					switch(object_index){
 						case LaserCrystal:
 							obj_create(x, y, "Mortar");
@@ -728,10 +728,26 @@
 			}
 			
 			 // Spawn Crystal Bats:
-			with(instances_matching([Spider, InvSpider], "", null)){
-				if(chance(1, 6)){
-					obj_create(x, y, (instance_is(id, InvSpider) ? "InvCrystalBat" : "CrystalBat"));
-					instance_delete(id);
+			if(GameCont.loops > 0){
+				with(instances_matching([Spider, InvSpider], "", null)){
+					if(chance(1, 6) && !array_length(instances_matching(instances_at(x, y, Floor), "styleb", true))){
+						var	_ang = pround(random(360), 90),
+							_dis = 32;
+							
+						for(var _dir = _ang; _dir < _ang + 360; _dir += (360 / 2)){
+							with(obj_create(x, y, (instance_is(self, InvSpider) ? "InvCrystalBat" : "CrystalBat"))){
+								repeat(2){
+									if(place_free(x + lengthdir_x(_dis, _dir), y + lengthdir_y(_dis, _dir))){
+										x += lengthdir_x(_dis, _dir);
+										y += lengthdir_y(_dis, _dir);
+									}
+									else break;
+								}
+							}
+						}
+						
+						instance_delete(id);
+					}
 				}
 			}
 			
@@ -753,32 +769,55 @@
 			}
 			
 			 // Big Crystal Prop:
-			with(instance_random([CrystalProp, InvCrystal])){
-				obj_create(x, y, "BigCrystalProp");
-				instance_delete(id);
+			if(chance(1, 2)){
+				with(array_shuffle(instances_matching([CrystalProp, InvCrystal], "", null))){
+					if(place_meeting(x, y, Floor) && point_distance(x, y, _spawnX, _spawnY) >= 96){
+						obj_create(x, y, "BigCrystalProp");
+						instance_delete(id);
+						break;
+					}
+				}
 			}
 			
 			 // Hyper Crystal Pit:
 			with(HyperCrystal){
-				var	_size = 5,
-					_type = "",
-					_floorDis = -32,
-					_spaFloor = FloorNormal,
-					_dirOff = 0,
-					_spaDis = 256;
+				var	_w          = 5,
+					_h          = _w,
+					_type       = "",
+					_dirOff     = 0,
+					_floorDis   = -32,
+					_spawnDis   = 256,
+					_spawnFloor = FloorNormal;
 					
 				 // Arena:
-				with(floor_room(_spawnX, _spawnY, _spaDis, _spaFloor, _size, _size, _type, _dirOff, _floorDis)){
-					floor_fill(x, y, _size + 4, _size - 2, "ring");
-					floor_fill(x, y, _size - 2, _size + 4, "ring");
+				with(floor_room(_spawnX, _spawnY, _spawnDis, _spawnFloor, _w, _h, _type, _dirOff, _floorDis)){
+					with(other){
+						x = other.x;
+						y = other.y;
+						xprevious = x;
+						yprevious = y;
+						
+						 // Delete PortalClears:
+						for(var _inst = id + 1; _inst <= id + 15; _inst++){
+							if(instance_is(_inst, PortalClear)){
+								instance_delete(_inst);
+							}
+						}
+					}
+					
+					 // Side Column Hallways:
+					floor_fill(x, y, _w + 4, _h - 2, "ring");
+					floor_fill(x, y, _w - 2, _h + 4, "ring");
 					
 					 // Mysterious Pit:
-					obj_create(x, y, "CaveHole");
-					
-					 // Relocation:
-					other.x = x;
-					other.y = y;
+					with(obj_create(x, y, "ManholeOpen")){
+						sprite_index = ((GameCont.area == area_cursed_caves) ? spr.CaveHoleCursed : spr.CaveHole);
+						mask_index   = msk.CaveHole;
+						big          = true;
+					}
 				}
+				
+				break;
 			}
 			
 			break;
@@ -1919,10 +1958,17 @@
 					 // Make Footprints:
 					if("ntte_foot_time" in self && ntte_foot_time > 0){
 						if(sprite_index == spr_walk && speed_raw > max(0, friction_raw)){
-							if(round(image_index) == footstep + 2 /*|| footextra == true*/){
+							if(footextra == true){
+								footextra = 2;
+							}
+							if(round(image_index) == footstep + 2){
 								if(footkind != 0 && roll == 0){
 									var _side = (((footstep % 2) < 1) ? -1 : 1) * right;
-									with(instance_create(x + (random_range(3, 4) * _side), bbox_bottom, PhantomBolt)){
+									with(instance_create(
+										x + (random_range(3, 4) * _side),
+										bbox_bottom + ((race == "plant") ? -(_side / right) : 1),
+										PhantomBolt
+									)){
 										sprite_index = sprBoltTrail;
 										image_blend  = variable_instance_get(other, "ntte_foot_color", c_white);
 										image_alpha  = variable_instance_get(other, "ntte_foot_alpha", 1);
