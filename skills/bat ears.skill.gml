@@ -1,39 +1,41 @@
 #define init
+	 // Sprites:
 	global.sprSkillHUD  = sprite_add("../sprites/skills/Bat Ears/sprBatEarsHUD.png",  1,  8,  8);
 	
-#define skill_name    return "BAT EARS";
-#define skill_text    return "@wSEE BETTER @sIN THE @wDARK";
-#define skill_tip     return "ECHOLOCATION IS UNDERRATED";
-#define skill_icon    return global.sprSkillHUD;
-
-#define skill_avail
-	 // No Wild Encounters:
-	return (variable_instance_get(TopCont, "darkness", false) && !instance_is(other, LevCont));
+#define skill_name   return "BAT EARS";
+#define skill_text   return "@wSEE BETTER @sIN THE @wDARK";
+#define skill_tip    return "ECHOLOCATION IS UNDERRATED";
+#define skill_icon   return global.sprSkillHUD;
+#define skill_avail  return false;
 	
 #define ntte_dark(_type)
-	switch(_type){
-		case "normal":
-			draw_clear(draw_get_color());
+	if(skill_get(mod_current) > 0){
+		switch(_type){
 			
-			break;
-		
-		case "end":
-		
-			 // Extended Radius:
-			var _playerIndex = player_find_local_nonsync();
-			if(player_get_race(_playerIndex) == "eyes"){
+			case "normal":
+				
+				 // Extended Vision:
 				draw_clear(draw_get_color());
-			}
-			else{
-				var _localPlayer = player_find(_playerIndex);
-				if(instance_exists(_localPlayer)){
-					with(_localPlayer){
-						draw_circle(x, y, (80 + irandom(2)), false);
+				
+				break;
+				
+			case "end":
+				
+				 // Extended Vision:
+				with(Player){
+					 // Soopa Eyes:
+					if(race == "eyes" && player_is_local_nonsync(index)){
+						draw_clear(draw_get_color());
+					}
+					
+					 // Normal:
+					else{
+						draw_circle(x, y, (130 + random(4)) * skill_get(mod_current), false);
 					}
 				}
-			}
-			
-			break;
+				
+				break;
+		}
 	}
 	
 	

@@ -1,11 +1,7 @@
 #define init
-	spr = mod_variable_get("mod", "teassets", "spr");
-	
 	 // Sprites:
 	global.sprSkillHUD = sprite_add("../sprites/skills/Annihilation/sprSkillAnnihilationHUD.png", 1, 9, 9);
 	
-#macro spr global.spr
-
 #macro annihilation_list variable_instance_get(GameCont, "annihilation_list", [])
 
 #define skill_name   return "ANNIHILATION";

@@ -1,15 +1,13 @@
 #define init
+	 // Sprites:
 	global.sprSkillHUD  = sprite_add("../sprites/skills/Magnetic Pulse/sprMagneticPulseHUD.png",  1,  8,  8);
 	
-#define skill_name    return "MAGNETIC PULSE";
-#define skill_text    return "@bIDPD @sHAVE @wHALF HEALTH";
-#define skill_tip     return "SHORT CIRCUIT";
-#define skill_icon    return global.sprSkillHUD;
+#define skill_name   return "MAGNETIC PULSE";
+#define skill_text   return "@bIDPD @sHAVE @wHALF HEALTH";
+#define skill_tip    return "SHORT CIRCUIT";
+#define skill_icon   return global.sprSkillHUD;
+#define skill_avail  return false;
 
-#define skill_avail
-	 // No Wild Encounters:
-	return false; // (GameCont.loops > 0 && !instance_is(other, LevCont));
-	
 #define step
 	if(instance_exists(enemy)){
 		var _inst = instances_matching(enemy, "team", 3);

@@ -1,22 +1,13 @@
 #define init
+	 // Sprites:
 	global.sprSkillHUD  = sprite_add("../sprites/skills/Toad Breath/sprToadBreathHUD.png",  1,  8,  8);
 	
-#define skill_name    return "TOAD BREATH";
-#define skill_text    return "@wIMMUNITY @sTO @gTOXIC GAS"; // #@sTOXIC GAS @wHEALS" // maybe??;
-#define skill_tip     return "CORROSION";
-#define skill_icon    return global.sprSkillHUD;
+#define skill_name   return "TOAD BREATH";
+#define skill_text   return "@wIMMUNITY @sTO @gTOXIC GAS"; // #@sTOXIC GAS @wHEALS" // maybe??;
+#define skill_tip    return "CORROSION";
+#define skill_icon   return global.sprSkillHUD;
+#define skill_avail  return false;
 
-#define skill_avail	 
-	var v = false;
-	with(Player){
-		if(!notoxic){
-			v = true;
-		}
-	}
-	
-	 // No Wild Encounters:
-	return !(instance_is(other, LevCont) && v);
-	
 #define step
 	if(instance_exists(Player)){
 		with(Player){
@@ -28,7 +19,7 @@
 				var _inst = instances_meeting(x, y, ToxicGas);
 				if(array_length(_inst) > 0){
 					
-					with(_inst)	if(place_meeting(x, y, other)){
+					with(_inst) if(place_meeting(x, y, other)){
 						if(x != xstart && y != ystart){
 							var _maxSpeed = max(other.speed, speed);
 							

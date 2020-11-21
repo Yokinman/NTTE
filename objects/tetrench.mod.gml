@@ -33,17 +33,17 @@
 		yprevious = y;
 		
 		 // Visual:
-		spr_idle      = spr.AnglerIdle;
-		spr_walk      = spr.AnglerWalk;
-		spr_hurt      = spr.AnglerHurt;
-		spr_dead      = spr.AnglerDead;
-		spr_appear    = spr.AnglerAppear;
-		//spr_shadow    = shd64;
-		//spr_shadow_y  = 6;
-		hitid         = [spr_idle, "ANGLER"];
-		sprite_index  = spr_appear;
-		image_speed   = 0.4;
-		depth         = -2;
+		spr_idle     = spr.AnglerIdle;
+		spr_walk     = spr.AnglerWalk;
+		spr_hurt     = spr.AnglerHurt;
+		spr_dead     = spr.AnglerDead;
+		spr_appear   = spr.AnglerAppear;
+	//	spr_shadow   = shd64;
+	//	spr_shadow_y = 6;
+		hitid        = [spr_idle, "ANGLER"];
+		sprite_index = spr_appear;
+		image_speed  = 0.4;
+		depth        = -2;
 		
 		 // Sound:
 		var _water = area_get_underwater(GameCont.area);
@@ -54,7 +54,7 @@
 		mask_index  = -1;
 		maxhealth   = 50;
 		raddrop     = 25;
-		// rad_max		= raddrop;
+	//	rad_max     = raddrop;
 		meleedamage = 4;
 		size        = 3;
 		walk        = 0;
@@ -62,12 +62,12 @@
 		maxspeed    = 3;
 		hiding      = true;
 		ammo        = 0;
-		gold		= false;
-		// rad_paths	= [];
+		gold        = false;
+	//	rad_paths   = [];
 		
 		 // Alarms:
 		alarm1 = 30 + irandom(30);
-		// alarm2 = -1;
+	//	alarm2 = -1;
 		
 		 // Hide:
 		scrAnglerHide();
@@ -277,47 +277,42 @@
 		
 		 // most important part
 		if(raddrop > 0){
-			var _minID = GameObject.id;
-			if(gold){
-				var _numRad = 2,
-					_radVal = 10;
-					
-				while(_numRad > 0 && raddrop >= _radVal){
-					instance_create(_x, _y, BigRad);
-					raddrop -= _radVal;
-					_numRad--;
+			while(raddrop > 25){
+				raddrop -= 10;
+				with(instance_create(_x, _y, BigRad)){
+					motion_add(random(360), random(4));
+					motion_add(other.direction, min(other.speed / 3, 3));
 				}
 			}
-			if(raddrop > 0){
-				repeat(raddrop){
-					instance_create(_x, _y, Rad);
+			repeat(raddrop){
+				with(instance_create(_x, _y, Rad)){
+					motion_add(random(360), random(5));
+					motion_add(other.direction, min(other.speed / 3, 3));
 				}
-				raddrop = 0;
 			}
-			
-			 // Schmove:
-			with(instances_matching_gt([Rad, BigRad], "id", _minID)){
-				motion_add(random(360), random(5));
-				motion_add(other.direction, min(other.speed / 3, 3));				
-			}
+			raddrop = 0;
 		}
 		
 		 // Effects:
 		sound_play(sndEXPChest);
+		repeat(4){
+			scrFX(_x, _y, random(3), Smoke);
+		}
 		with(instance_create(_x, _y, ExploderExplo)){
 			motion_add(other.direction, 1);
 		}
-	
+		
 	 // Gold:
 	if(gold){
-		
 		 // Sounds:
 		sound_play_hit_ext(sndEnergyHammerUpg, 0.9, 0.9);
 		audio_sound_gain(sound_play_hit_ext(sndLilHunterDeath, 0.5, 1.1), 0, 2500);
 		audio_sound_set_track_position(sound_play_hit_ext(sndNothing2DeadStart, 1, 0.5), 1);
 		
 		 // Angler Fish Skin Unlock:
-		if(player_count_race("fish") > 0 && !unlock_get("skin:angler fish")) unlock_set("skin:angler fish", true);
+		if(player_count_race(char_fish) > 0 && !unlock_get("skin:angler fish")){
+			unlock_set("skin:angler fish", true);
+		}
 	}
 		
 #define scrAnglerAppear()
@@ -326,8 +321,8 @@
 	 // Anglers rise up
 	mask_index = mskFrogQueen;
 	spr_shadow = shd64B;
-	spr_shadow_y = 3;
 	spr_shadow_x = 0;
+	spr_shadow_y = 3;
 	wall_clear(x, y);
 	
 	 // Time 2 Charge
@@ -1073,23 +1068,24 @@
 		spr_dead     = spr.GoldAnglerDead;
 		spr_appear   = spr.GoldAnglerAppear;
 		sprite_index = spr_appear;
-		hitid		 = [spr_idle, "GOLD ANGLER"];
+		hitid        = [spr_idle, "GOLDEN ANGLER"];
 		
 		// Sounds:
 		snd_hurt = sndFreakPopoHurt;
 		
 		 // Vars:
-		// meleedamage = 6;
-		maxhealth	= 110;
+	//	meleedamage = 6;
+		maxhealth   = 110;
 		my_health   = maxhealth;
-		raddrop 	= 45;
-		// rad_max		= raddrop;
-		gold		= true;
-		maxspeed	= 4;
+		raddrop     = 45;
+	//	rad_max     = raddrop;
+		gold        = true;
+		maxspeed    = 4;
 		
 		return id;
 	}
-
+	
+	
 #define Jelly_create(_x, _y)
 	/*
 		A standard Trench enemy that floats around and fires lightning rings at the Player

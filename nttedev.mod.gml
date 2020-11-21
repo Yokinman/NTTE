@@ -244,6 +244,8 @@
 		
 		"skin:parrot:1",
 		"skin:bee:1",
+		"skin:angler fish",
+		"skin:orchid plant",
 		"skin:red crystal",
 		
 		"wep:scythe",

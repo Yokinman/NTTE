@@ -1,6 +1,6 @@
 #define init
-    spr = mod_variable_get("mod", "teassets", "spr");
-    snd = mod_variable_get("mod", "teassets", "snd");
+	spr = mod_variable_get("mod", "teassets", "spr");
+	snd = mod_variable_get("mod", "teassets", "snd");
 	
 #macro spr global.spr
 #macro msk spr.msk
@@ -9,8 +9,8 @@
 
 #define skin_race      return "fish";
 #define skin_name      return ((argument_count <= 0 || argument0) ? "ABYSSAL" : skin_lock());
-#define skin_lock      return "DEFEAT A @yGOLD ANGLER";
-#define skin_unlock    return "FOR DEFEATING A @yGOLD ANGLER";
+#define skin_lock      return "DEFEAT A @yGOLDEN ANGLER";
+#define skin_unlock    return "FOR DEFEATING A @yGOLDEN ANGLER";
 #define skin_ttip      return choose("SO BRIGHT OUT", "MISSED THE SUN", "SHAPED BY THE DEPTHS", "LOST YOUR MIND");
 #define skin_avail     return unlock_get("skin:" + mod_current);
 #define skin_portrait  return spr.FishAnglerPortrait;
@@ -22,18 +22,18 @@
 	
 #define skin_sprite(_spr)
 	switch(_spr){
-		case sprMutant1Idle	 : return spr.FishAnglerIdle;
-		case sprMutant1Walk	 : return spr.FishAnglerWalk;
-		case sprMutant1Hurt	 : return spr.FishAnglerHurt;
-		case sprMutant1Dead	 : return spr.FishAnglerDead;
+		case sprMutant1Idle  : return spr.FishAnglerIdle;
+		case sprMutant1Walk  : return spr.FishAnglerWalk;
+		case sprMutant1Hurt  : return spr.FishAnglerHurt;
+		case sprMutant1Dead  : return spr.FishAnglerDead;
 		case sprMutant1GoSit : return spr.FishAnglerGoSit;
-		case sprMutant1Sit	 : return spr.FishAnglerSit;
-		case sprBigPortrait	 : return spr.FishAnglerPortrait;
-		case sprLoadoutSkin	 : return spr.FishAnglerLoadout;
-		case sprMapIcon		 : return spr.FishAnglerMapIcon;
+		case sprMutant1Sit   : return spr.FishAnglerSit;
+		case sprBigPortrait  : return spr.FishAnglerPortrait;
+		case sprLoadoutSkin  : return spr.FishAnglerLoadout;
+		case sprMapIcon      : return spr.FishAnglerMapIcon;
 	}
 	return -1;
-
+	
 	
 /// SCRIPTS
 #macro  current_frame_active                                                                    (current_frame % 1) < current_time_scale

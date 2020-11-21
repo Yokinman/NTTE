@@ -277,7 +277,7 @@
 			AnglerLight      = sprite(p + "sprAnglerLight",   4, 80, 80);
 			msk.AnglerHidden =[sprite(p + "mskAnglerHidden1", 1, 32, 32),
 			                   sprite(p + "mskAnglerHidden2", 1, 32, 32)];
-			                   
+			
 			 // Angler (Gold):
 			p = m + "GoldAngler/";
 			GoldAnglerIdle    = sprite(p + "sprGoldAnglerIdle",    8, 32, 32);
@@ -1611,7 +1611,7 @@
 			SunkenCoinBig   = sprite(p + "sprCoinBig",         1,  3,  3, shn8);
 			
 			 // Lead Ribs Upgraded Rads:
-			RadUpg	  = sprite(p + "sprRadUpg",    1, 5, 5, shn10);
+			RadUpg    = sprite(p + "sprRadUpg",    1, 5, 5, shn10);
 			BigRadUpg = sprite(p + "sprBigRadUpg", 1, 8, 8, shn16);
 			
 		//#endregion
@@ -1702,26 +1702,24 @@
 		//#region SKINS
 		m = "skins/";
 			
-			//#region RED CRYSTAL
-			p = m + "CrystalRed/";
+			//#region ANGLER FISH
+			var p = m + "FishAngler/";
 				
 				 // Player:
-				CrystalRedPortrait        = sprite(p + "sprCrystalRedPortrait",        1, 20, 229);
-				CrystalRedIdle            = sprite(p + "sprCrystalRedIdle",            4, 12,  12);
-				CrystalRedWalk            = sprite(p + "sprCrystalRedWalk",            6, 12,  12);
-				CrystalRedHurt            = sprite(p + "sprCrystalRedHurt",            3, 12,  12);
-				CrystalRedDead            = sprite(p + "sprCrystalRedDead",            6, 12,  12);
-				CrystalRedGoSit           = sprite(p + "sprCrystalRedGoSit",           3, 12,  12);
-				CrystalRedSit             = sprite(p + "sprCrystalRedSit",             1, 12,  12);
-				CrystalRedLoadout         = sprite(p + "sprCrystalRedLoadout",         2, 16,  16);
-				CrystalRedMapIcon         = sprite(p + "sprCrystalRedMapIcon",         1, 10,  10);
-				CrystalRedShield          = sprite(p + "sprCrystalRedShield",          4, 32,  42);
-				CrystalRedShieldDisappear = sprite(p + "sprCrystalRedShieldDisappear", 6, 32,  42);
-				CrystalRedShieldIdleFront = sprite(p + "sprCrystalRedShieldIdleFront", 1, 32,  42);
-				CrystalRedShieldWalkFront = sprite(p + "sprCrystalRedShieldWalkFront", 8, 32,  42);
-				CrystalRedShieldIdleBack  = sprite(p + "sprCrystalRedShieldIdleBack",  1, 32,  42);
-				CrystalRedShieldWalkBack  = sprite(p + "sprCrystalRedShieldWalkBack",  8, 32,  42);
-				CrystalRedTrail           = sprite(p + "sprCrystalRedTrail",           5,  8,   8);
+				FishAnglerIdle  = sprite(p + "sprFishAnglerIdle",  4, 12, 12);
+				FishAnglerWalk  = sprite(p + "sprFishAnglerWalk",  6, 12, 12);
+				FishAnglerHurt  = sprite(p + "sprFishAnglerHurt",  3, 12, 12);
+				FishAnglerDead  = sprite(p + "sprFishAnglerDead",  6, 12, 12);
+				FishAnglerGoSit = sprite(p + "sprFishAnglerGoSit", 3, 12, 12);
+				FishAnglerSit   = sprite(p + "sprFishAnglerSit",   1, 12, 12);
+				
+				 // Menu:
+				FishAnglerPortrait = sprite(p + "sprFishAnglerPortrait", 1, 20, 229);
+				FishAnglerLoadout  = sprite(p + "sprFishAnglerLoadout",  2, 16,  16);
+				FishAnglerMapIcon  = sprite(p + "sprFishAnglerMapIcon",  1, 10,  10);
+				
+				 // Eye Trail:
+				FishAnglerTrail = sprite(p + "sprFishAnglerTrail", 4, 12, 12);
 				
 			//#endregion
 			
@@ -1729,35 +1727,49 @@
 			var p = m + "PlantOrchid/";
 				
 				 // Player:
-				PlantOrchidPortrait   = sprite(p + "sprPlantOrchidPortrait",   1, 20, 229);
-				PlantOrchidIdle 	  = sprite(p + "sprPlantOrchidIdle",	   4, 16, 16);
-				PlantOrchidWalk 	  = sprite(p + "sprPlantOrchidWalk",	   4, 16, 16);
-				PlantOrchidHurt 	  = sprite(p + "sprPlantOrchidHurt",	   3, 16, 16);
-				PlantOrchidDead 	  = sprite(p + "sprPlantOrchidDead",	   9, 16, 16);
-				PlantOrchidGoSit	  = sprite(p + "sprPlantOrchidGoSit",	   3, 16, 16);
-				PlantOrchidSit		  = sprite(p + "sprPlantOrchidSit",		   1, 16, 16);
-				PlantOrchidLoadout	  = sprite(p + "sprPlantOrchidLoadout",	   2, 16, 16);
-				PlantOrchidMapIcon	  = sprite(p + "sprPlantOrchidMapIcon",    1, 10, 10);
-				PlantOrchidTangle	  = sprite(p + "sprPlantOrchidTangle",	   6, 24, 24);
-				PlantOrchidTangleSeed = sprite(p + "sprPlantOrchidTangleSeed", 2, 4,  4);
-				 
+				PlantOrchidIdle  = sprite(p + "sprPlantOrchidIdle",  4, 16, 16);
+				PlantOrchidWalk  = sprite(p + "sprPlantOrchidWalk",  4, 16, 16);
+				PlantOrchidHurt  = sprite(p + "sprPlantOrchidHurt",  3, 16, 16);
+				PlantOrchidDead  = sprite(p + "sprPlantOrchidDead",  9, 16, 16);
+				PlantOrchidGoSit = sprite(p + "sprPlantOrchidGoSit", 3, 16, 16);
+				PlantOrchidSit   = sprite(p + "sprPlantOrchidSit",   1, 16, 16);
+				
+				 // Menu:
+				PlantOrchidPortrait = sprite(p + "sprPlantOrchidPortrait", 1, 20, 229);
+				PlantOrchidLoadout  = sprite(p + "sprPlantOrchidLoadout",  2, 16,  16);
+				PlantOrchidMapIcon  = sprite(p + "sprPlantOrchidMapIcon",  1, 10,  10);
+				
+				 // Snare:
+				PlantOrchidTangle     = sprite(p + "sprPlantOrchidTangle",     6, 24, 24);
+				PlantOrchidTangleSeed = sprite(p + "sprPlantOrchidTangleSeed", 2,  4,  4);
+				
 			//#endregion
 			
-			//#region ANGLER FISH
-			var p = m + "FishAngler/";
+			//#region RED CRYSTAL
+			p = m + "CrystalRed/";
 				
 				 // Player:
-				FishAnglerPortrait = sprite(p + "sprFishAnglerPortrait", 1, 20, 229);
-				FishAnglerIdle	   = sprite(p + "sprFishAnglerIdle",	 4, 12, 12);
-				FishAnglerWalk	   = sprite(p + "sprFishAnglerWalk",	 6, 12, 12);
-				FishAnglerHurt	   = sprite(p + "sprFishAnglerHurt",	 3, 12, 12);
-				FishAnglerDead	   = sprite(p + "sprFishAnglerDead",	 6, 12, 12);
-				FishAnglerGoSit    = sprite(p + "sprFishAnglerGoSit",	 3, 12, 12);
-				FishAnglerSit	   = sprite(p + "sprFishAnglerSit", 	 1, 12, 12);
-				FishAnglerLoadout  = sprite(p + "sprFishAnglerLoadout",  2, 16, 16);
-				FishAnglerMapIcon  = sprite(p + "sprFishAnglerMapIcon",  1, 10, 10);
-				FishAnglerTrail	   = sprite(p + "sprFishAnglerTrail",	 4, 12, 12);
-			
+				CrystalRedIdle  = sprite(p + "sprCrystalRedIdle",  4, 12, 12);
+				CrystalRedWalk  = sprite(p + "sprCrystalRedWalk",  6, 12, 12);
+				CrystalRedHurt  = sprite(p + "sprCrystalRedHurt",  3, 12, 12);
+				CrystalRedDead  = sprite(p + "sprCrystalRedDead",  6, 12, 12);
+				CrystalRedGoSit = sprite(p + "sprCrystalRedGoSit", 3, 12, 12);
+				CrystalRedSit   = sprite(p + "sprCrystalRedSit",   1, 12, 12);
+				
+				 // Menu:
+				CrystalRedPortrait = sprite(p + "sprCrystalRedPortrait", 1, 20, 229);
+				CrystalRedLoadout  = sprite(p + "sprCrystalRedLoadout",  2, 16,  16);
+				CrystalRedMapIcon  = sprite(p + "sprCrystalRedMapIcon",  1, 10,  10);
+				
+				 // Shield:
+				CrystalRedShield          = sprite(p + "sprCrystalRedShield",          4, 32, 42);
+				CrystalRedShieldDisappear = sprite(p + "sprCrystalRedShieldDisappear", 6, 32, 42);
+				CrystalRedShieldIdleFront = sprite(p + "sprCrystalRedShieldIdleFront", 1, 32, 42);
+				CrystalRedShieldWalkFront = sprite(p + "sprCrystalRedShieldWalkFront", 8, 32, 42);
+				CrystalRedShieldIdleBack  = sprite(p + "sprCrystalRedShieldIdleBack",  1, 32, 42);
+				CrystalRedShieldWalkBack  = sprite(p + "sprCrystalRedShieldWalkBack",  8, 32, 42);
+				CrystalRedTrail           = sprite(p + "sprCrystalRedTrail",           5,  8,  8);
+				
 			//#endregion
 			
 		//#endregion

@@ -1,6 +1,7 @@
 #define init
 	spr = mod_variable_get("mod", "teassets", "spr");
 	
+	 // Sprites:
 	global.sprSkillHUD  = sprite_add("../sprites/skills/Lead Ribs/sprLeadRibsHUD.png",  1,  8,  8);
 	
 	/*
@@ -8,27 +9,24 @@
 	*/
 	
 #macro spr global.spr
-	
-#define skill_name    return "LEAD RIBS";
-#define skill_text    return "@sMORE @gRADS @sFROM @wENEMIES";
-#define skill_tip     return "HIGHER THRESHOLD";
-#define skill_icon    return global.sprSkillHUD;
 
-#define skill_avail	 
-	 // No Wild Encounters:
-	return !instance_is(other, LevCont);
+#define skill_name   return "LEAD RIBS";
+#define skill_text   return "@sMORE @gRADS @sFROM @wENEMIES";
+#define skill_tip    return "HIGHER THRESHOLD";
+#define skill_icon   return global.sprSkillHUD;
+#define skill_avail  return false;
 	
-#define skill_take
-	global.minID = GameObject.id;
+/*#define skill_take
+	global.minID = GameObject.id;*/
 	
 #define step
+	 // More Rads!!!!!
 	if(instance_exists(enemy)){
-		var _inst = instances_matching_le(instances_matching_ne(enemy, "candie", false), "my_health", 0);
-		if(array_length(_inst) > 0){
-			with(_inst){
-				with(rad_drop(x, y, ceil(raddrop * 0.2), direction, speed)){
-					sprite_index = (instance_is(id, BigRad) ? spr.BigRadUpg : spr.RadUpg);
-				}
+		var _inst = instances_matching(instances_matching_le(enemy, "my_health", 0), "leadribs_check", null);
+		if(array_length(_inst)) with(_inst){
+			leadribs_check = true;
+			with(rad_drop(x, y, ceil(raddrop * 0.2 * skill_get(mod_current)), direction, speed / 4)){
+				sprite_index = (instance_is(id, BigRad) ? spr.BigRadUpg : spr.RadUpg);
 			}
 		}
 	}

@@ -44,14 +44,18 @@
 	
 	 // Scythe Tippage:
 	global.scythe_tip_index = 0;
-	global.scythe_tip       = ["press @we @sto change modes", "the @rscythe @scan do so much more", "press @we @sto rearrange a few @rbones", "just press @we @salready", "please press @we", "@w@qe"];
+	global.scythe_tip       = [
+		"press @1(sprKeySmall:pick) to change modes",
+		"the @rscythe @scan do so much more",
+		"press @1(sprKeySmall:pick) to rearrange a few @rbones",
+		"just press @1(sprKeySmall:pick) already",
+		"please press @1(sprKeySmall:pick)",
+		"@q@1(sprKeySmall:pick)"
+	];
 	
 	 // Spawn Guarantees:
 	heart_spawn  = {};
 	weapon_spawn = [];
-	
-	 // Bat Ears Effect:
-	global.bat_ears = 0;
 	
 #macro spr global.spr
 #macro msk spr.msk
@@ -1747,18 +1751,16 @@
 	 // Call Scripts:
 	var _scrt = array_combine(["", ""], _call);
 	with(ntte_mods_call){
-		if(self[0] != "skill" || skill_get(self[1]) > 0){
-			if(mod_script_exists(self[0], self[1], _scrt[2])){
-				_scrt[0] = self[0];
-				_scrt[1] = self[1];
-				with(UberCont){
-					var _lag = other[2];
-					if(_lag) trace_time();
-					
-					script_ref_call(_scrt);
-					
-					if(_lag) trace_time(array_join(_scrt, "_"));
-				}
+		if(mod_script_exists(self[0], self[1], _scrt[2])){
+			_scrt[0] = self[0];
+			_scrt[1] = self[1];
+			with(UberCont){
+				var _lag = other[2];
+				if(_lag) trace_time();
+				
+				script_ref_call(_scrt);
+				
+				if(_lag) trace_time(array_join(_scrt, "_"));
 			}
 		}
 	}
@@ -2049,53 +2051,6 @@
 	
 	 // Call Scripts:
 	ntte_call("begin_step");
-	
-	 // NTTE Blood Weapons:
-	for(var i = 0; i < maxp; i++){
-		var	_fire = button_pressed(i, "fire"),
-			_spec = button_pressed(i, "spec");
-			
-		if(_fire || _spec){
-			with(ntte_mods.wep){
-				var	_name = self,
-					_scrt = "weapon_blood";
-					
-				if(mod_script_exists("weapon", _name, _scrt)){
-					var _wepList = [];
-					with(instances_matching(Player, "infammo", 0)){
-						if(player_active){
-							if(_fire && canfire >= 1){
-								array_push(_wepList, [id, wep]);
-							}
-							if(_spec && canspec && race == "steroids"){
-								array_push(_wepList, [id, bwep]);
-							}
-						}
-					}
-					if(array_length(_wepList)) with(_wepList){
-						var _wep = self[1];
-						if(wep_raw(_wep) == _name){
-							with(self[0]){
-								var	_type = weapon_get_type(_wep),
-									_cost = weapon_get_cost(_wep);
-									
-								if(ammo[_type] < _cost && _type != type_melee){
-									var _blood = mod_script_call_self("weapon", _name, _scrt, _wep);
-									if(_blood != 0){
-										ammo[_type] += _cost;
-										lasthit = [weapon_get_sprt(_wep), weapon_get_name(_wep)];
-										projectile_hit_raw(self, _blood, true);
-										sound_play_hit(sndBloodHurt, 0.1);
-										sleep(40);
-									}
-								}
-							}
-						}
-					}
-				}
-			}
-		}
-	}
 	
 	 // Last Wish:
 	var _inst = instances_matching_ne(GameCont, "ntte_lastwish", skill_get(mut_last_wish));

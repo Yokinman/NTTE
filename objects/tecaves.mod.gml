@@ -1419,7 +1419,7 @@
 		case area_hq:
 			area_color = make_color_rgb(0, 255, 255);
 			break;
-		
+			
 		default:
 			var _col = area_get_back_color(area);
 			area_color =  make_color_hsv(
@@ -1443,7 +1443,7 @@
 	
 	 // Effects:
 	if((area == "red" || area == area_hq) && chance_ct(2, 3)){
-		with(scrFX([x, 6], [y, 6], random(1), (area == area_hq ? IDPDPortalCharge : LaserCharge))){
+		with(scrFX([x, 6], [y, 6], random(1), ((area == area_hq) ? IDPDPortalCharge : LaserCharge))){
 			alarm0 = 5 + random(15);
 		}
 	}
@@ -1463,12 +1463,11 @@
 	}
 	
 	 // Shielder Interaction:
-	if(deflected && hitid == 58 && team == 3){
-		if(area != area_hq){
-			area = area_hq;
-			subarea  = min(subarea, 2);
-			CrystalHeartBullet_setup();
-		}
+	if(deflected && hitid == 58 && area != area_hq){
+		area       = area_hq;
+		subarea    = min(subarea, 2);
+		area_chaos = false;
+		CrystalHeartBullet_setup();
 	}
 	
 #define CrystalHeartBullet_draw
@@ -1651,14 +1650,12 @@
 		}
 		
 		 // Red Crown Quality Assurance:
-		if(area_chaos){
-			with(instances_matching_gt([PizzaEntrance, CarVenus, IceFlower], "id", _genID)){
+		with(instances_matching_gt([PizzaEntrance, CarVenus, IceFlower], "id", _genID)){
+			instance_delete(id);
+		}
+		if(loops <= 0 || GameCont.subarea != 3 || !instance_exists(enemy)){
+			with(instances_matching_gt(WantBoss, "id", _genID)){
 				instance_delete(id);
-			}
-			if(loops <= 0 || GameCont.subarea != 3 || !instance_exists(enemy)){
-				with(instances_matching_gt(WantBoss, "id", _genID)){
-					instance_delete(id);
-				}
 			}
 		}
 		
@@ -3871,6 +3868,17 @@
 					var _r = 32 + (32 * _gray);
 					with(_inst){
 						draw_circle(x, y - z, _r + orandom(1), false);
+					}
+				}
+			}
+			
+			 // Big Crystal Prop:
+			if(instance_exists(CrystalProp)){
+				var _inst = instances_matching(CrystalProp, "name", "BigCrystalProp");
+				if(array_length(_inst)){
+					var _r = 30 + (60 * _gray) + (1 + sin(current_frame / 80));
+					with(_inst){
+						draw_circle(x, y, _r, false);
 					}
 				}
 			}

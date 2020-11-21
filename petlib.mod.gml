@@ -752,7 +752,7 @@
 		 // Find Sprite's Precise Right & Top Positions:
 		for(var i = 0; i < sprite_get_number(_spr); i++){
 			var _copy = sprite_duplicate_ext(_spr, i, 1);
-			sprite_collision_mask(_copy, true, 0, 0, 0, 0, 0, 1, 0);
+			sprite_collision_mask(_copy, false, 0, 0, 0, 0, 0, 1, 0);
 			array_push(_bob, [
 				sprite_get_bbox_right(_copy),
 				sprite_get_bbox_top(_copy)

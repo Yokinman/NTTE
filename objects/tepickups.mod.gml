@@ -4355,14 +4355,14 @@
 		
 		 // Determine Skill:
 		if(alive){
-			
 			 // Orchid Plant Skin Unlock:
-			if(player_count_race("plant") > 0 && skill_get(mut_heavy_heart) && !unlock_get("skin:orchid plant")){
+			if(player_count_race(char_plant) > 0 && skill_get(mut_heavy_heart) != 0 && !unlock_get("skin:orchid plant")){
 				skill  = mut_heavy_heart;
 				unlock = true;
 			}
 			
-			if(skill_get(skill) == 0){
+			 // Normal:
+			else if(skill_get(skill) == 0){
 				var _skillList = [];
 				for(var i = 0; !is_undefined(skill_get_at(i)); i++){
 					var _skill = skill_get_at(i);
