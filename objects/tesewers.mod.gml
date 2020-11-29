@@ -1648,7 +1648,7 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 						returning = false;
 						has_hit   = false;
 						direction = other.direction;
-						speed     = maxspeed + 4;
+						speed     = maxspeed + 8;
 						
 						 // Game Feel:
 						//x -= hspeed;
@@ -1657,7 +1657,7 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 						 // Effects:
 						sleep_max(12);
 						view_shake_at(x, y, 3);
-						sound_play_hit_ext(sndDiscBounce, 1.3 + random(0.3), 0.8);
+						sound_play_hit_ext(sndDiscBounce, 1.3 + random(0.3), 0.5);
 						with(instance_create(x, y, Deflect)){
 							image_angle = other.direction;
 						}

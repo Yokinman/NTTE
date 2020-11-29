@@ -113,10 +113,10 @@
 	var _fire = weapon_fire_init(_wep);
 	_wep = _fire.wep;
 	
+	var _num = (_wep.chrg_num / _wep.chrg_max);
+	
 	 // Charging:
 	if(_wep.chrg){
-		var _num = (_wep.chrg_num / _wep.chrg_max);
-		
 		 // Pullback:
 		var _kick = -3 * _num;
 		if(wkick != _kick){
@@ -150,7 +150,7 @@
 	}
 	
 	 // Charged Disc Slash:
-	else if(_wep.chrg_num > 0){
+	else if(_num > 0){
 		var _skill = skill_get(mut_long_arms),
 			_len   = (20 * _skill),
 			_dir   = gunangle + orandom(8 * accuracy);
@@ -178,7 +178,7 @@
 		sleep(15);
 		
 		 // Fully Charged - Launch Disc:
-		if(_wep.chrg_num >= _wep.chrg_max){
+		if(_num >= 1){
 			if(weapon_ammo_fire(_wep)){
 				with(projectile_create(x, y, "BatDisc", gunangle + orandom(4 * accuracy), 0)){
 					ammo = _wep.cost;
