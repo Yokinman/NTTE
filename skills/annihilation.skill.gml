@@ -117,6 +117,7 @@
 	}
 	
 	 // Add Enemy Info to List:
+	var _canFX = true;
 	with(_inst){
 		with({
 			"object_index" : object_index,
@@ -149,14 +150,20 @@
 			if(_add){
 				array_push(annihilation_list, self);
 			}
+		}
+		
+		 // Effects:
+		if(_canFX){
+			_canFX = false;
 			
-			 // Popup Text:
-			with(Player){
-				with(instance_create(x, y, PopupText)){
-					target = other.index;
-					text   = `${instance_get_name(_inst)} @(color:${area_get_back_color("red")})ANNIHILATED!`;
-				}
+			 // Text:
+			with(instance_create(x, y - 8, PopupText)){
+				text = `${instance_get_name(other)}# @(color:${area_get_back_color("red")})ANNIHILATED!`;
 			}
+			
+			 // Sound:
+			sound_play_pitchvol(sndNothingSmallball, random_range(0.4, 0.6), 1.5);
+			sound_play_pitchvol(sndNothingLowHP,     random_range(3.0, 4.0), 0.4);
 		}
 	}
 	

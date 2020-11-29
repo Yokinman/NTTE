@@ -1279,7 +1279,7 @@
 			stretch        - The width of the ring (How fat the ring looks)
 			super          - Describes the minimum size of the ring before splitting into more rings, -1 == no splitting
 			creator_follow - True/false, should follow its creator while charging up
-			roids          - Shot by steroids' secondary weapon
+			primary        - Shot by a player's primary weapon (true) or secondary weapon (false)
 	*/
 	
 	with(instance_create(_x, _y, CustomProjectile)){
@@ -1289,24 +1289,24 @@
 		depth = -3;
 		
 		 // Vars:
-		mask_index = mskWepPickup;
-		rotspeed = random_range(10, 20) * choose(-1, 1);
-		rotation = 0;
-		radius = 12;
-		charge = 1;
-		charge_spd = 2;
-		ammo = 10;
-		typ = 0;
-		shrink = 1/160;
-		maxspeed = 2.5;
-		is_enemy = false;
-		image_xscale = 0;
-		image_yscale = 0;
-		stretch = 1;
-		super = -1;
+		mask_index     = mskWepPickup;
+		rotspeed       = random_range(10, 20) * choose(-1, 1);
+		rotation       = 0;
+		radius         = 12;
+		charge         = 1;
+		charge_spd     = 2;
+		ammo           = 10;
+		typ            = 0;
+		shrink         = 1/160;
+		maxspeed       = 2.5;
+		is_enemy       = false;
+		image_xscale   = 0;
+		image_yscale   = 0;
+		stretch        = 1;
+		super          = -1;
 		creator_follow = true;
-		roids = false;
-		setup = true;
+		primary        = true;
+		setup          = true;
 		
 		return id;
 	}
@@ -1342,7 +1342,7 @@
 		if(creator_follow){
 			if(instance_exists(creator)){
 				x = creator.x;
-				y = creator.y - (4 * roids);
+				y = creator.y + (primary ? 0 : -4);
 				
 				if("gunangle" in creator){
 					direction = creator.gunangle;
@@ -1366,7 +1366,7 @@
 				}
 				
 				 // Chargin'
-				var _kick = (roids ? "bwkick" : "wkick");
+				var _kick = (primary ? "" : "b") + "wkick";
 				if(_kick in creator){
 					variable_instance_set(creator, _kick, 5 * (image_xscale / charge));
 				}
@@ -1398,8 +1398,10 @@
 			
 			 // Creator Stuff:
 			with(creator){
-				var	_kick = (other.roids ? "bwkick" : "wkick");
-				if(_kick in self) variable_instance_set(id, _kick, -4);
+				var	_kick = (other.primary ? "" : "b") + "wkick";
+				if(_kick in self){
+					variable_instance_set(id, _kick, -4);
+				}
 				
 				 // Player Papa:
 				if(instance_is(self, Player)){
@@ -3048,7 +3050,7 @@
 			spr_strt       - The start of the laser sprite
 			spr_stop       - The end of the laser sprite
 			loop_snd       - The index of the beam's looping sound, used to stop the sound when destroyed
-			roids          - Created by steroids' secondary weapon, true/false
+			primary        - Shot by a player's primary weapon (true) or secondary weapon (false)
 			hit_time       - Custom frame count for custom invincibility frames system
 			hit_list       - ds_map of hit enemies and what 'hit_time' they were hit at
 			blast_hit      - Initial hit, true/false, does more damage and effects
@@ -3090,7 +3092,7 @@
 		image_xscale   = 1;
 		image_yscale   = image_xscale;
 		creator        = noone;
-		roids          = false;
+		primary        = true;
 		damage         = 12;
 		force          = 4;
 		typ            = 0;
@@ -3195,27 +3197,25 @@
 			 // Visually Force Player's Gunangle:
 			if(instance_is(self, Player)) with(other){
 				var _ang = angle_difference(image_angle, other.gunangle);
-				if(array_length(instances_matching(instances_matching(instances_matching(CustomEndStep, "name", "QuasarBeam_wepangle"), "creator", creator), "roids", roids)) <= 0){
+				if(array_length(instances_matching(instances_matching(instances_matching(CustomEndStep, "name", "QuasarBeam_wepangle"), "creator", creator), "primary", primary)) <= 0){
 					with(script_bind_end_step(QuasarBeam_wepangle, 0)){
 						name    = script[2];
 						creator = other.creator;
-						roids   = other.roids;
+						primary = other.primary;
 						angle   = 0;
 					}
 				}
-				with(instances_matching(instances_matching(instances_matching(CustomEndStep, "name", "QuasarBeam_wepangle"), "creator", creator), "roids", roids)){
+				with(instances_matching(instances_matching(instances_matching(CustomEndStep, "name", "QuasarBeam_wepangle"), "creator", creator), "primary", primary)){
 					angle = _ang;
 				}
 			}
 			
 			 // Kickback:
 			if(other.shrink_delay > 0){
-				var k = (8 * (1 + (max(other.image_xscale - 1, 0)))) / max(1, abs(_ang / 30));
-				if(other.roids){
-					if("bwkick" in self) bwkick = max(bwkick, k);
-				}
-				else{
-					if("wkick" in self) wkick = max(wkick, k);
+				var _kick = (other.primary ? "" : "b") + "wkick";
+				if(_kick in self){
+					var _num = (8 * (1 + (max(other.image_xscale - 1, 0)))) / max(1, abs(_ang / 30))
+					variable_instance_set(self, _kick, max(_num, variable_instance_get(self, _kick)));
 				}
 			}
 			
@@ -3226,7 +3226,7 @@
 			
 			 // Follow Player:
 			other.hold_x = x;
-			other.hold_y = y - (4 * other.roids);
+			other.hold_y = y + (other.primary ? 0 : -4);
 			if(!place_meeting(x + hspeed_raw, y, Wall)) other.hold_x += hspeed_raw;
 			if(!place_meeting(x, y + vspeed_raw, Wall)) other.hold_y += vspeed_raw;
 			if("gunangle" in self) other.line_dir_goal = gunangle;
@@ -3683,14 +3683,14 @@
 #define QuasarBeam_wepangle
 	if(instance_exists(creator) && abs(angle) > 1){
 		with(creator){
-			if(string_pos("quasar", string(wep_raw(other.roids ? bwep : wep))) == 1){
-				if(other.roids){
-					bwepangle += other.angle;
-				}
-				else{
+			if(string_pos("quasar", string(wep_raw(other.primary ? wep : bwep))) == 1){
+				if(other.primary){
 					wepangle += other.angle;
 					back = (((((gunangle + other.angle) + 360) % 360) > 180) ? -1 : 1);
 					scrRight(gunangle + other.angle);
+				}
+				else{
+					bwepangle += other.angle;
 				}
 			}
 		}
@@ -3749,7 +3749,7 @@
 		target_x     = x;
 		target_y     = y;
 		dist_max     = 96;
-		roids        = false;
+		primary      = true;
 		purple       = false;
 		
 		 // Alarms:
@@ -3806,14 +3806,13 @@
 	if(instance_exists(creator)){
 		 // Follow Creator:
 		if(instance_exists(creator)){
-			var	_xdis = creator_offx - (variable_instance_get(creator, (roids ? "bwkick" : "wkick"), 0) / 3),
+			var	_xdis = creator_offx - (variable_instance_get(creator, (primary ? "" : "b") + "wkick", 0) / 3),
 				_xdir = (("gunangle" in creator) ? creator.gunangle : direction),
 				_ydis = creator_offy * variable_instance_get(creator, "right", 1),
 				_ydir = _xdir - 90;
 				
 			x = creator.x + creator.hspeed_raw + lengthdir_x(_xdis, _xdir) + lengthdir_x(_ydis, _ydir);
-			y = creator.y + creator.vspeed_raw + lengthdir_y(_xdis, _xdir) + lengthdir_y(_ydis, _ydir);
-			if(roids) y -= 4;
+			y = creator.y + creator.vspeed_raw + lengthdir_y(_xdis, _xdir) + lengthdir_y(_ydis, _ydir) + (primary ? 0 : -4);
 		}
 		
 		 // Targeting:
@@ -3874,7 +3873,7 @@
 		
 		 // Effects:
 		view_shake_max_at(x, y, 3);
-		var _kick = (roids ? "bwkick" : "wkick");
+		var _kick = (primary ? "" : "b") + "wkick";
 		if(_kick in creator){
 			variable_instance_set(creator, _kick, 3);
 		}

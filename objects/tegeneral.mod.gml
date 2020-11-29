@@ -3763,7 +3763,7 @@
 		portal     = false;
 		hold       = true;
 		spec       = false;
-		roids      = false;
+		primary    = true;
 		
 		return id;
 	}
@@ -3786,7 +3786,7 @@
 	 // Charging:
 	if(hold){
 		 // Hold Still:
-		var _wep = variable_instance_get(creator, (roids ? "b" : "") + "wep");
+		var _wep = variable_instance_get(creator, (primary ? "" : "b") + "wep");
 		if(
 			sprite_index == spr_spwn
 			|| (
@@ -3807,7 +3807,7 @@
 				y = creator.y;
 				move_contact_solid(
 					direction,
-					offset - variable_instance_get(creator, (roids ? "b" : "") + "wkick", 0)
+					offset - variable_instance_get(creator, (primary ? "" : "b") + "wkick", 0)
 				);
 				
 				mask_index = _lastMask;
@@ -3820,7 +3820,7 @@
 			hold = false;
 			
 			 // FX:
-			var _kick = (roids ? "b" : "") + "wkick";
+			var _kick = (primary ? "" : "b") + "wkick";
 			if(_kick in creator){
 				variable_instance_set(creator, _kick, 10);
 			}

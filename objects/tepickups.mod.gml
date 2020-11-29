@@ -1495,7 +1495,7 @@
 		friction   = 0.4;
 		creator    = noone;
 		prompt     = prompt_create("");
-		shine      = 0.025;
+		shine      = 1/16;
 		open_state = 0;
 		open       = 1;
 		wave       = random(100);
@@ -1837,8 +1837,8 @@
 	if(setup) ChestShop_setup();
 	
 	 // Shine Delay:
-	if(image_index < 1 && shine < 1){
-		image_index += random(shine * current_time_scale) - image_speed_raw;
+	if(image_index < 1 && shine != 1){
+		image_index -= image_speed_raw * (1 - random(shine * current_time_scale));
 	}
 	
 	 // Particles:
@@ -2414,7 +2414,7 @@
 	}
 	
 #define CustomChest_step
-	 // Call Chest Step Event:
+	 // Call Custom Step Event:
 	if(is_array(on_step)){
 		mod_script_call(on_step[0], on_step[1], on_step[2]);
 	}
@@ -2434,7 +2434,7 @@
 					}
 				}
 				
-				 // Call Chest Open Event:
+				 // Call Custom Open Event:
 				if(is_array(on_open)){
 					mod_script_call(on_open[0], on_open[1], on_open[2]);
 				}
@@ -2459,26 +2459,51 @@
 	}
 	
 	 // Increase Big Weapon Chest Chance if Skipped:
-	if(nochest != 0 && instance_exists(Player) && fork()){
-		var _add = nochest;
-		wait 0;
-		if(!instance_exists(self)){
-			if(instance_exists(GenCont) || instance_exists(LevCont)){
-				GameCont.nochest += _add;
+	if(nochest != 0){
+		with(GameCont){
+			if(fork()){
+				var _add = other.nochest;
+				wait 0;
+				if(!instance_exists(other) && instance_exists(self)){
+					if(instance_exists(GenCont) || instance_exists(LevCont)){
+						nochest += _add;
+					}
+				}
+				exit;
 			}
 		}
-		exit;
 	}
 	
 	
 #define CustomPickup_create(_x, _y)
+	/*
+		A basic customizable Pickup object
+		
+		Vars:
+			shine      - Randomized animation speed multiplier for the sprite's first frame, use 1 to animate normally
+			spr_open   - The sprite that plays when opened by a Player
+			spr_fade   - The sprite that plays after disappearing
+			snd_open   - The sound that plays when opened by a Player
+			snd_fade   - The sound that plays after disappearing
+			mask_index - The hitbox, use mskPickup to collide with Ammo/HP-style pickups
+			num        - General multiplier for what it gives to Players
+			blink      - How many times it can blink on or off before disappearing
+			alarm0     - The number of frames before blinking starts
+			pull_dis   - The range in which it gets attracted to Players
+			pull_spd   - The speed at which it moves toward Players
+			on_step    - Script reference, called every frame for general code
+			on_pull    - Script reference, called to determine if the pickup should attract toward a given Player (other=Player)
+			on_open    - Script reference, called when the pickup is opened by a Player or Portal (other=Player/Portal)
+			on_fade    - Script reference, called when the pickup disappears
+	*/
+	
 	with(instance_create(_x, _y, Pickup)){
 		 // Visual:
 		sprite_index = sprAmmo;
 		spr_open     = sprSmallChestPickup;
 		spr_fade     = sprSmallChestFade;
 		image_speed  = 0.4;
-		shine        = 0.04;
+		shine        = 0.1;
 		
 		 // Sound:
 		snd_open = sndAmmoPickup;
@@ -2507,6 +2532,11 @@
 	
 #define CustomPickup_step
 	array_push(global.pickup_custom, id); // For step event management
+	
+	 // Animate:
+	if(image_index < 1 && shine != 1){
+		image_index -= image_speed_raw * (1 - random(shine * current_time_scale));
+	}
 	
 	 // Fading:
 	if(alarm0 >= 0 && --alarm0 == 0){
@@ -2540,7 +2570,7 @@
 		}
 	}
 	
-	 // Call Chest Step Event:
+	 // Call Custom Step Event:
 	if(is_array(on_step)){
 		mod_script_call(on_step[0], on_step[1], on_step[2]);
 	}
@@ -2591,11 +2621,6 @@
 	if(place_meeting(x + hspeed_raw, y + vspeed_raw, Wall)){
 		if(place_meeting(x + hspeed_raw, y, Wall)) hspeed_raw *= -1;
 		if(place_meeting(x, y + vspeed_raw, Wall)) vspeed_raw *= -1;
-	}
-	
-	 // Animate:
-	if(image_index < 1 && shine < 1){
-		image_index += random(shine * current_time_scale) - image_speed_raw;
 	}
 	
 	
@@ -2668,9 +2693,9 @@
 	with(obj_create(_x, _y, "CustomPickup")){
 		 // Visual:
 		sprite_index = spr.Harpoon;
-		image_index = 1;
-		spr_open = spr.HarpoonOpen;
-		spr_fade = spr.HarpoonFade;
+		image_index  = 1;
+		spr_open     = spr.HarpoonOpen;
+		spr_fade     = spr.HarpoonFade;
 		
 		 // Vars:
 		mask_index = mskBigRad;
@@ -4308,7 +4333,7 @@
 		image_angle  = random(360);
 		spr_open     = sprCaveSparkle;
 		spr_fade     = sprCaveSparkle;
-		shine        = 0.03;
+		shine        = 0.075;
 		
 		 // Sound:
 		snd_open = sndRadPickup;
@@ -5045,8 +5070,9 @@
 		if(array_length(_inst)){
 			with(_inst){
 				if(player_active){
-					 // Restore Ammo:
 					var _ammo = 0;
+					
+					 // Restore Ammo:
 					if("bonus_ammo_save" in self){
 						for(var i = min(array_length(ammo), array_length(bonus_ammo_save)) - 1; i >= 0; i--){
 							var _diff = (bonus_ammo_save[i] - ammo[i]);
@@ -5056,21 +5082,33 @@
 							}
 						}
 					}
-					with([wep, bwep]){
-						if(is_object(self) && "ammo" in self && "cost" in self){
-							if("ntte_bonus_ammo_save" in self){
-								var _diff = (ntte_bonus_ammo_save - ammo);
-								if(_diff > 0){
-									ammo  += _diff;
-									_ammo += _diff;
-								}
-							}
-							ntte_bonus_ammo_save = ammo;
-						}
-					}
 					bonus_ammo_save = array_clone(ammo);
 					drawempty       = 0;
 					drawemptyb      = 0;
+					
+					 // Restore Internal Ammo:
+					if("bonus_ammo_save_internal" not in self){
+						bonus_ammo_save_internal = [];
+					}
+					var _wepList = [wep, bwep];
+					for(var i = 0; i < array_length(_wepList); i++){
+						var _wep = _wepList[i];
+						if(
+							is_object(_wep)
+							&& "ammo" in _wep
+							&& "cost" in _wep
+							&& i < array_length(bonus_ammo_save_internal)
+						){
+							var	_save = bonus_ammo_save_internal[i],
+								_diff = (_save[1] - _wep.ammo);
+								
+							if(_save[0] == _wep && _diff > 0){
+								_wep.ammo += _diff;
+								_ammo     += _diff;
+							}
+						}
+						bonus_ammo_save_internal[i] = [_wep, lq_defget(_wep, "ammo", 0)];
+					}
 					
 					 // Timer:
 					if("bonus_ammo_max" not in self || abs(bonus_ammo_max) < abs(bonus_ammo)){
@@ -5091,11 +5129,12 @@
 						
 						 // End:
 						if(bonus_ammo <= 0){
-							bonus_ammo       = 0;
-							bonus_ammo_max   = 0;
-							bonus_ammo_tick  = 0;
-							bonus_ammo_flash = 0;
-							bonus_ammo_save  = [];
+							bonus_ammo               = 0;
+							bonus_ammo_max           = 0;
+							bonus_ammo_tick          = 0;
+							bonus_ammo_flash         = 0;
+							bonus_ammo_save          = [];
+							bonus_ammo_save_internal = [];
 						}
 						
 						 // Particles:
@@ -5167,21 +5206,23 @@
 		}
 		
 		 // Eyes Custom Pickup Attraction:
-		var _inst = instances_matching(Player, "race", "eyes");
-		if(array_length(_inst)) with(_inst){
-			if(player_active && canspec && button_check(index, "spec")){
-				var	_vx = view_xview[index],
-					_vy = view_yview[index];
-					
-				with(instance_rectangle(_vx, _vy, _vx + game_width, _vy + game_height, global.pickup_custom)){
-					if(!is_array(on_pull) || mod_script_call(on_pull[0], on_pull[1], on_pull[2])){
-						var	_l = (1 + skill_get(mut_throne_butt)) * current_time_scale,
-							_d = point_direction(x, y, other.x, other.y),
-							_x = x + lengthdir_x(_l, _d),
-							_y = y + lengthdir_y(_l, _d);
-							
-						if(place_free(_x, y)) x = _x;
-						if(place_free(x, _y)) y = _y;
+		if(array_length(global.pickup_custom)){
+			var _inst = instances_matching(Player, "race", "eyes");
+			if(array_length(_inst)) with(_inst){
+				if(player_active && canspec && button_check(index, "spec")){
+					var	_vx = view_xview[index],
+						_vy = view_yview[index];
+						
+					with(instance_rectangle(_vx, _vy, _vx + game_width, _vy + game_height, global.pickup_custom)){
+						if(!is_array(on_pull) || mod_script_call(on_pull[0], on_pull[1], on_pull[2])){
+							var	_l = (1 + skill_get(mut_throne_butt)) * current_time_scale,
+								_d = point_direction(x, y, other.x, other.y),
+								_x = x + lengthdir_x(_l, _d),
+								_y = y + lengthdir_y(_l, _d);
+								
+							if(place_free(_x, y)) x = _x;
+							if(place_free(x, _y)) y = _y;
+						}
 					}
 				}
 			}

@@ -24,7 +24,7 @@
 	
 	 // Big Lightning Disc:
 	with(projectile_create(x, y, "LightningDisc", gunangle, 14)){
-		roids       = _fire.roids;
+		primary     = _fire.primary;
 		charge     *= 2.5;
 		charge_spd /= 2;
 		stretch    *= 1.2;

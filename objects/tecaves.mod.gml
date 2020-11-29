@@ -2898,7 +2898,6 @@
 		target     = noone;
 		target_x   = x;
 		target_y   = y;
-		walled     = false;
 		my_sound   = -1;
 		cannon     = 0;
 		setup      = true;
@@ -2974,8 +2973,11 @@
 	
 #define VlasmaBullet_end_step
 	 // Pass Through Walls:
-	if(walled){
-		walled = false;
+	if(
+		x == xprevious &&
+		y == yprevious &&
+		place_meeting(x + hspeed_raw, y + vspeed_raw, Wall)
+	){
 		x += hspeed_raw;
 		y += vspeed_raw;
 	}
@@ -3015,10 +3017,7 @@
 	}
 	
 #define VlasmaBullet_wall
-	 // Pass Through Walls:
-	if(other.solid){
-		walled = true;
-	}
+	// Passing through...
 	
 #define VlasmaBullet_destroy
 	 // Sound:

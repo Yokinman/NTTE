@@ -1447,7 +1447,7 @@
 					_lastLoop  = GameCont.loops,
 					_lastIntro = UberCont.opt_bossintros;
 					
-				GameCont.loops = 0;
+				GameCont.loops          = 0;
 				UberCont.opt_bossintros = true;
 				
 				with(instance_create(0, 0, BanditBoss)){
@@ -1458,8 +1458,8 @@
 					instance_delete(id);
 				}
 				
-				GameCont.subarea = _lastSub;
-				GameCont.loops = _lastLoop;
+				GameCont.subarea        = _lastSub;
+				GameCont.loops          = _lastLoop;
 				UberCont.opt_bossintros = _lastIntro;
 			}
 		}
@@ -1528,16 +1528,16 @@
 		Called from a Player object
 	*/
 	
-	with(["wep", "curse", "reload", "wkick", "wepflip", "wepangle", "can_shoot", "interfacepop"]){
-		var _temp = variable_instance_get(other, self);
-		variable_instance_set(other, self, variable_instance_get(other, "b" + self));
-		variable_instance_set(other, "b" + self, _temp);
+	with(["%wep", "%curse", "%reload", "%wkick", "%wepflip", "%wepangle", "%can_shoot", "%interfacepop", "drawempty%"]){
+		var	_name = [string_replace_all(self, "%", ""), string_replace_all(self, "%", "b")],
+			_temp = variable_instance_get(other, _name[0]);
+			
+		variable_instance_set(other, _name[0], variable_instance_get(other, _name[1]));
+		variable_instance_set(other, _name[1], _temp);
 	}
 	
-	can_shoot = (reload <= 0);
-	drawempty = 30;
-	swapmove  = true;
-	clicked   = false;
+	 // bclicked...
+	clicked = false;
 	
 #define portal_poof()
 	/*
@@ -1888,7 +1888,7 @@
 		
 		 // Named:
 		if(_name == ""){
-			if("name" in _inst && string_pos("Custom", _name) == 1){
+			if("name" in _inst && string_pos("Custom", object_get_name(variable_instance_get(_inst, "object_index", -1))) == 1){
 				_name = string(_inst.name);
 				if(string_pos(" ", _name) <= 0){
 					_name = string_space(_name);
@@ -2341,23 +2341,18 @@
 		Vars:
 			wep     - The weapon's value, may be modified from the given argument
 			creator - The actual instance firing, for 'player_fire_ext()' support
-			wepheld - The weapon is in the firing instance's primary slot, true/false
-			roids   - The weapon is being shot by steroids' active
-			spec    - The weapon is being shot by an active
+			primary - The weapon is in the primary slot (true) or secondary slot (false)
+			wepheld - The weapon is physically stored in the creator's 'wep' variable
+			spec    - The weapon is being shot by an active (YV, Steroids, Skeleton)
 	*/
 	
 	var _fire = {
 		"wep"     : _wep,
 		"creator" : noone,
+		"primary" : true,
 		"wepheld" : false,
-		"roids"   : false,
 		"spec"    : false
 	};
-	
-	 // Melee:
-	if(weapon_is_melee(_wep)){
-		wepangle *= -1;
-	}
 	
 	 // Creator:
 	_fire.creator = self;
@@ -2368,10 +2363,10 @@
 	 // Weapon Held by Creator:
 	_fire.wepheld = (variable_instance_get(_fire.creator, "wep") == _wep);
 	
-	 // Secondary Firing:
+	 // Active / Secondary Firing:
 	_fire.spec = variable_instance_get(self, "specfiring", false);
 	if(race == "steroids" && _fire.spec){
-		_fire.roids = true;
+		_fire.primary = false;
 	}
 	
 	 // LWO Setup:
@@ -2385,7 +2380,122 @@
 		}
 	}
 	
+	 // Charge Weapon:
+	if(mod_script_call("weapon", wep_raw(_wep), "weapon_chrg", _wep) && _wep.chrg >= 0){
+		var	_load = variable_instance_get(self, "reloadspeed", 1) * current_time_scale,
+			_auto = (
+				(race == "steroids")
+				? (weapon_get_auto(wep) >= 0)
+				: weapon_get_auto(wep)
+			);
+			
+		 // Charging (chrg: -1==Released, 0==None, 1==Charging, 2==Charged):
+		_wep.chrg = ((_wep.chrg_num < _wep.chrg_max) ? 1 : 2);
+		if(_wep.chrg == 1){
+			_wep.chrg_num = min(_wep.chrg_num + _load, _wep.chrg_max);
+			
+			 // Pop Pop:
+			if(_fire.spec && _fire.primary){
+				_wep.chrg_num = _wep.chrg_max;
+			}
+		}
+		
+		 // Hold to Charge:
+		if(_auto || wep.chrg_num >= wep.chrg_max){
+			 // Manual Reload:
+			reload += _load - weapon_get_load(_wep);
+			
+			 // Charge Controller:
+			var _inst = instances_matching(instances_matching(CustomObject, "name", "WeaponCharger"), "wep", _wep);
+			if(!array_length(_inst)){
+				_inst = instance_create(x, y, CustomObject);
+				with(_inst){
+					name    = "WeaponCharger";
+					wep     = _wep;
+					on_step = weapon_chrg_step;
+				}
+			}
+			with(_inst){
+				x         = other.x;
+				y         = other.y;
+				direction = other.gunangle;
+				team      = other.team;
+				creator   = _fire.creator;
+				primary   = _fire.primary;
+				fire      = !_auto;
+			}
+		}
+	}
+	
+	 // Melee:
+	else if(weapon_is_melee(_wep)){
+		wepangle *= -1;
+	}
+	
 	return _fire;
+	
+#define weapon_chrg_step
+	if(fire){
+		if(is_object(wep) && "chrg" in wep){
+			if(wep.chrg){
+				wep.chrg = -1;
+				with(creator){
+					other.x = x;
+					other.y = y;
+					if(variable_instance_get(self, (other.primary ? "" : "b") + "wep") == other.wep){
+						 // Player:
+						if(instance_is(self, Player)){
+							 // Steroids:
+							if(!other.primary){
+								player_swap();
+								specfiring = true;
+							}
+							
+							 // Fire:
+							var	_type = weapon_get_type(wep),
+								_cost = weapon_get_cost(wep),
+								_rads = weapon_get_rads(wep),
+								_ammo = ammo[_type];
+								
+							if(infammo != 0 || (_ammo >= _cost && GameCont.rad >= _rads)){
+								var _lastTeam = team;
+								team = other.team;
+								player_fire(other.direction);
+								team = _lastTeam;
+							}
+							
+							 // Low Ammo:
+							else{
+								wkick     = -2;
+								clicked   = false;
+								drawempty = 30;
+								sound_play((_ammo < _cost) ? sndEmpty : sndUltraEmpty);
+								with(instance_create(x, y, PopupText)){
+									target = other.index;
+									text   = ((_ammo < _cost) ? ((_ammo > 0) ? "NOT ENOUGH " + other.typ_name[_type] : "EMPTY") : "NOT ENOUGH RADS");
+								}
+							}
+							
+							 // Steroids:
+							if(!other.primary){
+								specfiring = false;
+								player_swap();
+							}
+						}
+						
+						 // Non-Player:
+						else with(other){
+							player_fire_ext(direction, wep, x, y, team, other);
+						}
+					}
+				}
+				wep.chrg = 0;
+			}
+			wep.chrg_num = 0;
+		}
+		instance_destroy();
+	}
+	else fire = true;
 	
 #define weapon_ammo_fire(_wep)
 	/*
@@ -2393,8 +2503,10 @@
 		Returns 'true' if the weapon had enough internal ammo to fire, 'false' otherwise
 	*/
 	
-	 // Infinite Ammo:
-	if(infammo != 0) return true;
+	 // Gun Warrant:
+	if(infammo != 0){
+		return true;
+	}
 	
 	 // Ammo Cost:
 	var _cost = lq_defget(_wep, "cost", 1);
@@ -2413,18 +2525,13 @@
 			sound_play(sndEmpty);
 			with(instance_create(x, y, PopupText)){
 				target = other.index;
-				if(_wep.ammo > 0){
-					text = "NOT ENOUGH " + _wep.anam;
-				}
-				else{
-					text = "EMPTY";
-				}
+				text   = ((_wep.ammo > 0) ? "NOT ENOUGH " + _wep.anam : "EMPTY");
 			}
 		}
 	}
 	
 	return false;
-
+	
 #define weapon_ammo_hud(_wep)
 	/*
 		Called from a 'weapon_sprt_hud' script to draw HUD for LWO weapons with internal ammo
@@ -2450,7 +2557,7 @@
 	
 	 // Default Sprite:
 	return weapon_get_sprt(_wep);
-
+	
 #define draw_ammo(_index, _primary, _steroids, _ammo, _ammoMin)
 	/*
 		Draws ammo HUD text

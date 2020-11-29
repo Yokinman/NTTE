@@ -469,11 +469,11 @@
 				hush = min(hush + 0.2, 0.3);
 				hushtime = 60;
 			}
-
+			
 			 // Not Holding Weapon:
 			if(wep == wep_none && !place_meeting(x, y, WepPickup) && instance_exists(prompt_mimic)){
 				with(prompt_mimic) visible = true;
-
+				
 				 // Place Weapon:
 				with(player_find(prompt_mimic.pick)){
 					if(canpick && wep != wep_none){
@@ -1019,7 +1019,7 @@
 				
 				 // Invulnerability:
 				if(instance_is(self, Player)){
-					nexthurt = max(nexthurt, current_frame + 10);
+					nexthurt = max(nexthurt, current_frame + 6);
 					angle    = 1.5 * hspeed * -clamp((vspeed + 1) / 2, -1, 1);
 				}
 				
@@ -1069,9 +1069,16 @@
 								if(my_health > 0){
 									if((1 + size > other.dash_charge && !instance_is(self, prop)) || maxhealth > _damage){
 										with(other){
-											dash_charge = 0;
 											sprite_index = spr_hurt;
-											image_index = 0;
+											image_index  = 0;
+											
+											 // Bounce:
+											dash_direction = point_direction(other.x, other.y, x, y);
+											dash_charge    = 0;
+											with((mount && instance_exists(leader)) ? leader : self){
+												direction = other.dash_direction;
+												speed /= 3;
+											}
 										}
 										
 										 // Effects:
@@ -1086,7 +1093,7 @@
 								 // Punt:
 								else if(
 									instance_is(self, enemy)
-									&& size == 1
+									&& (size == 1 || instance_is(self, BanditBoss))
 									&& team != 0
 									&& chance(speed * (1 + (0.5 * skill_get(mut_throne_butt))), 12)
 								){
