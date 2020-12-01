@@ -1560,7 +1560,7 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 		target     = noone;
 		big        = false;
 		key        = "";
-		seek       = 40 * skill_get(mut_bolt_marrow);
+		seek       = 48 * skill_get(mut_bolt_marrow);
 		walled     = false;
 		speed      = maxspeed;
 		
@@ -1578,7 +1578,7 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 		if(alarm0 < 0){
 			alarm0 = 30;
 		}
-		seek *= 1.6;
+		seek *= 4/3;
 	}
 	
 #define BatDisc_step
@@ -1647,6 +1647,7 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 						deflected = true;
 						returning = false;
 						has_hit   = false;
+						seek      = max(seek, 48 * skill_get(mut_bolt_marrow));
 						direction = other.direction;
 						speed     = maxspeed + 8;
 						

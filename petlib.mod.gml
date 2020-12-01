@@ -2381,8 +2381,10 @@
 											hitid     = other.hitid;
 											
 											var _dirOff = angle_difference(_dir, direction);
+											if(image_angle != 0 || image_angle == direction){
+												image_angle += _dirOff;
+											}
 											direction   += _dirOff;
-											image_angle += _dirOff;
 											
 											 // Rebounce:
 											if("zspeed" in self) zspeed *= -1;
@@ -2635,8 +2637,8 @@
 							sprite_index = sprLightning;
 							image_xscale = random_range(0.5, 2);
 							image_yscale = random_range(0.5, 2);
-							image_angle = random(360);
-							alarm0 = 4 + random(4);
+							image_angle  = random(360);
+							alarm0       = 4 + random(4);
 						}
 						motion_add(random(360), 1);
 					}
@@ -2751,12 +2753,24 @@
 		light      = false;
 		spr_shadow = -1;
 		
+		 // Animate Slower:
+		if(image_index < 1){
+			image_index -= image_speed_raw * 0.95;
+			
+			 // Goodbye:
+			if(instance_exists(CustomEnemy) && array_length(instances_matching(instances_matching(CustomEnemy, "name", "PitSquid"), "intro", true))){
+				instance_destroy();
+				exit;
+			}
+		}
+		
 		 // Hop to New Pit:
-		if(image_index < 1) image_index -= image_speed_raw * 0.95;
 		else if(anim_end){
 			with(instance_random(instances_matching(Floor, "sprite_index", spr.FloorTrenchB))){
 				other.x = bbox_center_x;
 				other.y = bbox_center_y;
+				other.xprevious = other.x;
+				other.yprevious = other.y;
 			}
 		}
 		

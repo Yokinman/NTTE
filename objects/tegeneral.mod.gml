@@ -970,15 +970,13 @@
 	}
 	
 #define scrBoneDust(_x, _y)
-	var c = [
-		make_color_rgb(208, 197, 180),
-		make_color_rgb(157, 133, 098),
-		make_color_rgb(111, 082, 043)
-	];
-	
 	 // Create the guy aready:
 	with(instance_create(_x, _y, Sweat)){
-		image_blend = c[irandom(array_length(c) - 1)];
+		image_blend = choose(
+			make_color_rgb(208, 197, 180),
+			make_color_rgb(157, 133, 098),
+			make_color_rgb(111, 082, 043)
+		);
 		return id;
 	}
 
@@ -2541,7 +2539,9 @@
 	wave += current_time_scale;
 	
 	 // Pathfinding Delay:
-	if(path_delay > 0) path_delay -= current_time_scale;
+	if(path_delay > 0){
+		path_delay -= current_time_scale;
+	}
 	
 	 // Loop HP Scaling:
 	if(loops != GameCont.loops){
@@ -2580,6 +2580,9 @@
 		var _scrt = pet + "_anim";
 		if(mod_script_exists(mod_type, mod_name, _scrt)){ // Custom Animation Event
 			mod_script_call(mod_type, mod_name, _scrt);
+			if(!instance_exists(self)){
+				exit;
+			}
 		}
 		else sprite_index = enemy_sprite;
 		
@@ -2625,9 +2628,9 @@
 		}
 		
 		 // Custom Step Event:
-		var _scrt = pet + "_step";
-		if(mod_script_exists(mod_type, mod_name, _scrt)){
-			mod_script_call(mod_type, mod_name, _scrt);
+		mod_script_call(mod_type, mod_name, pet + "_step");
+		if(!instance_exists(self)){
+			exit;
 		}
 	}
 	else walk = 0;
@@ -2679,9 +2682,9 @@
 			image_index  = 0;
 			
 			 // Custom Death Event:
-			var _scrt = pet + "_death";
-			if(mod_script_exists(mod_type, mod_name, _scrt)){
-				mod_script_call(mod_type, mod_name, _scrt);
+			mod_script_call(mod_type, mod_name, pet + "_death");
+			if(!instance_exists(self)){
+				exit;
 			}
 		}
 	}
@@ -2955,9 +2958,9 @@
 	
 	/*
 	 // Custom End Step Event:
-	var _scrt = pet + "_end_step";
-	if(mod_script_exists(mod_type, mod_name, _scrt)){
-		mod_script_call(mod_type, mod_name, _scrt);
+	mod_script_call(mod_type, mod_name, pet + "_end_step");
+	if(!instance_exists(self)){
+		exit;
 	}
 	*/
 	
@@ -3008,6 +3011,9 @@
 		
 	if(mod_script_exists(mod_type, mod_name, _scr)){
 		mod_script_call(mod_type, mod_name, _scr, _spr, _img, _x, _y, _xsc, _ysc, _ang, _col, _alp);
+		if(!instance_exists(self)){
+			exit;
+		}
 	}
 	else draw_sprite_ext(_spr, _img, _x, _y, _xsc, _ysc, _ang, _col, _alp);
 	
@@ -3053,8 +3059,13 @@
 		 // Custom Alarm Event:
 		var _scrt = pet + "_alrm0";
 		if(mod_script_exists(mod_type, mod_name, _scrt)){
-			var a = mod_script_call(mod_type, mod_name, _scrt, _leaderDir, _leaderDis);
-			if(is_real(a) && a != 0) alarm0 = a;
+			var _alarm = mod_script_call(mod_type, mod_name, _scrt, _leaderDir, _leaderDis);
+			if(!instance_exists(self)){
+				exit;
+			}
+			if(is_real(_alarm) && _alarm != 0){
+				alarm0 = _alarm;
+			}
 		}
 		
 		 // Default:
@@ -3104,6 +3115,9 @@
 				 // Custom Hurt Event:
 				if(mod_script_exists(mod_type, mod_name, _scrt)){
 					mod_script_call(mod_type, mod_name, _scrt, _hitdmg, _hitvel, _hitdir);
+					if(!instance_exists(self)){
+						exit;
+					}
 				}
 				
 				 // Default:
@@ -3118,6 +3132,9 @@
 					 // Custom Dodge Event:
 					if(mod_script_exists(mod_type, mod_name, _scrt)){
 						mod_script_call(mod_type, mod_name, _scrt, _hitdmg, _hitvel, _hitdir);
+						if(!instance_exists(self)){
+							exit;
+						}
 					}
 					
 					 // Default:
@@ -3132,10 +3149,7 @@
 	
 #define Pet_cleanup
 	 // Custom Cleanup Event:
-	var _scrt = pet + "_cleanup";
-	if(mod_script_exists(mod_type, mod_name, _scrt)){
-		mod_script_call(mod_type, mod_name, _scrt);
-	}
+	mod_script_call(mod_type, mod_name, pet + "_cleanup");
 	
 	 // Add to Pet History (MutantVats Event):
 	if(!stat_found && array_length(history) > 0){
@@ -4326,10 +4340,10 @@
 		override_mask    = true;
 	//	override_depth   = true;
 		unstick          = false;
-		search_x1        = x - 8;
-		search_x2        = x + 8;
-		search_y1        = y - 8;
-		search_y2        = y + 8;
+		search_x1        = x;
+		search_x2        = x;
+		search_y1        = y;
+		search_y2        = y;
 		
 		 // Up down:
 		y += z;

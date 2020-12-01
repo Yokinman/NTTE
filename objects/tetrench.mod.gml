@@ -52,7 +52,7 @@
 		
 		 // Vars:
 		mask_index  = -1;
-		maxhealth   = 50;
+		maxhealth   = 45;
 		raddrop     = 25;
 	//	rad_max     = raddrop;
 		meleedamage = 4;
@@ -63,7 +63,6 @@
 		hiding      = true;
 		ammo        = 0;
 		gold        = false;
-	//	rad_paths   = [];
 		
 		 // Alarms:
 		alarm1 = 30 + irandom(30);
@@ -78,7 +77,7 @@
 #define Angler_step
 	 // Alarms:
 	if(alarm1_run) exit;
-	// if(alarm2_run) exit;
+	//if(alarm2_run) exit;
 	
 	 // Movement:
 	enemy_walk(walkspeed, maxspeed + (8 * (ammo >= 0 && walk > 0)));
@@ -99,7 +98,7 @@
 		 // Charging Up:
 		if(ammo >= 0){
 			speed *= power(0.85, current_time_scale);
-			wall_clear(x + hspeed, y + vspeed);
+			//wall_clear(x + hspeed, y + vspeed);
 		}
 	}
 	
@@ -111,6 +110,7 @@
 	
 #define Angler_alrm1
 	alarm1 = 6 + irandom(6);
+	
 	enemy_target(x, y);
 	
 	 // Hiding:
@@ -124,34 +124,34 @@
 		 // Charging:
 		if(ammo > 0){
 			ammo--;
-			alarm1 = (gold ? 8 : 8);
+			alarm1 = (gold ? 6 : 8);
 			
 			 // Charge:
-			scrWalk((instance_seen(x, y, target) ? point_direction(x, y, target.x, target.y) : direction) + orandom(40), (gold ? 5 : 5));
-			speed = maxspeed + (gold ? 20 : 10);
+			scrWalk((instance_seen(x, y, target) ? point_direction(x, y, target.x, target.y) : direction) + orandom(40), 5);
+			speed = maxspeed + 10;
 			
 			 // Effects:
 			sound_play_pitchvol(sndRoll, 1.4 + random(0.4), 1.2);
 			sound_play_pitchvol(sndBigBanditMeleeStart, 1.2 + random(0.2), 0.5);
-			repeat(4) with(instance_create(x + orandom(16), y + orandom(16), Dust)){
-				motion_add(other.direction + 180, random(4));
+			repeat(4){
+				scrFX([x, 16], [y, 16], [direction + 180, random(4)], Dust);
 			}
 			sprite_index = spr_hurt; // Temporary?
-			image_index = 1;
+			image_index  = 1;
 			
 			 // Gold:
 			if(gold){
 				wall_clear(x + hspeed, y + vspeed);
-				with(projectile_create(x, y, "BatScreech", 0, 0)){
-					sprite_index = spr.GoldAnglerScreech;
+				/*with(projectile_create(x, y, "BatScreech", 0, 0)){
+					sprite_index = spr.AnglerGoldScreech;
 					image_xscale = 0.5;
 					image_yscale = 0.5;
 					image_index  = 1;
-				}
+				}*/
 			}
 		}
 		else if(ammo == 0){
-			ammo = -1;
+			ammo   = -1;
 			alarm1 = 15;
 			
 			 // Back up:
@@ -163,11 +163,30 @@
 			alarm1 = 20 + irandom(20);
 			
 			 // Move Toward Player:
-			if((gold || instance_seen(x, y, target)) && instance_near(x, y, target, (gold ? 192 : 96))){
+			if((gold || instance_seen(x, y, target)) && instance_near(x, y, target, 96 * (1 + gold))){
 				scrWalk(point_direction(x, y, target.x, target.y) + orandom(20), [25, 50]);
 				if(chance(1, 2)){
 					ammo = irandom_range(1, 3) + (2 * gold);
-					if(gold) alarm1 *= 2/5;
+					if(gold){
+						alarm1 = ceil(alarm1 * 0.4);
+						direction += 180;
+						
+						 // Screech:
+						with(projectile_create(x, y, "BatScreech", 0, 0)){
+							sprite_index = spr.AnglerGoldScreech;
+						}
+						
+						 // Sounds:
+						audio_sound_gain(sound_play_hit_ext(sndLilHunterLaunch, 0.5 + orandom(0.1), 1.6), 0, 750);
+						audio_sound_set_track_position(sound_play_hit_ext(sndNothing2DeadStart, 1, 1.3), 1);
+						
+						 // Call the bros:
+						with(instances_matching_lt(instances_matching(object_index, "name", "Angler", "AnglerGold"), "gold", gold)){
+							if(hiding && instance_near(x, y, other, 128)){
+								scrAnglerAppear();
+							}
+						}
+					}
 				}
 			}
 			
@@ -187,45 +206,43 @@
 			}
 		}
 	}
-
-/*	
-/// #define Angler_alrm2
-	alarm2 = 2 + random(4);
 	
-	 // Call Rads to Heal:
-	if(!hiding && my_health <= maxhealth){
-		if(instance_exists(Rad) || instance_exists(BigRad)){
-			var _inst = instances_matching([Rad, BigRad], "goldanglerradattract_check", null);
-			
-			if(array_length(_inst)){
-				with(instance_nearest_array(x, y, _inst)){
-					goldanglerradattract_check = true;
-					rad_path(id, other);
-				}
-			}
-		}
-	}
+//#define Angler_alrm2
+//	alarm2 = 2 + random(4);
+//	
+//	 // Call Rads to Heal:
+//	if(!hiding && my_health <= maxhealth){
+//		if(instance_exists(Rad) || instance_exists(BigRad)){
+//			var _inst = instances_matching([Rad, BigRad], "goldanglerradattract_check", null);
+//			
+//			if(array_length(_inst)){
+//				with(instance_nearest_array(x, y, _inst)){
+//					goldanglerradattract_check = true;
+//					rad_path(id, other);
+//				}
+//			}
+//		}
+//	}
+//	
+//	 // Heal Up:
+//	if(raddrop > rad_max){
+//		repeat(min(irandom_range(1, 3), (raddrop - rad_max))){
+//			raddrop--;
+//			my_health++;
+//			instance_create(x + orandom(16), y + orandom(12), HorrorTB);
+//		}
+//	}
 	
-	 // Heal Up:
-	if(raddrop > rad_max){
-		repeat(min(irandom_range(1, 3), (raddrop - rad_max))){
-			raddrop--;
-			my_health++;
-			instance_create(x + orandom(16), y + orandom(12), HorrorTB);
-		}
-	}
-*/
-	
-#define Angler_hurt(_hitdmg, _hitvel, _hitdir)
-	my_health -= _hitdmg;          // Damage
-	nexthurt = current_frame + 6;  // I-Frames
-	motion_add(_hitdir, _hitvel);  // Knockback
+#define Angler_hurt(_damage, _force, _direction)
+	my_health -= _damage;           // Damage
+	nexthurt = current_frame + 6;   // I-Frames
+	motion_add(_direction, _force); // Knockback
 	
 	 // Sounds:
-	if(gold){
+	if(gold && snd_hurt == sndFreakPopoHurt){
 		sound_play_hit_ext(sndEnergyHammerUpg, 0.8 + random(0.2), 0.7);
-		sound_play_hit_ext(sndSwapGold, 	   0.9 + random(0.2), 0.4);
-		sound_play_hit_ext(snd_hurt,		   0.7 + random(0.2), 1);
+		sound_play_hit_ext(sndSwapGold,        0.9 + random(0.2), 0.4);
+		sound_play_hit_ext(snd_hurt,           0.7 + random(0.2), 1);
 	}
 	else sound_play_hit(snd_hurt, 0.3);
 	
@@ -241,10 +258,21 @@
 	}
 	
 	 // Emergency:
-	if(my_health < (maxhealth * 3/5) && chance(2, 3) && ammo < 0){
+	if(my_health < maxhealth * 2/3 && chance(2, 3) && ammo < 0){
 		walk   = 0;
 		ammo   = 1 + gold;
 		alarm1 = 4;
+		
+		if(gold){
+			 // Screech:
+			with(projectile_create(x, y, "BatScreech", 0, 0)){
+				sprite_index = spr.AnglerGoldScreech;
+			}
+			
+			 // Sounds:
+			audio_sound_gain(sound_play_hit_ext(sndLilHunterLaunch, 0.5 + orandom(0.1), 1.6), 0, 750);
+			audio_sound_set_track_position(sound_play_hit_ext(sndNothing2DeadStart, 1, 1.3), 1);
+		}
 	}
 	
 #define Angler_death
@@ -314,20 +342,20 @@
 			unlock_set("skin:angler fish", true);
 		}
 	}
-		
+	
 #define scrAnglerAppear()
 	hiding = false;
 	
 	 // Anglers rise up
-	mask_index = mskFrogQueen;
-	spr_shadow = shd64B;
+	mask_index   = mskFrogQueen;
+	spr_shadow   = shd64B;
 	spr_shadow_x = 0;
 	spr_shadow_y = 3;
 	wall_clear(x, y);
 	
 	 // Time 2 Charge
 	alarm1 = 15 + orandom(2);
-	ammo = 3 + (2 * gold);
+	ammo   = 3 + (2 * gold);
 	
 	 // Effects:
 	sound_play_pitch(sndBigBanditMeleeStart, 0.8 + random(0.2));
@@ -339,8 +367,12 @@
 	}
 	
 	 // Call the bros:
-	with(instances_matching(object_index, "name", "Angler")){
-		if((hiding && chance(1, 2) && instance_near(x, y, other, 64)) || other.gold){
+	with(instances_matching_lt(instances_matching(object_index, "name", "Angler", "AnglerGold"), "gold", gold)){
+		if(
+			hiding
+			&& chance(1 + other.gold, 2)
+			&& instance_near(x, y, other, 64 * (1 + other.gold))
+		){
 			scrAnglerAppear();
 		}
 	}
@@ -348,7 +380,7 @@
 	 // Screech:
 	if(gold){
 		with(projectile_create(x, y, "BatScreech", 0, 0)){
-			sprite_index = spr.GoldAnglerScreech;
+			sprite_index = spr.AnglerGoldScreech;
 		}
 		
 		 // Sounds:	
@@ -365,8 +397,8 @@
 	image_index  = image_number - 1 + image_speed;
 	mask_index   = msk.AnglerHidden[right < 0];
 	spr_shadow   = shd24;
-	spr_shadow_y = 9;
 	spr_shadow_x = 6 * right;
+	spr_shadow_y = 9;
 	walk         = 0;
 	
 	 // Effects:
@@ -377,6 +409,33 @@
 			waterbubble = true;
 			motion_add(random(360), 2)
 		}
+	}
+	
+	
+#define AnglerGold_create(_x, _y)
+	with(obj_create(_x, _y, "Angler")){
+		 // Visual:
+		spr_idle     = spr.AnglerGoldIdle;
+		spr_walk     = spr.AnglerGoldWalk;
+		spr_hurt     = spr.AnglerGoldHurt;
+		spr_dead     = spr.AnglerGoldDead;
+		spr_appear   = spr.AnglerGoldAppear;
+		sprite_index = spr_appear;
+		hitid        = [spr_idle, "GOLDEN ANGLER"];
+		
+		// Sounds:
+		snd_hurt = sndFreakPopoHurt;
+		
+		 // Vars:
+		maxhealth   = round(maxhealth * 1.6);
+		my_health   = round(my_health * 1.6);
+		maxspeed    = 5;
+	//	meleedamage = 6;
+		raddrop     = 45;
+	//	rad_max     = raddrop;
+		gold        = true;
+		
+		return id;
 	}
 	
 	
@@ -412,22 +471,19 @@
 		snd_mele = (_water ? sndOasisMelee : sndMaggotBite);
 		
 		 // Vars:
-		mask_index    = mskRat;
-		maxhealth     = 12;
-		raddrop       = 2;
-		meleedamage   = 2;
-		size          = 1;
-		walk          = 0;
-		walkspeed     = 1.2;
-		maxspeed      = 3.4;
-		pitDepth      = 0;
-		direction     = random(360);
-		arc_inst      = noone;
-		arcing        = 0;
-		wave          = random(100);
-		elite         = 0;
-		ammo          = 0;
-		canmelee_last = canmelee;
+		mask_index  = mskRat;
+		maxhealth   = 10;
+		raddrop     = 2;
+		meleedamage = 2;
+		size        = 1;
+		walk        = 0;
+		walkspeed   = 1.2;
+		maxspeed    = 3.4;
+		direction   = random(360);
+		arc_inst    = noone;
+		arcing      = 0;
+		elite       = 0;
+		wave        = random(100);
 		
 		 // Alarms:
 		alarm1 = 15 + random(45);
@@ -517,23 +573,29 @@
 	}
 	else arcing = 0;
 
-	 // Elite:
+	 // Eelite:
 	if(elite > 0){
 		elite -= current_time_scale;
 		
 		 // Zappin ?
-		if(canmelee_last && !canmelee){
+		if(
+			alarm11 > 0
+			&& ((alarm11 + 1) % 15) < 1
+			&& current_frame_active
+		){
 			var _dir = random(360);
 			if(instance_exists(Player)){
-				var n = instance_nearest(x, y, Player);
-				_dir = point_direction(x, y, n.x, n.y);
+				with(instance_nearest(x, y, Player)){
+					_dir = point_direction(other.x, other.y, x, y) + orandom(40);
+				}
 			}
 			with(projectile_create(x, y, EnemyLightning, _dir, 0)){
-				ammo = 6 + random(2);
+				ammo = 2 + random(2);
 				with(self){
 					event_perform(ev_alarm, 0);
 				}
 			}
+			walk = 0;
 		}
 		
 		 // Effects:
@@ -546,7 +608,6 @@
 			image_index  = 0;
 		}
 	}
-	canmelee_last = canmelee;
 	
 	 // Movement:
 	enemy_walk(walkspeed, maxspeed);
@@ -1059,33 +1120,6 @@
 	}
 	
 	
-#define GoldAngler_create(_x, _y)
-	with(obj_create(_x, _y, "Angler")){
-		 // Visual:
-		spr_idle     = spr.GoldAnglerIdle;
-		spr_walk     = spr.GoldAnglerWalk;
-		spr_hurt     = spr.GoldAnglerHurt;
-		spr_dead     = spr.GoldAnglerDead;
-		spr_appear   = spr.GoldAnglerAppear;
-		sprite_index = spr_appear;
-		hitid        = [spr_idle, "GOLDEN ANGLER"];
-		
-		// Sounds:
-		snd_hurt = sndFreakPopoHurt;
-		
-		 // Vars:
-	//	meleedamage = 6;
-		maxhealth   = 110;
-		my_health   = maxhealth;
-		raddrop     = 45;
-	//	rad_max     = raddrop;
-		gold        = true;
-		maxspeed    = 4;
-		
-		return id;
-	}
-	
-	
 #define Jelly_create(_x, _y)
 	/*
 		A standard Trench enemy that floats around and fires lightning rings at the Player
@@ -1178,15 +1212,23 @@
 		if(chance(1, 3) && instance_near(x, y, target, [32, 256])){
 			alarm1 += 30;
 			
-			 // Shoot lightning disc:
-			if(type > 2){
-				for(var a = _targetDir; a < _targetDir + 360; a += (360 / 3)){
-					with(projectile_create(x, y, "LightningDiscEnemy", a, 8)){
-						shrink /= 2; // Last twice as long
-					}
+			 // Shoot Lightning Disc:
+			var _inst = [];
+			if(type <= 2){
+				array_push(_inst, projectile_create(x, y, "LightningDisc", _targetDir, 8));
+			}
+			else for(var _dir = _targetDir; _dir < _targetDir + 360; _dir += (360 / 3)){
+				with(projectile_create(x, y, "LightningDisc", _dir, 8)){
+					shrink /= 2; // Last twice as long
+					array_push(_inst, id);
 				}
 			}
-			else projectile_create(x, y, "LightningDiscEnemy", _targetDir, 8);
+			with(_inst){
+				is_enemy    = true;
+				maxspeed   *= 4/5;
+				radius     *= 4/3;
+				charge_spd *= 0.7;
+			}
 			
 			 // Effects:
 			sound_play_hit(sndLightningHit, 0.25);
@@ -1244,11 +1286,11 @@
 	
 	with(instance_create(_x, _y, CustomProp)){
 		 // Visual:
-		spr_idle = spr.KelpIdle;
-		spr_hurt = spr.KelpHurt;
-		spr_dead = spr.KelpDead;
+		spr_idle    = spr.KelpIdle;
+		spr_hurt    = spr.KelpHurt;
+		spr_dead    = spr.KelpDead;
 		image_speed = random_range(0.2, 0.3);
-		depth = -2;
+		depth       = -2;
 		
 		 // Sounds:
 		snd_hurt = sndOasisHurt;
@@ -1256,7 +1298,7 @@
 		
 		 // Vars:
 		maxhealth = 2;
-		size = 1;
+		size      = 1;
 		
 		return id;
 	}
@@ -1285,11 +1327,13 @@
 	with(instance_create(_x, _y, CustomProjectile)){
 		 // Visual:
 		sprite_index = sprLightning;
-		image_speed = 0.4;
-		depth = -3;
+		image_speed  = 0.4;
+		depth        = -3;
 		
 		 // Vars:
 		mask_index     = mskWepPickup;
+		image_xscale   = 0;
+		image_yscale   = 0;
 		rotspeed       = random_range(10, 20) * choose(-1, 1);
 		rotation       = 0;
 		radius         = 12;
@@ -1299,11 +1343,9 @@
 		typ            = 0;
 		shrink         = 1/160;
 		maxspeed       = 2.5;
-		is_enemy       = false;
-		image_xscale   = 0;
-		image_yscale   = 0;
 		stretch        = 1;
 		super          = -1;
+		is_enemy       = false;
 		creator_follow = true;
 		primary        = true;
 		setup          = true;
@@ -1314,11 +1356,18 @@
 #define LightningDisc_setup
 	setup = false;
 	
+	 // Enemy:
+	if(is_enemy){
+		if(sprite_index == sprLightning){
+			sprite_index = sprEnemyLightning;
+		}
+	}
+	
 	 // Laser Brain:
-	if(!is_enemy){
+	else{
 		var _skill = skill_get(mut_laser_brain);
-		charge *= power(1.2, _skill);
-		stretch *= power(1.2, _skill);
+		charge      *= power(1.2,  _skill);
+		stretch     *= power(1.2,  _skill);
 		image_speed *= power(0.75, _skill);
 	}
 
@@ -1609,25 +1658,6 @@
 			_ang = point_direction(_x1, _y1, _x2, _y2);
 			
 		draw_sprite_ext(_spr, _img, _x1, _y1, _xsc, _ysc, _ang, _blend, _alpha);
-	}
-
-
-#define LightningDiscEnemy_create(_x, _y)
-	/*
-		Basic enemy lightning ring
-	*/
-	
-	with(obj_create(_x, _y, "LightningDisc")){
-		 // Visual:
-		sprite_index = sprEnemyLightning;
-		
-		 // Vars:
-		is_enemy = true;
-		maxspeed = 2;
-		radius = 16;
-		charge_spd = 1.4;
-		
-		return id;
 	}
 	
 	
@@ -2373,17 +2403,17 @@
 		}
 	}
 
-#define PitSquid_hurt(_hitdmg, _hitvel, _hitdir)
+#define PitSquid_hurt(_damage, _force, _direction)
 	x = xpos;
 	y = ypos;
 	
-	my_health -= _hitdmg;
+	my_health -= _damage;
 	nexthurt = current_frame + 6;
 	sound_play_hit_ext(snd_hurt, 1.4 + orandom(0.4), 3);
 	
 	 // Half HP:
-	var h = (maxhealth / 2);
-	if(in_range(my_health, h - _hitdmg + 1, h)){
+	var _h = (maxhealth / 2);
+	if(in_range(my_health, _h - _damage + 1, _h)){
 		if(snd_lowh == sndNothing2HalfHP){
 			sound_play_pitch(snd_lowh, 0.6);
 		}
@@ -2765,13 +2795,13 @@
 	draw_self_enemy();
 	if(_hurt) draw_set_fog(false, 0, 0, 0);
 	
-#define PitSquidArm_hurt(_hitdmg, _hitvel, _hitdir)
+#define PitSquidArm_hurt(_damage, _force, _direction)
 	var _armHealth = my_health;
-	my_health -= _hitdmg;
+	my_health -= _damage;
 	
 	 // Hurt Papa Squid:
 	with(other) with(other.creator){
-		PitSquid_hurt(min(_hitdmg, max(0, _armHealth)), _hitvel, _hitdir);
+		PitSquid_hurt(min(_damage, max(0, _armHealth)), _force, _direction);
 	}
 	with(instances_matching(instances_matching(object_index, "name", name), "creator", creator)){
 		nexthurt = current_frame + 6;
@@ -2781,7 +2811,7 @@
 	sound_play_hit(snd_hurt, 0.3);
 	
 	 // Visual:
-	scrRight(_hitdir + 180);
+	scrRight(_direction + 180);
 	if(sprite_index != spr_appear && sprite_index != spr_disappear){
 		sprite_index = spr_hurt;
 		image_index  = 0;
@@ -4078,7 +4108,7 @@
 		target     = noone;
 		
 		 // Alarms:
-		alarm1 = 30;
+		alarm1 = irandom_range(150, 600);
 		alarm2 = -1;
 		
 		 // No Portals:
@@ -4227,21 +4257,6 @@
 	
 	
 /// GENERAL
-//#define ntte_begin_step
-	 // Lightring Trigger Fingers Interaction:
-	/*if(skill_get(mut_trigger_fingers) > 0){
-		var n = array_length(instances_matching_le(enemy, "my_health", 0));
-		if(n > 0){
-			with(instances_matching(instances_matching(CustomProjectile, "name", "LightningDisc"), "is_enemy", false)){
-				if(image_xscale < charge){
-					image_xscale *= (n / 0.6) * skill_get(mut_trigger_fingers);
-					image_xscale = min(image_xscale, charge);
-					image_yscale = image_xscale;
-				}
-			}
-		}
-	}*/
-	
 #define ntte_end_step
 	 // Open Pits:
 	if(instance_exists(PortalClear)){
@@ -4298,7 +4313,7 @@
 #define ntte_bloom
 	 // Canister Bloom:
 	if(instance_exists(CustomEnemy)){
-		var _inst = instances_matching(instances_matching(CustomEnemy, "name", "Angler"), "hiding", true);
+		var _inst = instances_matching(instances_matching(CustomEnemy, "name", "Angler", "AnglerGold"), "hiding", true);
 		if(array_length(_inst)) with(_inst){
 			draw_sprite_ext(sprRadChestGlow, image_index, x + (6 * right), y + 8, image_xscale * 2 * right, image_yscale * 2, image_angle, image_blend, image_alpha * 0.1);
 		}
@@ -4444,7 +4459,7 @@
 				}
 				
 				 // Lightning Discs:
-				var _inst = instances_matching(CustomProjectile, "name", "LightningDisc", "LightningDiscEnemy");
+				var _inst = instances_matching(CustomProjectile, "name", "LightningDisc");
 				if(array_length(_inst)){
 					var _scale  = 1.5 + (1.5 * _gray),
 						_border = 4;
@@ -4498,7 +4513,7 @@
 			 // Enemies:
 			if(instance_exists(CustomEnemy)){
 				 // Anglers:
-				var _inst = instances_matching(CustomEnemy, "name", "Angler");
+				var _inst = instances_matching(CustomEnemy, "name", "Angler", "AnglerGold");
 				if(array_length(_inst)){
 					draw_set_fog(true, draw_get_color(), 0, 0);
 					if(!_gray){
@@ -4592,7 +4607,7 @@
 		
 		 // Gather Instances:
 		if(instance_exists(CustomEnemy)){
-			_inst[0] = instances_matching(instances_matching(instances_matching(CustomEnemy, "name", "Angler", "GoldAngler"), "hiding", false), "visible", true);
+			_inst[0] = instances_matching(instances_matching(instances_matching(CustomEnemy, "name", "Angler", "AnglerGold"), "hiding", false), "visible", true);
 		}
 		if(instance_exists(Player)){
 			_inst[1] = instances_matching(instances_matching(Player, "bskin", "angler fish"), "visible", true);

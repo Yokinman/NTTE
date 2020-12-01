@@ -280,12 +280,12 @@
 			
 			 // Angler (Gold):
 			p = m + "GoldAngler/";
-			GoldAnglerIdle    = sprite(p + "sprGoldAnglerIdle",    8, 32, 32);
-			GoldAnglerWalk    = sprite(p + "sprGoldAnglerWalk",    8, 32, 32);
-			GoldAnglerHurt    = sprite(p + "sprGoldAnglerHurt",    3, 32, 32);
-			GoldAnglerDead    = sprite(p + "sprGoldAnglerDead",    7, 32, 32);
-			GoldAnglerAppear  = sprite(p + "sprGoldAnglerAppear",  4, 32, 32);
-			GoldAnglerScreech = sprite(p + "sprGoldAnglerScreech", 8, 48, 48);
+			AnglerGoldIdle    = sprite(p + "sprGoldAnglerIdle",    8, 32, 32);
+			AnglerGoldWalk    = sprite(p + "sprGoldAnglerWalk",    8, 32, 32);
+			AnglerGoldHurt    = sprite(p + "sprGoldAnglerHurt",    3, 32, 32);
+			AnglerGoldDead    = sprite(p + "sprGoldAnglerDead",    7, 32, 32);
+			AnglerGoldAppear  = sprite(p + "sprGoldAnglerAppear",  4, 32, 32);
+			AnglerGoldScreech = sprite(p + "sprGoldAnglerScreech", 8, 48, 48);
 			
 			 // Baby Gator:
 			p = m + "BabyGator/";

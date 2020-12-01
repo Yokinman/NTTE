@@ -964,7 +964,8 @@
 					
 					 // Enemy Vars:
 					if(instance_is(self, enemy)){
-						kills = 0;
+						kills     = 0;
+						wepseed   = -1;
 						my_health = ceil(my_health / 2);
 						if(canmelee == true){
 							canmelee = false;

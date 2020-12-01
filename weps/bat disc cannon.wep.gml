@@ -30,7 +30,7 @@
 				surface_save(_surf, "sprWep.png");
 				array_push(global.sprWepAmmo, sprite_add_weapon("sprWep.png", _sprX, _sprY));
 			}
-			global.sprWep = global.sprWepAmmo[0];
+			global.sprWep = global.sprWepAmmo[array_length(global.sprWepAmmo) - 1];
 			
 			 // Done:
 			surface_reset_target();
@@ -69,20 +69,21 @@
 
 #define weapon_sprt(_wep)
 	if(weapon_avail()){
-		 // Ammo Indicators:
-		if(lq_defget(_wep, "canload", false) && array_length(global.sprWepAmmo) > 0){
-			var	_ammo = lq_defget(_wep, "ammo", 0),
+		 // Indicators:
+		if(is_object(_wep) && array_length(global.sprWepAmmo) > 0){
+			var	_ammo = (lq_defget(_wep, "canload", false) ? lq_defget(_wep, "ammo", 0) : 0),
 				_amax = lq_defget(_wep, "amax", 1),
 				_cost = lq_defget(_wep, "cost", 1);
 				
-			return global.sprWepAmmo[ceil(clamp((floor(_ammo / _cost) * _cost) / _amax, 0, 1) * (array_length(global.sprWepAmmo) - 1))];
-		}
-		
-		 // Homing:
-		if(instance_exists(CustomObject)){
-			if(array_length(instances_matching(instances_matching(instances_matching(CustomProjectile, "name", "BatDisc"), "wep", _wep), "image_index", 1))){
-				return global.sprWepHoming;
+			 // Homing:
+			if(_ammo < _cost && instance_exists(CustomObject)){
+				if(array_length(instances_matching(instances_matching(instances_matching(CustomProjectile, "name", "BatDisc"), "wep", _wep), "image_index", 1))){
+					return global.sprWepHoming;
+				}
 			}
+			
+			 // Ammo:
+			return global.sprWepAmmo[ceil(clamp((floor(_ammo / _cost) * _cost) / _amax, 0, 1) * (array_length(global.sprWepAmmo) - 1))];
 		}
 		
 		 // Normal:

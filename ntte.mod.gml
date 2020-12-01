@@ -1964,7 +1964,11 @@
 								footextra = 2;
 							}
 							if(round(image_index) == footstep + 2){
-								if(footkind != 0 && roll == 0){
+								if(
+									roll == 0
+									&& footkind != 0
+									&& array_length(instances_at(x, bbox_bottom, instances_matching_ne(Floor, "material", 0)))
+								){
 									var _side = (((footstep % 2) < 1) ? -1 : 1) * right;
 									with(instance_create(
 										x + (random_range(3, 4) * _side),

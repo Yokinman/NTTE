@@ -349,7 +349,9 @@
 		
 		 // Normal Enemies:
 		else{
-			if(styleb) obj_create(_x + orandom(2), _y - irandom(16), "TrafficCrab");
+			if(styleb){
+				obj_create(_x + orandom(2), _y - irandom(16), "TrafficCrab");
+			}
 			else{
 				if(chance(GameCont.subarea, 18)){
 					obj_create(_x, _y, choose("Pelican", "Pelican", "TrafficCrab"));

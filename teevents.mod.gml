@@ -2362,7 +2362,7 @@
 	
 #define EelGrave_text    return `EELS ${event_tip}NEVER @sFORGET`;
 #define EelGrave_area    return "trench";
-#define EelGrave_chance  return (unlock_get("pack:trench") ? 1/8 : 0);
+#define EelGrave_chance  return (unlock_get("pack:trench") ? 1/10 : 0);
 
 #define EelGrave_create
 	var	_w          = 6,
@@ -2384,10 +2384,12 @@
 		floor_fill(x, y, _w - 2, _h - 2, _type);
 		
 		 // Skulls:
-		var _ang = random(360);
-		for(var _dir = _ang; _dir < 360; _dir += (360 / 3)){
-			var	_l = random_range(16, 24),
-				_d = _dir + orandom(8);
+		var	_ang = random(360),
+			_num = irandom_range(2, 3);
+			
+		for(var _dir = _ang; _dir < _ang + 360; _dir += (360 / _num)){
+			var	_l = random_range(16, 28),
+				_d = _dir + orandom(30 / _num);
 				
 			obj_create(x + lengthdir_x(_l, _d), y + lengthdir_y(_l, _d), "EelSkull");
 		}
