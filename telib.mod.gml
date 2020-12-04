@@ -1411,14 +1411,20 @@
 	 // Bind begin_step to fix TopCont.darkness flash
 	if(_name != ""){
 		with(script_bind_begin_step(boss_intro_step, 0)){
-			boss     = _name;
-			loops    = 0;
-			replaced = false;
+			boss    = _name;
+			loops   = 0;
+			intro   = true;
+			sprites = [
+				[`sprites/intros/spr${boss}Main.png`, sprBossIntro,          0],
+				[`sprites/intros/spr${boss}Back.png`, sprBossIntroBackLayer, 0],
+				[`sprites/intros/spr${boss}Name.png`, sprBossName,           0]
+			];
 			
-			 // Co-op Delay:
-			delay = 0;
-			for(var i = 0; i < maxp; i++){
-				delay += player_is_active(i) * current_time_scale;
+			 // Preload Sprites:
+			with(sprites){
+				if(!file_loaded(self[0])){
+					file_load(self[0]);
+				}
 			}
 			
 			return id;
@@ -1428,49 +1434,52 @@
 	return noone;
 
 #define boss_intro_step
-	if(delay > 0){
-		delay -= current_time_scale;
+	if(intro){
+		intro = false;
 		
-		if(option_get("intros") && GameCont.loops <= loops){
+		 // Preload Sprites:
+		with(sprites){
+			if(!file_loaded(self[0])){
+				other.intro = true;
+				break;
+			}
+		}
+		
+		 // Boss Intro Time:
+		if(!intro && option_get("intros") && GameCont.loops <= loops){
 			 // Replace Big Bandit's Intro:
-			if(!replaced){
-				replaced = true;
-				var _path = "sprites/intros/";
-				sprite_replace_image(sprBossIntro,          `${_path}spr${boss}Main.png`, 0);
-				sprite_replace_image(sprBossIntroBackLayer, `${_path}spr${boss}Back.png`, 0);
-				sprite_replace_image(sprBossName,           `${_path}spr${boss}Name.png`, 0);
+			with(sprites){
+				if(file_exists(self[0])){
+					sprite_replace_image(self[1], self[0], self[2]);
+				}
 			}
 			
 			 // Call Big Bandit's Intro:
-			if(delay <= 0){
-				var	_lastSub   = GameCont.subarea,
-					_lastLoop  = GameCont.loops,
-					_lastIntro = UberCont.opt_bossintros;
-					
-				GameCont.loops          = 0;
-				UberCont.opt_bossintros = true;
+			var	_lastSub   = GameCont.subarea,
+				_lastLoop  = GameCont.loops,
+				_lastIntro = UberCont.opt_bossintros;
 				
-				with(instance_create(0, 0, BanditBoss)){
-					with(self){
-						event_perform(ev_alarm, 6);
-					}
-					sound_stop(sndBigBanditIntro);
-					instance_delete(id);
+			GameCont.loops          = 0;
+			UberCont.opt_bossintros = true;
+			
+			with(instance_create(0, 0, BanditBoss)){
+				with(self){
+					event_perform(ev_alarm, 6);
 				}
-				
-				GameCont.subarea        = _lastSub;
-				GameCont.loops          = _lastLoop;
-				UberCont.opt_bossintros = _lastIntro;
+				sound_stop(sndBigBanditIntro);
+				instance_delete(id);
 			}
+			
+			GameCont.subarea        = _lastSub;
+			GameCont.loops          = _lastLoop;
+			UberCont.opt_bossintros = _lastIntro;
 		}
 	}
 	
 	 // End:
 	else{
-		if(replaced){
-			sprite_restore(sprBossIntro);
-			sprite_restore(sprBossIntroBackLayer);
-			sprite_restore(sprBossName);
+		with(sprites){
+			sprite_restore(self[1]);
 		}
 		instance_destroy();
 	}
@@ -5948,8 +5957,8 @@
 				_targ = _vars.targ;
 				
 			if(instance_exists(self) && instance_exists(_targ)){
-				var	_tx = _targ.x,
-					_ty = _targ.y,
+				var	_tx   = _targ.x,
+					_ty   = _targ.y,
 					_path = _vars.path;
 					
 				if(array_length(_path) > 0){
@@ -5986,7 +5995,7 @@
 					else _vars.path = [];
 					
 					 // Done:
-					if(place_meeting(x, y, _targ) || (_targ.mask_index == mskNone && point_in_rectangle(x, y, _targ.bbox_left, _targ.bbox_top, _targ.bbox_right, _targ.bbox_bottom))){
+					if(place_meeting(x, y, _targ) || point_distance(x, y, _tx, _ty) <= speed_raw){
 						if(instance_is(_targ, Player)) speed = 0;
 						else{
 							if("raddrop" in _targ) _targ.raddrop += rad;

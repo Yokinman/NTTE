@@ -1917,7 +1917,7 @@
 														_key  = _path + ":" + string(_num);
 														
 													if(!ds_map_exists(_sprList, _key)){
-														_sprList[? _path] = -1;
+														_sprList[? _key] = -1;
 														
 														 // Load File Manually & Make Sure it Exists:
 														if(file_loaded(_path)){
@@ -1943,8 +1943,6 @@
 														if(file_exists(_path)){
 															_sprList[? _key] = sprite_add(_path, _num, 0, 0);
 														}
-														
-														file_unload(_path);
 													}
 													if(ds_map_exists(_sprList, _key)){
 														_spr = _sprList[? _key];
@@ -2074,8 +2072,9 @@
 	if(changelog_exists(_index)){
 		 // Unload Sprites:
 		with(changelog_get(_index)){
-			with(ds_map_values(sprites)){
-				sprite_delete(self);
+			with(ds_map_keys(sprites)){
+				file_unload(string_split(self, ":")[0]);
+				sprite_delete(other.sprites[? self]);
 			}
 			ds_map_destroy(sprites);
 		}

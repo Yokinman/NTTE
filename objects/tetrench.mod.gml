@@ -1921,9 +1921,7 @@
 					 // Boss Intro:
 					if(!intro){
 						intro = true;
-						with(boss_intro("PitSquid")){
-							delay += 2;
-						}
+						boss_intro("PitSquid");
 						sound_play(sndBigDogIntro);
 						sound_play_pitchvol(sndNothing2Taunt, 0.7, 0.8);
 						view_shake_at(xpos, ypos, 30);
