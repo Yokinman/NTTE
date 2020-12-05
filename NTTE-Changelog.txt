@@ -26,6 +26,7 @@
 	~	@rFake Walls @sare easier to spot
 	*	Fixed the @gSewer Pool @sroom sometimes being empty in NTT beta (9942+) versions
 	*	Fixed @yLair @srarely not generating past its hallway@d?
+	*	Fixed @wBig Bat @snot collecting @wBig Cat's @srads during morph mode in NTT beta (9942+) versions
 	*	Fixed @yPit Eels @soccasionally breaking through the floor right when the level starts
 	*	Fixed @yPit Eels @scausing an error if you died right when the level started
 	*	Fixed enemies cloned by @rCrystal Brain @sdropping the same weapons as their original enemy

@@ -146,7 +146,7 @@
 		}
 	}
 	if(!_wep.canload){
-		if(_wep.ammo < _wep.amax){
+		if(weapon_is_melee(_wep) ? (_wep.ammo <= 0) : (_wep.ammo < _wep.amax)){
 			 // Stop Reloading:
 			if(_wep.ammo > 0){
 				wep_set(_primary, "reload",    weapon_get_load(_wep));
