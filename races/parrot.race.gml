@@ -370,7 +370,7 @@
 	with(instances_matching(Player, "race", mod_current)){
 		switch(_ultra){
 			case ultFeath:
-				feather_num_mult = 1 + (2 * _state);
+				feather_num_mult    = 1 + (2 * _state);
 				feather_targ_radius = 24 * (1 + _state);
 				
 				 // Bonus - Full Ammo:

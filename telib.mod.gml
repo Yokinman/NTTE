@@ -471,7 +471,7 @@
 			var _clear = true;
 			if(_isDraw){
 				with(ds_map_values(ntte_obj_bind[? _type])){
-					if(array_length(inst)){
+					if("inst" in self && array_length(inst)){
 						_clear = false;
 						break;
 					}

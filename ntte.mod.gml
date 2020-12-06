@@ -2108,7 +2108,7 @@
 			if(fork()){
 				var	_x    = x,
 					_y    = y,
-					_save = ["ntte_pet", "feather_ammo", "bonus_ammo", "red_ammo", "red_amax", "red_amax_muscle"],
+					_save = ["ntte_pet", "bonus_ammo", "bonus_ammo_max", "bonus_health", "bonus_health_max", "red_ammo", "red_amax", "red_amax_muscle", "feather_ammo"],
 					_vars = {},
 					_race = race;
 					
@@ -3884,7 +3884,7 @@
 	}
 	
 	 // Player HUD:
-	var	_ox = _vx - (17 * (_players > 1)),
+	var	_ox = _vx + (17 * (_players <= 1)),
 		_oy = _vy;
 		
 	for(var _index = 0; _index < maxp; _index++){
@@ -3909,7 +3909,7 @@
 								_cost = weapon_get_red(_wep);
 								
 							if(_cost > 0){
-								var	_x   = _ox + 43 + (44 * i),
+								var	_x   = _ox + 26 + (44 * i),
 									_y   = _oy + 20,
 									_max = 4,
 									_low = (
@@ -3965,7 +3965,7 @@
 								_HPLstCharm = max(0, charm_hplink_hud_hp_lst),
 								_w          = 83,
 								_h          = 7,
-								_x          = _ox + 22,
+								_x          = _ox + 5,
 								_y          = _oy + 7,
 								_HPw        = floor(_w * (1 - (0.7 * charm_hplink_hud)));
 								
@@ -4059,7 +4059,7 @@
 						}
 						
 						 // Parrot Feathers:
-						var	_x        = _ox + 116 - (104 * _side),
+						var	_x        = _ox + (_side ? -5 : 99),
 							_y        = _oy + 11,
 							_spr      = race_get_sprite(race, sprChickenFeather),
 							_sprHUD   = race_get_sprite(race, sprRogueAmmoHUD),
@@ -4159,13 +4159,12 @@
 									draw_set_font(fntM);
 									draw_set_halign(fa_left);
 									draw_set_valign(fa_top);
-									draw_text_nt(_ox + 110, _oy + 7, `@(color:${c_red})LOW HP`);
+									draw_text_nt(_ox + 93, _oy + 7, `@(color:${c_red})LOW HP`);
 								}
 							}
 						}
 					}
 				}
-				
 				
 				 // Bonus Ammo:
 				if("bonus_ammo" in self && bonus_ammo > 0){
@@ -4177,7 +4176,7 @@
 					 // Draw:
 					if(_HUDDraw){
 						var	_img = _flash,
-							_x   = _ox + 5,
+							_x   = _ox + 5 - (17 * (_players <= 1)),
 							_y   = _oy + 35,
 							_w   = sprite_get_width(_spr) * clamp(bonus_ammo / _max, 0, 1),
 							_h   = sprite_get_height(_spr);
@@ -4225,7 +4224,7 @@
 					 // Draw:
 					if(_HUDDraw){
 						var	_img = ((maxhealth > 0 && lsthealth < my_health && !instance_exists(GenCont) && !instance_exists(LevCont)) ? 1 : _flash),
-							_x   = _ox + 22,
+							_x   = _ox + 5,
 							_y   = _oy + 7,
 							_w   = sprite_get_width(_spr) * clamp(bonus_health / _max, 0, 1),
 							_h   = sprite_get_height(_spr);
