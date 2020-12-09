@@ -553,12 +553,36 @@
 	
 /// SCRIPTS
 #define draw_self_enemy()
+	/*
+		'draw_self()' for enemies
+	*/
+	
 	image_xscale *= right;
 	draw_self(); // This is faster than draw_sprite_ext yea
 	image_xscale /= right;
 	
-#define draw_weapon(_sprite, _x, _y, _ang, _meleeAng, _wkick, _flip, _blend, _alpha)
-	draw_sprite_ext(_sprite, 0, _x - lengthdir_x(_wkick, _ang), _y - lengthdir_y(_wkick, _ang), 1, _flip, _ang + (_meleeAng * (1 - (_wkick / 20))), _blend, _alpha);
+#define draw_weapon(_sprite, /*_image,*/ _x, _y, _angle, _angleMelee, _kick, _flip, _blend, _alpha)
+	/*
+		Drawing weapon sprites
+		
+		Ex:
+			draw_weapon(sprBanditGun, gunshine, x, y, gunangle, 0, wkick, right, image_blend, image_alpha)
+			draw_weapon(sprPipe, 0, x, y, gunangle, wepangle, wkick, wepflip, image_blend, image_alpha)
+	*/
+	
+	 // Melee Offset:
+	if(_angleMelee != 0){
+		_angle += _angleMelee * (1 - (_kick / 20));
+	}
+	
+	 // Kick:
+	if(_kick != 0){
+		_x -= lengthdir_x(_kick, _angle);
+		_y -= lengthdir_y(_kick, _angle);
+	}
+	
+	 // Draw:
+	draw_sprite_ext(_sprite, /*_image*/0, _x, _y, 1, _flip, _angle, _blend, _alpha);
 	
 #define draw_lasersight(_x, _y, _dir, _maxDistance, _width)
 	/*

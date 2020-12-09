@@ -1729,68 +1729,53 @@
 				}
 			}
 		}
-		
-		if(instance_exists(Player) && intro_pan > 15){
-			 // Freeze Things:
-			if(current_frame_active){
-				with(instances_matching([WantRevivePopoFreak, VanSpawn, IDPDSpawn], "", null)){
-					for(var i = 0; i <= 1; i++){
-						var _alarm = alarm_get(i);
-						if(_alarm > 0){
-							alarm_set(i, _alarm + 1);
-						}
-					}
-				}
-				with(Seal){
-					var _alarm = alarm_get(1);
-					if(_alarm > 0){
-						alarm_set(1, _alarm + 1);
-					}
-				}
-			}
-			
-			 // Just in case:
-			with(instances_matching_ne(enemy, "name", "Palanking", "Seal", "SealHeavy")){
-				my_health = 0;
-			}
-			
-			 // Attract Pickups:
-			portal_pickups();
-		}
 	}
 	
 	 // Pan Intro Camera:
+	var _pan = false;
 	if(intro_pan > 0){
-		intro_pan -= min(1, current_time_scale);
+		intro_pan -= current_time_scale;
 		
-		 // Pan:
-		global.palanking_pan = [
-			point_direction(x, y, intro_pan_x, intro_pan_y),
-			point_distance(x, y, intro_pan_x, intro_pan_y) / 1.5
-		];
-		
-		 // Still Camera:
-		for(var i = 0; i < maxp; i++){
-			view_object[i] = id;
-			view_pan_factor[i] = 10000;
-			if(intro_pan <= 0){
-				view_pan_factor[i] = null;
+		 // Just in Case:
+		if(alarm0 > 0 && intro_pan < alarm0){
+			intro_pan = alarm0;
+		}
+		if(instance_number(enemy) <= array_length(instances_matching(object_index, "name", name)) + array_length(Seal) + instance_number(Van)){
+			_pan = true;
+			
+			 // Delay Popo:
+			if(instance_exists(IDPDSpawn) || instance_exists(VanSpawn) || instance_exists(WantRevivePopoFreak)){
+				if(instance_exists(Player) && current_frame_active){
+					var _inst = instances_matching_gt([IDPDSpawn, VanSpawn, WantRevivePopoFreak], "alarm0", 0);
+					if(array_length(_inst)) with(_inst){
+						alarm0++;
+					}
+				}
 			}
 		}
+		
+		 // Attract Pickups:
+		portal_pickups();
 		
 		 // Hold Off Seals:
 		with(Seal){
 			attack_delay = 15 + random(30);
 		}
 	}
-	else{
-		global.palanking_pan = [0, 0];
-		for(var i = 0; i < maxp; i++){
-			if(view_object[i] == id){
-				view_object[i] = noone;
-			}
+	for(var i = 0; i < maxp; i++){
+		if(_pan){
+			view_object[i] = id;
+			view_pan_factor[i] = 10000;
+		}
+		else if(view_object[i] == id){
+			view_object[i] = noone;
+			view_pan_factor[i] = null;
 		}
 	}
+	global.palanking_pan = [
+		(_pan ? point_direction(x, y, intro_pan_x, intro_pan_y)        : 0),
+		(_pan ? (point_distance(x, y, intro_pan_x, intro_pan_y) / 1.5) : 0)
+	];
 	
 	 // Z-Axis:
 	z += zspeed * current_time_scale;
@@ -2604,14 +2589,10 @@
 		}
 	}
 	else{
+		script_ref_call(on_cleanup);
+		on_cleanup = [];
+		
 		with(creator){
-			 // Reset Vars:
-			mask_index = other.mask_index;
-			depth = other.depth;
-			if("spr_shadow_y" in self) spr_shadow_y = other.spr_shadow_y;
-			if("angle" in self) angle = 0;
-			else image_angle = 0;
-			
 			 // Damage:
 			if(instance_is(self, hitme) && (place_meeting(x, y, Floor) || GameCont.area != "coast")){
 				projectile_hit(id, 1);
@@ -2664,6 +2645,16 @@
 		}
 		
 		instance_destroy();
+	}
+	
+#define PalankingToss_cleanup
+	 // Reset Vars:
+	with(creator){
+		mask_index = other.mask_index;
+		depth = other.depth;
+		if("spr_shadow_y" in self) spr_shadow_y = other.spr_shadow_y;
+		if("angle" in self) angle = 0;
+		else image_angle = 0;
 	}
 	
 	
@@ -2867,7 +2858,7 @@
 	}
 	
 	 // Misc. Visual/Sound:
-	wkick = -10;
+	wkick = -4;
 	wepangle = -wepangle;
 	view_shake_at(x, y, 20); // Mmm that's heavy
 	sound_play(sndEnergyHammer);
@@ -3418,7 +3409,7 @@
 								}
 								motion_add(gunangle, 2);
 								wepangle *= -1;
-								wkick = -5;
+								wkick = -4;
 								
 								 // Effects:
 								instance_create(x, y, Dust);
