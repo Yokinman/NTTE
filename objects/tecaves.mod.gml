@@ -2502,6 +2502,8 @@
 	*/
 	
 	with(instance_create(_x, _y, MeatExplosion)){
+		sound_stop(sndMeatExplo);
+		
 		 // Visual:
 		sprite_index = spr.RedExplosion;
 		image_angle  = random(360);
@@ -2845,6 +2847,406 @@
 	}
 	
 	
+#macro  SOUNDDEBUG false
+#define Tesseract_create(_x, _y)
+	with(instance_create(_x, _y, CustomEnemy)){
+		boss = true;
+		
+		 // For Sani's bosshudredux:
+		bossname = "TESSERACT";
+		col      = area_get_back_color("red");
+		
+		 // Visual:
+		spr_frnt	 = spr.Tesseract;
+		spr_back	 = spr.TesseractOutline;
+		spr_idle     = spr.TesseractEyeIdle;
+		spr_hurt	 = spr.TesseractEyeHurt;
+		spr_fire	 = spr.TesseractEyeFire;
+		spr_weap	 = spr.TesseractWeapon;
+		spr_shadow   = mskNone;
+		spr_shadow_y = 12;
+		hitid        = [spr.TesseractGameover, "TESSERACT"];
+		depth        = -3;
+		
+		layers = [];
+		var n = 3;
+		for(var i = 0; i < n; i++){
+			array_push(layers, {
+				rotation : image_angle,
+				rotspeed : 0,
+				rotfrict : 0.2
+			});
+		}
+		
+		 // Sound:
+		snd_hurt = sndHyperCrystalHurt;
+		snd_dead = sndHyperCrystalDead;
+		snd_lowh = sndHyperCrystalLowHP;
+		
+		 // Vars:
+		mask_index  = mskReviveArea;
+		friction    = 0.2;
+		maxhealth   = boss_hp(600);
+		meleedamage = infinity; // yokin please leave it in it's funny
+		canmelee	= true;
+		raddrop     = 24;
+		size        = 5;
+		walk        = 0;
+		walkspeed   = 0.4;
+		maxspeed    = 2;
+		minspeed	= 0.2;
+		intro       = false;
+		ammo		= 3;
+		tauntdelay  = 60;
+		direction   = random(360);
+		
+		weapons = [];
+		var n = 5;
+		for(var i = 0; i < n; i++){
+			array_push(weapons, {
+				rotation : (360 / n) * i,
+				rotspeed : 0,
+				rotfrict : 0.1,
+				kick	 : 0
+			});
+		}
+		
+		 // Alarms:
+		alarm0 = 60;
+		alarm1 = 60;
+		alarm2 = 120;
+		
+		return id;
+	}
+	
+#define Tesseract_step
+	 // Alarms:
+	if(alarm0_run) exit;
+	if(alarm1_run) exit;
+	if(alarm2_run) exit;
+	
+	 // Animation:
+	if(anim_end) sprite_index = spr_idle;
+	
+	 // Movement:
+	enemy_walk(walkspeed, maxspeed);
+	if(speed < minspeed){
+		speed = minspeed;
+	}
+	if(place_meeting(x + hspeed, y + vspeed, Wall)){
+		if(place_meeting(x + hspeed, y, Wall)) hspeed *= -1;
+		if(place_meeting(x, y + vspeed, Wall)) vspeed *= -1;
+		wall_clear(x, y);
+	}
+	
+	 // Layers:
+	with(layers){
+		rotation += rotspeed * current_time_scale;
+		rotspeed  = max((abs(rotspeed) - (rotfrict * current_time_scale)), 0) * sign(rotspeed);
+		
+		if(chance_ct(1, 40)) rotspeed = orandom(6);
+	}
+	
+     // Weapons:
+	with(weapons){
+		rotation += rotspeed * current_time_scale;
+		rotspeed  = max((abs(rotspeed) - (rotfrict * current_time_scale)), 0) * sign(rotspeed);
+		kick	  = max((abs(kick) - current_time_scale), 0) * sign(kick);
+		xoff	  = lengthdir_x((sprite_get_width(other.mask_index)  * 2/3) * other.image_xscale, rotation);
+		yoff	  = lengthdir_y((sprite_get_height(other.mask_index) * 2/3) * other.image_yscale, rotation);
+ 	}
+ 	
+ 	 // Death Taunt:
+ 	if(tauntdelay > 0 && !instance_exists(Player)){
+ 		tauntdelay -= current_time_scale;
+ 		if(tauntdelay <= 0){
+			if(SOUNDDEBUG) trace("tesseract:death taunt");
+ 		}
+ 	}
+	
+#define Tesseract_draw
+	var h = (sprite_index == spr_hurt && image_index < 1);
+	if(h) draw_set_fog(true, image_blend, 0, 0);
+	
+	 // Draw Outline Layerss:
+	var n = array_length(layers);
+	for(var i = 0; i < n; i++){
+		var d = layers[i].rotation;
+		draw_sprite_ext(spr_back, i, x, y, image_xscale, image_yscale, image_angle + d, image_blend, image_alpha)
+	}
+	
+	for(var i = 0; i < n; i++){
+		
+		 // Draw Weapons:
+		if(i == (n - 1)){
+			for(var j = 0; j < array_length(weapons); j++){
+				var w = weapons[j],
+					_wRot = w.rotation,
+					_xPos = x + w.xoff - lengthdir_x(w.kick, _wRot),
+					_yPos = y + w.yoff - lengthdir_y(w.kick, _wRot);
+					
+				draw_sprite_ext(spr_weap, 0, _xPos, _yPos, image_xscale, image_yscale, _wRot, image_blend, image_alpha);
+			}
+		}
+		
+		 // Draw Front Layers:
+		var d = layers[i].rotation;
+		draw_sprite_ext(spr_frnt, i, x, y, image_xscale, image_yscale, image_angle + d, image_blend, image_alpha)
+	}
+	
+	 // Eye:
+	draw_sprite_ext(sprite_index, image_index, x, y, image_xscale, image_yscale, image_angle, image_blend, image_alpha);
+	
+	if(h) draw_set_fog(false, c_white, 0, 0);
+
+#define Tesseract_alrm0
+	intro = true;
+	boss_intro("Tesseract");
+	if(SOUNDDEBUG) trace("tesseract:intro");
+	
+	with(MusCont) alarm_set(2, -1);
+	sound_play_music(mus.Tesseract);
+	
+#define Tesseract_alrm1
+	alarm1 = 60 + random(30);
+	 
+	 // Just Schmovin' About:
+	scrWalk(direction + orandom(90), 60 + random(60));
+	
+#define Tesseract_alrm2
+	alarm2 = 20 + random(40);
+	enemy_target(x, y);
+	
+	 // Orderly Attack:
+	if(ammo > 0){
+		alarm2 = 40;
+		ammo--;
+		
+		sprite_index = spr_fire;
+		image_index  = 0;
+		
+		var n = array_length(weapons),
+			s = 3 * choose(-1, 1),
+			o = random(360);
+			
+		if(instance_exists(target)){
+			o = point_direction(x, y, target.x, target.y) + orandom(30);
+		}
+		
+		for(var i = 0; i < n; i++){
+			var d = o + (360 / n) * i;
+			with(weapons[i]){
+				rotation = d;
+				rotspeed = s;
+				with(other){
+					var w = other;
+					with(projectile_create(x, y, "TesseractStrike", 0, 0)){
+						weapon = w;
+						alarm1 = 35;
+						kick   = 10;
+					}
+				}
+			}
+		}
+		
+		 // Sounds
+		if(SOUNDDEBUG) trace("tesseract:big attack");
+	}
+	else{
+		
+		 // Start Orderly Attack:
+		if(chance(1, 10)){
+			ammo = irandom_range(3, 4);
+			with(weapons) kick = -20;
+			
+			 // Sounds:
+			if(SOUNDDEBUG) trace("tesseract:begin big attack");
+			
+			Tesseract_alrm2();
+		}
+		
+		 // Chaotic Attack:
+		else{
+			 // Sounds:
+			if(SOUNDDEBUG) trace("tesseract:small attack");
+			
+			with(weapons[0]){
+				var d = rotation;
+				with(other) if(instance_exists(target)){
+					d = point_direction(x, y, target.x, target.y);
+				}
+				
+				rotation = d + orandom(90);
+				rotspeed = 1.2;
+				
+				with(other){
+					var w = other;
+					with(projectile_create(x, y, "TesseractStrike", 0, 0)){
+						weapon = w;
+						alarm1 = 20;
+						kick   = 15;
+					}
+				}
+			}
+			
+			 // Weapon Rotation:
+			var _newWeapons = array_delete(weapons, 0);
+			array_push(_newWeapons, weapons[0]);
+			weapons = _newWeapons;
+		}
+	}
+	
+#define Tesseract_hurt(_hitdmg, _hitvel, _hitdir)
+	enemy_hurt(_hitdmg, _hitvel, _hitdir);
+	
+	 // Pitch Hurt Sound:
+	if(snd_hurt == sndHyperCrystalHurt){
+		if(SOUNDDEBUG) trace("tesseract:hurt");
+	}
+	
+	 // Half HP:
+	var h = (maxhealth / 2);
+	if(in_range(my_health, h - _hitdmg + 1, h)){
+		if(snd_lowh == sndHyperCrystalLowHP){
+			if(SOUNDDEBUG) trace("tesseract:half health")
+		}
+		else sound_play(snd_lowh);
+	}
+	
+#define Tesseract_death
+	 // Pitch Death Sound:
+	if(snd_dead == sndHyperCrystalDead){
+		if(SOUNDDEBUG) trace("tesseract:death");
+	}
+	
+	 // Goodnight:
+	with(MusCont) alarm_set(1, 1);
+	
+
+#define TesseractStrike_create(_x, _y)
+	with(instance_create(_x, _y, CustomObject)){
+		 // Visual:
+		sprite_index = spr.TesseractStrike;
+		image_yscale = 1/3;
+		image_speed  = 0.4;
+		
+		 // Vars:
+		mask_index   = mskSuperFlakBullet;
+		max_segments = 25;
+		strike_delay = 3;
+		strike_count = 2;
+		can_strike	 = true;
+		segments     = [];
+		creator      = noone;
+		weapon	     = noone;
+		active	     = true;
+		hitid	     = [];
+		kick	     = 8;
+		team	     = 0;
+		
+		 // Alarms:
+		alarm1 = 30;
+		alarm2 = -1;
+		
+		return id;
+	}
+	
+#define TesseractStrike_step
+	if(alarm1_run) exit;
+	if(alarm2_run) exit;
+	
+	 // Rescale:
+	image_yscale = lerp(image_yscale, image_xscale, current_time_scale / 5);
+	
+	if(active){
+		if(instance_exists(creator)){
+			
+			 // Set Origin and Direction:
+			if(is_object(weapon)){
+				x = creator.x + lq_get(weapon, "xoff");
+				y = creator.y + lq_get(weapon, "yoff");
+				
+				direction   = lq_get(weapon, "rotation");
+				image_angle = direction;
+			}
+			
+			 // Extend:
+			segments = [{xpos : x, ypos : y}];
+			while(array_length(segments) < max_segments && (!instance_exists(Wall) || !place_meeting(x, y, Wall))){
+				var _len = sprite_get_width(sprite_index) * image_xscale;
+				x += lengthdir_x(_len, direction);
+				y += lengthdir_y(_len, direction);
+				
+				array_push(segments, {xpos : x, ypos : y});
+			}
+		}
+		else{
+			
+			 // Goodbye:
+			can_strike = false;
+			TesseractStrike_alrm1();
+		}
+	}
+	
+#define TesseractStrike_draw
+	image_alpha = abs(image_alpha);
+	
+	with(segments) with(other){
+		draw_sprite_ext(sprite_index, image_index, other.xpos, other.ypos, image_xscale, image_yscale, image_angle, image_blend, image_alpha);
+	}
+	
+	image_alpha *= -1;
+	
+#define TesseractStrike_alrm1
+	with(weapon) kick += other.kick;
+	active = false;
+	
+	 // Effects:
+	sleep_max(15);
+	if(SOUNDDEBUG) trace_color("tesseract strike:strike start", c_silver);
+	
+	TesseractStrike_alrm2();
+	
+#define TesseractStrike_alrm2
+	alarm2 = strike_delay;
+	
+	var a = array_length(segments);
+	if(a > 0){
+		
+		repeat(min(strike_count, a)){
+			
+			 // We Strikin':
+			with(segments[0]) with(other){
+				if(can_strike) with(projectile_create(other.xpos, other.ypos, "RedExplosion", 0, 0)) mask_index = mskSmallExplosion;
+				else           instance_create(other.xpos, other.ypos, Smoke);
+			}
+			
+			 // Get Them Out of Here!:
+			segments = array_delete(segments, 0);
+			if(array_length(segments) <= 0){
+				instance_destroy();
+			}
+		}
+	}
+	
+	 // Sounds:
+	if(instance_exists(self)){
+		if(SOUNDDEBUG) trace_color("tesseract strike:strike hit", c_silver);
+	}
+	else{
+		if(SOUNDDEBUG) trace_color("tesseract strike:strike end", c_silver);
+	}
+	
+#define TesseractStrike_destroy
+	 // Only destroys walls near creator to avoid infinite stage expansion:
+	if(instance_near(x, y, creator, 160)){
+		var _inst = instances_matching(MeatExplosion, "name", "RedExplosion");
+		if(array_length(_inst)) with(_inst[0]){
+			wall_clear(x, y);
+		}
+	}
+
+
 #define TwinOrbital_create(_x, _y)
 	with(instance_create(_x, _y, CustomHitme)){
 		 // Visual:
@@ -3718,6 +4120,25 @@
 		var _inst = instances_matching(instances_matching(CustomObject, "name", "CrystalBrainDeath"), "visible", true);
 		if(array_length(_inst)) with(_inst){
 			draw_sprite(spr_shadow, 0, x + spr_shadow_x, y + spr_shadow_y);
+		}
+	}
+	
+	 // Tesseract:
+	if(instance_exists(CustomEnemy)){
+		var _inst = instances_matching(CustomEnemy, "name", "Tesseract");
+		if(array_length(_inst)) with(_inst){
+			var _scale  = 0.9,
+				_offset = spr_shadow_y;
+			
+			image_xscale *= _scale;
+			image_yscale *= _scale;
+			y += _offset;
+			
+			with(self) event_perform(ev_draw, 0);
+			
+			image_xscale /= _scale;
+			image_yscale /= _scale;
+			y -= _offset;
 		}
 	}
 	

@@ -130,10 +130,11 @@
 			msk.ClamShieldSlash = sprite(p + "mskClamShieldSlash",  4, 12, 12);
 			
 			 // Crystal Heart:
-			CrystalHeartBullet      = sprite(p + "sprCrystalHeartBullet",      2, 10, 10);
-			CrystalHeartBulletHit   = sprite(p + "sprCrystalHeartBulletHit",   8, 16, 16);
-			CrystalHeartBulletRing  = sprite(p + "sprCrystalHeartBulletRing",  2, 10, 10);
-			CrystalHeartBulletTrail = sprite(p + "sprCrystalHeartBulletTrail", 4, 10, 10);
+			CrystalHeartBullet      	= sprite(p + "sprCrystalHeartBullet",   	   2, 10, 10);
+			CrystalHeartBulletHit   	= sprite(p + "sprCrystalHeartBulletHit",	   8, 16, 16);
+			CrystalHeartBulletRing  	= sprite(p + "sprCrystalHeartBulletRing",	   2, 10, 10);
+			CrystalHeartBulletTrail 	= sprite(p + "sprCrystalHeartBulletTrail",     4, 10, 10);
+			CrystalHeartBulletTesseract = sprite(p + "sprCrystalHeartBulletTesseract", 2, 24, 24);
 			
 			 // Electroplasma:
 			ElectroPlasma       = sprite(p + "sprElectroPlasma",       7, 12, 12);
@@ -736,6 +737,17 @@
 			InvSpiderlingHurt  = sprite(p + "sprInvSpiderlingHurt",  3, 8, 8);
 			InvSpiderlingDead  = sprite(p + "sprInvSpiderlingDead",  7, 8, 8);
 			InvSpiderlingHatch = sprite(p + "sprInvSpiderlingHatch", 5, 8, 8);
+			
+			 // Tesseract:
+			p = m + "Tesseract/";
+			TesseractEyeIdle  = sprite(p + "sprTesseractEyeIdle",  8,  8,  8);
+			TesseractEyeHurt  = sprite(p + "sprTesseractEyeHurt",  3,  8,  8);
+			TesseractEyeFire  = sprite(p + "sprTesseractEyeFire",  6,  8,  8);
+			Tesseract		  = sprite(p + "sprTesseract",		   3,  48, 48);
+			TesseractOutline  = sprite(p + "sprTesseractOutline",  3,  48, 48);
+			TesseractGameover = sprite(p + "sprTesseractGameover", 8,  48, 48);
+			TesseractWeapon   = sprite(p + "sprTesseractWeapon",   1,  24, 24);
+			TesseractStrike   = sprite(p + "sprTesseractStrike",   4,  12, 12);
 			
 			 // Traffic Crab:
 			p = m + "Crab/";
@@ -1955,6 +1967,7 @@
 			BigShots      = sound_add(p + "musBigShots.ogg");
 			PitSquid      = sound_add(p + "musPitSquid.ogg");
 			PitSquidIntro = sound_add(p + "musPitSquidIntro.ogg");
+			Tesseract	  = sound_add(p + "musTesseract.ogg");
 		}
 	}
 	
