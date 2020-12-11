@@ -4570,7 +4570,11 @@
 			
 		 // Boss Music:
 		if(alarm_get(2) > 0 && alarm_get(2) <= ceil(current_time_scale)){
-			if(array_exists(ntte_mods.area, _area)){
+			if(array_length(instances_matching(CustomEnemy, "name", "Tesseract"))){
+				alarm_set(2, -1);
+				_mus = mus.Tesseract;
+			}
+			else if(array_exists(ntte_mods.area, _area)){
 				if(mod_script_exists("area", _area, "area_music_boss")){
 					alarm_set(2, -1);
 					_mus = mod_script_call_self("area", _area, "area_music_boss");
