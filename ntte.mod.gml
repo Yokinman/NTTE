@@ -122,6 +122,11 @@
 			if(_type != type_melee){
 				ammo[_type] += round(typ_ammo[_type] * ((wep_raw(wep) == "merge") ? 1.25 : 3));
 			}
+			
+			 // Red Ammo:
+			if(weapon_get_red(_wep) > 0){
+				red_ammo = 1;
+			}
 		}
 	}
 	
@@ -2372,7 +2377,7 @@
 				with([wep, bwep]){
 					var _wep = self;
 					if(weapon_get_gold(_wep) != 0){
-						if(array_exists(["merge", "trident"], wep_raw(_wep))){
+						if(array_exists(["merge", "tunneller", "trident"], wep_raw(_wep))){
 							var	_path = `loadout:wep:${other.race}`,
 								_name = "main";
 								
@@ -3906,7 +3911,8 @@
 						var _b = ["", "b"];
 						for(var i = 0; i < array_length(_b); i++){
 							var	_wep  = variable_instance_get(self, _b[i] + "wep", wep_none),
-								_cost = weapon_get_red(_wep);
+								_cost = weapon_get_red(_wep),
+								_gold = (weapon_get_gold(_wep) != 0);
 								
 							if(_cost > 0){
 								var	_x   = _ox + 26 + (44 * i),
@@ -3919,7 +3925,7 @@
 									);
 									
 								 // Main:
-								draw_sprite(spr.RedAmmoHUD, (red_amax > _max), _x, _y);
+								draw_sprite((_gold ? spr.RedAmmoHUDGold : spr.RedAmmoHUD), (red_amax > _max), _x, _y);
 								
 								 // Ammo Charges:
 								if(red_ammo > 0){
@@ -3930,7 +3936,7 @@
 								}
 								
 								 // Cost Indicator:
-								draw_sprite(spr.RedAmmoHUDCost, _low, _x + 4 + (4 * (_cost % _max)), _y + 4);
+								draw_sprite((_gold ? spr.RedAmmoHUDCostGold : spr.RedAmmoHUDCost), _low, _x + 4 + (4 * (_cost % _max)), _y + 4);
 							}
 						}
 					}
