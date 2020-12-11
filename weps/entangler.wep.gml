@@ -35,7 +35,8 @@
 	 // Normal Outline:
 	if(instance_is(self, Player)){
 		if(
-			weapon_get_rads(_wep) > 0
+			weapon_get_gold(_wep) != 0
+			|| weapon_get_rads(_wep) > 0
 			|| (wep  == _wep && curse  > 0)
 			|| (bwep == _wep && bcurse > 0)
 		){

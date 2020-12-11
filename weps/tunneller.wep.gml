@@ -1,14 +1,14 @@
 #define init
 	spr = mod_variable_get("mod", "teassets", "spr");
-
+	
 	 // Sprites:
-	global.sprWep       	 = spr.Tunneller;
-	global.sprWepGold		 = spr.GoldTunneller;
-	global.sprWepLoadout	 = spr.TunnellerLoadout;
+	global.sprWep            = spr.Tunneller;
+	global.sprWepGold        = spr.GoldTunneller;
+	global.sprWepLoadout     = spr.TunnellerLoadout;
 	global.sprWepGoldLoadout = spr.GoldTunnellerLoadout;
-	global.sprWepHUD    	 = spr.TunnellerHUD;
-	global.sprWepHUDRed 	 = spr.TunnellerHUDRed;
-	global.sprWepLocked 	 = mskNone;
+	global.sprWepHUD         = spr.TunnellerHUD;
+	global.sprWepHUDRed      = spr.TunnellerHUDRed;
+	global.sprWepLocked      = mskNone;
 	
 	 // LWO:
 	global.lwoWep = {
@@ -17,20 +17,20 @@
 	};
 	
 #macro spr global.spr
-	
+
 #define weapon_name(_wep)  return (weapon_avail(_wep) ? ((weapon_gold(_wep) != 0) ? "GOLDEN " : "") + "TUNNELLER" : "LOCKED");
 #define weapon_text(_wep)  return ((weapon_get_gold(_wep) != 0) ? choose("GOLDEN GOD", `@(color:${area_get_back_color("red")})KEY @sTO THE @wMULTIVERSE`) : choose(`@wUNLOCK @sTHE @(color:${area_get_back_color("red")})CONTINUUM`, "FULL CIRCLE", `YET ANOTHER @(color:${area_get_back_color("red")})RED KEY`));
 #define weapon_sprt(_wep)  return (weapon_avail() ? ((weapon_get_gold(_wep) == 0) ? global.sprWep : global.sprWepGold) : global.sprWepLocked);
 #define weapon_loadout     return ((argument_count > 0 && weapon_get_gold(argument0) != 0) ? global.sprWepGoldLoadout : global.sprWepLoadout);
 #define weapon_area(_wep)  return ((argument_count > 0 && weapon_avail(_wep) && weapon_get_gold(_wep) == 0) ? 22 : -1); // L1 3-1
 #define weapon_gold(_wep)  return ((argument_count > 0 && lq_defget(_wep, "gold", false)) ? -1 : 0);
-#define weapon_load       return 24; // 0.8 Seconds
-#define weapon_auto       return true;
-#define weapon_melee      return false;
-#define weapon_avail      return unlock_get("pack:" + weapon_ntte_pack());
-#define weapon_ntte_pack  return "red";
-#define weapon_shrine     return [mut_long_arms, mut_laser_brain];
-#define weapon_red        return 1;
+#define weapon_load        return 24; // 0.8 Seconds
+#define weapon_auto        return true;
+#define weapon_melee       return false;
+#define weapon_avail       return unlock_get("pack:" + weapon_ntte_pack());
+#define weapon_ntte_pack   return "red";
+#define weapon_shrine      return [mut_long_arms, mut_laser_brain];
+#define weapon_red         return 1;
 
 #define weapon_type
 	 // Weapon Pickup Ammo Outline:
@@ -49,8 +49,8 @@
 	 // Normal Outline:
 	if(instance_is(self, Player)){
 		if(
-			   weapon_get_gold(_wep)  != 0
-			|| weapon_get_rads(_wep)   > 0
+			weapon_get_gold(_wep) != 0
+			|| weapon_get_rads(_wep) > 0
 			|| (wep  == _wep && curse  > 0)
 			|| (bwep == _wep && bcurse > 0)
 		){
@@ -86,7 +86,7 @@
 			image_yscale += 0.15 * _skill;
 			
 			 // Area:
-			area_goal  = irandom_range(8, 12) + (4 * _skill) + ((weapon_get_gold(_wep) != 0) ? 4 : 0);
+			area_goal  = irandom_range(8, 12) + (4 * _skill) + (4 * (weapon_get_gold(_wep) != 0));
 			area_chaos = chance(1, 2); 
 			area_chest = pool([
 				[AmmoChest,          4],
@@ -140,7 +140,9 @@
 				_dir + orandom(10 * accuracy),
 				lerp(3, 6, _skill)
 			)){
-				if(weapon_get_gold(_wep) != 0) sprite_index = spr.RedShankGold; // it's a small change but looks better
+				if(weapon_get_gold(_wep) != 0){
+					sprite_index = spr.RedShankGold; // it's a small change but looks better
+				}
 			}
 			
 			 // Sounds:

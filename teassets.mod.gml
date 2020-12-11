@@ -78,12 +78,12 @@
 			BoneShard = sprite(p + "sprBoneShard", 1, 3, 2, shnWep);
 			
 			 // Tunneller:
-			Tunneller			 = sprite(p + "sprTunneller",			 1,  8,  6, shnWep);
-			GoldTunneller		 = sprite(p + "sprGoldTunneller",		 1,  8,  6, shnWep);
-			TunnellerLoadout	 = sprite(p + "sprTunnellerLoadout",	 1,  24, 24);
-			GoldTunnellerLoadout = sprite(p + "sprGoldTunnellerLoadout", 1,  24, 24);
-			TunnellerHUD		 = sprite(p + "sprTunnellerHUD",		 1,  0,  3);
-			TunnellerHUDRed 	 = sprite(p + "sprTunnellerHUDRed", 	 1,  0,  3);
+			Tunneller            = sprite(p + "sprTunneller",            1,  8,  6, shnWep);
+			GoldTunneller        = sprite(p + "sprGoldTunneller",        1,  8,  6, shnWep);
+			TunnellerLoadout     = sprite(p + "sprTunnellerLoadout",     1, 24, 24);
+			GoldTunnellerLoadout = sprite(p + "sprGoldTunnellerLoadout", 1, 24, 24);
+			TunnellerHUD         = sprite(p + "sprTunnellerHUD",         1,  0,  3);
+			TunnellerHUDRed      = sprite(p + "sprTunnellerHUDRed",      1,  0,  3);
 			
 			 // Trident:
 			Trident            = sprite(p + "sprTrident",            1, 11,  6, shnWep);
@@ -193,7 +193,7 @@
 			RedExplosion       = sprite(p + "sprRedExplosion",       7, 16, 16);
 			RedSlash           = sprite(p + "sprRedSlash",           3,  0, 24);
 			RedShank           = sprite(p + "sprRedShank",           2, -5,  8);
-			RedShankGold	   = sprite(p + "sprRedShankGold",		 2, -5,  8);
+			RedShankGold       = sprite(p + "sprRedShankGold",       2, -5,  8);
 			
 			 // Small Green Explo:
 			SmallGreenExplosion = sprite(p + "sprSmallGreenExplosion", 7, 12, 12);
@@ -1608,7 +1608,7 @@
 			RedAmmoHUDAmmo     = sprite(p + "sprRedAmmoHUDAmmo",     2, 1, 2);
 			RedAmmoHUDFill     = sprite(p + "sprRedAmmoHUDFill",     2, 0, 0);
 			RedAmmoHUDCost     = sprite(p + "sprRedAmmoHUDCost",     2, 2, 2);
-			RedAmmoHUDGold	   = sprite(p + "sprRedAmmoHUDGold",	 2, 1, 1);
+			RedAmmoHUDGold     = sprite(p + "sprRedAmmoHUDGold",     2, 1, 1);
 			RedAmmoHUDCostGold = sprite(p + "sprRedAmmoHUDCostGold", 2, 2, 2);
 			
 			 // Red Crystal Chest:

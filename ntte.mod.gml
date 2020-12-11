@@ -2377,7 +2377,7 @@
 				with([wep, bwep]){
 					var _wep = self;
 					if(weapon_get_gold(_wep) != 0){
-						if(array_exists(["merge", "tunneller", "trident"], wep_raw(_wep))){
+						if(array_exists(["merge", "trident", "tunneller"], wep_raw(_wep))){
 							var	_path = `loadout:wep:${other.race}`,
 								_name = "main";
 								
