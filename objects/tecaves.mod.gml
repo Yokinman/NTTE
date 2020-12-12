@@ -872,7 +872,7 @@
 		 // Vars:
 		creator = noone;
 		target  = noone;
-		clone   = instances_matching_ne(instances_matching_ne(instances_matching_ne(instances_matching_ne(enemy, "team", 2), "name", "CrystalBrain", "CrystalHeart", "ChaosHeart"), "mask_index", mskNone), "intro", false);
+		clone   = instances_matching_ne(instances_matching_ne(instances_matching_ne(instances_matching_lt(instances_matching_ne(enemy, "team", 2), "size", 6), "name", "CrystalBrain", "CrystalHeart", "ChaosHeart"), "mask_index", mskNone), "intro", false);
 		time    = 600;
 		appear  = 1;
 		
@@ -1331,6 +1331,7 @@
 		)){
 			area_chest = _chestTypes[i];
 			area_chaos = other.white;
+			tesseract  = (i == 0);
 		}
 	}
 	
@@ -1363,9 +1364,11 @@
 		loops      = GameCont.loops;
 		area_seed  = irandom(random_get_seed());
 		area_goal  = irandom_range(10, 20);
+		chest_pos  = "furthest";
 		area_chest = AmmoChest;
 		area_chaos = false;
 		setup      = true;
+		tesseract  = false;
 		
 		 // Alarms:
 		alarm0 = 12;
@@ -1376,41 +1379,75 @@
 #define CrystalHeartBullet_setup
 	setup = false;
 	
-	 // Determine Area:
-	if(area_chaos){
-		var _pick = [
-			((area_get_secret(GameCont.area) || GameCont.subarea <= 0) ? GameCont.lastarea : GameCont.area),
-			area
-		];
-		if(chance(1, 2)){
-			_pick = [_pick[0]];
-			
-			while(loops > 0){
-				loops = ceil(loops - 1);
-				
-				if(chance(1, 2)){
-					switch(_pick[irandom(array_length(_pick) - 1)]){
-						case area_desert     : _pick = [area_sewers, area_scrapyards]; break;
-						case area_sewers     : _pick = [area_caves];                   break;
-						case area_scrapyards : _pick = [area_sewers, area_city];       break;
-						case area_caves      : _pick = [area_labs];                    break;
-						case area_city       : _pick = [area_labs, area_palace];       break;
-						case area_labs       : _pick = [area_sewers, area_caves];      break;
-						case area_palace     : _pick = [area_scrapyards, area_labs];   break;
-						case "coast"         : _pick = [area_scrapyards, area_jungle]; break;
-						case "oasis"         : _pick = [area_sewers, area_labs];       break;
-						case "trench"        : _pick = [area_sewers, area_caves];      break;
-					}
-				}
-				else break;
-			}
-		}
-		area = _pick[irandom(array_length(_pick) - 1)];
+	 // Tesseraction:
+	if(tesseract){
 		
-		 // Boss Time:
-		if(loops > 0 && GameCont.subarea == 3){
-			if(area == area_desert || area == area_scrapyards || area == area_city){
-				subarea = 3;
+		 // Visual:
+		sprite_index = spr.CrystalHeartBulletTesseract;
+		spr_trail    = spr.CrystalHeartBulletTrailTesseract;
+		spr_ring	 = mskNone;
+		
+		 // Vars:
+		friction  *= 4/3;
+		maxspeed  *= 2/3;
+	 // area_goal  = ceil(area_goal * 4/5);
+		chest_pos  = "random";
+		area_chest = [
+			{
+				"chest" : AmmoChest,
+				"count" : 3
+			},
+			{
+				"chest" : WeaponChest,
+				"count" : 2
+			},
+			{
+				"chest" : "Backpack",
+				"count" : 1
+			}
+		];
+		
+		 // Alarms:
+		alarm0 += 4;
+	}
+	else{
+			
+		 // Determine Area:
+		if(area_chaos){
+			var _pick = [
+				((area_get_secret(GameCont.area) || GameCont.subarea <= 0) ? GameCont.lastarea : GameCont.area),
+				area
+			];
+			if(chance(1, 2)){
+				_pick = [_pick[0]];
+				
+				while(loops > 0){
+					loops = ceil(loops - 1);
+					
+					if(chance(1, 2)){
+						switch(_pick[irandom(array_length(_pick) - 1)]){
+							case area_desert     : _pick = [area_sewers, area_scrapyards]; break;
+							case area_sewers     : _pick = [area_caves];                   break;
+							case area_scrapyards : _pick = [area_sewers, area_city];       break;
+							case area_caves      : _pick = [area_labs];                    break;
+							case area_city       : _pick = [area_labs, area_palace];       break;
+							case area_labs       : _pick = [area_sewers, area_caves];      break;
+							case area_palace     : _pick = [area_scrapyards, area_labs];   break;
+							case "coast"         : _pick = [area_scrapyards, area_jungle]; break;
+							case "oasis"         : _pick = [area_sewers, area_labs];       break;
+							case "trench"        : _pick = [area_sewers, area_caves];      break;
+						}
+					}
+					else break;
+				}
+			}
+			area = _pick[irandom(array_length(_pick) - 1)];
+			
+			 // Boss Time:
+			if(loops > 0 && GameCont.subarea == 3){
+				if(area == area_desert || area == area_scrapyards || area == area_city){
+					subarea = 3;
+				}
 			}
 		}
 	}
@@ -1437,11 +1474,13 @@
 	if(alarm0_run) exit;
 	
 	 // Shielder Interaction:
-	if(deflected && hitid == 58 && area != area_hq){
-		area       = area_hq;
-		subarea    = min(subarea, 2);
-		area_chaos = false;
-		CrystalHeartBullet_setup();
+	if(!tesseract){
+		if(deflected && hitid == 58 && area != area_hq){
+			area       = area_hq;
+			subarea    = min(subarea, 2);
+			area_chaos = false;
+			CrystalHeartBullet_setup();
+		}
 	}
 	
 	 // Movement:
@@ -1477,7 +1516,7 @@
 	
 #define CrystalHeartBullet_alrm0
 	 // Accelerate:
-	friction = -0.4;
+	friction = (tesseract ? -0.3 : -0.4);
 	
 	 // Deflectable:
 	if(typ == 0) typ = 1;
@@ -1536,37 +1575,99 @@
 	sleep(50);
 	
 	 // Tunnel Time:
-	var	_scrt  = script_ref_create(CrystalHeartBullet_area_generate_setup, area_goal, direction, area_seed),
+	var	_scrt  = script_ref_create(CrystalHeartBullet_area_generate_setup, area_goal, direction, area_seed, tesseract),
 		_genID = area_generate(area, subarea, loops, x, y, false, false, _scrt);
 		
 	if(is_real(_genID)){
-		var	_chest  = area_chest,
-			_chestX = x,
-			_chestY = y,
-			_disMin = -1;
+		
+		 // Tesseract Room:
+		/*
+		if(tesseract){
+			var _w			= 4,
+				_h			= 4,
+				_type		= "round",
+				_dirOff 	= 60,
+				_dirStart	= direction + 180,
+				_floorDis	= -64,
+				_spawnX 	= 10016,
+				_spawnY 	= 10016,
+				_spawnDis	= 32,
+				_spawnFloor = instances_matching_gt(FloorNormal, "id", _genID);
 			
+			floor_set_style(1, area);
+			
+			with(floor_room_start(_spawnX, _spawnY, _spawnDis, _spawnFloor)){
+				with(floor_room_create(x, y, _w, _h, _type, _dirStart, _dirOff, _floorDis)){
+					
+				}
+			}
+			
+			floor_reset_style();
+		}
+		*/
+		
 		 // Delete Chests:
 		with(instances_matching_gt([RadChest, chestprop], "id", _genID)){
 			instance_delete(id);
 		}
 		
-		 // Spawn Chest on Furthest Floor:
-		with(instances_matching_gt(FloorNormal, "id", _genID)){
-			var	_x   = bbox_center_x,
-				_y   = bbox_center_y,
-				_dis = point_distance(other.x, other.y, _x, _y);
+		 // Spawn Chests:
+		if(!is_array(area_chest)) area_chest = [area_chest];
+		for(var i = 0; i < array_length(area_chest); i++){
+			
+			var _chestInfo = area_chest[i];
+			repeat(lq_defget(_chestInfo, "count", 1)){
 				
-			if(_dis > _disMin){
-				if(!place_meeting(x, y, Wall)){
-					_disMin = _dis;
-					_chestX = _x;
-					_chestY = _y;
+				var	_chest  = lq_defget(_chestInfo, "chest", _chestInfo),
+					_chestX = x,
+					_chestY = y,
+					_disMin = -1;
+					
+				switch(chest_pos){
+					case "furthest":
+						
+						 // Spawn Chest on Furthest Floor:
+						with(instances_matching_gt(FloorNormal, "id", _genID)){
+							var	_x   = bbox_center_x,
+								_y   = bbox_center_y,
+								_dis = point_distance(other.x, other.y, _x, _y);
+								
+							if(_dis > _disMin){
+								if(!place_meeting(x, y, Wall) && !place_meeting(x, y, chestprop)){
+									_disMin = _dis;
+									_chestX = _x;
+									_chestY = _y;
+								}
+							}
+						}
+						
+						break;
+						
+					case "random":
+						
+						 // Spawn Chest on Random Floor:
+						var _tries = 100;
+						while(_tries > 0){
+							_tries--;
+							
+							with(instance_random(instances_matching_gt(FloorNormal, "id", _genID))){
+								if(!place_meeting(x, y, Wall) && !place_meeting(x, y, chestprop)){
+									_tries = 0;
+									_chestX = bbox_center_x;
+									_chestY = bbox_center_y;
+								}
+							}
+						}
+						
+						break;
 				}
-			}
-		}
-		with(chest_create(_chestX, _chestY, _chest, true)){
-			with(instances_meeting(x, y, CrystalProp)){
-				instance_delete(id);
+				
+				 // New Chest Just Dropped:
+				with(chest_create(_chestX, _chestY, _chest, true)){
+					with(instances_meeting(x, y, CrystalProp)){
+						instance_delete(id);
+					}
+				}
 			}
 		}
 		
@@ -1667,10 +1768,11 @@
 		instance_create(x, y, PortalClear);
 	}
 	
-#define CrystalHeartBullet_area_generate_setup(_goal, _direction, _seed)
+#define CrystalHeartBullet_area_generate_setup(_goal, _direction, _seed, _tesseract)
 	with(GenCont){
 		goal = _goal;
 		iswarpzone = false;
+		tesseract  = _tesseract;
 	}
 	with(FloorMaker){
 		goal = _goal;
@@ -2856,7 +2958,7 @@
 		boss = true;
 		
 		 // For Sani's bosshudredux:
-		bossname = "TESSERACT";
+		bossname = `@9(${spr.TesseractGameoverText}:-0.8)`;
 		col      = area_get_back_color("red");
 		
 		 // Visual:
@@ -2866,10 +2968,11 @@
 		spr_walk     = spr.TesseractEyeIdle;
 		spr_hurt     = spr.TesseractEyeHurt;
 		spr_fire     = spr.TesseractEyeFire;
+		spr_tell	 = spr.TesseractEyeTell;
 		spr_arms     = spr.TesseractWeapon;
 		spr_shadow   = mskNone;
 		spr_shadow_y = 12;
-		hitid        = [spr.TesseractGameover, "TESSERACT"];
+		hitid        = [spr.TesseractGameover, `@9(${spr.TesseractGameoverText}:-0.8)`];
 		depth        = -3;
 		
 		 // Sound:
@@ -2881,9 +2984,9 @@
 		mask_index  = msk.CaveHole;
 		friction    = 0.2;
 		maxhealth   = boss_hp(600);
-		meleedamage = 200; // yokin please leave it in it's funny  noooo i cant itll give things weird infinite HP and bug it out
+		meleedamage = 200;
 		raddrop     = 24;
-		size        = 5;
+		size        = 6;
 		walk        = 0;
 		walkspeed   = 0.4;
 		maxspeed    = 2;
@@ -2936,7 +3039,9 @@
 	if(alarm2_run) exit;
 	
 	 // Animate:
-	sprite_index = enemy_sprite;
+	if((sprite_index != spr_tell && sprite_index != spr_fire) || anim_end){
+		sprite_index = enemy_sprite;
+	}
 	
 	 // Movement:
 	enemy_walk(walkspeed, maxspeed);
@@ -2966,9 +3071,13 @@
 			 // Strike Launched:
 			if(strike.alarm1 > 0 && strike.alarm1 <= ceil(current_time_scale)){
 				kick = kick_goal;
-				with(other.layers){
-					if(abs(rotspeed) < 6){
-						rotspeed += 3 * ((rotspeed == 0) ? choose(-1, 1) : sign(rotspeed));
+				with(other){
+					sprite_index = spr_fire;
+					image_index  = 0;
+					with(layers){
+						if(abs(rotspeed) < 6){
+							rotspeed += 3 * ((rotspeed == 0) ? choose(-1, 1) : sign(rotspeed));
+						}
 					}
 				}
 			}
@@ -3078,12 +3187,19 @@
 		else if(array_length(weapons)){
 			var _wep = weapons[0];
 			
+			 // Effects:
+			instance_create(
+				x + lengthdir_x(_wep.offset, _wep.rotation),
+				y + lengthdir_y(_wep.offset, _wep.rotation),
+				Smoke
+			);
+			
 			 // Aim:
 			if(instance_exists(target)){
 				_wep.rotation = point_direction(x, y, target.x, target.y);
 			}
 			_wep.rotation += orandom(90);
-			_wep.rotspeed = 1.2;
+			_wep.rotspeed  = 1.2;
 			
 			 // Fire:
 			_wep.strike = projectile_create(x, y, "TesseractStrike", _wep.rotation, 0);
@@ -3091,6 +3207,7 @@
 				alarm1 = 20;
 			}
 			_wep.kick_goal = 15;
+			_wep.kick	   = -5;
 			
 			 // Weapon Rotation:
 			for(var i = 0; i < array_length(weapons) - 1; i++){
@@ -3109,7 +3226,7 @@
 		alarm2 = 40;
 		
 		 // Animate:
-		sprite_index = spr_fire;
+		sprite_index = spr_tell;
 		image_index  = 0;
 		
 		 // Fire:

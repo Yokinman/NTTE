@@ -15,6 +15,9 @@
 #macro area_active variable_instance_get(GameCont, "ntte_active_" + mod_current, false) && (GameCont.area == mod_current || GameCont.lastarea == mod_current)
 #macro area_visits variable_instance_get(GameCont, "ntte_visits_" + mod_current, 0)
 
+#macro tesseract variable_instance_get(GenCont, "tesseract",  false)
+#macro warp_zone variable_instance_get(GenCont, "iswarpzone", true)
+
 #define area_subarea           return 1;
 #define area_goal              return 60;
 #define area_next              return [mod_current, 1]; // CAN'T LEAVE
@@ -220,7 +223,7 @@
 		}
 		
 	/// Don't Move:
-		if(!variable_instance_get(GenCont, "iswarpzone", true)){
+		if(!warp_zone){
 			if("direction_start" not in self){
 				direction_start = direction;
 			}
@@ -246,18 +249,21 @@
 	var	_x = x + 16,
 		_y = y + 16;
 		
-	 // Big:
-	if(chance(1, 7)){
-		obj_create(_x, _y, "CrystalBrain");
-	}
-	
-	 // Small:
-	else{
+	if(!tesseract){
+		
+		 // Big:
 		if(chance(1, 7)){
-			instance_create(_x, _y, Bandit);
+			obj_create(_x, _y, "CrystalBrain");
 		}
+		
+		 // Small:
 		else{
-			obj_create(_x, _y, "RedSpider");
+			if(chance(1, 7)){
+				instance_create(_x, _y, Bandit);
+			}
+			else{
+				obj_create(_x, _y, "RedSpider");
+			}
 		}
 	}
 	
@@ -279,7 +285,7 @@
 	}
 	
 	 // Warp Rooms:
-	if(variable_instance_get(GenCont, "iswarpzone", true) && styleb == 0){
+	if(warp_zone && styleb == 0){
 		if(chance(1, 12 * array_length(instances_matching(CustomObject, "name", "Warp")))){
 			var _w          = 2,
 				_h          = 2,
@@ -347,7 +353,7 @@
 	}
 	
 	 // Secrets Upon Secrets:
-	if(variable_instance_get(GenCont, "iswarpzone", true)){
+	if(warp_zone){
 		var	_w          = 3,
 			_h          = 3,
 			_type       = "",
@@ -435,6 +441,29 @@
 		
 		floor_reset_align();
 		floor_reset_style();
+	}
+	
+	 // Tesseract Room:
+	if(tesseract){
+		/*
+		var _spawnX     = 10016,
+			_spawnY     = 10016,
+			_furthest   = instance_furthest(_spawnX, _spawnY, Floor),
+			_dirStart	= point_direction(_spawnX, _spawnY, _furthest.x, _furthest.y),
+			_type		= "",
+			_w			= 4,
+			_h			= 4,
+			_dirOff 	= 90,
+			_spawnDis	= 32,
+			_floorDis	= -64,
+			_spawnFloor = FloorNormal;
+		
+		with(floor_room_start(_spawnX, _spawnY, _spawnDis, _spawnFloor)){
+			with(floor_room_create(x, y, _w, _h, _type, _dirStart, _dirOff, _floorDis)){
+				obj_create(x, y, "Tesseract");
+			}
+		}
+		*/
 	}
 	
 #define area_effect

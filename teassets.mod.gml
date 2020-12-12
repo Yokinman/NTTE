@@ -138,11 +138,12 @@
 			msk.ClamShieldSlash = sprite(p + "mskClamShieldSlash",  4, 12, 12);
 			
 			 // Crystal Heart:
-			CrystalHeartBullet          = sprite(p + "sprCrystalHeartBullet",          2, 10, 10);
-			CrystalHeartBulletHit       = sprite(p + "sprCrystalHeartBulletHit",       8, 16, 16);
-			CrystalHeartBulletRing      = sprite(p + "sprCrystalHeartBulletRing",      2, 10, 10);
-			CrystalHeartBulletTrail     = sprite(p + "sprCrystalHeartBulletTrail",     4, 10, 10);
-			CrystalHeartBulletTesseract = sprite(p + "sprCrystalHeartBulletTesseract", 2, 24, 24);
+			CrystalHeartBullet          	 = sprite(p + "sprCrystalHeartBullet",          	 2, 10, 10);
+			CrystalHeartBulletHit       	 = sprite(p + "sprCrystalHeartBulletHit",       	 8, 16, 16);
+			CrystalHeartBulletRing      	 = sprite(p + "sprCrystalHeartBulletRing",      	 2, 10, 10);
+			CrystalHeartBulletTrail     	 = sprite(p + "sprCrystalHeartBulletTrail",     	 4, 10, 10);
+			CrystalHeartBulletTesseract 	 = sprite(p + "sprCrystalHeartBulletTesseract", 	 2, 24, 24);
+			CrystalHeartBulletTrailTesseract = sprite(p + "sprCrystalHeartBulletTrailTesseract", 4, 24, 24);
 			
 			 // Electroplasma:
 			ElectroPlasma       = sprite(p + "sprElectroPlasma",       7, 12, 12);
@@ -749,14 +750,16 @@
 			
 			 // Tesseract:
 			p = m + "Tesseract/";
-			TesseractEyeIdle  = sprite(p + "sprTesseractEyeIdle",  8,  8,  8);
-			TesseractEyeHurt  = sprite(p + "sprTesseractEyeHurt",  3,  8,  8);
-			TesseractEyeFire  = sprite(p + "sprTesseractEyeFire",  6,  8,  8);
-			Tesseract         = sprite(p + "sprTesseract",         3, 48, 48);
-			TesseractOutline  = sprite(p + "sprTesseractOutline",  3, 48, 48);
-			TesseractGameover = sprite(p + "sprTesseractGameover", 8, 48, 48);
-			TesseractWeapon   = sprite(p + "sprTesseractWeapon",   1, 24, 24);
-			TesseractStrike   = sprite(p + "sprTesseractStrike",   4, 26, 12);
+			TesseractEyeIdle	  = sprite(p + "sprTesseractEyeIdle",	   8,  8,  8);
+			TesseractEyeHurt	  = sprite(p + "sprTesseractEyeHurt",	   3,  8,  8);
+			TesseractEyeFire	  = sprite(p + "sprTesseractEyeFire",	   4,  8,  8);
+			TesseractEyeTell	  = sprite(p + "sprTesseractEyeTell",	   6,  8,  8);
+			Tesseract       	  = sprite(p + "sprTesseract",      	   3,  48, 48);
+			TesseractOutline	  = sprite(p + "sprTesseractOutline",	   3,  48, 48);
+			TesseractGameover	  = sprite(p + "sprTesseractGameover",	   8,  48, 48);
+			TesseractGameoverText = sprite(p + "sprTesseractGameoverText", 12, 36, 4);
+			TesseractWeapon 	  = sprite(p + "sprTesseractWeapon",       1,  24, 24);
+			TesseractStrike 	  = sprite(p + "sprTesseractStrike",       4,  26, 12);
 			
 			 // Traffic Crab:
 			p = m + "Crab/";

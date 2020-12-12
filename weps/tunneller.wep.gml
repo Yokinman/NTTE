@@ -88,14 +88,55 @@
 			 // Area:
 			area_goal  = irandom_range(8, 12) + (4 * _skill) + (4 * (weapon_get_gold(_wep) != 0));
 			area_chaos = chance(1, 2); 
-			area_chest = pool([
-				[AmmoChest,          4],
-				[WeaponChest,        4],
-				["Backpack",         3],
-				["BonusAmmoChest",   2],
-				["BonusHealthChest", 2],
-				["RedAmmoChest",     1]
+			area_chest = [];
+			
+			var _set = pool([
+				["normal",                              	 90],
+				["orchid", (save_get("orchid:seen", false) ? 5 : 0)],
+				["lair",   (unlock_get("crown:crime")      ? 5 : 0)]
 			]);
+			
+			switch(_set){
+				case "orchid":
+					
+					 // Orchid Set:
+					chest_pos = "random";
+					array_push(area_chest, {
+						"chest" : "OrchidChest",
+						"count" : irandom_range(2, 4)
+					});	
+				
+					break;
+					
+				case "lair":
+					
+					 // Lair Set:
+					array_push(area_chest, "CatChest");
+					array_push(area_chest, "BatChest");
+				 // array_push(area_chest, "RatChest"); // one day...
+					
+					break;
+					
+				case "normal":
+					
+					 // Normal Set:
+					array_push(area_chest, pool([
+						[AmmoChest,          4],
+						[WeaponChest,        4],
+						["Backpack",         3],
+						["BonusAmmoChest",   2],
+						["BonusHealthChest", 2],
+					]));
+					
+					break;
+			}
+			
+			 // Bonus Chance of Red Ammo:
+			if(chance(1, 15)){
+				array_push(area_chest, "RedAmmoChest");
+			}
+			
+			 // Effect:
 			with(instance_create(x, y, ThrowHit)){
 				image_blend = area_get_back_color(other.area);
 			}
@@ -196,6 +237,7 @@
 #define chance(_numer, _denom)                                                          return  random(_denom) < _numer;
 #define chance_ct(_numer, _denom)                                                       return  random(_denom) < (_numer * current_time_scale);
 #define unlock_get(_unlock)                                                             return  mod_script_call_nc('mod', 'teassets', 'unlock_get', _unlock);
+#define save_get(_name, _default)                                                       return  mod_script_call_nc  ('mod', 'teassets', 'save_get', _name, _default);
 #define obj_create(_x, _y, _obj)                                                        return  (is_undefined(_obj) ? [] : mod_script_call_nc('mod', 'telib', 'obj_create', _x, _y, _obj));
 #define projectile_create(_x, _y, _obj, _dir, _spd)                                     return  mod_script_call_self('mod', 'telib', 'projectile_create', _x, _y, _obj, _dir, _spd);
 #define weapon_fire_init(_wep)                                                          return  mod_script_call     ('mod', 'telib', 'weapon_fire_init', _wep);
