@@ -300,8 +300,9 @@
 	
 	 // Crystal Hearts:
 	if(_normalArea){
-		var	_heartNum = (chance(GameCont.hard, 400 + (5 * GameCont.hard)) && GameCont.area != area_hq),
-			_chaosNum = ((GameCont.subarea == 1) + chance(1, 5)) * (crown_current == "red");
+		var	_heartNum  = (chance(GameCont.hard, 400 + (5 * GameCont.hard)) && GameCont.area != area_hq),
+			_chaosNum  = ((GameCont.subarea == 1) + chance(1, 5)) * (crown_current == "red"),
+			_tesseract = (GameCont.hard >= 5 && variable_instance_get(GameCont, "ntte_tesseract_min_loop", -1) < GameCont.loops);
 			
 		 // Guarantee Unnecessary:
 		if(_heartNum > 0){
@@ -336,9 +337,10 @@
 			
 			 // Spawn Hearts:
 			if(array_length(_spawnFloor) > 0){
+				
 				 // Visited Warp Zone, Only Chaos Hearts:
 				if(_heartNum > 0){
-					if(GameCont.area == "red" || variable_instance_get(GameCont, "ntte_visits_red", 0) > GameCont.loops){
+					if(GameCont.area == "red" || variable_instance_get(GameCont, "ntte_last_loop_visited_red", -1) >= GameCont.loops){
 						_chaosNum += _heartNum;
 						_heartNum = 0;
 					}
@@ -347,11 +349,21 @@
 				 // Create:
 				while((_heartNum + _chaosNum) > 0){
 					with(instance_random(_spawnFloor)){
-						obj_create(
+						with(obj_create(
 							bbox_center_x,
 							bbox_center_y + 2,
 							((_chaosNum > 0) ? "ChaosHeart" : "CrystalHeart")
-						);
+						)){
+							
+							 // Tesseract:
+							if(_tesseract > 0 && chance(1, ((crown_current == "red") ? 25 : 5))){
+								tesseract = true;
+								
+								 // No More:
+								_tesseract = 0;
+								variable_instance_set(GameCont, "ntte_tesseract_min_loop", GameCont.loops);
+							}
+						}
 					}
 					if(_chaosNum > 0) _chaosNum--;
 					else _heartNum--;

@@ -1232,6 +1232,7 @@
 		subarea     = 1;
 		loops       = GameCont.loops;
 		white       = false;
+		tesseract	= false;
 		
 		 // Alarms:
 		alarm1 = 30;
@@ -1331,7 +1332,7 @@
 		)){
 			area_chest = _chestTypes[i];
 			area_chaos = other.white;
-			tesseract  = (i == 0);
+			tesseract  = (other.tesseract && i == 0);
 		}
 	}
 	
@@ -1365,7 +1366,7 @@
 		area_seed  = irandom(random_get_seed());
 		area_goal  = irandom_range(10, 20);
 		chest_pos  = "furthest";
-		area_chest = AmmoChest;
+		area_chest = null;
 		area_chaos = false;
 		setup      = true;
 		tesseract  = false;
@@ -1612,65 +1613,68 @@
 		}
 		
 		 // Spawn Chests:
-		if(!is_array(area_chest)) area_chest = [area_chest];
-		for(var i = 0; i < array_length(area_chest); i++){
+		if(array_length(area_chest) || !is_undefined(area_chest)){
 			
-			var _chestInfo = area_chest[i];
-			repeat(lq_defget(_chestInfo, "count", 1)){
+			if(!is_array(area_chest)) area_chest = [area_chest];
+			for(var i = 0; i < array_length(area_chest); i++){
 				
-				var	_chest  = lq_defget(_chestInfo, "chest", _chestInfo),
-					_chestX = x,
-					_chestY = y,
-					_disMin = -1;
+				var _chestInfo = area_chest[i];
+				repeat(lq_defget(_chestInfo, "count", 1)){
 					
-				switch(chest_pos){
-					case "furthest":
+					var	_chest  = lq_defget(_chestInfo, "chest", _chestInfo),
+						_chestX = x,
+						_chestY = y,
+						_disMin = -1;
 						
-						 // Spawn Chest on Furthest Floor:
-						with(instances_matching_gt(FloorNormal, "id", _genID)){
-							var	_x   = bbox_center_x,
-								_y   = bbox_center_y,
-								_dis = point_distance(other.x, other.y, _x, _y);
-								
-							if(_dis > _disMin){
-								if(!place_meeting(x, y, Wall) && !place_meeting(x, y, chestprop)){
-									_disMin = _dis;
-									_chestX = _x;
-									_chestY = _y;
-								}
-							}
-						}
-						
-						break;
-						
-					case "random":
-						
-						 // Spawn Chest on Random Floor:
-						var _tries = 100;
-						while(_tries > 0){
-							_tries--;
+					switch(chest_pos){
+						case "furthest":
 							
-							with(instance_random(instances_matching_gt(FloorNormal, "id", _genID))){
-								if(!place_meeting(x, y, Wall) && !place_meeting(x, y, chestprop)){
-									_tries = 0;
-									_chestX = bbox_center_x;
-									_chestY = bbox_center_y;
+							 // Spawn Chest on Furthest Floor:
+							with(instances_matching_gt(FloorNormal, "id", _genID)){
+								var	_x   = bbox_center_x,
+									_y   = bbox_center_y,
+									_dis = point_distance(other.x, other.y, _x, _y);
+									
+								if(_dis > _disMin){
+									if(!place_meeting(x, y, Wall) && !place_meeting(x, y, chestprop)){
+										_disMin = _dis;
+										_chestX = _x;
+										_chestY = _y;
+									}
 								}
 							}
+							
+							break;
+							
+						case "random":
+							
+							 // Spawn Chest on Random Floor:
+							var _tries = 100;
+							while(_tries > 0){
+								_tries--;
+								
+								with(instance_random(instances_matching_gt(FloorNormal, "id", _genID))){
+									if(!place_meeting(x, y, Wall) && !place_meeting(x, y, chestprop)){
+										_tries = 0;
+										_chestX = bbox_center_x;
+										_chestY = bbox_center_y;
+									}
+								}
+							}
+							
+							break;
+					}
+					
+					 // New Chest Just Dropped:
+					with(chest_create(_chestX, _chestY, _chest, true)){
+						with(instances_meeting(x, y, CrystalProp)){
+							instance_delete(id);
 						}
-						
-						break;
-				}
-				
-				 // New Chest Just Dropped:
-				with(chest_create(_chestX, _chestY, _chest, true)){
-					with(instances_meeting(x, y, CrystalProp)){
-						instance_delete(id);
 					}
 				}
 			}
 		}
-		
+			
 		 // Deptherize:
 		if(area == "red"){
 			with(instances_matching_gt(Floor, "id", _genID)){
@@ -2993,12 +2997,17 @@
 		minspeed    = 0.2;
 		intro       = false;
 		ammo        = 3;
+		spin		= choose(-1, 1);
 		tauntdelay  = 60;
+		teleport_x  = x;
+		teleport_y  = y;
+		teleport    = false;
 		direction   = random(360);
 		
 		 // Alarms:
 		alarm1 = 200;
 		alarm2 = 240;
+		alarm3 = -1;
 		
 		 // Main Layers:
 		layers = [];
@@ -3037,6 +3046,7 @@
 	 // Alarms:
 	if(alarm1_run) exit;
 	if(alarm2_run) exit;
+	if(alarm3_run) exit;
 	
 	 // Animate:
 	if((sprite_index != spr_tell && sprite_index != spr_fire) || anim_end){
@@ -3104,15 +3114,17 @@
 	}
 	
 #define Tesseract_draw
-	var _hurt = (sprite_index == spr_hurt && image_index < 1);
+	var _hurt = (sprite_index == spr_hurt && image_index < 1),
+		_x = (teleport ? teleport_x : x),
+		_y = (teleport ? teleport_y : y);
+		
 	if(_hurt) draw_set_fog(true, image_blend, 0, 0);
 	
-	var _max = array_length(layers);
-	
 	 // Outline Layers:
+	var _max = array_length(layers);
 	for(var i = 0; i < _max; i++){
 		var _layer = layers[i];
-		draw_sprite_ext(spr_back, i, x, y, image_xscale, image_yscale, image_angle + _layer.rotation, image_blend, image_alpha);
+		draw_sprite_ext(spr_back, i, _x, _y, image_xscale, image_yscale, image_angle + _layer.rotation, image_blend, image_alpha);
 	}
 	
 	 // Main Layers:
@@ -3122,18 +3134,18 @@
 		 // Weapons:
 		if(i == (_max - 1)){
 			for(var j = 0; j < array_length(weapons); j++){
-				var _wep = weapons[j],
-					_len = _wep.offset - _wep.kick,
-					_dir = _wep.rotation,
-					_x   = x + lengthdir_x(_len * image_xscale, _dir),
-					_y   = y + lengthdir_y(_len * image_yscale, _dir);
+				var _wep  = weapons[j],
+					_len  = _wep.offset - _wep.kick,
+					_dir  = _wep.rotation,
+					_wepX = _x + lengthdir_x(_len * image_xscale, _dir),
+					_wepY = _y + lengthdir_y(_len * image_yscale, _dir);
 					
-				draw_sprite_ext(spr_arms, j, _x, _y, image_xscale, image_yscale, _dir, image_blend, image_alpha);
+				draw_sprite_ext(spr_arms, j, _wepX, _wepY, image_xscale, image_yscale, _dir, image_blend, image_alpha);
 			}
 		}
 		
 		 // Layer:
-		draw_sprite_ext(spr_frnt, i, x, y, image_xscale, image_yscale, image_angle + _layer.rotation, image_blend, image_alpha)
+		draw_sprite_ext(spr_frnt, i, _x, _y, image_xscale, image_yscale, image_angle + _layer.rotation, image_blend, image_alpha);
 	}
 	
 	 // Eye:
@@ -3166,13 +3178,13 @@
 	scrWalk(direction + orandom(90), 60 + random(60));
 	
 #define Tesseract_alrm2
-	alarm2 = 20 + random(40);
+	alarm2 = 30 + random(30);
 	
 	enemy_target(x, y);
 	
-	 // Begin Attack:
 	if(ammo <= 0){
-		 // Start Orderly Attack:
+		
+		 // Begin Orderly Attack:
 		if(chance(1, 10)){
 			ammo = irandom_range(3, 4);
 			with(weapons){
@@ -3183,7 +3195,7 @@
 			if(SOUNDDEBUG) trace("tesseract:begin big attack");
 		}
 		
-		 // Chaotic Attack:
+		 // Begin Chaotic Attack:
 		else if(array_length(weapons)){
 			var _wep = weapons[0];
 			
@@ -3199,12 +3211,12 @@
 				_wep.rotation = point_direction(x, y, target.x, target.y);
 			}
 			_wep.rotation += orandom(90);
-			_wep.rotspeed  = 1.2;
+			_wep.rotspeed  = 1.2 * spin;
 			
 			 // Fire:
 			_wep.strike = projectile_create(x, y, "TesseractStrike", _wep.rotation, 0);
 			with(_wep.strike){
-				alarm1 = 20;
+				alarm1 = 25;
 			}
 			_wep.kick_goal = 15;
 			_wep.kick	   = -5;
@@ -3223,7 +3235,8 @@
 	 // Orderly Attack:
 	if(ammo > 0){
 		ammo--;
-		alarm2 = 40;
+		alarm2 = 50;
+		spin = choose(-1, 1);
 		
 		 // Animate:
 		sprite_index = spr_tell;
@@ -3232,7 +3245,7 @@
 		 // Fire:
 		var _max = array_length(weapons),
 			_dir = random(360),
-			_spd = 3 * choose(-1, 1);
+			_spd = 4 * spin;
 			
 		if(instance_exists(target)){
 			_dir = point_direction(x, y, target.x, target.y) + orandom(30);
@@ -3244,11 +3257,22 @@
 			_wep.rotspeed  = _spd;
 			_wep.kick_goal = 10;
 			_wep.strike    = projectile_create(x, y, "TesseractStrike", _wep.rotation, 0);
+			with(_wep.strike){
+				alarm1 = 45;
+			}
+		}
+		
+		 // Cooldown:
+		if(ammo <= 0){
+			alarm2 = 80;
 		}
 		
 		 // Sounds:
 		if(SOUNDDEBUG) trace("tesseract:big attack");
 	}
+
+#define Tesseract_alrm3
+
 	
 #define Tesseract_hurt(_damage, _force, _direction)
 	enemy_hurt(_damage, _force, _direction);
@@ -3441,6 +3465,83 @@
 	}
 	
 	
+/*#define TesseractWarp_create(_x, _y)
+	with(instance_create(_x, _y, CustomObject)){
+		 // Visual:
+		sprite_index = spr.WarpOpen;
+		image_angle  = random(360);
+		image_speed  = 0.4;
+		depth		 = -4;
+		
+		 // Vars:
+		sprite_scale	      = 0.6;
+		sprite_scale_speed	  = 0.3;
+		sprite_scale_friction = 0.03;
+		radius				  = 5;
+		radius_speed		  = 3;
+		radius_friction 	  = 0.2;
+		angle_speed			  = 0;
+		angle_friction		  = 0.4;
+		
+		return id;
+	}
+*/
+/*#define TesseractWarp_step
+	 // He do be growin' tho:
+	image_angle += angle_speed	  * current_time_scale;
+	angle_speed -= angle_friction * current_time_scale;
+
+	sprite_scale	   += sprite_scale_speed	* current_time_scale;
+	sprite_scale_speed -= sprite_scale_friction * current_time_scale;
+	
+	radius		 += radius_speed	* current_time_scale;
+	radius_speed -= radius_friction * current_time_scale;
+	
+	radius		 = max(radius,		 0);
+	sprite_scale = max(sprite_scale, 0);
+	
+	 // Effects:
+	if(current_frame_active){
+		var	_l = 64,
+			_d = random(360);
+			
+		with(instance_create(x + lengthdir_x(_l, _d), y + lengthdir_y(_l, _d), LaserCharge)){
+			alarm0 = random_range(15, 20);
+			motion_set(_d + 180, random_range(1, 2));
+			sprite_index = sprSpiralStar;
+			direction    = _d + 180;
+			speed        = _l / alarm0;
+		}
+	}
+	if(chance_ct(1, 5)){
+		var	_l = random_range(32, 128),
+			_d = random(360);
+			
+		with(instance_create(x + lengthdir_x(_l, _d), y + lengthdir_y(_l, _d), BulletHit)){
+			sprite_index = sprWepSwap;
+		}
+	}
+	
+	if(sprite_scale <= 0 && radius <= 0){
+		with(instance_create(x, y, BulletHit)){
+			sprite_index = sprThrowHit;
+		}
+		
+		 // Goodbye:
+		instance_destroy();
+	}
+*/
+/*#define TesseractWarp_draw
+
+	draw_set_fog(true, image_blend, 0, 0);
+	image_alpha = abs(image_alpha);
+	
+	draw_sprite_ext(sprite_index, image_index, x, y, (image_xscale * sprite_scale), (image_yscale * sprite_scale), image_angle, image_blend, image_alpha);
+	draw_ellipse(x - (radius * image_xscale), y - (radius * image_yscale), x + (radius * image_xscale), y + (radius * image_yscale), false);
+	
+	draw_set_fog(false, c_white, 0, 0);
+	image_alpha *= -1;
+*/
 #define TwinOrbital_create(_x, _y)
 	with(instance_create(_x, _y, CustomHitme)){
 		 // Visual:
@@ -4327,6 +4428,8 @@
 				
 			image_xscale *= _scale;
 			image_yscale *= _scale;
+			teleport_x += _offX;
+			teleport_y += _offY;
 			x += _offX;
 			y += _offY;
 			
@@ -4334,6 +4437,8 @@
 			
 			image_xscale /= _scale;
 			image_yscale /= _scale;
+			teleport_x -= _offX;
+			teleport_y -= _offY;
 			x -= _offX;
 			y -= _offY;
 		}
@@ -4383,9 +4488,9 @@
 		}
 	}
 	
-	 // Warp Portal:
+	 // Warp Portals:
 	if(instance_exists(CustomObject)){
-		var _inst = instances_matching(CustomObject, "name", /*"TesseractStrike",*/ "WarpPortal");
+		var _inst = instances_matching(CustomObject, "name", /*"TesseractStrike",*/ "WarpPortal", "TesseractWarp");
 		if(array_length(_inst)) with(_inst){
 			var	_scale = 2,
 				_alpha = 0.1;
@@ -4429,6 +4534,12 @@
 						with(_inst){
 							draw_crystal_heart_dark(_ver, _rad + random(2), _coe);
 						}
+					}
+					
+					 // Tesseract:
+					var _inst = instances_matching(CustomEnemy, "name", "Tesseract");
+					if(array_length(_inst)) with(_inst){
+						draw_circle(x, y, 64 + (128 * _gray) + random(2), false);
 					}
 					
 					/*

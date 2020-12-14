@@ -90,45 +90,48 @@
 			area_chaos = chance(1, 2); 
 			area_chest = [];
 			
-			var _set = pool([
-				["normal",                              	 90],
-				["orchid", (save_get("orchid:seen", false) ? 5 : 0)],
-				["lair",   (unlock_get("crown:crime")      ? 5 : 0)]
-			]);
-			
-			switch(_set){
-				case "orchid":
-					
-					 // Orchid Set:
-					chest_pos = "random";
-					array_push(area_chest, {
-						"chest" : "OrchidChest",
-						"count" : irandom_range(2, 4)
-					});	
+			 // No Guarantees:
+			if(chance(3, 5)){
+				var _set = pool([
+					["normal",                              	 90     ],
+					["orchid", (save_get("orchid:seen", false) ? 5  : 0)],
+					["lair",   (unlock_get("crown:crime")      ? 5  : 0)]
+				]);
 				
-					break;
+				switch(_set){
+					case "orchid":
+						
+						 // Orchid Set:
+						chest_pos = "random";
+						array_push(area_chest, {
+							"chest" : "OrchidChest",
+							"count" : irandom_range(2, 4)
+						});	
 					
-				case "lair":
-					
-					 // Lair Set:
-					array_push(area_chest, "CatChest");
-					array_push(area_chest, "BatChest");
-				 // array_push(area_chest, "RatChest"); // one day...
-					
-					break;
-					
-				case "normal":
-					
-					 // Normal Set:
-					array_push(area_chest, pool([
-						[AmmoChest,          4],
-						[WeaponChest,        4],
-						["Backpack",         3],
-						["BonusAmmoChest",   2],
-						["BonusHealthChest", 2],
-					]));
-					
-					break;
+						break;
+						
+					case "lair":
+						
+						 // Lair Set:
+						array_push(area_chest, "CatChest");
+						array_push(area_chest, "BatChest");
+					 // array_push(area_chest, "RatChest"); // one day...
+						
+						break;
+						
+					case "normal":
+						
+						 // Normal Set:
+						array_push(area_chest, pool([
+							[AmmoChest,          5],
+							[WeaponChest,        5],
+							["Backpack",         3],
+							["BonusAmmoChest",   2],
+							["BonusHealthChest", 2],
+						]));
+						
+						break;
+				}
 			}
 			
 			 // Bonus Chance of Red Ammo:

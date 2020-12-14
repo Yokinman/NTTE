@@ -166,7 +166,8 @@
 	
 #define area_finish
 	 // Remember:
-	variable_instance_set(GameCont, "ntte_visits_" + mod_current, area_visits + 1);
+	variable_instance_set(GameCont, "ntte_visits_" + mod_current, area_visits + 1); 
+	variable_instance_set(GameCont, "ntte_last_loop_visited_" + mod_current, GameCont.loops);
 	
 	 // Next Subarea:
 	if(subarea < area_subarea()){
