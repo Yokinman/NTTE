@@ -561,7 +561,7 @@
 	draw_self(); // This is faster than draw_sprite_ext yea
 	image_xscale /= right;
 	
-#define draw_weapon(_sprite, /*_image,*/ _x, _y, _angle, _angleMelee, _kick, _flip, _blend, _alpha)
+#define draw_weapon(_sprite, _image, _x, _y, _angle, _angleMelee, _kick, _flip, _blend, _alpha)
 	/*
 		Drawing weapon sprites
 		
@@ -582,7 +582,7 @@
 	}
 	
 	 // Draw:
-	draw_sprite_ext(_sprite, /*_image*/0, _x, _y, 1, _flip, _angle, _blend, _alpha);
+	draw_sprite_ext(_sprite, _image, _x, _y, 1, _flip, _angle, _blend, _alpha);
 	
 #define draw_lasersight(_x, _y, _dir, _maxDistance, _width)
 	/*
@@ -870,11 +870,11 @@
 	}
 	instance_destroy();
 	
-#define enemy_hurt(_hitdmg, _hitvel, _hitdir)
-	my_health -= _hitdmg;          // Damage
-	motion_add(_hitdir, _hitvel);  // Knockback
-	nexthurt = current_frame + 6;  // I-Frames
-	sound_play_hit(snd_hurt, 0.3); // Sound
+#define enemy_hurt(_damage, _force, _direction)
+	my_health -= _damage;           // Damage
+	nexthurt = current_frame + 6;   // I-Frames
+	motion_add(_direction, _force); // Knockback
+	sound_play_hit(snd_hurt, 0.3);  // Sound
 	
 	 // Hurt Sprite:
 	sprite_index = spr_hurt;
@@ -1022,13 +1022,53 @@
 	return _inst;
 	
 #define object_is(_object, _parent)
+	/*
+		Returns whether the given object is a child of, or equal to, the given parent object (true) or not (false)
+	*/
+	
 	return (_object == _parent || object_is_ancestor(_object, _parent));
 	
 #define chance(_numer, _denom)
-	return random(_denom) < _numer;
-
+	/*
+		Returns true or false randomly, based on the given probability
+		
+		Ex:
+			if(chance(1, 3)) trace("1/3 chance");
+	*/
+	
+	return (random(_denom) < _numer);
+	
 #define chance_ct(_numer, _denom)
-	return random(_denom) < (_numer * current_time_scale);
+	/*
+		Like 'chance()', but used when being called every frame (for timescale support)
+	*/
+	
+	return (random(_denom) < _numer * current_time_scale);
+	
+#define lerp_ct(_val1, _val2, _amount)
+	/*
+		Like 'lerp()', but used when modifying a persistent value every frame (for timescale support)
+	*/
+	
+	return lerp(_val2, _val1, power(1 - _amount, current_time_scale));
+	
+#define angle_lerp(_ang1, _ang2, _num)
+	/*
+		Linearly interpolates between the two given angles
+		
+		Ex:
+			lerp(90, 180, 0.5) == 135
+			lerp(20, 270, 0.1) == 9
+	*/
+	
+	return _ang1 + (angle_difference(_ang2, _ang1) * _num);
+	
+#define angle_lerp_ct(_ang1, _ang2, _num)
+	/*
+		Like 'angle_lerp()', but used when modifying a persistent value every frame (for timescale support)
+	*/
+	
+	return _ang2 + (angle_difference(_ang1, _ang2) * power(1 - _num, current_time_scale));
 	
 #define instance_seen(_x, _y, _obj)
 	/*
@@ -5806,31 +5846,6 @@
 	
 	return _inst;
 	
-#define player_create(_x, _y, _index)
-	/*
-		Creates a Player of the given index at the given coordinates
-	*/
-	
-	with(instance_create(_x, _y, CustomHitme)){
-		with(instance_create(x, y, Revive)){
-			p = _index;
-			canrevive = true;
-			event_perform(ev_collision, Player);
-			with(self){
-				event_perform(ev_alarm, 0);
-			}
-		}
-		instance_destroy();
-	}
-	
-	with(player_find(_index)){
-		my_health = maxhealth;
-		sound_stop(snd_hurt);
-		return id;
-	}
-	
-	return noone;
-
 #define trace_error(_error)
 	trace(_error);
 	trace_color(" ^ Screenshot that error and post it on NT:TE's itch.io page, thanks!", c_yellow);

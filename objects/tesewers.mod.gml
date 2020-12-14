@@ -405,7 +405,7 @@
 	if(h) d3d_set_fog(true, c_black, 0, 0);
 	if(b) draw_self_enemy();
 	
-	draw_weapon(spr_weap, x, y, gunangle, 0, wkick, right, image_blend, image_alpha);
+	draw_weapon(spr_weap, 0, x, y, gunangle, 0, wkick, right, image_blend, image_alpha);
 	
 	if(!b) draw_self_enemy();
 	if(h) d3d_set_fog(false, 0, 0, 0);
@@ -413,9 +413,9 @@
 	 // Halo:
 	draw_sprite(spr_halo, halo_index, x, (y - 3) + sin(wave * 0.1));
 	
-#define AlbinoGator_hurt(_hitdmg, _hitvel, _hitdir)
-	spirit = max(spirit - _hitdmg, 0);
-	nexthurt = (current_frame + 6);
+#define AlbinoGator_hurt(_damage, _force, _direction)
+	spirit = max(spirit - _damage, 0);
+	nexthurt = current_frame + 6;
 	
 	if(spirit_hurt <= current_frame){
 		if(canspirit){
@@ -441,11 +441,11 @@
 			with(instance_create(x + (5 * right), y - 5, ThrowHit)){
 				depth = other.depth - 1;
 			}
-			motion_add(_hitdir, (_hitvel / 4));
+			motion_add(_direction, _force / 4);
 		}
 		
 		 // Take Damage:
-		else enemy_hurt(_hitdmg, _hitvel, _hitdir);
+		else enemy_hurt(_damage, _force, _direction);
 	}
 	
 #define AlbinoGator_death
@@ -713,21 +713,21 @@
 #define BabyGator_draw
 	var _angle = image_angle + ((right * (current_frame * current_time_scale) * 12) * (z > 0));
 	if(gunangle >  180) draw_sprite_ext(sprite_index, image_index, x, y - z, image_xscale * right, image_yscale, _angle, image_blend, image_alpha);
-	draw_weapon(spr_weap, x, y - z, gunangle, 0, wkick, right, image_blend, image_alpha);
+	draw_weapon(spr_weap, 0, x, y - z, gunangle, 0, wkick, right, image_blend, image_alpha);
 	if(gunangle <= 180) draw_sprite_ext(sprite_index, image_index, x, y - z, image_xscale * right, image_yscale, _angle, image_blend, image_alpha);
 
-#define BabyGator_hurt(_hitdmg, _hitvel, _hitdir)
+#define BabyGator_hurt(_damage, _force, _direction)
 	 // Kick:
 	if(speed > 0){
-		zspeed = 3;
+		zspeed  = 3;
 		zbounce = 1;
 	}
 
 	 // Hurt:
-	enemy_hurt(_hitdmg, _hitvel, _hitdir);
+	enemy_hurt(_damage, _force, _direction);
 	
 	 // Effects:
-	scrFX(x, (y - z), [_hitdir, 1], Smoke);
+	scrFX(x, y - z, [_direction, 1], Smoke);
 	
 #define BabyGator_death
 	sound_play_pitch(snd_hurt, 1.3 + random(0.3));
@@ -803,7 +803,7 @@
 	
 #define Bat_draw
 	if(gunangle >  180) draw_self_enemy();
-	draw_weapon(spr_weap, x, y, gunangle, 0, wkick, right, image_blend, image_alpha);
+	draw_weapon(spr_weap, 0, x, y, gunangle, 0, wkick, right, image_blend, image_alpha);
 	if(gunangle <= 180) draw_self_enemy();
 	
 #define Bat_alrm1
@@ -906,17 +906,17 @@
 	}
 	
 	
-#define Bat_hurt(_hitdmg, _hitvel, _hitdir)
+#define Bat_hurt(_damage, _force, _direction)
 	 // Get hurt:
 	if(!instance_is(other, ToxicGas)){
-		stress += _hitdmg;
-		enemy_hurt(_hitdmg, _hitvel, _hitdir);
+		stress += _damage;
+		enemy_hurt(_damage, _force, _direction);
 	}
 	
 	 // Screech:
 	else{
 		stress -= 4;
-		nexthurt = current_frame + 5;
+		nexthurt = current_frame + 6;
 		
 		scrBatScreech(0.5);
 	}
@@ -1143,7 +1143,7 @@
 	if(h) draw_set_fog(true, _blend, 0, 0);
 	
 	if(gunangle >  180) draw_self_enemy();
-	draw_weapon(spr_weap, x, y, gunangle, 0, wkick, right, image_blend, image_alpha);
+	draw_weapon(spr_weap, 0, x, y, gunangle, 0, wkick, right, image_blend, image_alpha);
 	if(gunangle <= 180) draw_self_enemy();
 	
 	if(h) draw_set_fog(false, 0, 0, 0);
@@ -1325,11 +1325,11 @@
 		}
 	}
 	
-#define BatBoss_hurt(_hitdmg, _hitvel, _hitdir)
+#define BatBoss_hurt(_damage, _force, _direction)
 	 // Get hurt:
 	if(!instance_is(other, ToxicGas)){
-		stress += _hitdmg;
-		enemy_hurt(_hitdmg, _hitvel, _hitdir);
+		stress += _damage;
+		enemy_hurt(_damage, _force, _direction);
 		
 		 // Pitch Hurt:
 		if(snd_hurt == sndMutant10Hurt){
@@ -1341,8 +1341,8 @@
 		}
 		
 		 // Half HP:
-		var h = (maxhealth / 2);
-		if(in_range(my_health, h - _hitdmg + 1, h)){
+		var _half = maxhealth / 2;
+		if(my_health <= _half && my_health + _damage > _half){
 			if(snd_lowh == sndNothing2HalfHP){
 				sound_play_pitch(sndNothing2HalfHP, 1.3);
 			}
@@ -1356,7 +1356,7 @@
 	 // Screech:
 	else{
 		stress -= 4;
-		nexthurt = current_frame + 5;
+		nexthurt = current_frame + 6;
 		
 		scrBatBossScreech(1);
 	}
@@ -2063,7 +2063,7 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 	
 #define BoneGator_draw
 	if(gunangle >  180) draw_self_enemy();
-	draw_weapon(spr_weap, x, y, gunangle, 0, wkick, right, image_blend, image_alpha);
+	draw_weapon(spr_weap, 0, x, y, gunangle, 0, wkick, right, image_blend, image_alpha);
 	if(gunangle <= 180) draw_self_enemy();
 	
 #define BoneGator_alrm1
@@ -2157,9 +2157,9 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 		}
 	}
 
-#define BoneGator_hurt(_hitdmg, _hitvel, _hitdir)
+#define BoneGator_hurt(_damage, _force, _direction)
 	if(!instance_is(other, Explosion)){
-		enemy_hurt(_hitdmg, _hitvel, _hitdir);
+		enemy_hurt(_damage, _force, _direction);
 		sound_play_hit_ext(sndBloodHurt, 0.8 + orandom(0.2), 0.9);
 	}
 
@@ -2476,7 +2476,7 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 				y = sit.bbox_top;
 				
 				if(gunangle >  180) draw_self_enemy();
-				draw_weapon(spr_weap, x, y, gunangle, 0, wkick, right, image_blend, image_alpha);
+				draw_weapon(spr_weap, 0, x, y, gunangle, 0, wkick, right, image_blend, image_alpha);
 				if(gunangle <= 180) draw_self_enemy();
 				
 				x = _x;
@@ -2487,7 +2487,7 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 	}
 	else{
 		if(gunangle >  180) draw_self_enemy();
-		draw_weapon(spr_weap, x, y, gunangle, 0, wkick, right, image_blend, image_alpha);
+		draw_weapon(spr_weap, 0, x, y, gunangle, 0, wkick, right, image_blend, image_alpha);
 		if(gunangle <= 180) draw_self_enemy();
 	}
 	
@@ -2647,11 +2647,13 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 		}
 	}
 	
-#define Cat_hurt(_hitdmg, _hitvel, _hitdir)
+#define Cat_hurt(_damage, _force, _direction)
 	if(!instance_is(other, ToxicGas)){
 		if(active){
-			enemy_hurt(_hitdmg, _hitvel, _hitdir)
-			if(!instance_is(sit, enemy)) sit = false;
+			enemy_hurt(_damage, _force, _direction)
+			if(!instance_is(sit, enemy)){
+				sit = false;
+			}
 		}
 	}
 	
@@ -2659,7 +2661,9 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 	else with(other){
 		instance_copy(false);
 		instance_delete(id);
-		for(var i = 0; i < maxp; i++) view_shake[i] -= 1;
+		for(var i = 0; i < maxp; i++){
+			view_shake[i] -= 1;
+		}
 	}
 	
 #define Cat_cleanup
@@ -3011,7 +3015,7 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 	scrAim(angle_lerp(
 		gunangle,
 		angle_lerp(_targetDir, direction, 0.5),
-		0.5 * current_time_scale
+		0.5
 	));
 	
 #define CatBoss_alrm3
@@ -3026,9 +3030,9 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 		}
 	}
 	
-#define CatBoss_hurt(_hitdmg, _hitvel, _hitdir)
+#define CatBoss_hurt(_damage, _force, _direction)
 	if(!instance_is(other, ToxicGas)){
-		enemy_hurt(_hitdmg, (dash ? 0 : _hitvel), _hitdir);
+		enemy_hurt(_damage, (dash ? 0 : _force), _direction);
 		
 		 // Pitch Hurt:
 		if(snd_hurt == sndBuffGatorHit){
@@ -3036,18 +3040,20 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 		}
 		
 		 // Half HP:
-		var h = (maxhealth / 2);
-		if(in_range(my_health, h - _hitdmg + 1, h)){
+		var _half = maxhealth / 2;
+		if(my_health <= _half && my_health + damage > _half){
 			if(snd_lowh == sndBallMamaAppear){
-				var s = sound_play_pitchvol(snd_lowh, 0.8, 1.5);
-				audio_sound_set_track_position(s, 1.5);
+				audio_sound_set_track_position(
+					sound_play_pitchvol(snd_lowh, 0.8, 1.5),
+					1.5
+				);
 			}
 			else sound_play(snd_lowh);
 		}
 		
 		 // Break charging:
 		if(supertime > 0 && superbreakmax > 0){
-			supertime += _hitdmg * 4;
+			supertime += _damage * 4;
 			superbreakmax--;
 			
 			if(supertime >= maxsupertime){
@@ -3056,7 +3062,7 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 				gunangle = (right ? 300 : 240);
 				sleep(100);
 				view_shake_at(x, y, 20);
-				motion_add(_hitdir, 4);
+				motion_add(_direction, 4);
 				
 				 // Sounds:
 				sound_play_pitch(sndGunGun, 0.8);
@@ -3068,13 +3074,13 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 				}
 				repeat(2 + irandom(2)){
 					with(instance_create(x, y, Rad)){
-						motion_set(_hitdir + orandom(30), 4 + random(4));
+						motion_set(_direction + orandom(30), 4 + random(4));
 						friction = 0.4;
 					}
 				}
 				repeat(3 + irandom(6)){
 					with(instance_create(x, y, Smoke)){
-						motion_set(_hitdir + orandom(30), 4 + random(4));
+						motion_set(_direction + orandom(30), 4 + random(4));
 					}
 				}
 				with(instance_create(x + lengthdir_x(16, gunangle), y + lengthdir_y(16, gunangle), FishA)){
@@ -3207,7 +3213,7 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 		
 		 // Hitscan Lines:
 		with(fire_line){
-			dir = angle_lerp(dir, dir_goal, current_time_scale / 7);
+			dir = angle_lerp_ct(dir, dir_goal, 1/7);
 			
 			 // Line Hitscan:
 			var	_dir = dir + other.direction,
@@ -3579,11 +3585,11 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 		}
 	}
 
-#define CatDoor_hurt(_hitdmg, _hitvel, _hitdir)
-	my_health -= _hitdmg;          // Damage
-	motion_add(_hitdir, _hitvel);  // Knockback
-	nexthurt = current_frame + 6;  // I-Frames
-	sound_play_hit(snd_hurt, 0.3); // Sound
+#define CatDoor_hurt(_damage, _force, _direction)
+	my_health -= _damage;
+	nexthurt = current_frame + 6;
+	motion_add(_direction, _force);
+	sound_play_hit(snd_hurt, 0.3);
 	
 	 // Push Open Force:
 	if(instance_exists(other)){
@@ -3594,9 +3600,11 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 	}
 	
 	 // Shared Hurt:
-	if(_hitdmg > 0){
-		with(partner) if(my_health > other.my_health){
-			CatDoor_hurt(_hitdmg, _hitvel, _hitdir);
+	if(_damage > 0){
+		if(instance_exists(partner) && partner.my_health > my_health){
+			with(other){
+				projectile_hit(other.partner, _damage, _force, _direction);
+			}
 		}
 	}
 	
@@ -4550,7 +4558,7 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 					){
 						x = other.x + lengthdir_x(_dis, _dir);
 						y = other.y + lengthdir_y(_dis, _dir);
-						direction = angle_lerp(direction, _dir, 1/12);
+						direction = angle_lerp_ct(direction, _dir, 1/12);
 					}
 					
 					 // Push:
@@ -4560,8 +4568,8 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 								motion_add_ct(_dir, friction + 0.4);
 							}
 							else{
-								x += lengthdir_x(_spd - 0.4, _dir);
-								y += lengthdir_y(_spd - 0.4, _dir);
+								x += lengthdir_x(_spd - 0.4, _dir) * current_time_scale;
+								y += lengthdir_y(_spd - 0.4, _dir) * current_time_scale;
 							}
 						}
 					}
@@ -4869,7 +4877,7 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 			}
 			
 			 // Turn:
-			if(in_range(_sy, _borderY - 160, _borderY - 32)){
+			if(_sy >= _borderY - 160 && _sy <= _borderY - 32){
 				_dir += choose(0, 0, 0, 0, -90, 90);
 				if(abs(angle_difference(_dir, 90)) > 90){
 					_dir = 90;
@@ -4901,7 +4909,7 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 			floor_walls();
 			
 			 // Pipe Decals:
-			if(!in_range(_borderY, bbox_top, bbox_bottom + 1)){
+			if(_borderY < bbox_top || _borderY > bbox_bottom + 1){
 				GameCont.area = ((y > _borderY) ? _lastArea : area);
 				floor_bones(1, 1/12, true);
 				GameCont.area = area;
@@ -5070,16 +5078,18 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 	if(!place_meeting(x, y, Wall)) my_health = 0;
 	if(my_health <= 0) instance_destroy();
 
-#define PizzaRubble_hurt(_hitdmg, _hitvel, _hitdir)
-	enemy_hurt(_hitdmg, _hitvel, _hitdir);
+#define PizzaRubble_hurt(_damage, _force, _direction)
+	enemy_hurt(_damage, _force, _direction);
 
 	 // Diggin FX:
-	if(chance(_hitvel, 8)){
-		repeat(irandom_range(1, ceil(sqrt(_hitdmg)))) if(chance(1, my_health / 10)){
-			with(instance_create(random_range(bbox_left, bbox_right + 1), y + 8, Debris)){
-				depth = 1;
-				direction = 90 + orandom(60);
-				sound_play_hit(sndWallBreak, 0.4);
+	if(chance(_force, 8)){
+		repeat(irandom_range(1, ceil(sqrt(_damage)))){
+			if(chance(1, my_health / 10)){
+				with(instance_create(random_range(bbox_left, bbox_right + 1), y + 8, Debris)){
+					depth = 1;
+					direction = 90 + orandom(60);
+					sound_play_hit(sndWallBreak, 0.4);
+				}
 			}
 		}
 	}
@@ -5806,7 +5816,7 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 #macro  current_frame_active                                                                    (current_frame % 1) < current_time_scale
 #macro  anim_end                                                                                (image_index + image_speed_raw >= image_number || image_index + image_speed_raw < 0)
 #macro  enemy_sprite                                                                            (sprite_index != spr_hurt || anim_end) ? ((speed <= 0) ? spr_idle : spr_walk) : sprite_index
-#macro  enemy_boss                                                                              (('boss' in self) ? boss : ('intro' in self)) || array_exists([Nothing, Nothing2, BigFish, OasisBoss], object_index)
+#macro  enemy_boss                                                                              ('boss' in self) ? boss : ('intro' in self || array_exists([Nothing, Nothing2, BigFish, OasisBoss], object_index))
 #macro  player_active                                                                           visible && !instance_exists(GenCont) && !instance_exists(LevCont) && !instance_exists(SitDown) && !instance_exists(PlayerSit)
 #macro  game_scale_nonsync                                                                      game_screen_get_width_nonsync() / game_width
 #macro  bbox_width                                                                              (bbox_right + 1) - bbox_left
@@ -5826,13 +5836,14 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 #macro  alarm9_run                                                                              alarm9 >= 0 && --alarm9 == 0 && (script_ref_call(on_alrm9) || !instance_exists(self))
 #define orandom(_num)                                                                   return  random_range(-_num, _num);
 #define chance(_numer, _denom)                                                          return  random(_denom) < _numer;
-#define chance_ct(_numer, _denom)                                                       return  random(_denom) < (_numer * current_time_scale);
+#define chance_ct(_numer, _denom)                                                       return  random(_denom) < _numer * current_time_scale;
 #define pround(_num, _precision)                                                        return  (_num == 0) ? _num : round(_num / _precision) * _precision;
 #define pfloor(_num, _precision)                                                        return  (_num == 0) ? _num : floor(_num / _precision) * _precision;
 #define pceil(_num, _precision)                                                         return  (_num == 0) ? _num :  ceil(_num / _precision) * _precision;
-#define in_range(_num, _lower, _upper)                                                  return  (_num >= _lower && _num <= _upper);
 #define frame_active(_interval)                                                         return  (current_frame % _interval) < current_time_scale;
+#define lerp_ct(_val1, _val2, _amount)                                                  return  lerp(_val2, _val1, power(1 - _amount, current_time_scale));
 #define angle_lerp(_ang1, _ang2, _num)                                                  return  _ang1 + (angle_difference(_ang2, _ang1) * _num);
+#define angle_lerp_ct(_ang1, _ang2, _num)                                               return  _ang2 + (angle_difference(_ang1, _ang2) * power(1 - _num, current_time_scale));
 #define draw_self_enemy()                                                                       image_xscale *= right; draw_self(); image_xscale /= right;
 #define enemy_walk(_add, _max)                                                                  if(walk > 0){ walk -= current_time_scale; motion_add_ct(direction, _add); } if(speed > _max) speed = _max;
 #define save_get(_name, _default)                                                       return  mod_script_call_nc  ('mod', 'teassets', 'save_get', _name, _default);
@@ -5874,7 +5885,7 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 #define instance_get_name(_inst)                                                        return  mod_script_call_nc  ('mod', 'telib', 'instance_get_name', _inst);
 #define variable_instance_get_list(_inst)                                               return  mod_script_call_nc  ('mod', 'telib', 'variable_instance_get_list', _inst);
 #define variable_instance_set_list(_inst, _list)                                                mod_script_call_nc  ('mod', 'telib', 'variable_instance_set_list', _inst, _list);
-#define draw_weapon(_sprite, _x, _y, _ang, _meleeAng, _wkick, _flip, _blend, _alpha)            mod_script_call_nc  ('mod', 'telib', 'draw_weapon', _sprite, _x, _y, _ang, _meleeAng, _wkick, _flip, _blend, _alpha);
+#define draw_weapon(_spr, _img, _x, _y, _ang, _angMelee, _kick, _flip, _blend, _alpha)          mod_script_call_nc  ('mod', 'telib', 'draw_weapon', _spr, _img, _x, _y, _ang, _angMelee, _kick, _flip, _blend, _alpha);
 #define draw_lasersight(_x, _y, _dir, _maxDistance, _width)                             return  mod_script_call_nc  ('mod', 'telib', 'draw_lasersight', _x, _y, _dir, _maxDistance, _width);
 #define draw_surface_scale(_surf, _x, _y, _scale)                                               mod_script_call_nc  ('mod', 'telib', 'draw_surface_scale', _surf, _x, _y, _scale);
 #define array_exists(_array, _value)                                                    return  mod_script_call_nc  ('mod', 'telib', 'array_exists', _array, _value);
@@ -5889,7 +5900,7 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 #define scrRight(_dir)                                                                          mod_script_call_self('mod', 'telib', 'scrRight', _dir);
 #define scrWalk(_dir, _walk)                                                                    mod_script_call_self('mod', 'telib', 'scrWalk', _dir, _walk);
 #define scrAim(_dir)                                                                            mod_script_call_self('mod', 'telib', 'scrAim', _dir);
-#define enemy_hurt(_hitdmg, _hitvel, _hitdir)                                                   mod_script_call_self('mod', 'telib', 'enemy_hurt', _hitdmg, _hitvel, _hitdir);
+#define enemy_hurt(_damage, _force, _direction)                                                 mod_script_call_self('mod', 'telib', 'enemy_hurt', _damage, _force, _direction);
 #define enemy_target(_x, _y)                                                            return  mod_script_call_self('mod', 'telib', 'enemy_target', _x, _y);
 #define boss_hp(_hp)                                                                    return  mod_script_call_nc  ('mod', 'telib', 'boss_hp', _hp);
 #define boss_intro(_name)                                                               return  mod_script_call_nc  ('mod', 'telib', 'boss_intro', _name);
@@ -5924,7 +5935,6 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 #define sound_play_hit_ext(_snd, _pit, _vol)                                            return  mod_script_call_self('mod', 'telib', 'sound_play_hit_ext', _snd, _pit, _vol);
 #define race_get_sprite(_race, _sprite)                                                 return  mod_script_call     ('mod', 'telib', 'race_get_sprite', _race, _sprite);
 #define race_get_title(_race)                                                           return  mod_script_call_self('mod', 'telib', 'race_get_title', _race);
-#define player_create(_x, _y, _index)                                                   return  mod_script_call_nc  ('mod', 'telib', 'player_create', _x, _y, _index);
 #define player_swap()                                                                   return  mod_script_call_self('mod', 'telib', 'player_swap');
 #define wep_raw(_wep)                                                                   return  mod_script_call_nc  ('mod', 'telib', 'wep_raw', _wep);
 #define wep_merge(_stock, _front)                                                       return  mod_script_call_nc  ('mod', 'telib', 'wep_merge', _stock, _front);

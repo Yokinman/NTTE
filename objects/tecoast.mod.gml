@@ -115,9 +115,9 @@
 	
 	instance_delete(id);
 	
-#define BloomingAssassinHide_hurt(_hitdmg, _hitvel, _hitdir)
+#define BloomingAssassinHide_hurt(_damage, _force, _direction)
 	alarm1 = min(alarm1, 1);
-	enemy_hurt(_hitdmg, _hitvel / 2, _hitdir);
+	enemy_hurt(_damage, _force / 2, _direction);
 	
 #define BloomingAssassinHide_death
 	 // Bonus Rads:
@@ -235,7 +235,7 @@
 				_goalDir += 180;
 			}
 			
-			image_angle = angle_lerp(image_angle, _goalDir, (instance_is(creator, Player) ? 1/2 : 1/16) * current_time_scale);
+			image_angle = angle_lerp_ct(image_angle, _goalDir, (instance_is(creator, Player) ? 1/2 : 1/16));
 			direction = image_angle;
 			
 			 // Manually Rotate BoltSticks:
@@ -739,8 +739,8 @@
 	if(reload > 0){
 		reload -= current_time_scale;
 		
-		if(in_range(reload, 6, 12)){
-			wkick += ((6 - wkick) * 3/5) * current_time_scale;
+		if(reload >= 6 && reload <= 12){
+			wkick = lerp_ct(wkick, 6, 3/5);
 		}
 		
 		else if(reload <= 0){
@@ -875,7 +875,7 @@
 	}
 	
 	 // Weapon:
-	draw_weapon(spr_weap, x, y, gunangle, 0, wkick, right, image_blend, image_alpha);
+	draw_weapon(spr_weap, 0, x, y, gunangle, 0, wkick, right, image_blend, image_alpha);
 	
 #define Diver_draw_laser(_inst)
 	with(_inst){
@@ -1015,9 +1015,9 @@
 	sprite_index = enemy_sprite;
 	
 #define Gull_draw
-	if(gunangle <= 180) draw_weapon(spr_weap, x, y, gunangle, wepangle, wkick, 1, image_blend, image_alpha);
+	if(gunangle <= 180) draw_weapon(spr_weap, 0, x, y, gunangle, wepangle, wkick, 1, image_blend, image_alpha);
 	draw_self_enemy();
-	if(gunangle >  180) draw_weapon(spr_weap, x, y, gunangle, wepangle, wkick, 1, image_blend, image_alpha);
+	if(gunangle >  180) draw_weapon(spr_weap, 0, x, y, gunangle, wepangle, wkick, 1, image_blend, image_alpha);
 	
 #define Gull_alrm1
 	alarm1 = 40 + irandom(30);
@@ -2198,12 +2198,13 @@
 	 // Effects:
 	sound_play(sndHammer);
 	
-#define Palanking_hurt(_hitdmg, _hitvel, _hitdir)
-	nexthurt = current_frame + 6;	// I-Frames
+#define Palanking_hurt(_damage, _force, _direction)
+	nexthurt = current_frame + 6; // I-Frames
+	
 	if(active){
-		my_health -= _hitdmg;			// Damage
-		motion_add(_hitdir, _hitvel);	// Knockback
-		sound_play_hit(snd_hurt, 0.3);	// Sound
+		my_health -= _damage;
+		motion_add(_direction, _force)
+		sound_play_hit(snd_hurt, 0.3);
 		
 		 // Hurt Sprite:
 		if(sprite_index != spr_call && sprite_index != spr_burp && sprite_index != spr_fire){
@@ -2223,8 +2224,8 @@
 	}
 	
 	 // Half HP:
-	var h = (maxhealth / 2);
-	if(in_range(my_health, h - _hitdmg + 1, h)){
+	var _half = maxhealth / 2;
+	if(my_health <= _half && my_health + _damage > _half){
 		if(snd_lowh == sndRocket) sound_play_pitch(snd_lowh, 0.5);
 		else sound_play(snd_lowh);
 		
@@ -2242,7 +2243,7 @@
 		if(chance(other.damage, 8)) with(other){
 			sound_play_hit(sndHitRock, 0.3);
 			with(instance_create(x, y, Debris)){
-				motion_set(_hitdir + 180 + orandom(other.force * 4), 2 + random(other.force / 2));
+				motion_set(_direction + 180 + orandom(other.force * 4), 2 + random(other.force / 2));
 			}
 		}
 	}
@@ -2792,7 +2793,7 @@
 		_angOff = sign(wepangle) * (60 * (_charge / chrg_time));
 
 	if(gunangle >  180) draw_self_enemy();
-	draw_weapon(spr_weap, x, y, gunangle, wepangle - _angOff, wkick, 1, image_blend, image_alpha);
+	draw_weapon(spr_weap, 0, x, y, gunangle, wepangle - _angOff, wkick, 1, image_blend, image_alpha);
 	if(gunangle <= 180) draw_self_enemy();
 
 #define Pelican_alrm1
@@ -2865,9 +2866,11 @@
 	sound_play_pitch(sndHammer, 0.75);
 	sound_play_pitch(sndRavenScreech, 0.5 + random(0.1));
 	
-#define Pelican_hurt(_hitdmg, _hitvel, _hitdir)
-	if(dash > 0) _hitvel = min(_hitvel, speed - 1);
-	enemy_hurt(_hitdmg, _hitvel, _hitdir);
+#define Pelican_hurt(_damage, _force, _direction)
+	if(dash > 0){
+		_force = min(_force, speed - 1);
+	}
+	enemy_hurt(_damage, _force, _direction);
 	
 #define Pelican_death
 	var _minID = GameObject.id;
@@ -3309,7 +3312,7 @@
 	
 	 // Weapon:
 	if(_drawWep && !instance_exists(shield_inst)){
-		draw_weapon(spr_weap, x, y, gunangle, wepangle, wkick, ((wepangle == 0) ? right : sign(wepangle)), image_blend, image_alpha);
+		draw_weapon(spr_weap, 0, x, y, gunangle, wepangle, wkick, ((wepangle == 0) ? right : sign(wepangle)), image_blend, image_alpha);
 	}
 	
 	 // Self:
@@ -3728,8 +3731,8 @@
 			break;
 	}
 	
-#define Seal_hurt(_hitdmg, _hitvel, _hitdir)
-	enemy_hurt(_hitdmg, _hitvel, _hitdir);
+#define Seal_hurt(_damage, _force, _direction)
+	enemy_hurt(_damage, _force, _direction);
 	
 	switch(type){
 		case seal_none:
@@ -4149,7 +4152,7 @@
 	if(gunangle >  180) draw_self_enemy();
 
 	if(anchor_swap && _drawWep && !instance_exists(anchor)){
-		draw_weapon(spr_weap, x, y, gunangle, 0, wkick, 1, image_blend, image_alpha);
+		draw_weapon(spr_weap, 0, x, y, gunangle, 0, wkick, 1, image_blend, image_alpha);
 	}
 
 	if(gunangle <= 180) draw_self_enemy();
@@ -4573,11 +4576,11 @@
 		instance_create(x + (6 * right), y, AssassinNotice);
 	}
 	
-#define TrafficCrab_hurt(_hitdmg, _hitvel, _hitdir)
-	my_health -= _hitdmg;          // Damage
-	motion_add(_hitdir, _hitvel);  // Knockback
-	nexthurt = current_frame + 6;  // I-Frames
-	sound_play_hit(snd_hurt, 0.3); // Sound
+#define TrafficCrab_hurt(_damage, _force, _direction)
+	my_health -= _damage;
+	nexthurt = current_frame + 6;
+	motion_add(_direction, _force);
+	sound_play_hit(snd_hurt, 0.3);
 
 	 // Hurt Sprite:
 	if(sprite_index != spr_hide){
@@ -4733,7 +4736,7 @@
 				if(instance_near(x, y, creator, 40)){
 					d += 180;
 				}
-				image_angle = angle_lerp(image_angle, d, (0.05 * current_time_scale) / (curse_return_delay + 1));
+				image_angle = angle_lerp_ct(image_angle, d, 0.05 / (curse_return_delay + 1));
 			}
 			if(curse_return_delay <= 8){
 				image_angle += orandom(2 + curse_return_delay) * current_time_scale;
@@ -4842,7 +4845,8 @@
 				&& instance_seen(x, y, marrow_target)
 				&& instance_near(x, y, marrow_target, 160)
 			){
-				if(in_range(abs(angle_difference(image_angle, point_direction(x, y, marrow_target.x, marrow_target.y))), 10, 160)){
+				var _angTurn = abs(angle_difference(image_angle, point_direction(x, y, marrow_target.x, marrow_target.y)));
+				if(_angTurn >= 10 && _angTurn <= 160){
 					_canWall = false;
 				}
 			}
@@ -4868,7 +4872,7 @@
 		
 		 // Marrow Homin on Target:
 		else if(instance_exists(marrow_target)){
-			direction = angle_lerp(direction, point_direction(x, y, marrow_target.x, marrow_target.y), 0.25 * current_time_scale);
+			direction = angle_lerp_ct(direction, point_direction(x, y, marrow_target.x, marrow_target.y), 0.25);
 			image_angle = direction;
 			alarm0 = min(alarm0, 1);
 		}
@@ -5176,7 +5180,7 @@
 #macro  current_frame_active                                                                    (current_frame % 1) < current_time_scale
 #macro  anim_end                                                                                (image_index + image_speed_raw >= image_number || image_index + image_speed_raw < 0)
 #macro  enemy_sprite                                                                            (sprite_index != spr_hurt || anim_end) ? ((speed <= 0) ? spr_idle : spr_walk) : sprite_index
-#macro  enemy_boss                                                                              (('boss' in self) ? boss : ('intro' in self)) || array_exists([Nothing, Nothing2, BigFish, OasisBoss], object_index)
+#macro  enemy_boss                                                                              ('boss' in self) ? boss : ('intro' in self || array_exists([Nothing, Nothing2, BigFish, OasisBoss], object_index))
 #macro  player_active                                                                           visible && !instance_exists(GenCont) && !instance_exists(LevCont) && !instance_exists(SitDown) && !instance_exists(PlayerSit)
 #macro  game_scale_nonsync                                                                      game_screen_get_width_nonsync() / game_width
 #macro  bbox_width                                                                              (bbox_right + 1) - bbox_left
@@ -5196,13 +5200,14 @@
 #macro  alarm9_run                                                                              alarm9 >= 0 && --alarm9 == 0 && (script_ref_call(on_alrm9) || !instance_exists(self))
 #define orandom(_num)                                                                   return  random_range(-_num, _num);
 #define chance(_numer, _denom)                                                          return  random(_denom) < _numer;
-#define chance_ct(_numer, _denom)                                                       return  random(_denom) < (_numer * current_time_scale);
+#define chance_ct(_numer, _denom)                                                       return  random(_denom) < _numer * current_time_scale;
 #define pround(_num, _precision)                                                        return  (_num == 0) ? _num : round(_num / _precision) * _precision;
 #define pfloor(_num, _precision)                                                        return  (_num == 0) ? _num : floor(_num / _precision) * _precision;
 #define pceil(_num, _precision)                                                         return  (_num == 0) ? _num :  ceil(_num / _precision) * _precision;
-#define in_range(_num, _lower, _upper)                                                  return  (_num >= _lower && _num <= _upper);
 #define frame_active(_interval)                                                         return  (current_frame % _interval) < current_time_scale;
+#define lerp_ct(_val1, _val2, _amount)                                                  return  lerp(_val2, _val1, power(1 - _amount, current_time_scale));
 #define angle_lerp(_ang1, _ang2, _num)                                                  return  _ang1 + (angle_difference(_ang2, _ang1) * _num);
+#define angle_lerp_ct(_ang1, _ang2, _num)                                               return  _ang2 + (angle_difference(_ang1, _ang2) * power(1 - _num, current_time_scale));
 #define draw_self_enemy()                                                                       image_xscale *= right; draw_self(); image_xscale /= right;
 #define enemy_walk(_add, _max)                                                                  if(walk > 0){ walk -= current_time_scale; motion_add_ct(direction, _add); } if(speed > _max) speed = _max;
 #define save_get(_name, _default)                                                       return  mod_script_call_nc  ('mod', 'teassets', 'save_get', _name, _default);
@@ -5244,7 +5249,7 @@
 #define instance_get_name(_inst)                                                        return  mod_script_call_nc  ('mod', 'telib', 'instance_get_name', _inst);
 #define variable_instance_get_list(_inst)                                               return  mod_script_call_nc  ('mod', 'telib', 'variable_instance_get_list', _inst);
 #define variable_instance_set_list(_inst, _list)                                                mod_script_call_nc  ('mod', 'telib', 'variable_instance_set_list', _inst, _list);
-#define draw_weapon(_sprite, _x, _y, _ang, _meleeAng, _wkick, _flip, _blend, _alpha)            mod_script_call_nc  ('mod', 'telib', 'draw_weapon', _sprite, _x, _y, _ang, _meleeAng, _wkick, _flip, _blend, _alpha);
+#define draw_weapon(_spr, _img, _x, _y, _ang, _angMelee, _kick, _flip, _blend, _alpha)          mod_script_call_nc  ('mod', 'telib', 'draw_weapon', _spr, _img, _x, _y, _ang, _angMelee, _kick, _flip, _blend, _alpha);
 #define draw_lasersight(_x, _y, _dir, _maxDistance, _width)                             return  mod_script_call_nc  ('mod', 'telib', 'draw_lasersight', _x, _y, _dir, _maxDistance, _width);
 #define draw_surface_scale(_surf, _x, _y, _scale)                                               mod_script_call_nc  ('mod', 'telib', 'draw_surface_scale', _surf, _x, _y, _scale);
 #define array_exists(_array, _value)                                                    return  mod_script_call_nc  ('mod', 'telib', 'array_exists', _array, _value);
@@ -5259,7 +5264,7 @@
 #define scrRight(_dir)                                                                          mod_script_call_self('mod', 'telib', 'scrRight', _dir);
 #define scrWalk(_dir, _walk)                                                                    mod_script_call_self('mod', 'telib', 'scrWalk', _dir, _walk);
 #define scrAim(_dir)                                                                            mod_script_call_self('mod', 'telib', 'scrAim', _dir);
-#define enemy_hurt(_hitdmg, _hitvel, _hitdir)                                                   mod_script_call_self('mod', 'telib', 'enemy_hurt', _hitdmg, _hitvel, _hitdir);
+#define enemy_hurt(_damage, _force, _direction)                                                 mod_script_call_self('mod', 'telib', 'enemy_hurt', _damage, _force, _direction);
 #define enemy_target(_x, _y)                                                            return  mod_script_call_self('mod', 'telib', 'enemy_target', _x, _y);
 #define boss_hp(_hp)                                                                    return  mod_script_call_nc  ('mod', 'telib', 'boss_hp', _hp);
 #define boss_intro(_name)                                                               return  mod_script_call_nc  ('mod', 'telib', 'boss_intro', _name);
@@ -5294,7 +5299,6 @@
 #define sound_play_hit_ext(_snd, _pit, _vol)                                            return  mod_script_call_self('mod', 'telib', 'sound_play_hit_ext', _snd, _pit, _vol);
 #define race_get_sprite(_race, _sprite)                                                 return  mod_script_call     ('mod', 'telib', 'race_get_sprite', _race, _sprite);
 #define race_get_title(_race)                                                           return  mod_script_call_self('mod', 'telib', 'race_get_title', _race);
-#define player_create(_x, _y, _index)                                                   return  mod_script_call_nc  ('mod', 'telib', 'player_create', _x, _y, _index);
 #define player_swap()                                                                   return  mod_script_call_self('mod', 'telib', 'player_swap');
 #define wep_raw(_wep)                                                                   return  mod_script_call_nc  ('mod', 'telib', 'wep_raw', _wep);
 #define wep_merge(_stock, _front)                                                       return  mod_script_call_nc  ('mod', 'telib', 'wep_merge', _stock, _front);
