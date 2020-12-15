@@ -59,19 +59,21 @@
 	return -1;
 	
 #define race_sound(_snd)
+	var _sndNone = sndFootPlaSand5; // playing a sound that doesn't exist using sound_play_pitch/sound_play_pitchvol modifies sndSwapPistol's pitch/volume
+	
 	switch(_snd){
-		case sndMutant1Wrld : return -1;
-		case sndMutant1Hurt : return -1;
-		case sndMutant1Dead : return -1;
-		case sndMutant1LowA : return -1;
-		case sndMutant1LowH : return -1;
-		case sndMutant1Chst : return -1;
-		case sndMutant1Valt : return -1;
-		case sndMutant1Crwn : return -1;
-		case sndMutant1Spch : return -1;
-		case sndMutant1IDPD : return -1;
-		case sndMutant1Cptn : return -1;
-		case sndMutant1Thrn : return -1;
+		case sndMutant1Wrld : return _sndNone;
+		case sndMutant1Hurt : return _sndNone;
+		case sndMutant1Dead : return _sndNone;
+		case sndMutant1LowA : return _sndNone;
+		case sndMutant1LowH : return _sndNone;
+		case sndMutant1Chst : return _sndNone;
+		case sndMutant1Valt : return _sndNone;
+		case sndMutant1Crwn : return _sndNone;
+		case sndMutant1Spch : return _sndNone;
+		case sndMutant1IDPD : return _sndNone;
+		case sndMutant1Cptn : return _sndNone;
+		case sndMutant1Thrn : return _sndNone;
 	}
 	
 	return -1;

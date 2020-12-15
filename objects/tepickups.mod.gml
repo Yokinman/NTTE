@@ -3595,18 +3595,18 @@
 	}
 	else{
 		if(num > 0 && position_meeting(x, y, (small ? SmallChestPickup : ChestOpen))){
-			var t = instances_matching(Player, "race", "parrot");
+			var _target = instances_matching(Player, "race", "parrot");
 			
 			 // Pickup Feathers go to Nearest Parrot:
 			if(small && !place_meeting(x, y, Portal)){
-				t = instance_nearest(x, y, Player);
-				if(instance_exists(t) && t.race != "parrot"){
-					t = noone;
+				_target = instance_nearest(x, y, Player);
+				if(instance_exists(_target) && _target.race != "parrot"){
+					_target = noone;
 				}
 			}
 			
 			 // Feathers:
-			with(t){
+			with(_target){
 				for(var i = 0; i < other.num; i++){
 					with(obj_create(other.x, other.y, "ParrotFeather")){
 						bskin        = other.bskin;
@@ -3642,10 +3642,10 @@
 		 // Visual:
 		sprite_index     = sprChickenFeather;
 		image_blend_fade = c_gray;
-		depth            = -8;
+		depth            = -1;
 		
 		 // Vars:
-		mask_index     = mskLaser;
+		mask_index     = mskAlly;
 		creator        = noone;
 		target         = noone;
 		index          = -1;
@@ -3653,12 +3653,10 @@
 		stick          = false;
 		stickx         = 0;
 		sticky         = 0;
-		stick_time_max = 60;// * (1 + ultra_get("parrot", 3));
+		stick_time_max = 30;// * (1 + ultra_get("parrot", 3));
 		stick_time     = stick_time_max;
 		stick_list     = [];
 		stick_wait     = 0;
-		canhold        = false;
-		move_factor    = 0;
 		
 		 // Push:
 		motion_add(random(360), 4 + random(2));
@@ -3686,10 +3684,10 @@
 		 // Decrement When First in Queue:
 		if(
 			stick
-			? (array_find_index(stick_list, id) == 0)
+			? (stick_list[0] == id)
 			: (stick_time < stick_time_max)
 		){
-			stick_time -= lq_defget(variable_instance_get(target, "ntte_charm"), "time_speed", 1) * current_time_scale;
+			stick_time -= current_time_scale;
 		}
 	}
 	
@@ -3697,38 +3695,8 @@
 		if(!stick){
 			stick_list = [];
 			
-			var _hold = false;
-			
-			if(canhold){
-				 // Reach Target Faster:
-				if(
-					distance_to_object(target) > 48 &&
-					abs(angle_difference(direction, point_direction(x, y, target.x, target.y))) < 30
-				){
-					move_factor = lerp_ct(move_factor, distance_to_object(target) / 128, 0.3);
-				}
-				else{
-					move_factor = lerp_ct(move_factor, 0, 0.8);
-				}
-				move_factor = max(0, move_factor);
-				x += hspeed_raw * move_factor;
-				y += vspeed_raw * move_factor;
-				
-				 // Active Held:
-				if(instance_is(creator, Player)){
-					with(creator){
-						if(canspec && player_active){
-							if(button_check(index, "spec") || usespec > 0){
-								//_hold = true;
-							}
-						}
-					}
-				}
-			}
-			else move_factor = 0;
-			
 			 // Orbit Target:
-			if(_hold || stick_wait != 0){
+			if(stick_wait != 0){
 				var	_l = 16,
 					_d = point_direction(target.x, target.y, x, y);
 					
@@ -3742,12 +3710,27 @@
 			
 			 // Reach Target:
 			else{
-				canhold = false;
-				
+				var	_dis = point_distance(x, y, target.x, target.y),
+					_dir = point_direction(x, y, target.x, target.y);
+					
 				 // Fly Towards Enemy:
-				motion_add_ct(point_direction(x, y, target.x, target.y) + orandom(60), 1);
+				motion_add_ct(_dir + orandom(60), 1);
 				
-				if(distance_to_object(target) <= speed || (target == creator && place_meeting(x, y, Portal))){
+				 // Far Away:
+				var _disMax = 640;
+				if(_dis > _disMax){
+					var _len = ((_dis - _disMax) / 16) * current_time_scale;
+					x += lengthdir_x(_len, _dir);
+					y += lengthdir_y(_len, _dir);
+					direction = _dir;
+				}
+				
+				 // Reached Target:
+				if(
+					_dis <= speed_raw
+					|| place_meeting(x, y, target)
+					|| (target == creator && place_meeting(x, y, Portal))
+				){
 					 // Effects:
 					with(instance_create(x, y, Dust)){
 						depth = other.depth - 1;
@@ -3777,10 +3760,10 @@
 						var _wasUncharmed = ("ntte_charm" not in target || !target.ntte_charm.charmed);
 						with(charm_instance(target, true)){
 							if(_wasUncharmed || time >= 0 || feather){
-								time += max(other.stick_time, 1);
+								time    = max(time, 0) + max(other.stick_time, 1);
+								index   = other.index;
+								feather = true;
 							}
-							index   = other.index;
-							feather = true;
 						}
 					}
 					
@@ -3802,8 +3785,7 @@
 			
 			 // Stick Delay:
 			if(stick_wait > 0){
-				stick_wait -= current_time_scale;
-				if(stick_wait <= 0) stick_wait = 0;
+				stick_wait -= min(stick_wait, current_time_scale);
 			}
 			
 			 // Facing:
@@ -3840,14 +3822,19 @@
 	}
 	else{
 		visible = true;
-		depth   = -8;
+		if(stick_wait == 0 || position_meeting(x, y + 8, Wall) || !position_meeting(x, y + 8, Floor)){
+			depth = -8;
+		}
+		else if(depth < -6){
+			depth = -1;
+		}
 	}
 	
 #define ParrotFeather_draw // Code below is 2x faster than using a draw_sprite_ext so
-	var _col = image_blend;
+	var _lastCol = image_blend;
 	image_blend = merge_color(image_blend, image_blend_fade, 1 - (stick_time / stick_time_max));
 	draw_self();
-	image_blend = _col;
+	image_blend = _lastCol;
 	
 #define ParrotFeather_destroy
 	 // Fall to Ground:
@@ -3855,7 +3842,7 @@
 		sprite_index = other.sprite_index;
 		image_angle  = other.image_angle;
 		image_blend  = other.image_blend_fade;
-		depth        = ((!position_meeting(x, y, Floor) && !instance_seen(x, y, other.creator)) ? -7 : 0);
+		depth        = ((other.depth > -6) ? 0 : -7);
 	}
 	
 	 // Sound:
@@ -5307,12 +5294,12 @@
 						case IDPDChest:
 						case BigWeaponChest:
 						case BigCursedChest:
-							num = 18;
+							num *= 2;
 							break;
 							
 						case GiantWeaponChest:
 						case GiantAmmoChest:
-							num = 60;
+							num *= 6;
 							break;
 					}
 				}
@@ -5332,7 +5319,7 @@
 					with(my_feather_storage){
 						creator = other;
 						small   = true;
-						num     = ceil(2 * skill_get(mut_throne_butt));
+						num     = ceil(skill_get(mut_throne_butt));
 					}
 				}
 			}

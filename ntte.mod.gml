@@ -3955,7 +3955,9 @@
 					var m = ceil(feather_ammo_max / feather_num);
 					if(array_length(feather_ammo_hud) != m){
 						feather_ammo_hud = array_create(m);
-						for(var i = 0; i < m; i++) feather_ammo_hud[i] = [0, 0];
+						for(var i = 0; i < m; i++){
+							feather_ammo_hud[i] = [0, 0];
+						}
 					}
 					
 					/*
@@ -4077,17 +4079,12 @@
 							_spr      = race_get_sprite(race, sprChickenFeather),
 							_sprHUD   = race_get_sprite(race, sprRogueAmmoHUD),
 							_output   = feather_num_mult,
-							_feathers = instances_matching(instances_matching(CustomObject, "name", "ParrotFeather"), "creator", id),
+							_feathers = instances_matching_ne(instances_matching(instances_matching(CustomObject, "name", "ParrotFeather"), "creator", id), "target", id),
 							_hudGoal  = [feather_ammo, 0];
 							
 						if(array_length(_feathers)){
-							with(instances_matching_ne(_feathers, "canhud", true)){
-								if(canhold){
-									canhud = true;
-								}
-							}
 							for(var i = 0; i < array_length(_hudGoal); i++){
-								_hudGoal[i] += array_length(instances_matching(_feathers, "canhud", true));
+								_hudGoal[i] += array_length(_feathers);
 							}
 						}
 						
@@ -4339,6 +4336,30 @@
 					}
 				}
 				draw_set_alpha(1);
+			}
+			
+			 // Charm Indicator:
+			if(instance_exists(enemy)){
+				var _inst = instances_matching(instances_matching_ne(enemy, "ntte_charm", null), "visible", true);
+				if(array_length(_inst)) with(_inst){
+					if(ntte_charm.charmed && ntte_charm.feather){
+						var _index = ntte_charm.index;
+						if(!point_seen(x, y, _index) && player_is_local_nonsync(_index)){
+							with(player_find(_index)){
+								var	_spr = race_get_sprite(race, sprRogueAmmoHUD),
+									_x1  = sprite_get_xoffset(_spr) - sprite_get_bbox_left(_spr),
+									_y1  = sprite_get_yoffset(_spr) - sprite_get_bbox_top(_spr),
+									_x2  = _x1 - sprite_get_bbox_right(_spr)  + _gw,
+									_y2  = _y1 - sprite_get_bbox_bottom(_spr) + _gh,
+									_x   = _vx + clamp(other.x - _vx, _x1 + 1, _x2 - 1);
+									_y   = _vy + clamp(other.y - _vy, _y1 + 1, _y2 - 2);
+								
+								draw_sprite(_spr, 0, _x, _y);
+								draw_sprite(race_get_sprite(race, sprChickenFeather), 0, _x, _y);
+							}
+						}
+					}
+				}
 			}
 			
 			 // Pet Indicator:

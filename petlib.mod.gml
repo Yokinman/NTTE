@@ -820,7 +820,7 @@
 				}
 			}
 		}
-
+		
 		 // Fly Toward Leader:
 		if(perched != leader){
 			 // Pathfinding:
@@ -828,14 +828,14 @@
 				scrWalk(path_dir + orandom(4), [4, 8]);
 				return walk;
 			}
-
+			
 			 // Wander Toward Leader:
 			else{
 				scrWalk(_leaderDir + orandom(30), [10, 20]);
 				if(_leaderDis > 32) return walk;
 			}
 		}
-
+		
 		 // Real Parrot:
 		else if(chance(1, 4)){
 			with(leader){
@@ -858,15 +858,15 @@
 			return 40 + random(20);
 		}
 	}
-
+	
 	 // Look Around:
 	if(!instance_exists(leader) || instance_exists(perched)){
 		scrRight(random(360));
 		return 30 + random(30);
 	}
-
+	
 	return 20 + random(20);
-
+	
 #define Parrot_hurt(_damage, _force, _direction)
 	if(!instance_exists(perched)){
 		sprite_index = spr_hurt;

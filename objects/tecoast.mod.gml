@@ -1948,32 +1948,35 @@
 #define Palanking_end_step
 	with(instances_matching_ne(instances_matching_ne(instances_matching(seal, "hold", true), "hold_x", null), "hold_y", null)){
 		if(mask_index != mskNone){
-			x = other.x + hold_x;
-			y = other.y + hold_y;
+			x         = other.x + hold_x;
+			y         = other.y + hold_y;
 			xprevious = x;
 			yprevious = y;
-			hspeed = other.hspeed;
-			vspeed = other.vspeed;
-			depth = other.depth - (hold_y > 24 && hold);
+			hspeed    = other.hspeed;
+			vspeed    = other.vspeed;
+			depth     = other.depth - (hold_y > 24 && hold);
 		}
 		else hold = false;
 	}
 
 #define Palanking_draw
-	var h = ((nexthurt > current_frame + 3 && active) || (sprite_index == spr_hurt && image_index < 1));
+	var _hurt = (
+		(nexthurt > current_frame + 3 && active) ||
+		(sprite_index == spr_hurt && image_index < 1)
+	);
 	
 	 // Palanquin Bottom:
 	if(z > 4 || place_meeting(x, y, Floor)){
-		if(h) draw_set_fog(true, image_blend, 0, 0);
+		if(_hurt) draw_set_fog(true, image_blend, 0, 0);
 		draw_sprite_ext(spr_bott, image_index, x, y - z, image_xscale * right, image_yscale, image_angle, image_blend, image_alpha);
-		if(h) draw_set_fog(false, 0, 0, 0);
+		if(_hurt) draw_set_fog(false, 0, 0, 0);
 	}
 	
 	 // Self:
-	h = (h && sprite_index != spr_hurt);
-	if(h) draw_set_fog(true, image_blend, 0, 0);
+	_hurt &= (sprite_index != spr_hurt);
+	if(_hurt) draw_set_fog(true, image_blend, 0, 0);
 	draw_sprite_ext(sprite_index, image_index, x, y - z, image_xscale * right, image_yscale, image_angle, image_blend, image_alpha);
-	if(h) draw_set_fog(false, 0, 0, 0);
+	if(_hurt) draw_set_fog(false, 0, 0, 0);
 	
 #define Palanking_alrm0
 	if(intro_pan <= 0){
@@ -2029,7 +2032,12 @@
 					for(var _dir = _ang; _dir < _ang + 360; _dir += (360 / 3)){
 						var _dis = 64 + random(16);
 						
-						seal_wave(x + lengthdir_x(_odis, _odir) + lengthdir_x(_dis, _dir), y + lengthdir_y(_odis, _odir) + lengthdir_y(_dis, _dir), _dir + 180, _delay);
+						seal_wave(
+							x + lengthdir_x(_odis, _odir) + lengthdir_x(_dis, _dir),
+							y + lengthdir_y(_odis, _odir) + lengthdir_y(_dis, _dir),
+							_dir + 180,
+							_delay
+						);
 						
 						_delay += 10 + random(10);
 					}
@@ -2226,19 +2234,25 @@
 	 // Half HP:
 	var _half = maxhealth / 2;
 	if(my_health <= _half && my_health + _damage > _half){
-		if(snd_lowh == sndRocket) sound_play_pitch(snd_lowh, 0.5);
+		if(snd_lowh == sndRocket){
+			sound_play_pitch(snd_lowh, 0.5);
+		}
 		else sound_play(snd_lowh);
 		
 		 // Extra FX:
 		view_shake_at(x, y, 30);
-		repeat(5) instance_create(x, y - z + 16, Debris);
+		repeat(5){
+			instance_create(x, y - z + 16, Debris);
+		}
 	}
 	
 	 // Effects:
 	if(instance_exists(other) && instance_is(other, projectile)){
 		with(instance_create(other.x, other.y, Dust)){
 			coast_water = 1;
-			if(y > other.y + 12) depth = other.depth - 1;
+			if(y > other.y + 12){
+				depth = other.depth - 1;
+			}
 		}
 		if(chance(other.damage, 8)) with(other){
 			sound_play_hit(sndHitRock, 0.3);

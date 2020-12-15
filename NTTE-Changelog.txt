@@ -61,6 +61,7 @@
 	~	Increased @wSalamander @spet's bashing damage by about @w2.5x, @sand made it pierce more
 	~	@wSalamander @spet's @w"MOUNT" @sprompt no longer overrides weapon pickup prompts
 	~	Tripled @bSlaughter @spet's bite damage + radius, and gave them a bigger hurt explosion
+	~	@bOcto @snow spawns on @(sprite:menu/sprRouteIcon.png:2:0)@w3-3 instead of @(sprite:menu/sprRouteIcon.png:2:0)@w3-1
 	*	Fixed pets attacking @wSeal King @swhile he's out at sea
 	*	Fixed @rTwins @spet visually reorienting @gGuardian Orbs
 	
@@ -244,7 +245,7 @@
 	~	Gave playable @wBig Dog @sa bigger @sunderwater bubble
 	~	The @wWater Quality @soption is now @wVisual Quality @sand affects much more
 	~	Merged Disc Gun projectiles now use @rEnemy @ssprites
-	~	@bCoast @snow only spawns sea mines on @(sprite:sprInterfaceIcons)@w1-3
+	~	@bCoast @snow only spawns sea mines on @(sprite:menu/sprRouteIcon.png:2:0)@w1-3
 	~	Slightly increased @bCoast @sand @yLair's @smusic volumes
 	~	@wSeal King @snow plays their boss music for the initial wave of seals
 	~	@yShop Chests @snow automatically select an item if opened by a portal
