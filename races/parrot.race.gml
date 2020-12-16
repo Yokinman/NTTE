@@ -23,7 +23,7 @@
 			false
 		));
 	}
-	shader_add("Charm",
+	charm_shad = shader_add("Charm",
 		
 		/* Vertex Shader */"
 		struct VertexShaderInput
@@ -147,6 +147,7 @@
 
 #macro charm_object global.charm_object
 #macro charm_bind   global.charm_bind
+#macro charm_shad   global.charm_shad
 
 /// General
 #define race_name              return "PARROT";
@@ -357,7 +358,7 @@
 #define race_ultra_text(_ultra)
 	switch(_ultra){
 		case ultFeath: return "INCREASED @rFEATHER @sOUTPUT";
-		case ultShare: return "@wFEATHERED @sENEMIES#SHARE @rHEALTH @sWITH YOU";
+		case ultShare: return "@wINCOMING DAMAGE @sIS SPLIT#WITH @rFEATHERED @sENEMIES";
 	}
 	return "";
 	
@@ -369,21 +370,10 @@
 	return race_sprite_raw("UltraHUD" + chr(64 + _ultra), 0);
 	
 #define race_ultra_take(_ultra, _state)
+	 // Bonus - Full Ammo:
 	with(instances_matching(Player, "race", mod_current)){
-		switch(_ultra){
-			case ultFeath:
-				feather_num_mult    = 1 + (2 * _state);
-				feather_targ_radius = 24 * (1 + _state);
-				
-				 // Bonus - Full Ammo:
-				if(instance_exists(EGSkillIcon)){
-					feather_ammo = feather_ammo_max;
-				}
-				break;
-				
-			case ultShare:
-				// Look elsewhere bro
-				break;
+		if(instance_exists(EGSkillIcon)){
+			feather_ammo_get = feather_ammo_max;
 		}
 	}
 	
@@ -464,15 +454,13 @@
 	footkind = 1; // Organic
 	
 	 // Feather Related:
-	feather_num            = 12;
-	feather_num_mult       = 1;
-	feather_ammo           = 0;
-	feather_ammo_max       = 3 * feather_num;
-	feather_ammo_get       = 0;
-	feather_ammo_hud       = [];
+	feather_num      = 12;
+	feather_num_mult = 1;
+	feather_ammo     = 0;
+	feather_ammo_max = 3 * feather_num;
+	feather_ammo_get = 0;
+	feather_ammo_hud = [];
 	//feather_ammo_hud_flash = 0;
-	feather_targ_radius    = 24;
-	feather_targ_delay     = 0;
 	
 	 // Ultra B:
 	charm_hplink_lock       = my_health;
@@ -653,42 +641,33 @@
 	}
 	*/
 	if(canspec && player_active){
-		var _target = noone;
-		
-		 // Targeting:
-		if(button_check(index, "spec") || usespec > 0){
+		var _targetInst  = [],
+			_featherInst = (instance_exists(CustomObject) ? instances_matching(instances_matching(CustomObject, "name", "ParrotFeather"), "index", index) : []),
+			_activeHeld  = (button_check(index, "spec") || usespec > 0),
+			_activePress = (_activeHeld && (button_pressed(index, "spec") || (usespec > 0 && !array_length(instances_matching(_featherInst, "creator", self)))));
+			
+		 // Get Targetable Instances:
+		if(_activeHeld){
 			if(instance_exists(enemy)){
-				_target = instance_nearest_bbox(
-					mouse_x[index],
-					mouse_y[index],
-					instances_matching_ne(instances_matching_lt([enemy, FrogEgg], "size", 6), "mask_index", mskNone)
+				_targetInst = instance_rectangle(
+					view_xview[index],
+					view_yview[index],
+					view_xview[index] + game_width,
+					view_yview[index] + game_height,
+					instances_matching_ne(instances_matching_lt(instances_matching_ne([enemy, FrogEgg], "team", team), "size", 6), "mask_index", mskNone)
 				);
 			}
-			if(!instance_exists(_target)){
-				_target = self;
+			if(!array_length(_targetInst)){
+				array_push(_targetInst, self);
 			}
 		}
 		
-		 // Feathering:
-		var _featherInst = (
-			instance_exists(CustomObject)
-			? instances_matching(instances_matching(CustomObject, "name", "ParrotFeather"), "index", index)
-			: []
-		);
-		if(
-			_target == noone
-			|| button_pressed(index, "spec")
-			|| (usespec > 0 && !array_length(instances_matching(_featherInst, "creator", self)))
-			|| (array_length(_featherInst) && array_equals(_featherInst, instances_matching(instances_matching(_featherInst, "creator", self), "target", self)))
-		){
-			var	_featherNum        = ceil(feather_num * feather_num_mult),
-				_featherInstTarget = [];
-				
-			 // Retrieve Feathers:
+		 // Retrieve Feathers:
+		if(_activePress || !_activeHeld){
 			if(array_length(_featherInst)){
 				with(_featherInst){
 					 // Remove Charm Time:
-					if(target != creator){
+					if(target != creator && (creator == other || !instance_exists(creator))){
 						with(target){
 							if("ntte_charm" in self && (ntte_charm.time >= 0 || ntte_charm.feather)){
 								ntte_charm.time -= other.stick_time;
@@ -705,36 +684,51 @@
 						stick = false;
 						motion_add(random(360), 4);
 					}
-					
-					 // Mine now:
-					if(creator == other && array_length(_featherInstTarget) < _featherNum){
-						array_push(_featherInstTarget, self);
-					}
 				}
 			}
+		}
+		
+		 // Sending Feathers:
+		if(array_length(_targetInst)){
+			var _featherNum = (
+				(ultra_get(mod_current, ultFeath) > 0)
+				? feather_num * array_length(_targetInst)
+				: feather_num
+			);
 			
-			 // Sending Feathers:
-			if(instance_exists(_target)){
-				var _num = 0;
+			 // Get Targetable Feathers:
+			if(array_length(_featherInst)){
+				_featherInst = instances_matching(_featherInst, "creator", self);
+				_featherInst = array_slice(_featherInst, 0, min(_featherNum, array_length(_featherInst)));
+			}
+			
+			 // Excrete New Feathers:
+			if(_activePress){
+				var	_tx  = mouse_x[index],
+					_ty  = mouse_y[index],
+					_num = 0;
+					
+				with(instance_nearest_bbox(_tx, _ty, _targetInst)){
+					_tx = x;
+					_ty = y;
+				}
 				
-				 // Excrete New Feathers:
-				while(array_length(_featherInstTarget) < _featherNum && (feather_ammo > 0 || infammo != 0)){
+				while(feather_ammo > 0 && array_length(_featherInst) < _featherNum){
+					feather_ammo--;
+					
 					with(obj_create(
-						(((_num % 3) == 1) ? _target.x : x) + orandom(4),
-						(((_num % 3) == 1) ? _target.y : y) + orandom(4),
+						(((_num % 3) == 1) ? _tx : x) + orandom(4),
+						(((_num % 3) == 1) ? _ty : y) + orandom(4),
 						"ParrotFeather"
 					)){
 						bskin        = other.bskin;
 						index        = other.index;
 						creator      = other;
 						target       = other;
-						stick_wait   = 3;
 						sprite_index = race_get_sprite(other.race, sprite_index);
-						array_push(_featherInstTarget, self);
+						array_push(_featherInst, self);
 					}
-					if(infammo == 0){
-						feather_ammo--;
-					}
+					
 					_num++;
 				}
 				
@@ -742,21 +736,39 @@
 				if(_num > 0){
 					sound_play_hit_ext(sndSharpTeeth, 3 + random(3), 0.4);
 				}
+			}
+			
+			 // Send Feathers to Target:
+			if(array_length(_featherInst)){
+				var	_targetX    = mouse_x[index],
+					_targetY    = mouse_y[index],
+					_targetList = [];
+					
+				 // Sort Targets by Distance:
+				with(_targetInst){
+					array_push(_targetList, [self, distance_to_point(_targetX, _targetY)]);
+				}
+				array_sort_sub(_targetList, 1, true);
 				
-				 // Send Feathers:
-				if(array_length(_featherInstTarget)){
-					with(_featherInstTarget){
-						target = _target;
+				 // Send to Target:
+				for(var i = 0; i < min(_featherNum / feather_num, array_length(_targetInst)); i++){
+					var _target = _targetList[i, 0];
+					with(array_slice(
+						_featherInst,
+						i * feather_num,
+						min(feather_num, array_length(_featherInst) - (i * feather_num))
+					)){
 						if(target == creator){
+							target     = _target;
 							stick_wait = max(stick_wait, 3);
 						}
 					}
 				}
-				
-				 // No Feathers:
-				else if(button_pressed(index, "spec")){
-					sound_play_hit_ext(sndMutant0Cnfm, 3 + orandom(0.2), 1);
-				}
+			}
+			
+			 // No Feathers:
+			else if(button_pressed(index, "spec")){
+				sound_play_hit_ext(sndMutant0Cnfm, 3 + orandom(0.2), 1);
 			}
 		}
 	}
@@ -766,8 +778,8 @@
 		repeat((my_health <= 0) ? 5 : 1){
 			with(instance_create(x, y, Feather)){
 				bskin        = other.bskin;
-				sprite_index = race_get_sprite(other.race, sprite_index);
 				image_blend  = c_gray;
+				sprite_index = race_get_sprite(other.race, sprite_index);
 			}
 		}
 	}
@@ -800,7 +812,7 @@
 				 // Gather Charmed Bros:
 				if(array_length(_instSearch)){
 					with(_instSearch){
-						if(lq_defget(ntte_charm, "index", -1) == other.index){
+						if(ntte_charm.index == other.index){
 							ds_list_add(_HPList, id);
 						}
 					}
@@ -813,6 +825,8 @@
 					 // Steal:
 					if(nexthurt > current_frame && my_health < charm_hplink_lock){
 						ds_list_shuffle(_HPList);
+						
+						charm_hplink_lock = ceil(lerp(my_health, charm_hplink_lock, 0.5));
 						
 						while(my_health < charm_hplink_lock){
 							if(ds_list_size(_HPList) > 0){
@@ -835,6 +849,7 @@
 							}
 							else break;
 						}
+						
 						my_health = charm_hplink_lock;
 					}
 					
@@ -854,9 +869,9 @@
 				}
 				
 				 // No Health to Steal:
-				else{
-					charm_hplink_hud_hp[0]  -= ceil(charm_hplink_hud_hp[0]  /  5) * current_time_scale;
-					charm_hplink_hud_hp_lst -= ceil(charm_hplink_hud_hp_lst / 10) * current_time_scale;
+				else if(current_frame_active){
+					charm_hplink_hud_hp[0]  = floor(charm_hplink_hud_hp[0]  / 5);
+					charm_hplink_hud_hp_lst = floor(charm_hplink_hud_hp_lst / 10);
 				}
 			}
 			else charm_hplink_hud_hp_lst = 0;
@@ -1040,23 +1055,30 @@
 	 // Targeting:
 	if(
 		!instance_exists(_vars.target)
-		|| !instance_seen(x, y, _vars.target)
+		|| !collision_line(x, y, _vars.target.x, _vars.target.y, Wall, false, false)
 		|| !instance_is(_vars.target, hitme)
-		|| ("team" in self && team == _vars.target.team)
+		|| _vars.target.team == variable_instance_get(self, "team")
+		|| _vars.target.team == variable_instance_get(player_find(_vars.index), "team")
 		|| _vars.target.mask_index == mskNone
 	){
-		var	_inst   = instances_matching_ne(instances_matching_ne(hitme, "team", 0), "mask_index", mskNone),
-			_disMax = infinity;
+		var _inst = instances_matching_ne(instances_matching_ne([enemy, Player, Sapling, Ally, SentryGun, CustomHitme], "team", 0), "mask_index", mskNone);
+		if(array_length(_inst)){
+			 // Team Check:
+			if("team" in self){
+				_inst = instances_matching_ne(_inst, "team", team);
+			}
+			if(player_is_active(_vars.index)){
+				with(player_find(_vars.index)){
+					_inst = instances_matching_ne(_inst, "team", team);
+				}
+			}
 			
-		if("team" in self){
-			_inst = instances_matching_ne(_inst, "team", team);
-		}
-		
-		if(array_length(_inst)) with(_inst){
-			var _dis = point_distance(x, y, other.x, other.y);
-			if(_dis < _disMax){
-				if(!instance_is(self, prop)){
-					if(instance_seen(x, y, other)){
+			 // Target Nearest:
+			var _disMax = infinity;
+			if(array_length(_inst)) with(_inst){
+				var _dis = point_distance(x, y, other.x, other.y);
+				if(_dis < _disMax){
+					if(!instance_is(self, prop)){
 						_disMax = _dis;
 						_vars.target = id;
 					}
@@ -1101,6 +1123,7 @@
 		var _inst = instances_matching(instances_matching_gt(charm_object, "id", _minID), "creator", null, noone);
 		if(array_length(_inst)) with(_inst){
 			creator = other;
+			if(instance_is(self, Player)) trace("HUH??????");
 		}
 		
 		 // Ally-ify Projectiles:
@@ -1146,7 +1169,9 @@
 			var _vars = _varsList[_instNum++];
 			
 			if(_vars.charmed){
-				if(!instance_exists(self)) _vars.charmed = false;
+				if(!instance_exists(self)){
+					_vars.charmed = false;
+				}
 				else{
 					if("ntte_charm_override" not in self || !ntte_charm_override){
 						var	_lastDir  = direction,
@@ -1194,12 +1219,16 @@
 						
 						 // Normal (Run Alarms):
 						else{
-							var _minID = GameObject.id;
+							var _minID = undefined;
 							
 							for(var _alarmNum = 0; _alarmNum <= 10; _alarmNum++){
 								var _alarm = alarm_get(_alarmNum);
 								if(_alarm > 0 && _alarm <= ceil(current_time_scale)){
 									var _playerPos = charm_target(_vars);
+									
+									if(is_undefined(_minID)){
+										_minID = GameObject.id;
+									}
 									
 									 // Call Alarm Event:
 									with(self){
@@ -1234,7 +1263,9 @@
 							}
 							
 							 // Grab Spawned Things:
-							charm_grab(_vars, _minID);
+							if(!is_undefined(_minID)){
+								charm_grab(_vars, _minID);
+							}
 						}
 						
 						 // Enemy Stuff:
@@ -1259,10 +1290,10 @@
 										|| ("walk" in self && walk > 0 && !instance_is(self, ExploFreak))
 									){
 										if(
-											distance_to_object(Player) > 256
-											|| !instance_exists(_vars.target)
-											|| !instance_seen(x, y, _vars.target)
-											|| !instance_near(x, y, _vars.target, 80)
+											!instance_exists(_vars.target)
+											|| !collision_line(x, y, _vars.target.x, _vars.target.y, Wall, false, false)
+											|| distance_to_object(_vars.target) > 80
+											|| distance_to_object(Player) > 256
 										){
 											 // Player to Follow:
 											var _follow = player_find(_vars.index);
@@ -1318,7 +1349,9 @@
 							switch(object_index){
 								
 								case BigMaggot:
-									if(alarm1 < 0) alarm1 = irandom_range(10, 20); // JW u did this to me
+									if(alarm1 < 0 && instance_exists(_vars.target) && instance_seen(x, y, _vars.target)){
+										alarm1 = 90; // JW u did this to me
+									}
 								case MaggotSpawn:
 								case JungleFly:
 								case FiredMaggot:
@@ -1526,7 +1559,7 @@
 								}
 								
 								 // Featherize:
-								if(_charm.feather && _charm.time >= 0){
+								if(_charm.feather && (_charm.time >= 0 || !_vars.charmed)){
 									repeat(max(_charm.time / 45, 1)){
 										with(obj_create(x + orandom(24), y + orandom(24), "ParrotFeather")){
 											target = other;
@@ -1600,68 +1633,71 @@
 	if(array_length(_inst) > 0){
 		if(lag) trace_time();
 		
-		if(_index < 0){
-			_index = player_find_local_nonsync();
-		}
+		var _outline = option_get("outline:charm");
 		
-		var	_vx = view_xview_nonsync,
-			_vy = view_yview_nonsync,
-			_gw = game_width,
-			_gh = game_height;
-			
-		with(surface_setup("CharmScreen", _gw, _gh, game_scale_nonsync)){
-			x = _vx;
-			y = _vy;
-			
-			 // Copy & Clear Screen:
-			draw_set_blend_mode_ext(bm_one, bm_zero);
-			surface_screenshot(surf);
-			draw_set_alpha(0);
-			draw_surface_scale(surf, x, y, 1 / scale);
-			draw_set_alpha(1);
-			draw_set_blend_mode(bm_normal);
-			
-			 // Call Enemy Draw Events:
-			var _lastTimeScale = current_time_scale;
-			current_time_scale = 0.0000000001;
-			try{
-				with(other){
-					with(instances_seen(_inst, 24, 24, -1)){
-						event_perform(ev_draw, 0);
-					}
-				}
+		if(_outline || charm_shad.shad != -1){
+			if(_index < 0){
+				_index = player_find_local_nonsync();
 			}
-			catch(_error){
-				trace_error(_error);
-			}
-			current_time_scale = _lastTimeScale;
 			
-			 // Copy Enemy Drawing:
-			var _outline = option_get("outline:charm");
-			with(surface_setup("Charm", w, h, (_outline ? option_get("quality:main") : scale))){
-				x = other.x;
-				y = other.y;
+			var	_vx = view_xview_nonsync,
+				_vy = view_yview_nonsync,
+				_gw = game_width,
+				_gh = game_height;
 				
-				 // Copy Enemy Drawing & Redraw Old Screen:
+			with(surface_setup("CharmScreen", _gw, _gh, game_scale_nonsync)){
+				x = _vx;
+				y = _vy;
+				
+				 // Copy & Clear Screen:
 				draw_set_blend_mode_ext(bm_one, bm_zero);
 				surface_screenshot(surf);
-				with(other) draw_surface_scale(surf, x, y, 1 / scale);
+				draw_set_alpha(0);
+				draw_surface_scale(surf, x, y, 1 / scale);
+				draw_set_alpha(1);
 				draw_set_blend_mode(bm_normal);
 				
-				 // Outlines:
-				if(_outline){
-					draw_set_fog(true, player_get_color(_index), 0, 0);
-					for(var a = 0; a < 360; a += 90){
-						draw_surface_scale(surf, x + dcos(a), y - dsin(a), 1 / scale);
+				 // Call Enemy Draw Events:
+				var _lastTimeScale = current_time_scale;
+				current_time_scale = 0.0000000001;
+				try{
+					with(other){
+						with(instances_seen(_inst, 24, 24, -1)){
+							event_perform(ev_draw, 0);
+						}
 					}
-					draw_set_fog(false, 0, 0, 0);
-					draw_surface_scale(surf, x, y, 1 / scale);
 				}
+				catch(_error){
+					trace_error(_error);
+				}
+				current_time_scale = _lastTimeScale;
 				
-				 // Eye Shader:
-				if(shader_setup("Charm", surface_get_texture(surf), [w, h])){
-					draw_surface_scale(surf, x, y, 1 / scale);
-					shader_reset();
+				 // Copy Enemy Drawing:
+				with(surface_setup("Charm", w, h, (_outline ? option_get("quality:main") : scale))){
+					x = other.x;
+					y = other.y;
+					
+					 // Copy Enemy Drawing & Redraw Old Screen:
+					draw_set_blend_mode_ext(bm_one, bm_zero);
+					surface_screenshot(surf);
+					with(other) draw_surface_scale(surf, x, y, 1 / scale);
+					draw_set_blend_mode(bm_normal);
+					
+					 // Outlines:
+					if(_outline){
+						draw_set_fog(true, player_get_color(_index), 0, 0);
+						for(var a = 0; a < 360; a += 90){
+							draw_surface_scale(surf, x + dcos(a), y - dsin(a), 1 / scale);
+						}
+						draw_set_fog(false, 0, 0, 0);
+						draw_surface_scale(surf, x, y, 1 / scale);
+					}
+					
+					 // Eye Shader:
+					if(shader_setup("Charm", surface_get_texture(surf), [w, h])){
+						draw_surface_scale(surf, x, y, 1 / scale);
+						shader_reset();
+					}
 				}
 			}
 		}

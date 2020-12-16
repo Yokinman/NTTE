@@ -2018,7 +2018,7 @@
 	
 #define instance_nearest_bbox(_x, _y, _obj)
 	/*
-		Returns the instance closest to a given point based on their bounding box, similar to how 'distance_to_point()' works
+		Returns the instance closest to a given point based on their bounding box
 		Accepts an array argument like 'instance_nearest_array()' does
 		
 		Ex:
@@ -2029,7 +2029,7 @@
 		_nearest = noone;
 		
 	with(instances_matching(_obj, "", null)){
-		var _dis = point_distance(_x, _y, clamp(_x, bbox_left, bbox_right + 1), clamp(_y, bbox_top, bbox_bottom + 1));
+		var _dis = distance_to_point(_x, _y);
 		if(_dis < _disMax){
 			_disMax  = _dis;
 			_nearest = id;
@@ -2055,8 +2055,8 @@
 		_nearest = noone;
 		
 	with(instances_matching(_obj, "", null)){
-		var	_disA = point_distance(clamp(x, _x1, _x2), clamp(y, _y1, _y2), x, y),
-			_disB = point_distance(_cx, _cy, x, y);
+		var	_disA = point_distance(x, y, clamp(x, _x1, _x2), clamp(y, _y1, _y2)),
+			_disB = point_distance(x, y, _cx, _cy);
 			
 		if(_disA < _disAMax || (_disA == _disAMax && _disB < _disBMax)){
 			_disAMax = _disA;
@@ -2069,7 +2069,7 @@
 	
 #define instance_nearest_rectangle_bbox(_x1, _y1, _x2, _y2, _obj)
 	/*
-		Returns the instance closest to a given rectangle based on their bounding box, similar to how 'distance_to_object()' works
+		Returns the instance closest to a given rectangle based on their bounding box
 		If multiple instances are equally distant from the rectangle, a bias exists for the one closer to its center
 		Accepts an array argument like 'instance_nearest_array()' does
 		
@@ -2086,8 +2086,8 @@
 	with(instances_matching(_obj, "", null)){
 		var	_x    = clamp(_cx, bbox_left, bbox_right + 1),
 			_y    = clamp(_cy, bbox_top, bbox_bottom + 1),
-			_disA = point_distance(clamp(_x, _x1, _x2), clamp(_y, _y1, _y2), _x, _y),
-			_disB = point_distance(_cx, _cy, _x, _y);
+			_disA = point_distance(_x, _y, clamp(_x, _x1, _x2), clamp(_y, _y1, _y2)),
+			_disB = point_distance(_x, _y, _cx, _cy);
 			
 		if(_disA < _disAMax || (_disA == _disAMax && _disB < _disBMax)){
 			_disAMax = _disA;
@@ -4860,7 +4860,9 @@
 		var	_id   = race_get_id(_race),
 			_name = race_get_name(_race);
 			
-		if(_id >= 17) _id = 1;
+		if(_id >= 17){
+			_id = 1;
+		}
 		
 		switch(_sprite){
 			case sprMutant1Idle:
@@ -4903,13 +4905,15 @@
 			 // Shadow:
 			case shd24:
 				
-				if(_id == 13) _sprite = shd96;
+				if(_id == char_bigdog){
+					_sprite = shd96;
+				}
 				
 				break;
 		}
 	}
 	
-	return skin_get_sprite(variable_instance_get(self, "bskin"), _sprite);
+	return skin_get_sprite(variable_instance_get(self, "bskin", 0), _sprite);
 	
 #define race_get_title(_race)
 	/*
@@ -4989,126 +4993,126 @@
 		Returns a given skin's variant of a given sprite
 		
 		Ex:
-			skin_get_sprite(1, sprShield) == sprShieldB
+			skin_get_sprite(1,      sprShield) == sprShieldB
 			skin_get_sprite("tree", sprShield) == (Shield sprite for 'tree.skin.gml')
 	*/
 	
 	switch(_sprite){
-		 // FISH:
-		case sprMutant1Idle:            return sprite_skin(_skin, _sprite, sprMutant1BIdle);
-		case sprMutant1Walk:            return sprite_skin(_skin, _sprite, sprMutant1BWalk);
-		case sprMutant1Hurt:            return sprite_skin(_skin, _sprite, sprMutant1BHurt);
-		case sprMutant1Dead:            return sprite_skin(_skin, _sprite, sprMutant1BDead);
-		case sprMutant1GoSit:           return sprite_skin(_skin, _sprite, sprMutant1BGoSit);
-		case sprMutant1Sit:             return sprite_skin(_skin, _sprite, sprMutant1BSit);
+		 /// FISH:
+		case sprMutant1Idle            : return sprite_skin(_skin, _sprite, sprMutant1BIdle);
+		case sprMutant1Walk            : return sprite_skin(_skin, _sprite, sprMutant1BWalk);
+		case sprMutant1Hurt            : return sprite_skin(_skin, _sprite, sprMutant1BHurt);
+		case sprMutant1Dead            : return sprite_skin(_skin, _sprite, sprMutant1BDead);
+		case sprMutant1GoSit           : return sprite_skin(_skin, _sprite, sprMutant1BGoSit);
+		case sprMutant1Sit             : return sprite_skin(_skin, _sprite, sprMutant1BSit);
 		
-		 // CRYSTAL:
-		case sprMutant2Idle:            return sprite_skin(_skin, _sprite, sprMutant2BIdle);
-		case sprMutant2Walk:            return sprite_skin(_skin, _sprite, sprMutant2BWalk);
-		case sprMutant2Hurt:            return sprite_skin(_skin, _sprite, sprMutant2BHurt);
-		case sprMutant2Dead:            return sprite_skin(_skin, _sprite, sprMutant2BDead);
-		case sprMutant2GoSit:           return sprite_skin(_skin, _sprite, sprMutant2BGoSit);
-		case sprMutant2Sit:             return sprite_skin(_skin, _sprite, sprMutant2BSit);
-		case sprShield:                 return sprite_skin(_skin, _sprite, sprShieldB);
-		case sprCrystTrail:             return sprite_skin(_skin, _sprite, sprCrystTrailB);
-		case sprCrystalShieldIdleFront: return sprite_skin(_skin, _sprite, sprCrystalShieldBIdleFront);
-		case sprCrystalShieldWalkFront: return sprite_skin(_skin, _sprite, sprCrystalShieldBWalkFront);
-		case sprCrystalShieldIdleBack:  return sprite_skin(_skin, _sprite, sprCrystalShieldBIdleBack);
-		case sprCrystalShieldWalkBack:  return sprite_skin(_skin, _sprite, sprCrystalShieldBWalkBack);
+		 /// CRYSTAL:
+		case sprMutant2Idle            : return sprite_skin(_skin, _sprite, sprMutant2BIdle);
+		case sprMutant2Walk            : return sprite_skin(_skin, _sprite, sprMutant2BWalk);
+		case sprMutant2Hurt            : return sprite_skin(_skin, _sprite, sprMutant2BHurt);
+		case sprMutant2Dead            : return sprite_skin(_skin, _sprite, sprMutant2BDead);
+		case sprMutant2GoSit           : return sprite_skin(_skin, _sprite, sprMutant2BGoSit);
+		case sprMutant2Sit             : return sprite_skin(_skin, _sprite, sprMutant2BSit);
+		case sprShield                 : return sprite_skin(_skin, _sprite, sprShieldB);
+		case sprCrystTrail             : return sprite_skin(_skin, _sprite, sprCrystTrailB);
+		case sprCrystalShieldIdleFront : return sprite_skin(_skin, _sprite, sprCrystalShieldBIdleFront);
+		case sprCrystalShieldWalkFront : return sprite_skin(_skin, _sprite, sprCrystalShieldBWalkFront);
+		case sprCrystalShieldIdleBack  : return sprite_skin(_skin, _sprite, sprCrystalShieldBIdleBack);
+		case sprCrystalShieldWalkBack  : return sprite_skin(_skin, _sprite, sprCrystalShieldBWalkBack);
 		
-		 // EYES:
-		case sprMutant3Idle:            return sprite_skin(_skin, _sprite, sprMutant3BIdle);
-		case sprMutant3Walk:            return sprite_skin(_skin, _sprite, sprMutant3BWalk);
-		case sprMutant3Hurt:            return sprite_skin(_skin, _sprite, sprMutant3BHurt);
-		case sprMutant3Dead:            return sprite_skin(_skin, _sprite, sprMutant3BDead);
-		case sprMutant3GoSit:           return sprite_skin(_skin, _sprite, sprMutant3BGoSit);
-		case sprMutant3Sit:             return sprite_skin(_skin, _sprite, sprMutant3BSit);
+		 /// EYES:
+		case sprMutant3Idle            : return sprite_skin(_skin, _sprite, sprMutant3BIdle);
+		case sprMutant3Walk            : return sprite_skin(_skin, _sprite, sprMutant3BWalk);
+		case sprMutant3Hurt            : return sprite_skin(_skin, _sprite, sprMutant3BHurt);
+		case sprMutant3Dead            : return sprite_skin(_skin, _sprite, sprMutant3BDead);
+		case sprMutant3GoSit           : return sprite_skin(_skin, _sprite, sprMutant3BGoSit);
+		case sprMutant3Sit             : return sprite_skin(_skin, _sprite, sprMutant3BSit);
 		
-		 // MELTING:
-		case sprMutant4Idle:            return sprite_skin(_skin, _sprite, sprMutant4BIdle);
-		case sprMutant4Walk:            return sprite_skin(_skin, _sprite, sprMutant4BWalk);
-		case sprMutant4Hurt:            return sprite_skin(_skin, _sprite, sprMutant4BHurt);
-		case sprMutant4Dead:            return sprite_skin(_skin, _sprite, sprMutant4BDead);
-		case sprMutant4GoSit:           return sprite_skin(_skin, _sprite, sprMutant4BGoSit);
-		case sprMutant4Sit:             return sprite_skin(_skin, _sprite, sprMutant4BSit);
+		 /// MELTING:
+		case sprMutant4Idle            : return sprite_skin(_skin, _sprite, sprMutant4BIdle);
+		case sprMutant4Walk            : return sprite_skin(_skin, _sprite, sprMutant4BWalk);
+		case sprMutant4Hurt            : return sprite_skin(_skin, _sprite, sprMutant4BHurt);
+		case sprMutant4Dead            : return sprite_skin(_skin, _sprite, sprMutant4BDead);
+		case sprMutant4GoSit           : return sprite_skin(_skin, _sprite, sprMutant4BGoSit);
+		case sprMutant4Sit             : return sprite_skin(_skin, _sprite, sprMutant4BSit);
 		
-		 // PLANT:
-		case sprMutant5Idle:            return sprite_skin(_skin, _sprite, sprMutant5BIdle);
-		case sprMutant5Walk:            return sprite_skin(_skin, _sprite, sprMutant5BWalk);
-		case sprMutant5Hurt:            return sprite_skin(_skin, _sprite, sprMutant5BHurt);
-		case sprMutant5Dead:            return sprite_skin(_skin, _sprite, sprMutant5BDead);
-		case sprMutant5GoSit:           return sprite_skin(_skin, _sprite, sprMutant5BGoSit);
-		case sprMutant5Sit:             return sprite_skin(_skin, _sprite, sprMutant5BSit);
-		case sprTangle:                 return sprite_skin(_skin, _sprite, sprTangleB);
-		case sprTangleSeed:             return sprite_skin(_skin, _sprite, sprTangleSeedB);
+		 /// PLANT:
+		case sprMutant5Idle            : return sprite_skin(_skin, _sprite, sprMutant5BIdle);
+		case sprMutant5Walk            : return sprite_skin(_skin, _sprite, sprMutant5BWalk);
+		case sprMutant5Hurt            : return sprite_skin(_skin, _sprite, sprMutant5BHurt);
+		case sprMutant5Dead            : return sprite_skin(_skin, _sprite, sprMutant5BDead);
+		case sprMutant5GoSit           : return sprite_skin(_skin, _sprite, sprMutant5BGoSit);
+		case sprMutant5Sit             : return sprite_skin(_skin, _sprite, sprMutant5BSit);
+		case sprTangle                 : return sprite_skin(_skin, _sprite, sprTangleB);
+		case sprTangleSeed             : return sprite_skin(_skin, _sprite, sprTangleSeedB);
 		
-		 // YV:
-		case sprMutant6Idle:            return sprite_skin(_skin, _sprite, sprMutant6BIdle,  sprMutant16Idle);
-		case sprMutant6Walk:            return sprite_skin(_skin, _sprite, sprMutant6BWalk,  sprMutant16Walk);
-		case sprMutant6Hurt:            return sprite_skin(_skin, _sprite, sprMutant6BHurt,  sprMutant16Hurt);
-		case sprMutant6Dead:            return sprite_skin(_skin, _sprite, sprMutant6BDead,  sprMutant16Dead);
-		case sprMutant6GoSit:           return sprite_skin(_skin, _sprite, sprMutant6BGoSit, sprMutant16GoSit);
-		case sprMutant6Sit:             return sprite_skin(_skin, _sprite, sprMutant6BSit,   sprMutant16Sit);
+		 /// YV:
+		case sprMutant6Idle            : return sprite_skin(_skin, _sprite, sprMutant6BIdle,  sprMutant16Idle);
+		case sprMutant6Walk            : return sprite_skin(_skin, _sprite, sprMutant6BWalk,  sprMutant16Walk);
+		case sprMutant6Hurt            : return sprite_skin(_skin, _sprite, sprMutant6BHurt,  sprMutant16Hurt);
+		case sprMutant6Dead            : return sprite_skin(_skin, _sprite, sprMutant6BDead,  sprMutant16Dead);
+		case sprMutant6GoSit           : return sprite_skin(_skin, _sprite, sprMutant6BGoSit, sprMutant16GoSit);
+		case sprMutant6Sit             : return sprite_skin(_skin, _sprite, sprMutant6BSit,   sprMutant16Sit);
 		
-		 // STEROIDS:
-		case sprMutant7Idle:            return sprite_skin(_skin, _sprite, sprMutant7BIdle);
-		case sprMutant7Walk:            return sprite_skin(_skin, _sprite, sprMutant7BWalk);
-		case sprMutant7Hurt:            return sprite_skin(_skin, _sprite, sprMutant7BHurt);
-		case sprMutant7Dead:            return sprite_skin(_skin, _sprite, sprMutant7BDead);
-		case sprMutant7GoSit:           return sprite_skin(_skin, _sprite, sprMutant7BGoSit);
-		case sprMutant7Sit:             return sprite_skin(_skin, _sprite, sprMutant7BSit);
+		 /// STEROIDS:
+		case sprMutant7Idle            : return sprite_skin(_skin, _sprite, sprMutant7BIdle);
+		case sprMutant7Walk            : return sprite_skin(_skin, _sprite, sprMutant7BWalk);
+		case sprMutant7Hurt            : return sprite_skin(_skin, _sprite, sprMutant7BHurt);
+		case sprMutant7Dead            : return sprite_skin(_skin, _sprite, sprMutant7BDead);
+		case sprMutant7GoSit           : return sprite_skin(_skin, _sprite, sprMutant7BGoSit);
+		case sprMutant7Sit             : return sprite_skin(_skin, _sprite, sprMutant7BSit);
 		
-		 // ROBOT:
-		case sprMutant8Idle:            return sprite_skin(_skin, _sprite, sprMutant8BIdle,  sprMutant8CIdle);
-		case sprMutant8Walk:            return sprite_skin(_skin, _sprite, sprMutant8BWalk,  sprMutant8CWalk);
-		case sprMutant8Hurt:            return sprite_skin(_skin, _sprite, sprMutant8BHurt,  sprMutant8CHurt);
-		case sprMutant8Dead:            return sprite_skin(_skin, _sprite, sprMutant8BDead,  sprMutant8CDead);
-		case sprMutant8GoSit:           return sprite_skin(_skin, _sprite, sprMutant8BGoSit, sprMutant8CGoSit);
-		case sprMutant8Sit:             return sprite_skin(_skin, _sprite, sprMutant8BSit,   sprMutant8CSit);
+		 /// ROBOT:
+		case sprMutant8Idle            : return sprite_skin(_skin, _sprite, sprMutant8BIdle,  sprMutant8CIdle);
+		case sprMutant8Walk            : return sprite_skin(_skin, _sprite, sprMutant8BWalk,  sprMutant8CWalk);
+		case sprMutant8Hurt            : return sprite_skin(_skin, _sprite, sprMutant8BHurt,  sprMutant8CHurt);
+		case sprMutant8Dead            : return sprite_skin(_skin, _sprite, sprMutant8BDead,  sprMutant8CDead);
+		case sprMutant8GoSit           : return sprite_skin(_skin, _sprite, sprMutant8BGoSit, sprMutant8CGoSit);
+		case sprMutant8Sit             : return sprite_skin(_skin, _sprite, sprMutant8BSit,   sprMutant8CSit);
 		
-		 // CHICKEN:
-		case sprMutant9Idle:            return sprite_skin(_skin, _sprite, sprMutant9BIdle);
-		case sprMutant9Walk:            return sprite_skin(_skin, _sprite, sprMutant9BWalk);
-		case sprMutant9Hurt:            return sprite_skin(_skin, _sprite, sprMutant9BHurt);
-		case sprMutant9GoSit:           return sprite_skin(_skin, _sprite, sprMutant9BGoSit);
-		case sprMutant9Sit:             return sprite_skin(_skin, _sprite, sprMutant9BSit);
-		case sprMutant9HeadIdle:        return sprite_skin(_skin, _sprite, sprMutant9BHeadIdle);
-		case sprMutant9HeadHurt:        return sprite_skin(_skin, _sprite, sprMutant9BHeadHurt);
+		 /// CHICKEN:
+		case sprMutant9Idle            : return sprite_skin(_skin, _sprite, sprMutant9BIdle);
+		case sprMutant9Walk            : return sprite_skin(_skin, _sprite, sprMutant9BWalk);
+		case sprMutant9Hurt            : return sprite_skin(_skin, _sprite, sprMutant9BHurt);
+		case sprMutant9GoSit           : return sprite_skin(_skin, _sprite, sprMutant9BGoSit);
+		case sprMutant9Sit             : return sprite_skin(_skin, _sprite, sprMutant9BSit);
+		case sprMutant9HeadIdle        : return sprite_skin(_skin, _sprite, sprMutant9BHeadIdle);
+		case sprMutant9HeadHurt        : return sprite_skin(_skin, _sprite, sprMutant9BHeadHurt);
 		
-		 // REBEL:
-		case sprMutant10Idle:           return sprite_skin(_skin, _sprite, sprMutant10BIdle, sprMutant10CIdle);
-		case sprMutant10Walk:           return sprite_skin(_skin, _sprite, sprMutant10BWalk, sprMutant10CWalk);
-		case sprMutant10Hurt:           return sprite_skin(_skin, _sprite, sprMutant10BHurt, sprMutant10CHurt);
-		case sprMutant10Dead:           return sprite_skin(_skin, _sprite, sprMutant10BDead, sprMutant10CDead);
-		case sprMutant10GoSit:          return sprite_skin(_skin, _sprite, sprMutant10BGoSit);
-		case sprMutant10Sit:            return sprite_skin(_skin, _sprite, sprMutant10BSit);
+		 /// REBEL:
+		case sprMutant10Idle           : return sprite_skin(_skin, _sprite, sprMutant10BIdle, sprMutant10CIdle);
+		case sprMutant10Walk           : return sprite_skin(_skin, _sprite, sprMutant10BWalk, sprMutant10CWalk);
+		case sprMutant10Hurt           : return sprite_skin(_skin, _sprite, sprMutant10BHurt, sprMutant10CHurt);
+		case sprMutant10Dead           : return sprite_skin(_skin, _sprite, sprMutant10BDead, sprMutant10CDead);
+		case sprMutant10GoSit          : return sprite_skin(_skin, _sprite, sprMutant10BGoSit);
+		case sprMutant10Sit            : return sprite_skin(_skin, _sprite, sprMutant10BSit);
 		
-		 // HORROR:
-		case sprMutant11Idle:           return sprite_skin(_skin, _sprite, sprMutant11BIdle);
-		case sprMutant11Walk:           return sprite_skin(_skin, _sprite, sprMutant11BWalk);
-		case sprMutant11Hurt:           return sprite_skin(_skin, _sprite, sprMutant11BHurt);
-		case sprMutant11Dead:           return sprite_skin(_skin, _sprite, sprMutant11BDead);
-		case sprMutant11GoSit:          return sprite_skin(_skin, _sprite, sprMutant11BGoSit);
-		case sprMutant11Sit:            return sprite_skin(_skin, _sprite, sprMutant11BSit);
-		case sprHorrorBullet:           return sprite_skin(_skin, _sprite, sprHorrorBBullet);
-		case sprHorrorBulletHit:        return sprite_skin(_skin, _sprite, sprHorrorBulletHitB);
-		case sprHorrorHit:              return sprite_skin(_skin, _sprite, sprHorrorHitB);
+		 /// HORROR:
+		case sprMutant11Idle           : return sprite_skin(_skin, _sprite, sprMutant11BIdle);
+		case sprMutant11Walk           : return sprite_skin(_skin, _sprite, sprMutant11BWalk);
+		case sprMutant11Hurt           : return sprite_skin(_skin, _sprite, sprMutant11BHurt);
+		case sprMutant11Dead           : return sprite_skin(_skin, _sprite, sprMutant11BDead);
+		case sprMutant11GoSit          : return sprite_skin(_skin, _sprite, sprMutant11BGoSit);
+		case sprMutant11Sit            : return sprite_skin(_skin, _sprite, sprMutant11BSit);
+		case sprHorrorBullet           : return sprite_skin(_skin, _sprite, sprHorrorBBullet);
+		case sprHorrorBulletHit        : return sprite_skin(_skin, _sprite, sprHorrorBulletHitB);
+		case sprHorrorHit              : return sprite_skin(_skin, _sprite, sprHorrorHitB);
 		
-		 // ROGUE:
-		case sprMutant12Idle:           return sprite_skin(_skin, _sprite, sprMutant12BIdle);
-		case sprMutant12Walk:           return sprite_skin(_skin, _sprite, sprMutant12BWalk);
-		case sprMutant12Hurt:           return sprite_skin(_skin, _sprite, sprMutant12BHurt);
-		case sprMutant12Dead:           return sprite_skin(_skin, _sprite, sprMutant12BDead);
-		case sprMutant12GoSit:          return sprite_skin(_skin, _sprite, sprMutant12BGoSit);
-		case sprMutant12Sit:            return sprite_skin(_skin, _sprite, sprMutant12BSit);
+		 /// ROGUE:
+		case sprMutant12Idle           : return sprite_skin(_skin, _sprite, sprMutant12BIdle);
+		case sprMutant12Walk           : return sprite_skin(_skin, _sprite, sprMutant12BWalk);
+		case sprMutant12Hurt           : return sprite_skin(_skin, _sprite, sprMutant12BHurt);
+		case sprMutant12Dead           : return sprite_skin(_skin, _sprite, sprMutant12BDead);
+		case sprMutant12GoSit          : return sprite_skin(_skin, _sprite, sprMutant12BGoSit);
+		case sprMutant12Sit            : return sprite_skin(_skin, _sprite, sprMutant12BSit);
 		
-		 // SKELETON:
-		case sprMutant14Idle:           return sprite_skin(_skin, _sprite, sprMutant14BIdle);
-		case sprMutant14Walk:           return sprite_skin(_skin, _sprite, sprMutant14BWalk);
-		case sprMutant14Hurt:           return sprite_skin(_skin, _sprite, sprMutant14BHurt);
-		case sprMutant14Dead:           return sprite_skin(_skin, _sprite, sprMutant14BDead);
-		case sprMutant14GoSit:          return sprite_skin(_skin, _sprite, sprMutant14BGoSit);
-		case sprMutant14Sit:            return sprite_skin(_skin, _sprite, sprMutant14BSit);
+		 /// SKELETON:
+		case sprMutant14Idle           : return sprite_skin(_skin, _sprite, sprMutant14BIdle);
+		case sprMutant14Walk           : return sprite_skin(_skin, _sprite, sprMutant14BWalk);
+		case sprMutant14Hurt           : return sprite_skin(_skin, _sprite, sprMutant14BHurt);
+		case sprMutant14Dead           : return sprite_skin(_skin, _sprite, sprMutant14BDead);
+		case sprMutant14GoSit          : return sprite_skin(_skin, _sprite, sprMutant14BGoSit);
+		case sprMutant14Sit            : return sprite_skin(_skin, _sprite, sprMutant14BSit);
 	}
 	
 	return sprite_skin(_skin, _sprite);

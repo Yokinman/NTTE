@@ -4,9 +4,9 @@
 	lag = false;
 	
 	 // Top Object Searching:
-	TopObjectSearchMap = ds_map_create();
-	with(TopObjectSearch){
-		ds_map_set(TopObjectSearchMap, self, max(variable_instance_get(GameObject, "id", 0), other));
+	TopObject_search_map = ds_map_create();
+	with(TopObject_search){
+		TopObject_search_map[? self] = max(variable_instance_get(GameObject, "id", 0), other);
 	}
 	
 	 // Floor Related:
@@ -26,8 +26,8 @@
 #macro mus snd.mus
 #macro lag global.debug_lag
 
-#macro TopObjectSearch    [hitme, projectile, becomenemy, Pickup, chestprop, Corpse, Effect, Explosion, MeatExplosion, PlasmaImpact, BigDogExplo, NothingDeath, Nothing2Death, FrogQueenDie, PopoShield, CrystalShield, SharpTeeth, ReviveArea, NecroReviveArea, RevivePopoFreak]
-#macro TopObjectSearchMap global.top_object_search_map
+#macro TopObject_search     [hitme, projectile, becomenemy, Pickup, chestprop, Corpse, Effect, Explosion, MeatExplosion, PlasmaImpact, BigDogExplo, NothingDeath, Nothing2Death, FrogQueenDie, PopoShield, CrystalShield, SharpTeeth, ReviveArea, NecroReviveArea, RevivePopoFreak]
+#macro TopObject_search_map global.top_object_search_map
 
 #define AlertIndicator_create(_x, _y)
 	/*
@@ -5535,12 +5535,12 @@
 	}
 	
 	 // Auto-Topify New Objects:
-	with(TopObjectSearch){
+	with(TopObject_search){
 		var _object = self;
 		if(instance_exists(_object)){
-			var _lastID = TopObjectSearchMap[? _object];
+			var _lastID = TopObject_search_map[? _object];
 			if(_object.id > _lastID){
-				TopObjectSearchMap[? _object] = _object.id;
+				TopObject_search_map[? _object] = _object.id;
 				
 				var _instTop = instances_matching(CustomObject, "name", "TopObject");
 				

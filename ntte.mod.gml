@@ -3982,7 +3982,8 @@
 								_h          = 7,
 								_x          = _ox + 5,
 								_y          = _oy + 7,
-								_HPw        = floor(_w * (1 - (0.7 * charm_hplink_hud)));
+								_HPw        = floor(_w * (1 - (0.5 * charm_hplink_hud))),
+								_HPFlash      = (((sprite_index == spr_hurt && image_index < 1 && !instance_exists(Portal)) || _HPLst < _HPCur) && !instance_exists(GenCont) && !instance_exists(LevCont) && !instance_exists(PlayerSit));
 								
 							draw_set_halign(fa_center);
 							draw_set_valign(fa_middle);
@@ -4008,22 +4009,21 @@
 									
 									 // my_health Filling:
 									if(_HPCurCharm > 0 && _HPMaxCharm > 0){
-										draw_set_color(
-											(sprite_index == spr_hurt && image_index < 1)
-											? c_white
-											: merge_color(_skinCol, player_get_color(index), 0.5)
-										);
+										draw_set_color(_HPFlash ? c_white : merge_color(_skinCol, player_get_color(index), 0.5));
 										draw_rectangle(_x1, _y, lerp(_x1, _x2, clamp(_HPCurCharm / _HPMaxCharm, 0, 1)), _y + _h, false);
 									}
 									
 									 // Text:
 									var _HPText = `${_HPCurCharm}/${_HPMaxCharm}`;
-									draw_set_font(
-										(string_length(_HPText) > 7 || ((string_length(_HPText) - 1) * 8) >= _x2 - _x1)
-										? fntSmall
-										: fntM
+									draw_set_font(fntM);
+									if(string_length(_HPText) > 7 || (string_width(_HPText) - 8) >= _x2 - _x1){
+										draw_set_font(fntSmall);
+									}
+									draw_text_nt(
+										min(ceil(lerp(_x1, _x + _w, 0.5)), _x + _w - ceil(string_width(_HPText) / 2)) + 1,
+										_y + 1 + floor(_h / 2),
+										_HPText
 									);
-									draw_text_nt(min(floor(lerp(_x1, _x + _w, 0.54)), _x + _w - (string_width(_HPText) / 2)), _y + 1 + floor(_h / 2), _HPText);
 								}
 								
 							/// Normal HP:
@@ -4043,23 +4043,22 @@
 								
 								 // my_health Filling:
 								if(_HPCur > 0 && _HPMax > 0){
-									draw_set_color(
-										(_HPLst < _HPCur)
-										? c_white
-										: player_get_color(index)
-									);
+									draw_set_color(_HPFlash ? c_white : player_get_color(index));
 									draw_rectangle(_x, _y, _x + floor(_HPw * clamp(_HPCur / _HPMax, 0, 1)), _y + _h, false);
 								}
 								
 								 // Text:
 								if(_HPLst >= _HPCur || sin(wave) > 0){
 									var _HPText = `${_HPCur}/${_HPMax}`;
-									draw_set_font(
-										(string_length(_HPText) > 6 * (1 - charm_hplink_hud))
-										? fntSmall
-										: fntM
+									draw_set_font(fntM);
+									if(string_length(_HPText) > 7 || string_width(_HPText) >= _x1 - _x){
+										draw_set_font(fntSmall);
+									}
+									draw_text_nt(
+										_x + ceil((_HPw / 2) + (4 * (1 - charm_hplink_hud))),
+										_y + 1 + floor(_h / 2),
+										_HPText
 									);
-									draw_text_nt(_x + floor(_HPw * 0.55), _y + 1 + floor(_h / 2), _HPText);
 								}
 								
 							 // Separator:
@@ -4078,8 +4077,7 @@
 							_y        = _oy + 11,
 							_spr      = race_get_sprite(race, sprChickenFeather),
 							_sprHUD   = race_get_sprite(race, sprRogueAmmoHUD),
-							_output   = feather_num_mult,
-							_feathers = instances_matching_ne(instances_matching(instances_matching(CustomObject, "name", "ParrotFeather"), "creator", id), "target", id),
+							_feathers = instances_matching(instances_matching(CustomObject, "name", "ParrotFeather"), "creator", id),
 							_hudGoal  = [feather_ammo, 0];
 							
 						if(array_length(_feathers)){
@@ -4111,7 +4109,7 @@
 							}
 							
 							 // Extend Shootable Feathers:
-							if(i < _output && _hud[0] > 0){
+							if((i < 1 || ultra_get(race, 1) > 0) && _hud[0] > 0){
 								_dx -= _flip;
 								if(_hud[0] > _hud[1]) _dy++;
 							}

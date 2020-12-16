@@ -3659,21 +3659,21 @@
 		stick_wait     = 0;
 		
 		 // Push:
-		motion_add(random(360), 4 + random(2));
+		motion_add(random(360), random_range(4, 6));
 		image_angle = direction + 135;
 		
 		return id;
 	}
 	
 #define ParrotFeather_step
-	speed -= speed_raw * 0.1;
-	
-	 // Timer:
 	if(stick_time > 0){
-		 // Generate Queue:
+		 // Slow:
+		speed -= speed_raw * 0.1;
+		
+		 // Generate Timer Queue:
 		if(stick){
 			if(!array_length(stick_list)){
-				var _list = instances_matching(instances_matching(instances_matching(object_index, "name", name), "target", target), "creator", creator);
+				var _list = instances_matching(instances_matching(instances_matching(instances_matching(object_index, "name", name), "target", target), "creator", creator), "stick", stick);
 				with(_list){
 					stick_list = _list;
 				}
@@ -3681,7 +3681,7 @@
 		}
 		else stick_list = [];
 		
-		 // Decrement When First in Queue:
+		 // Deteriorate:
 		if(
 			stick
 			? (stick_list[0] == id)
@@ -3689,119 +3689,124 @@
 		){
 			stick_time -= current_time_scale;
 		}
-	}
-	
-	if(stick_time > 0 && instance_exists(target) && (!stick || ("ntte_charm" in target && lq_defget(target.ntte_charm, "charmed", true)))){
-		if(!stick){
-			stick_list = [];
-			
-			 // Orbit Target:
-			if(stick_wait != 0){
-				var	_l = 16,
-					_d = point_direction(target.x, target.y, x, y);
+		
+		 // Targeting:
+		if(instance_exists(target)){
+			if(!stick){
+				 // Orbit Target:
+				if(stick_wait != 0){
+					if(stick_wait > 0){
+						stick_wait -= min(stick_wait, current_time_scale);
+					}
 					
-				_d += 5 * sign(angle_difference(direction, _d));
-				
-				var	_x = target.x + lengthdir_x(_l, _d),
-					_y = target.y + lengthdir_y(_l, _d);
+					var	_l = 16,
+						_d = point_direction(target.x, target.y, x, y);
+						
+					_d += 5 * sign(angle_difference(direction, _d));
 					
-				motion_add_ct(point_direction(x, y, _x, _y) + orandom(60), 1);
-			}
-			
-			 // Reach Target:
-			else{
-				var	_dis = point_distance(x, y, target.x, target.y),
-					_dir = point_direction(x, y, target.x, target.y);
-					
-				 // Fly Towards Enemy:
-				motion_add_ct(_dir + orandom(60), 1);
-				
-				 // Far Away:
-				var _disMax = 640;
-				if(_dis > _disMax){
-					var _len = ((_dis - _disMax) / 16) * current_time_scale;
-					x += lengthdir_x(_len, _dir);
-					y += lengthdir_y(_len, _dir);
-					direction = _dir;
+					var	_x = target.x + lengthdir_x(_l, _d),
+						_y = target.y + lengthdir_y(_l, _d);
+						
+					motion_add_ct(point_direction(x, y, _x, _y) + orandom(60), 1);
 				}
 				
-				 // Reached Target:
-				if(
-					_dis <= speed_raw
-					|| place_meeting(x, y, target)
-					|| (target == creator && place_meeting(x, y, Portal))
-				){
-					 // Effects:
-					with(instance_create(x, y, Dust)){
-						depth = other.depth - 1;
-					}
-					sound_play_pitchvol(sndFlyFire,        2 + random(0.2),  0.25);
-					sound_play_pitchvol(sndChickenThrow,   1 + orandom(0.3), 0.25);
-					sound_play_pitchvol(sndMoneyPileBreak, 1 + random(3),    0.5);
+				 // Reach Target:
+				else{
+					var	_dis = point_distance(x, y, target.x, target.y),
+						_dir = point_direction(x, y, target.x, target.y);
+						
+					 // Fly Towards Enemy:
+					motion_add_ct(_dir + orandom(60), 1);
 					
-					 // Stick to & Charm Enemy:
-					if(target != creator){
-						stick       = true;
-						stickx      = random(x - target.x) * (("right" in target) ? target.right : 1);
-						sticky      = random(y - target.y);
-						image_angle = random(360);
-						speed       = 0;
-						
-						 // Parrot's Special Stat:
-						if("ntte_charm" not in target){
-							var _race = variable_instance_get(creator, "race", char_random);
-							if(_race == "parrot"){
-								var _stat = "race:" + _race + ":spec";
-								stat_set(_stat, stat_get(_stat) + 1);
-							}
-						}
-						
-						 // Charm Enemy:
-						var _wasUncharmed = ("ntte_charm" not in target || !target.ntte_charm.charmed);
-						with(charm_instance(target, true)){
-							if(_wasUncharmed || time >= 0 || feather){
-								time    = max(time, 0) + max(other.stick_time, 1);
-								index   = other.index;
-								feather = true;
-							}
-						}
+					 // Far Away:
+					var _disMax = 640;
+					if(_dis > _disMax){
+						var _len = ((_dis - _disMax) / 16) * current_time_scale;
+						x += lengthdir_x(_len, _dir);
+						y += lengthdir_y(_len, _dir);
+						direction = _dir;
 					}
 					
-					 // Player Pickup:
-					else{
-						with(creator){
-							if("feather_ammo" in self){
-								feather_ammo++;
-								if("feather_ammo_max" in self && feather_ammo > feather_ammo_max){
-									feather_ammo = feather_ammo_max;
+					 // Reached Target:
+					if(
+						_dis <= speed_raw
+						|| place_meeting(x, y, target)
+						|| (target == creator && place_meeting(x, y, Portal))
+					){
+						 // Effects:
+						with(instance_create(x, y, Dust)){
+							depth = other.depth - 1;
+						}
+						sound_play_pitchvol(sndFlyFire,        2 + random(0.2),  0.25);
+						sound_play_pitchvol(sndChickenThrow,   1 + orandom(0.3), 0.25);
+						sound_play_pitchvol(sndMoneyPileBreak, 1 + random(3),    0.5);
+						
+						 // Stick to & Charm Enemy:
+						if(target != creator){
+							stick       = true;
+							stickx      = random(x - target.x) * (("right" in target) ? target.right : 1);
+							sticky      = random(y - target.y);
+							image_angle = random(360);
+							speed       = 0;
+							
+							 // Parrot's Special Stat:
+							if("ntte_charm" not in target){
+								var _race = variable_instance_get(creator, "race", char_random);
+								if(_race == "parrot"){
+									var _stat = "race:" + _race + ":spec";
+									stat_set(_stat, stat_get(_stat) + 1);
+								}
+							}
+							
+							 // Charm Enemy:
+							var _wasUncharmed = ("ntte_charm" not in target || !target.ntte_charm.charmed);
+							with(charm_instance(target, true)){
+								if(_wasUncharmed || time >= 0 || feather){
+									time    = max(time, 0) + max(other.stick_time, 1);
+									index   = other.index;
+									feather = true;
 								}
 							}
 						}
-						instance_delete(id);
-						exit;
+						
+						 // Player Pickup:
+						else{
+							with(creator){
+								if("feather_ammo" in self){
+									feather_ammo++;
+									if("feather_ammo_max" in self && feather_ammo > feather_ammo_max){
+										feather_ammo = feather_ammo_max;
+									}
+								}
+							}
+							instance_delete(id);
+							exit;
+						}
 					}
 				}
 			}
-			
-			 // Stick Delay:
-			if(stick_wait > 0){
-				stick_wait -= min(stick_wait, current_time_scale);
-			}
-			
-			 // Facing:
-			image_angle = direction + 135;
-		}
-	}
-	
-	else{
-		 // Travel to Creator:
-		if(!stick && stick_time > 0 && instance_exists(creator)){
-			target = creator;
 		}
 		
-		 // End:
-		else instance_destroy();
+		 // Travel Back to Creator:
+		else if(/*!stick &&*/ stick_time > 0 && instance_exists(creator)){
+			target = creator;
+			
+			 // Unstick:
+			if(stick){
+				stick = false;
+				motion_add(random(360), 4);
+			}
+		}
+		
+		 // Nothing to Do:
+		else stick_time = 0;
+		
+		 // Facing:
+		image_angle = direction + 135;
 	}
+	
+	 // End:
+	else instance_destroy();
 	
 #define ParrotFeather_end_step
 	if(stick && instance_exists(target)){
@@ -3851,7 +3856,7 @@
 		sound_play_pitchvol(
 			sndAssassinPretend,
 			1.5 + random(1.5),
-			(stick_time_max / max(stick_time_max, lq_defget(target.ntte_charm, "time", 0)))
+			stick_time_max / max(stick_time_max, target.ntte_charm.time)
 		);
 	}
 	
@@ -5319,7 +5324,7 @@
 					with(my_feather_storage){
 						creator = other;
 						small   = true;
-						num     = ceil(skill_get(mut_throne_butt));
+						num     = ceil(2 * skill_get(mut_throne_butt));
 					}
 				}
 			}
