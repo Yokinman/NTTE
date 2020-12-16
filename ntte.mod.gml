@@ -4077,7 +4077,7 @@
 							_y        = _oy + 11,
 							_spr      = race_get_sprite(race, sprChickenFeather),
 							_sprHUD   = race_get_sprite(race, sprRogueAmmoHUD),
-							_feathers = instances_matching(instances_matching(CustomObject, "name", "ParrotFeather"), "creator", id),
+							_feathers = instances_matching(instances_matching(instances_matching(CustomObject, "name", "ParrotFeather"), "index", index), "creator", id),
 							_hudGoal  = [feather_ammo, 0];
 							
 						if(array_length(_feathers)){

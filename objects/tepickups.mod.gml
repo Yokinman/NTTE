@@ -3594,7 +3594,9 @@
 		y = creator.y;
 	}
 	else{
-		if(num > 0 && position_meeting(x, y, (small ? SmallChestPickup : ChestOpen))){
+		var _num = num;
+		
+		if(_num > 0 && position_meeting(x, y, (small ? SmallChestPickup : ChestOpen))){
 			var _target = instances_matching(Player, "race", "parrot");
 			
 			 // Pickup Feathers go to Nearest Parrot:
@@ -3607,19 +3609,20 @@
 			
 			 // Feathers:
 			with(_target){
-				for(var i = 0; i < other.num; i++){
+				for(var i = 0; i < _num; i++){
 					with(obj_create(other.x, other.y, "ParrotFeather")){
 						bskin        = other.bskin;
-						index        = other.index;
+					//	index        = other.index;
 						creator      = other;
 						target       = other;
 						stick_wait   = 3;
+						speed       *= max(1, power(_num, 1/5));
 						sprite_index = race_get_sprite(other.race, sprite_index);
 					}
 					
 					 // Sound FX:
 					if(fork()){
-						wait((i * (4 / other.num)) + irandom(irandom(1)));
+						wait((i * (4 / _num)) + irandom(irandom(1)));
 						sound_play_pitchvol(sndBouncerSmg, 3 + random(0.2), 0.2 + random(0.1));
 						exit;
 					}
@@ -5324,7 +5327,7 @@
 					with(my_feather_storage){
 						creator = other;
 						small   = true;
-						num     = ceil(2 * skill_get(mut_throne_butt));
+						num     = ceil(skill_get(mut_throne_butt));
 					}
 				}
 			}

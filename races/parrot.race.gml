@@ -512,7 +512,7 @@
 		feather_ammo_get--;
 		with(obj_create(x + orandom(16), y + orandom(16), "ParrotFeather")){
 			bskin        = other.bskin;
-			index        = other.index;
+		//	index        = other.index;
 			creator      = other;
 			target       = other;
 			speed       *= 3;
@@ -1570,7 +1570,7 @@
 											sprite_index = race_get_sprite(mod_current, sprite_index);
 										}
 									}
-									_charm.time = -1;
+									_charm.time = 15;
 								}
 							}
 						}
