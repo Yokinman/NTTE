@@ -1377,7 +1377,7 @@
 	else if(instance_exists(Floor)){
 		if(floor_num != instance_number(Floor) || floor_min < Floor.id){
 			floor_num = instance_number(Floor);
-			floor_min = GameObject.id;
+			floor_min = instance_max;
 			
 			 // Check if Vault Uncovered:
 			var	_open = false,
@@ -1418,7 +1418,7 @@
 				}
 				
 				 // Generate:
-				var	_minID = GameObject.id;
+				var	_minID = instance_max;
 				with(layout){
 					var _room = lq_defget(self, "room", -1);
 					
@@ -4000,7 +4000,7 @@
 			
 			 // Player Impact Zone:
 			if(instance_is(self, Player)){
-				var _minID = GameObject.id;
+				var _minID = instance_max;
 				with(projectile_create(x, y, "BatScreech", 0, 0)){
 					image_alpha = 0;
 					damage      = 4;
@@ -5529,7 +5529,7 @@
 						instance_destroy();
 					}
 				}
-				global.floor_min = GameObject.id;
+				global.floor_min = instance_max;
 			}
 		}
 	}
@@ -5540,7 +5540,7 @@
 		if(instance_exists(_object)){
 			var _lastID = TopObject_search_map[? _object];
 			if(_object.id > _lastID){
-				TopObject_search_map[? _object] = _object.id;
+				TopObject_search_map[? _object] = instance_max;
 				
 				var _instTop = instances_matching(CustomObject, "name", "TopObject");
 				
@@ -5963,6 +5963,7 @@
 #macro  area_hq                                                                                 106
 #macro  area_crib                                                                               107
 #macro  infinity                                                                                1/0
+#macro  instance_max                                                                            instance_create(0, 0, DramaCamera)
 #macro  current_frame_active                                                                    (current_frame % 1) < current_time_scale
 #macro  anim_end                                                                                (image_index + image_speed_raw >= image_number || image_index + image_speed_raw < 0)
 #macro  enemy_sprite                                                                            (sprite_index != spr_hurt || anim_end) ? ((speed <= 0) ? spr_idle : spr_walk) : sprite_index

@@ -1666,7 +1666,7 @@
 						["Sit",           1, 12,  12, true],
 						["MenuSelected", 10, 16,  16, false],
 						["Feather",       1,  3,   4, true],
-						["FeatherHUD",    1,  5,   5, false]
+						["FeatherHUD",    8,  5,   5, true]
 					]
 				}/*,
 					
@@ -2017,6 +2017,12 @@
 				for(var i = 0; i < lq_size(_save); i++){
 					lq_set(save_data, lq_get_key(_save, i), lq_get_value(_save, i));
 				}
+				
+				 // Shader Override:
+				if(!save_get("shaders_option_reset", false)){
+					save_set("shaders_option_reset", true);
+					option_set("shaders", true);
+				}
 			}
 			
 			 // Save File Corrupt:
@@ -2042,10 +2048,11 @@
 		exit;
 	}
 	
-	 // Surface, Shader, Script Binding Storage:
-	global.surf = ds_map_create();
-	global.shad = ds_map_create();
-	global.bind = ds_map_create();
+	 // Script Binding, Surface, Shader Storage:
+	global.bind        = ds_map_create();
+	global.surf        = ds_map_create();
+	global.shad        = ds_map_create();
+	global.shad_active = "";
 	
 	 // Compile Mod Lists:
 	ntte_mods = {
@@ -2130,13 +2137,7 @@
 			}
 		}
 		
-		 // Warnings:
-		try{
-			if(!null){
-				trace_color("NT:TE | WARNING - NTT beta versions (9942+) may cause issues!", c_red);
-			}
-		}
-		catch(_error){}
+		 // FPS Warning:
 		if(room_speed > 30){
 			trace_color("NT:TE | WARNING - Playing on higher than 30 FPS will likely cause lag!", c_red);
 		}
@@ -2533,8 +2534,8 @@
 		global.surf[? _name] = _surf;
 		
 		 // Auto-Management:
-		with(_surf){
-			if(fork()){
+		if(fork()){
+			with(_surf){
 				while(true){
 					 // Deactivate Unused Surfaces:
 					if((time > 0 || free) && --time <= 0){
@@ -2558,8 +2559,8 @@
 					
 					wait 0;
 				}
-				exit;
 			}
+			exit;
 		}
 	}
 	
@@ -2607,6 +2608,9 @@
 	*/
 	
 	if(mod_variable_exists("mod", mod_current, "shad") && ds_map_exists(global.shad, _name)){
+		if(global.shad_active == ""){
+			global.shad_active = _name;
+		}
 		with(global.shad[? _name]){
 			if(shad != -1){
 				 // Enable Shader & Stage Texture:
@@ -2671,6 +2675,17 @@
 	
 	 // Initialize Shader:
 	if(is_undefined(_shad)){
+		var _beta = false;
+		
+		 // Partial Beta Fix:
+		try{
+			if(!null){
+				_beta = true;
+			}
+		}
+		catch(_error){}
+		
+		 // Add:
 		_shad = {
 			"name" : _name,
 			"shad" : -1,
@@ -2680,11 +2695,11 @@
 		global.shad[? _name] = _shad;
 		
 		 // Auto-Management:
-		with(_shad){
-			if(fork()){
+		if(fork()){
+			with(_shad){
 				while(true){
 					 // Create Shaders:
-					if(option_get("shaders")){
+					if(option_get("shaders") && (!_beta || (global.shad_active == name && !instance_exists(Menu)))){
 						if(shad == -1 && !instance_exists(Menu)){
 							try{
 								// GMS2
@@ -2703,15 +2718,20 @@
 					}
 					
 					 // Shaders Disabled:
-					else if(shad != -1){
-						shader_destroy(shad);
-						shad = -1;
+					else{
+						if(shad != -1){
+							shader_destroy(shad);
+							shad = -1;
+						}
+						if(global.shad_active == name){
+							global.shad_active = "";
+						}
 					}
 					
 					wait 0;
 				}
-				exit;
 			}
+			exit;
 		}
 	}
 	
@@ -2940,6 +2960,9 @@ var _shine = argument_count > 4 ? argument[4] : shnNone;
 		with(instances_matching(GameCont, "ntte_autosave", null)){
 			save_ntte();
 			ntte_autosave = true;
+			
+			 // Reset Active Shader (Beta Fix):
+			global.shad_active = "";
 		}
 	}
 	

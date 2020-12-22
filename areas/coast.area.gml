@@ -578,11 +578,18 @@
 			
 			 // Find Dudes In/Out of Water:
 			//var i = 0;
+			var _z = -2;
 			with(global.sea_inst){
 				 // In Water:
 				var _dis = distance_to_object(Floor);
 				if(_dis > 4 && depth >= _depthMin){
 					if(wading <= 0){
+						 // Offset:
+						y -= _z;
+						if(distance_to_object(Floor) <= 4){
+							y += _z;
+						}
+						
 						 // Splash:
 						repeat(irandom_range(4, 8)){
 							instance_create(x, y, Sweat/*Bubble*/);
@@ -605,6 +612,12 @@
 				 // Out of Water:
 				else if(wading > 0){
 					wading = 0;
+					
+					 // Offset:
+					y += _z;
+					if(distance_to_object(Floor) > 4){
+						y -= _z;
+					}
 					
 					 // Sploosh:
 					repeat(irandom_range(5, 9)){
@@ -902,7 +915,7 @@
 			x = _surfX;
 			y = _surfY;
 			floor_num = instance_number(Floor);
-			floor_min = GameObject.id;
+			floor_min = instance_max;
 			
 			 // Draw Floors:
 			surface_set_target(surf);
@@ -1069,8 +1082,8 @@
 					draw_clear_alpha(0, 0);
 					
 					/// Z-Axis / Water Height:
-						var	_z  = 2,
-							_wh = (_sprH - sprite_get_bbox_bottom(sprite_index)) + ((wading - 16) * 0.2);
+						var	_z  = 0,
+							_wh = 2 + (_sprH - sprite_get_bbox_bottom(sprite_index)) + ((wading - 16) * 0.2);
 							
 						 // Clamp Water Height:
 						if(!_isPlayer || !instance_exists(Portal)){
@@ -1078,7 +1091,7 @@
 						}
 						
 						 // Bobbing:
-						if(wading > _sprH || !instance_is(id, hitme)){
+						if(wading > _sprH || !instance_is(self, hitme)){
 							var _bobMax = min(wading / _sprH, 2) / (1 + (wading_sink / 10));
 							_z += _bobMax * sin((_wave + x + y) / 10);
 						}
@@ -1489,6 +1502,7 @@
 #macro  area_hq                                                                                 106
 #macro  area_crib                                                                               107
 #macro  infinity                                                                                1/0
+#macro  instance_max                                                                            instance_create(0, 0, DramaCamera)
 #macro  current_frame_active                                                                    (current_frame % 1) < current_time_scale
 #macro  anim_end                                                                                (image_index + image_speed_raw >= image_number || image_index + image_speed_raw < 0)
 #macro  enemy_sprite                                                                            (sprite_index != spr_hurt || anim_end) ? ((speed <= 0) ? spr_idle : spr_walk) : sprite_index

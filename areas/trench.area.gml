@@ -588,7 +588,7 @@
 	if(instance_exists(Floor) && !instance_exists(GenCont)){
 		if(global.floor_num != instance_number(Floor) || global.floor_min < Floor.id){
 			global.floor_num = instance_number(Floor);
-			global.floor_min = GameObject.id;
+			global.floor_min = instance_max;
 			
 			var	_pits  = FloorPit,
 				_floor = FloorPitless;
@@ -1123,6 +1123,7 @@
 #macro  area_hq                                                                                 106
 #macro  area_crib                                                                               107
 #macro  infinity                                                                                1/0
+#macro  instance_max                                                                            instance_create(0, 0, DramaCamera)
 #macro  current_frame_active                                                                    (current_frame % 1) < current_time_scale
 #macro  anim_end                                                                                (image_index + image_speed_raw >= image_number || image_index + image_speed_raw < 0)
 #macro  enemy_sprite                                                                            (sprite_index != spr_hurt || anim_end) ? ((speed <= 0) ? spr_idle : spr_walk) : sprite_index

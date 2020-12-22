@@ -1920,7 +1920,7 @@
 					_targetX = xstart,
 					_targetY = ystart,
 					_deflect = (typ == 1 && other.candeflect),
-					_minID   = GameObject.id;
+					_minID   = instance_max;
 					
 				if(_deflect) deflected = true;
 				
@@ -4236,7 +4236,7 @@
 			
 			 // Update Vars:
 			wall_num  = instance_number(Wall);
-			wall_min  = GameObject.id;
+			wall_min  = instance_max;
 			wall_inst = instances_matching(Wall, "name", "WallFake");
 			
 			 // Update Fake Walls:
@@ -4345,7 +4345,7 @@
 			
 			 // Update Vars:
 			wall_num  = instance_number(Wall);
-			wall_min  = GameObject.id;
+			wall_min  = instance_max;
 			wall_inst = instances_matching(Wall,     "topspr",       spr.WallRedTop, spr.WallRedTrans);
 			tops_inst = instances_matching(TopSmall, "sprite_index", spr.WallRedTop, spr.WallRedTrans);
 		}
@@ -4933,6 +4933,7 @@
 #macro  area_hq                                                                                 106
 #macro  area_crib                                                                               107
 #macro  infinity                                                                                1/0
+#macro  instance_max                                                                            instance_create(0, 0, DramaCamera)
 #macro  current_frame_active                                                                    (current_frame % 1) < current_time_scale
 #macro  anim_end                                                                                (image_index + image_speed_raw >= image_number || image_index + image_speed_raw < 0)
 #macro  enemy_sprite                                                                            (sprite_index != spr_hurt || anim_end) ? ((speed <= 0) ? spr_idle : spr_walk) : sprite_index

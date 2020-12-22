@@ -166,6 +166,7 @@
 				string_pos("GRENADE", _name) > 0 ||
 				string_pos("BAZOOKA", _name) > 0 ||
 				string_pos("NUKE",    _name) > 0 ||
+				string_pos("BUBBLE",  _name) > 0 ||
 				string_pos("ABRIS",   _name) > 0 ||
 				string_pos("ROCKLET", _name) > 0
 			){
@@ -247,6 +248,12 @@
 			obj_create(x, y, "BigCactus");
 			instance_delete(id);
 		}
+	}
+	
+	 // Sewer Manhole:
+	with(PizzaEntrance){
+		obj_create(bbox_center_x, bbox_center_y, "Manhole");
+		instance_delete(id);
 	}
 	
 	 // Baby Spiders:
@@ -525,7 +532,7 @@
 			
 			 // Frog Nest:
 			with(FrogQueen){
-				var _minID = GameObject.id;
+				var _minID = instance_max;
 				
 				 // Bathing:
 				with(obj_create(x, y, "SludgePool")){
@@ -842,7 +849,7 @@
 			
 			 // Igloos:
 			if(chance(1, GameCont.subarea)){
-				var	_minID      = GameObject.id,
+				var	_minID      = instance_max,
 					_w          = 3,
 					_h          = 3,
 					_type       = "",
@@ -1098,7 +1105,7 @@
 		on_cleanup = script_ref_create_ext(mod_type, mod_name, event + "_cleanup");
 		
 		 // Generate Event:
-		var _minID = GameObject.id;
+		var _minID = instance_max;
 		mod_script_call(mod_type, mod_name, event + "_create");
 		floors = instances_matching_gt(Floor, "id", _minID);
 		
@@ -1146,7 +1153,7 @@
 		}
 		
 		 // Spawn Crate:
-		var	_minID    = GameObject.id,
+		var	_minID    = instance_max,
 			_lastArea = GameCont.area;
 			
 		GameCont.area = area_campfire;
@@ -1576,12 +1583,6 @@
 		repeat(irandom_range(2, 6) * (1 + GameCont.loops)){
 			top_create(x, y, "TopRaven", random(360), -1);
 		}
-	}
-	
-	 // Sewer Manhole:
-	with(PizzaEntrance){
-		obj_create(bbox_center_x, bbox_center_y, "Manhole");
-		instance_delete(id);
 	}
 	
 	 // Crown of Crime:
@@ -3351,8 +3352,8 @@
 					y = _surfY;
 					floor_num = instance_number(Floor);
 					wall_num  = instance_number(Wall);
-					floor_min = GameObject.id;
-					wall_min  = GameObject.id;
+					floor_min = instance_max;
+					wall_min  = instance_max;
 					
 					 // Floor Mask:
 					surface_set_target(surf);
@@ -3951,14 +3952,16 @@
 				
 				 // Parrot:
 				if(race == "parrot"){
+					/*
 					 // Expand HUD:
-					var m = ceil(feather_ammo_max / feather_num);
-					if(array_length(feather_ammo_hud) != m){
-						feather_ammo_hud = array_create(m);
-						for(var i = 0; i < m; i++){
+					var _max = ceil(feather_ammo_max / feather_num);
+					if(array_length(feather_ammo_hud) != _max){
+						feather_ammo_hud = array_create(_max);
+						for(var i = 0; i < _max; i++){
 							feather_ammo_hud[i] = [0, 0];
 						}
 					}
+					*/
 					
 					/*
 					 // Flash:
@@ -3968,22 +3971,21 @@
 					
 					 // Draw:
 					if(_HUDDraw){
-						var _skinCol = (bskin ? make_color_rgb(24, 31, 50) : make_color_rgb(114, 2, 10));
-						
 						 // Ultra B:
-						if(charm_hplink_hud > 0){
+						if(ntte_charm_flock_hud > 0){
 							var	_HPCur      = max(0, my_health),
 								_HPMax      = max(0, maxhealth),
 								_HPLst      = max(0, lsthealth),
-								_HPCurCharm = max(0, charm_hplink_hud_hp[0]),
-								_HPMaxCharm = max(0, charm_hplink_hud_hp[1]),
-								_HPLstCharm = max(0, charm_hplink_hud_hp_lst),
+								_HPCurCharm = max(0, ntte_charm_flock_hud_hp),
+								_HPMaxCharm = max(0, ntte_charm_flock_hud_hp_max),
+								_HPLstCharm = max(0, ntte_charm_flock_hud_hp_lst),
+								_HPCol      = player_get_color(index),
+								_HPColCharm = make_color_hsv(color_get_hue(_HPCol), min(255, color_get_saturation(_HPCol) * 1.5), color_get_value(_HPCol) * 2/3),
 								_w          = 83,
 								_h          = 7,
 								_x          = _ox + 5,
 								_y          = _oy + 7,
-								_HPw        = floor(_w * (1 - (0.5 * charm_hplink_hud))),
-								_HPFlash      = (((sprite_index == spr_hurt && image_index < 1 && !instance_exists(Portal)) || _HPLst < _HPCur) && !instance_exists(GenCont) && !instance_exists(LevCont) && !instance_exists(PlayerSit));
+								_HPw        = floor(_w * 0.35 * ntte_charm_flock_hud);
 								
 							draw_set_halign(fa_center);
 							draw_set_valign(fa_middle);
@@ -3993,14 +3995,14 @@
 							draw_rectangle(_x, _y, _x + _w, _y + _h, false);
 								
 							/// Charmed HP:
-								var	_x1 = _x + _HPw + 2,
-									_x2 = _x + _w;
+								var	_x1 = _x,
+									_x2 = _x + _HPw - 1;
 									
 								if(_x1 < _x2){
 									 // lsthealth Filling:
 									if(_HPLstCharm > _HPCurCharm){
 										draw_set_color(merge_color(
-											merge_color(_skinCol, player_get_color(index), 0.5),
+											_HPColCharm,
 											make_color_rgb(21, 27, 42),
 											2/3
 										));
@@ -4009,150 +4011,146 @@
 									
 									 // my_health Filling:
 									if(_HPCurCharm > 0 && _HPMaxCharm > 0){
-										draw_set_color(_HPFlash ? c_white : merge_color(_skinCol, player_get_color(index), 0.5));
+										draw_set_color(
+											(_HPLstCharm != _HPCurCharm)
+											? c_white
+											: _HPColCharm
+										);
 										draw_rectangle(_x1, _y, lerp(_x1, _x2, clamp(_HPCurCharm / _HPMaxCharm, 0, 1)), _y + _h, false);
 									}
 									
 									 // Text:
-									var _HPText = `${_HPCurCharm}/${_HPMaxCharm}`;
+									var _HPText = `+${_HPCurCharm}`;
 									draw_set_font(fntM);
-									if(string_length(_HPText) > 7 || (string_width(_HPText) - 8) >= _x2 - _x1){
+									if(string_width(_HPText) >= _x2 - _x1){
 										draw_set_font(fntSmall);
 									}
 									draw_text_nt(
-										min(ceil(lerp(_x1, _x + _w, 0.5)), _x + _w - ceil(string_width(_HPText) / 2)) + 1,
+										clamp(ceil(lerp(_x1, _x2, 0.5)), _x + floor(string_width(_HPText) / 2) + 1, _x + _w - ceil(string_width(_HPText) / 2) + 1),
 										_y + 1 + floor(_h / 2),
 										_HPText
 									);
 								}
 								
 							/// Normal HP:
-								 // BG:
-								draw_set_color(c_black);
-								draw_rectangle(_x, _y, _x + _HPw, _y + _h, false);
-								
-								 // lsthealth Filling: (Color is like 95% accurate, I did a lot of trial and error)
-								if(_HPLst > _HPCur){
-									draw_set_color(merge_color(
-										player_get_color(index),
-										make_color_rgb(21, 27, 42),
-										2/3
-									));
-									draw_rectangle(_x, _y, _x + floor(_HPw * clamp(_HPLst / _HPMax, 0, 1)), _y + _h, false);
-								}
-								
-								 // my_health Filling:
-								if(_HPCur > 0 && _HPMax > 0){
-									draw_set_color(_HPFlash ? c_white : player_get_color(index));
-									draw_rectangle(_x, _y, _x + floor(_HPw * clamp(_HPCur / _HPMax, 0, 1)), _y + _h, false);
-								}
-								
-								 // Text:
-								if(_HPLst >= _HPCur || sin(wave) > 0){
-									var _HPText = `${_HPCur}/${_HPMax}`;
-									draw_set_font(fntM);
-									if(string_length(_HPText) > 7 || string_width(_HPText) >= _x1 - _x){
-										draw_set_font(fntSmall);
+								var	_x1 = _x + _HPw + (1 * ntte_charm_flock_hud),
+									_x2 = _x + _w;
+									
+								if(_x1 < _x2){
+									 // BG:
+									draw_set_color(c_black);
+									draw_rectangle(_x1, _y, _x2, _y + _h, false);
+									
+									 // lsthealth Filling: (Color is like 95% accurate, I did a lot of trial and error)
+									if(_HPLst > _HPCur){
+										draw_set_color(merge_color(
+											_HPCol,
+											make_color_rgb(21, 27, 42),
+											2/3
+										));
+										draw_rectangle(_x1, _y, lerp(_x1, _x2, clamp(_HPLst / _HPMax, 0, 1)), _y + _h, false);
 									}
-									draw_text_nt(
-										_x + ceil((_HPw / 2) + (4 * (1 - charm_hplink_hud))),
-										_y + 1 + floor(_h / 2),
-										_HPText
-									);
+									
+									 // my_health Filling:
+									if(_HPCur > 0 && _HPMax > 0){
+										draw_set_color(
+											(((sprite_index == spr_hurt && image_index < 1 && !instance_exists(Portal)) || _HPLst < _HPCur) && !instance_exists(GenCont) && !instance_exists(LevCont) && !instance_exists(PlayerSit))
+											? c_white
+											: _HPCol
+										);
+										draw_rectangle(_x1, _y, lerp(_x1, _x2, clamp(_HPCur / _HPMax, 0, 1)), _y + _h, false);
+									}
+									
+									 // Text:
+									if(_HPLst >= _HPCur || sin(wave) > 0){
+										var _HPText = `${_HPCur}/${_HPMax}`;
+										draw_set_font(fntM);
+										if(string_width(_HPText) >= _x2 - _x1){
+											draw_set_font(fntSmall);
+										}
+										draw_text_nt(
+											ceil(lerp(_x1, _x2, 0.5)) + round(4 * (1 - ntte_charm_flock_hud)),
+											_y + 1 + floor(_h / 2),
+											_HPText
+										);
+									}
 								}
 								
 							 // Separator:
-							if(_HPw < _w){
-								draw_set_color(c_white);
-								draw_line_width(_x + _HPw + 1, _y - 2, _x + _HPw + 1, _y + _h, 1);
-								if(_HPw + 1 < _w){
-									draw_set_color(c_black);
-									draw_line_width(_x + _HPw + 2, _y - 2, _x + _HPw + 2, _y + _h, 1);
-								}
-							}
+							draw_set_color(c_white);
+							draw_line_width(_x + _HPw, _y - 2, _x + _HPw, _y + _h, 1);
 						}
 						
 						 // Parrot Feathers:
-						var	_x        = _ox + (_side ? -5 : 99),
-							_y        = _oy + 11,
-							_spr      = race_get_sprite(race, sprChickenFeather),
-							_sprHUD   = race_get_sprite(race, sprRogueAmmoHUD),
-							_feathers = instances_matching(instances_matching(instances_matching(CustomObject, "name", "ParrotFeather"), "index", index), "creator", id),
-							_hudGoal  = [feather_ammo, 0];
+						var	_x           = _ox + (_side ? -5 : 99),
+							_y           = _oy + 11,
+							_spr         = race_get_sprite(race, sprRogueAmmoHUD),
+							_featherInst = (instance_exists(CustomObject) ? instances_matching(instances_matching(instances_matching(CustomObject, "name", "ParrotFeather"), "index", index), "creator", self, noone) : []),
+							_hudActive   = ((button_check(index, "spec") || usespec > 0) && canspec && player_active),
+							_hudFill     = array_create(ceil(feather_ammo_max / feather_num), 0),
+							_hudTarget   = [];
 							
-						if(array_length(_feathers)){
-							for(var i = 0; i < array_length(_hudGoal); i++){
-								_hudGoal[i] += array_length(_feathers);
+						with(_featherInst){
+							var _pos = array_find_index(_hudTarget, target);
+							if(_pos < 0){
+								_pos = array_length(_hudTarget);
+								
+								 // Idle Feather:
+								if(target == other){
+									while(_pos < array_length(_hudFill) && _hudFill[_pos] >= other.feather_num){
+										_pos++;
+									}
+								}
+								
+								 // Active Feather:
+								else if(_pos < array_length(_hudFill)){
+									array_push(_hudTarget, target);
+									
+									 // Shift Right:
+									for(var i = array_length(_hudFill) - 1; i > _pos; i--){
+										_hudFill[i] = _hudFill[i - 1];
+									}
+									_hudFill[_pos] = 0;
+								}
+							}
+							if(_pos < array_length(_hudFill)){
+								_hudFill[_pos]++;
 							}
 						}
 						
-						for(var i = 0; i < array_length(feather_ammo_hud); i++){
-							var	_hud = feather_ammo_hud[i],
-								_xsc = _flip,
-								_ysc = 1,
-								_col = merge_color(c_white, c_black, clamp((_hud[1] / _hud[0]) - 1/3, 0, 1)),
-								_alp = 1,
-								_dx = _x + (5 * i * _flip),
-								_dy = _y;
+						for(var i = 0; i < array_length(_hudFill); i++){
+							var	_ammo = clamp(((feather_ammo + array_length(_featherInst)) / feather_num) - i, 0, 1),
+								_fill = clamp(_hudFill[i] / feather_num, 0, 1),
+								_xsc  = _flip,
+								_ysc  = 1,
+								_dx   = _x + (5 * i * _flip),
+								_dy   = _y;
 								
-							 // Gradual Fill Change:
-							for(var j = 0; j < array_length(_hudGoal); j++){
-								var _diff = clamp((_hudGoal[j] - (feather_num * i)) / feather_num, 0, 1) - _hud[j];
-								if(_diff != 0){
-									if((j == 1 && _diff > 0) || abs(_diff) < 0.01){
-										_hud[j] += _diff;
-									}
-									else{
-										_hud[j] += _diff * 2/3 * current_time_scale;
-									}
-								}
-							}
-							
 							 // Extend Shootable Feathers:
-							if((i < 1 || ultra_get(race, 1) > 0) && _hud[0] > 0){
+							if((_ammo > 0 && (i < 1 || ultra_get(race, 1) > 0)) || _fill > 0){
 								_dx -= _flip;
-								if(_hud[0] > _hud[1]) _dy++;
-							}
-							
-							 // Draw:
-							draw_sprite_ext(_sprHUD, 0, _dx, _dy, _xsc, _ysc, 0, c_white, 1);
-							_dx -= sprite_get_xoffset(_spr) * _xsc;
-							_dy -= sprite_get_yoffset(_spr) * _ysc;
-							for(var j = 0; j < array_length(_hud); j++){
-								if(_hud[j] > 0){
-									var	_l = 0,
-										_t = 0,
-										_w = max(1, sprite_get_width(_spr) * _hud[j]),
-										_h = sprite_get_height(_spr);
-										
-									draw_set_fog(j, merge_color(_skinCol, player_get_color(index), 0.5), 0, 0);
-									draw_sprite_part_ext(_spr, 0, _l, _t, _w, _h, _dx + _l, _dy + _t, _xsc, _ysc, _col, _alp);
-									
-									 // Separation Line:
-									if(_hud[j] < 1 && _hud[0] > _hud[1]){
-										_l += _w - 1;
-										_w = 1;
-										draw_set_fog(true, merge_color(_skinCol, player_get_color(index), 0.2 * j), 0, 0);
-										draw_sprite_part_ext(_spr, 0, _l, _t, _w, _h, _dx + (_l * _xsc), _dy + _t, _xsc, _ysc, _col, _alp);
-									}
-									
-									/*
-									 // Flash:
-									if(j == 0 && feather_ammo_hud_flash > 0){
-										var	_flash = ((feather_ammo_hud_flash - 1 - array_length(feather_ammo_hud) - (i * _flip)) % 150),
-											_flashAlpha = _alp * ((3 - _flash) / 5);
-											
-										if(_flash >= 0 && _flashAlpha > 0){
-											if(!_pause){
-												draw_set_fog(true, merge_color(_skinCol, c_white, 1), 0, 0);
-												draw_sprite_part_ext(_spr, 0, _l, _t, _w, _h, _dx + _l, _dy + _t, _xsc, _ysc, _col, _flashAlpha);
-											}
-										}
-									}
-									*/
+								if((!_hudActive || _fill <= 0) && _ammo > _fill){
+									_fill = _ammo;
+									_dy++;
 								}
 							}
-							draw_set_fog(false, 0, 0, 0);
+							
+							 // Main HUD:
+							draw_sprite_ext(_spr, 0, _dx, _dy, _xsc, _ysc, 0, c_white, 1);
+							
+							 // Total Feathers Filling:
+							if(_ammo > _fill){
+								var	_img = lerp(1, sprite_get_number(_spr) - 1, clamp(_ammo, 0, 1)),
+									_col = make_color_hsv(178, 1/3 * 255, 0.6 * 255);
+									
+								draw_sprite_ext(_spr, _img, _dx, _dy, _xsc, _ysc, 0, _col, 1);
+							}
+							
+							 // Active Feathers Filling:
+							if(_fill > 0){
+								var _img = lerp(1, sprite_get_number(_spr) - 1, clamp(_fill, 0, 1));
+								draw_sprite_ext(_spr, _img, _dx, _dy, _xsc, _ysc, 0, c_white, 1);
+							}
 						}
 					}
 					
@@ -4792,6 +4790,7 @@
 #macro  area_hq                                                                                 106
 #macro  area_crib                                                                               107
 #macro  infinity                                                                                1/0
+#macro  instance_max                                                                            instance_create(0, 0, DramaCamera)
 #macro  current_frame_active                                                                    (current_frame % 1) < current_time_scale
 #macro  anim_end                                                                                (image_index + image_speed_raw >= image_number || image_index + image_speed_raw < 0)
 #macro  enemy_sprite                                                                            (sprite_index != spr_hurt || anim_end) ? ((speed <= 0) ? spr_idle : spr_walk) : sprite_index

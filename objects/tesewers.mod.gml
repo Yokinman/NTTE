@@ -3747,6 +3747,7 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 			}
 		}
 		
+		 // Open:
 		if(image_index < close_index){
 			depth = min(depth, -6);
 			
@@ -3795,39 +3796,39 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 					}
 				}
 			}
+		}
+		
+		 // Close:
+		else if(instance_exists(hole)){
+			depth = 5;
 			
-			 // Close:
-			if(image_index + image_speed_raw >= close_index){
-				depth = 5;
-				
-				 // Delete Hole:
-				with(hole){
-					instance_destroy();
-				}
-				
-				 // Grab Bro:
-				if(instance_exists(target)){
-					if(place_meeting(x, y, target)){
-						target.active = false;
-						
-						 // Effects:
-						sound_play_pitch(target.snd_hurt, 1.3 + random(0.2));
-						for(var _dir = 0; _dir < 360; _dir += (360 / 5)){
-							with(instance_create(target.x, target.y, Dust)){
-								motion_set(_dir + orandom(20), 3 + random(1));
-								depth = other.depth;
-							}
+			 // Delete Hole:
+			with(hole){
+				instance_destroy();
+			}
+			
+			 // Grab Bro:
+			if(instance_exists(target)){
+				if(place_meeting(x, y, target)){
+					target.active = false;
+					
+					 // Effects:
+					sound_play_pitch(target.snd_hurt, 1.3 + random(0.2));
+					for(var _dir = 0; _dir < 360; _dir += (360 / 5)){
+						with(instance_create(target.x, target.y, Dust)){
+							motion_set(_dir + orandom(20), 3 + random(1));
+							depth = other.depth;
 						}
 					}
-					target = noone;
 				}
-				
-				 // Effects:
-				view_shake_at(x, y, 10);
-				instance_create(x, y, ImpactWrists);
-				if(point_seen(x, y, -1)){
-					sound_play_pitch(sndHitMetal, 0.5 + random(0.2));
-				}
+				target = noone;
+			}
+			
+			 // Effects:
+			view_shake_at(x, y, 10);
+			instance_create(x, y, ImpactWrists);
+			if(point_seen(x, y, -1)){
+				sound_play_pitch(sndHitMetal, 0.5 + random(0.2));
 			}
 		}
 		if(anim_end){
@@ -4901,7 +4902,7 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 		area_generate(area, subarea, loops, _sx + 16, _sy - 16, true, 0, _scrSetup);
 		
 		 // Finish Path:
-		var _minID = GameObject.id;
+		var _minID = instance_max;
 		with(_path){
 			styleb = true;
 			area = GameCont.area;
@@ -5093,7 +5094,7 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 			}
 		}
 	}
-
+	
 #define PizzaRubble_destroy
 	 // Sound:
 	sound_play_pitch(snd_dead, 1 + random(0.3));
@@ -5260,7 +5261,7 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 			_dirStart = 90,
 			_dirOff   = 0,
 			_floorDis = 32,
-			_minID    = GameObject.id;
+			_minID    = instance_max;
 			
 		with(floor_room_create(_x, _y, _w, _h, _type, _dirStart, _dirOff, _floorDis)){
 			 // Entrance Hallway:
@@ -5813,6 +5814,7 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 #macro  area_hq                                                                                 106
 #macro  area_crib                                                                               107
 #macro  infinity                                                                                1/0
+#macro  instance_max                                                                            instance_create(0, 0, DramaCamera)
 #macro  current_frame_active                                                                    (current_frame % 1) < current_time_scale
 #macro  anim_end                                                                                (image_index + image_speed_raw >= image_number || image_index + image_speed_raw < 0)
 #macro  enemy_sprite                                                                            (sprite_index != spr_hurt || anim_end) ? ((speed <= 0) ? spr_idle : spr_walk) : sprite_index
