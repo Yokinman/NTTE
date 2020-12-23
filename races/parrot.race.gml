@@ -1162,11 +1162,13 @@
 						 // Enemy Stuff:
 						if(instance_is(self, enemy)){
 							 // Add to Charm Drawing:
-							with(_charmDraw[_vars.index + 1].id){
-								array_push(script[3], other);
-								if(!visible || other.depth - 1 < depth){
-									visible = true;
-									depth   = other.depth - 1;
+							if(visible){
+								with(_charmDraw[_vars.index + 1].id){
+									array_push(script[3], other);
+									if(!visible || other.depth - 1 < depth){
+										visible = true;
+										depth   = other.depth - 1;
+									}
 								}
 							}
 							
@@ -1528,82 +1530,78 @@
 		var _outline = option_get("outline:charm");
 		
 		if(_outline || option_get("shaders")){
-			_inst = instances_matching(_inst, "visible", true);
+			if(_index < 0){
+				_index = player_find_local_nonsync();
+			}
 			
-			if(array_length(_inst)){
-				if(_index < 0){
-					_index = player_find_local_nonsync();
-				}
+			var	_vx = view_xview_nonsync,
+				_vy = view_yview_nonsync,
+				_gw = game_width,
+				_gh = game_height;
 				
-				var	_vx = view_xview_nonsync,
-					_vy = view_yview_nonsync,
-					_gw = game_width,
-					_gh = game_height;
-					
-				with(surface_setup("CharmScreen", _gw, _gh, game_scale_nonsync)){
-					x = _vx;
-					y = _vy;
-					
-					 // Copy & Clear Screen:
-					draw_set_blend_mode_ext(bm_one, bm_zero);
-					surface_screenshot(surf);
-					draw_set_alpha(0);
-					draw_surface_scale(surf, x, y, 1 / scale);
-					draw_set_alpha(1);
-					draw_set_blend_mode(bm_normal);
-					
-					 // Call Enemy Draw Events:
-					var _lastTimeScale = current_time_scale;
-					current_time_scale = 0.0000000001;
-					try{
-						with(other){
-							with(instances_seen(_inst, 24, 24, -1)){
-								event_perform(ev_draw, 0);
-							}
+			with(surface_setup("CharmScreen", _gw, _gh, game_scale_nonsync)){
+				x = _vx;
+				y = _vy;
+				
+				 // Copy & Clear Screen:
+				draw_set_blend_mode_ext(bm_one, bm_zero);
+				surface_screenshot(surf);
+				draw_set_alpha(0);
+				draw_surface_scale(surf, x, y, 1 / scale);
+				draw_set_alpha(1);
+				draw_set_blend_mode(bm_normal);
+				
+				 // Call Enemy Draw Events:
+				var _lastTimeScale = current_time_scale;
+				current_time_scale = 0.0000000001;
+				try{
+					with(other){
+						with(instances_seen(_inst, 24, 24, -1)){
+							event_perform(ev_draw, 0);
 						}
 					}
-					catch(_error){
-						trace_error(_error);
-					}
-					current_time_scale = _lastTimeScale;
+				}
+				catch(_error){
+					trace_error(_error);
+				}
+				current_time_scale = _lastTimeScale;
+				
+				 // Copy Enemy Drawing:
+				with(surface_setup("Charm", w, h, (_outline ? option_get("quality:main") : scale))){
+					x = other.x;
+					y = other.y;
 					
 					 // Copy Enemy Drawing:
-					with(surface_setup("Charm", w, h, (_outline ? option_get("quality:main") : scale))){
-						x = other.x;
-						y = other.y;
-						
-						 // Copy Enemy Drawing:
-						draw_set_blend_mode_ext(bm_one, bm_zero);
-						surface_screenshot(surf);
-						
-						 // Outlines:
-						if(_outline){
-							draw_set_blend_mode(bm_normal);
-							
-							 // Outlines yes:
-							draw_set_fog(true, player_get_color(_index), 0, 0);
-							for(var _ang = 0; _ang < 360; _ang += 90){
-								draw_surface_scale(surf, x + dcos(_ang), y - dsin(_ang), 1 / scale);
-							}
-							draw_set_fog(false, 0, 0, 0);
-							
-							 // Cut Out Enemies:
-							draw_set_blend_mode_ext(bm_zero, bm_inv_src_alpha);
-							draw_surface_scale(surf, x, y, 1 / scale);
-							draw_set_blend_mode_ext(bm_inv_dest_alpha, bm_dest_alpha);
-						}
-						
-						 // Redraw Old Screen:
-						with(other){
-							draw_surface_scale(surf, x, y, 1 / scale);
-						}
+					draw_set_blend_mode_ext(bm_one, bm_zero);
+					surface_screenshot(surf);
+					
+					 // Outlines:
+					if(_outline){
 						draw_set_blend_mode(bm_normal);
 						
-						 // Eye Shader:
-						if(shader_setup("Charm", surface_get_texture(surf), [w, h])){
-							draw_surface_scale(surf, x, y, 1 / scale);
-							shader_reset();
+						 // Outlines yes:
+						draw_set_fog(true, player_get_color(_index), 0, 0);
+						for(var _ang = 0; _ang < 360; _ang += 90){
+							draw_surface_scale(surf, x + dcos(_ang), y - dsin(_ang), 1 / scale);
 						}
+						draw_set_fog(false, 0, 0, 0);
+						
+						 // Cut Out Enemies:
+						draw_set_blend_mode_ext(bm_zero, bm_inv_src_alpha);
+						draw_surface_scale(surf, x, y, 1 / scale);
+						draw_set_blend_mode_ext(bm_inv_dest_alpha, bm_dest_alpha);
+					}
+					
+					 // Redraw Old Screen:
+					with(other){
+						draw_surface_scale(surf, x, y, 1 / scale);
+					}
+					draw_set_blend_mode(bm_normal);
+					
+					 // Eye Shader:
+					if(shader_setup("Charm", surface_get_texture(surf), [w, h])){
+						draw_surface_scale(surf, x, y, 1 / scale);
+						shader_reset();
 					}
 				}
 			}

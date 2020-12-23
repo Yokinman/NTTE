@@ -3041,7 +3041,7 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 		
 		 // Half HP:
 		var _half = maxhealth / 2;
-		if(my_health <= _half && my_health + damage > _half){
+		if(my_health <= _half && my_health + _damage > _half){
 			if(snd_lowh == sndBallMamaAppear){
 				audio_sound_set_track_position(
 					sound_play_pitchvol(snd_lowh, 0.8, 1.5),

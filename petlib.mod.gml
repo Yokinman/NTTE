@@ -632,11 +632,13 @@
 	
 #define Parrot_step
 	 // In Water:
-	if("wading" in self && (speed > 0 || (instance_exists(perched) && ("wading" not in perched || perched.wading <= 0)))){
-		canwade = false;
-		wading = 0;
+	if("wading" in self){
+		if(speed > 0 || instance_exists(perched)){
+			canwade = false;
+			wading  = 0;
+		}
+		else canwade = true;
 	}
-	else canwade = true;
 	
 	 // Grabbing Pickup:
 	if(instance_exists(pickup)){

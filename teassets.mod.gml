@@ -489,7 +489,7 @@
 			DiverIdle  = sprite(p + "sprDiverIdle",       4, 12, 12);
 			DiverWalk  = sprite(p + "sprDiverWalk",       6, 12, 12);
 			DiverHurt  = sprite(p + "sprDiverHurt",       3, 12, 12);
-			DiverDead  = sprite(p + "sprDiverDead",       9, 16, 16);
+			DiverDead  = sprite(p + "sprDiverDead",       9, 24, 24);
 			HarpoonGun = sprite(p + "sprDiverHarpoonGun", 1,  8,  8);
 			
 			 // Eel:
@@ -1092,8 +1092,9 @@
 			DetailCoast = sprite(p + "sprDetailCoast", 6, 4, 4);
 			
 			 // Sea:
-			CoastTrans  = sprite(p + "sprCoastTrans",  1, 0, 0);
-			WaterStreak = sprite(p + "sprWaterStreak", 7, 8, 8);
+			CoastTrans    = sprite(p + "sprCoastTrans",    1,   0, 0);
+			WaterGradient = sprite(p + "sprWaterGradient", 1, 128, 0);
+			WaterStreak   = sprite(p + "sprWaterStreak",   7,   8, 8);
 			
 			//#region PROPS
 			p = m + "Props/";
