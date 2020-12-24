@@ -2445,12 +2445,13 @@
 	}
 	
 	 // LWO Setup:
-	if(is_string(_fire.wep)){
-		var _lwo = mod_variable_get("weapon", _fire.wep, "lwoWep");
+	if(is_string(_wep)){
+		var _lwo = mod_variable_get("weapon", _wep, "lwoWep");
 		if(is_object(_lwo)){
-			_fire.wep = lq_clone(_lwo);
+			_wep = lq_clone(_lwo);
+			_fire.wep = _wep;
 			if(_fire.wepheld){
-				_fire.creator.wep = _fire.wep;
+				_fire.creator.wep = _wep;
 			}
 		}
 	}
@@ -2472,7 +2473,7 @@
 		}
 		
 		 // Hold to Charge:
-		if(_auto || wep.chrg_num >= wep.chrg_max){
+		if(_auto || _wep.chrg_num >= _wep.chrg_max){
 			 // Manual Reload:
 			reload += _load - weapon_get_load(_wep);
 			
