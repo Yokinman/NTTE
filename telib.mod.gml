@@ -215,6 +215,8 @@
 
 #macro mod_current_type script_ref_create(0)[0]
 
+#macro instance_max instance_create(0, 0, DramaCamera)
+
 #macro current_frame_active ((current_frame % 1) < current_time_scale)
 
 #macro anim_end (image_index + image_speed_raw >= image_number || image_index + image_speed_raw < 0)
@@ -2443,12 +2445,13 @@
 	}
 	
 	 // LWO Setup:
-	if(is_string(_fire.wep)){
-		var _lwo = mod_variable_get("weapon", _fire.wep, "lwoWep");
+	if(is_string(_wep)){
+		var _lwo = mod_variable_get("weapon", _wep, "lwoWep");
 		if(is_object(_lwo)){
-			_fire.wep = lq_clone(_lwo);
+			_wep = lq_clone(_lwo);
+			_fire.wep = _wep;
 			if(_fire.wepheld){
-				_fire.creator.wep = _fire.wep;
+				_fire.creator.wep = _wep;
 			}
 		}
 	}
@@ -2470,7 +2473,7 @@
 		}
 		
 		 // Hold to Charge:
-		if(_auto || wep.chrg_num >= wep.chrg_max){
+		if(_auto || _wep.chrg_num >= _wep.chrg_max){
 			 // Manual Reload:
 			reload += _load - weapon_get_load(_wep);
 			
@@ -2949,7 +2952,7 @@
 				with(WantPopo) instance_delete(id);
 				with(WantVan ) instance_delete(id);
 			}
-			var _clearID = GameObject.id;
+			var _clearID = instance_max;
 			event_perform(ev_alarm, 1);
 			
 			 // Player Reset:
@@ -3585,7 +3588,7 @@
 		_y1    = bbox_top    - 16,
 		_x2    = bbox_right  + 16 + 1,
 		_y2    = bbox_bottom + 16 + 1,
-		_minID = GameObject.id;
+		_minID = instance_max;
 		
 	for(var _x = _x1; _x < _x2; _x += 16){
 		for(var _y = _y1; _y < _y2; _y += 16){
@@ -4256,7 +4259,7 @@
 		Creates the outer TopSmall tiles around the calling Wall instance
 	*/
 	
-	var _minID = GameObject.id;
+	var _minID = instance_max;
 	
 	instance_create(x - 16, y - 16, Top);
 	instance_create(x - 16, y,      Top);

@@ -4,10 +4,6 @@
 	 // Sprites:
 	global.sprSkillHUD  = sprite_add("../sprites/skills/Lead Ribs/sprLeadRibsHUD.png",  1,  8,  8);
 	
-	/*
-	global.minID = GameObject.id;
-	*/
-	
 #macro spr global.spr
 
 #define skill_name   return "LEAD RIBS";
@@ -15,10 +11,7 @@
 #define skill_tip    return "HIGHER THRESHOLD";
 #define skill_icon   return global.sprSkillHUD;
 #define skill_avail  return false;
-	
-/*#define skill_take
-	global.minID = GameObject.id;*/
-	
+
 #define step
 	 // More Rads!!!!!
 	if(instance_exists(enemy)){
@@ -50,9 +43,6 @@
 			}
 		}
 	}
-	
-	 // Keep Up:
-	global.minID = GameObject.id;
 	*/
 	
 /// SCRIPTS

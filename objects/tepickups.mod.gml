@@ -135,7 +135,7 @@
 		
 	if(_num > 0){
 		for(var _dir = _ang; _dir < _ang + 360; _dir += (360 / _num)){
-			var _minID = GameObject.id;
+			var _minID = instance_max;
 			
 			 // Puf:
 			with(instance_create(x, y, Dust)){
@@ -2371,13 +2371,13 @@
 	sound_play_hit(sndCursedChest, 0.1);
 	
 	 // Pickups:
-	var _objMin = GameObject.id;
+	var _minID = instance_max;
 	repeat(num){
 		pickup_drop(100 / pickup_chance_multiplier, 0);
 	}
 	
 	 // Make Dropped Ammo Cursed:
-	with(instances_matching_lt(instances_matching_gt(AmmoPickup, "id", _objMin), "cursed", 1)){
+	with(instances_matching_lt(instances_matching_gt(AmmoPickup, "id", _minID), "cursed", 1)){
 		sprite_index = sprCursedAmmo;
 		cursed       = true;
 		num          = 1 + (0.5 * cursed);
@@ -3612,11 +3612,10 @@
 				for(var i = 0; i < _num; i++){
 					with(obj_create(other.x, other.y, "ParrotFeather")){
 						bskin        = other.bskin;
-					//	index        = other.index;
 						creator      = other;
 						target       = other;
 						stick_wait   = 3;
-						speed       *= max(1, power(_num, 1/5));
+						speed       *= max(1, power(_num - 6, 1/5));
 						sprite_index = race_get_sprite(other.race, sprite_index);
 					}
 					
@@ -3656,7 +3655,7 @@
 		stick          = false;
 		stickx         = 0;
 		sticky         = 0;
-		stick_time_max = 30;// * (1 + ultra_get("parrot", 3));
+		stick_time_max = 30 * power(1.5, ultra_get("parrot", 1));
 		stick_time     = stick_time_max;
 		stick_list     = [];
 		stick_wait     = 0;
@@ -3671,9 +3670,9 @@
 #define ParrotFeather_step
 	if(stick_time > 0){
 		 // Slow:
-		speed -= speed_raw * 0.1;
+		speed *= power(0.9, current_time_scale);
 		
-		 // Generate Timer Queue:
+		 // Deterioration:
 		if(stick){
 			if(!array_length(stick_list)){
 				var _list = instances_matching(instances_matching(instances_matching(instances_matching(object_index, "name", name), "target", target), "creator", creator), "stick", stick);
@@ -3681,17 +3680,15 @@
 					stick_list = _list;
 				}
 			}
+			if(stick_list[0] == self){
+				stick_time -= current_time_scale;
+				if(stick_time <= 0){
+					instance_destroy();
+					exit;
+				}
+			}
 		}
 		else stick_list = [];
-		
-		 // Deteriorate:
-		if(
-			stick
-			? (stick_list[0] == id)
-			: (stick_time < stick_time_max)
-		){
-			stick_time -= current_time_scale;
-		}
 		
 		 // Targeting:
 		if(instance_exists(target)){
@@ -3765,7 +3762,7 @@
 							var _wasUncharmed = ("ntte_charm" not in target || !target.ntte_charm.charmed);
 							with(charm_instance(target, true)){
 								if(_wasUncharmed || time >= 0 || feather){
-									time    = max(time, 0) + max(other.stick_time, 1);
+									time    = max(0, time + other.stick_time);
 									index   = other.index;
 									feather = true;
 								}
@@ -3791,7 +3788,7 @@
 		}
 		
 		 // Travel Back to Creator:
-		else if(/*!stick &&*/ stick_time > 0 && instance_exists(creator)){
+		else if(instance_exists(creator) && (!stick || ultra_get("parrot", 1) > 0)){
 			target = creator;
 			
 			 // Unstick:
@@ -3838,11 +3835,14 @@
 		}
 	}
 	
-#define ParrotFeather_draw // Code below is 2x faster than using a draw_sprite_ext so
-	var _lastCol = image_blend;
-	image_blend = merge_color(image_blend, image_blend_fade, 1 - (stick_time / stick_time_max));
-	draw_self();
-	image_blend = _lastCol;
+#define ParrotFeather_draw
+	if(stick && stick_time < stick_time_max){
+		var _lastCol = image_blend;
+		image_blend = merge_color(image_blend, image_blend_fade, 1 - (stick_time / stick_time_max));
+		draw_self();
+		image_blend = _lastCol;
+	}
+	else draw_self();
 	
 #define ParrotFeather_destroy
 	 // Fall to Ground:
@@ -3850,7 +3850,13 @@
 		sprite_index = other.sprite_index;
 		image_angle  = other.image_angle;
 		image_blend  = other.image_blend_fade;
-		depth        = ((other.depth > -6) ? 0 : -7);
+		depth        = 0;
+		
+		 // Over Wall:
+		if(position_meeting(x, y + 8, Wall) || (other.depth < -6 && !position_meeting(x, y + 8, Floor))){
+			depth = -7;
+			fall  = random_range(20, 30);
+		}
 	}
 	
 	 // Sound:
@@ -5300,9 +5306,12 @@
 					creator = other;
 					switch(other.object_index){
 						case IDPDChest:
+							num *= 2;
+							break;
+							
 						case BigWeaponChest:
 						case BigCursedChest:
-							num *= 2;
+							num *= 3;
 							break;
 							
 						case GiantWeaponChest:
@@ -5847,6 +5856,7 @@
 #macro  area_hq                                                                                 106
 #macro  area_crib                                                                               107
 #macro  infinity                                                                                1/0
+#macro  instance_max                                                                            instance_create(0, 0, DramaCamera)
 #macro  current_frame_active                                                                    (current_frame % 1) < current_time_scale
 #macro  anim_end                                                                                (image_index + image_speed_raw >= image_number || image_index + image_speed_raw < 0)
 #macro  enemy_sprite                                                                            (sprite_index != spr_hurt || anim_end) ? ((speed <= 0) ? spr_idle : spr_walk) : sprite_index

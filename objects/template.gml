@@ -92,6 +92,7 @@ blah blah blah
 #macro  area_hq                                                                                 106
 #macro  area_crib                                                                               107
 #macro  infinity                                                                                1/0
+#macro  instance_max                                                                            instance_create(0, 0, DramaCamera)
 #macro  current_frame_active                                                                    (current_frame % 1) < current_time_scale
 #macro  anim_end                                                                                (image_index + image_speed_raw >= image_number || image_index + image_speed_raw < 0)
 #macro  enemy_sprite                                                                            (sprite_index != spr_hurt || anim_end) ? ((speed <= 0) ? spr_idle : spr_walk) : sprite_index
@@ -179,7 +180,7 @@ blah blah blah
 #define scrRight(_dir)                                                                          mod_script_call_self('mod', 'telib', 'scrRight', _dir);
 #define scrWalk(_dir, _walk)                                                                    mod_script_call_self('mod', 'telib', 'scrWalk', _dir, _walk);
 #define scrAim(_dir)                                                                            mod_script_call_self('mod', 'telib', 'scrAim', _dir);
-#define enemy_hurt(_hitdmg, _hitvel, _hitdir)                                                   mod_script_call_self('mod', 'telib', 'enemy_hurt', _hitdmg, _hitvel, _hitdir);
+#define enemy_hurt(_damage, _force, _direction)                                                 mod_script_call_self('mod', 'telib', 'enemy_hurt', _damage, _force, _direction);
 #define enemy_target(_x, _y)                                                            return  mod_script_call_self('mod', 'telib', 'enemy_target', _x, _y);
 #define boss_hp(_hp)                                                                    return  mod_script_call_nc  ('mod', 'telib', 'boss_hp', _hp);
 #define boss_intro(_name)                                                               return  mod_script_call_nc  ('mod', 'telib', 'boss_intro', _name);

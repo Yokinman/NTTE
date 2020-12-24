@@ -222,11 +222,11 @@
 	footkind = 1; // Sho
 	
 	 // Re-Get Ultras When Revived:
-	for(var i = 0; i < ultra_count(mod_current); i++){
+	/*for(var i = 0; i < ultra_count(mod_current); i++){
 		if(ultra_get(mod_current, i)){
 			race_ultra_take(i, true);
 		}
-	}
+	}*/
 	
 #define step
 	if(lag) trace_time();
@@ -266,6 +266,7 @@
 #macro  area_hq                                                                                 106
 #macro  area_crib                                                                               107
 #macro  infinity                                                                                1/0
+#macro  instance_max                                                                            instance_create(0, 0, DramaCamera)
 #macro  current_frame_active                                                                    (current_frame % 1) < current_time_scale
 #macro  anim_end                                                                                (image_index + image_speed_raw >= image_number || image_index + image_speed_raw < 0)
 #macro  enemy_sprite                                                                            (sprite_index != spr_hurt || anim_end) ? ((speed <= 0) ? spr_idle : spr_walk) : sprite_index

@@ -380,7 +380,7 @@
 		 // Secret Room:
 		with(floor_room_start(_spawnX, _spawnY, _spawnDis, _spawnFloor)){
 			with(floor_room_create(x, y, _w, _h, _type, _dirStart, _dirOff, _floorDis)){
-				var _minID = GameObject.id;
+				var _minID = instance_max;
 				
 				 // Hallway:
 				with(instance_random(floors)){
@@ -428,12 +428,8 @@
 				}
 				
 				 // Hidden:
-				with(instances_matching_gt(Wall, "id", _minID)){
-					topindex = 0;
-				}
-				with(instances_matching_gt(TopSmall, "id", _minID)){
-					image_index = 0;
-				}
+				with(instances_matching_gt(Wall,     "id", _minID)) topindex = 0;
+				with(instances_matching_gt(TopSmall, "id", _minID)) image_index = 0;
 				
 				 // Twins:
 				pet_spawn(x, y, "Twins");
@@ -535,6 +531,7 @@
 #macro  area_hq                                                                                 106
 #macro  area_crib                                                                               107
 #macro  infinity                                                                                1/0
+#macro  instance_max                                                                            instance_create(0, 0, DramaCamera)
 #macro  current_frame_active                                                                    (current_frame % 1) < current_time_scale
 #macro  anim_end                                                                                (image_index + image_speed_raw >= image_number || image_index + image_speed_raw < 0)
 #macro  enemy_sprite                                                                            (sprite_index != spr_hurt || anim_end) ? ((speed <= 0) ? spr_idle : spr_walk) : sprite_index

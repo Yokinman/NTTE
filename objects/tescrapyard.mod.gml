@@ -647,6 +647,40 @@
 		}
 	}
 	
+	 // Move Manhole:
+	if(place_meeting(x, y, CustomObject)){
+		var _instHole = instances_meeting(x, y, instances_matching(CustomObject, "name", "Manhole"));
+		if(array_length(_instHole)){
+			var	_inst     = self,
+				_instPool = instances_matching(object_index, "name", name);
+				
+			with(_instHole){
+				if(place_meeting(x, y, other)){
+					with(array_shuffle(FloorNormal)){
+						var _move = true;
+						if(place_meeting(x, y, _inst)){
+							_move = false;
+						}
+						else if(place_meeting(x, y, _inst.object_index)){
+							var _instMeet = instances_meeting(x, y, _instPool);
+							if(array_length(_instMeet)) with(_instMeet){
+								if(place_meeting(x, y, other)){
+									_move = false;
+									break;
+								}
+							}
+						}
+						if(_move){
+							other.x = bbox_center_x;
+							other.y = bbox_center_y;
+							break;
+						}
+					}
+				}
+			}
+		}
+	}
+	
 #define SludgePool_step
 	if(setup) SludgePool_setup();
 	
@@ -1402,6 +1436,7 @@
 #macro  area_hq                                                                                 106
 #macro  area_crib                                                                               107
 #macro  infinity                                                                                1/0
+#macro  instance_max                                                                            instance_create(0, 0, DramaCamera)
 #macro  current_frame_active                                                                    (current_frame % 1) < current_time_scale
 #macro  anim_end                                                                                (image_index + image_speed_raw >= image_number || image_index + image_speed_raw < 0)
 #macro  enemy_sprite                                                                            (sprite_index != spr_hurt || anim_end) ? ((speed <= 0) ? spr_idle : spr_walk) : sprite_index

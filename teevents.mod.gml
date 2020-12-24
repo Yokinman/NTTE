@@ -216,7 +216,7 @@
 	dummy_music = false;
 	
 #define BlockedRoom_create
-	var	_minID      = GameObject.id,
+	var	_minID      = instance_max,
 		_w          = 2,
 		_h          = 2,
 		_type       = "",
@@ -646,7 +646,7 @@
 						}
 						
 						 // Call Big Bandit:
-						var _minID = GameObject.id;
+						var _minID = instance_max;
 						with(WantBoss) with(self){
 							var	_lastSub   = GameCont.subarea,
 								_lastAlarm = alarm_get(0);
@@ -759,7 +759,7 @@
 	}
 	
 	 // Generate Area:
-	var _minID = GameObject.id;
+	var _minID = instance_max;
 	
 	floor_set_align(null, null, 32, 32);
 	floor_set_style(1, null);
@@ -941,7 +941,7 @@
 	}
 	
 	 // Scorpion Nests:
-	var	_minID      = GameObject.id,
+	var	_minID      = instance_max,
 		_spawnX     = spawn_x,
 		_spawnY     = spawn_y,
 		_spawnFloor = FloorNormal;
@@ -1739,7 +1739,7 @@
 	}
 	
 #define SealPlaza_create
-	var	_minID      = GameObject.id,
+	var	_minID      = instance_max,
 		_w          = 3,
 		_h          = 3,
 		_type       = "",
@@ -2091,7 +2091,7 @@
 		we epic
 	*/
 	
-	var	_minID      = GameObject.id,
+	var	_minID      = instance_max,
 		_skillArray = array_shuffle(PalaceShrine_skills()),
 		_skillCount = min(array_length(_skillArray), 2 + irandom(2)),
 		_w          = choose(3, 4),
@@ -2549,6 +2549,7 @@
 #macro  area_hq                                                                                 106
 #macro  area_crib                                                                               107
 #macro  infinity                                                                                1/0
+#macro  instance_max                                                                            instance_create(0, 0, DramaCamera)
 #macro  current_frame_active                                                                    (current_frame % 1) < current_time_scale
 #macro  anim_end                                                                                (image_index + image_speed_raw >= image_number || image_index + image_speed_raw < 0)
 #macro  enemy_sprite                                                                            (sprite_index != spr_hurt || anim_end) ? ((speed <= 0) ? spr_idle : spr_walk) : sprite_index
