@@ -2581,23 +2581,31 @@
 	}
 	
 #define RedBullet_hit
-	if(projectile_canhit(other)){
-		projectile_hit_push(other, min(damage + (bonus_damage * bonus), max(other.my_health, 10)), force);
+	if(instance_is(other, CustomEnemy) && variable_instance_get(other, "name") == "Tesseract"){
 		
-		 // Annihilation Time:
-		if(instance_is(other, prop) || other.team == 0){
-			obj_create(x, y, "RedExplosion");
-		}
-		else{
-			mod_script_call("skill", "annihilation", "enemy_annihilate", other, 2);
-			sleep(150);
-		}
-		
-		 // Goodbye:
-		with(instance_create(x, y, BulletHit)){
-			sprite_index = other.spr_dead;
-		}
 		instance_destroy();
+	}
+	else{
+		
+		 // Hit Time:
+		if(projectile_canhit(other)){
+			projectile_hit_push(other, min(damage + (bonus_damage * bonus), max(other.my_health, 10)), force);
+			
+			 // Annihilation Time:
+			if(instance_is(other, prop) || other.team == 0){
+				obj_create(x, y, "RedExplosion");
+			}
+			else{
+				mod_script_call("skill", "annihilation", "enemy_annihilate", other, 2);
+				sleep(150);
+			}
+			
+			 // Goodbye:
+			with(instance_create(x, y, BulletHit)){
+				sprite_index = other.spr_dead;
+			}
+			instance_destroy();
+		}
 	}
 	
 	
@@ -2606,9 +2614,8 @@
 		An explosion that deals massive pinpoint damage and destroys any enemy projectiles and explosions that it touches
 	*/
 	
+	
 	with(instance_create(_x, _y, MeatExplosion)){
-		//sound_stop(sndMeatExplo);
-		
 		 // Visual:
 		sprite_index = spr.RedExplosion;
 		image_angle  = random(360);
@@ -2618,6 +2625,13 @@
 		damage     = 200;
 		force      = 2;
 		target     = noone;
+		
+		 // Sounds:
+		sound_stop(sndMeatExplo);
+		
+		audio_sound_set_track_position(sound_play_pitchvol(sndUltraEmpty,	 1.1 + random(0.2), 0.4), 0.1)
+		audio_sound_set_track_position(sound_play_pitchvol(sndExplosionS,	 0.8 + random(0.4), 0.6), 0.03);
+		audio_sound_set_track_position(sound_play_pitchvol(sndIDPDNadeExplo, 1.2 + random(0.4), 0.6), 0.4);
 		
 		return id;
 	}
@@ -3178,10 +3192,11 @@
 	scrWalk(direction + orandom(90), 60 + random(60));
 	
 #define Tesseract_alrm2
-	alarm2 = 30 + random(30);
+	alarm2 = 20 + random(40);
 	
 	enemy_target(x, y);
 	
+	// ammo = 1;	
 	if(ammo <= 0){
 		
 		 // Begin Orderly Attack:
@@ -3190,9 +3205,6 @@
 			with(weapons){
 				kick = -20;
 			}
-			
-			 // Sounds:
-			if(SOUNDDEBUG) trace("tesseract:begin big attack");
 		}
 		
 		 // Begin Chaotic Attack:
@@ -3228,7 +3240,8 @@
 			weapons[array_length(weapons) - 1] = _wep;
 			
 			 // Sounds:
-			if(SOUNDDEBUG) trace("tesseract:small attack");
+			audio_sound_set_track_position(sound_play_pitch(sndPortalStrikeLoop, 1.3 + random(0.25)), 0.93);
+			audio_sound_set_track_position(sound_play_pitch(sndSnowBotDead, 	 1.3 + random(0.2)),  0.55);
 		}
 	}
 	
@@ -3268,18 +3281,23 @@
 		}
 		
 		 // Sounds:
-		if(SOUNDDEBUG) trace("tesseract:big attack");
+		audio_sound_set_track_position(sound_play_pitch(sndPortalStrikeLoop, 0.85 + random(0.15)), 1.33);
+		audio_sound_set_track_position(sound_play_pitchvol(sndSnowBotThrow, 0.6 + random(0.2), 0.8), 0.2);
 	}
 
 #define Tesseract_alrm3
 
 	
 #define Tesseract_hurt(_damage, _force, _direction)
+	_damage = 0;
 	enemy_hurt(_damage, _force, _direction);
 	
 	 // Pitch Hurt Sound:
-	if(snd_hurt == sndHyperCrystalHurt){
-		if(SOUNDDEBUG) trace("tesseract:hurt");
+	if(snd_hurt == snd_hurt){
+		// sound_pitch(snd_hurt, )
+		
+		sound_play_pitchvol(sndBigDogWalk, 1, 0.5);
+		sound_play_pitchvol(sndNothingHurtHigh, 0.8 + random(0.2), 0.5);
 	}
 	
 	 // Half HP:
@@ -3414,7 +3432,7 @@
 	if(active){
 		active = false;
 		sleep_max(15);
-		if(SOUNDDEBUG) trace_color("tesseract strike:strike start", c_silver);
+		image_speed *= 2;
 	}
 	
 	 // Explosions:
@@ -3444,23 +3462,15 @@
 		}
 	}
 	
-	 // Sound:
-	if(_dis > 0){
-		if(SOUNDDEBUG) trace_color("tesseract strike:strike hit", c_silver);
-	}
-	
-	 // End:
-	else{
-		 // Sound:
-		if(SOUNDDEBUG) trace_color("tesseract strike:strike end", c_silver);
-		
-		 // Break Walls (Only when near creator to avoid infinite stage expansion):
+	 // Break Walls (Only when near creator to avoid infinite stage expansion):
+	if(_dis < 0){
 		if(instance_near(x, y, creator, 96)){
 			if(array_length(_inst)) with(_inst[0]){
 				wall_clear(x, y);
 			}
 		}
 		
+		 // Goodbye:
 		instance_destroy();
 	}
 	
