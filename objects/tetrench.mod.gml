@@ -3560,6 +3560,7 @@
 		}
 		draw_set_alpha(1);
 		
+		/*
 		var	i = 0,
 			_x1 = null,
 			_y1 = null,
@@ -3571,11 +3572,12 @@
 			_y1 = y + (yoff * 2 * other.image_yscale);
 			if(_x2 != null){
 				draw_set_color([c_green, c_blue][i++ % 2]);
-				///draw_line(_x1, _y1, _x2, _y2);
+				draw_line(_x1, _y1, _x2, _y2);
 			}
 			_x2 = _x1;
 			_y2 = _y1;
 		}
+		*/
 	}
 	
 	if(flash_frame > current_frame) draw_set_fog(false, 0, 0, 0);

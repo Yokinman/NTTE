@@ -1709,8 +1709,15 @@
 	
 	 // Wall Depth Fix:
 	with(instances_matching(Wall, "depth", 0)){
+		var _depth = depth;
 		depth++;
-		depth--;
+		if(fork()){
+			wait 0;
+			if(instance_exists(self) && depth == _depth + 1){
+				depth = _depth;
+			}
+			exit;
+		}
 	}
 	
 #define step

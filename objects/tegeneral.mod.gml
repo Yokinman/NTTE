@@ -508,8 +508,15 @@
 				array_sort_sub(_sort, 1, false);
 				with(_sort){
 					with(self[0]){
+						var _depth = depth;
 						depth++;
-						depth--;
+						if(fork()){
+							wait 0;
+							if(instance_exists(self) && depth == _depth + 1){
+								depth = _depth;
+							}
+							exit;
+						}
 					}
 				}
 				
@@ -5480,9 +5487,16 @@
 /// GENERAL
 #define game_start
 	 // Delete:
-	with(instances_matching_lt(instances_matching(CustomHitme,  "name", "Pet"       ), "id", GameCont.id)) instance_delete(id);
-	with(instances_matching_lt(instances_matching(CustomObject, "name", "ReviveNTTE"), "id", GameCont.id)) instance_delete(id);
-	with(instances_matching_lt(instances_matching(CustomObject, "name", "UnlockCont"), "id", GameCont.id)) instance_destroy();
+	with(instances_matching_lt(
+		array_combine(
+			instances_matching(CustomHitme,  "name", "Pet"),
+			instances_matching(CustomObject, "name", "ReviveNTTE", "UnlockCont")
+		),
+		"id",
+		GameCont.id
+	)){
+		instance_destroy();
+	}
 	
 	 // Reset Pet History:
 	ds_list_clear(global.pet_history);

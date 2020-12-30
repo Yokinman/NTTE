@@ -8,7 +8,7 @@
 	
 	 // Harpoon Ropes:
 	global.harpoon_rope_bind = [
-		script_bind("HarpoonRopeDraw",    CustomDraw, script_ref_create(draw_harpoon_rope),  0, false),
+		script_bind("HarpoonRopeDraw",    CustomDraw, script_ref_create(draw_harpoon_rope),  1, false),
 		script_bind("HarpoonRopeDrawTop", CustomDraw, script_ref_create(draw_harpoon_rope), -9, false)
 	];
 	global.harpoon_rope = [];
@@ -5089,8 +5089,6 @@
 			inst = _ropeDraw[i++];
 			if(array_length(inst)){
 				visible = true;
-				depth++;
-				depth--;
 			}
 		}
 	}
