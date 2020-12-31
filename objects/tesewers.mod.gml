@@ -956,10 +956,6 @@
 	with(instance_create(_x, _y, CustomEnemy)){
 		boss = true;
 		
-		 // For Sani's bosshudredux:
-		bossname = "BIG BAT";
-		col      = c_green;
-		
 		 // Visual:
 		spr_idle     = spr.BatBossIdle;
 		spr_walk     = spr.BatBossWalk;
@@ -1000,6 +996,10 @@
 		alarm0 = 6;
 		alarm1 = 60;
 		alarm2 = -1;
+		
+		 // For Sani's bosshudredux:
+		bossname = hitid[1];
+		col      = c_green;
 		
 		return id;
 	}
@@ -2674,10 +2674,6 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 	with(instance_create(_x, _y, CustomEnemy)){
 		boss = true;
 		
-		 // For Sani's bosshudredux:
-		bossname = "BIG CAT";
-		col      = c_green;
-		
 		 // Visual:
 		spr_idle      = spr.CatBossIdle;
 		spr_walk      = spr.CatBossWalk;
@@ -2723,6 +2719,10 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 		alarm1 = 30 + random(20);
 		alarm2 = -1;
 		alarm3 = 300 + random(150);
+		
+		 // For Sani's bosshudredux:
+		bossname = hitid[1];
+		col      = c_green;
 		
 		return id;
 	}
@@ -5098,7 +5098,7 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 #define PizzaRubble_destroy
 	 // Sound:
 	sound_play_pitch(snd_dead, 1 + random(0.3));
-
+	
 	 // Corpse:
 	repeat(12){
 		with(obj_create(x + orandom(8), y + orandom(8), "CatDoorDebris")){
@@ -5110,7 +5110,7 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 		}
 		scrFX(x, y, 4, Dust);
 	}
-
+	
 	 // Destroy Walls:
 	with(instance_create(x, y + 24, PortalClear)){
 		sprite_index = mskPlasmaImpact;
@@ -5121,7 +5121,7 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 		if(object_index == Wall) instance_create(x, y, FloorExplo);
 		instance_destroy();
 	}
-
+	
 	 // Free Boys:
 	with(inst) if(instance_exists(self)){
 		visible = true;
@@ -5129,45 +5129,32 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 		y += orandom(4);
 		
 		 // Why do they break walls tell me
-		if(instance_is(self, HealthChest)) mask_index = -1;
-	}
-
-	 // Pizza time:
-	with(pet_spawn(x, y + 16, "CoolGuy")){
-		
-		 // Peas:
-		if(other.peas){
-			var _lastIcon = spr_icon;
-			spr_icon = spr.PetPeasIcon;
-			spr_idle = spr.PetPeasIdle;
-			spr_walk = spr.PetPeasWalk;
-			spr_hurt = spr.PetPeasHurt;
-			sprite_index = spr_idle;
-			
-			with(prompt){
-				text = string_replace(
-					text, 
-					string(_lastIcon), 
-					string(other.spr_icon)
-				) + "?";
-			}
+		if(instance_is(self, HealthChest)){
+			mask_index = -1;
 		}
 	}
-
-
+	
+	 // Pizza time:
+	with(pet_spawn(x, y + 16, "CoolGuy")){
+		if(other.peas){
+			pet_set_skin(1);
+		}
+	}
+	
+	
 #define PizzaTV_create(_x, _y)
 	with(instance_create(_x, _y, TV)){
 		 // Visual:
 		spr_hurt = spr.TVHurt;
 		spr_dead = spr_hurt;
-
+		
 		 // Vars:
 		maxhealth = 15;
 		my_health = maxhealth;
-
+		
 		return id;
 	}
-
+	
 #define PizzaTV_end_step
 	x = xstart;
 	y = ystart;
@@ -5954,7 +5941,9 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 #define portal_poof()                                                                   return  mod_script_call_nc  ('mod', 'telib', 'portal_poof');
 #define portal_pickups()                                                                return  mod_script_call_nc  ('mod', 'telib', 'portal_pickups');
 #define pet_spawn(_x, _y, _name)                                                        return  mod_script_call_nc  ('mod', 'telib', 'pet_spawn', _x, _y, _name);
-#define pet_get_icon(_modType, _modName, _name)                                         return  mod_script_call_self('mod', 'telib', 'pet_get_icon', _modType, _modName, _name);
+#define pet_get_name(_name, _modType, _modName, _skin)                                  return  mod_script_call_self('mod', 'telib', 'pet_get_name', _name, _modType, _modName, _skin);
+#define pet_get_sprite(_name, _modType, _modName, _skin, _sprName)                      return  mod_script_call_self('mod', 'telib', 'pet_get_sprite', _name, _modType, _modName, _skin, _sprName);
+#define pet_set_skin(_skin)                                                             return  mod_script_call_self('mod', 'telib', 'pet_set_skin', _skin);
 #define team_get_sprite(_team, _sprite)                                                 return  mod_script_call_nc  ('mod', 'telib', 'team_get_sprite', _team, _sprite);
 #define team_instance_sprite(_team, _inst)                                              return  mod_script_call_nc  ('mod', 'telib', 'team_instance_sprite', _team, _inst);
 #define sprite_get_team(_sprite)                                                        return  mod_script_call_nc  ('mod', 'telib', 'sprite_get_team', _sprite);

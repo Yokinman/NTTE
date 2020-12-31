@@ -1836,7 +1836,6 @@
 			PetCoolGuyIdle = sprite(p + "sprPetCoolGuyIdle",  4, 12, 12);
 			PetCoolGuyWalk = sprite(p + "sprPetCoolGuyWalk",  6, 12, 12);
 			PetCoolGuyHurt = sprite(p + "sprPetCoolGuyDodge", 3, 12, 12);
-			
 			PetPeasIcon    = sprite(p + "sprPetPeasIcon",     1,  6,  6);
 			PetPeasIdle    = sprite(p + "sprPetPeasIdle",     4, 12, 12);
 			PetPeasWalk    = sprite(p + "sprPetPeasWalk",     6, 12, 12);
@@ -1920,26 +1919,30 @@
 			PetWeaponHurt       = sprite(p + "sprPetWeaponHurt",        3, 12, 12);
 			PetWeaponDead       = sprite(p + "sprPetWeaponDead",        6, 12, 12);
 			PetWeaponStat       = sprite(p + "sprPetWeaponStat",        1, 20,  5);
-			PetWeaponIconCursed = sprite(p + "sprPetWeaponIconCursed",  1,  6,  6);
-			PetWeaponChstCursed = sprite(p + "sprPetWeaponChstCursed",  1,  8,  8);
-			PetWeaponHideCursed = sprite(p + "sprPetWeaponHideCursed",  8, 12, 12);
-			PetWeaponSpwnCursed = sprite(p + "sprPetWeaponSpwnCursed", 16, 12, 12);
-			PetWeaponIdleCursed = sprite(p + "sprPetWeaponIdleCursed",  8, 12, 12);
-			PetWeaponWalkCursed = sprite(p + "sprPetWeaponWalkCursed",  8, 12, 12);
-			PetWeaponHurtCursed = sprite(p + "sprPetWeaponHurtCursed",  3, 12, 12);
-			PetWeaponDeadCursed = sprite(p + "sprPetWeaponDeadCursed",  6, 12, 12);
+			PetWeaponCursedIcon = sprite(p + "sprPetWeaponIconCursed",  1,  6,  6);
+			PetWeaponCursedChst = sprite(p + "sprPetWeaponChstCursed",  1,  8,  8);
+			PetWeaponCursedHide = sprite(p + "sprPetWeaponHideCursed",  8, 12, 12);
+			PetWeaponCursedSpwn = sprite(p + "sprPetWeaponSpwnCursed", 16, 12, 12);
+			PetWeaponCursedIdle = sprite(p + "sprPetWeaponIdleCursed",  8, 12, 12);
+			PetWeaponCursedWalk = sprite(p + "sprPetWeaponWalkCursed",  8, 12, 12);
+			PetWeaponCursedHurt = sprite(p + "sprPetWeaponHurtCursed",  3, 12, 12);
+			PetWeaponCursedDead = sprite(p + "sprPetWeaponDeadCursed",  6, 12, 12);
 			
 			 // Twins:
 			p = m + "Red/";
 			PetTwinsIcon        = sprite(p + "sprPetTwinsIcon",        1,  6,  6);
 			PetTwinsStat        = sprite(p + "sprPetTwinsStat",        6, 12, 12);
-			PetTwinsRed         = sprite(p + "sprPetTwinsRed",         6, 12, 12);
 			PetTwinsRedIcon     = sprite(p + "sprPetTwinsRedIcon",     1,  6,  6);
+			PetTwinsRed         = sprite(p + "sprPetTwinsRed",         6, 12, 12);
 			PetTwinsRedEffect   = sprite(p + "sprPetTwinsRedEffect",   6,  8,  8);
-			PetTwinsWhite       = sprite(p + "sprPetTwinsWhite",       6, 12, 12);
 			PetTwinsWhiteIcon   = sprite(p + "sprPetTwinsWhiteIcon",   1,  6,  6);
+			PetTwinsWhite       = sprite(p + "sprPetTwinsWhite",       6, 12, 12);
 			PetTwinsWhiteEffect = sprite(p + "sprPetTwinsWhiteEffect", 6,  8,  8);
 			CrystalWhiteTrail   = sprite(p + "sprCrystalWhiteTrail",   5,  8,  8);
+			
+			 // Cuz:
+			p = m + "Crib/";
+			PetCuzIcon = sprite(p + "sprPetCuzIcon", 1, 6, 6);
 			
 		//#endregion
 	}

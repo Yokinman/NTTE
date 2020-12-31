@@ -882,32 +882,24 @@
 	with(instance_create(_x, _y, CustomEnemy)){
 		boss = true;
 		
-		 // For Sani's bosshudredux:
-		bossname = "BIG FISH";
-		col      = c_red;
+		 // Visual:
+		spr_spwn     = spr.BigFishSpwn;
+		spr_idle     = sprBigFishIdle;
+		spr_walk     = sprBigFishWalk;
+		spr_hurt     = sprBigFishHurt;
+		spr_dead     = sprBigFishDead;
+		spr_weap     = mskNone;
+		spr_chrg     = sprBigFishFireStart;
+		spr_fire     = sprBigFishFire;
+		spr_efir     = sprBigFishFireEnd;
+		spr_dive     = spr.BigFishLeap;
+		spr_rise     = spr.BigFishRise;
+		spr_shad     = shd48;
+		spr_shadow   = spr_shad;
+		hitid        = 105; // Big Fish
+		sprite_index = spr_spwn;
+		depth        = -2;
 		
-		/// Visual:
-			spr_spwn     = spr.BigFishSpwn;
-			spr_idle     = sprBigFishIdle;
-			spr_walk     = sprBigFishWalk;
-			spr_hurt     = sprBigFishHurt;
-			spr_dead     = sprBigFishDead;
-			spr_weap     = mskNone;
-			spr_shad     = shd48;
-			spr_shadow   = spr_shad;
-			hitid        = 105; // Big Fish
-			sprite_index = spr_spwn;
-			depth        = -2;
-			
-			 // Fire:
-			spr_chrg = sprBigFishFireStart;
-			spr_fire = sprBigFishFire;
-			spr_efir = sprBigFishFireEnd;
-			
-			 // Swim:
-			spr_dive = spr.BigFishLeap;
-			spr_rise = spr.BigFishRise;
-			
 		 // Sound:
 		snd_hurt = sndOasisBossHurt;
 		snd_dead = sndOasisBossDead;
@@ -947,6 +939,10 @@
 		alarm1 = 90;
 		alarm2 = -1;
 		alarm3 = -1;
+		
+		 // For Sani's bosshudredux:
+		bossname = "BIG FISH";
+		col      = c_red;
 		
 		return id;
 	}
@@ -2757,7 +2753,9 @@
 #define portal_poof()                                                                   return  mod_script_call_nc  ('mod', 'telib', 'portal_poof');
 #define portal_pickups()                                                                return  mod_script_call_nc  ('mod', 'telib', 'portal_pickups');
 #define pet_spawn(_x, _y, _name)                                                        return  mod_script_call_nc  ('mod', 'telib', 'pet_spawn', _x, _y, _name);
-#define pet_get_icon(_modType, _modName, _name)                                         return  mod_script_call_self('mod', 'telib', 'pet_get_icon', _modType, _modName, _name);
+#define pet_get_name(_name, _modType, _modName, _skin)                                  return  mod_script_call_self('mod', 'telib', 'pet_get_name', _name, _modType, _modName, _skin);
+#define pet_get_sprite(_name, _modType, _modName, _skin, _sprName)                      return  mod_script_call_self('mod', 'telib', 'pet_get_sprite', _name, _modType, _modName, _skin, _sprName);
+#define pet_set_skin(_skin)                                                             return  mod_script_call_self('mod', 'telib', 'pet_set_skin', _skin);
 #define team_get_sprite(_team, _sprite)                                                 return  mod_script_call_nc  ('mod', 'telib', 'team_get_sprite', _team, _sprite);
 #define team_instance_sprite(_team, _inst)                                              return  mod_script_call_nc  ('mod', 'telib', 'team_instance_sprite', _team, _inst);
 #define sprite_get_team(_sprite)                                                        return  mod_script_call_nc  ('mod', 'telib', 'sprite_get_team', _sprite);

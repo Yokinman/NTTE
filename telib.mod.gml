@@ -1047,30 +1047,30 @@
 	
 	return (random(_denom) < _numer * current_time_scale);
 	
-#define lerp_ct(_val1, _val2, _amount)
-	/*
-		Like 'lerp()', but used when modifying a persistent value every frame (for timescale support)
-	*/
-	
-	return lerp(_val2, _val1, power(1 - _amount, current_time_scale));
-	
-#define angle_lerp(_ang1, _ang2, _num)
-	/*
-		Linearly interpolates between the two given angles
-		
-		Ex:
-			lerp(90, 180, 0.5) == 135
-			lerp(20, 270, 0.1) == 9
-	*/
-	
-	return _ang1 + (angle_difference(_ang2, _ang1) * _num);
-	
-#define angle_lerp_ct(_ang1, _ang2, _num)
-	/*
-		Like 'angle_lerp()', but used when modifying a persistent value every frame (for timescale support)
-	*/
-	
-	return _ang2 + (angle_difference(_ang1, _ang2) * power(1 - _num, current_time_scale));
+//#define lerp_ct(_val1, _val2, _amount)
+//	/*
+//		Like 'lerp()', but used when modifying a persistent value every frame (for timescale support)
+//	*/
+//	
+//	return lerp(_val2, _val1, power(1 - _amount, current_time_scale));
+//	
+//#define angle_lerp(_ang1, _ang2, _num)
+//	/*
+//		Linearly interpolates between the two given angles
+//		
+//		Ex:
+//			lerp(90, 180, 0.5) == 135
+//			lerp(20, 270, 0.1) == 9
+//	*/
+//	
+//	return _ang1 + (angle_difference(_ang2, _ang1) * _num);
+//	
+//#define angle_lerp_ct(_ang1, _ang2, _num)
+//	/*
+//		Like 'angle_lerp()', but used when modifying a persistent value every frame (for timescale support)
+//	*/
+//	
+//	return _ang2 + (angle_difference(_ang1, _ang2) * power(1 - _num, current_time_scale));
 	
 #define instance_seen(_x, _y, _obj)
 	/*
@@ -5147,7 +5147,10 @@
 	
 #define pet_create(_x, _y, _name, _modType, _modName)
 	/*
-		Creates a given pet for a given mod, and sets up its stats, sprites, and other variables
+		Creates the given NT:TE pet, and sets up its stats, sprites, and other variables
+		
+		Ex:
+			pet_create(x, y, "Parrot", "mod", "petlib")
 	*/
 	
 	with(obj_create(_x, _y, "Pet")){
@@ -5158,34 +5161,30 @@
 		 // Stats:
 		var _stat = `pet:${pet}.${mod_name}.${mod_type}`;
 		if(!is_object(stat_get(_stat))){
-			stat_set(_stat, { found:0, owned:0 });
+			stat_set(_stat, {
+				"found" : 0,
+				"owned" : 0
+			});
 		}
 		stat = stat_get(_stat);
 		
-		 // Sprites:
-		if(mod_type == "mod" && mod_name == "petlib"){
-			spr_idle = lq_defget(spr, "Pet" + pet + "Idle", spr_idle);
-			spr_walk = lq_defget(spr, "Pet" + pet + "Walk", spr_idle);
-			spr_hurt = lq_defget(spr, "Pet" + pet + "Hurt", spr_idle);
-			spr_dead = lq_defget(spr, "Pet" + pet + "Dead", mskNone);
-		}
-		spr_icon = lq_defget(pet_get_icon(mod_type, mod_name, pet), "spr", spr_icon);
-		
 		 // Custom Create Event:
-		var _scrt = pet + "_create";
-		if(mod_script_exists(mod_type, mod_name, _scrt)){
-			mod_script_call(mod_type, mod_name, _scrt);
-		}
+		mod_script_call(mod_type, mod_name, pet + "_create");
 		
-		 // Auto-set Stuff:
+		 // Auto-Set:
 		if(instance_exists(self)){
-			with(prompt) if(text == ""){
-				icon = other.spr_icon;
-				text = `@2(${icon})` + other.pet;
+			 // Fill Health:
+			if(my_health == 0){
+				my_health = maxhealth;
 			}
-			if(sprite_index == spr.PetParrotIdle) sprite_index = spr_idle;
-			if(maxhealth > 0 && my_health == 0) my_health = maxhealth;
-			if(hitid == -1) hitid = [spr_idle, pet];
+			
+			 // Sprites:
+			pet_set_skin(bskin);
+			
+			 // Cause of Death Name:
+			if(is_array(hitid) && array_length(hitid) > 1 && hitid[1] == ""){
+				hitid[1] = pet_get_name(pet, mod_type, mod_name, 0);
+			}
 		}
 		
 		return self;
@@ -5196,9 +5195,164 @@
 #define pet_spawn(_x, _y, _name)
 	return pet_create(_x, _y, _name, "mod", "petlib");
 	
+#define pet_get_name(_name, _modType, _modName, _skin)
+	/*
+		Returns the name of the given NT:TE pet
+		
+		Ex:
+			pet_get_name("CoolGuy", "mod", "petlib", 0) == "CoolGuy"
+			pet_get_name("CoolGuy", "mod", "petlib", 1) == "CoolGuy?"
+	*/
+	
+	 // Custom:
+	var _modScrt = _name + "_name";
+	if(mod_script_exists(_modType, _modName, _modScrt)){
+		var _nameCustom = mod_script_call(_modType, _modName, _modScrt, _skin);
+		if(is_string(_nameCustom)){
+			return _nameCustom;
+		}
+	}
+	
+	 // Default:
+	return _name;
+	
+#define pet_get_ttip(_name, _modType, _modName, _skin)
+	/*
+		Returns a random loading screen tip for the given NT:TE pet
+	*/
+	
+	 // Custom:
+	var _modScrt = _name + "_ttip";
+	if(mod_script_exists(_modType, _modName, _modScrt)){
+		var _tip = mod_script_call(_modType, _modName, _modScrt, _skin);
+		if(is_array(_tip) && array_length(_tip) > 0){
+			_tip = _tip[irandom(array_length(_tip) - 1)];
+		}
+		if(is_string(_tip)){
+			return _tip;
+		}
+	}
+	
+	 // Default:
+	return "";
+	
+#define pet_get_sprite(_name, _modType, _modName, _skin, _sprName)
+	/*
+		Returns the sprite index associated with the given name and NT:TE pet, or 0 by default
+		
+		Ex:
+			pet_get_sprite("Parrot", "mod", "petlib", 1, "idle") == spr.PetParrotBIdle
+	*/
+	
+	 // Custom:
+	var _modScrt = _name + "_sprite";
+	if(mod_script_exists(_modType, _modName, _modScrt)){
+		var _spr = mod_script_call(_modType, _modName, _modScrt, _skin, _sprName);
+		if(_spr != 0 && is_real(_spr)){
+			return _spr;
+		}
+	}
+	
+	 // Legacy Support:
+	var _modScrt = _name + "_icon";
+	if(mod_script_exists(_modType, _modName, _modScrt)){
+		var _icon = mod_script_call(_modType, _modName, _modScrt);
+		if(is_real(_icon)){
+			return _icon;
+		}
+		else if(is_object(_icon) && "spr" in _icon && is_real(_icon.spr)){
+			return _icon.spr;
+		}
+	}
+	
+	 // Default:
+	return 0;
+	
+#define pet_get_sound(_name, _modType, _modName, _skin, _sndName)
+	/*
+		Returns the sound index associated with the given name and NT:TE pet, or 0 by default
+		
+		Ex:
+			pet_get_sound("Scorpion", "mod", "petlib", 0, "hurt") == sndScorpionMelee
+	*/
+	
+	 // Custom:
+	var _modScrt = _name + "_sound";
+	if(mod_script_exists(_modType, _modName, _modScrt)){
+		var _snd = mod_script_call(_modType, _modName, _modScrt, _skin, _sndName);
+		if(_snd != 0 && is_real(_snd)){
+			return _snd;
+		}
+	}
+	
+	 // Default:
+	return 0;
+	
+#define pet_set_skin(_skin)
+	/*
+		Called from an NT:TE pet to update their sprites and sounds to the given skin
+	*/
+	
+	bskin = _skin;
+	
+	 // Update Variables:
+	var _sprCurrent = sprite_index;
+	with(variable_instance_get_names(self)){
+		 // Sprites:
+		if(string_pos("spr_", self) == 1){
+			var _name = string_delete(self, 1, 4);
+			with(other){
+				var _spr = pet_get_sprite(pet, mod_type, mod_name, bskin, _name);
+				if(_spr != 0){
+					if(sprite_exists(_sprCurrent) && _sprCurrent == variable_instance_get(self, other)){
+						_sprCurrent = -1;
+						sprite_index = _spr;
+					}
+					variable_instance_set(self, other, _spr);
+				}
+			}
+		}
+		
+		 // Sounds:
+		else if(string_pos("snd_", self) == 1){
+			var _name = string_delete(self, 1, 4);
+			with(other){
+				var _snd = pet_get_sound(pet, mod_type, mod_name, bskin, _name)
+				if(_snd != 0){
+					variable_instance_set(self, other, _snd);
+				}
+			}
+		}
+	}
+	
+	 // Cause of Death Sprite:
+	if(is_array(hitid) && array_length(hitid) > 0){
+		var _spr = pet_get_sprite(pet, mod_type, mod_name, bskin, "stat");
+		if(_spr == 0){
+			_spr = spr_idle;
+		}
+		if(sprite_exists(_spr)){
+			hitid[0] = _spr;
+		}
+	}
+	
+	 // Prompt:
+	var	_icon = spr_icon,
+		_text = pet_get_name(pet, mod_type, mod_name, bskin);
+		
+	with(prompt){
+		text = `@2(${_icon})${_text}`;
+	}
+	
 #define pet_get_icon(_modType, _modName, _name)
-	var _icon = {
-		"spr" : spr.PetParrotIcon,
+	/*
+		Returns a LWO containing 'draw_sprite_ext()' arguments for the given NT:TE pet's icon
+		
+		!!! Legacy script, use 'pet_get_sprite()' instead
+	*/
+	
+	return {
+		"spr" : pet_get_sprite(_name, _modType, _modName, 0, "icon"),
 		"img" : 0.4 * current_frame,
 		"x"   : 0,
 		"y"   : 0,
@@ -5208,41 +5362,6 @@
 		"col" : c_white,
 		"alp" : 1
 	};
-	
-	 // Custom:
-	var _modScrt = _name + "_icon";
-	if(mod_script_exists(_modType, _modName, _modScrt)){
-		var _iconCustom = mod_script_call(_modType, _modName, _modScrt);
-		
-		if(is_real(_iconCustom)){
-			_icon.spr = _iconCustom;
-		}
-		
-		else{
-			for(var i = 0; i < min(array_length(_iconCustom), lq_size(_icon)); i++){
-				lq_set(_icon, lq_get_key(_icon, i), real(_iconCustom[i]));
-			}
-		}
-	}
-	
-	 // Stored Icon:
-	else if(
-		"name" in self
-		&& name == "Pet"
-		&& sprite_exists(spr_icon)
-	){
-		_icon.spr = spr_icon;
-	}
-	
-	 // Default:
-	else if(
-		_modType == "mod" &&
-		_modName == "petlib"
-	){
-		_icon.spr = lq_defget(spr, "Pet" + _name + "Icon", -1);
-	}
-	
-	return _icon;
 	
 #define top_create(_x, _y, _obj, _spawnDir, _spawnDis)
 	/*
@@ -6336,4 +6455,3 @@
 	
 	if(array_length(_newInst) <= 0) return noone;
 	return ((array_length(_newInst) == 1) ? _newInst[0] : _newInst);
-	

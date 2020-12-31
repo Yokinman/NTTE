@@ -2416,7 +2416,7 @@
 	
 #define Pet_create(_x, _y)
 	/*
-		An NTTE pet object
+		An NT:TE pet object
 		Generally don't create this object manually, use 'pet_spawn()' to create pets
 	*/
 	
@@ -2426,16 +2426,17 @@
 		spr_walk       = spr.PetParrotWalk;
 		spr_hurt       = spr.PetParrotHurt;
 		spr_dead       = mskNone;
-		spr_icon       = -1;
+		spr_icon       = spr.PetParrotIcon;
 		spr_shadow     = shd24;
 		spr_shadow_x   = 0;
-		spr_shadow_y   = -1;
+		spr_shadow_y   = 0;
 		spr_bubble     = sprPlayerBubble;
 		spr_bubble_pop = sprPlayerBubblePop;
 		spr_bubble_x   = 0;
 		spr_bubble_y   = 0;
-		hitid          = -1;
+		hitid          = [spr_idle, ""];
 		right          = choose(1, -1);
+		bskin          = 0;
 		image_speed    = 0.4;
 		depth          = -2;
 		
@@ -2474,13 +2475,12 @@
 		corpse       = true;
 		corpse_inst  = noone;
 		revive       = noone;
-		history      = ["spr_idle", "spr_walk", "spr_hurt", "spr_dead", "spr_icon", "spr_shadow", "spr_shadow_x", "spr_shadow_y", "spr_bubble", "spr_bubble_pop", "spr_bubble_x", "spr_bubble_y", "hitid", "snd_hurt", "snd_dead", "team", "stat_found"];
+		history      = ["bskin", "team", "stat_found"];
 		
 		 // Prompt:
 		prompt = prompt_create("");
 		with(prompt){
 			mask_index = mskShield;
-			icon       = other.spr_icon;
 		}
 		
 		 // Scripts:
@@ -2663,12 +2663,11 @@
 					if(other.damage > 0){
 						draw_set_font(fntM);
 						
-						var	_name          = other.creator.pet,
-							_nameLength    = string_length(string_delete_nt(_name)),
-							_prenameLength = string_length(string_delete_nt(string_copy(_text, 1, string_pos(_name, _text) - 1))),
-							_reviveLength  = string_length(string_delete_nt(text));
+						var	_textRaw    = string_delete_nt(_text),
+							_nameLength = string_length(string_ltrim(_textRaw)),
+							_iconLength = string_length(_textRaw) - _nameLength;
 							
-						_text += "#" + string_repeat(" ", _prenameLength + (_reviveLength - _nameLength)) + text;
+						_text += "#" + string_repeat(" ", _iconLength + (string_length(string_delete_nt(text)) - _nameLength)) + text;
 					}
 					text = _text;
 				}
@@ -2716,30 +2715,32 @@
 	
 	 // Portal Attraction:
 	var _spin = 0;
-	if(visible || instance_exists(revive)){
-		with(instances_matching_ne(Portal, "sprite_index", sprPortalSpawn, sprBigPortalSpawn)){
-			if(instance_near(x, y, other, 64) || (object_index == BigPortal && timer > 30)){
-				if(instance_seen(x, y, other)){
-					with(other){
-						var	_l = 4 * current_time_scale,
-							_d = point_direction(x, y, other.x, other.y),
-							_x = x + lengthdir_x(_l, _d),
-							_y = y + lengthdir_y(_l, _d)
-							
-						if(place_free(_x, y)) x = _x;
-						if(place_free(x, _y)) y = _y;
-						_spin = 30 * right;
+	if(instance_exists(Portal)){
+		if(visible || instance_exists(revive)){
+			with(instances_matching_ne(Portal, "sprite_index", sprPortalSpawn, sprBigPortalSpawn)){
+				if(instance_near(x, y, other, 64) || (object_index == BigPortal && timer > 30)){
+					if(instance_seen(x, y, other)){
+						with(other){
+							var	_l = 4 * current_time_scale,
+								_d = point_direction(x, y, other.x, other.y),
+								_x = x + lengthdir_x(_l, _d),
+								_y = y + lengthdir_y(_l, _d)
+								
+							if(place_free(_x, y)) x = _x;
+							if(place_free(x, _y)) y = _y;
+							_spin = 30 * right;
+						}
 					}
 				}
 			}
-		}
-		
-		 // Enter:
-		if(place_meeting(x, y, Portal)){
-			repeat(3) instance_create(x, y, Dust);
-			with(revive) instance_destroy();
-			visible    = false;
-			persistent = true;
+			
+			 // Enter:
+			if(place_meeting(x, y, Portal)){
+				repeat(3) instance_create(x, y, Dust);
+				with(revive) instance_destroy();
+				visible    = false;
+				persistent = true;
+			}
 		}
 	}
 	
@@ -2747,15 +2748,18 @@
 	if(_spin != 0){
 		portal_angle += _spin;
 		sprite_index = spr_hurt;
-		image_index = 1;
+		image_index  = 1;
 		
 		 // No Escape:
 		speed -= min(speed, friction_raw * 3);
 		walk = 0;
 	}
 	else if(portal_angle != 0){
-		portal_angle = ((portal_angle % 360) + 360) % 360;
-		portal_angle *= power(0.2, current_time_scale);
+		portal_angle = angle_lerp_ct(
+			((portal_angle % 360) + 360) % 360,
+			0,
+			0.2
+		);
 	}
 	
 	 // Player Owns Pet:
@@ -2879,12 +2883,6 @@
 	}
 	with(prompt){
 		visible = other.can_take;
-		
-		 // Update Icon:
-		if("icon" in self && icon != other.spr_icon){
-			text = string_replace(text, string(icon), string(other.spr_icon));
-			icon = other.spr_icon;
-		}
 	}
 	
 	if(visible || instance_exists(revive)){
@@ -3258,8 +3256,9 @@
 	
 	with(instance_create(_x, _y, chestprop)){
 		 // Visual:
-		sprite_index = spr.PetWeaponChst;
-		 
+		bskin        = 0;
+		sprite_index = pet_get_sprite("Weapon", "mod", "petlib", bskin, "chst");
+		
 		 // Vars:
 		type = choose(type_melee, type_bullet, type_shell, type_bolt, type_explosive, type_energy);
 		
@@ -3281,8 +3280,9 @@
 	
 #define PetWeaponBecome_step
 	 // Cursed:
-	if(curse && sprite_index == spr.PetWeaponChst){
-		sprite_index = spr.PetWeaponChstCursed;
+	if(bskin == (curse <= 0)){
+		bskin = (curse > 0);
+		sprite_index = pet_get_sprite("Weapon", "mod", "petlib", bskin, "chst");
 	}
 	
 	 // Activated:
@@ -3315,25 +3315,6 @@
 	with(instance_create(_x, _y, CustomEnemy)){
 		boss = true;
 		
-		 // For Sani's bosshudredux:
-		bossname = "WEAPON MIMIC";
-		col      = c_red;
-		
-		 // HP:
-		maxhealth = boss_hp(120);
-		var _hp = maxhealth;
-		
-		 // Stats:
-		var s = "pet:Weapon.petlib.mod";
-		if(!is_object(stat_get(s))){
-			stat_set(s, { found:0, owned:0 });
-		}
-		stat = stat_get(s);
-		
-		 // Base Code:
-		history = [];
-		mod_script_call("mod", "petlib", "Weapon_create");
-		
 		 // Visual:
 		spr_idle     = spr.PetWeaponIdle;
 		spr_walk     = spr.PetWeaponWalk;
@@ -3341,18 +3322,22 @@
 		spr_dead     = spr.PetWeaponDead;
 		spr_icon     = spr.PetWeaponIcon;
 		spr_shadow   = shd24;
-		spr_shadow_y = -1;
+		hitid        = [spr_idle, "WEAPON MIMIC"];
+		bskin        = 0;
 		depth        = -2;
+		sprite_index = spr_idle;
 		
 		 // Vars:
 		mask_index  = mskFreak;
-		maxhealth   = _hp;
+		maxhealth   = boss_hp(120);
 		size        = 1;
 		walk        = 0;
 		walkspeed   = 2;
 		maxspeed    = 3;
 		intro       = false;
 		corpse      = false;
+		prompt      = noone;
+		history     = [];
 		path        = [];
 		path_delay  = 0;
 		cover_x     = x;
@@ -3360,10 +3345,33 @@
 		cover_peek  = false;
 		cover_delay = 0;
 		stat_battle = true;
+		pet         = "Weapon";
+		mod_type    = "mod";
+		mod_name    = "petlib";
+		
+		 // Stats:
+		var _stat = `pet:${pet}.${mod_name}.${mod_type}`;
+		if(!is_object(stat_get(_stat))){
+			stat_set(_stat, {
+				"found" : 0,
+				"owned" : 0
+			});
+		}
+		stat = stat_get(_stat);
+		
+		 // Base Code:
+		var _hp = maxhealth;
+		mod_script_call(mod_type, mod_name, pet + "_create");
+		maxhealth = _hp;
+		pet_set_skin(bskin);
 		
 		 // Alarms:
 		alarm1 = 60;
 		alarm2 = reload;
+		
+		 // For Sani's bosshudredux:
+		bossname = hitid[1];
+		col      = c_red;
 		
 		return id;
 	}
@@ -3374,7 +3382,7 @@
 	if(alarm2_run) exit;
 	
 	 // Timers:
-	if(path_delay  > 0) path_delay -= current_time_scale;
+	if(path_delay  > 0) path_delay  -= current_time_scale;
 	if(cover_delay > 0) cover_delay -= current_time_scale;
 	
 	 // Movement:
@@ -3387,15 +3395,15 @@
 	 // Boss Intro:
 	if(!intro && sprite_index != spr_hide && sprite_index != spr_spwn){
 		intro = true;
-		boss_intro(curse ? "PetWeaponCursed" : "PetWeapon");
-		sound_play(curse ? sndBigCursedChest : sndBigWeaponChest);
+		boss_intro((curse > 0) ? "PetWeaponCursed" : "PetWeapon");
+		sound_play((curse > 0) ? sndBigCursedChest : sndBigWeaponChest);
 	}
 	
 	 // Laser Cannon:
-	with(instances_matching(LaserCannon, "creator", id)){
+	with(instances_matching(LaserCannon, "creator", self)){
 		time = 1 + floor(abs(angle_difference(other.gunangle, other.gunangle_goal)) / 4);
 	}
-	with(instances_matching(instances_matching(Laser, "creator", id), "petweaponbosslaser_check", null)){
+	with(instances_matching(instances_matching(Laser, "creator", self), "petweaponbosslaser_check", null)){
 		petweaponbosslaser_check = true;
 		image_yscale = 1.4;
 		hitid = other.hitid;
@@ -3417,14 +3425,15 @@
 	
 	if(sprite_index != spr_hide && sprite_index != spr_spwn){
 		if(enemy_target(x, y)){
-			var	_tx = target.x,
-				_ty = target.y,
+			var	_tx        = target.x,
+				_ty        = target.y,
 				_targetDir = point_direction(x, y, _tx, _ty),
-				_pathWall = Wall,
-				_pathX = null,
-				_pathY = null;
+				_pathWall  = Wall,
+				_pathX     = null,
+				_pathY     = null;
 				
 			switch(type){
+				
 				case type_melee: // MELEE
 					
 					 // Movement:
@@ -3589,6 +3598,7 @@
 					}
 					
 					break;
+					
 			}
 			
 			 // Pathfind:
@@ -3625,7 +3635,7 @@
 		 // Hide:
 		else{
 			sprite_index = spr_hide;
-			image_index = 0;
+			image_index  = 0;
 			//scrWalk(random(360), [15, 30]);
 			//gunangle_goal = direction;
 		}
@@ -3725,13 +3735,13 @@
 	}
 	
 	 // Pet Time:
-	with(pet_spawn(x, y, "Weapon")){
+	with(mod_script_call_nc("mod", "telib", "pet_create", x, y, pet, mod_type, mod_name)){
 		direction = other.direction;
-		speed = other.speed;
-		wep = other.wep;
-		bwep = other.bwep;
-		curse = other.curse;
-		my_health = 0;
+		speed     = other.speed;
+		wep       = other.wep;
+		bwep      = other.bwep;
+		curse     = other.curse;
+		my_health = other.my_health;
 	}
 	
 #define PetWeaponBoss_point_is_cover(_coverX, _coverY, _fromX, _fromY)
@@ -4292,18 +4302,22 @@
 	}
 	
 	 // Normal:
+	var _obj = -1;
 	switch(_area){
-		case area_campfire     : return instance_create(_x, _y, TopDecalNightDesert);
-		case area_desert       : return instance_create(_x, _y, TopDecalDesert);
-		case area_sewers       : return instance_create(_x, _y, TopDecalSewers);
-		case area_scrapyards   : return instance_create(_x, _y, TopDecalScrapyard);
-		case area_caves        : return instance_create(_x, _y, TopDecalCave);
-		case area_city         : return instance_create(_x, _y, TopDecalCity);
-		case area_palace       : return instance_create(_x, _y, TopDecalPalace);
-		case area_pizza_sewers : return instance_create(_x, _y, TopDecalPizzaSewers);
-		case area_cursed_caves : return instance_create(_x, _y, TopDecalInvCave);
-		case area_jungle       : return instance_create(_x, _y, TopDecalJungle);
-		case area_hq           : return instance_create(_x, _y, TopPot);
+		case area_campfire     : _obj = TopDecalNightDesert; break;
+		case area_desert       : _obj = TopDecalDesert;      break;
+		case area_sewers       : _obj = TopDecalSewers;      break;
+		case area_scrapyards   : _obj = TopDecalScrapyard;   break;
+		case area_caves        : _obj = TopDecalCave;        break;
+		case area_city         : _obj = TopDecalCity;        break;
+		case area_palace       : _obj = TopDecalPalace;      break;
+		case area_pizza_sewers : _obj = TopDecalPizzaSewers; break;
+		case area_cursed_caves : _obj = TopDecalInvCave;     break;
+		case area_jungle       : _obj = TopDecalJungle;      break;
+		case area_hq           : _obj = TopPot;              break;
+	}
+	if(object_exists(_obj)){
+		return instance_create(_x, _y, _obj);
 	}
 	
 	return noone;
@@ -4857,13 +4871,9 @@
 			}
 		}
 		
-		 // Other Stuff:
-		if(instance_is(self, CustomObject) && "name" in self){
-			switch(name){
-				case "WepPickupGrounded":
-					instance_destroy();
-					break;
-			}
+		 // Weapon:
+		if(instance_is(self, CustomObject) && "name" in self && name == "WepPickupGrounded"){
+			instance_destroy();
 		}
 	}
 	
@@ -5868,8 +5878,8 @@
 	
 #define ntte_bloom
 	if(instance_exists(CustomProjectile)){
-		 // Custom Bullets/Plasma:
-		var _inst = instances_matching(CustomProjectile, "name", "CustomBullet", "CustomPlasma");
+		 // Custom Bullets/Plasma & Portal Balls:
+		var _inst = instances_matching(CustomProjectile, "name", "CustomBullet", "CustomPlasma", "PortalBullet");
 		if(array_length(_inst)) with(_inst){
 			draw_sprite_ext(sprite_index, image_index, x, y, 2 * image_xscale, 2 * image_yscale, image_angle, image_blend, 0.1 * image_alpha);
 		}
@@ -5887,12 +5897,6 @@
 		var _inst = instances_matching(CustomProjectile, "name", "VenomPellet");
 		if(array_length(_inst)) with(_inst){
 			draw_sprite_ext(sprite_index, image_index, x, y, 2 * image_xscale, 2 * image_yscale, image_angle, image_blend, 0.2 * image_alpha);
-		}
-		
-		 // Portal Ball:
-		var _inst = instances_matching(CustomProjectile, "name", "PortalBullet");
-		if(array_length(_inst)) with(_inst){
-			draw_sprite_ext(sprite_index, image_index, x, y, 2 * image_xscale, 2 * image_yscale, image_angle, image_blend, 0.1 * image_alpha);
 		}
 		
 		 // Merged Flak Ball:
@@ -6117,7 +6121,9 @@
 #define portal_poof()                                                                   return  mod_script_call_nc  ('mod', 'telib', 'portal_poof');
 #define portal_pickups()                                                                return  mod_script_call_nc  ('mod', 'telib', 'portal_pickups');
 #define pet_spawn(_x, _y, _name)                                                        return  mod_script_call_nc  ('mod', 'telib', 'pet_spawn', _x, _y, _name);
-#define pet_get_icon(_modType, _modName, _name)                                         return  mod_script_call_self('mod', 'telib', 'pet_get_icon', _modType, _modName, _name);
+#define pet_get_name(_name, _modType, _modName, _skin)                                  return  mod_script_call_self('mod', 'telib', 'pet_get_name', _name, _modType, _modName, _skin);
+#define pet_get_sprite(_name, _modType, _modName, _skin, _sprName)                      return  mod_script_call_self('mod', 'telib', 'pet_get_sprite', _name, _modType, _modName, _skin, _sprName);
+#define pet_set_skin(_skin)                                                             return  mod_script_call_self('mod', 'telib', 'pet_set_skin', _skin);
 #define team_get_sprite(_team, _sprite)                                                 return  mod_script_call_nc  ('mod', 'telib', 'team_get_sprite', _team, _sprite);
 #define team_instance_sprite(_team, _inst)                                              return  mod_script_call_nc  ('mod', 'telib', 'team_instance_sprite', _team, _inst);
 #define sprite_get_team(_sprite)                                                        return  mod_script_call_nc  ('mod', 'telib', 'sprite_get_team', _sprite);

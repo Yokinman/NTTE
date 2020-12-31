@@ -1922,7 +1922,7 @@
 				 // Map Icons:
 				var _list = [];
 				with(instances_matching(ntte_pet, "", null)){
-					array_push(_list, pet_get_icon(mod_type, mod_name, pet));
+					array_push(_list, [pet, mod_type, mod_name, bskin]);
 				}
 				global.pet_mapicon[index] = _list;
 				
@@ -2907,6 +2907,8 @@
 		if(array_length(_inst)) with(_inst){
 			tip_ntte = "";
 			
+			var _lastSeed = random_get_seed();
+			
 			 // Scythe:
 			if(GameCont.hard > 1){
 				if(global.scythe_tip_index != -1){
@@ -2927,33 +2929,31 @@
 			 // Pets:
 			if(tip_ntte == "" && chance(1, 14)){
 				var	_player = array_shuffle(instances_matching_ne(Player, "ntte_pet", null)),
-					_tip    = null;
+					_tip    = "";
 					
 				with(_player){
 					var _pet = array_shuffle(array_clone(ntte_pet));
-					with(_pet) if(instance_exists(self)){
-						var _scrt = pet + "_ttip";
-						if(mod_script_exists(mod_type, mod_name, _scrt)){
-							_tip = mod_script_call(mod_type, mod_name, _scrt);
-							if(array_length(_tip) > 0){
-								_tip = _tip[irandom(array_length(_tip) - 1)];
-							}
+					with(instances_matching(_pet, "", null)){
+						_tip = mod_script_call("mod", "telib", "pet_get_ttip", pet, mod_type, mod_name, bskin);
+						if(_tip != ""){
+							break;
 						}
-						
-						if(is_string(_tip)) break;
 					}
-					if(is_string(_tip)) break;
+					if(_tip != ""){
+						break;
+					}
 				}
 				
-				if(is_string(_tip)){
-					tip_ntte = _tip;
-				}
+				tip_ntte = _tip;
 			}
 			
 			 // Set Tip:
 			if(tip_ntte != ""){
 				tip = tip_ntte;
 			}
+			
+			 // Reset Seed:
+			random_set_seed(_lastSeed);
 		}
 		
 		 // Setup Events:
@@ -4389,42 +4389,38 @@
 					}
 					
 					if(_draw){
-						var _icon = pet_get_icon(mod_type, mod_name, pet);
-						
-						if(sprite_exists(spr_icon)){
-							_icon.spr = spr_icon;
-						}
-						
-						if(sprite_exists(_icon.spr)){
-							var	_x = x + _icon.x,
-								_y = y + _icon.y;
+						var _spr = spr_icon;
+						if(sprite_exists(_spr)){
+							var	_x   = x,
+								_y   = y,
+								_img = 0.4 * current_frame;
 								
 							 // Death Pointer:
 							if(instance_exists(revive)){
 								_y -= 20 + sin(wave / 10);
-								draw_sprite_ext(spr.PetArrow, _icon.img, _x, _y + (sprite_get_height(_icon.spr) - sprite_get_yoffset(_icon.spr)), _icon.xsc, _icon.ysc, 0, _icon.col, _icon.alp);
+								draw_sprite(spr.PetArrow, _img, _x, _y + (sprite_get_height(_spr) - sprite_get_yoffset(_spr)));
 							}
 							
 							 // Icon:
-							var	_x1 = sprite_get_xoffset(_icon.spr),
-								_y1 = sprite_get_yoffset(_icon.spr),
-								_x2 = _x1 - sprite_get_width(_icon.spr) + _gw,
-								_y2 = _y1 - sprite_get_height(_icon.spr) + _gh;
+							var	_x1 = sprite_get_xoffset(_spr),
+								_y1 = sprite_get_yoffset(_spr),
+								_x2 = _x1 - sprite_get_width(_spr)  + _gw,
+								_y2 = _y1 - sprite_get_height(_spr) + _gh;
 								
 							_x = _vx + clamp(_x - _vx, _x1 + 1, _x2 - 1);
 							_y = _vy + clamp(_y - _vy, _y1 + 1, _y2 - 1);
 							
-							draw_sprite_ext(_icon.spr, _icon.img, _x, _y, _icon.xsc, _icon.ysc, _icon.ang, _icon.col, _icon.alp);
+							draw_sprite(_spr, _img, _x, _y);
 							
 							 // Death Indicating:
 							if(instance_exists(revive)){
 								var	_flashLength = 15,
-									_flashDelay = 10,
-									_flash = (current_frame % (_flashLength + _flashDelay));
+									_flashDelay  = 10,
+									_flash       = (current_frame % (_flashLength + _flashDelay));
 									
 								if(_flash < _flashLength){
 									draw_set_blend_mode(bm_add);
-									draw_sprite_ext(_icon.spr, _icon.img, clamp(_x, _x1, _x2), clamp(_y, _y1, _y2), _icon.xsc, _icon.ysc, _icon.ang, _icon.col, _icon.alp * (1 - (_flash / _flashLength)));
+									draw_sprite_ext(_spr, _img, clamp(_x, _x1, _x2), clamp(_y, _y1, _y2), 1, 1, 0, c_white, 1 - (_flash / _flashLength));
 									draw_set_blend_mode(bm_normal);
 								}
 							}
@@ -4560,20 +4556,22 @@
 			}
 			
 			 // Pet Icons:
-			for(var _petNum = 0; _petNum < array_length(global.pet_mapicon[i]); _petNum++){
-				var _icon = global.pet_mapicon[i, _petNum];
-				
-				if(sprite_exists(_icon.spr)){
+			var _iconList = global.pet_mapicon[i];
+			for(var _iconNum = 0; _iconNum < array_length(_iconList); _iconNum++){
+				var	_icon    = _iconList[_iconNum],
+					_iconSpr = pet_get_sprite(_icon[0], _icon[1], _icon[2], _icon[3], "icon");
+					
+				if(sprite_exists(_iconSpr)){
 					draw_sprite_ext(
-						_icon.spr,
-						_icon.img,
-						_x + floor(lengthdir_x(_iconDis, _iconAng + _iconDir)) + _icon.x,
-						_y + floor(lengthdir_y(_iconDis, _iconAng + _iconDir)) + _icon.y,
-						_icon.xsc,
-						_icon.ysc,
-						_icon.ang,
-						(instance_exists(BackMainMenu) ? merge_color(_icon.col, c_black, 0.9) : _icon.col),
-						_icon.alp
+						_iconSpr,
+						0.4 * current_frame,
+						_x + floor(lengthdir_x(_iconDis, _iconAng + _iconDir)),
+						_y + floor(lengthdir_y(_iconDis, _iconAng + _iconDir)),
+						1,
+						1,
+						0,
+						(instance_exists(BackMainMenu) ? merge_color(c_white, c_black, 0.9) : c_white),
+						1
 					);
 				}
 				
@@ -4937,7 +4935,9 @@
 #define portal_poof()                                                                   return  mod_script_call_nc  ('mod', 'telib', 'portal_poof');
 #define portal_pickups()                                                                return  mod_script_call_nc  ('mod', 'telib', 'portal_pickups');
 #define pet_spawn(_x, _y, _name)                                                        return  mod_script_call_nc  ('mod', 'telib', 'pet_spawn', _x, _y, _name);
-#define pet_get_icon(_modType, _modName, _name)                                         return  mod_script_call_self('mod', 'telib', 'pet_get_icon', _modType, _modName, _name);
+#define pet_get_name(_name, _modType, _modName, _skin)                                  return  mod_script_call_self('mod', 'telib', 'pet_get_name', _name, _modType, _modName, _skin);
+#define pet_get_sprite(_name, _modType, _modName, _skin, _sprName)                      return  mod_script_call_self('mod', 'telib', 'pet_get_sprite', _name, _modType, _modName, _skin, _sprName);
+#define pet_set_skin(_skin)                                                             return  mod_script_call_self('mod', 'telib', 'pet_set_skin', _skin);
 #define team_get_sprite(_team, _sprite)                                                 return  mod_script_call_nc  ('mod', 'telib', 'team_get_sprite', _team, _sprite);
 #define team_instance_sprite(_team, _inst)                                              return  mod_script_call_nc  ('mod', 'telib', 'team_instance_sprite', _team, _inst);
 #define sprite_get_team(_sprite)                                                        return  mod_script_call_nc  ('mod', 'telib', 'sprite_get_team', _sprite);

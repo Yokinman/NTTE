@@ -1803,8 +1803,8 @@
 														),
 														_wadeHeight = _surfH / 2;
 														
-													for(var s = 0; s < array_length(_surfScale); s++){
-														with(surface_setup(`VisualQuality${s}`, _surfW, _surfH, _surfScale[s])){
+													for(var _s = 0; _s < array_length(_surfScale); _s++){
+														with(surface_setup(`VisualQuality${_s}`, _surfW, _surfH, _surfScale[_s])){
 															x = _x - 20 - (w / 2);
 															y = _y + 24 - (h / 2);
 															
@@ -1815,14 +1815,14 @@
 															surface_set_target(surf);
 															draw_clear_alpha(0, 0);
 															with(UberCont){
-																if(s == 0) draw_set_fog(true, _wadeColor, 0, 0);
+																if(_s == 0) draw_set_fog(true, _wadeColor, 0, 0);
 																draw_sprite_ext(_spr, _img, _dx * other.scale, _dy * other.scale, other.scale, other.scale, 0, c_white, 1);
-																if(s == 0) draw_set_fog(false, 0, 0, 0);
+																if(_s == 0) draw_set_fog(false, 0, 0, 0);
 															}
 															surface_reset_target();
 															
 															 // Draw Clipped Surface:
-															if(s == 0){ // Bottom
+															if(_s == 0){ // Bottom
 																draw_surface_part_ext(surf, 0, _wadeHeight * scale, w * scale, (h - _wadeHeight) * scale, x, y + _wadeHeight, 1 / scale, 1 / scale, _col, 1);
 															}
 															else{ // Top
@@ -2188,7 +2188,7 @@
 										for(var i = 0; i < lq_size(_petList); i++){
 											var	_pet      = lq_get_key(_petList, i),
 												_info     = lq_get_value(_petList, i),
-												_icon     = pet_get_icon(_info.mod_type, _info.mod_name, _info.name),
+												_icon     = pet_get_sprite(_info.name, _info.mod_type, _info.mod_name, 0, "icon"),
 												_avail    = _info.avail,
 												_hover    = false,
 												_selected = (_petSlct[_index] == _pet && _avail);
@@ -2203,7 +2203,7 @@
 												_y + 6
 											)){
 												_hover = true;
-												_tooltip = (_avail ? _info.name : "UNKNOWN");
+												_tooltip = (_avail ? pet_get_name(_info.name, _info.mod_type, _info.mod_name, 0) : "UNKNOWN");
 												
 												 // Select:
 												if(button_pressed(_index, "fire")){
@@ -2223,11 +2223,17 @@
 												}
 											}
 											
-											if(!_avail) draw_set_fog(true, make_color_hsv(0, 0, 22 * (1 + _hover)), 0, 0);
-											
-											draw_sprite_ext(_icon.spr, _icon.img, _x + _icon.x, _y + _icon.y - _selected, _icon.xsc, _icon.ysc, _icon.ang, merge_color(_icon.col, c_black, (_selected || _hover) ? 0 : 0.5), _icon.alp);
-											
-											if(!_avail) draw_set_fog(false, 0, 0, 0);
+											if(sprite_exists(_icon)){
+												if(!_avail){
+													draw_set_fog(true, make_color_hsv(0, 0, 22 * (1 + _hover)), 0, 0);
+												}
+												
+												draw_sprite_ext(_icon, 0.4 * current_frame, _x, _y - _selected, 1, 1, 0, merge_color(c_white, c_black, (_selected || _hover) ? 0 : 0.5), 1);
+												
+												if(!_avail){
+													draw_set_fog(false, 0, 0, 0);
+												}
+											}
 											
 											_x += _w;
 											if((i % _col) == _col - 1){
@@ -2249,14 +2255,14 @@
 										draw_text_bn(
 											_vx + 28 + (2 * max(0, (_appear + 1) - _pop)),
 											_vy + 46,
-											((_pet != null) ? (_pet.avail ? _pet.name : "UNKNOWN") : "NONE"),
+											((_pet != null) ? (_pet.avail ? pet_get_name(_pet.name, _pet.mod_type, _pet.mod_name, 0) : "UNKNOWN") : "NONE"),
 											1.5
 										);
 									}
 									
 									 // Get Stats to Display:
 									if(_pet != null && _pet.avail){
-										var	_stat     = { name : "", list : [] },
+										var	_stat     = { name: "", list: [] },
 											_scrt     = _pet.name + "_stat",
 											_statPath = `pet:${_pet.name}.${_pet.mod_name}.${_pet.mod_type}:`;
 											
@@ -2267,18 +2273,27 @@
 												
 											 // Call Stats Script:
 											if(mod_script_exists(_pet.mod_type, _pet.mod_name, _scrt)){
-												var s = mod_script_call(_pet.mod_type, _pet.mod_name, _scrt, _name, _value);
-												if(s != 0){
-													if(is_array(s)){
-														if(array_length(s) > 0){
-															_name = s[0];
+												var _s = mod_script_call(_pet.mod_type, _pet.mod_name, _scrt, _name, _value);
+												if(_s != 0){
+													if(is_array(_s)){
+														if(array_length(_s) > 0){
+															_name = _s[0];
 														}
-														if(array_length(s) > 1){
-															_value = s[1];
+														if(array_length(_s) > 1){
+															_value = _s[1];
 															_type = stat_display;
 														}
 													}
-													else _name = s;
+													else _name = _s;
+												}
+											}
+											if(i < 0 && _name == ""){
+												var _spr = pet_get_sprite(_pet.name, _pet.mod_type, _pet.mod_name, 0, "stat");
+												if(_spr == 0){
+													_spr = pet_get_sprite(_pet.name, _pet.mod_type, _pet.mod_name, 0, "idle");
+												}
+												if(sprite_exists(_spr)){
+													_name = _spr;
 												}
 											}
 											
@@ -2286,7 +2301,7 @@
 												 // Title:
 												if(i < 0){
 													if(is_real(_name) && sprite_exists(_name)){
-														_name = `@(${s}:-0.4)${chr(13) + chr(10)} `;
+														_name = `@(${_name}:-0.4)${chr(13) + chr(10)} `;
 													}
 													_stat.name = string(_name);
 												}
@@ -2962,7 +2977,9 @@
 #define portal_poof()                                                                   return  mod_script_call_nc  ('mod', 'telib', 'portal_poof');
 #define portal_pickups()                                                                return  mod_script_call_nc  ('mod', 'telib', 'portal_pickups');
 #define pet_spawn(_x, _y, _name)                                                        return  mod_script_call_nc  ('mod', 'telib', 'pet_spawn', _x, _y, _name);
-#define pet_get_icon(_modType, _modName, _name)                                         return  mod_script_call_self('mod', 'telib', 'pet_get_icon', _modType, _modName, _name);
+#define pet_get_name(_name, _modType, _modName, _skin)                                  return  mod_script_call_self('mod', 'telib', 'pet_get_name', _name, _modType, _modName, _skin);
+#define pet_get_sprite(_name, _modType, _modName, _skin, _sprName)                      return  mod_script_call_self('mod', 'telib', 'pet_get_sprite', _name, _modType, _modName, _skin, _sprName);
+#define pet_set_skin(_skin)                                                             return  mod_script_call_self('mod', 'telib', 'pet_set_skin', _skin);
 #define team_get_sprite(_team, _sprite)                                                 return  mod_script_call_nc  ('mod', 'telib', 'team_get_sprite', _team, _sprite);
 #define team_instance_sprite(_team, _inst)                                              return  mod_script_call_nc  ('mod', 'telib', 'team_instance_sprite', _team, _inst);
 #define sprite_get_team(_sprite)                                                        return  mod_script_call_nc  ('mod', 'telib', 'sprite_get_team', _sprite);
