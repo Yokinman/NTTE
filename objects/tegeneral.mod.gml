@@ -2905,47 +2905,6 @@
 				}
 			}
 		}
-		
-		 // Wall Collision:
-		if(visible || instance_exists(revive)){
-			motion_step(1);
-			
-			with(path_wall){
-				var _walled = false;
-				with(other){
-					if(place_meeting(x, y, other)){
-						_walled = true;
-						
-						x = xprevious;
-						y = yprevious;
-						
-						var	_mx = 1,
-							_my = 1;
-							
-						with(path_wall) with(other){
-							for(var _mx; _mx >= 0; _mx -= 0.5){
-								if(!place_meeting(x + (hspeed_raw * _mx), y, other)){
-									break;
-								}
-							}
-							for(var _my; _my >= 0; _my -= 0.5){
-								if(!place_meeting(x, y + (vspeed_raw * _my), other)){
-									break;
-								}
-							}
-						}
-						
-						hspeed_raw *= max(0, _mx);
-						vspeed_raw *= max(0, _my);
-						x += hspeed_raw;
-						y += vspeed_raw;
-					}
-				}
-				if(_walled) break;
-			}
-			
-			motion_step(-1);
-		}
 	}
 	
 	 // Disabling Collision to Avoid Projectiles:
@@ -2959,6 +2918,43 @@
 	if(mask_index == mskNone && mask_store != null){
 		mask_index = mask_store;
 		mask_store = null;
+	}
+	
+	 // Wall Collision:
+	if(visible || instance_exists(revive)){
+		with(path_wall){
+			var _walled = false;
+			with(other){
+				if(place_meeting(x, y, other) && !place_meeting(xprevious, yprevious, other)){
+					_walled = true;
+					
+					x = xprevious;
+					y = yprevious;
+					
+					var	_mx = 1,
+						_my = 1;
+						
+					with(path_wall) with(other){
+						for(_mx = _mx; _mx >= 0; _mx -= 0.5){
+							if(!place_meeting(x + (hspeed_raw * _mx), y, other)){
+								break;
+							}
+						}
+						for(_my = _my; _my >= 0; _my -= 0.5){
+							if(!place_meeting(x, y + (vspeed_raw * _my), other)){
+								break;
+							}
+						}
+					}
+					
+					hspeed_raw *= max(0, _mx);
+					vspeed_raw *= max(0, _my);
+					x += hspeed_raw;
+					y += vspeed_raw;
+				}
+			}
+			if(_walled) break;
+		}
 	}
 	
 	/*

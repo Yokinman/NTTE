@@ -3842,22 +3842,24 @@
 	spr_cry  = Cuz_sprite(0, "cry");
 	
 	 // Sound:
-	snd_horn     = Cuz_sound(0, "horn");
-	snd_lowa     = Cuz_sound(0, "lowa");
-	snd_chst     = Cuz_sound(0, "chst");
-	snd_pick     = Cuz_sound(0, "pick");
-	snd_wrld     = Cuz_sound(0, "wrld");
-	snd_valt     = Cuz_sound(0, "valt");
-	snd_idpd     = Cuz_sound(0, "idpd");
-	snd_cry      = Cuz_sound(0, "cry");
-	snd_gone     = Cuz_sound(0, "gone");
-	leader_sound = {
+	snd_horn  = Cuz_sound(0, "horn");
+	snd_lowa  = Cuz_sound(0, "lowa");
+	snd_chst  = Cuz_sound(0, "chst");
+	snd_pick  = Cuz_sound(0, "pick");
+	snd_wrld  = Cuz_sound(0, "wrld");
+	snd_valt  = Cuz_sound(0, "valt");
+	snd_idpd  = Cuz_sound(0, "idpd");
+	snd_popo  = Cuz_sound(0, "popo");
+	snd_cry   = Cuz_sound(0, "cry");
+	snd_gone  = Cuz_sound(0, "gone");
+	cuz_sound = {
 		"lowa" : 0,
 		"chst" : 0,
 		"pick" : 0,
 		"wrld" : 0,
 		"valt" : 0,
-		"idpd" : 0
+		"idpd" : 0,
+		"popo" : 0
 	};
 	
 	 // Vars:
@@ -3904,6 +3906,7 @@
 		case "wrld" : return sndMutant16Wrld;
 		case "valt" : return sndMutant16Valt;
 		case "idpd" : return sndMutant16IDPD;
+		case "popo" : return sndMutant16Chst;
 		case "cry"  : return sndCuzCry;
 		case "gone" : return sndCuzOutaway;
 	}
@@ -3930,10 +3933,10 @@
 		if(button_pressed(leader_index, "horn")){
 			sound_play_hit_ext(snd_horn, 1, 2);
 		}
-		for(var i = 0; i < lq_size(leader_sound); i++){
-			var	_name = lq_get_key(leader_sound, i),
-				_time = lq_get_value(leader_sound, i),
-				_play = false;
+		for(var i = 0; i < lq_size(cuz_sound); i++){
+			var	_name = lq_get_key(cuz_sound, i),
+				_time = lq_get_value(cuz_sound, i),
+				_play = 0;
 				
 			switch(_name){
 				case "pick":
@@ -3942,25 +3945,31 @@
 						&& (audio_is_playing(sndWeaponPickup) || audio_is_playing(sndGuitarPickup))
 						&& array_length(instances_matching(WepSwap, "creator", leader))
 					){
-						_play = true;
+						_play = 1;
+					}
+					break;
+					
+				case "popo":
+					if(instance_exists(IDPDSpawn) || instance_exists(VanSpawn)){
+						_play = 30;
 					}
 					break;
 					
 				default:
 					if(("snd_" + _name) in leader && audio_is_playing(variable_instance_get(leader, "snd_" + _name))){
-						_play = true;
+						_play = 1;
 					}
 			}
 			
 			 // Playing Sound:
-			if(_play){
+			if(_play > 0){
 				if(_time <= 0){
-					lq_set(leader_sound, _name, 1);
+					lq_set(cuz_sound, _name, _play);
 					sound_play_hit(variable_instance_get(self, "snd_" + _name), 0.1);
 				}
 			}
 			else if(_time > 0){
-				lq_set(leader_sound, _name, _time - current_time_scale);
+				lq_set(cuz_sound, _name, _time - current_time_scale);
 			}
 		}
 		
@@ -3984,11 +3993,10 @@
 							motion_step(-1);
 						}
 					}
-					alarm0 = 30;
 				}
 				
 				 // Lets GO:
-				else alarm0 = 1;
+				else scrWalk(270, 10);
 				sound_play(snd_chst);
 				instance_delete(cuz);
 			}
@@ -4200,16 +4208,16 @@
 #define Cuz_alrm0(_leaderDir, _leaderDis)
 	if(!instance_exists(cuz)){
 		 // Following:
-		if(instance_exists(leader) && _leaderDis > 64){
+		if(instance_exists(leader) && (_leaderDis > 64 || path_dir != null)){
 			 // Pathfinding:
 			if(path_dir != null){
-				scrWalk(path_dir + orandom(20), 8);
+				scrWalk(path_dir + orandom(10), 8);
 				return walk;
 			}
 			
 			 // Move Toward Leader:
 			else{
-				scrWalk(_leaderDir + orandom(20), 10);
+				scrWalk(_leaderDir + orandom(10), 10);
 				return 10 + random(5);
 			}
 		}

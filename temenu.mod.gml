@@ -114,7 +114,8 @@
 							"Prism"      + ".petlib.mod",
 							"Orchid"     + ".petlib.mod",
 							"Weapon"     + ".petlib.mod",
-							"Twins"      + ".petlib.mod"
+							"Twins"      + ".petlib.mod",
+							"Cuz"        + ".petlib.mod"
 						]
 					},
 					
