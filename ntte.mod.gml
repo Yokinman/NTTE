@@ -98,7 +98,7 @@
 	 // Race Runs Stat:
 	for(var i = 0; i < maxp; i++){
 		var _race = player_get_race(i);
-		if(array_exists(ntte_mods.race, _race)){
+		if(array_find_index(ntte_mods.race, _race) >= 0){
 			var _stat = "race:" + _race + ":runs";
 			stat_set(_stat, stat_get(_stat) + 1);
 		}
@@ -200,7 +200,9 @@
 		
 	 // Activate Pets:
 	with(instances_matching(CustomHitme, "name", "Pet")){
-		visible = true;
+		if(!instance_exists(PopoScene)){
+			visible = true;
+		}
 		if(instance_exists(leader)){
 			x = leader.x;
 			y = leader.y;
@@ -434,7 +436,7 @@
 		case area_campfire: /// CAMPFIRE
 			
 			 // Unlock Custom Crowns:
-			if(array_exists(ntte_mods.crown, crown_current)){
+			if(array_find_index(ntte_mods.crown, crown_current) >= 0){
 				unlock_set(`loadout:crown:${crown_current}`, true);
 			}
 			
@@ -1795,7 +1797,7 @@
 		with(GameCont){
 			 // NTTE Area B-Themes:
 			if(subarea == 1){
-				if(array_exists(ntte_mods.area, area)){
+				if(array_find_index(ntte_mods.area, area) >= 0){
 					if(random(20) < 1 || array_length(instances_matching_le(Player, "my_health", 1))){
 						if(vaults < 3){
 							proto = true;
@@ -1850,7 +1852,7 @@
 		 // CampChar Management:
 		for(var i = 0; i < maxp; i++) if(player_is_active(i)){
 			var _race = player_get_race(i);
-			if(array_exists(ntte_mods.race, _race)){
+			if(array_find_index(ntte_mods.race, _race) >= 0){
 				with(instances_matching(CampChar, "race", _race)){
 					 // Pan Camera:
 					var _local = false;
@@ -2041,7 +2043,7 @@
 	
 	 // NTTE Area Effects:
 	if(!instance_exists(GenCont) && !instance_exists(LevCont) && instance_exists(BackCont)){
-		if(array_exists(ntte_mods.area, GameCont.area)){
+		if(array_find_index(ntte_mods.area, GameCont.area) >= 0){
 			var _inst = instances_matching_le(instances_matching_gt(BackCont, "alarm0", 0), "alarm0", ceil(current_time_scale));
 			if(array_length(_inst)) with(_inst){
 				alarm_set(0, 0);
@@ -2060,7 +2062,7 @@
 	if(instance_exists(PlayerSit)){
 		var _inst = instances_matching_le(instances_matching_gt(PlayerSit, "alarm0", 0), "alarm0", ceil(current_time_scale));
 		if(array_length(_inst)) with(_inst){
-			if(array_exists(ntte_mods.crown, crown_current)){
+			if(array_find_index(ntte_mods.crown, crown_current) >= 0){
 				unlock_set(`loadout:crown:${crown_current}`, true);
 			}
 		}
@@ -2091,7 +2093,7 @@
 						is_object(_wep)
 						&& "ammo" in _wep
 						&& "amax" in _wep
-						&& array_exists(ntte_mods.wep, wep_raw(_wep))
+						&& array_find_index(ntte_mods.wep, wep_raw(_wep)) >= 0
 					){
 						var	_cost    = lq_defget(_wep, "cost", 0),
 							_amax    = _wep.amax,
@@ -2154,7 +2156,7 @@
 					}
 					
 					 // Race Deaths Stat:
-					if(array_exists(ntte_mods.race, _race)){
+					if(array_find_index(ntte_mods.race, _race) >= 0){
 						var _stat = "race:" + _race + ":lost";
 						stat_set(_stat, stat_get(_stat) + 1);
 					}
@@ -2392,7 +2394,7 @@
 				with([wep, bwep]){
 					var _wep = self;
 					if(weapon_get_gold(_wep) != 0){
-						if(array_exists(["merge", "trident", "tunneller"], wep_raw(_wep))){
+						if(array_find_index(["merge", "trident", "tunneller"], wep_raw(_wep)) >= 0){
 							var	_path = `loadout:wep:${other.race}`,
 								_name = "main";
 								
@@ -2411,7 +2413,7 @@
 	else if(!instance_exists(LevCont) && instance_exists(Player)){
 		if(instance_exists(Portal) || (!instance_exists(enemy) && !instance_exists(becomenemy) && !instance_exists(CorpseActive))){
 			//if(!array_length(instances_matching_ne(instances_matching(CustomObject, "name", "CatHoleBig"), "sprite_index", mskNone))){ yokin wtf how could you comment out my epic code!?!?
-				if(array_exists(["coast", "oasis", "trench", "lair", "red"], GameCont.area)){
+				if(array_find_index(["coast", "oasis", "trench", "lair", "red"], GameCont.area) >= 0){
 					if(GameCont.subarea >= area_get_subarea(GameCont.area)){
 						unlock_set("pack:" + GameCont.area, true);
 					}
@@ -2620,6 +2622,34 @@
 		}
 	}
 	
+	 // Yung Cuz Fix:
+	if(instance_exists(YungCuz)){
+		var _inst = instances_matching(YungCuz, "whatthehellhowisthisreal", null);
+		if(array_length(_inst)) with(_inst){
+			whatthehellhowisthisreal = false;
+			if(spr_to == sprCuzInteractTo && spr_from == sprCuzInteractFrom){
+				var	_lastSpr = sprite_index,
+					_lastImg = image_index,
+					_looking = (distance_to_object(Player) <= 64);
+					
+				sprite_index = (_looking ? spr_idle : spr_heya);
+				
+				with(self){
+					event_perform(ev_other, ev_animation_end);
+				}
+				
+				if(sprite_index == (_looking ? spr_from : spr_to)){
+					whatthehellhowisthisreal = true;
+					spr_from = sprCuzInteractTo;
+					spr_to   = sprCuzInteractFrom;
+				}
+				
+				sprite_index = _lastSpr;
+				image_index  = _lastImg;
+			}
+		}
+	}
+	
 	if(lag) trace_time("ntte_step");
 	
 #define ntte_end_step
@@ -2633,7 +2663,7 @@
 				var	_wep = variable_instance_get(id, _b + "wep"),
 					_raw = wep_raw(_wep);
 					
-				if(is_string(_raw) && mod_script_exists("weapon", _raw, "weapon_avail") && array_exists(ntte_mods.wep, _raw)){
+				if(is_string(_raw) && mod_script_exists("weapon", _raw, "weapon_avail") && array_find_index(ntte_mods.wep, _raw) >= 0){
 					 // No Cheaters (bro just play the mod):
 					if(!mod_script_call_self("weapon", _raw, "weapon_avail", _wep)){
 						variable_instance_set(id, _b + "wep",      "crabbone");
@@ -2658,7 +2688,7 @@
 	}
 	
 	 // Crown Found:
-	if(is_string(crown_current) && array_exists(ntte_mods.crown, crown_current)){
+	if(is_string(crown_current) && array_find_index(ntte_mods.crown, crown_current) >= 0){
 		stat_set("found:" + crown_current + ".crown", true);
 		save_set("unlock:pack:crown", true);
 	}
@@ -2682,7 +2712,7 @@
 		var _statRace = [];
 		for(var i = 0; i < maxp; i++){
 			var _race = player_get_race(i);
-			if(array_exists(ntte_mods.race, _race) && !array_exists(_statRace, _race)){
+			if(array_find_index(ntte_mods.race, _race) >= 0 && array_find_index(_statRace, _race) < 0){
 				array_push(_statRace, _race);
 			}
 		}
@@ -2702,7 +2732,7 @@
 			}
 			
 			 // Time:
-			if((array_length(instances_matching(instances_matching(Player, "race", self), "visible", false)) <= 0 && !instance_exists(GenCont)) || instance_exists(LevCont)){
+			if((!array_length(instances_matching(instances_matching(Player, "race", self), "visible", false)) && !instance_exists(GenCont)) || instance_exists(LevCont)){
 				if(!instance_exists(PlayerSit)){
 					var _stat = _statPath + "time";
 					stat_set(_stat, stat_get(_stat) + (current_time_scale / 30));
@@ -2711,7 +2741,7 @@
 			
 			 // Best Run:
 			if(GameCont.kills >= stat_get(_statPath + "best:kill")){
-				stat_set(_statPath + "best:area", area_get_name(GameCont.area, GameCont.subarea, GameCont.loops));
+				stat_set(_statPath + "best:area", [GameCont.area, GameCont.subarea, GameCont.loops]);
 				stat_set(_statPath + "best:kill", GameCont.kills);
 			}
 		}
@@ -3116,7 +3146,7 @@
 			
 			with(weapon_spawn){
 				 // Natural Spawn:
-				if(array_exists(wep, wep_raw(other.wep))){
+				if(array_find_index(wep, wep_raw(other.wep)) >= 0){
 					other.ntte_weapon_spawn = true;
 				}
 				
@@ -3140,7 +3170,7 @@
 								
 							for(var i = 0; i < 128 + array_length(_mods); i++){
 								var _wep = ((i < 128) ? i : _mods[i - 128]);
-								if(!array_exists(other.wep, _wep)){
+								if(array_find_index(other.wep, _wep) < 0){
 									array_push(_noWep, _wep);
 								}
 							}
@@ -3195,7 +3225,7 @@
 	 // Loading Screen Map Drawing Setup:
 	with(global.map_bind[? "load"].id){
 		visible = false;
-		if(instance_exists(GenCont)){
+		if(instance_exists(GenCont) && !instance_exists(PopoScene) && !GameCont.win){
 			with(instances_matching(GenCont, "visible", true)){
 				if(!other.visible || depth - 1 <= other.depth){
 					other.visible = true;
@@ -4609,7 +4639,7 @@
 				alarm_set(2, -1);
 				_mus = mus.Tesseract;
 			}
-			else if(array_exists(ntte_mods.area, _area)){
+			else if(array_find_index(ntte_mods.area, _area) >= 0){
 				if(mod_script_exists("area", _area, "area_music_boss")){
 					alarm_set(2, -1);
 					_mus = mod_script_call_self("area", _area, "area_music_boss");
@@ -4619,7 +4649,7 @@
 		
 		 // Music / Ambience:
 		if(alarm_get(11) > 0 && alarm_get(11) <= ceil(current_time_scale)){
-			if(array_exists(ntte_mods.area, _area)){
+			if(array_find_index(ntte_mods.area, _area) >= 0){
 				if(mod_script_exists("area", _area, "area_music") || mod_script_exists("area", _area, "area_ambient")){
 					alarm_set(11, -1);
 					
@@ -4799,7 +4829,7 @@
 #macro  current_frame_active                                                                    (current_frame % 1) < current_time_scale
 #macro  anim_end                                                                                (image_index + image_speed_raw >= image_number || image_index + image_speed_raw < 0)
 #macro  enemy_sprite                                                                            (sprite_index != spr_hurt || anim_end) ? ((speed <= 0) ? spr_idle : spr_walk) : sprite_index
-#macro  enemy_boss                                                                              ('boss' in self) ? boss : ('intro' in self || array_exists([Nothing, Nothing2, BigFish, OasisBoss], object_index))
+#macro  enemy_boss                                                                              ('boss' in self) ? boss : ('intro' in self || array_find_index([Nothing, Nothing2, BigFish, OasisBoss], object_index) >= 0)
 #macro  player_active                                                                           visible && !instance_exists(GenCont) && !instance_exists(LevCont) && !instance_exists(SitDown) && !instance_exists(PlayerSit)
 #macro  game_scale_nonsync                                                                      game_screen_get_width_nonsync() / game_width
 #macro  bbox_width                                                                              (bbox_right + 1) - bbox_left
@@ -4871,7 +4901,6 @@
 #define draw_weapon(_spr, _img, _x, _y, _ang, _angMelee, _kick, _flip, _blend, _alpha)          mod_script_call_nc  ('mod', 'telib', 'draw_weapon', _spr, _img, _x, _y, _ang, _angMelee, _kick, _flip, _blend, _alpha);
 #define draw_lasersight(_x, _y, _dir, _maxDistance, _width)                             return  mod_script_call_nc  ('mod', 'telib', 'draw_lasersight', _x, _y, _dir, _maxDistance, _width);
 #define draw_surface_scale(_surf, _x, _y, _scale)                                               mod_script_call_nc  ('mod', 'telib', 'draw_surface_scale', _surf, _x, _y, _scale);
-#define array_exists(_array, _value)                                                    return  mod_script_call_nc  ('mod', 'telib', 'array_exists', _array, _value);
 #define array_count(_array, _value)                                                     return  mod_script_call_nc  ('mod', 'telib', 'array_count', _array, _value);
 #define array_combine(_array1, _array2)                                                 return  mod_script_call_nc  ('mod', 'telib', 'array_combine', _array1, _array2);
 #define array_delete(_array, _index)                                                    return  mod_script_call_nc  ('mod', 'telib', 'array_delete', _array, _index);

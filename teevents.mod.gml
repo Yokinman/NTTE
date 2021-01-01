@@ -1082,7 +1082,7 @@
 				 // Not Above Another Event:
 				var _notEvent = true;
 				/*with(teevent_get_active(all)){
-					if(array_exists(floors, other)){
+					if(array_find_index(floors, other) >= 0){
 						_notEvent = false;
 						break;
 					}
@@ -1898,7 +1898,7 @@
 		if(i >= 0){
 			depth    = 8;
 			traction = 0.45;
-			material = ((i == 0 || array_exists([0, sqrt(image_number) - 1, image_number - 1, image_number - sqrt(image_number)], image_index)) ? 2 : 1);
+			material = ((i == 0 || array_find_index([0, sqrt(image_number) - 1, image_number - 1, image_number - sqrt(image_number)], image_index) >= 0) ? 2 : 1);
 			with(instance_create(x, y - 1, SnowFloor)){
 				sprite_index = _floorSnow[i];
 				image_index  = other.image_index;
@@ -2234,17 +2234,17 @@
 							}
 							
 							 // Toxic:
-							if(array_exists(_split, "TOXIC")){
+							if(array_find_index(_split, "TOXIC") >= 0){
 								array_push(_list, "toad breath");
 							}
 							
 							 // Blood:
-							if(array_exists(_split, "BLOOD")){
+							if(array_find_index(_split, "BLOOD") >= 0){
 								array_push(_list, mut_bloodlust);
 							}
 							
 							 // Pop:
-							if(array_exists(_split, "POP") && _type == type_bullet){
+							if(array_find_index(_split, "POP") >= 0 && _type == type_bullet){
 								array_push(_list, mut_shotgun_shoulders);
 							}
 						}
@@ -2281,7 +2281,7 @@
 			if(
 				skill_get(_skill) == 0
 				&& skill_get_avail(_skill)
-				&& !array_exists(_pool, _skill)
+				&& array_find_index(_pool, _skill) < 0
 			){
 				array_push(_pool, _skill);
 			}
@@ -2551,7 +2551,7 @@
 #macro  current_frame_active                                                                    (current_frame % 1) < current_time_scale
 #macro  anim_end                                                                                (image_index + image_speed_raw >= image_number || image_index + image_speed_raw < 0)
 #macro  enemy_sprite                                                                            (sprite_index != spr_hurt || anim_end) ? ((speed <= 0) ? spr_idle : spr_walk) : sprite_index
-#macro  enemy_boss                                                                              ('boss' in self) ? boss : ('intro' in self || array_exists([Nothing, Nothing2, BigFish, OasisBoss], object_index))
+#macro  enemy_boss                                                                              ('boss' in self) ? boss : ('intro' in self || array_find_index([Nothing, Nothing2, BigFish, OasisBoss], object_index) >= 0)
 #macro  player_active                                                                           visible && !instance_exists(GenCont) && !instance_exists(LevCont) && !instance_exists(SitDown) && !instance_exists(PlayerSit)
 #macro  game_scale_nonsync                                                                      game_screen_get_width_nonsync() / game_width
 #macro  bbox_width                                                                              (bbox_right + 1) - bbox_left
@@ -2623,7 +2623,6 @@
 #define draw_weapon(_spr, _img, _x, _y, _ang, _angMelee, _kick, _flip, _blend, _alpha)          mod_script_call_nc  ('mod', 'telib', 'draw_weapon', _spr, _img, _x, _y, _ang, _angMelee, _kick, _flip, _blend, _alpha);
 #define draw_lasersight(_x, _y, _dir, _maxDistance, _width)                             return  mod_script_call_nc  ('mod', 'telib', 'draw_lasersight', _x, _y, _dir, _maxDistance, _width);
 #define draw_surface_scale(_surf, _x, _y, _scale)                                               mod_script_call_nc  ('mod', 'telib', 'draw_surface_scale', _surf, _x, _y, _scale);
-#define array_exists(_array, _value)                                                    return  mod_script_call_nc  ('mod', 'telib', 'array_exists', _array, _value);
 #define array_count(_array, _value)                                                     return  mod_script_call_nc  ('mod', 'telib', 'array_count', _array, _value);
 #define array_combine(_array1, _array2)                                                 return  mod_script_call_nc  ('mod', 'telib', 'array_combine', _array1, _array2);
 #define array_delete(_array, _index)                                                    return  mod_script_call_nc  ('mod', 'telib', 'array_delete', _array, _index);

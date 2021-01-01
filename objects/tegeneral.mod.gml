@@ -2158,7 +2158,7 @@
 								_y   = (_size / 2) + lengthdir_y(_dis, _ang),
 								_pulse = 1 + min(4 / sprite_get_width(_spr), i * (sprite_get_height(_spr) / 64));
 								
-							if(array_exists(_instMergeFlak, self)){
+							if(array_find_index(_instMergeFlak, self) >= 0){
 								_img = i;
 								_pulse = 1;
 							}
@@ -2567,7 +2567,7 @@
 	}
 	
 	 // Loading/Level Up Screen:
-	if((instance_exists(GenCont) && instance_exists(FloorMaker)) || instance_exists(LevCont)){
+	if(instance_exists(GenCont) || instance_exists(LevCont)){
 		visible      = false;
 		portal_angle = 0;
 		
@@ -2812,7 +2812,7 @@
 		 // Time Stat:
 		if(
 			instance_is(leader, Player)
-			&& array_exists(leader.ntte_pet, id)
+			&& array_find_index(leader.ntte_pet, id) >= 0
 			&& "owned" in stat
 		){
 			stat.owned += (current_time_scale / 30);
@@ -3280,7 +3280,7 @@
 	
 #define PetWeaponBecome_step
 	 // Cursed:
-	if(bskin == (curse <= 0)){
+	if(bskin == !(curse > 0)){
 		bskin = (curse > 0);
 		sprite_index = pet_get_sprite("Weapon", "mod", "petlib", bskin, "chst");
 	}
@@ -3830,7 +3830,7 @@
 				&& button_check(creator.index, (spec ? "spec" : "fire"))
 				&& is_object(_wep)
 				&& is_array(lq_get(_wep, "inst"))
-				&& array_exists(_wep.inst, id)
+				&& array_find_index(_wep.inst, id) >= 0
 			)
 		){
 			if(instance_exists(creator)){
@@ -5985,7 +5985,7 @@
 #macro  current_frame_active                                                                    (current_frame % 1) < current_time_scale
 #macro  anim_end                                                                                (image_index + image_speed_raw >= image_number || image_index + image_speed_raw < 0)
 #macro  enemy_sprite                                                                            (sprite_index != spr_hurt || anim_end) ? ((speed <= 0) ? spr_idle : spr_walk) : sprite_index
-#macro  enemy_boss                                                                              ('boss' in self) ? boss : ('intro' in self || array_exists([Nothing, Nothing2, BigFish, OasisBoss], object_index))
+#macro  enemy_boss                                                                              ('boss' in self) ? boss : ('intro' in self || array_find_index([Nothing, Nothing2, BigFish, OasisBoss], object_index) >= 0)
 #macro  player_active                                                                           visible && !instance_exists(GenCont) && !instance_exists(LevCont) && !instance_exists(SitDown) && !instance_exists(PlayerSit)
 #macro  game_scale_nonsync                                                                      game_screen_get_width_nonsync() / game_width
 #macro  bbox_width                                                                              (bbox_right + 1) - bbox_left
@@ -6057,7 +6057,6 @@
 #define draw_weapon(_spr, _img, _x, _y, _ang, _angMelee, _kick, _flip, _blend, _alpha)          mod_script_call_nc  ('mod', 'telib', 'draw_weapon', _spr, _img, _x, _y, _ang, _angMelee, _kick, _flip, _blend, _alpha);
 #define draw_lasersight(_x, _y, _dir, _maxDistance, _width)                             return  mod_script_call_nc  ('mod', 'telib', 'draw_lasersight', _x, _y, _dir, _maxDistance, _width);
 #define draw_surface_scale(_surf, _x, _y, _scale)                                               mod_script_call_nc  ('mod', 'telib', 'draw_surface_scale', _surf, _x, _y, _scale);
-#define array_exists(_array, _value)                                                    return  mod_script_call_nc  ('mod', 'telib', 'array_exists', _array, _value);
 #define array_count(_array, _value)                                                     return  mod_script_call_nc  ('mod', 'telib', 'array_count', _array, _value);
 #define array_combine(_array1, _array2)                                                 return  mod_script_call_nc  ('mod', 'telib', 'array_combine', _array1, _array2);
 #define array_delete(_array, _index)                                                    return  mod_script_call_nc  ('mod', 'telib', 'array_delete', _array, _index);

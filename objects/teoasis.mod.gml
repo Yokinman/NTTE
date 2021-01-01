@@ -246,7 +246,7 @@
 #macro ntte_mods global.mods
 
 #macro underwater_area   ((GameCont.area == area_vault) ? GameCont.lastarea : GameCont.area)
-#macro underwater_active (!instance_exists(GenCont) && !instance_exists(LevCont) && array_exists(ntte_mods.area, underwater_area) && area_get_underwater(underwater_area))
+#macro underwater_active (!instance_exists(GenCont) && !instance_exists(LevCont) && array_find_index(ntte_mods.area, underwater_area) >= 0 && area_get_underwater(underwater_area))
 
 #define BubbleBomb_create(_x, _y)
 	with(instance_create(_x, _y, CustomProjectile)){
@@ -1316,7 +1316,7 @@
 				with(FloorNormal){
 					_spawnX = bbox_center_x;
 					_spawnY = bbox_center_y;
-					if(!array_exists(other.floors, id)){
+					if(array_find_index(other.floors, id) < 0){
 						array_push(_tunnelFloor, [id, point_distance(bbox_center_x, bbox_center_y, _x, _y)]);
 					}
 				}
@@ -1559,7 +1559,7 @@
 	}
 	
 	 // Underwater Sounds:
-	if(global.underwater_sound_active || array_exists(ntte_mods.area, underwater_area)){
+	if(global.underwater_sound_active || array_find_index(ntte_mods.area, underwater_area) >= 0){
 		underwater_sound(area_get_underwater(underwater_area));
 	}
 	
@@ -1929,7 +1929,7 @@
 #macro  current_frame_active                                                                    (current_frame % 1) < current_time_scale
 #macro  anim_end                                                                                (image_index + image_speed_raw >= image_number || image_index + image_speed_raw < 0)
 #macro  enemy_sprite                                                                            (sprite_index != spr_hurt || anim_end) ? ((speed <= 0) ? spr_idle : spr_walk) : sprite_index
-#macro  enemy_boss                                                                              ('boss' in self) ? boss : ('intro' in self || array_exists([Nothing, Nothing2, BigFish, OasisBoss], object_index))
+#macro  enemy_boss                                                                              ('boss' in self) ? boss : ('intro' in self || array_find_index([Nothing, Nothing2, BigFish, OasisBoss], object_index) >= 0)
 #macro  player_active                                                                           visible && !instance_exists(GenCont) && !instance_exists(LevCont) && !instance_exists(SitDown) && !instance_exists(PlayerSit)
 #macro  game_scale_nonsync                                                                      game_screen_get_width_nonsync() / game_width
 #macro  bbox_width                                                                              (bbox_right + 1) - bbox_left
@@ -2001,7 +2001,6 @@
 #define draw_weapon(_spr, _img, _x, _y, _ang, _angMelee, _kick, _flip, _blend, _alpha)          mod_script_call_nc  ('mod', 'telib', 'draw_weapon', _spr, _img, _x, _y, _ang, _angMelee, _kick, _flip, _blend, _alpha);
 #define draw_lasersight(_x, _y, _dir, _maxDistance, _width)                             return  mod_script_call_nc  ('mod', 'telib', 'draw_lasersight', _x, _y, _dir, _maxDistance, _width);
 #define draw_surface_scale(_surf, _x, _y, _scale)                                               mod_script_call_nc  ('mod', 'telib', 'draw_surface_scale', _surf, _x, _y, _scale);
-#define array_exists(_array, _value)                                                    return  mod_script_call_nc  ('mod', 'telib', 'array_exists', _array, _value);
 #define array_count(_array, _value)                                                     return  mod_script_call_nc  ('mod', 'telib', 'array_count', _array, _value);
 #define array_combine(_array1, _array2)                                                 return  mod_script_call_nc  ('mod', 'telib', 'array_combine', _array1, _array2);
 #define array_delete(_array, _index)                                                    return  mod_script_call_nc  ('mod', 'telib', 'array_delete', _array, _index);

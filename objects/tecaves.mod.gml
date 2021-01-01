@@ -1736,7 +1736,7 @@
 		/*
 		 // Clientside Darkness:
 		var _darkAreas = [area_sewers, area_caves, area_labs, "pizza", "lair", "trench"];
-		if(array_exists(_darkAreas, area) && !array_exists(_darkAreas, GameCont.area)){
+		if(array_find_index(_darkAreas, area) >= 0 && array_find_index(_darkAreas, GameCont.area) < 0){
 			with(instances_matching_gt(Floor, "id", _genID)){
 				array_push(clientDarknessFloor, id);
 			}
@@ -1748,7 +1748,7 @@
 		
 		 // Reveal:
 		with(instances_matching_gt([Floor, Wall, TopSmall], "id", _genID)){
-			if(!array_exists(_tileOld, id)){
+			if(array_find_index(_tileOld, id) < 0){
 				with(floor_reveal(bbox_left, bbox_top, bbox_right, bbox_bottom, 6)){
 					time_max *= 1.3;
 				}
@@ -3847,7 +3847,7 @@
 			
 		with(array_combine([area_campfire, area_desert, area_sewers, area_scrapyards, area_caves, area_city, area_labs, area_palace, area_vault, area_oasis, area_pizza_sewers, area_mansion, area_cursed_caves, area_jungle, area_hq, area_crib], mod_get_names("area"))){
 			var _area = self;
-			if(!array_exists([area_campfire, area_vault, area_oasis, area_pizza_sewers, area_hq, "red"], _area)){
+			if(array_find_index([area_campfire, area_vault, area_oasis, area_pizza_sewers, area_hq, "red"], _area) < 0){
 				 // Cursed:
 				if(_area == area_caves){
 					with(Player) if(curse > 0 || bcurse > 0){
@@ -4177,7 +4177,7 @@
 	
 	 // Warpin Help:
 	with(portal) if(anim_end){
-		if(array_exists(instance_is(self, BigPortal) ? [sprBigPortalDisappear] : [sprPortalDisappear, sprProtoPortalDisappear, sprPopoPortalDisappear], sprite_index)){
+		if(array_find_index(instance_is(self, BigPortal) ? [sprBigPortalDisappear] : [sprPortalDisappear, sprProtoPortalDisappear, sprPopoPortalDisappear], sprite_index) >= 0){
 			area_set("red", 0, GameCont.loops);
 			with(self){
 				event_perform(ev_other, ev_animation_end);
@@ -4947,7 +4947,7 @@
 #macro  current_frame_active                                                                    (current_frame % 1) < current_time_scale
 #macro  anim_end                                                                                (image_index + image_speed_raw >= image_number || image_index + image_speed_raw < 0)
 #macro  enemy_sprite                                                                            (sprite_index != spr_hurt || anim_end) ? ((speed <= 0) ? spr_idle : spr_walk) : sprite_index
-#macro  enemy_boss                                                                              ('boss' in self) ? boss : ('intro' in self || array_exists([Nothing, Nothing2, BigFish, OasisBoss], object_index))
+#macro  enemy_boss                                                                              ('boss' in self) ? boss : ('intro' in self || array_find_index([Nothing, Nothing2, BigFish, OasisBoss], object_index) >= 0)
 #macro  player_active                                                                           visible && !instance_exists(GenCont) && !instance_exists(LevCont) && !instance_exists(SitDown) && !instance_exists(PlayerSit)
 #macro  game_scale_nonsync                                                                      game_screen_get_width_nonsync() / game_width
 #macro  bbox_width                                                                              (bbox_right + 1) - bbox_left
@@ -5019,7 +5019,6 @@
 #define draw_weapon(_spr, _img, _x, _y, _ang, _angMelee, _kick, _flip, _blend, _alpha)          mod_script_call_nc  ('mod', 'telib', 'draw_weapon', _spr, _img, _x, _y, _ang, _angMelee, _kick, _flip, _blend, _alpha);
 #define draw_lasersight(_x, _y, _dir, _maxDistance, _width)                             return  mod_script_call_nc  ('mod', 'telib', 'draw_lasersight', _x, _y, _dir, _maxDistance, _width);
 #define draw_surface_scale(_surf, _x, _y, _scale)                                               mod_script_call_nc  ('mod', 'telib', 'draw_surface_scale', _surf, _x, _y, _scale);
-#define array_exists(_array, _value)                                                    return  mod_script_call_nc  ('mod', 'telib', 'array_exists', _array, _value);
 #define array_count(_array, _value)                                                     return  mod_script_call_nc  ('mod', 'telib', 'array_count', _array, _value);
 #define array_combine(_array1, _array2)                                                 return  mod_script_call_nc  ('mod', 'telib', 'array_combine', _array1, _array2);
 #define array_delete(_array, _index)                                                    return  mod_script_call_nc  ('mod', 'telib', 'array_delete', _array, _index);

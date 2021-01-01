@@ -247,7 +247,7 @@
 					},
 				{	name : "Best Run",
 					list : [
-						["Area",  _path + "best:area", stat_base],
+						["Area",  _path + "best:area", stat_area],
 						["Kills", _path + "best:kill", stat_base]
 						]
 					}
@@ -315,7 +315,8 @@
 
 #macro stat_base    0
 #macro stat_time    1
-#macro stat_display 2
+#macro stat_area    2
+#macro stat_display 3
 
 #macro cred_artist     `@(color:${make_color_rgb(30, 160, 240)})`
 #macro cred_coder      `@(color:${make_color_rgb(250, 170, 0)})`
@@ -1497,7 +1498,7 @@
 		for(var _index = 0; _index < maxp; _index++){
 			if(player_is_active(_index)){
 				var _user = player_get_uid(_index);
-				if(!array_exists(_userSeen, _user)){
+				if(array_find_index(_userSeen, _user) < 0){
 					array_push(_userSeen, _user);
 					
 					draw_set_visible_all(false);
@@ -2096,7 +2097,7 @@
 										
 									for(var i = 0; i < lq_size(_petStatList); i++){
 										var _key = lq_get_key(_petStatList, i);
-										if(!array_exists(_list, _key)){
+										if(array_find_index(_list, _key) < 0){
 											array_push(_list, _key);
 										}
 									}
@@ -2614,7 +2615,9 @@
 											_stat = stat_get(_stat);
 										}
 										switch(_type){
+											
 											case stat_time:
+												
 												var _t = "";
 												_t += string_lpad(string(floor((_stat / power(60, 2))     )), "0", 1); // Hours
 												_t += ":";
@@ -2622,7 +2625,33 @@
 												_t += ":";
 												_t += string_lpad(string(floor((_stat / power(60, 0)) % 60)), "0", 2); // Seconds
 												_stat = _t;
+												
 												break;
+												
+											case stat_area:
+												
+												var	_area    = _stat,
+													_subarea = 1,
+													_loops   = 0;
+													
+												if(is_array(_stat)){
+													if(array_length(_stat) > 0){
+														_area = _stat[0];
+														if(array_length(_stat) > 1){
+															_subarea = _stat[1];
+															if(array_length(_stat) > 2){
+																_loops = _stat[2];
+															}
+														}
+													}
+												}
+												
+												if(!is_string(_area) || mod_exists("area", _area)){
+													_stat = area_get_name(_area, _subarea, _loops);
+												}
+												
+												break;
+												
 										}
 										_stat = string(_stat);
 										
@@ -2841,7 +2870,7 @@
 #macro  current_frame_active                                                                    (current_frame % 1) < current_time_scale
 #macro  anim_end                                                                                (image_index + image_speed_raw >= image_number || image_index + image_speed_raw < 0)
 #macro  enemy_sprite                                                                            (sprite_index != spr_hurt || anim_end) ? ((speed <= 0) ? spr_idle : spr_walk) : sprite_index
-#macro  enemy_boss                                                                              ('boss' in self) ? boss : ('intro' in self || array_exists([Nothing, Nothing2, BigFish, OasisBoss], object_index))
+#macro  enemy_boss                                                                              ('boss' in self) ? boss : ('intro' in self || array_find_index([Nothing, Nothing2, BigFish, OasisBoss], object_index) >= 0)
 #macro  player_active                                                                           visible && !instance_exists(GenCont) && !instance_exists(LevCont) && !instance_exists(SitDown) && !instance_exists(PlayerSit)
 #macro  game_scale_nonsync                                                                      game_screen_get_width_nonsync() / game_width
 #macro  bbox_width                                                                              (bbox_right + 1) - bbox_left
@@ -2913,7 +2942,6 @@
 #define draw_weapon(_spr, _img, _x, _y, _ang, _angMelee, _kick, _flip, _blend, _alpha)          mod_script_call_nc  ('mod', 'telib', 'draw_weapon', _spr, _img, _x, _y, _ang, _angMelee, _kick, _flip, _blend, _alpha);
 #define draw_lasersight(_x, _y, _dir, _maxDistance, _width)                             return  mod_script_call_nc  ('mod', 'telib', 'draw_lasersight', _x, _y, _dir, _maxDistance, _width);
 #define draw_surface_scale(_surf, _x, _y, _scale)                                               mod_script_call_nc  ('mod', 'telib', 'draw_surface_scale', _surf, _x, _y, _scale);
-#define array_exists(_array, _value)                                                    return  mod_script_call_nc  ('mod', 'telib', 'array_exists', _array, _value);
 #define array_count(_array, _value)                                                     return  mod_script_call_nc  ('mod', 'telib', 'array_count', _array, _value);
 #define array_combine(_array1, _array2)                                                 return  mod_script_call_nc  ('mod', 'telib', 'array_combine', _array1, _array2);
 #define array_delete(_array, _index)                                                    return  mod_script_call_nc  ('mod', 'telib', 'array_delete', _array, _index);

@@ -18,19 +18,19 @@
 	
 #macro spr global.spr
 
-#define weapon_name(_wep)  return (weapon_avail(_wep) ? ((weapon_gold(_wep) != 0) ? "GOLDEN " : "") + "TUNNELLER" : "LOCKED");
-#define weapon_text(_wep)  return ((weapon_get_gold(_wep) != 0) ? choose("GOLDEN GOD", `@(color:${area_get_back_color("red")})KEY @sTO THE @wMULTIVERSE`) : choose(`@wUNLOCK @sTHE @(color:${area_get_back_color("red")})CONTINUUM`, "FULL CIRCLE", `YET ANOTHER @(color:${area_get_back_color("red")})RED KEY`));
-#define weapon_sprt(_wep)  return (weapon_avail() ? ((weapon_get_gold(_wep) == 0) ? global.sprWep : global.sprWepGold) : global.sprWepLocked);
-#define weapon_loadout     return ((argument_count > 0 && weapon_get_gold(argument0) != 0) ? global.sprWepGoldLoadout : global.sprWepLoadout);
-#define weapon_area(_wep)  return ((argument_count > 0 && weapon_avail(_wep) && weapon_get_gold(_wep) == 0) ? 22 : -1); // L1 3-1
-#define weapon_gold(_wep)  return ((argument_count > 0 && lq_defget(_wep, "gold", false)) ? -1 : 0);
-#define weapon_load        return 24; // 0.8 Seconds
-#define weapon_auto        return true;
-#define weapon_melee       return false;
-#define weapon_avail       return unlock_get("pack:" + weapon_ntte_pack());
-#define weapon_ntte_pack   return "red";
-#define weapon_shrine      return [mut_long_arms, mut_laser_brain];
-#define weapon_red         return 1;
+#define weapon_name(_wep)     return (weapon_avail(_wep) ? ((weapon_gold(_wep) != 0) ? "GOLDEN " : "") + "TUNNELLER" : "LOCKED");
+#define weapon_text(_wep)     return ((weapon_get_gold(_wep) != 0) ? choose("GOLDEN GOD", `@(color:${area_get_back_color("red")})KEY @sTO THE @wMULTIVERSE`) : choose(`@wUNLOCK @sTHE @(color:${area_get_back_color("red")})CONTINUUM`, "FULL CIRCLE", `YET ANOTHER @(color:${area_get_back_color("red")})RED KEY`));
+#define weapon_sprt(_wep)     return (weapon_avail() ? ((weapon_get_gold(_wep) == 0) ? global.sprWep : global.sprWepGold) : global.sprWepLocked);
+#define weapon_loadout(_wep)  return ((argument_count > 0 && weapon_get_gold(_wep) != 0) ? global.sprWepGoldLoadout : global.sprWepLoadout);
+#define weapon_area(_wep)     return ((argument_count > 0 && weapon_avail(_wep) && weapon_get_gold(_wep) == 0) ? 22 : -1); // L1 3-1
+#define weapon_gold(_wep)     return ((argument_count > 0 && lq_defget(_wep, "gold", false)) ? -1 : 0);
+#define weapon_load           return 24; // 0.8 Seconds
+#define weapon_auto           return true;
+#define weapon_melee          return false;
+#define weapon_avail          return unlock_get("pack:" + weapon_ntte_pack());
+#define weapon_ntte_pack      return "red";
+#define weapon_shrine         return [mut_long_arms, mut_laser_brain];
+#define weapon_red            return 1;
 
 #define weapon_type
 	 // Weapon Pickup Ammo Outline:
@@ -147,9 +147,9 @@
 		
 		 // Sounds:
 		var _pitch = random_range(0.8, 1.2);
-		sound_play_pitch(sndHyperCrystalSearch,	((_skill > 0) ? 1.2 : 1.4) * _pitch);
-		sound_play_pitch(sndUltraGrenade,		1.0 * _pitch);
-		sound_play_pitch(sndGammaGutsKill,		1.4 * _pitch);
+		sound_play_pitch(sndHyperCrystalSearch, ((_skill > 0) ? 1.2 : 1.4) * _pitch);
+		sound_play_pitch(((weapon_get_gold(_wep) == 0) ? sndUltraGrenade : sndGoldPlasmaUpg), 1.0 * _pitch);
+		sound_play_pitch(sndGammaGutsKill, 1.4 * _pitch);
 		sound_set_track_position(
 			sound_play_pitch(((_skill > 0) ? sndDevastatorUpg : sndDevastator), 0.8 * _pitch),
 			0.6
@@ -190,7 +190,7 @@
 			}
 			
 			 // Sounds:
-			sound_play_gun(sndScrewdriver, 0.2, 0.6);
+			sound_play_gun(((weapon_get_gold(_wep) == 0) ? sndScrewdriver : sndGoldScrewdriver), 0.2, 0.6);
 			sound_set_track_position(
 				sound_play_pitchvol(sndHyperCrystalChargeExplo, 1 + random(0.5), 0.4),
 				1.5

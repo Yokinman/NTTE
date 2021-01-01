@@ -49,7 +49,7 @@
 			}
 			instance_delete(id);
 		}
-		if(array_exists(_eventList, "step")){
+		if(array_find_index(_eventList, "step") >= 0){
 			for(var i = ntte_alarm_min; i < ntte_alarm_max; i++){
 				array_push(_eventList, `alrm${i}`);
 			}
@@ -129,8 +129,12 @@
 			
 		for(var i = 0; i < _teamSize; i++){
 			var _team = _teamList[i];
-			if(array_length(_team) > 0) _sprtList[i] = _team[0];
-			if(array_length(_team) > 1) _objsList[i] = _team[1];
+			if(array_length(_team)){
+				_sprtList[i] = _team[0];
+				if(array_length(_team) > 1){
+					_objsList[i] = _team[1];
+				}
+			}
 		}
 		
 		 // Compiling Sprite Maps:
@@ -161,8 +165,12 @@
 							
 						for(var i = 0; i < _tSize; i++){
 							var _team = _tList[i];
-							if(array_length(_team) > 0) _sList[i] = _team[0];
-							if(array_length(_team) > 1) _oList[i] = _team[1];
+							if(array_length(_team)){
+								_sList[i] = _team[0];
+								if(array_length(_team) > 1){
+									_oList[i] = _team[1];
+								}
+							}
 						}
 						
 						for(var i = 0; i < _tSize; i++){
@@ -220,8 +228,6 @@
 #macro current_frame_active ((current_frame % 1) < current_time_scale)
 
 #macro anim_end (image_index + image_speed_raw >= image_number || image_index + image_speed_raw < 0)
-
-#macro enemy_boss (("boss" in self && boss) || array_exists([BanditBoss, ScrapBoss, LilHunter, Nothing, Nothing2, FrogQueen, HyperCrystal, TechnoMancer, Last, BigFish, OasisBoss], object_index))
 
 #macro bbox_center_x (bbox_left + bbox_right + 1) / 2
 #macro bbox_center_y (bbox_top + bbox_bottom + 1) / 2
@@ -330,7 +336,7 @@
 												
 												 // Object/Parents Already in List:
 												for(var i = _obj; object_exists(i); i = object_get_parent(i)){
-													if(array_exists(_objList, i)){
+													if(array_find_index(_objList, i) >= 0){
 														_obj = -1;
 														break;
 													}
@@ -957,7 +963,7 @@
 		 // Only Ammo Chests:
 		if(crown_current == crwn_love){
 			if(!is_real(_obj) || !object_is(_obj, AmmoChest)){
-				if(!array_exists([ProtoChest, RogueChest, "Backpack", "BonusAmmoChest", "BonusAmmoMimic", "BuriedVaultChest", "CatChest", "CursedAmmoChest", "CursedMimic", "SunkenChest"], _obj)){
+				if(array_find_index([ProtoChest, RogueChest, "Backpack", "BonusAmmoChest", "BonusAmmoMimic", "BuriedVaultChest", "CatChest", "CursedAmmoChest", "CursedMimic", "SunkenChest"], _obj) < 0){
 					var _name = (is_real(_obj) ? object_get_name(_obj) : _obj);
 					if(string_pos("Mimic", _name) > 0){
 						_obj = Mimic;
@@ -1357,7 +1363,7 @@
 	
 #define unlock_splat(_name, _text, _sprite, _sound)
 	 // Make Sure UnlockCont Exists:
-	if(array_length(instances_matching(CustomObject, "name", "UnlockCont")) <= 0){
+	if(!array_length(instances_matching(CustomObject, "name", "UnlockCont"))){
 		obj_create(0, 0, "UnlockCont");
 	}
 	
@@ -1792,9 +1798,6 @@
 	
 	return _num;
 	
-#define array_exists(_array, _value)
-	return (array_find_index(_array, _value) >= 0);
-	
 #define array_count(_array, _value)
 	/*
 		Returns the number of times a given value was found in the given array
@@ -1956,7 +1959,7 @@
 			}
 			
 			 // Custom:
-			else if(is_array(_hitid) && array_length(_hitid) > 1){
+			else if(is_array(_hitid) && array_length(_hitid)){
 				_name = string(_hitid[1]);
 			}
 		}
@@ -2396,12 +2399,12 @@
 		Returns 'true' if the given variable on the given instance is read-only, 'false' otherwise
 	*/
 	
-	if(array_exists(["id", "object_index", "bbox_bottom", "bbox_top", "bbox_right", "bbox_left", "image_number", "sprite_yoffset", "sprite_xoffset", "sprite_height", "sprite_width"], _varName)){
+	if(array_find_index(["id", "object_index", "bbox_bottom", "bbox_top", "bbox_right", "bbox_left", "image_number", "sprite_yoffset", "sprite_xoffset", "sprite_height", "sprite_width"], _varName) >= 0){
 		return true;
 	}
 	
 	if(instance_is(_inst, Player)){
-		if(array_exists(["p", "index", "alias"], _varName)){
+		if(array_find_index(["p", "index", "alias"], _varName) >= 0){
 			return true;
 		}
 	}
@@ -3024,13 +3027,13 @@
 		var	_overlapObject = [Floor, Wall, InvisiWall, TopSmall, TopPot, Bones],
 			_overlapObj    = array_clone(_overlapObject);
 			
-		while(array_length(_overlapObj) > 0){
+		while(array_length(_overlapObj)){
 			var _obj = _overlapObj[0];
 			
 			 // New Overwriting Old:
 			var _objNew = instances_matching_gt(_obj, "id", _genID);
 			with(instances_matching_lt(_overlapObj, "id", _genID)){
-				if(place_meeting(x, y, _obj) && array_length(instances_meeting(x, y, _objNew)) > 0){
+				if(place_meeting(x, y, _obj) && array_length(instances_meeting(x, y, _objNew))){
 					if(object_index == Floor){
 						array_push(_overlapFloorFill, [bbox_left, bbox_top, bbox_right, bbox_bottom]);
 					}
@@ -3044,14 +3047,14 @@
 			 // Old Overwriting New:
 			var _objOld = instances_matching_lt(_obj, "id", _genID);
 			with(instances_matching_gt(_overlapObj, "id", _genID)){
-				if(place_meeting(x, y, _obj) && array_length(instances_meeting(x, y, _objOld)) > 0){
+				if(place_meeting(x, y, _obj) && array_length(instances_meeting(x, y, _objOld))){
 					instance_delete(id);
 				}
 			}
 		}
 		var _wallOld = instances_matching_lt(Wall, "id", _genID);
 		with(instances_matching_lt(hitme, "id", _genID)){
-			if(place_meeting(x, y, Wall) && array_length(instances_meeting(x, y, _wallOld)) <= 0){
+			if(place_meeting(x, y, Wall) && !array_length(instances_meeting(x, y, _wallOld))){
 				instance_budge(Wall, -1);
 			}
 		}
@@ -3390,7 +3393,9 @@
 		_fix = true;
 		if(cavein_dis > 0){
 			var d = 12;
-			if(array_length(instances_matching_gt(Player, "y", _y - 64)) <= 0) d *= 1.5;
+			if(!array_length(instances_matching_gt(Player, "y", _y - 64))){
+				d *= 1.5;
+			}
 			cavein_dis = max(0, cavein_dis - (max(4, random(d)) * current_time_scale));
 			
 			 // Debris:
@@ -3499,7 +3504,7 @@
 	}
 	else if(cavein == false){
 		 // Start Cave In:
-		if(array_length(instances_matching_lt(Player, "y", _y)) > 0){
+		if(array_length(instances_matching_lt(Player, "y", _y))){
 			cavein = true;
 			sound_play_pitchvol(sndStatueXP, 0.2 + random(0.2), 3);
 		}
@@ -3566,7 +3571,7 @@
 			
 			 // Save:
 			else if(persistent || (instance_is(self, Pickup) && !instance_is(self, Rad)) || instance_is(self, chestprop) || (instance_is(self, Corpse) && y < _y + 240) || (instance_is(self, CustomHitme) && "name" in self && name == "Pet")){
-				if(!array_exists(_caveInst, id)){
+				if(array_find_index(_caveInst, id) < 0){
 					array_push(_caveInst, id);
 				}
 			}
@@ -3678,7 +3683,7 @@
 	
 	with(list){
 		 // Revealing:
-		if(time > 0 && (time <= time_max || array_length(instance_rectangle_bbox(x1, y1, x2, y2, _destroyInst)) <= 0)){
+		if(time > 0 && (time <= time_max || !array_length(instance_rectangle_bbox(x1, y1, x2, y2, _destroyInst)))){
 			var	_num = clamp(time / time_max, 0, 1),
 				_col = ((time > time_max) ? color : merge_color(flash_color, color, (flash ? (1 - _num) : _num)));
 				
@@ -3695,7 +3700,7 @@
 	draw_set_alpha(1);
 	
 	 // Goodbye:
-	if(array_length(list) <= 0){
+	if(!array_length(list)){
 		visible = false;
 	}
 	
@@ -4106,7 +4111,7 @@
 		
 		 // Floors in Range:
 		_move = false;
-		if(array_length(_inst) > 0){
+		if(array_length(_inst)){
 			if(_floorDis <= 0){
 				_move = true;
 			}
@@ -4148,7 +4153,7 @@
 		_x2           = _x,
 		_y2           = _y;
 		
-	if(array_length(_floors) > 0){
+	if(array_length(_floors)){
 		with(_floors[0]){
 			_x1 = bbox_left;
 			_y1 = bbox_top;
@@ -4338,7 +4343,7 @@
 			var	_x = x + lengthdir_x(_dis, _dir),
 				_y = y + lengthdir_y(_dis, _dir);
 				
-			if(_isArray ? (array_length(instances_meeting(_x, _y, _objAvoid)) <= 0) : !place_meeting(_x, _y, _objAvoid)){
+			if(_isArray ? !array_length(instances_meeting(_x, _y, _objAvoid)) : !place_meeting(_x, _y, _objAvoid)){
 				if(_inLevel || (place_free(_x, _y) && (position_meeting(_x, _y, Floor) || place_meeting(_x, _y, Floor)))){
 					x = _x;
 					y = _y;
@@ -5178,13 +5183,13 @@
 				my_health = maxhealth;
 			}
 			
-			 // Sprites:
-			pet_set_skin(bskin);
-			
 			 // Cause of Death Name:
-			if(is_array(hitid) && array_length(hitid) > 1 && hitid[1] == ""){
+			if(is_array(hitid) && array_length(hitid) && hitid[1] == ""){
 				hitid[1] = pet_get_name(pet, mod_type, mod_name, 0);
 			}
+			
+			 // Sprites:
+			pet_set_skin(bskin);
 		}
 		
 		return self;
@@ -5197,100 +5202,155 @@
 	
 #define pet_get_name(_name, _modType, _modName, _skin)
 	/*
-		Returns the name of the given NT:TE pet
+		Returns the display name of the given NT:TE pet
+		Defaults to the A-skin, or ultimately the pet's raw name if no name was found
 		
 		Ex:
-			pet_get_name("CoolGuy", "mod", "petlib", 0) == "CoolGuy"
 			pet_get_name("CoolGuy", "mod", "petlib", 1) == "CoolGuy?"
 	*/
 	
+	var _title = undefined;
+	
 	 // Custom:
-	var _modScrt = _name + "_name";
-	if(mod_script_exists(_modType, _modName, _modScrt)){
-		var _nameCustom = mod_script_call(_modType, _modName, _modScrt, _skin);
-		if(is_string(_nameCustom)){
-			return _nameCustom;
+	if(is_array(_skin)){
+		var _ref = array_clone(_skin);
+		if(array_length(_ref) >= 3){
+			_ref[2] += "_name";
 		}
+		_title = script_ref_call(_ref);
 	}
 	
-	 // Default:
-	return _name;
+	 // Normal:
+	else _title = mod_script_call(_modType, _modName, _name + "_name", _skin);
+	
+	 // Return:
+	if(is_string(_title)){
+		return _title;
+	}
+	return (
+		(_skin == 0)
+		? _name
+		: pet_get_name(_name, _modType, _modName, 0)
+	);
 	
 #define pet_get_ttip(_name, _modType, _modName, _skin)
 	/*
 		Returns a random loading screen tip for the given NT:TE pet
+		Defaults to the A-skin, or ultimately a blank string if no tip was found
 	*/
 	
+	var _tip = undefined;
+	
 	 // Custom:
-	var _modScrt = _name + "_ttip";
-	if(mod_script_exists(_modType, _modName, _modScrt)){
-		var _tip = mod_script_call(_modType, _modName, _modScrt, _skin);
-		if(is_array(_tip) && array_length(_tip) > 0){
-			_tip = _tip[irandom(array_length(_tip) - 1)];
+	if(is_array(_skin)){
+		var _ref = array_clone(_skin);
+		if(array_length(_ref) >= 3){
+			_ref[2] += "_ttip";
 		}
-		if(is_string(_tip)){
-			return _tip;
-		}
+		_tip = script_ref_call(_ref);
 	}
 	
-	 // Default:
-	return "";
+	 // Normal:
+	else _tip = mod_script_call(_modType, _modName, _name + "_ttip", _skin);
+	
+	 // Auto-Choose:
+	if(is_array(_tip) && array_length(_tip)){
+		_tip = _tip[irandom(array_length(_tip) - 1)];
+	}
+	
+	 // Return:
+	if(is_string(_tip)){
+		return _tip;
+	}
+	return (
+		(_skin == 0)
+		? ""
+		: pet_get_ttip(_name, _modType, _modName, 0)
+	);
 	
 #define pet_get_sprite(_name, _modType, _modName, _skin, _sprName)
 	/*
-		Returns the sprite index associated with the given name and NT:TE pet, or 0 by default
+		Returns the sprite index associated with the given name and NT:TE pet
+		Defaults to the A-skin, or ultimately '0' if no sprite was found
 		
 		Ex:
 			pet_get_sprite("Parrot", "mod", "petlib", 1, "idle") == spr.PetParrotBIdle
 	*/
 	
+	var _spr = undefined;
+	
 	 // Custom:
-	var _modScrt = _name + "_sprite";
-	if(mod_script_exists(_modType, _modName, _modScrt)){
-		var _spr = mod_script_call(_modType, _modName, _modScrt, _skin, _sprName);
-		if(_spr != 0 && is_real(_spr)){
-			return _spr;
+	if(is_array(_skin)){
+		var _ref = array_clone(_skin);
+		if(array_length(_ref) >= 3){
+			_ref[2] += "_sprite";
+		}
+		_spr = script_ref_call(_ref, _sprName);
+	}
+	
+	 // Normal:
+	else{
+		var _modScrt = _name + "_sprite";
+		if(mod_script_exists(_modType, _modName, _modScrt)){
+			_spr = mod_script_call(_modType, _modName, _modScrt, _skin, _sprName);
+		}
+		
+		 // Legacy Support:
+		else if(_sprName == "icon"){
+			_spr = mod_script_call(_modType, _modName, _name + "_icon");
+			if(is_object(_spr) && "spr" in _spr){
+				_spr = _spr.spr;
+			}
 		}
 	}
 	
-	 // Legacy Support:
-	var _modScrt = _name + "_icon";
-	if(mod_script_exists(_modType, _modName, _modScrt)){
-		var _icon = mod_script_call(_modType, _modName, _modScrt);
-		if(is_real(_icon)){
-			return _icon;
-		}
-		else if(is_object(_icon) && "spr" in _icon && is_real(_icon.spr)){
-			return _icon.spr;
-		}
+	 // Return:
+	if(_spr != 0 && is_real(_spr)){
+		return _spr;
 	}
-	
-	 // Default:
-	return 0;
+	return (
+		(_skin == 0)
+		? 0
+		: pet_get_sprite(_name, _modType, _modName, 0, _sprName)
+	);
 	
 #define pet_get_sound(_name, _modType, _modName, _skin, _sndName)
 	/*
 		Returns the sound index associated with the given name and NT:TE pet, or 0 by default
+		Defaults to the A-skin, or ultimately '0' if no sound was found
 		
 		Ex:
 			pet_get_sound("Scorpion", "mod", "petlib", 0, "hurt") == sndScorpionMelee
 	*/
 	
+	var _snd = undefined;
+	
 	 // Custom:
-	var _modScrt = _name + "_sound";
-	if(mod_script_exists(_modType, _modName, _modScrt)){
-		var _snd = mod_script_call(_modType, _modName, _modScrt, _skin, _sndName);
-		if(_snd != 0 && is_real(_snd)){
-			return _snd;
+	if(is_array(_skin)){
+		var _ref = array_clone(_skin);
+		if(array_length(_ref) >= 3){
+			_ref[2] += "_sound";
 		}
+		_snd = script_ref_call(_ref, _sndName);
 	}
 	
-	 // Default:
-	return 0;
+	 // Normal:
+	else _snd = mod_script_call(_modType, _modName, _name + "_sound", _skin, _sndName);
+	
+	 // Return:
+	if(_snd != 0 && is_real(_snd)){
+		return _snd;
+	}
+	return (
+		(_skin == 0)
+		? 0
+		: pet_get_sound(_name, _modType, _modName, 0, _sndName)
+	);
 	
 #define pet_set_skin(_skin)
 	/*
 		Called from an NT:TE pet to update their sprites and sounds to the given skin
+		The skin can be a script reference for setting a custom skin
 	*/
 	
 	bskin = _skin;
@@ -5326,14 +5386,12 @@
 	}
 	
 	 // Cause of Death Sprite:
-	if(is_array(hitid) && array_length(hitid) > 0){
+	if(is_array(hitid) && array_length(hitid)){
 		var _spr = pet_get_sprite(pet, mod_type, mod_name, bskin, "stat");
 		if(_spr == 0){
 			_spr = spr_idle;
 		}
-		if(sprite_exists(_spr)){
-			hitid[0] = _spr;
-		}
+		hitid[0] = _spr;
 	}
 	
 	 // Prompt:
@@ -5392,7 +5450,7 @@
 	}
 	
 	 // Top-ify:
-	if(array_length(instances_matching(instances_matching(CustomObject, "name", "TopObject"), "target", _inst)) <= 0){
+	if(!array_length(instances_matching(instances_matching(CustomObject, "name", "TopObject"), "target", _inst))){
 		with(obj_create(_x, _y, "TopObject")){
 			target = _inst;
 			
@@ -5568,11 +5626,11 @@
 						
 					case Cactus:
 						with(target){
-							var t = choose("", "3");
-							if(true || chance(2, 3)) t = "B" + t; // Rotten epic
-							spr_idle = asset_get_index("sprCactus" + t);
-							spr_hurt = asset_get_index("sprCactus" + t + "Hurt");
-							spr_dead = asset_get_index("sprCactus" + t + "Dead");
+							var _t = choose("", "3");
+							//if(chance(2, 3)) t = "B" + t; // Rotten epic
+							spr_idle = asset_get_index("sprCactusB" + _t);
+							spr_hurt = asset_get_index("sprCactusB" + _t + "Hurt");
+							spr_dead = asset_get_index("sprCactusB" + _t + "Dead");
 						}
 						//case NightCactus:
 						spr_shadow = sprMine;
@@ -6126,7 +6184,7 @@
 					_ty   = _targ.y,
 					_path = _vars.path;
 					
-				if(array_length(_path) > 0){
+				if(array_length(_path)){
 					 // Direction to Follow:
 					var _dir = null;
 					if(collision_line(x, y, _tx, _ty, Wall, false, false)){
@@ -6209,7 +6267,7 @@
 						var j = 0;
 						with(_instList){
 							var v = _varsList[j++];
-							if(v.targ == _targ && array_length(v.path) <= 0 && self != other){
+							if(v.targ == _targ && !array_length(v.path) && self != other){
 								if(instance_exists(self) && !collision_line(x, y, other.x, other.y, Wall, false, false)){
 									v.path = _path;
 									v.can_path = false;
@@ -6250,7 +6308,7 @@
 		vars = _varsList;
 		
 		 // Goodbye:
-		if(array_length(_instList) <= 0){
+		if(!array_length(_instList)){
 			visible = false;
 		}
 		
@@ -6345,7 +6403,7 @@
 								variable_instance_set_list(self, _varList);
 								
 								 // Object-Specifics:
-								if(array_exists(["CustomBullet", "CustomFlak", "CustomShell", "CustomPlasma"], _newObj)){
+								if(array_find_index(["CustomBullet", "CustomFlak", "CustomShell", "CustomPlasma"], _newObj) >= 0){
 									var _sprAlly = team_get_sprite(2, sprite_index);
 									
 									 // Destruction Sprite:
@@ -6453,5 +6511,8 @@
 	
 	_newInst = instances_matching(_newInst, "", null);
 	
-	if(array_length(_newInst) <= 0) return noone;
-	return ((array_length(_newInst) == 1) ? _newInst[0] : _newInst);
+	if(array_length(_newInst)){
+		return ((array_length(_newInst) == 1) ? _newInst[0] : _newInst);
+	}
+	
+	return noone;

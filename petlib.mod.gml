@@ -25,9 +25,13 @@
 
 #define Scorpion_create
 	 // Visual:
-	spr_fire   = spr.PetScorpionFire;
-	spr_shield = spr.PetScorpionShield;
+	spr_fire   = Scorpion_sprite(0, "fire");
+	spr_shield = Scorpion_sprite(0, "shield");
 	hitid[1]   = "SILVER SCORPION";
+	
+	 // Sound:
+	snd_fire   = Scorpion_sound(0, "fire");
+	snd_shield = Scorpion_sound(0, "shield");
 	
 	 // Vars:
 	mask_index    = mskFrogEgg;
@@ -66,8 +70,10 @@
 	
 #define Scorpion_sound(_skin, _name)
 	switch(_name){
-		case "hurt" : return sndScorpionMelee;
-		case "dead" : return sndScorpionDie;
+		case "hurt"   : return sndScorpionMelee;
+		case "dead"   : return sndScorpionDie;
+		case "fire"   : return sndScorpionFireStart;
+		case "shield" : return sndGoldScorpionHurt;
 	}
 	
 #define Scorpion_anim
@@ -138,7 +144,7 @@
 				if(instance_exists(target) && !instance_exists(my_venom)){
 					if(instance_seen(x, y, target) && _leaderSeeTarget && _leaderDis <= 96){
 						if(chance(2, 3)){
-							sound_play_hit_ext(sndScorpionFireStart, 1.2, 3);
+							sound_play_hit_ext(snd_fire, 1.2, 3);
 							
 							 // Venom Ball:
 							var _targetDir = point_direction(x, y, target.x, target.y);
@@ -165,21 +171,23 @@
 	
 	 // Dodge/Shield:
 	else{
-		nexthurt = current_frame + 6;
 		motion_add(_direction, 2);
-		walk = 0;
+		nexthurt = current_frame + 6;
+		walk     = 0;
 		
+		 // Visual:
 		sprite_index = spr_shield;
 		image_index  = 0;
-		
-		stat.blocked++;
-		
-		 // Effects:
-		sound_play_hit_ext(sndGoldScorpionHurt,      1.4 + random(0.4), 1.8);
-		sound_play_hit_ext(sndCursedPickupDisappear, 0.8 + random(0.4), 1.8);
 		with(instance_create(x, y, ThrowHit)){
 			depth = other.depth - 1;
 		}
+		
+		 // Sounds:
+		sound_play_hit_ext(snd_shield,               1.4 + random(0.4), 1.8);
+		sound_play_hit_ext(sndCursedPickupDisappear, 0.8 + random(0.4), 1.8);
+		
+		 // Stat:
+		stat.blocked++;
 	}
 	
 #define Scorpion_death
@@ -204,8 +212,11 @@
 	
 #define Parrot_create
 	 // Visual:
-	spr_note = spr.PetParrotNote;
+	spr_note = Parrot_sprite(0, "note");
 	depth    = -3;
+	
+	 // Sound:
+	snd_note = Parrot_sound(0, "note");
 	
 	 // Vars:
 	maxspeed    = 3.5;
@@ -241,6 +252,11 @@
 		case "shadow"   : return shd16;
 		case "shadow_y" : return 4;
 		case "bubble_y" : return -2;
+	}
+	
+#define Parrot_sound(_skin, _name)
+	switch(_name){
+		case "note" : return sndSaplingSpawn;
 	}
 	
 #define Parrot_anim
@@ -461,9 +477,9 @@
 		
 		 // Real Parrot:
 		else if(chance(1, 4)){
+			sound_play_hit_ext(snd_note, 1.8 + random(0.2), 0.33);
 			with(leader){
-				sound_play_hit_ext(sndSaplingSpawn,                      1.8 + random(0.2), 0.33);
-				sound_play_hit_ext(choose(snd_wrld, snd_chst, snd_crwn), 1.6,               0.4);
+				sound_play_hit_ext(choose(snd_wrld, snd_chst, snd_crwn), 1.6, 0.4);
 			}
 			
 			 // Real:
@@ -506,11 +522,14 @@
 	
 #define Slaughter_create
 	 // Visual:
-	spr_spwn       = spr.PetSlaughterSpwn;
-	spr_fire       = spr.PetSlaughterBite;
-	hitid[1]       = "SLAUGHTERFISH";
-	sprite_index   = spr_spwn;
-	depth          = -3;
+	spr_spwn     = Slaughter_sprite(0, "spwn");
+	spr_fire     = Slaughter_sprite(0, "fire");
+	hitid[1]     = "SLAUGHTERFISH";
+	sprite_index = spr_spwn;
+	depth        = -3;
+	
+	 // Sound:
+	snd_spwn = Slaughter_sound(0, "spwn");
 	
 	 // Vars:
 	mask_index = mskFrogEgg;
@@ -553,6 +572,7 @@
 	switch(_name){
 		case "hurt" : return sndOasisBossHurt;
 		case "dead" : return sndFreakDead;
+		case "spwn" : return sndOasisBossDead;
 	}
 	
 #define Slaughter_anim
@@ -564,7 +584,7 @@
 			depth = -2;
 			
 			 // Effects:
-			sound_play_hit_ext(sndOasisBossDead, 1.2 + random(0.1), 1.2);
+			sound_play_hit_ext(snd_spwn, 1.2 + random(0.1), 1.2);
 			var l = -8;
 			for(var d = direction; d < direction + 360; d += (360 / 3)){
 				repeat(2) scrFX(x, y, [d + orandom(40), 4], Dust);
@@ -838,7 +858,7 @@
 	
 #define Octo_create
 	 // Visual:
-	spr_hide = spr.PetOctoHide;
+	spr_hide = Octo_sprite(0, "hide");
 	
 	 // Vars:
 	friction      = 0.1;
@@ -1173,26 +1193,21 @@
 	}
 	
 #define CoolGuy_name(_skin)
-	return "CoolGuy" + ((_skin == 1) ? "?" : "");
+	return "CoolGuy" + ((_skin == "peas") ? "?" : "");
 	
 #define CoolGuy_ttip(_skin)
 	return (
-		(_skin == 1)
+		(_skin == "peas")
 		? "STINK BEAN"
-		: [
-			"JUST A COOL GUY",
-			"BRO",
-			"HIGH SCORE!",
-			"BACKWARD CAPS ARE COOL"
-		]
+		: ["JUST A COOL GUY", "BRO", "HIGH SCORE!", "BACKWARD CAPS ARE COOL"]
 	);
 	
 #define CoolGuy_sprite(_skin, _name)
 	switch(_name){
-		case "icon"     : return ((_skin == 1) ? spr.PetPeasIcon : spr.PetCoolGuyIcon);
-		case "idle"     : return ((_skin == 1) ? spr.PetPeasIdle : spr.PetCoolGuyIdle);
-		case "walk"     : return ((_skin == 1) ? spr.PetPeasWalk : spr.PetCoolGuyWalk);
-		case "hurt"     : return ((_skin == 1) ? spr.PetPeasHurt : spr.PetCoolGuyHurt);
+		case "icon"     : return ((_skin == "peas") ? spr.PetPeasIcon : spr.PetCoolGuyIcon);
+		case "idle"     : return ((_skin == "peas") ? spr.PetPeasIdle : spr.PetCoolGuyIdle);
+		case "walk"     : return ((_skin == "peas") ? spr.PetPeasWalk : spr.PetCoolGuyWalk);
+		case "hurt"     : return ((_skin == "peas") ? spr.PetPeasHurt : spr.PetCoolGuyHurt);
 		case "shadow"   : return shd16;
 		case "shadow_y" : return 4;
 	}
@@ -1412,7 +1427,7 @@
 	
 #define Salamander_create
 	 // Visual:
-	spr_chrg = spr.PetSalamanderChrg;
+	spr_chrg = Salamander_sprite(0, "chrg");
 	depth    = -3;
 	
 	 // Vars:
@@ -1948,8 +1963,8 @@
 	
 #define Mimic_create
 	 // Visual:
-	spr_open = spr.PetMimicOpen;
-	spr_hide = spr.PetMimicHide;
+	spr_open = Mimic_sprite(0, "open");
+	spr_hide = Mimic_sprite(0, "hide");
 	depth    = -1;
 	
 	 // Vars:
@@ -2110,7 +2125,7 @@
 			
 			 // Weapon Collection Stat:
 			with(instance_nearest(x, y, WepPickup)){
-				if(!array_exists(other.stat.weapons, wep_raw(wep))){
+				if(array_find_index(other.stat.weapons, wep_raw(wep)) < 0){
 					array_push(other.stat.weapons, wep_raw(wep));
 				}
 			}
@@ -2135,7 +2150,7 @@
 		}
 
 		 // Weapon Collection Stat:
-		if(!array_exists(stat.weapons, wep_raw(wep))){
+		if(array_find_index(stat.weapons, wep_raw(wep)) < 0){
 			array_push(stat.weapons, wep_raw(wep));
 		}
 	}
@@ -2195,9 +2210,9 @@
 	
 #define Spider_create
 	 // Visual:
-	spr_web      = spr.PetSpiderWeb;
-	spr_web_bits = spr.PetSpiderWebBits;
-	spr_web_kill = sprTangleKill;
+	spr_web      = Spider_sprite(0, "web");
+	spr_web_bits = Spider_sprite(0, "web_bits");
+	spr_web_kill = Spider_sprite(0, "web_kill");
 	
 	 // Vars:
 	maxspeed      = 3.4;
@@ -2469,10 +2484,12 @@
 					for(var _dis = _disMax; _dis >= -_disMax; _dis -= 2){
 						with(instance_create(other.x + lengthdir_x(_dis, _dir), other.y + lengthdir_y(_dis, _dir), BoltTrail)){
 							motion_add(_dir, 1);
-							image_angle = _dir;
+							image_angle  = _dir;
 							image_xscale = 2;
 							image_yscale = 1 + (1 * (1 - ((_dis + _disMax) / (2 * _disMax))));
-							if(skill_get(mut_bolt_marrow) > 0) image_yscale *= 0.7;
+							if(skill_get(mut_bolt_marrow) > 0){
+								image_yscale *= 0.7;
+							}
 							depth = -4;
 						}
 					}
@@ -2562,7 +2579,7 @@
 									with(instances_matching_gt(Lightning, "id", id)){
 										prism_duplicate = true;
 										with(_varCopy){
-											if(!array_exists(_varNo, self)){
+											if(array_find_index(_varNo, self) < 0){
 												variable_instance_set(other, self, variable_instance_get(_clone, self));
 											}
 										}
@@ -2704,10 +2721,10 @@
 	
 #define Twins_create
 	 // Visual:
-	spr_fx_arrow = spr.PetTwinsRedEffect;
-	spr_fx_trail = spr.CrystalRedTrail;
-	spr_fx_ring  = spr.SquidCharge;
-	spr_fx_star  = sprLaserCharge;
+	spr_fx_arrow = Twins_sprite(0, "fx_arrow");
+	spr_fx_trail = Twins_sprite(0, "fx_trail");
+	spr_fx_ring  = Twins_sprite(0, "fx_ring");
+	spr_fx_star  = Twins_sprite(0, "fx_star");
 	depth        = -3;
 	
 	 // Vars:
@@ -2745,19 +2762,15 @@
 	
 #define Twins_sprite(_skin, _name)
 	switch(_name){
-		case "icon" : return (("name" in self && name == "Pet") ? ((_skin == 1) ? spr.PetTwinsWhiteIcon : spr.PetTwinsRedIcon) : spr.PetTwinsIcon);
-		case "idle" :
-		case "walk" :
-		case "hurt" : return ((_skin == 1) ? spr.PetTwinsWhite : spr.PetTwinsRed);
-		case "stat" : return spr.PetTwinsStat;
-		
-		 // Effects:
-		case "fx_arrow" : return ((_skin == 1) ? spr.PetTwinsWhiteEffect : spr.PetTwinsRedEffect);
-		case "fx_trail" : return ((_skin == 1) ? spr.CrystalWhiteTrail   : spr.CrystalRedTrail);
-		case "fx_ring"  : return ((_skin == 1) ? sprImpactWrists         : spr.SquidCharge);
-		case "fx_star"  : return ((_skin == 1) ? sprSpiralStar           : sprLaserCharge);
-		
-		 // Other:
+		case "icon"       : return (("name" in self && name == "Pet") ? ((_skin == 1) ? spr.PetTwinsWhiteIcon : spr.PetTwinsRedIcon) : spr.PetTwinsIcon);
+		case "stat"       : return spr.PetTwinsStat;
+		case "idle"       :
+		case "walk"       :
+		case "hurt"       : return ((_skin == 1) ? spr.PetTwinsWhite : spr.PetTwinsRed);
+		case "fx_arrow"   : return ((_skin == 1) ? spr.PetTwinsWhiteEffect : spr.PetTwinsRedEffect);
+		case "fx_trail"   : return ((_skin == 1) ? spr.CrystalWhiteTrail   : spr.CrystalRedTrail);
+		case "fx_ring"    : return ((_skin == 1) ? sprImpactWrists         : spr.SquidCharge);
+		case "fx_star"    : return ((_skin == 1) ? sprSpiralStar           : sprLaserCharge);
 		case "shadow_y"   : return 2;
 		case "bubble"     : return -1;
 		case "bubble_pop" : return -1;
@@ -2776,11 +2789,13 @@
 			partner    = other;
 			team       = other.team;
 			stat_found = other.stat_found;
-			pet_set_skin(!other.bskin);
+			if(is_real(other.bskin)){
+				pet_set_skin(!other.bskin);
+			}
 		}
 	}
 	if(instance_exists(leader) && instance_exists(partner)){
-		if(instance_is(leader, Player) && array_exists(leader.ntte_pet, id)){
+		if(instance_is(leader, Player) && array_find_index(leader.ntte_pet, id) >= 0){
 			partner.leader     = leader;
 			partner.can_take   = can_take;
 			partner.stat_found = stat_found;
@@ -2821,7 +2836,7 @@
 		orbit_pull = min(orbit_pull + (current_time_scale / 6), 1);
 		
 		 // Ignore Walls:
-		if(array_exists(path_wall, Wall)){
+		if(array_find_index(path_wall, Wall) >= 0){
 			path_wall = array_delete_value(path_wall, Wall);
 		}
 	}
@@ -2833,7 +2848,7 @@
 		//angle_lerp_ct(direction, round(direction / 8) * 8, 1/3);
 		
 		 // Bounce Off Walls:
-		if(!array_exists(path_wall, Wall)){
+		if(array_find_index(path_wall, Wall) < 0){
 			array_push(path_wall, Wall);
 		}
 		if(place_meeting(x + hspeed_raw, y + vspeed_raw, Wall)){
@@ -3231,11 +3246,15 @@
 	
 #define Weapon_create
 	 // Visual:
-	spr_spwn     = spr.PetWeaponSpwn;
-	spr_hide     = spr.PetWeaponHide;
+	spr_spwn     = Weapon_sprite(0, "spwn");
+	spr_hide     = Weapon_sprite(0, "hide");
 	hitid[1]     = "WEAPON MIMIC";
 	sprite_index = spr_hide;
 	image_index  = image_number - 1;
+	
+	 // Sound:
+	snd_spwn = Weapon_sound(0, "spwn");
+	snd_hide = Weapon_sound(0, "hide");
 	
 	 // Vars:
 	mask_index    = mskFrogEgg;
@@ -3286,6 +3305,14 @@
 		case "chst"     : return ((_skin == 1) ? spr.PetWeaponCursedChst : spr.PetWeaponChst);
 		case "shadow_y" : return -1;
 		case "bubble_y" : return -1;
+	}
+	
+#define Weapon_sound(_skin, _name)
+	switch(_name){
+		case "hurt" : return sndMimicHurt;
+		case "dead" : return sndMimicDead;
+		case "spwn" : return sndBallMamaTaunt;
+		case "hide" : return sndChest;
 	}
 	
 #define Weapon_ttip(_skin)
@@ -3393,9 +3420,12 @@
 			
 			 // Laugh:
 			if(image_index <= 0){
-				audio_sound_set_track_position(sound_play_hit_ext(sndBallMamaTaunt, 2, 3), 0.2); // don't like the part at tha end but audio_set_gain was being fucky
-				audio_sound_gain(sound_play_hit(sndTechnomancerActivate, 0), 0.4, 300);
-				sound_play_hit(sndBigWeaponChest, 0);
+				if(snd_spwn == sndBallMamaTaunt){
+					audio_sound_set_track_position(sound_play_hit_ext(snd_spwn, 2, 3), 0.2); // don't like the part at tha end but audio_set_gain was being fucky
+					audio_sound_gain(sound_play_hit(sndTechnomancerActivate, 0), 0.4, 300);
+					sound_play_hit(sndBigWeaponChest, 0);
+				}
+				else sound_play_hit(snd_spwn, 0);
 			}
 			
 			 // Swap to Weapons:
@@ -3418,7 +3448,7 @@
 		
 		 // Clunk:
 		if(floor(image_index) == image_number - 2 && image_index < floor(image_index) + image_speed_raw){
-			sound_play_pitch(sndChest, 0.8 + random(0.2));
+			sound_play_pitch(snd_hide, 0.8 + random(0.2));
 			repeat(4) scrFX(x, y, 2, Dust);
 		}
 	}
@@ -3427,10 +3457,10 @@
 	if(setup) Weapon_setup();
 	
 	 // Cursed:
-	if(curse > 0 && bskin == 0){
-		pet_set_skin(1);
+	if(bskin == !(curse > 0)){
+		pet_set_skin(curse > 0);
 		if(is_array(hitid) && array_length(hitid) > 1){
-			hitid[1] = "@q@pCURSED#WEAPON MIMIC";
+			hitid[1] = ((bskin == 1) ? "@q@pCURSED#" : "") + "WEAPON MIMIC";
 		}
 	}
 	
@@ -3541,7 +3571,7 @@
 							break;
 							
 						case type_explosive:
-							if(array_exists([wep_grenade_launcher, wep_golden_grenade_launcher, wep_grenade_shotgun, wep_grenade_rifle, wep_auto_grenade_shotgun, wep_ultra_grenade_launcher, wep_sticky_launcher, wep_hyper_launcher, wep_toxic_launcher, wep_cluster_launcher, wep_heavy_grenade_launcher], _wep)){
+							if(array_find_index([wep_grenade_launcher, wep_golden_grenade_launcher, wep_grenade_shotgun, wep_grenade_rifle, wep_auto_grenade_shotgun, wep_ultra_grenade_launcher, wep_sticky_launcher, wep_hyper_launcher, wep_toxic_launcher, wep_cluster_launcher, wep_heavy_grenade_launcher], _wep) >= 0){
 								_snd = sndNadeReload;
 							}
 							break;
@@ -3802,13 +3832,422 @@
 	}
 	
 	
+#define Cuz_create
+	 // Visual:
+	spr_sit1 = Cuz_sprite(0, "sit1");
+	spr_sit2 = Cuz_sprite(0, "sit2");
+	spr_sit3 = Cuz_sprite(0, "sit3");
+	spr_sit4 = Cuz_sprite(0, "sit4");
+	spr_horn = Cuz_sprite(0, "horn");
+	spr_cry  = Cuz_sprite(0, "cry");
+	
+	 // Sound:
+	snd_horn     = Cuz_sound(0, "horn");
+	snd_lowa     = Cuz_sound(0, "lowa");
+	snd_chst     = Cuz_sound(0, "chst");
+	snd_pick     = Cuz_sound(0, "pick");
+	snd_wrld     = Cuz_sound(0, "wrld");
+	snd_valt     = Cuz_sound(0, "valt");
+	snd_idpd     = Cuz_sound(0, "idpd");
+	snd_cry      = Cuz_sound(0, "cry");
+	snd_gone     = Cuz_sound(0, "gone");
+	leader_sound = {
+		"lowa" : 0,
+		"chst" : 0,
+		"pick" : 0,
+		"wrld" : 0,
+		"valt" : 0,
+		"idpd" : 0
+	};
+	
+	 // Vars:
+	leader_index = -1;
+	cuz          = noone;
+	
+	 // Stat:
+	if("playtime" not in stat){
+		stat.playtime = 0;
+	}
+	
+#define Cuz_ttip
+	return [
+		"YUNG CUZ",
+		"YUNG CUZ IS LAZY",
+		"CUZ IS STILL LEARNING",
+		"BE A ROLE MODEL",
+		"NO TIME FOR GAMES",
+		"1-UP"
+	];
+	
 #define Cuz_sprite(_skin, _name)
 	switch(_name){
 		case "icon" : return spr.PetCuzIcon;
+		case "stat" : return sprCuzIdle;
 		case "idle" : return sprMutant16Idle;
 		case "walk" : return sprMutant16Walk;
 		case "hurt" : return sprMutant16Hurt;
 		case "dead" : return sprMutant16Dead;
+		case "sit1" : return sprCuzInteractFrom;
+		case "sit2" : return sprCuzIdle;
+		case "sit3" : return sprCuzInteractTo;
+		case "sit4" : return sprCuzInteract;
+		case "horn" : return sprCuzHorn;
+		case "cry"  : return sprCuzCry;
+	}
+	
+#define Cuz_sound(_skin, _name)
+	switch(_name){
+		case "horn" : return sndCuzHorn;
+		case "lowa" : return sndMutant16LowA;
+		case "chst" : return sndCuzOpen;
+		case "pick" : return sndCuzWep;
+		case "wrld" : return sndMutant16Wrld;
+		case "valt" : return sndMutant16Valt;
+		case "idpd" : return sndMutant16IDPD;
+		case "cry"  : return sndCuzCry;
+		case "gone" : return sndCuzOutaway;
+	}
+	
+#define Cuz_stat(_name, _value)
+	if(_name == "playtime"){
+		var _time = "";
+		
+		_time += string_lpad(string(floor((_value / power(60, 2))     )), "0", 1); // Hours
+		_time += ":";
+		_time += string_lpad(string(floor((_value / power(60, 1)) % 60)), "0", 2); // Minutes
+		_time += ":";
+		_time += string_lpad(string(floor((_value / power(60, 0)) % 60)), "0", 2); // Seconds
+		
+		return [_name, _time];
+	}
+	
+#define Cuz_step
+	 // Following:
+	if(instance_exists(leader)){
+		leader_index = leader.index;
+		
+		 // Sounds:
+		if(button_pressed(leader_index, "horn")){
+			sound_play_hit_ext(snd_horn, 1, 2);
+		}
+		for(var i = 0; i < lq_size(leader_sound); i++){
+			var	_name = lq_get_key(leader_sound, i),
+				_time = lq_get_value(leader_sound, i),
+				_play = false;
+				
+			switch(_name){
+				case "pick":
+					if(
+						instance_exists(WepSwap)
+						&& (audio_is_playing(sndWeaponPickup) || audio_is_playing(sndGuitarPickup))
+						&& array_length(instances_matching(WepSwap, "creator", leader))
+					){
+						_play = true;
+					}
+					break;
+					
+				default:
+					if(("snd_" + _name) in leader && audio_is_playing(variable_instance_get(leader, "snd_" + _name))){
+						_play = true;
+					}
+			}
+			
+			 // Playing Sound:
+			if(_play){
+				if(_time <= 0){
+					lq_set(leader_sound, _name, 1);
+					sound_play_hit(variable_instance_get(self, "snd_" + _name), 0.1);
+				}
+			}
+			else if(_time > 0){
+				lq_set(leader_sound, _name, _time - current_time_scale);
+			}
+		}
+		
+		 // Unsit:
+		if(cuz != noone){
+			if(instance_exists(cuz)){
+				 // Tissue:
+				if(cuz.spr_idle == spr_cry){
+					sound_stop(snd_cry);
+					for(var _dir = 150; _dir <= 390; _dir += 40){
+						with(instance_create(x, y, Dust)){
+							motion_add(_dir, 4);
+							sprite_index = sprSweat;
+							image_index  = irandom(image_number - 1);
+							gravity      = random_range(0.05, 0.15);
+							friction    *= 1.5;
+							image_xscale = 1.2;
+							image_yscale = image_xscale;
+							depth        = other.depth - 1;
+							image_blend  = make_color_rgb(99, 131, 171);
+							motion_step(-1);
+						}
+					}
+					alarm0 = 30;
+				}
+				
+				 // Lets GO:
+				else alarm0 = 1;
+				sound_play(snd_chst);
+				instance_delete(cuz);
+			}
+			cuz = noone;
+		}
+	}
+	
+	 // Wandering:
+	else if(instance_exists(Player)){
+		 // Abandoned:
+		if(player_is_active(leader_index) && instance_exists(player_find(leader_index))){
+			leader_index = -1;
+		}
+		
+		 // Sitting:
+		if(cuz == noone && position_meeting(x, y, VenuzCouch)){
+			cuz = instance_create(x, y, YungCuz);
+			with(cuz){
+				ntte_cuz     = other;
+				sprite_index = spr_from;
+				image_index  = 0;
+				image_xscale = other.right;
+				
+				 // Cry:
+				if(GameCont.area == area_crib && !instance_exists(VenuzTV)){
+					sound_loop(other.snd_cry);
+					spr_idle = other.spr_cry;
+					spr_to   = other.spr_cry;
+					spr_from = other.spr_cry;
+					spr_heya = other.spr_cry;
+				}
+			}
+		}
+		if(instance_exists(cuz)){
+			with(cuz){
+				 // Skinning:
+				var _spr = undefined;
+				switch(sprite_index){
+					case sprCuzInteractFrom : _spr = other.spr_sit1; break;
+					case sprCuzIdle         : _spr = other.spr_sit2; break;
+					case sprCuzInteractTo   : _spr = other.spr_sit3; break;
+					case sprCuzInteract     : _spr = other.spr_sit4; break;
+					case sprCuzHorn         : _spr = other.spr_horn; break;
+					case sprCuzCry          : _spr = other.spr_cry;  break;
+				}
+				if(is_real(_spr) && sprite_index != _spr){
+					if(spr_idle == sprite_index) spr_idle = _spr;
+					if(spr_to   == sprite_index) spr_to   = _spr;
+					if(spr_from == sprite_index) spr_from = _spr;
+					if(spr_heya == sprite_index) spr_heya = _spr;
+					sprite_index = _spr;
+				}
+				
+				 // Sitting:
+				with(instance_nearest(x, y, VenuzCouch)){
+					other.x = lerp_ct(other.x, clamp(other.x, bbox_left + 16, bbox_right  + 1 - 16), 0.1);
+					other.y = lerp_ct(other.y, clamp(other.y, bbox_top  + 16, bbox_bottom + 1 - 16), 0.1);
+				}
+				
+				 // Crying:
+				if(spr_idle == other.spr_cry){
+					if(other.snd_cry != sndCuzCry && audio_is_playing(sndCuzCry)){
+						sound_stop(sndCuzCry);
+						sound_loop(other.snd_cry);
+					}
+				}
+				
+				 // Looking:
+				else if(anim_end && (sprite_index == spr_heya || distance_to_object(Player) <= 64)){
+					var _p = instance_nearest(x, y, Player);
+					if(instance_exists(_p) && x != _p.x){
+						image_xscale = abs(image_xscale) * sign(_p.x - x);
+					}
+				}
+			}
+			hspeed    = cuz.hspeed;
+			vspeed    = cuz.vspeed;
+			x         = cuz.x;
+			y         = cuz.y;
+			xprevious = x;
+			yprevious = y;
+		}
+	}
+	
+	 // Activate Cuz:
+	else if(player_is_active(leader_index) && !GameCont.win){
+		var	_race     = "cuz",
+			_lastRace = player_get_race(leader_index);
+			
+		player_set_race(leader_index, _race);
+		
+		 // Make Player:
+		with(instance_create(x, y, Revive)){
+			p = other.leader_index;
+			canrevive = true;
+			with(instance_create(x, y, CustomHitme)){
+				with(other){
+					event_perform(ev_collision, Player);
+				}
+				instance_delete(self);
+			}
+			with(self){
+				event_perform(ev_alarm, 0);
+			}
+	 	}
+		with(player_find(leader_index)){
+			sound_stop(snd_hurt);
+			
+			 // Setup:
+			race      = _race;
+			my_health = maxhealth;
+			lsthealth = my_health;
+			nexthurt  = current_frame + 30;
+			if(skill_get(mut_strong_spirit) > 0){
+				canspirit = false;
+				GameCont.canspirit[index] = true;
+			}
+			
+			 // Copy Vars:
+			mask_index     = other.mask_index;
+			sprite_index   = other.sprite_index;
+			image_index    = other.image_index;
+			image_speed    = other.image_speed;
+			image_xscale   = other.image_xscale;
+			image_yscale   = other.image_yscale;
+			image_angle    = other.image_angle;
+			image_blend    = other.image_blend;
+			image_alpha    = other.image_alpha;
+			sprite_angle   = other.image_angle;
+			angle          = other.portal_angle;
+			spr_idle       = other.spr_idle;
+			spr_walk       = other.spr_walk;
+			spr_hurt       = other.spr_hurt;
+			spr_dead       = other.spr_dead;
+			spr_sit1       = other.spr_sit1;
+			spr_sit2       = other.spr_sit2;
+			spr_shadow     = other.spr_shadow;
+			spr_shadow_x   = other.spr_shadow_x;
+			spr_shadow_y   = other.spr_shadow_y;
+			spr_bubble     = other.spr_bubble;
+			spr_bubble_pop = other.spr_bubble_pop;
+			spr_bubble_x   = other.spr_shadow_x;
+			spr_bubble_y   = other.spr_shadow_y;
+			sound_play(snd_wrld);
+		}
+		
+		 // Swap Ultras:
+		var _ultraSwap = true;
+		for(var i = 0; i < maxp; i++){
+			if(player_get_race(i) == _lastRace){
+				_ultraSwap = false;
+				break;
+			}
+		}
+		if(_ultraSwap){
+			var _ultraNum = ultra_count(_lastRace);
+			for(var i = 1; i <= _ultraNum; i++){
+				if(ultra_get(_lastRace, i) != 0){
+					ultra_set(_lastRace, i, 0);
+					ultra_set(_race, 1 + ((i - 1) % ultra_count(_race)), true);
+				}
+			}
+		}
+		
+		 // Tunes:
+		sound_play_music(mus107);
+		
+		 // Ammo:
+		with(instances_matching(WepPickup, "ammo", 0)){
+			ammo = 1;
+		}
+		
+		 // Fixes:
+		with(Crown){
+			persistent = true;
+		}
+		with(instances_matching_lt(Portal, "endgame", 0)){
+			endgame = 100;
+			if(instance_is(self, BigPortal)){
+				sprite_index = sprBigPortal;
+			}
+			else switch(type){
+				case 1 : sprite_index = sprPortal;      break;
+				case 2 : sprite_index = sprProtoPortal; break;
+				case 3 : sprite_index = sprPopoPortal;  break;
+			}
+		}
+		with(instances_matching(Revive, "p", leader_index)){
+			instance_delete(id);
+		}
+		with(button){
+			instance_destroy();
+		}
+		with(UnlockScreen){
+			alarm_set(0, -1);
+		}
+		game_letterbox = false;
+		
+		 // Bye Bro:
+		instance_delete(id);
+		exit;
+	}
+	
+#define Cuz_draw(_spr, _img, _x, _y, _xsc, _ysc, _ang, _col, _alp)
+	if(!instance_exists(cuz)){
+		draw_sprite_ext(_spr, _img, _x, _y, _xsc, _ysc, _ang, _col, _alp);
+	}
+	
+#define Cuz_alrm0(_leaderDir, _leaderDis)
+	if(!instance_exists(cuz)){
+		 // Following:
+		if(instance_exists(leader) && _leaderDis > 64){
+			 // Pathfinding:
+			if(path_dir != null){
+				scrWalk(path_dir + orandom(20), 8);
+				return walk;
+			}
+			
+			 // Move Toward Leader:
+			else{
+				scrWalk(_leaderDir + orandom(20), 10);
+				return 10 + random(5);
+			}
+		}
+		
+		 // Wandering:
+		else{
+			scrWalk(
+				(instance_exists(leader) ? _leaderDir : direction) + (random_range(30, 60) * choose(-1, 1)),
+				[12, 24]
+			);
+			
+			 // Couch:
+			if(cuz == noone && instance_exists(VenuzCouch) && !instance_exists(leader)){
+				with(instance_seen(x, y, VenuzCouch)){
+					with(other){
+						direction = point_direction(x, y, other.x, other.y) + orandom(30);
+						scrRight(direction);
+						return walk;
+					}
+				}
+			}
+		}
+	}
+	
+	return 60;
+	
+#define Cuz_cleanup
+	 // Delete Couch Cuz:
+	if(instance_exists(cuz)){
+		if(cuz.spr_idle == spr_cry){
+			sound_stop(snd_cry);
+		}
+		instance_delete(cuz);
+	}
+	
+	 // Bye:
+	if(!player_is_active(leader_index)){
+		sound_play_hit(snd_gone, 0.1);
 	}
 	
 	
@@ -3869,6 +4308,51 @@
 				
 				 // Add Salamander:
 				text += "@s#SALAMANDER - @wPUNTED @sENEMIES @rEXPLODE@s";
+			}
+		}
+	}
+	
+	 // Spawn Cuz Pet:
+	if(instance_exists(YungCuz)){
+		var _inst = instances_matching(YungCuz, "ntte_cuz", null);
+		if(array_length(_inst)) with(_inst){
+			ntte_cuz = (
+				(spr_idle == sprCuzIdle)
+				? pet_spawn(x, y, "Cuz")
+				: noone
+			);
+			with(ntte_cuz){
+				cuz = other;
+			}
+		}
+	}
+	
+	 // Playing Cuz:
+	if(instance_exists(Player)){
+		var _inst = instances_matching(Player, "race", "cuz");
+		if(array_length(_inst)){
+			var _playing = false;
+			
+			 // Reduce Active Confusion:
+			with(_inst){
+				if(player_get_race_pick(index) != race && player_active){
+					if(canspec && button_pressed(index, "spec")){
+						sound_play(
+							(skill_get(mut_throne_butt) > 0)
+							? sndCuzHorn
+							: sndCuzBye
+						);
+					}
+					_playing = true;
+				}
+			}
+			
+			 // Playtime Stat:
+			if(_playing){
+				var _stat = stat_get("pet:Cuz.petlib.mod");
+				if(is_object(_stat) && "playtime" in _stat){
+					_stat.playtime += (current_time_scale / 30);
+				}
 			}
 		}
 	}
@@ -4140,7 +4624,7 @@
 #macro  current_frame_active                                                                    (current_frame % 1) < current_time_scale
 #macro  anim_end                                                                                (image_index + image_speed_raw >= image_number || image_index + image_speed_raw < 0)
 #macro  enemy_sprite                                                                            (sprite_index != spr_hurt || anim_end) ? ((speed <= 0) ? spr_idle : spr_walk) : sprite_index
-#macro  enemy_boss                                                                              ('boss' in self) ? boss : ('intro' in self || array_exists([Nothing, Nothing2, BigFish, OasisBoss], object_index))
+#macro  enemy_boss                                                                              ('boss' in self) ? boss : ('intro' in self || array_find_index([Nothing, Nothing2, BigFish, OasisBoss], object_index) >= 0)
 #macro  player_active                                                                           visible && !instance_exists(GenCont) && !instance_exists(LevCont) && !instance_exists(SitDown) && !instance_exists(PlayerSit)
 #macro  game_scale_nonsync                                                                      game_screen_get_width_nonsync() / game_width
 #macro  bbox_width                                                                              (bbox_right + 1) - bbox_left
@@ -4212,7 +4696,6 @@
 #define draw_weapon(_spr, _img, _x, _y, _ang, _angMelee, _kick, _flip, _blend, _alpha)          mod_script_call_nc  ('mod', 'telib', 'draw_weapon', _spr, _img, _x, _y, _ang, _angMelee, _kick, _flip, _blend, _alpha);
 #define draw_lasersight(_x, _y, _dir, _maxDistance, _width)                             return  mod_script_call_nc  ('mod', 'telib', 'draw_lasersight', _x, _y, _dir, _maxDistance, _width);
 #define draw_surface_scale(_surf, _x, _y, _scale)                                               mod_script_call_nc  ('mod', 'telib', 'draw_surface_scale', _surf, _x, _y, _scale);
-#define array_exists(_array, _value)                                                    return  mod_script_call_nc  ('mod', 'telib', 'array_exists', _array, _value);
 #define array_count(_array, _value)                                                     return  mod_script_call_nc  ('mod', 'telib', 'array_count', _array, _value);
 #define array_combine(_array1, _array2)                                                 return  mod_script_call_nc  ('mod', 'telib', 'array_combine', _array1, _array2);
 #define array_delete(_array, _index)                                                    return  mod_script_call_nc  ('mod', 'telib', 'array_delete', _array, _index);

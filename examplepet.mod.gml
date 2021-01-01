@@ -21,7 +21,7 @@
 		spr_walk        = The pet's walk sprite.
 		spr_hurt        = The pet's hurt OR dodge sprite.
 		spr_dead        = The pet's death sprite, only used if the pet takes damage.
-		bskin           = The pet's skin
+		bskin           = The pet's skin value (use 'mod_script_call("mod", "telib", "pet_set_skin", skin)' to set skin)
 		right           = Determines if the pet is facing left(-1) or right(1).
 		leader          = The current leader (Player ID).
 		can_take        = Determines if a player can take the pet. Set to false when a leader exists.
@@ -46,9 +46,11 @@
 			Set sprites and important variables in here.
 			
 		<Name>_name - Return the pet's display name here.
-		
+			Arguments: (Skin)
+			
 		<Name>_ttip - Return loading screen tips here.
 			Return a string or an array of strings for the game to randomly pick one.
+			Arguments: (Skin)
 			
 		<Name>_sprite - Return the pet's sprites here.
 			Returns the sprite associated with a given skin and name.

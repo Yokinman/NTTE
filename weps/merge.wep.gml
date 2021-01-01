@@ -1529,7 +1529,7 @@
 		if(
 			mele
 			|| (_gold xor (gold != 0)) // ^^ is kinda ugly bro
-			|| ((area < _hardMin || area > _hardMax) && !(_gold && array_exists([wep_golden_wrench, wep_golden_machinegun, wep_golden_shotgun, wep_golden_crossbow, wep_golden_grenade_launcher, wep_golden_laser_pistol], weap)))
+			|| ((area < _hardMin || area > _hardMax) && !(_gold && array_find_index([wep_golden_wrench, wep_golden_machinegun, wep_golden_shotgun, wep_golden_crossbow, wep_golden_grenade_launcher, wep_golden_laser_pistol], weap) >= 0))
 		){
 			_add = false;
 		}
@@ -1563,7 +1563,7 @@
 				_frontWeap = lq_defget(_frontPart, "weap", _frontPart);
 				
 			if(_stockWeap != _frontWeap){
-				if(!array_exists(_stockAvoid, _stockWeap) && !array_exists(_frontAvoid, _frontWeap)){
+				if(array_find_index(_stockAvoid, _stockWeap) < 0 && array_find_index(_frontAvoid, _frontWeap) < 0){
 					_part = [_stockPart, _frontPart];
 					
 					 // Difficulty Check:
@@ -1755,10 +1755,10 @@
 			 // Normal:
 			else{
 				 // Determine Fraction of Stock Projectiles to Keep:
-				var f = (_stockProjCost / (_frontProjCost * (array_exists(_front.flag, "wave") ? _front.shot : 1)));
+				var f = (_stockProjCost / (_frontProjCost * ((array_find_index(_front.flag, "wave") >= 0) ? _front.shot : 1)));
 				if(f < 1){
 					var	_costLevel = 3.333 * sqrt(max(0, _stockProjCostRaw - 1/6)),
-						p = _frontProjCostRaw * (array_exists(_front.flag, "wave") ? _front.shot : 1);
+						p = _frontProjCostRaw * ((array_find_index(_front.flag, "wave") >= 0) ? _front.shot : 1);
 						
 					if(p < 4){
 						f = 1 + (p / (2 * (1 + _costLevel)));
@@ -1941,7 +1941,7 @@
 				_delete = ["GUN", "PISTOL"];
 				
 			 // Assault Bazooka > Assault Bazooka Rifle:
-			if(array_exists(_stockName, "ASSAULT") || array_exists(_stockName, "ROGUE")){
+			if(array_find_index(_stockName, "ASSAULT") >= 0 || array_find_index(_stockName, "ROGUE") >= 0){
 				array_push(_delete, "RIFLE");
 			}
 			
@@ -1952,13 +1952,15 @@
 			
 			 // Start Name w/ Pre-Suffix Stock Name:
 			var _name = [];
-			if(array_exists(_stockName, "GOLDEN") || array_exists(_frontName, "GOLDEN")){
+			if(array_find_index(_stockName, "GOLDEN") >= 0 || array_find_index(_frontName, "GOLDEN") >= 0){
 				array_push(_name, "GOLDEN");
 				_stockName = array_delete_value(_stockName, "GOLDEN");
 				_frontName = array_delete_value(_frontName, "GOLDEN");
 			}
 			with(_stockName){
-				if(array_exists(_stockSuffix, self)) break;
+				if(array_find_index(_stockSuffix, self) >= 0){
+					break;
+				}
 				array_push(_name, self);
 				_stockSuffixStart++;
 			}
@@ -2206,7 +2208,7 @@
 				break;
 				
 			case Flame:
-				if(!array_exists(flag, "laser")){
+				if(array_find_index(flag, "laser") < 0){
 					time = _stock.time;
 					amnt *= _front.shot;
 					fixd /= _front.shot;
@@ -2220,7 +2222,7 @@
 						case PlasmaBall:
 						case PlasmaBig:
 						case PlasmaHuge:
-							if(array_exists([PlasmaBall, PlasmaBig, PlasmaHuge], _stockObjRaw)){
+							if(array_find_index([PlasmaBall, PlasmaBig, PlasmaHuge], _stockObjRaw) >= 0){
 								sped[0] *= 4/3;
 								sped[1] *= 4/3;
 							}
@@ -2232,8 +2234,8 @@
 		with(_flagProj) lq_set(other.proj, flagProjPref + self, null);
 		
 		 // Gun Gun:
-		var	_ggStock = (array_exists(_stock.flag, "gungun") && _stockObjRaw == ThrownWep),
-			_ggFront = (array_exists(_front.flag, "gungun") && _frontObjRaw == ThrownWep);
+		var	_ggStock = (array_find_index(_stock.flag, "gungun") >= 0 && _stockObjRaw == ThrownWep),
+			_ggFront = (array_find_index(_front.flag, "gungun") >= 0 && _frontObjRaw == ThrownWep);
 			
 		if(_ggStock || _ggFront){
 			var	a = data_clone((_ggStock ? _stock : _front), infinity),
@@ -2429,7 +2431,7 @@
 		
 		if(instance_exists(self)){
 			 // Smart Gun:
-			if(array_exists(_wep.flag, "smart")){
+			if(array_find_index(_wep.flag, "smart") >= 0){
 				if(array_length(instances_matching(instances_matching(CustomBeginStep, "name", "step_smartaim"), "creator", _creator)) <= 0){
 					with(script_bind_begin_step(step_smartaim, 0)){
 						name = script[2];
@@ -2496,7 +2498,7 @@
 			var _shot = shot;
 			
 			 // Flak Mode - >1 Shots Become Super Flak
-			if(array_exists(_flag, "flak")){
+			if(array_find_index(_flag, "flak") >= 0){
 				_timeMax = 0;
 			}
 			
@@ -2517,7 +2519,7 @@
 					
 					 // Fixed Spread:
 					var _fix = _wep.fixd * (i - ((_amnt - 1) / 2));
-					if(array_exists(_flag, "wave")){
+					if(array_find_index(_flag, "wave") >= 0){
 						_fix -= ((_wep.fixd * sign(_fix)) / 2) * (1 - sin((7 * (1 - (_shot / (_shotMax - 1)))) / 2));
 					}
 					
@@ -2546,18 +2548,14 @@
 						 // Wep-Specific:
 						for(var j = 0; j < lq_size(_proj); j++){
 							var _name = lq_get_key(_proj, j);
-							
-							if(!array_exists(
-								["id", "object_index", "bbox_bottom", "bbox_top", "bbox_right", "bbox_left", "image_number", "sprite_yoffset", "sprite_xoffset", "sprite_height", "sprite_width"],
-								_name
-							)){
+							if(array_find_index(["id", "object_index", "bbox_bottom", "bbox_top", "bbox_right", "bbox_left", "image_number", "sprite_yoffset", "sprite_xoffset", "sprite_height", "sprite_width"], _name) < 0){
 								var _valu = lq_get_value(_proj, j);
 								variable_instance_set(self, _name, _valu);
 							}
 						}
 						
 						 // Lasery Hitscan:
-						if(array_exists(_flag, "laser") && !instance_is(self, Lightning)){
+						if(array_find_index(_flag, "laser") >= 0 && !instance_is(self, Lightning)){
 							if(array_length(_laserDir) <= i){
 								_laserDir[i] = _dir;
 							}
@@ -2616,7 +2614,7 @@
 						}
 						
 						 // Black Sword:
-						if(array_exists(_flag, "blacksword")){
+						if(array_find_index(_flag, "blacksword") >= 0){
 							if(instance_exists(creator) && creator.my_health <= 0){
 								if(_isMelee == 1) sprite_index = sprMegaSlash;
 								damage = max(damage, 80);
@@ -2624,7 +2622,7 @@
 						}
 						
 						 // Gun Gun:
-						if(array_exists(_flag, "gungun")){	
+						if(array_find_index(_flag, "gungun") >= 0){	
 							instance_create(_x + hspeed, _y + vspeed, GunGun);
 							
 							if("wep" in self){
@@ -2655,7 +2653,7 @@
 						}
 						
 						 // Cannon:
-						if(array_exists(_flag, "flak")){
+						if(array_find_index(_flag, "flak") >= 0){
 							if(_amnt < 16) direction = (i + orandom(0.5)) * (360 / _amnt);
 							else direction = random(360);
 							image_angle = direction;
@@ -2677,12 +2675,12 @@
 					}
 				}
 			}
-			if(array_exists(_flag, "laser") && _obj != Lightning){
+			if(array_find_index(_flag, "laser") >= 0 && _obj != Lightning){
 				_laserMov += sprite_get_width(object_get_sprite(_obj)) * ((_obj == Flame) ? 0.4 : 1);
 			}
 			
 			 // Dog Spin Attack:
-			if(array_exists(_flag, "dogspin")){
+			if(array_find_index(_flag, "dogspin") >= 0){
 				with(creator) if(race == "bigdog"){
 					alarm2 = 15;
 					dogammo = 15;
@@ -2695,7 +2693,7 @@
 			if(_timeMax > 0 || shot == 0){
 				 // Sound:
 				with(_wep.soun){
-					if(shot < 0 || shot == _shot || (is_array(shot) && array_exists(shot, _shot))){
+					if(shot < 0 || shot == _shot || (is_array(shot) && array_find_index(shot, _shot) >= 0)){
 						var	_snd = (is_array(snd) ? snd[irandom(array_length(snd) - 1)] : snd),
 							_pit = (is_array(pit) ? random_range(pit[0], pit[1]) : pit),
 							_vol = (is_array(vol) ? random_range(vol[0], vol[1]) : vol);
@@ -2726,7 +2724,7 @@
 								
 							 // Black Sword:
 							case sndBlackSword:
-								if(array_exists(_flag, "blacksword")){
+								if(array_find_index(_flag, "blacksword") >= 0){
 									if(instance_exists(_creator) && _creator.my_health <= 0){
 										_snd = sndBlackSwordMega;
 									}
@@ -2936,7 +2934,7 @@
 			(flagProjPref + "nuke"   ) in self && "index" in creator,
 			(flagProjPref + "disc"   ) in self,
 			(flagProjPref + "bouncer") in self,
-			array_exists(_flag, "laser")
+			array_find_index(_flag, "laser") >= 0
 		);
 		
 		 // Visual:
@@ -3321,8 +3319,8 @@
 		case proj_create:
 			if(object_index == Seeker) return true; // No seekers
 			
-			o.trail = !array_exists([Bolt, ToxicBolt, HeavyBolt, Splinter, UltraBolt], object_index);
-			o.trail_clone = !array_exists([Disc, Grenade, BloodGrenade, ToxicGrenade, ClusterNade, MiniNade, HeavyNade, Rocket, Nuke, UltraGrenade, ConfettiBall], object_index);
+			o.trail = (array_find_index([Bolt, ToxicBolt, HeavyBolt, Splinter, UltraBolt], object_index) < 0);
+			o.trail_clone = (array_find_index([Disc, Grenade, BloodGrenade, ToxicGrenade, ClusterNade, MiniNade, HeavyNade, Rocket, Nuke, UltraGrenade, ConfettiBall], object_index) < 0);
 			
 			 // Disable Nuke:
 			if(object_index == Nuke) index = -1;
@@ -3459,7 +3457,7 @@
 			 // Explode:
 			if(
 				(typ != 0 && place_meeting(x, y, Explosion)) ||
-				(image_index >= 3 && array_exists([sprBullet2Disappear, sprSlugDisappear, sprHeavySlugDisappear, sprHyperSlugDisappear, sprUltraShellDisappear], sprite_index))
+				(image_index >= 3 && array_find_index([sprBullet2Disappear, sprSlugDisappear, sprHeavySlugDisappear, sprHyperSlugDisappear, sprUltraShellDisappear], sprite_index) >= 0)
 			){
 				o.time = current_time_scale;
 			}
@@ -3473,7 +3471,9 @@
 						c = instances_matching(instances_matching(CustomDraw, "name", "proj_explo_draw"), "depth", d);
 						
 					if(array_length(c)) with(c){
-						if(!array_exists(inst, other)) array_push(inst, other);
+						if(array_find_index(inst, other) < 0){
+							array_push(inst, other);
+						}
 					}
 					else with(script_bind_draw(proj_explo_draw, d)){
 						name = script[2];
@@ -3833,7 +3833,7 @@
 			if(object_index == Nuke) index = -1;
 			
 			 // Don't Use Normal Speed Increase:
-			if(array_exists([PlasmaBall, PlasmaBig, PlasmaHuge], object_index)){
+			if(array_find_index([PlasmaBall, PlasmaBig, PlasmaHuge], object_index) >= 0){
 				o.sped = -1;
 				o.goal = 8;
 			}
@@ -4070,7 +4070,7 @@
 			o.team = team;
 			
 			 // Shell Early Release:
-			if(image_index >= 3 && array_exists([sprBullet2Disappear, sprSlugDisappear, sprHeavySlugDisappear, sprHyperSlugDisappear, sprUltraShellDisappear], sprite_index)){
+			if(image_index >= 3 && array_find_index([sprBullet2Disappear, sprSlugDisappear, sprHeavySlugDisappear, sprHyperSlugDisappear, sprUltraShellDisappear], sprite_index) >= 0){
 				proj_flame(proj_destroy, o);
 				return true;
 			}
@@ -4159,7 +4159,7 @@
 			o.y = y + lengthdir_y(l, direction);
 			
 			 // Shell Early Release:
-			if(image_index >= 3 && array_exists([sprBullet2Disappear, sprSlugDisappear, sprHeavySlugDisappear, sprHyperSlugDisappear, sprUltraShellDisappear], sprite_index)){
+			if(image_index >= 3 && array_find_index([sprBullet2Disappear, sprSlugDisappear, sprHeavySlugDisappear, sprHyperSlugDisappear, sprUltraShellDisappear], sprite_index) >= 0){
 				proj_toxic(proj_destroy, o);
 				return true;
 			}
@@ -4225,7 +4225,7 @@
 			o.team = team;
 			
 			 // Shell Early Release:
-			if(image_index >= 3 && array_exists([sprBullet2Disappear, sprSlugDisappear, sprHeavySlugDisappear, sprHyperSlugDisappear, sprUltraShellDisappear], sprite_index)){
+			if(image_index >= 3 && array_find_index([sprBullet2Disappear, sprSlugDisappear, sprHeavySlugDisappear, sprHyperSlugDisappear, sprUltraShellDisappear], sprite_index) >= 0){
 				proj_cluster(proj_destroy, o);
 				return true;
 			}
@@ -4510,7 +4510,7 @@
 #macro  current_frame_active                                                                    (current_frame % 1) < current_time_scale
 #macro  anim_end                                                                                (image_index + image_speed_raw >= image_number || image_index + image_speed_raw < 0)
 #macro  enemy_sprite                                                                            (sprite_index != spr_hurt || anim_end) ? ((speed <= 0) ? spr_idle : spr_walk) : sprite_index
-#macro  enemy_boss                                                                              ('boss' in self) ? boss : ('intro' in self || array_exists([Nothing, Nothing2, BigFish, OasisBoss], object_index))
+#macro  enemy_boss                                                                              ('boss' in self) ? boss : ('intro' in self || array_find_index([Nothing, Nothing2, BigFish, OasisBoss], object_index) >= 0)
 #macro  player_active                                                                           visible && !instance_exists(GenCont) && !instance_exists(LevCont) && !instance_exists(SitDown) && !instance_exists(PlayerSit)
 #macro  game_scale_nonsync                                                                      game_screen_get_width_nonsync() / game_width
 #macro  bbox_width                                                                              (bbox_right + 1) - bbox_left
@@ -4582,7 +4582,6 @@
 #define draw_weapon(_spr, _img, _x, _y, _ang, _angMelee, _kick, _flip, _blend, _alpha)          mod_script_call_nc  ('mod', 'telib', 'draw_weapon', _spr, _img, _x, _y, _ang, _angMelee, _kick, _flip, _blend, _alpha);
 #define draw_lasersight(_x, _y, _dir, _maxDistance, _width)                             return  mod_script_call_nc  ('mod', 'telib', 'draw_lasersight', _x, _y, _dir, _maxDistance, _width);
 #define draw_surface_scale(_surf, _x, _y, _scale)                                               mod_script_call_nc  ('mod', 'telib', 'draw_surface_scale', _surf, _x, _y, _scale);
-#define array_exists(_array, _value)                                                    return  mod_script_call_nc  ('mod', 'telib', 'array_exists', _array, _value);
 #define array_count(_array, _value)                                                     return  mod_script_call_nc  ('mod', 'telib', 'array_count', _array, _value);
 #define array_combine(_array1, _array2)                                                 return  mod_script_call_nc  ('mod', 'telib', 'array_combine', _array1, _array2);
 #define array_delete(_array, _index)                                                    return  mod_script_call_nc  ('mod', 'telib', 'array_delete', _array, _index);
