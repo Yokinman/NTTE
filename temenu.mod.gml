@@ -2094,41 +2094,49 @@
 									
 									 // Add Any Pets Found in Stats:
 									var	_petStatList = save_get("stat:pet", {}),
-										_list = array_clone(_statMenu.list);
+										_petListFull = array_clone(_statMenu.list);
 										
 									for(var i = 0; i < lq_size(_petStatList); i++){
-										var _key = lq_get_key(_petStatList, i);
-										if(array_find_index(_list, _key) < 0){
-											array_push(_list, _key);
+										var _pet = lq_get_key(_petStatList, i);
+										if(array_find_index(_petListFull, _pet) < 0){
+											var _petStat = lq_defget(_petStatList, _pet, {});
+											if(
+												lq_size(_petStat) > (lq_exists(_petStat, "found") + lq_exists(_petStat, "owned"))
+												|| lq_defget(_petStat, "found", 0) > 0
+												|| lq_defget(_petStat, "owned", 0) > 0
+												|| pet_get_sprite(_info.name, _info.mod_type, _info.mod_name, 0, "icon") != 0
+											){
+												array_push(_petListFull, _pet);
+											}
 										}
 									}
 									
 									 // Compile Pet List:
 									var _petList = {};
-									with(_list){
+									with(_petListFull){
 										var	_pet   = self,
 											_split = string_split(_pet, ".");
 											
 										if(array_length(_split) >= 3){
-											var	_petName = _split[0],
-												_modName = array_join(array_slice(_split, 1, array_length(_split) - 2), "."),
-												_modType = _split[array_length(_split) - 1],
-												_petStat = lq_defget(_petStatList, _pet, {});
+											var	_modName = array_join(array_slice(_split, 1, array_length(_split) - 2), "."),
+												_modType = _split[array_length(_split) - 1];
 												
 											if(mod_exists(_modType, _modName)){
-												var _avail = (lq_defget(_petStat, "found", 0) > 0 || lq_defget(_petStat, "owned", 0) > 0);
-												
+												var	_petStat  = lq_defget(_petStatList, _pet, {}),
+													_petAvail = (lq_defget(_petStat, "found", 0) > 0 || lq_defget(_petStat, "owned", 0) > 0);
+													
 												 // Auto-Select First Unlocked Pet:
-												if(_avail && _petSlct[_index] == ""){
+												if(_petAvail && _petSlct[_index] == ""){
 													_petSlct[_index] = _pet;
 												}
 												
+												 // Add:
 												lq_set(_petList, _pet, {
-													"name"		: _split[0],
-													"mod_name"	: array_join(array_slice(_split, 1, array_length(_split) - 2), "."),
-													"mod_type"	: _split[array_length(_split) - 1],
-													"stat"		: _petStat,
-													"avail"		: _avail
+													"name"     : _split[0],
+													"mod_name" : array_join(array_slice(_split, 1, array_length(_split) - 2), "."),
+													"mod_type" : _split[array_length(_split) - 1],
+													"stat"     : _petStat,
+													"avail"    : _petAvail
 												});
 											}
 										}

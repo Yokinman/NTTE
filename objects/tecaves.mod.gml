@@ -455,7 +455,7 @@
 		
 		for(var i = 0; i <= 1; i++){
 			surface_set_target(surf);
-			draw_clear_alpha(0, 0);
+			draw_clear_alpha(c_black, 0);
 			
 			with(other){
 				var	_c = ((i == 0) ? -1 : 1),
@@ -1075,17 +1075,13 @@
 				 // Copy & Clear Screen:
 				draw_set_blend_mode_ext(bm_one, bm_zero);
 				surface_screenshot(surf);
-				draw_set_alpha(0);
-				draw_surface_scale(surf, x, y, 1 / scale);
-				draw_set_alpha(1);
-				draw_set_blend_mode(bm_normal)
+				draw_set_blend_mode(bm_normal);
+				draw_clear_alpha(c_black, 0);
 				
-				 // Draw Clones:
-				with(other){
-					var _lastTimeScale = current_time_scale;
-					current_time_scale = 0.0000000000000001;
-					
-					 // Cloned Instances:
+				 // Draw Clone Overlays:
+				var _lastTimeScale = current_time_scale;
+				current_time_scale = 0.0000000000000001;
+				try{
 					with(_inst){
 						if(time > 60 || (time % 6) < 3){
 							with(target){
@@ -1117,7 +1113,7 @@
 											_h  = (_y2 - _y1) / 16,
 											_y  = lerp(_y1 - (_h * 2), _y2, min(1, other.appear));
 											
-										draw_set_blend_mode_ext(bm_zero, bm_zero);
+										draw_set_blend_mode_ext(bm_zero, bm_inv_src_alpha);
 										draw_primitive_begin(pr_trianglestrip);
 										
 										draw_vertex(_x1, _y1);
@@ -1139,29 +1135,33 @@
 					}
 					
 					 // Epic Overlay:
-					if(sprite_exists(sprite_index)){
-						if(appear > 0){
+					with(other){
+						if(sprite_exists(sprite_index)){
+							if(appear > 0){
+								draw_set_blend_mode(bm_add);
+							}
+							draw_set_color_write_enable(true, true, true, false);
+							draw_sprite_tiled(sprite_index, image_index, 0, 0);
+							draw_set_color_write_enable(true, true, true, true);
+							if(appear > 0){
+								draw_set_blend_mode(bm_normal);
+							}
+						}
+						if(appear <= 0){
 							draw_set_blend_mode(bm_add);
 						}
-						draw_set_color_write_enable(true, true, true, false);
-						draw_sprite_tiled(sprite_index, image_index, 0, 0);
-						draw_set_color_write_enable(true, true, true, true);
-						if(appear > 0){
-							draw_set_blend_mode(bm_normal);
-						}
+						surface_screenshot(other.surf);
 					}
 					
-					current_time_scale = _lastTimeScale;
+					 // Redraw Screen:
+					draw_set_blend_mode_ext(bm_one, bm_zero);
+					draw_surface_scale(surf, x, y, 1 / scale);
+					draw_set_blend_mode(bm_normal);
 				}
-				
-				 // Redraw Screen:
-				if(other.appear <= 0){
-					draw_set_blend_mode(bm_add);
+				catch(_error){
+					trace(_error);
 				}
-				surface_screenshot(surf);
-				draw_set_blend_mode_ext(bm_one, bm_zero);
-				draw_surface_scale(surf, x, y, 1 / scale);
-				draw_set_blend_mode(bm_normal);
+				current_time_scale = _lastTimeScale;
 			}
 		}
 	}
@@ -1169,7 +1169,7 @@
 #define CrystalClone_destroy
 	 // Death Effects:
 	if(target != noone){
-		var _num = round((((bbox_right + 1) - bbox_left) + ((bbox_bottom + 1) - bbox_top)) / 32) + irandom(2);
+		var _num = round((bbox_width + bbox_height) / 32) + irandom(2);
 		if(_num > 0) repeat(_num){
 			instance_create(random_range(bbox_left, bbox_right + 1), random_range(bbox_top, bbox_bottom + 1), Smoke);
 			CrystalBrain_effect(random_range(bbox_left, bbox_right + 1), random_range(bbox_top, bbox_bottom + 1));
@@ -4677,7 +4677,7 @@
 			y = _surfY;
 			
 			surface_set_target(surf);
-			draw_clear_alpha(0, 0);
+			draw_clear_alpha(c_black, 0);
 				
 				 // Background:
 				if(background_color == area_get_back_color("red")){
@@ -4736,7 +4736,7 @@
 			
 		if(_shineDis < _shineDisMax){
 			surface_set_target(surf);
-			draw_clear_alpha(0, 0);
+			draw_clear_alpha(c_black, 0);
 				
 				 // Mask:
 				draw_set_fog(true, c_black, 0, 0);
@@ -4814,7 +4814,7 @@
 			surfWallFakeMaskBot.wall_inst = instances_matching(surfWallFakeMaskBot.wall_inst, "", null);
 			
 			surface_set_target(surf);
-			draw_clear_alpha(0, 0);
+			draw_clear_alpha(c_black, 0);
 			
 			switch(_type){
 				
@@ -4862,7 +4862,7 @@
 		y = _vy;
 		
 		surface_set_target(surf);
-		draw_clear_alpha(0, 0);
+		draw_clear_alpha(c_black, 0);
 		
 		 // Circles:
 		var _inst = instances_matching_gt(Player, "red_wall_fake", 0);

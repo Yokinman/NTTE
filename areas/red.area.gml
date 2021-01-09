@@ -188,6 +188,10 @@
 	with(instances_matching(CustomObject, "name", "WarpPortal")){
 		if(!instance_exists(portal)){
 			area_set(area, subarea, loops);
+			if(!area_get_secret(area)){
+				other.lastarea    = area;
+				other.lastsubarea = subarea - 1;
+			}
 		}
 	}
 	

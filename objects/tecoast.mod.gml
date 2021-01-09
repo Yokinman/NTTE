@@ -3,6 +3,9 @@
 	snd = mod_variable_get("mod", "teassets", "snd");
 	lag = false;
 	
+	 // Bind Events:
+	script_bind("DiverLaserDraw", CustomDraw, script_ref_create(draw_diver_laser), -4, true);
+	
 	 // Palanking Camera Pan (During Pause Screen):
 	global.palanking_pan = [0, 0];
 	
@@ -717,7 +720,6 @@
 		gonnafire  = false;
 		reload     = 0;
 		laser      = 0;
-		laser_draw = noone;
 		
 		 // Alarms:
 		alarm1 = 90 + irandom(90);
@@ -745,29 +747,21 @@
 		
 		else if(reload <= 0){
 			alarm1 = max(alarm1, 30)
-			wkick = -2;
+			wkick  = -2;
 			sound_play_hit(sndCrossReload, 0.1);
 			
-			var	l = 8,
-				d = gunangle;
+			var	_l = 8,
+				_d = gunangle;
 				
-			instance_create(x + lengthdir_x(l, d), y + lengthdir_y(l, d), WepSwap);
+			instance_create(x + lengthdir_x(_l, _d), y + lengthdir_y(_l, _d), WepSwap);
 		}
 	}
 	
 	 // Laser Sight:
-	laser += (gonnafire - laser) * 0.3 * current_time_scale;
-	if(laser > 0 && variable_instance_get(self, "wading", 0) > 0){
-		if(!instance_exists(laser_draw)){
-			laser_draw = script_bind_draw(Diver_draw_laser, depth - 1, id);
-		}
-	}
-	else if(instance_exists(laser_draw)){
-		with(laser_draw) instance_destroy();
-	}
+	laser = lerp_ct(laser, gonnafire, 0.3);
 	
 #define Diver_draw
-	var _back = (gunangle <= 180 || instance_exists(laser_draw));
+	var _back = (gunangle <= 180 || laser != 0);
 	
 	 // Gun Behind:
 	if(_back) Diver_draw_wep();
@@ -776,16 +770,12 @@
 	draw_self_enemy();
 	
 	 // Tree:
-	with(instances_matching(instances_matching(CustomProp, "name", "Palm"), "creator", id)){
-		draw_self();
+	if(instance_exists(CustomProp)){
+		var _inst = instances_matching(instances_matching(CustomProp, "name", "Palm"), "creator", self);
+		if(array_length(_inst)) with(_inst){
+			draw_self();
+		}
 	}
-	
-	 // Laser Sight:
-	if(instance_exists(laser_draw)){
-		laser_draw.x = x;
-		laser_draw.y = y;
-	}
-	else Diver_draw_laser(id);
 	
 	 // Gun Above:
 	if(!_back) Diver_draw_wep();
@@ -860,50 +850,19 @@
 #define Diver_death
 	pickup_drop(20, 0);
 	
-#define Diver_cleanup
-	with(laser_draw) instance_destroy();
-	
 #define Diver_draw_wep
 	 // Bolt:
 	if(reload < 6){
 		var	_ox = 6 - (wkick + reload),
 			_oy = -right,
-			_x = x + lengthdir_x(_ox, gunangle) + lengthdir_x(_oy, gunangle - 90),
-			_y = y + lengthdir_y(_ox, gunangle) + lengthdir_y(_oy, gunangle - 90);
+			_x  = x + lengthdir_x(_ox, gunangle) + lengthdir_x(_oy, gunangle - 90),
+			_y  = y + lengthdir_y(_ox, gunangle) + lengthdir_y(_oy, gunangle - 90);
 			
 		draw_sprite_ext(sprBolt, 1, _x, _y, 1, right, gunangle, image_blend, image_alpha);
 	}
 	
 	 // Weapon:
 	draw_weapon(spr_weap, 0, x, y, gunangle, 0, wkick, right, image_blend, image_alpha);
-	
-#define Diver_draw_laser(_inst)
-	with(_inst){
-		draw_set_color(c_white);
-		draw_set_alpha(0.8 * laser);
-		
-		 // Main:
-		var	_x = other.x - 1,
-			_y = other.y - 3,
-			_angle = gunangle,
-			_width = (1 + random(0.5)) * laser,
-			_laser = draw_lasersight(_x, _y, _angle, 1000 * laser, _width);
-			
-		 // Bloom:
-		draw_set_alpha(draw_get_alpha() * 0.2);
-		draw_set_blend_mode(bm_add);
-		draw_line_width(
-			_x,
-			_y,
-			_laser[0] + lengthdir_x(2, _angle),
-			_laser[1] + lengthdir_y(2, _angle),
-			_width * 2
-		);
-		
-		draw_set_blend_mode(bm_normal);
-		draw_set_alpha(1);
-	}
-	
 	
 #define DiverHarpoon_create(_x, _y)
 	with(instance_create(_x, _y, CustomProjectile)){
@@ -2719,7 +2678,8 @@
 		 // Disable Hitbox:
 		if(mask_index != mskNone){
 			other.creator_mask = mask_index;
-			mask_index = mskNone;
+			mask_index         = mskNone;
+			canfly             = true;
 		}
 	}
 
@@ -5137,6 +5097,38 @@
 		
 	if(_dis > 0){
 		view_shift(-1, _dir, _dis);
+	}
+	
+#define draw_diver_laser
+	if(instance_exists(CustomEnemy)){
+		var _inst = instances_matching_ne(instances_matching(CustomEnemy, "name", "Diver"), "laser", 0);
+		if(array_length(_inst)){
+			draw_set_color(c_white);
+			with(_inst){
+				var _alpha = 0.8 * laser;
+				draw_set_alpha(_alpha);
+				
+				 // Main:
+				var	_x     = x,
+					_y     = y - 1.5,
+					_angle = gunangle,
+					_width = (1 + random(0.5)) * laser,
+					_laser = draw_lasersight(_x, _y, _angle, 1000, _width);
+					
+				 // Bloom:
+				draw_set_alpha(0.2 * _alpha);
+				draw_set_blend_mode(bm_add);
+				draw_line_width(
+					_x - 1,
+					_y - 1,
+					_laser[0] + lengthdir_x(2, _angle) - 1,
+					_laser[1] + lengthdir_y(2, _angle) - 1,
+					_width * 2
+				);
+				draw_set_blend_mode(bm_normal);
+			}
+			draw_set_alpha(1);
+		}
 	}
 	
 #define draw_harpoon_rope

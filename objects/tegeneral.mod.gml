@@ -2567,7 +2567,7 @@
 	}
 	
 	 // Loading/Level Up Screen:
-	if(instance_exists(GenCont) || instance_exists(LevCont)){
+	if((instance_exists(GenCont) && instance_exists(FloorMaker)) || instance_exists(LevCont)){
 		visible      = false;
 		portal_angle = 0;
 		
@@ -2907,12 +2907,6 @@
 		}
 	}
 	
-	 // Disabling Collision to Avoid Projectiles:
-	if(my_health <= 0){
-		mask_store = mask_index;
-		mask_index = mskNone;
-	}
-	
 #define Pet_end_step
 	 // Reset Hitbox:
 	if(mask_index == mskNone && mask_store != null){
@@ -2925,30 +2919,33 @@
 		with(path_wall){
 			var _walled = false;
 			with(other){
-				if(place_meeting(x, y, other) && !place_meeting(xprevious, yprevious, other)){
+				if(place_meeting(x, y, other)){
 					_walled = true;
 					
 					x = xprevious;
 					y = yprevious;
 					
-					var	_mx = 1,
-						_my = 1;
-						
 					with(path_wall) with(other){
-						for(_mx = _mx; _mx >= 0; _mx -= 0.5){
-							if(!place_meeting(x + (hspeed_raw * _mx), y, other)){
-								break;
+						while(speed_raw != 0 && place_meeting(x + hspeed_raw, y + vspeed_raw, other)){
+							if(hspeed_raw != 0 && place_meeting(x + hspeed_raw, y, other)){
+								if(abs(hspeed_raw) > 1){
+									hspeed_raw /= 2;
+								}
+								else hspeed_raw = 0;
 							}
-						}
-						for(_my = _my; _my >= 0; _my -= 0.5){
-							if(!place_meeting(x, y + (vspeed_raw * _my), other)){
-								break;
+							else if(vspeed_raw != 0 && place_meeting(x, y + vspeed_raw, other)){
+								if(abs(vspeed_raw) > 1){
+									vspeed_raw /= 2;
+								}
+								else vspeed_raw = 0;
 							}
+							else if(abs(speed_raw) > 1){
+								speed_raw /= 2;
+							}
+							else speed_raw = 0;
 						}
 					}
 					
-					hspeed_raw *= max(0, _mx);
-					vspeed_raw *= max(0, _my);
 					x += hspeed_raw;
 					y += vspeed_raw;
 				}
@@ -2974,27 +2971,16 @@
 		&& player_is_local_nonsync(player_find_local_nonsync())
 	);
 	if(_outline){
-		var	_surfScreen = surface_setup("PetScreen", game_width, game_height, game_scale_nonsync),
-			_surfPet    = surface_setup("Pet",       game_width, game_height, option_get("quality:main"));
-			
-		with([_surfScreen, _surfPet]){
+		var _surfScreen = surface_setup("PetScreen", game_width, game_height, game_scale_nonsync);
+		with(_surfScreen){
 			x = view_xview_nonsync;
 			y = view_yview_nonsync;
 			
-			 // Clear:
-			surface_set_target(surf);
-			draw_clear_alpha(0, 0);
-			surface_reset_target();
-		}
-		
-		 // Copy & Clear Screen:
-		with(_surfScreen){
+			 // Copy & Clear Screen:
 			draw_set_blend_mode_ext(bm_one, bm_zero);
 			surface_screenshot(surf);
-			draw_set_alpha(0);
-			draw_surface_scale(surf, x, y, 1 / scale);
-			draw_set_alpha(1);
 			draw_set_blend_mode(bm_normal);
+			draw_clear_alpha(c_black, 0);
 		}
 	}
 	
@@ -3020,19 +3006,36 @@
 	
 	 // Draw Outline:
 	if(_outline){
-		with(_surfPet){
-			 // Copy Pet Drawing & Redraw Old Screen:
+		with(surface_setup("Pet", game_width, game_height, option_get("quality:main"))){
+			x = view_xview_nonsync;
+			y = view_yview_nonsync;
+			
+			 // Copy Pet Drawing:
 			draw_set_blend_mode_ext(bm_one, bm_zero);
 			surface_screenshot(surf);
+			
+			 // Unblend Color/Alpha:
+			if(shader_setup("Unblend", surface_get_texture(surf), [1])){
+				draw_surface_scale(surf, x, y, 1 / scale);
+				shader_reset();
+				surface_screenshot(surf);
+			}
+			else{
+				draw_set_blend_mode_ext(bm_inv_src_alpha, bm_one); // Partial Unblend
+				surface_screenshot(surf);
+				draw_set_blend_mode_ext(bm_one, bm_zero);
+			}
+			
+			 // Redraw Screen:
 			with(_surfScreen){
 				draw_surface_scale(surf, x, y, 1 / scale);
 			}
 			draw_set_blend_mode(bm_normal);
 			
-			 // Outline:
+			 // Outlines:
 			draw_set_fog(true, player_get_color(other.leader.index), 0, 0);
-			for(var a = 0; a < 360; a += 90){
-				draw_surface_scale(surf, x + dcos(a), y - dsin(a), 1 / scale);
+			for(var _ang = 0; _ang < 360; _ang += 90){
+				draw_surface_scale(surf, x + dcos(_ang), y - dsin(_ang), 1 / scale);
 			}
 			draw_set_fog(false, 0, 0, 0);
 			
@@ -5906,29 +5909,6 @@
 			}
 			
 			draw_sprite_ext(sprite_index, image_index, x, y, image_xscale * _scale, image_yscale * _scale, rotation, image_blend, image_alpha * _alpha);
-		}
-	}
-	
-	 // GunCont (Laser Cannon):
-	if(instance_exists(CustomObject)){
-		var _inst = instances_matching_gt(instances_matching(CustomObject, "name", "GunCont"), "bloom", 0);
-		if(array_length(_inst)) with(_inst){
-			var _scr = on_draw;
-			if(array_length(_scr) >= 3){
-				var	_xsc = 2,
-					_ysc = 2,
-					_alp = 0.1 * bloom;
-					
-				image_xscale *= _xsc;
-				image_yscale *= _ysc;
-				image_alpha  *= _alp;
-				
-				mod_script_call(_scr[0], _scr[1], _scr[2]);
-				
-				image_xscale /= _xsc;
-				image_yscale /= _ysc;
-				image_alpha  /= _alp;
-			}
 		}
 	}
 	

@@ -592,46 +592,46 @@
 	 // Draw:
 	draw_sprite_ext(_sprite, _image, _x, _y, 1, _flip, _angle, _blend, _alpha);
 	
-#define draw_lasersight(_x, _y, _dir, _maxDistance, _width)
+#define draw_lasersight(_x, _y, _dir, _disMax, _width)
 	/*
 		Performs hitscan and draws a laser sight line
 		Returns the line's ending position
 	*/
 	
-	var	_sx = _x,
-		_sy = _y,
-		_lx = _sx,
-		_ly = _ly,
-		_md = _maxDistance,
-		_d  = _md,
-		_m  = 0; // Minor hitscan increment distance
+	var	_dis  = _disMax,
+		_disX = lengthdir_x(_dis, _dir),
+		_disY = lengthdir_y(_dis, _dir);
 		
-	while(_d > 0){
-		 // Major Hitscan Mode (Start at max, go back until no collision line):
-		if(_m <= 0){
-			_lx = _sx + lengthdir_x(_d, _dir);
-			_ly = _sy + lengthdir_y(_d, _dir);
-			_d -= sqrt(_md);
+	 // Major Hitscan Mode (Start at max, halve distance until no collision line):
+	while(_dis >= 1 && collision_line(_x, _y, _x + _disX, _y + _disY, Wall, false, false)){
+		_dis  /= 2;
+		_disX /= 2;
+		_disY /= 2;
+	}
+	
+	 // Minor Hitscan Mode (Increment until walled):
+	if(_dis < _disMax){
+		var	_disAdd  = max(2, _dis / 32),
+			_disAddX = lengthdir_x(_disAdd, _dir),
+			_disAddY = lengthdir_y(_disAdd, _dir);
 			
-			 // Enter minor hitscan mode:
-			if(!collision_line(_sx, _sy, _lx, _ly, Wall, false, false)){
-				_m = 2;
-				_d = sqrt(_md);
-			}
-		}
-		
-		 // Minor Hitscan Mode (Move until collision):
-		else{
-			if(position_meeting(_lx, _ly, Wall)) break;
-			_lx += lengthdir_x(_m, _dir);
-			_ly += lengthdir_y(_m, _dir);
-			_d -= _m;
+		while(_dis > 0 && !position_meeting(_x + _disX, _y + _disY, Wall)){
+			_dis  -= _disAdd;
+			_disX += _disAddX;
+			_disY += _disAddY;
 		}
 	}
 	
-	draw_line_width(_sx, _sy, _lx, _ly, _width);
+	 // Draw:
+	draw_line_width(
+		_x - 1,
+		_y - 1,
+		_x - 1 + _disX,
+		_y - 1 + _disY,
+		_width
+	);
 	
-	return [_lx, _ly];
+	return [_x + _disX, _y + _disY];
 	
 #define draw_surface_scale(_surf, _x, _y, _scale)
 	/*
@@ -826,8 +826,8 @@
 	
 	with(_inst){
 		 // Motion:
-		direction += _dir;
-		if(_spd > 0) motion_add(_dir, _spd);
+		speed       += _spd;
+		direction   += _dir;
 		image_angle += direction;
 		
 		 // Auto Setup:

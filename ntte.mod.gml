@@ -2650,6 +2650,15 @@
 		}
 	}
 	
+	 // Disable Pet Collision to Avoid Projectiles:
+	if(instance_exists(CustomHitme)){
+		var _inst = instances_matching_le(instances_matching(CustomHitme, "name", "Pet"), "my_health", 0);
+		if(array_length(_inst)) with(_inst){
+			mask_store = mask_index;
+			mask_index = mskNone;
+		}
+	}
+	
 	if(lag) trace_time("ntte_step");
 	
 #define ntte_end_step
@@ -3303,6 +3312,29 @@
 	 // Call Scripts:
 	ntte_call("bloom");
 	
+	 // GunCont (Merged Laser Cannon):
+	if(instance_exists(CustomObject)){
+		var _inst = instances_matching_gt(instances_matching(CustomObject, "name", "GunCont"), "bloom", 0);
+		if(array_length(_inst)) with(_inst){
+			var _scr = on_draw;
+			if(array_length(_scr) >= 3){
+				var	_xsc = 2,
+					_ysc = 2,
+					_alp = 0.1 * bloom;
+					
+				image_xscale *= _xsc;
+				image_yscale *= _ysc;
+				image_alpha  *= _alp;
+				
+				mod_script_call(_scr[0], _scr[1], _scr[2]);
+				
+				image_xscale /= _xsc;
+				image_yscale /= _ysc;
+				image_alpha  /= _alp;
+			}
+		}
+	}
+	
 	if(lag) trace_time("ntte_bloom");
 	
 #define draw_shadows
@@ -3649,685 +3681,663 @@
 #define ntte_hud(_visible, _fade)
 	if(lag) trace_time();
 	
-	var	_local   = player_find_local_nonsync(),
-		_pause   = false,
+	var	_hudList = [],
 		_players = 0,
-		_hudNum  = 0,
-		_hudSide = array_create(maxp, 0),
-		_fade    = 0,
+		_pause   = false,
+		_local   = player_find_local_nonsync(),
 		_vx      = view_xview_nonsync,
 		_vy      = view_yview_nonsync,
 		_gw      = game_width,
 		_gh      = game_height;
 		
-	for(var i = 0; i < maxp; i++){
-		 // Count Players:
-		_players += player_is_active(i);
-		
-		 // Pause Imminent:
-		if(instance_exists(Player)){
-			if(button_pressed(i, "paus")){
-				_pause = true;
-			}
+	 // Local HUD Order:
+	while(true){
+		var _index = player_find_local_nonsync(array_length(_hudList));
+		if(player_is_active(_index)){
+			array_push(_hudList, _index);
 		}
-		
-		 // Local HUD Screen Sides:
-		if(player_is_local_nonsync(i)){
-			_hudSide[i] = (_hudNum++ & 1);
-		}
+		else break;
 	}
+	
+	 // Players:
 	for(var i = 0; i < maxp; i++){
-		 // Non-Local HUD Screen Sides:
-		if(!player_is_local_nonsync(i)){
-			_hudSide[i] = (_hudNum++ & 1);
+		if(player_is_active(i)){
+			_players++;
+			
+			 // Pause Imminent:
+			if(instance_exists(Player)){
+				if(button_pressed(i, "paus")){
+					_pause = true;
+				}
+			}
+			
+			 // HUD Order:
+			if(array_find_index(_hudList, i) < 0){
+				array_push(_hudList, i);
+			}
 		}
 	}
 	
-	/// Surface Setup:
-		var	_surfScreen = surface_setup("HUDScreen", _gw, _gh, game_scale_nonsync),
-			_surfMain   = surface_setup("HUDMain",   _gw, _gh, game_scale_nonsync),
-			_surfSkill  = surface_setup("HUDSkill",  _gw, _gh, game_scale_nonsync);
-			
-		with([_surfMain, _surfSkill, _surfScreen]){
-			x = _vx;
-			y = _vy;
-			
-			 // Clear:
-			surface_set_target(surf);
-			draw_clear_alpha(0, 0);
-			surface_reset_target();
-		}
-		
-		 // Copy & Clear Screen:
-		with(_surfScreen){
-			draw_set_blend_mode_ext(bm_one, bm_zero);
-			surface_screenshot(surf);
-			draw_set_alpha(0);
-			draw_surface_scale(surf, x, y, 1 / scale);
-			draw_set_alpha(1);
-			draw_set_blend_mode(bm_normal);
-		}
-		
 	 // Mutation HUD:
-	if(_players <= 1 || instance_exists(Player)){
-		var	_skillType = [],
-			_skillList = [];
-			
-		 // Compile Orchid Skills to Draw:
-		if(instance_exists(CustomObject)){
-			var _inst = instances_matching(CustomObject, "name", "OrchidSkill");
-			if(array_length(_inst)) with(_inst){
-				if(skill_get(skill) != 0){
-					array_push(_skillType, "orchid");
-					array_push(_skillList, skill);
-				}
-			}
-		}
+	with(surface_setup("HUDSkill", _gw, _gh, game_scale_nonsync)){
+		x = _vx;
+		y = _vy;
 		
-		 // Compile Orchid Rerolls to Draw:
-		if(skill_get(global.hud_reroll) != 0){
-			array_push(_skillType, "reroll");
-			array_push(_skillList, (
-				(global.hud_reroll == mut_patience && skill_get(GameCont.hud_patience) != 0)
-				? GameCont.hud_patience
-				: global.hud_reroll
-			));
-		}
-		else if(!is_undefined(global.hud_reroll)){
-			global.hud_reroll = undefined;
-			
-			 // Link to Latest Mutation:
-			for(var _pos = 0; !is_undefined(skill_get_at(_pos)); _pos++){
-				global.hud_reroll = skill_get_at(_pos);
-			}
-		}
+		var _draw = false;
 		
-		 // Draw Stuff:
-		if(array_length(_skillList)){
-			var	_sx   = _gw - 11,
-				_sy   = 12,
-				_addx = -16,
-				_addy = 16,
-				_minx = 110 - (17 * (_players > 1));
-				
-			 // Co-op Offset:
-			if(!_pause && instance_exists(Player)){
-				if(_players >= 2){
-					_minx = 10;
-					_addy *= -1;
-					_sy = _gh - 12;
-					if(instance_exists(LevCont)){
-						_sy -= 34;
-					}
-					else{
-						if(_players >= 3) _minx = 100;
-						if(_players >= 4) _sx = _gw - 100;
-					}
-				}
-			}
-			
-			var	_x = _sx,
-				_y = _sy;
-				
-			 // Ultras Offset:
-			var _raceMods = mod_get_names("race");
-			for(var i = 0; i < 17 + array_length(_raceMods); i++){
-				var _race = ((i < 17) ? i : _raceMods[i - 17]);
-				for(var j = 1; j <= ultra_count(_race); j++){
-					if(ultra_get(_race, j) != 0){
-						_x += _addx;
-						if(_x < _minx){
-							_x = _sx;
-							_y += _addy;
+		surface_set_target(surf);
+		draw_clear_alpha(c_black, 0);
+		
+		d3d_set_projection_ortho(0, 0, w, h, 0);
+		
+		if(_players <= 1 || instance_exists(Player)){
+			with(UberCont){
+				var	_skillList = [],
+					_skillType = [];
+					
+				 // Compile Orchid Skills to Draw:
+				if(instance_exists(CustomObject)){
+					var _inst = instances_matching(CustomObject, "name", "OrchidSkill");
+					if(array_length(_inst)) with(_inst){
+						if(skill_get(skill) != 0){
+							array_push(_skillType, "orchid");
+							array_push(_skillList, skill);
 						}
 					}
 				}
-			}
-			
-			 // Draw:
-			for(var i = 0; !is_undefined(skill_get_at(i)); i++){
-				var	_skill      = skill_get_at(i),
-					_skillIndex = array_find_index(_skillList, _skill);
+				
+				 // Compile Orchid Rerolls to Draw:
+				if(skill_get(global.hud_reroll) != 0){
+					array_push(_skillType, "reroll");
+					array_push(_skillList, (
+						(global.hud_reroll == mut_patience && skill_get(GameCont.hud_patience) != 0)
+						? GameCont.hud_patience
+						: global.hud_reroll
+					));
+				}
+				else if(!is_undefined(global.hud_reroll)){
+					global.hud_reroll = undefined;
 					
-				if(_skillIndex >= 0){
-					var	_dx = _x + _vx,
-						_dy = _y + _vy;
+					 // Link to Latest Mutation:
+					for(var _pos = 0; !is_undefined(skill_get_at(_pos)); _pos++){
+						global.hud_reroll = skill_get_at(_pos);
+					}
+				}
+				
+				 // Mutation Drawing:
+				if(array_length(_skillList)){
+					var	_sx   = _gw - 11,
+						_sy   = 12,
+						_addx = -16,
+						_addy = 16,
+						_minx = 110 - (17 * (_players > 1));
 						
-					while(_skillIndex >= 0){
-						switch(_skillType[_skillIndex]){
+					 // Co-op Offset:
+					if(!_pause && instance_exists(Player)){
+						if(_players >= 2){
+							_minx = 10;
+							_addy *= -1;
+							_sy = _gh - 12;
+							if(instance_exists(LevCont)){
+								_sy -= 34;
+							}
+							else{
+								if(_players >= 3) _minx = 100;
+								if(_players >= 4) _sx = _gw - 100;
+							}
+						}
+					}
+					
+					var	_x = _sx,
+						_y = _sy;
+						
+					 // Ultras Offset:
+					var _raceMods = mod_get_names("race");
+					for(var i = 0; i < 17 + array_length(_raceMods); i++){
+						var _race = ((i < 17) ? i : _raceMods[i - 17]);
+						for(var j = 1; j <= ultra_count(_race); j++){
+							if(ultra_get(_race, j) != 0){
+								_x += _addx;
+								if(_x < _minx){
+									_x = _sx;
+									_y += _addy;
+								}
+							}
+						}
+					}
+					
+					 // Draw:
+					for(var i = 0; !is_undefined(skill_get_at(i)); i++){
+						var	_skill      = skill_get_at(i),
+							_skillIndex = array_find_index(_skillList, _skill);
 							
-							case "reroll": // VAULT FLOWER
-								
-								draw_sprite(
-									spr.SkillRerollHUDSmall,
-									0,
-									_dx + ((global.hud_reroll == mut_patience && skill_get(GameCont.hud_patience) != 0) ? -4 : 5),
-									_dy + 5
-								);
-								
-								break;
-								
-							case "orchid": // ORCHID MANTIS
-								
-								var	_icon = skill_get_icon(_skill),
-									_spr  = _icon[0],
-									_img  = _icon[1];
+						if(_skillIndex >= 0){
+							while(_skillIndex >= 0){
+								switch(_skillType[_skillIndex]){
 									
-								if(sprite_exists(_spr)){
-									var	_time    = infinity,
-										_timeMax = infinity,
-										_colSub  = c_dkgray,
-										_colTop  = c_white,
-										_flash   = false;
+									case "reroll": // VAULT FLOWER
 										
-									 // Get Orchid Skill With Least Time:
-									with(instances_matching(instances_matching(CustomObject, "name", "OrchidSkill"), "skill", _skill)){
-										if(time < _time){
-											_time    = time;
-											_timeMax = time_max;
-											_colSub  = color2;
-											_colTop  = color1;
-										}
-										if(flash) _flash = true;
-									}
-									
-									 // Orchid Skill Drawing:
-									if(_time > current_time_scale){
-										var	_uvs = sprite_get_uvs(_spr, _img),
-											_x1 = max(sprite_get_bbox_left  (_spr),     _uvs[4]                                      ),
-											_y1 = max(sprite_get_bbox_top   (_spr),     _uvs[5]                                      ),
-											_x2 = min(sprite_get_bbox_right (_spr) + 1, _uvs[4] + (_uvs[6] * sprite_get_width (_spr))),
-											_y2 = min(sprite_get_bbox_bottom(_spr) + 1, _uvs[5] + (_uvs[7] * sprite_get_height(_spr)));
+										_draw = true;
+										
+										draw_sprite(
+											spr.SkillRerollHUDSmall,
+											0,
+											_x + ((global.hud_reroll == mut_patience && skill_get(GameCont.hud_patience) != 0) ? -4 : 5),
+											_y + 5
+										);
+										
+										break;
+										
+									case "orchid": // ORCHID MANTIS
+										
+										var	_icon = skill_get_icon(_skill),
+											_spr  = _icon[0],
+											_img  = _icon[1];
 											
-										 // Outline:
-										draw_set_fog(true, _colSub, 0, 0);
-										for(var d = 0; d < 360; d += 90){
-											draw_sprite(_spr, _img, _dx + dcos(d), _dy - dsin(d));
-										}
-										
-										 // Timer Outline:
-										draw_set_fog(true, _colTop, 0, 0);
-										var _num =  1 - (_time / _timeMax);
-										for(var d = 0; d < 360; d += 90){
-											var	_l = _x1,
-												_t = max(_y1, lerp(_y1 - 1, _y2 + 1, _num) + dsin(d)),
-												_w = _x2 - _l,
-												_h = _y2 + 1 - _t;
+										if(sprite_exists(_spr)){
+											_draw = true;
+											
+											var	_time    = infinity,
+												_timeMax = infinity,
+												_colSub  = c_dkgray,
+												_colTop  = c_white,
+												_flash   = false;
 												
-											draw_sprite_part(_spr, _img, _l, _t, _w, _h, _dx + _l - sprite_get_xoffset(_spr) + dcos(d), _dy + _t - sprite_get_yoffset(_spr) - dsin(d));
+											 // Get Orchid Skill With Least Time:
+											with(instances_matching(instances_matching(CustomObject, "name", "OrchidSkill"), "skill", _skill)){
+												if(time < _time){
+													_time    = time;
+													_timeMax = time_max;
+													_colSub  = color2;
+													_colTop  = color1;
+												}
+												if(flash) _flash = true;
+											}
+											
+											 // Orchid Skill Drawing:
+											if(_time > current_time_scale){
+												var	_uvs = sprite_get_uvs(_spr, _img),
+													_x1 = max(sprite_get_bbox_left  (_spr),     _uvs[4]                                      ),
+													_y1 = max(sprite_get_bbox_top   (_spr),     _uvs[5]                                      ),
+													_x2 = min(sprite_get_bbox_right (_spr) + 1, _uvs[4] + (_uvs[6] * sprite_get_width (_spr))),
+													_y2 = min(sprite_get_bbox_bottom(_spr) + 1, _uvs[5] + (_uvs[7] * sprite_get_height(_spr)));
+													
+												 // Outline:
+												draw_set_fog(true, _colSub, 0, 0);
+												for(var _dir = 0; _dir < 360; _dir += 90){
+													draw_sprite(_spr, _img, _x + dcos(_dir), _y - dsin(_dir));
+												}
+												
+												 // Timer Outline:
+												draw_set_fog(true, _colTop, 0, 0);
+												var _num =  1 - (_time / _timeMax);
+												for(var _dir = 0; _dir < 360; _dir += 90){
+													var	_l = _x1,
+														_t = max(_y1, lerp(_y1 - 1, _y2 + 1, _num) + dsin(_dir)),
+														_w = _x2 - _l,
+														_h = _y2 + 1 - _t;
+														
+													draw_sprite_part(_spr, _img, _l, _t, _w, _h, _x + _l - sprite_get_xoffset(_spr) + dcos(_dir), _y + _t - sprite_get_yoffset(_spr) - dsin(_dir));
+												}
+												
+												 // Star Flash:
+												var	_wave = current_frame + (i * 1000),
+													_frames = 60,
+													_scale = max(0, (1.1 + (0.1 * sin(_wave / 15))) * ((_time - (_timeMax - _frames)) / _frames)),
+													_angle = _wave / 10;
+													
+												if(_scale > 0){
+													if(_flash) draw_set_fog(true, c_white, 0, 0);
+													draw_sprite_ext(spr.PetOrchidBall, _wave, _x, _y, _scale, _scale, _angle, c_white, 1);
+												}
+											}
+											
+											 // Skill Icon:
+											draw_set_fog(_flash, c_white, 0, 0);
+											draw_sprite(_spr, _img, _x, _y);
+											draw_set_fog(false, 0, 0, 0);
+											draw_set_blend_mode(bm_add);
+											draw_sprite_ext(_spr, _img, _x, _y, 1, 1, 0, c_white, 0.1 + (0.1 * cos((_timeMax - _time) / 20)));
+											draw_set_blend_mode(bm_normal);
 										}
 										
-										 // Star Flash:
-										var	_wave = current_frame + (i * 1000),
-											_frames = 60,
-											_scale = max(0, (1.1 + (0.1 * sin(_wave / 15))) * ((_time - (_timeMax - _frames)) / _frames)),
-											_angle = _wave / 10;
-											
-										if(_scale > 0){
-											if(_flash) draw_set_fog(true, c_white, 0, 0);
-											draw_sprite_ext(spr.PetOrchidBall, _wave, _dx, _dy, _scale, _scale, _angle, c_white, 1);
-										}
-									}
-									
-									 // Skill Icon:
-									draw_set_fog(_flash, c_white, 0, 0);
-									draw_sprite(_spr, _img, _dx, _dy);
-									draw_set_fog(false, 0, 0, 0);
-									draw_set_blend_mode(bm_add);
-									draw_sprite_ext(_spr, _img, _dx, _dy, 1, 1, 0, c_white, 0.1 + (0.1 * cos((_timeMax - _time) / 20)));
-									draw_set_blend_mode(bm_normal);
+										break;
+										
 								}
 								
-								break;
+								_skillList = array_delete(_skillList, _skillIndex);
+								_skillType = array_delete(_skillType, _skillIndex);
 								
+								_skillIndex = array_find_index(_skillList, _skill);
+							}
+							
+							if(array_length(_skillList) <= 0){
+								break;
+							}
 						}
 						
-						_skillList = array_delete(_skillList, _skillIndex);
-						_skillType = array_delete(_skillType, _skillIndex);
-						
-						_skillIndex = array_find_index(_skillList, _skill);
-					}
-					
-					if(array_length(_skillList) <= 0){
-						break;
-					}
-				}
-				
-				 // Keep it movin:
-				if(
-					_skill != mut_patience
-					|| GameCont.hud_patience == 0
-					|| GameCont.hud_patience == null
-				){
-					_x += _addx;
-					if(_x < _minx){
-						_x = _sx;
-						_y += _addy;
+						 // Keep it movin:
+						if(
+							_skill != mut_patience
+							|| GameCont.hud_patience == 0
+							|| GameCont.hud_patience == null
+						){
+							_x += _addx;
+							if(_x < _minx){
+								_x = _sx;
+								_y += _addy;
+							}
+						}
 					}
 				}
 			}
 		}
-	}
-	
-	 // Copy Mutation HUD Drawing & Clear Screen:
-	surface_screenshot(_surfSkill.surf);
-	with(_surfScreen){
-		if(_visible && instance_exists(Player) && player_is_active(_local) && player_get_show_skills(_local)){
-			 // Game Win Fade:
+		
+		d3d_set_projection_ortho(_vx, _vy, _gw, _gh, 0);
+		
+		surface_reset_target();
+		
+		 // Draw to Screen:
+		if(_draw && _visible && instance_exists(Player) && player_is_active(_local) && player_get_show_skills(_local)){
 			if(_fade > 0){
-				draw_set_color(c_black);
-				draw_set_color_write_enable(true, true, true, false);
-				draw_set_alpha(_fade);
-				draw_rectangle(_vx, _vy, _vx + _gw, _vy + _gh, false);
-				draw_set_alpha(1);
-				draw_set_color_write_enable(true, true, true, true);
+				draw_surface_ext(surf, x, y, 1 / scale, 1 / scale, 0, merge_color(c_white, c_black, min(1, _fade)), 1);
 			}
-			
-			 // Copy Mutation HUD:
-			surface_screenshot(surf);
+			else draw_surface_scale(surf, x, y, 1 / scale);
 		}
-		draw_set_blend_mode_ext(bm_one, bm_zero);
-		draw_set_alpha(0);
-		draw_surface_scale(surf, x, y, 1 / scale);
-		draw_set_alpha(1);
-		draw_set_blend_mode(bm_normal);
 	}
 	
 	 // Player HUD:
-	var	_ox = _vx + (17 * (_players <= 1)),
-		_oy = _vy;
+	with(surface_setup("HUDMain", _gw, _gh, game_scale_nonsync)){
+		x = _vx;
+		y = _vy;
 		
-	for(var _index = 0; _index < maxp; _index++){
-		var _player = player_find(_index);
+		surface_set_target(surf);
+		draw_clear_alpha(c_black, 0);
+		surface_reset_target();
 		
-		if(instance_exists(_player)){
-			var	_side       = _hudSide[_index],
-				_flip       = (_side ? -1 : 1),
-				_HUDMain    = (_local == _index),
-				_HUDVisible = (_visible && player_is_active(_local) && player_get_show_hud(_index, _local) && !instance_exists(PopoScene) && (_index < 2 || !instance_exists(LevCont))),
-				_HUDDraw    = (_HUDMain || _HUDVisible);
-				
-			draw_set_projection(2, _index);
-			
-			with(_player){
-				 // Red Ammo:
-				if("red_ammo" in self){
-					if(_HUDDraw){
-						var _b = ["", "b"];
-						for(var i = 0; i < array_length(_b); i++){
-							var	_wep  = variable_instance_get(self, _b[i] + "wep", wep_none),
-								_cost = weapon_get_red(_wep),
-								_gold = (weapon_get_gold(_wep) != 0);
-								
-							if(_cost > 0){
-								var	_x   = _ox + 26 + (44 * i),
-									_y   = _oy + 20,
-									_max = 4,
-									_low = (
-										red_ammo < _cost
-										&& (wave % 10) < 5
-										&& variable_instance_get(self, "drawempty" + _b[i], 0) > 0
-									);
-									
-								 // Main:
-								draw_sprite((_gold ? spr.RedAmmoHUDGold : spr.RedAmmoHUD), (red_amax > _max), _x, _y);
-								
-								 // Ammo Charges:
-								if(red_ammo > 0){
-									draw_sprite_ext(spr.RedAmmoHUDFill, (red_amax > _max), _x + 2, _y, red_ammo, 1, 0, c_white, 1);
-									for(var j = 0; j < red_ammo; j++){
-										draw_sprite(spr.RedAmmoHUDAmmo, j / _max, _x + 4 + (4 * (j % _max)), _y + 4);
-									}
-								}
-								
-								 // Cost Indicator:
-								draw_sprite((_gold ? spr.RedAmmoHUDCostGold : spr.RedAmmoHUDCost), _low, _x + 4 + (4 * (_cost % _max)), _y + 4);
-							}
-						}
-					}
-				}
-				
-				 // Parrot:
-				if(race == "parrot"){
-					/*
-					 // Expand HUD:
-					var _max = ceil(feather_ammo_max / feather_num);
-					if(array_length(feather_ammo_hud) != _max){
-						feather_ammo_hud = array_create(_max);
-						for(var i = 0; i < _max; i++){
-							feather_ammo_hud[i] = [0, 0];
-						}
-					}
-					*/
+		if(instance_exists(Player)){
+			for(var _hudIndex = array_length(_hudList) - 1; _hudIndex >= 0; _hudIndex--){
+				var	_index  = _hudList[_hudIndex],
+					_player = player_find(_index);
 					
-					/*
-					 // Flash:
-					if(feather_ammo < feather_ammo_max) feather_ammo_hud_flash = 0;
-					else feather_ammo_hud_flash += current_time_scale;
-					*/
+				if(instance_exists(_player)){
+					var	_hudX       = 17 * (_players <= 1),
+						_hudY       = 0,
+						_hudSide    = (_hudIndex % 2),
+						_hudMain    = (_hudIndex == 0),
+						_hudVisible = (_visible && player_is_active(_local) && player_get_show_hud(_index, _local) && !instance_exists(PopoScene) && (_index < 2 || !instance_exists(LevCont))),
+						_hudDraw    = (_hudMain || _hudVisible);
+						
+					 // draw_set_projection(2) doesn't work on surfaces?
+					switch(_hudIndex){
+						case 1 : _hudX += 227;               break;
+						case 2 : _hudY += 193;               break;
+						case 3 : _hudX += 227; _hudY += 193; break;
+					}
 					
-					 // Draw:
-					if(_HUDDraw){
-						 // Ultra B:
-						if(ntte_charm_flock_hud > 0){
-							var	_HPCur      = max(0, my_health),
-								_HPMax      = max(0, maxhealth),
-								_HPLst      = max(0, lsthealth),
-								_HPCurCharm = max(0, ntte_charm_flock_hud_hp),
-								_HPMaxCharm = max(0, ntte_charm_flock_hud_hp_max),
-								_HPLstCharm = max(0, ntte_charm_flock_hud_hp_lst),
-								_HPCol      = player_get_color(index),
-								_HPColCharm = make_color_hsv(color_get_hue(_HPCol), min(255, color_get_saturation(_HPCol) * 1.5), color_get_value(_HPCol) * 2/3),
-								_w          = 83,
-								_h          = 7,
-								_x          = _ox + 5,
-								_y          = _oy + 7,
-								_HPw        = floor(_w * 0.35 * ntte_charm_flock_hud);
-								
-							draw_set_halign(fa_center);
-							draw_set_valign(fa_middle);
-							
-							 // Main BG:
-							draw_set_color(c_black);
-							draw_rectangle(_x, _y, _x + _w, _y + _h, false);
-								
-							/// Charmed HP:
-								var	_x1 = _x,
-									_x2 = _x + _HPw - 1;
-									
-								if(_x1 < _x2){
-									 // lsthealth Filling:
-									if(_HPLstCharm > _HPCurCharm){
-										draw_set_color(merge_color(
-											_HPColCharm,
-											make_color_rgb(21, 27, 42),
-											2/3
-										));
-										draw_rectangle(_x1, _y, lerp(_x1, _x2, clamp(_HPLstCharm / _HPMaxCharm, 0, 1)), _y + _h, false);
-									}
-									
-									 // my_health Filling:
-									if(_HPCurCharm > 0 && _HPMaxCharm > 0){
-										draw_set_color(
-											(_HPLstCharm != _HPCurCharm)
-											? c_white
-											: _HPColCharm
-										);
-										draw_rectangle(_x1, _y, lerp(_x1, _x2, clamp(_HPCurCharm / _HPMaxCharm, 0, 1)), _y + _h, false);
-									}
-									
-									 // Text:
-									var _HPText = `+${_HPCurCharm}`;
-									draw_set_font(fntM);
-									if(string_width(_HPText) >= _x2 - _x1){
-										draw_set_font(fntSmall);
-									}
-									draw_text_nt(
-										clamp(ceil(lerp(_x1, _x2, 0.5)), _x + floor(string_width(_HPText) / 2) + 1, _x + _w - ceil(string_width(_HPText) / 2) + 1),
-										_y + 1 + floor(_h / 2),
-										_HPText
-									);
-								}
-								
-							/// Normal HP:
-								var	_x1 = _x + _HPw + (1 * ntte_charm_flock_hud),
-									_x2 = _x + _w;
-									
-								if(_x1 < _x2){
-									 // BG:
-									draw_set_color(c_black);
-									draw_rectangle(_x1, _y, _x2, _y + _h, false);
-									
-									 // lsthealth Filling: (Color is like 95% accurate, I did a lot of trial and error)
-									if(_HPLst > _HPCur){
-										draw_set_color(merge_color(
-											_HPCol,
-											make_color_rgb(21, 27, 42),
-											2/3
-										));
-										draw_rectangle(_x1, _y, lerp(_x1, _x2, clamp(_HPLst / _HPMax, 0, 1)), _y + _h, false);
-									}
-									
-									 // my_health Filling:
-									if(_HPCur > 0 && _HPMax > 0){
-										draw_set_color(
-											(((sprite_index == spr_hurt && image_index < 1 && !instance_exists(Portal)) || _HPLst < _HPCur) && !instance_exists(GenCont) && !instance_exists(LevCont) && !instance_exists(PlayerSit))
-											? c_white
-											: _HPCol
-										);
-										draw_rectangle(_x1, _y, lerp(_x1, _x2, clamp(_HPCur / _HPMax, 0, 1)), _y + _h, false);
-									}
-									
-									 // Text:
-									if(_HPLst >= _HPCur || sin(wave) > 0){
-										var _HPText = `${_HPCur}/${_HPMax}`;
-										draw_set_font(fntM);
-										if(string_width(_HPText) >= _x2 - _x1){
-											draw_set_font(fntSmall);
+					surface_set_target(surf);
+					draw_clear_alpha(c_black, 0);
+					
+					d3d_set_projection_ortho(-_hudX, -_hudY, w, h, 0);
+					
+					with(_player){
+						 // Red Ammo:
+						if("red_ammo" in self){
+							if(_hudDraw){
+								var _b = ["", "b"];
+								for(var i = 0; i < array_length(_b); i++){
+									var	_wep  = variable_instance_get(self, _b[i] + "wep", wep_none),
+										_cost = weapon_get_red(_wep),
+										_gold = (weapon_get_gold(_wep) != 0);
+										
+									if(_cost > 0){
+										var	_x   = 26 + (44 * i),
+											_y   = 20,
+											_max = 4,
+											_low = (
+												red_ammo < _cost
+												&& (wave % 10) < 5
+												&& variable_instance_get(self, "drawempty" + _b[i], 0) > 0
+											);
+											
+										 // Main:
+										draw_sprite((_gold ? spr.RedAmmoHUDGold : spr.RedAmmoHUD), (red_amax > _max), _x, _y);
+										
+										 // Ammo Charges:
+										if(red_ammo > 0){
+											draw_sprite_ext(spr.RedAmmoHUDFill, (red_amax > _max), _x + 2, _y, red_ammo, 1, 0, c_white, 1);
+											for(var j = 0; j < red_ammo; j++){
+												draw_sprite(spr.RedAmmoHUDAmmo, j / _max, _x + 4 + (4 * (j % _max)), _y + 4);
+											}
 										}
-										draw_text_nt(
-											ceil(lerp(_x1, _x2, 0.5)) + round(4 * (1 - ntte_charm_flock_hud)),
-											_y + 1 + floor(_h / 2),
-											_HPText
-										);
+										
+										 // Cost Indicator:
+										draw_sprite((_gold ? spr.RedAmmoHUDCostGold : spr.RedAmmoHUDCost), _low, _x + 4 + (4 * (_cost % _max)), _y + 4);
 									}
 								}
-								
-							 // Separator:
-							draw_set_color(c_white);
-							draw_line_width(_x + _HPw, _y - 2, _x + _HPw, _y + _h, 1);
-						}
-						
-						 // Parrot Feathers:
-						var	_x           = _ox + (_side ? -5 : 99),
-							_y           = _oy + 11,
-							_spr         = race_get_sprite(race, sprRogueAmmoHUD),
-							_featherInst = (instance_exists(CustomObject) ? instances_matching(instances_matching(instances_matching(CustomObject, "name", "ParrotFeather"), "index", index), "creator", self, noone) : []),
-							_hudActive   = ((button_check(index, "spec") || usespec > 0) && canspec && player_active),
-							_hudFill     = array_create(ceil(feather_ammo_max / feather_num), 0),
-							_hudTarget   = [];
-							
-						with(_featherInst){
-							var _pos = array_find_index(_hudTarget, target);
-							if(_pos < 0){
-								_pos = array_length(_hudTarget);
-								
-								 // Idle Feather:
-								if(target == other){
-									while(_pos < array_length(_hudFill) && _hudFill[_pos] >= other.feather_num){
-										_pos++;
-									}
-								}
-								
-								 // Active Feather:
-								else if(_pos < array_length(_hudFill)){
-									array_push(_hudTarget, target);
-									
-									 // Shift Right:
-									for(var i = array_length(_hudFill) - 1; i > _pos; i--){
-										_hudFill[i] = _hudFill[i - 1];
-									}
-									_hudFill[_pos] = 0;
-								}
-							}
-							if(_pos < array_length(_hudFill)){
-								_hudFill[_pos]++;
 							}
 						}
 						
-						for(var i = 0; i < array_length(_hudFill); i++){
-							var	_ammo = clamp(((feather_ammo + array_length(_featherInst)) / feather_num) - i, 0, 1),
-								_fill = clamp(_hudFill[i] / feather_num, 0, 1),
-								_xsc  = _flip,
-								_ysc  = 1,
-								_dx   = _x + (5 * i * _flip),
-								_dy   = _y;
+						 // Parrot:
+						if(race == "parrot"){
+							/*
+							 // Expand HUD:
+							var _max = ceil(feather_ammo_max / feather_num);
+							if(array_length(feather_ammo_hud) != _max){
+								feather_ammo_hud = array_create(_max);
+								for(var i = 0; i < _max; i++){
+									feather_ammo_hud[i] = [0, 0];
+								}
+							}
+							*/
+							
+							/*
+							 // Flash:
+							if(feather_ammo < feather_ammo_max) feather_ammo_hud_flash = 0;
+							else feather_ammo_hud_flash += current_time_scale;
+							*/
+							
+							 // Draw:
+							if(_hudDraw){
+								 // Ultra B:
+								if(ntte_charm_flock_hud > 0){
+									var	_HPCur      = max(0, my_health),
+										_HPMax      = max(0, maxhealth),
+										_HPLst      = max(0, lsthealth),
+										_HPCurCharm = max(0, ntte_charm_flock_hud_hp),
+										_HPMaxCharm = max(0, ntte_charm_flock_hud_hp_max),
+										_HPLstCharm = max(0, ntte_charm_flock_hud_hp_lst),
+										_HPCol      = player_get_color(index),
+										_HPColCharm = make_color_hsv(color_get_hue(_HPCol), min(255, color_get_saturation(_HPCol) * 1.5), color_get_value(_HPCol) * 2/3),
+										_w          = 83,
+										_h          = 7,
+										_x          = 5,
+										_y          = 7,
+										_HPw        = floor(_w * 0.35 * ntte_charm_flock_hud);
+										
+									draw_set_halign(fa_center);
+									draw_set_valign(fa_middle);
+									
+									 // Main BG:
+									draw_set_color(c_black);
+									draw_rectangle(_x, _y, _x + _w, _y + _h, false);
+										
+									/// Charmed HP:
+										var	_x1 = _x,
+											_x2 = _x + _HPw - 1;
+											
+										if(_x1 < _x2){
+											 // lsthealth Filling:
+											if(_HPLstCharm > _HPCurCharm){
+												draw_set_color(merge_color(
+													_HPColCharm,
+													make_color_rgb(21, 27, 42),
+													2/3
+												));
+												draw_rectangle(_x1, _y, lerp(_x1, _x2, clamp(_HPLstCharm / _HPMaxCharm, 0, 1)), _y + _h, false);
+											}
+											
+											 // my_health Filling:
+											if(_HPCurCharm > 0 && _HPMaxCharm > 0){
+												draw_set_color(
+													(_HPLstCharm != _HPCurCharm)
+													? c_white
+													: _HPColCharm
+												);
+												draw_rectangle(_x1, _y, lerp(_x1, _x2, clamp(_HPCurCharm / _HPMaxCharm, 0, 1)), _y + _h, false);
+											}
+											
+											 // Text:
+											var _HPText = `+${_HPCurCharm}`;
+											draw_set_font(fntM);
+											if(string_width(_HPText) >= _x2 - _x1){
+												draw_set_font(fntSmall);
+											}
+											draw_text_nt(
+												clamp(ceil(lerp(_x1, _x2, 0.5)), _x + floor(string_width(_HPText) / 2) + 1, _x + _w - ceil(string_width(_HPText) / 2) + 1),
+												_y + 1 + floor(_h / 2),
+												_HPText
+											);
+										}
+										
+									/// Normal HP:
+										var	_x1 = _x + _HPw + (1 * ntte_charm_flock_hud),
+											_x2 = _x + _w;
+											
+										if(_x1 < _x2){
+											 // BG:
+											draw_set_color(c_black);
+											draw_rectangle(_x1, _y, _x2, _y + _h, false);
+											
+											 // lsthealth Filling: (Color is like 95% accurate, I did a lot of trial and error)
+											if(_HPLst > _HPCur){
+												draw_set_color(merge_color(
+													_HPCol,
+													make_color_rgb(21, 27, 42),
+													2/3
+												));
+												draw_rectangle(_x1, _y, lerp(_x1, _x2, clamp(_HPLst / _HPMax, 0, 1)), _y + _h, false);
+											}
+											
+											 // my_health Filling:
+											if(_HPCur > 0 && _HPMax > 0){
+												draw_set_color(
+													(((sprite_index == spr_hurt && image_index < 1 && !instance_exists(Portal)) || _HPLst < _HPCur) && !instance_exists(GenCont) && !instance_exists(LevCont) && !instance_exists(PlayerSit))
+													? c_white
+													: _HPCol
+												);
+												draw_rectangle(_x1, _y, lerp(_x1, _x2, clamp(_HPCur / _HPMax, 0, 1)), _y + _h, false);
+											}
+											
+											 // Text:
+											if(_HPLst >= _HPCur || sin(wave) > 0){
+												var _HPText = `${_HPCur}/${_HPMax}`;
+												draw_set_font(fntM);
+												if(string_width(_HPText) >= _x2 - _x1){
+													draw_set_font(fntSmall);
+												}
+												draw_text_nt(
+													ceil(lerp(_x1, _x2, 0.5)) + round(4 * (1 - ntte_charm_flock_hud)),
+													_y + 1 + floor(_h / 2),
+													_HPText
+												);
+											}
+										}
+										
+									 // Separator:
+									draw_set_color(c_white);
+									draw_line_width(_x + _HPw, _y - 2, _x + _HPw, _y + _h, 1);
+								}
 								
-							 // Extend Shootable Feathers:
-							if((_ammo > 0 && (i < 1 || ultra_get(race, 1) > 0)) || _fill > 0){
-								_dx -= _flip;
-								if((!_hudActive || _fill <= 0) && _ammo > _fill){
-									_fill = _ammo;
-									_dy++;
+								 // Parrot Feathers:
+								var	_x           = (_hudSide ? -5 : 99),
+									_y           = 11,
+									_spr         = race_get_sprite(race, sprRogueAmmoHUD),
+									_featherInst = (instance_exists(CustomObject) ? instances_matching(instances_matching(instances_matching(CustomObject, "name", "ParrotFeather"), "index", index), "creator", self, noone) : []),
+									_hudActive   = ((button_check(index, "spec") || usespec > 0) && canspec && player_active),
+									_hudFill     = array_create(ceil(feather_ammo_max / feather_num), 0),
+									_hudTarget   = [];
+									
+								with(_featherInst){
+									var _pos = array_find_index(_hudTarget, target);
+									if(_pos < 0){
+										_pos = array_length(_hudTarget);
+										
+										 // Idle Feather:
+										if(target == other){
+											while(_pos < array_length(_hudFill) && _hudFill[_pos] >= other.feather_num){
+												_pos++;
+											}
+										}
+										
+										 // Active Feather:
+										else if(_pos < array_length(_hudFill)){
+											array_push(_hudTarget, target);
+											
+											 // Shift Right:
+											for(var i = array_length(_hudFill) - 1; i > _pos; i--){
+												_hudFill[i] = _hudFill[i - 1];
+											}
+											_hudFill[_pos] = 0;
+										}
+									}
+									if(_pos < array_length(_hudFill)){
+										_hudFill[_pos]++;
+									}
+								}
+								
+								for(var i = 0; i < array_length(_hudFill); i++){
+									var	_ammo = clamp(((feather_ammo + array_length(_featherInst)) / feather_num) - i, 0, 1),
+										_fill = clamp(_hudFill[i] / feather_num, 0, 1),
+										_xsc  = (_hudSide ? -1 : 1),
+										_ysc  = 1,
+										_dx   = _x + (5 * i * _xsc),
+										_dy   = _y;
+										
+									 // Extend Shootable Feathers:
+									if((_ammo > 0 && (i < 1 || ultra_get(race, 1) > 0)) || _fill > 0){
+										_dx -= _xsc;
+										if((!_hudActive || _fill <= 0) && _ammo > _fill){
+											_fill = _ammo;
+											_dy++;
+										}
+									}
+									
+									 // Main HUD:
+									draw_sprite_ext(_spr, 0, _dx, _dy, _xsc, _ysc, 0, c_white, 1);
+									
+									 // Total Feathers Filling:
+									if(_ammo > _fill){
+										var	_img = lerp(1, sprite_get_number(_spr) - 1, clamp(_ammo, 0, 1)),
+											_col = make_color_hsv(178, 1/3 * 255, 0.6 * 255);
+											
+										draw_sprite_ext(_spr, _img, _dx, _dy, _xsc, _ysc, 0, _col, 1);
+									}
+									
+									 // Active Feathers Filling:
+									if(_fill > 0){
+										var _img = lerp(1, sprite_get_number(_spr) - 1, clamp(_fill, 0, 1));
+										draw_sprite_ext(_spr, _img, _dx, _dy, _xsc, _ysc, 0, c_white, 1);
+									}
 								}
 							}
 							
-							 // Main HUD:
-							draw_sprite_ext(_spr, 0, _dx, _dy, _xsc, _ysc, 0, c_white, 1);
-							
-							 // Total Feathers Filling:
-							if(_ammo > _fill){
-								var	_img = lerp(1, sprite_get_number(_spr) - 1, clamp(_ammo, 0, 1)),
-									_col = make_color_hsv(178, 1/3 * 255, 0.6 * 255);
-									
-								draw_sprite_ext(_spr, _img, _dx, _dy, _xsc, _ysc, 0, _col, 1);
-							}
-							
-							 // Active Feathers Filling:
-							if(_fill > 0){
-								var _img = lerp(1, sprite_get_number(_spr) - 1, clamp(_fill, 0, 1));
-								draw_sprite_ext(_spr, _img, _dx, _dy, _xsc, _ysc, 0, c_white, 1);
+							 // LOW HP:
+							if(_players <= 1){
+								if(drawlowhp > 0 && sin(wave) > 0){
+									if(my_health <= 4 && my_health != maxhealth){
+										if(_pause){
+											drawlowhp = 0;
+										}
+										else{
+											draw_set_font(fntM);
+											draw_set_halign(fa_left);
+											draw_set_valign(fa_top);
+											draw_text_nt(93, 7, `@(color:${c_red})LOW HP`);
+										}
+									}
+								}
 							}
 						}
-					}
-					
-					 // LOW HP:
-					if(_players <= 1){
-						if(drawlowhp > 0 && sin(wave) > 0){
-							if(my_health <= 4 && my_health != maxhealth){
-								if(_pause){
-									drawlowhp = 0;
+						
+						 // Bonus Ammo:
+						if("bonus_ammo" in self && bonus_ammo > 0){
+							var	_max   = (("bonus_ammo_max"   in self) ? bonus_ammo_max   : bonus_ammo),
+								_tick  = (("bonus_ammo_tick"  in self) ? bonus_ammo_tick  : 0),
+								_flash = (("bonus_ammo_flash" in self) ? bonus_ammo_flash : 0),
+								_spr   = ((_tick == 0) ? spr.BonusAmmoHUDFill : spr.BonusAmmoHUDFillDrain);
+								
+							 // Draw:
+							if(_hudDraw){
+								var	_img = _flash,
+									_x   = 5 - (17 * (_players <= 1)),
+									_y   = 35,
+									_w   = sprite_get_width(_spr) * clamp(bonus_ammo / _max, 0, 1),
+									_h   = sprite_get_height(_spr);
+									
+								if(bonus_ammo > 2 * _tick * current_time_scale){
+									 // Back:
+									draw_sprite(spr.BonusAmmoHUD, 0, _x, _y);
+									draw_sprite_ext(_spr, 0, _x, _y, 1, 1, 0, make_color_hsv(wave % 256, 80, 80), 1);
+									
+									 // Filling:
+									draw_sprite_part(_spr, _img, 0, 0, _w, _h, _x, _y);
+									
+									 // Text:
+									draw_sprite(spr.BonusHUDText, 0, _x + (sprite_get_width(_spr) / 2), _y + (sprite_get_height(_spr) / 2));
 								}
+								
+								 // Flash Out:
 								else{
-									draw_set_font(fntM);
-									draw_set_halign(fa_left);
-									draw_set_valign(fa_top);
-									draw_text_nt(_ox + 93, _oy + 7, `@(color:${c_red})LOW HP`);
+									draw_set_fog(true, c_white, 0, 0);
+									draw_sprite(spr.BonusAmmoHUD, 0, _x, _y);
+									draw_set_fog(false, 0, 0, 0);
+								}
+							}
+							
+							 // Animate:
+							if(_flash > 0){
+								bonus_ammo_flash += 0.4 * current_time_scale;
+								if(bonus_ammo_flash >= sprite_get_number(_spr)){
+									bonus_ammo_flash = 0;
+								}
+							}
+						}
+						
+						 // Bonus HP:
+						if(
+							"bonus_health"     in self &&
+							"bonus_health_max" in self &&
+							bonus_health > 0
+						){
+							var	_max   = (("bonus_health_max"   in self) ? bonus_health_max   : bonus_health),
+								_tick  = (("bonus_health_tick"  in self) ? bonus_health_tick  : 0),
+								_flash = (("bonus_health_flash" in self) ? bonus_health_flash : 0)
+								_spr   = ((_tick == 0) ? spr.BonusHealthHUDFill : spr.BonusHealthHUDFillDrain);
+							
+							 // Draw:
+							if(_hudDraw){
+								var	_img = ((maxhealth > 0 && lsthealth < my_health && !instance_exists(GenCont) && !instance_exists(LevCont)) ? 1 : _flash),
+									_x   = 5,
+									_y   = 7,
+									_w   = sprite_get_width(_spr) * clamp(bonus_health / _max, 0, 1),
+									_h   = sprite_get_height(_spr);
+									
+								 // Back:
+								draw_sprite(sprHealthBar, 0, _x - 2, _y - 3);
+								draw_sprite_ext(_spr, 0, _x, _y, 1, 1, 0, make_color_hsv(wave % 256, 80, 80), 1);
+								
+								 // Filling:
+								draw_sprite_part(_spr, _img, 0, 0, _w, _h, _x, _y);
+								
+								 // Text:
+								draw_sprite(spr.BonusHUDText, 0, _x + (sprite_get_width(_spr) / 2) + 1, _y + (sprite_get_height(_spr) / 2));
+							}
+							
+							 // Animate:
+							if(_flash > 0){
+								bonus_health_flash += 0.4 * current_time_scale;
+								if(bonus_health_flash >= sprite_get_number(_spr)){
+									bonus_health_flash = 0;
 								}
 							}
 						}
 					}
-				}
-				
-				 // Bonus Ammo:
-				if("bonus_ammo" in self && bonus_ammo > 0){
-					var	_max   = (("bonus_ammo_max"   in self) ? bonus_ammo_max   : bonus_ammo),
-						_tick  = (("bonus_ammo_tick"  in self) ? bonus_ammo_tick  : 0),
-						_flash = (("bonus_ammo_flash" in self) ? bonus_ammo_flash : 0),
-						_spr   = ((_tick == 0) ? spr.BonusAmmoHUDFill : spr.BonusAmmoHUDFillDrain);
-						
-					 // Draw:
-					if(_HUDDraw){
-						var	_img = _flash,
-							_x   = _ox + 5 - (17 * (_players <= 1)),
-							_y   = _oy + 35,
-							_w   = sprite_get_width(_spr) * clamp(bonus_ammo / _max, 0, 1),
-							_h   = sprite_get_height(_spr);
-							
-						if(bonus_ammo > 2 * _tick * current_time_scale){
-							 // Back:
-							draw_sprite(spr.BonusAmmoHUD, 0, _x, _y);
-							draw_sprite_ext(_spr, 0, _x, _y, 1, 1, 0, make_color_hsv(wave % 256, 80, 80), 1);
-							
-							 // Filling:
-							draw_sprite_part(_spr, _img, 0, 0, _w, _h, _x, _y);
-							
-							 // Text:
-							draw_sprite(spr.BonusHUDText, 0, _x + (sprite_get_width(_spr) / 2), _y + (sprite_get_height(_spr) / 2));
-						}
-						
-						 // Flash Out:
-						else{
-							draw_set_fog(true, c_white, 0, 0);
-							draw_sprite(spr.BonusAmmoHUD, 0, _x, _y);
-							draw_set_fog(false, 0, 0, 0);
-						}
-					}
 					
-					 // Animate:
-					if(_flash > 0){
-						bonus_ammo_flash += 0.4 * current_time_scale;
-						if(bonus_ammo_flash >= sprite_get_number(_spr)){
-							bonus_ammo_flash = 0;
+					d3d_set_projection_ortho(_vx, _vy, _gw, _gh, 0);
+					
+					surface_reset_target();
+					
+					 // Draw to Screen:
+					if(_hudVisible){
+						if(_fade > 0){
+							draw_surface_ext(surf, x, y, 1 / scale, 1 / scale, 0, merge_color(c_white, c_black, min(1, _fade)), 1);
 						}
+						else draw_surface_scale(surf, x, y, 1 / scale);
 					}
 				}
-				
-				 // Bonus HP:
-				if(
-					"bonus_health"     in self &&
-					"bonus_health_max" in self &&
-					bonus_health > 0
-				){
-					var	_max   = (("bonus_health_max"   in self) ? bonus_health_max   : bonus_health),
-						_tick  = (("bonus_health_tick"  in self) ? bonus_health_tick  : 0),
-						_flash = (("bonus_health_flash" in self) ? bonus_health_flash : 0)
-						_spr   = ((_tick == 0) ? spr.BonusHealthHUDFill : spr.BonusHealthHUDFillDrain);
-					
-					 // Draw:
-					if(_HUDDraw){
-						var	_img = ((maxhealth > 0 && lsthealth < my_health && !instance_exists(GenCont) && !instance_exists(LevCont)) ? 1 : _flash),
-							_x   = _ox + 5,
-							_y   = _oy + 7,
-							_w   = sprite_get_width(_spr) * clamp(bonus_health / _max, 0, 1),
-							_h   = sprite_get_height(_spr);
-							
-						 // Back:
-						draw_sprite(sprHealthBar, 0, _x - 2, _y - 3);
-						draw_sprite_ext(_spr, 0, _x, _y, 1, 1, 0, make_color_hsv(wave % 256, 80, 80), 1);
-						
-						 // Filling:
-						draw_sprite_part(_spr, _img, 0, 0, _w, _h, _x, _y);
-						
-						 // Text:
-						draw_sprite(spr.BonusHUDText, 0, _x + (sprite_get_width(_spr) / 2) + 1, _y + (sprite_get_height(_spr) / 2));
-					}
-					
-					 // Animate:
-					if(_flash > 0){
-						bonus_health_flash += 0.4 * current_time_scale;
-						if(bonus_health_flash >= sprite_get_number(_spr)){
-							bonus_health_flash = 0;
-						}
-					}
-				}
-			}
-			
-			draw_reset_projection();
-			
-			 // Copy HUD Drawing & Clear Screen:
-			if(_HUDMain){
-				surface_screenshot(_surfMain.surf);
-			}
-			with(_surfScreen){
-				if(_HUDVisible){
-					 // Game Win Fade:
-					if(_fade > 0){
-						draw_set_color(c_black);
-						draw_set_color_write_enable(true, true, true, false);
-						draw_set_alpha(_fade);
-						draw_rectangle(_vx, _vy, _vx + _gw, _vy + _gh, false);
-						draw_set_alpha(1);
-						draw_set_color_write_enable(true, true, true, true);
-					}
-					
-					 // Copy HUD:
-					surface_screenshot(surf);
-				}
-				draw_set_blend_mode_ext(bm_one, bm_zero);
-				draw_set_alpha(0);
-				draw_surface_scale(surf, x, y, 1 / scale);
-				draw_set_alpha(1);
-				draw_set_blend_mode(bm_normal);
 			}
 		}
-	}
-	
-	 // Redraw Screen:
-	with(_surfScreen){
-		draw_set_blend_mode_ext(bm_one, bm_zero);
-		draw_surface_scale(surf, x, y, 1 / scale);
-		draw_set_blend_mode(bm_normal);
 	}
 	
 	 // Indicator HUD:

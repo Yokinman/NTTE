@@ -1100,7 +1100,7 @@
 			
 			 // Clear:
 			surface_set_target(surf);
-			draw_clear_alpha(0, 0);
+			draw_clear_alpha(c_black, 0);
 			surface_reset_target();
 		}
 		
@@ -1127,7 +1127,7 @@
 					
 				with(_inst){
 					 // Clear Screen:
-					draw_clear_alpha(0, 0);
+					draw_clear_alpha(c_black, 0);
 					
 					 // Call Draw Event:
 					if(global.draw_event_exists[object_index]){
@@ -1171,12 +1171,12 @@
 							_cutY = (bbox_bottom - _wh - _surfSwimTopSubY) * _surfSwimTopSubScale;
 							
 						 // Copy Screen:
-						surface_set_target(_surfSwimTopSubSurf);
-						draw_clear_alpha(0, 0);
+						draw_set_blend_mode_ext(bm_one, bm_zero);
 						surface_screenshot(_surfSwimTopSubSurf);
 						
 						/// Cut Off Bottom Half:
 							
+							surface_set_target(_surfSwimTopSubSurf);
 							draw_set_blend_mode_ext(bm_zero, bm_inv_src_alpha);
 							
 							 // Gradient (Laser Sights - Awesome):
@@ -1207,10 +1207,10 @@
 								_y = _surfSwimTopSubY - _surfSwimTopY;
 								
 							surface_set_target(_surfSwimTopSurf);
-								
+							
 							 // Water Interference Line:
 							draw_set_fog(true, c_white, 0, 0);
-							draw_surface_part_ext(_surfSwimTopSubSurf, 0, _cutY - 1, _surfSwimTopSubW, 1, _x, _y + _cutY, 1, max(1, _surfSwimTopSubScale), c_white, 0.8);
+							draw_surface_part_ext(_surfSwimTopSubSurf, 0, _cutY - 1, _surfSwimTopSubW, 1, _x, _y + _cutY, 1, max(1, _surfSwimTopSubScale), c_white, 0.4);
 							draw_set_fog(false, 0, 0, 0);
 							
 							 // Top Half:
@@ -1223,12 +1223,32 @@
 				}
 			}
 			
+			 // Unblend Color/Alpha:
+			draw_set_blend_mode_ext(bm_one, bm_zero);
+			with([_surfSwimBot, _surfSwimTop]){
+				if(shader_setup("Unblend", surface_get_texture(surf), [2])){
+					draw_surface_scale(surf, x, y, 1 / scale);
+					shader_reset();
+					surface_screenshot(surf);
+				}
+				
+				 // Partial Unblend:
+				else{
+					draw_surface_scale(surf, x, y, 1 / scale);
+					draw_set_blend_mode_ext(bm_inv_src_alpha, bm_one);
+					surface_screenshot(surf);
+					draw_set_color_write_enable(false, false, false, true);
+					repeat(3) surface_screenshot(surf);
+					draw_set_color_write_enable(true, true, true, true);
+					draw_set_blend_mode_ext(bm_one, bm_zero);
+				}
+			}
+			
 			 // Redraw Screen:
 			with(_surfSwimScreen){
-				draw_set_blend_mode_ext(bm_one, bm_zero);
 				draw_surface_scale(surf, x, y, 1 / scale);
-				draw_set_blend_mode(bm_normal);
 			}
+			draw_set_blend_mode(bm_normal);
 			
 			 // Draw Bottom Halves:
 			with(_surfSwimBot){

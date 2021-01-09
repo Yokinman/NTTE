@@ -1541,23 +1541,21 @@
 				 // Copy & Clear Screen:
 				draw_set_blend_mode_ext(bm_one, bm_zero);
 				surface_screenshot(surf);
-				draw_set_alpha(0);
-				draw_surface_scale(surf, x, y, 1 / scale);
-				draw_set_alpha(1);
 				draw_set_blend_mode(bm_normal);
+				draw_clear_alpha(c_black, 0);
 				
 				 // Call Enemy Draw Events:
 				var _lastTimeScale = current_time_scale;
 				current_time_scale = 0.0000000001;
 				try{
-					with(other){
-						with(instances_seen(_inst, 24, 24, -1)){
+					with(instances_seen(_inst, 24, 24, -1)){
+						with(self){
 							event_perform(ev_draw, 0);
 						}
 					}
 				}
 				catch(_error){
-					trace_error(_error);
+					trace(_error);
 				}
 				current_time_scale = _lastTimeScale;
 				
@@ -1570,28 +1568,52 @@
 					draw_set_blend_mode_ext(bm_one, bm_zero);
 					surface_screenshot(surf);
 					
-					 // Outlines:
-					if(_outline){
-						draw_set_blend_mode(bm_normal);
-						
-						 // Outlines yes:
-						draw_set_fog(true, player_get_color(_index), 0, 0);
-						for(var _ang = 0; _ang < 360; _ang += 90){
-							draw_surface_scale(surf, x + dcos(_ang), y - dsin(_ang), 1 / scale);
-						}
-						draw_set_fog(false, 0, 0, 0);
-						
-						 // Cut Out Enemies:
-						draw_set_blend_mode_ext(bm_zero, bm_inv_src_alpha);
+					 // Unblend Color/Alpha:
+					if(shader_setup("Unblend", surface_get_texture(surf), [1])){
 						draw_surface_scale(surf, x, y, 1 / scale);
-						draw_set_blend_mode_ext(bm_inv_dest_alpha, bm_dest_alpha);
+						shader_reset();
+						surface_screenshot(surf);
+					}
+					else{
+						draw_set_blend_mode_ext(bm_inv_src_alpha, bm_one); // Partial Unblend
+						surface_screenshot(surf);
+						draw_set_blend_mode_ext(bm_one, bm_zero);
 					}
 					
-					 // Redraw Old Screen:
+					 // Redraw Screen:
 					with(other){
 						draw_surface_scale(surf, x, y, 1 / scale);
 					}
 					draw_set_blend_mode(bm_normal);
+					
+					 // Outlines:
+					if(_outline){
+						surface_set_target(other.surf);
+						
+						 // Solid Color:
+						draw_set_fog(true, player_get_color(_index), 0, 0);
+						for(var _ang = 0; _ang < 360; _ang += 90){
+							draw_surface_scale(
+								surf,
+								(x - other.x + dcos(_ang)) * other.scale,
+								(y - other.y - dsin(_ang)) * other.scale,
+								other.scale / scale
+							);
+						}
+						draw_set_fog(false, 0, 0, 0);
+						
+						 // Cut Out Enemy:
+						draw_set_blend_mode_ext(bm_zero, bm_inv_src_alpha);
+						draw_surface_scale(surf, (x - other.x) * other.scale, (y - other.y) * other.scale, other.scale / scale);
+						draw_set_blend_mode(bm_normal);
+						
+						surface_reset_target();
+						
+						 // Draw to Screen:
+						with(other){
+							draw_surface_scale(surf, x, y, 1 / scale);
+						}
+					}
 					
 					 // Eye Shader:
 					if(shader_setup("Charm", surface_get_texture(surf), [w, h])){

@@ -1345,7 +1345,7 @@
 							var _instNear = instance_rectangle_bbox(bbox_left - 8, bbox_top - 8, bbox_right + 8, bbox_bottom + 8, _inst);
 							if(array_length(_instNear)){
 								surface_set_target(_surf);
-								draw_clear_alpha(0, 0);
+								draw_clear_alpha(c_black, 0);
 								
 								 // Grab Screen for Shader:
 								if(_canShader){

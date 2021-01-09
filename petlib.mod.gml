@@ -486,7 +486,6 @@
 			hspeed = 4 * right;
 			with(instance_create(x + (8 * right) + perched_x, y - 4 + perched_y, Wind)){
 				sprite_index = other.spr_note;
-				image_xscale = choose(-1, 1);
 				depth        = other.depth - 1;
 				hspeed       = random_range(1, 1.4) * other.right;
 				gravity      = -abs(speed / 10);
@@ -3938,6 +3937,7 @@
 				_time = lq_get_value(cuz_sound, i),
 				_play = 0;
 				
+			 // Condition:
 			switch(_name){
 				case "pick":
 					if(
@@ -4106,10 +4106,11 @@
 			sound_stop(snd_hurt);
 			
 			 // Setup:
-			race      = _race;
-			my_health = maxhealth;
-			lsthealth = my_health;
-			nexthurt  = current_frame + 30;
+			race         = _race;
+			my_health    = maxhealth;
+			lsthealth    = my_health;
+			nexthurt     = current_frame + 30;
+			spiriteffect = 6;
 			if(skill_get(mut_strong_spirit) > 0){
 				canspirit = false;
 				GameCont.canspirit[index] = true;
@@ -4344,12 +4345,75 @@
 			 // Reduce Active Confusion:
 			with(_inst){
 				if(player_get_race_pick(index) != race && player_active){
-					if(canspec && button_pressed(index, "spec")){
-						sound_play(
-							(skill_get(mut_throne_butt) > 0)
-							? sndCuzHorn
-							: sndCuzBye
-						);
+					if(canspec){
+						if("ntte_cuz_snd" not in self){
+							ntte_cuz_snd     = -1;
+							ntte_cuz_snd_id  = -1;
+							ntte_cuz_snd_num = -1;
+						}
+						
+						 // Beatbox:
+						if(button_check(index, "spec")){
+							var _stopped = false;
+							if(button_pressed(index, "spec") && audio_is_playing(ntte_cuz_snd_id)){
+								sound_stop(ntte_cuz_snd_id);
+								_stopped = true;
+							}
+							if(!audio_is_playing(ntte_cuz_snd_id)){
+								var _beat = [sndCuzBye, sndCuzBye, sndCuzWep];
+								
+								 // Compile Beat:
+								if(ultra_get(race, 1) > 0){
+									_beat = array_combine([sndCuzHorn, sndCuzHorn, sndCuzHorn, snd_thrn], array_create(8, -1));
+								}
+								if(ultra_get(race, 2) > 0){
+									_beat = array_combine(_beat, [sndCuzBye, sndCuzBye, sndCuzWep, sndCuzBye, sndCuzBye, sndCuzWep, snd_wrld]);
+								}
+								
+								 // Play:
+								var _lastSnd = ntte_cuz_snd;
+								ntte_cuz_snd_num = max(0, ntte_cuz_snd_num + 1) % array_length(_beat);
+								if(ntte_cuz_snd == _beat[ntte_cuz_snd_num]){
+									ntte_cuz_snd_id = sound_play_pitch(ntte_cuz_snd, 1 + orandom(0.05));
+								}
+								else{
+									ntte_cuz_snd    = _beat[ntte_cuz_snd_num];
+									ntte_cuz_snd_id = sound_play(ntte_cuz_snd);
+								}
+								
+								 // Note:
+								if(ntte_cuz_snd == _beat[0] && (ntte_cuz_snd_num > 0 || !_stopped)){
+									var _side = choose(-1, 1);
+									with(instance_create(x + (8 * _side), y + orandom(8), Wind)){
+										sprite_index = spr.PetParrotNote;
+										image_blend  = c_black;
+										depth        = other.depth - 1;
+										hspeed       = random_range(1, 1.4) * _side;
+										gravity      = -abs(speed / 10);
+										friction     = 0.1;
+									}
+									if(wkick == 0){
+										wkick = 3;
+									}
+								}
+							}
+						}
+						
+						 // Stop:
+						else{
+							ntte_cuz_snd_num = -1;
+							if(sound_exists(ntte_cuz_snd) && !audio_is_playing(ntte_cuz_snd_id)){
+								if(skill_get(mut_throne_butt) <= 0 || ntte_cuz_snd == snd_valt || ntte_cuz_snd == snd_wrld || ntte_cuz_snd == snd_thrn){
+									ntte_cuz_snd = -1;
+								}
+								
+								 // Throne Butt - Cool Ending:
+								else{
+									ntte_cuz_snd    = snd_valt;
+									ntte_cuz_snd_id = sound_play(ntte_cuz_snd);
+								}
+							}
+						}
 					}
 					_playing = true;
 				}

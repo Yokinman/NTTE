@@ -2149,6 +2149,67 @@
 		exit;
 	}
 	
+	 // Color/Alpha-Unblending Shader for Copying Drawn Stuff:
+	try{
+		if(!null){} // GMS1 only for now
+	}
+	catch(_error){
+		shader_add("Unblend",
+			
+			/* Vertex Shader */"
+			struct VertexShaderInput
+			{
+				float2 vTexcoord : TEXCOORD0;
+				float4 vPosition : POSITION;
+			};
+			
+			struct VertexShaderOutput
+			{
+				float2 vTexcoord : TEXCOORD0;
+				float4 vPosition : SV_POSITION;
+			};
+			
+			uniform float4x4 matrix_world_view_projection;
+			
+			VertexShaderOutput main(VertexShaderInput INPUT)
+			{
+				VertexShaderOutput OUT;
+				
+				OUT.vTexcoord = INPUT.vTexcoord; // (x,y)
+				OUT.vPosition = mul(matrix_world_view_projection, INPUT.vPosition); // (x,y,z,w)
+				
+				return OUT;
+			}
+			",
+			
+			/* Fragment/Pixel Shader */"
+			struct PixelShaderInput
+			{
+				float2 vTexcoord : TEXCOORD0;
+			};
+			
+			sampler2D s0;
+			
+			uniform float blendPower;
+			
+			float4 main(PixelShaderInput INPUT) : SV_TARGET
+			{
+				float4 RGBA = tex2D(s0, INPUT.vTexcoord);
+				if(RGBA.a > 0.0){
+					float RGBFactor = pow(abs(RGBA.a), 1.0 - blendPower);
+					return float4(
+						RGBA.r / RGBFactor,
+						RGBA.g / RGBFactor,
+						RGBA.b / RGBFactor,
+						pow(abs(RGBA.a), blendPower)
+					);
+				}
+				return RGBA;
+			}
+			"
+		);
+	}
+	
 #macro spr global.spr
 #macro msk spr.msk
 #macro snd global.snd
@@ -2640,6 +2701,12 @@
 							
 						shader_set_fragment_constant_f(0, [1 / _w, 1 / _h]);
 						shader_set_fragment_constant_f(1, [color_get_red(_color) / 255, color_get_green(_color) / 255, color_get_blue(_color) / 255]);
+						break;
+						
+					case "Unblend":
+						var _blendNum = _args[0];
+						
+						shader_set_fragment_constant_f(0, [1 / power(2, _blendNum)]);
 						break;
 				}
 				
