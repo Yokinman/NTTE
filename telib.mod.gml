@@ -826,8 +826,10 @@
 	
 	with(_inst){
 		 // Motion:
-		speed       += _spd;
-		direction   += _dir;
+		direction += _dir;
+		if(_spd > 0){
+			motion_add(_dir, _spd);
+		}
 		image_angle += direction;
 		
 		 // Auto Setup:
@@ -2749,7 +2751,9 @@
 		GameCont.loops = 0;
 		if(!instance_exists(Player)){
 			_player = instance_create(0, 0, GameObject);
-			with(_player) instance_change(Player, false);
+			with(_player){
+				instance_change(Player, false);
+			}
 		}
 		
 		 // Call Boss Intro:
@@ -2763,10 +2767,12 @@
 		}
 		
 		 // Reset:
-		alarm2 = -1;
+		alarm2         = -1;
 		opt_bossintros = _lastIntro;
 		GameCont.loops = _lastLoops;
-		with(_player) instance_delete(id);
+		with(_player){
+			instance_delete(id);
+		}
 		
 		 // Unpause Game, Then Deactivate Objects:
 		event_perform(ev_alarm, 2);
