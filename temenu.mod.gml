@@ -500,18 +500,14 @@
 			with(wepLoadout){
 				if(!instance_exists(inst)){
 					if(name == "" || unlock_get(`loadout:wep:${player_get_race_fix(loadoutPlayer)}:${name}`) != wep_none){
-						inst   = instance_create(0, 0, FloorMaker);
+						inst   = instance_create(0, 0, GameObject);
 						alarm0 = 2;
 						overy  = 0;
 						addy   = 2;
 						
-						 // Destroy FloorMaker Things:
-						with(instances_matching_gt(GameObject, "id", inst)){
-							instance_delete(id);
-						}
-						
 						 // Become LoadoutWep:
 						with(inst){
+							instance_change(FloorMaker, false);
 							dix = other.dix;
 							instance_change(LoadoutWep, true);
 							other.alarm0 = alarm_get(0);

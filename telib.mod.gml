@@ -814,8 +814,8 @@
 #define projectile_create(_x, _y, _obj, _dir, _spd)
 	/*
 		Creates a given projectile with the given motion applied
-		Automatically sets team, creator, and hitid based on the calling instance
-		Automatically applies Euphoria to NTTE's custom projectiles if the calling instance is an enemy
+		Automatically sets 'team', 'creator', and 'hitid' based on the calling instance
+		Automatically applies Euphoria to the projectile if the creator is an enemy
 		
 		Ex:
 			projectile_create(x, y, Bullet2, gunangle + orandom(30), 16)
@@ -827,7 +827,7 @@
 	with(_inst){
 		 // Motion:
 		direction += _dir;
-		if(_spd > 0){
+		if(_spd != 0){
 			motion_add(_dir, _spd);
 		}
 		image_angle += direction;
@@ -1558,22 +1558,42 @@
 		instance_destroy();
 	}
 	
-#define scrFX(_x, _y, _motion, _obj)
-	if(!is_array(_x)) _x = [_x, 1];
-	while(array_length(_x) < 2) array_push(_x, 0);
-
-	if(!is_array(_y)) _y = [_y, 1];
-	while(array_length(_y) < 2) array_push(_y, 0);
-
-	if(!is_array(_motion)) _motion = [random(360), _motion];
-	while(array_length(_motion) < 2) array_push(_motion, 0);
-
-	with(obj_create(_x[0] + orandom(_x[1]), _y[0] + orandom(_y[1]), _obj)){
-		var _face = (image_angle == direction);
-		motion_add(_motion[0], _motion[1]);
-		if(_face) image_angle = direction;
+#define scrFX(_x, _y, _motion, _object)
+	/*
+		Creates a given Effect object with the given motion applied
+		Automatically reorients the effect towards its new direction
 		
-		return id;
+		Args:
+			x/y    - Spawn position, can be a 2-element array for [position, randomized offset]
+			motion - Can be a speed to apply toward a random direction, or a 2-element array to apply a [direction, speed]
+			object - The effect's object index, or an NT:TE object's name string
+			
+		Ex:
+			scrFX([x, 4], [y, 4], 3, Dust)
+			scrFX(x, y, [90 + orandom(30), random(3)], AcidStreak);
+	*/
+	
+	with(obj_create(
+		(is_array(_x) ? (_x[0] + orandom(_x[1])) : _x),
+		(is_array(_y) ? (_y[0] + orandom(_y[1])) : _y),
+		_object
+	)){
+		var _face = (image_angle == direction || (speed == 0 && (object_index == AcidStreak || object_index == BloodStreak)));
+		
+		 // Motion:
+		if(is_array(_motion)){
+			motion_add(_motion[0], _motion[1]);
+		}
+		else{
+			motion_add(random(360), _motion);
+		}
+		
+		 // Facing:
+		if(_face){
+			image_angle = direction;
+		}
+		
+		return self;
 	}
 	
 	return noone;
@@ -5541,7 +5561,7 @@
 					case BoneFish:
 					case "Puffer":
 					case "HammerShark":
-						idle_walk = [0, 5];
+						idle_walk        = [0, 5];
 						idle_walk_chance = 1/2;
 						break;
 						
@@ -5551,7 +5571,7 @@
 						
 					case ExploFreak:
 						jump *= 1.2;
-						idle_walk = [0, 5];
+						idle_walk        = [0, 5];
 						idle_walk_chance = 1;
 						
 						 // Important:
@@ -5559,19 +5579,19 @@
 						break;
 						
 					case Freak:
-						idle_walk = [0, 5];
+						idle_walk        = [0, 5];
 						idle_walk_chance = 1;
 						break;
 						
 					case JungleFly:
 						jump = 0;
 						grav = random_range(0.1, 0.3);
-						idle_walk = [8, 12];
+						idle_walk        = [8, 12];
 						idle_walk_chance = 1/2;
 						break;
 						
 					case MeleeBandit:
-						idle_walk = [10, 30];
+						idle_walk        = [10, 30];
 						idle_walk_chance = 1/2;
 						break;
 						
@@ -5591,9 +5611,9 @@
 						
 					case "TopRaven":
 					case "BoneRaven":
-						type = RavenFly;
-						jump = 2;
-						grav = 0;
+						type    = RavenFly;
+						jump    = 2;
+						grav    = 0;
 						canmove = true;
 						spr_shadow_y--;
 						break;
@@ -5602,26 +5622,26 @@
 					case Anchor:
 					case OasisBarrel:
 					case WaterMine:
-						mask_index = target.spr_shadow;
+						mask_index   = target.spr_shadow;
 						image_xscale = 0.5;
 						image_yscale = 0.5;
-						spr_shadow = mskNone;
+						spr_shadow   = mskNone;
 						break;
 						
 					case Barrel:
 					case GoldBarrel:
 					case ToxicBarrel:
-						jump *= 1.5;
-						spr_shadow = shd16;
+						jump        *= 1.5;
+						spr_shadow   = shd16;
 						spr_shadow_y = 4;
-						wobble = 8;
+						wobble       = 8;
 						break;
 						
 					case BigFlower:
 					case IceFlower:
 						//override_depth = false;
 						//depth = -6.01;
-						spr_shadow = target.spr_idle;
+						spr_shadow   = target.spr_idle;
 						spr_shadow_y = 1;
 						break;
 						
@@ -5633,25 +5653,24 @@
 					case Cactus:
 						with(target){
 							var _t = choose("", "3");
-							//if(chance(2, 3)) t = "B" + t; // Rotten epic
 							spr_idle = asset_get_index("sprCactusB" + _t);
 							spr_hurt = asset_get_index("sprCactusB" + _t + "Hurt");
 							spr_dead = asset_get_index("sprCactusB" + _t + "Dead");
 						}
 						//case NightCactus:
-						spr_shadow = sprMine;
+						spr_shadow   = sprMine;
 						spr_shadow_y = 9;
 						break;
 						
 					case Cocoon:
 					case "NewCocoon":
-						spr_shadow = shd16;
+						spr_shadow   = shd16;
 						spr_shadow_y = 3;
 						break;
 						
 					case FireBaller:
 					case SuperFireBaller:
-						z += random(8);
+						z   += random(8);
 						jump = random(1);
 						grav = random_range(0.1, 0.2);
 						break;
@@ -5667,24 +5686,26 @@
 						
 					case Hydrant:
 						 // Icicle:
-						if(chance(1, 2) || target.spr_idle == sprIcicle) with(target){
-							spr_idle = sprIcicle;
-							spr_hurt = sprIcicleHurt;
-							spr_dead = sprIcicleDead;
-							snd_hurt = sndHitRock;
-							snd_dead = sndIcicleBreak;
-							spr_shadow = shd16;
-							spr_shadow_y = 3;
+						if(chance(1, 2) || target.spr_idle == sprIcicle){
+							with(target){
+								spr_idle     = sprIcicle;
+								spr_hurt     = sprIcicleHurt;
+								spr_dead     = sprIcicleDead;
+								snd_hurt     = sndHitRock;
+								snd_dead     = sndIcicleBreak;
+								spr_shadow   = shd16;
+								spr_shadow_y = 3;
+							}
 						}
 						break;
 						
 					case MeleeFake:
-						spr_shadow = sprMine;
+						spr_shadow   = sprMine;
 						spr_shadow_y = 7;
 						break;
 						
 					case MoneyPile:
-						spawn_dis = 8;
+						spawn_dis    = 8;
 						spr_shadow_y = -1;
 						break;
 						
@@ -5693,23 +5714,23 @@
 						break;
 						
 					case Pipe:
-						spr_shadow = sprMine;
+						spr_shadow   = sprMine;
 						spr_shadow_y = 7;
 						break;
 						
 					case Server:
-						spr_shadow = sprHydrant;
+						spr_shadow   = sprHydrant;
 						spr_shadow_y = 5;
 						break;
 						
 					case SmallGenerator:
-						target.image_xscale = 1;
-						spr_shadow = target.spr_idle;
+						spr_shadow   = target.spr_idle;
 						spr_shadow_y = 1;
+						target.image_xscale = 1;
 						break;
 						
 					case SnowMan:
-						spr_shadow = sprNewsStand;
+						spr_shadow   = sprNewsStand;
 						spr_shadow_y = 5;
 						break;
 						
@@ -5722,8 +5743,8 @@
 						break;
 						
 					case "WepPickupGrounded":
-						jump = 3;
-						wobble = 8;
+						jump    = 3;
+						wobble  = 8;
 						unstick = true;
 						break;
 				}

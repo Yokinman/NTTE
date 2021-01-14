@@ -826,9 +826,7 @@
 				move_contact_solid(direction, _dis + (_dis * i));
 				
 				 // Effects:
-				with(scrFX(x, y, [direction + orandom(4), speed * 0.8], AcidStreak)){
-					image_angle = direction;
-				}
+				scrFX(x, y, [direction + orandom(4), speed * 0.8], AcidStreak);
 				
 				if(i <= 2){
 					scrFX(x, y, [direction + orandom(8 * i), (4 - i)], Smoke);
@@ -2268,8 +2266,11 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 		sound_play_hit(sndHealthChestBig, 0.4);
 		sound_play_pitchvol(sndToxicBarrelGas, 1.8 + random(0.6), 0.4 + random(0.4));
 		
-		with(scrFX(x, y, [direction + 180, 6], AcidStreak)) image_angle = direction;
-		scrFX(x, y, [direction, 1], AcidStreak).sprite_index = spr.AcidPuff;
+		scrFX(x, y, [direction + 180, 6], AcidStreak);
+		with(scrFX(x, y, [direction, 1], AcidStreak)){
+			sprite_index = spr.AcidPuff;
+			image_angle = random(360);
+		}
 		
 		repeat(2 + irandom(2)) with(scrFX([x, 8], [(y - 16), 8], 0, EatRad)){
 			sprite_index = choose(sprEatRadPlut, sprEatRadPlut, sprEatBigRadPlut);
@@ -2523,10 +2524,7 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 			
 			 // Effects:
 			repeat(3){
-				with(instance_create(_x, _y, AcidStreak)){
-					motion_add(other.gunangle + orandom(16), 3);
-					image_angle = direction;
-				}
+				scrFX(_x, _y, [gunangle + orandom(16), 3], AcidStreak);
 			}
 			sound_play_pitch(sndEmpty, random_range(0.75, 0.9));
 			sound_stop(toxer_loop);
@@ -3342,10 +3340,7 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 				
 				 // Effects:
 				if(chance(1, 2)){
-					with(instance_create(x + orandom(8), y + orandom(8), AcidStreak)){
-						motion_add(_dir + orandom(8), 4);
-						image_angle = direction;
-					}
+					scrFX([x, 8], [y, 8], [_dir + orandom(8), 4], AcidStreak);
 				}
 			}
 			
@@ -4081,6 +4076,12 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 	sound_play_pitchvol(sndHitMetal,  0.4, 1);
 	view_shake_at(x, y, 60);
 	sleep(60);
+	
+	 // Silver Tongue:
+	if("ntte_lairmut" not in GameCont){
+		GameCont.skillpoints++;
+		GameCont.ntte_lairmut = true; // Change this system later if you add secret area mutations
+	}
 	
 	
 #define CatLight_create(_x, _y)

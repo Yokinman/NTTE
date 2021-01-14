@@ -874,7 +874,7 @@
 	 // Splash:
 	for(var _dir = 0; _dir < 360; _dir += (360 / 3)){
 		with(scrFX([x, 8], [y, 4], [_dir + 90, 2], AcidStreak)){
-			image_angle = direction + orandom(30);
+			image_angle += orandom(30);
 			image_blend = merge_color(image_blend, c_lime, random(0.1));
 		}
 	}

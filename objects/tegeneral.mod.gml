@@ -493,9 +493,7 @@
 						
 						 // FX:
 						repeat(2){
-							with(instance_create(x + orandom(4), y + orandom(4), AcidStreak)){
-								motion_add(random(360), 1);
-								image_angle = direction;
+							with(scrFX([x, 4], [y, 4], 1, AcidStreak)){
 								image_speed *= random_range(0.5, 1);
 							}
 						}
@@ -5276,7 +5274,7 @@
 					
 					 // No Orange Crystals:
 					if(place_meeting(x, y, Wall)){
-						with(instances_meeting(x, y, Wall)){
+						with(instances_meeting(x, y, instances_matching(Wall, "topspr", sprWall4Top))){
 							if(place_meeting(x, y, other)){
 								topindex = irandom(1);
 							}

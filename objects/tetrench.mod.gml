@@ -2829,10 +2829,8 @@
 		for(var i = 0; i < 360; i += (360 / n)){
 			var d = direction + i;
 			
-			with(instance_create(x, y, BloodStreak)){
+			with(scrFX(x, y, [d + orandom(10), 3], BloodStreak)){
 				sprite_index = spr.SquidBloodStreak;
-				motion_set(d + orandom(10), 3);
-				image_angle = direction;
 			}
 		}
 	}

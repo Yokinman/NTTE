@@ -203,10 +203,7 @@
 		}
 		
 		 // Effects:
-		with(instance_create(x, y, AcidStreak)){
-			motion_set(d, 4);
-			image_angle = direction;
-		}
+		scrFX(x, y, [_d, 4], AcidStreak);
 	}
 	
 	
@@ -2172,16 +2169,18 @@
 
 #define Mimic_draw(_spr, _img, _x, _y, _xsc, _ysc, _ang, _col, _alp)
 	draw_sprite_ext(_spr, _img, _x, _y, _xsc, _ysc, _ang, _col, _alp);
-
+	
 	 // Wep Depth Fix:
-	if(place_meeting(x, y, WepPickup)){
-		with(WepPickup) if(place_meeting(x, y, other)){
-			with(self){
-				event_perform(ev_draw, 0);
+	if(open && place_meeting(x, y, WepPickup)){
+		with(instances_meeting(x, y, WepPickup)){
+			if(place_meeting(x, y, other)){
+				with(self){
+					event_perform(ev_draw, 0);
+				}
 			}
 		}
 	}
-
+	
 #define Mimic_alrm0(_leaderDir, _leaderDis)
 	if(instance_exists(leader)){
 		if(_leaderDis > 16){
@@ -2504,7 +2503,6 @@
 						 // FX:
 						for(var i = 0; i < 3; i++){
 							with(scrFX(x, y, [direction + orandom(5), 2 + (3 * i)], AcidStreak)){
-								image_angle = direction;
 								sprite_index = spr.WaterStreak;
 								image_speed = random_range(0.2, 0.4);
 								image_blend = make_color_rgb(103, 27, 131);

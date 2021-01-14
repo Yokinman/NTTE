@@ -58,7 +58,9 @@
 	 // Wtf:
 	if(!instance_is(self, Portal)){
 		with(obj_create(x, y, "CrystalClone")){
-			clone = other;
+			clone   = other;
+			creator = other;
+			team    = other.team;
 		}
 	}
 	

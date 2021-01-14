@@ -290,12 +290,6 @@
 		var _next = area_next();
 		area    = _next[0];
 		subarea = _next[1];
-		
-		 // Silver Tongue:
-		if("ntte_lairmut" not in self){
-			skillpoints++;
-			ntte_lairmut = true; // Change this system later if you add secret area mutations
-		}
 	}
 	
 #define area_transit
@@ -693,10 +687,8 @@
 						image_angle  = other.direction + orandom(30);
 						depth        = other.depth - (image_angle >= 180);
 						
-						with(instance_create(x, y, AcidStreak)){
-							motion_set(other.image_angle, 2 + random(2));
-							image_angle = direction;
-							depth       = other.depth;
+						with(scrFX(x, y, [image_angle, 2 + random(2)], AcidStreak)){
+							depth = other.depth;
 						}
 					}
 					

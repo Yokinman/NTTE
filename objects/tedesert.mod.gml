@@ -103,9 +103,7 @@
 		 // Effects:
 		sound_play_pitch(sndScorpionFire, 1.4 + random(0.2));
 		if(chance(1, 4)){
-			with(scrFX(x, y, [gunangle + orandom(24), random_range(2, 6)], AcidStreak)){
-				image_angle = direction;
-			}
+			scrFX(x, y, [gunangle + orandom(24), random_range(2, 6)], AcidStreak);
 		}
 		
 		 // End:
@@ -168,9 +166,7 @@
 	var l = 6;
 	repeat(gold ? 3 : 2){
 		var d = direction + orandom(60);
-		with(scrFX(x + lengthdir_x(l, d), y + lengthdir_y(l, d), [d, 4 + random(4)], AcidStreak)){
-			image_angle = direction;
-		}
+		scrFX(x + lengthdir_x(l, d), y + lengthdir_y(l, d), [d, 4 + random(4)], AcidStreak);
 	}
 	sound_play_pitchvol(snd_dead, 1.5 + random(0.3), 1.3);
 	snd_dead = -1;
@@ -1823,9 +1819,7 @@
 	 // Splat:
 	var _ang = direction + 45;
 	for(var _dir = _ang; _dir < _ang + 360; _dir += (360 / 4)){
-		with(scrFX(x, y, [_dir, 9], AcidStreak)){
-			image_angle = direction;
-		}
+		scrFX(x, y, [_dir, 9], AcidStreak);
 	}
 	
 	 // Venom:
@@ -2031,9 +2025,7 @@
 				var	_l = random(sprite_width),
 					_d = random(360);
 					
-				with(instance_create(x + lengthdir_x(_l, _d), y + lengthdir_y(_l, _d), AcidStreak)){
-					motion_set(_d + 180, 2);
-					image_angle = direction;
+				with(scrFX(x + lengthdir_x(_l, _d), y + lengthdir_y(_l, _d), [_d + 180, 2], AcidStreak)){
 					image_xscale = 0.8;
 					image_yscale = 0.8;
 					
@@ -2113,9 +2105,7 @@
 		}
 		
 		 // Effects:
-		with(instance_create(x, y, AcidStreak)){
-			motion_set(_dir + (45 * i), 4);
-			image_angle = direction;
+		with(scrFX(x, y, [_dir + (45 * i), 4], AcidStreak)){
 			image_xscale = 1.6;
 			image_yscale = 1.0;
 		}
@@ -2270,9 +2260,7 @@
 		sound_play_hit_ext(sndFrogEggHurt,    0.7, 0.3);
 		
 		 // Effects:
-		with(instance_create(x, y, AcidStreak)){
-			motion_set(other.direction, 3);
-			image_angle = direction;
+		with(scrFX(x, y, [direction, 3], AcidStreak)){
 			image_yscale *= 2; // fat splat
 		}
 	}
@@ -2309,10 +2297,7 @@
 					move_contact_solid(direction, 4 + (4 * i));
 					
 					 // Effects:
-					with(instance_create(x, y, AcidStreak)){
-						motion_set(other.direction + orandom(4), other.speed * 0.8);
-						image_angle = direction;
-					}
+					scrFX(x, y, [direction + orandom(4), speed * 0.8], AcidStreak);
 				}
 			}
 		}

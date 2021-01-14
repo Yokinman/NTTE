@@ -1419,11 +1419,11 @@
 	with(instance_create(_x, _y, AcidStreak)){
 		 // Visual:
 		sprite_index = spr.WaterStreak;
-		image_speed = 0.4 + random(0.2);
-		depth = 0;
+		image_speed  = 0.4 + random(0.2);
+		depth        = 0;
 		
 		 // Vars:
-		vspeed -= 2;
+		vspeed     -= 2;
 		image_angle = direction;
 		
 		return id;

@@ -2038,6 +2038,9 @@
 		}
 	}
 	
+	 // Call Scripts:
+	ntte_call("begin_step");
+	
 	 // NTTE Music / Ambience:
 	ntte_music();
 	
@@ -2074,9 +2077,6 @@
 		GameCont.junglevisits--;
 		GameCont.skillpoints--;
 	}
-	
-	 // Call Scripts:
-	ntte_call("begin_step");
 	
 	 // Last Wish:
 	var _inst = instances_matching_ne(GameCont, "ntte_lastwish", skill_get(mut_last_wish));
@@ -2227,6 +2227,17 @@
 					instance_destroy();
 				}
 			}
+		}
+	}
+	
+	 // Portal Out of Bounds Fix:
+	if(instance_exists(Portal)){
+		var _inst = instances_matching_le(instances_matching_gt(Portal, "alarm0", 0), "alarm0", ceil(current_time_scale));
+		if(array_length(_inst)) with(_inst){
+			alarm0 = 0;
+			event_perform(ev_alarm, 0);
+			xprevious = x;
+			yprevious = y;
 		}
 	}
 	
@@ -2394,7 +2405,7 @@
 				with([wep, bwep]){
 					var _wep = self;
 					if(weapon_get_gold(_wep) != 0){
-						if(array_find_index(["merge", "trident", "tunneller"], wep_raw(_wep)) >= 0){
+						if(array_find_index(ntte_mods.wep, wep_raw(_wep)) >= 0){
 							var	_path = `loadout:wep:${other.race}`,
 								_name = "main";
 								

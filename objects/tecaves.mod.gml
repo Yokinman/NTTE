@@ -507,6 +507,7 @@
 				if(!chance(_cloneNum, clone_max)){
 					with(obj_create(x, y, "CrystalClone")){
 						creator = other;
+						team    = other.team;
 					}
 					_canWarp = false;
 				}
@@ -641,6 +642,7 @@
 		snd_hurt     = other.snd_hurt;
 		raddrop      = other.raddrop;
 		size         = other.size;
+		team         = other.team;
 		direction    = other.direction;
 		speed        = min(other.speed / 1.5, 8);
 	}
@@ -699,6 +701,7 @@
 		mask_index = mskBanditBoss;
 		friction   = 0.5;
 		size       = 3;
+		team       = 1;
 		raddrop    = 20;
 		throes     = irandom_range(2, 3);
 		broken     = false;
@@ -756,6 +759,7 @@
 		 // Desperation Clone:
 		with(obj_create(x, y, "CrystalClone")){
 			creator = other;
+			team    = other.team;
 			clone   = instances_matching(instances_matching_lt(clone, "size", 3), "intro", null);
 		}
 		
@@ -873,7 +877,8 @@
 		creator = noone;
 		target  = noone;
 		clone   = instances_matching_ne(instances_matching_ne(instances_matching_ne(instances_matching_lt(instances_matching_ne(enemy, "team", 2), "size", 6), "name", "CrystalBrain", "CrystalHeart", "ChaosHeart"), "mask_index", mskNone), "intro", false);
-		time    = 600;
+		time    = 450;
+		team    = -1;
 		appear  = 1;
 		
 		return id;
@@ -882,14 +887,14 @@
 #define CrystalClone_step
 	 // Determine Overlay Sprite:
 	if(!sprite_exists(sprite_index)){
-		switch(variable_instance_get(creator, "team")){
+		switch(team){
 			case 2  : sprite_index = spr.CrystalCloneOverlayAlly; break;
 			case 3  : sprite_index = spr.CrystalCloneOverlayPopo; break;
 			default : sprite_index = spr.CrystalCloneOverlay;
 		}
 	}
 	if(!sprite_exists(spr_effect)){
-		switch(variable_instance_get(creator, "team")){
+		switch(team){
 			case 2  : spr_effect = spr.CrystalBrainEffectAlly; break;
 			case 3  : spr_effect = spr.CrystalBrainEffectPopo; break;
 			default : spr_effect = spr.CrystalBrainEffect;
@@ -962,14 +967,24 @@
 				if(instance_is(self, hitme)){
 					raddrop = 0;
 					
+					 // Team:
+					if(team != other.team){
+						if(other.team == 2){
+							charm_instance(self, true);
+						}
+						team = other.team;
+					}
+					
 					 // Enemy Vars:
 					if(instance_is(self, enemy)){
 						kills     = 0;
 						wepseed   = -1;
 						my_health = ceil(my_health / 2);
+						
+						 // Delay Contact Damage:
 						if(canmelee == true){
 							canmelee = false;
-							alarm11 = 30;
+							alarm11  = 30;
 						}
 					}
 				}
