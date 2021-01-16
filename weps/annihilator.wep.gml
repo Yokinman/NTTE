@@ -64,8 +64,8 @@
 	
 	 // Red:
 	var _cost = weapon_get_red(_wep);
-	if("red_ammo" in self && red_ammo >= _cost){
-		red_ammo -= _cost;
+	if("red_ammo" in _fire.creator && _fire.creator.red_ammo >= _cost){
+		_fire.creator.red_ammo -= _cost;
 		
 		 // Annihilator:
 		projectile_create(x, y, "RedBullet", gunangle, 16);
@@ -82,39 +82,32 @@
 	
 	 // Normal:
 	else{
+		var _skill = skill_get(mut_long_arms),
+			_dis   = 20 * _skill,
+			_dir   = gunangle; // + orandom(10 * accuracy);
+			
+		 // Slash:
+		projectile_create(
+			x + lengthdir_x(_dis, _dir),
+			y + lengthdir_y(_dis, _dir),
+			"RedSlash",
+			_dir,
+			lerp(2, 5, _skill)
+		);
+		
+		 // Sounds:
+		sound_play_gun(sndWrench, 0.2, 0.6);
+		sound_set_track_position(
+			sound_play_pitchvol(sndHyperCrystalChargeExplo, 1 + random(0.5), 0.4),
+			1.5
+		);
+		
+		 // Effects:
 		//wepangle *= -1;
-		//repeat(3){
-			var _skill = skill_get(mut_long_arms),
-				_dis   = 20 * _skill,
-				_dir   = gunangle/* + orandom(10 * accuracy)*/;
-				
-			 // Slash:
-			projectile_create(
-				x + lengthdir_x(_dis, _dir),
-				y + lengthdir_y(_dis, _dir),
-				"RedSlash",
-				_dir,
-				lerp(2, 5, _skill)
-			);
-			
-			 // Sounds:
-			sound_play_gun(sndWrench, 0.2, 0.6);
-			sound_set_track_position(
-				sound_play_pitchvol(sndHyperCrystalChargeExplo, 1 + random(0.5), 0.4),
-				1.5
-			);
-			
-			 // Effects:
-			//wepangle *= -1;
-			instance_create(x, y, Smoke);
-			weapon_post(-4, 12, 1);
-			motion_add(_dir, 6);
-			sleep(10);
-			
-			 // Waiting:
-		//	wait(6);
-		//	if(!instance_exists(self)) break;		
-		//}
+		instance_create(x, y, Smoke);
+		weapon_post(-4, 12, 1);
+		motion_add(_dir, 6);
+		sleep(10);
 	}
 	
 #define step(_primary)

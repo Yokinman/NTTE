@@ -25,6 +25,8 @@
 #define weapon_area(_wep)     return ((argument_count > 0 && weapon_avail(_wep) && weapon_get_gold(_wep) == 0) ? 22 : -1); // L1 3-1
 #define weapon_gold(_wep)     return ((argument_count > 0 && lq_defget(_wep, "gold", false)) ? -1 : 0);
 #define weapon_load           return 24; // 0.8 Seconds
+#define weapon_burst(_wep)    return (("red_ammo" in self && red_ammo >= weapon_get_red(_wep)) ? 1 : 3);
+#define weapon_burst_time     return 4; // 0.13 Seconds
 #define weapon_auto           return true;
 #define weapon_melee          return false;
 #define weapon_avail          return unlock_get("pack:" + weapon_ntte_pack());
@@ -73,9 +75,9 @@
 	_wep = _fire.wep;
 	
 	 // Red:
-	var _cost = weapon_red();
-	if("red_ammo" in self && red_ammo >= _cost){
-		red_ammo -= _cost;
+	var _cost = weapon_get_red(_wep);
+	if("red_ammo" in _fire.creator && _fire.creator.red_ammo >= _cost && _fire.burst == 1){
+		_fire.creator.red_ammo -= _cost;
 		
 		var _skill = skill_get(mut_laser_brain);
 		
@@ -99,6 +101,7 @@
 				]);
 				
 				switch(_set){
+					
 					case "orchid":
 						
 						 // Orchid Set:
@@ -107,7 +110,7 @@
 							"chest" : "OrchidChest",
 							"count" : irandom_range(2, 4)
 						});	
-					
+						
 						break;
 						
 					case "lair":
@@ -115,7 +118,7 @@
 						 // Lair Set:
 						array_push(area_chest, "CatChest");
 						array_push(area_chest, "BatChest");
-					 // array_push(area_chest, "RatChest"); // one day...
+					//	array_push(area_chest, "RatChest"); // one day...
 						
 						break;
 						
@@ -131,6 +134,7 @@
 						]));
 						
 						break;
+						
 				}
 			}
 			
@@ -170,41 +174,34 @@
 	}
 	
 	 // Normal:
-	else if(fork()){
-		repeat(3){
-			var	_skill = skill_get(mut_long_arms),
-				_dis   = 10 * _skill,
-				_dir   = gunangle;
-				
-			 // Shank:
-			with(projectile_create(
-				x + lengthdir_x(_dis, _dir),
-				y + lengthdir_y(_dis, _dir),
-				"RedShank",
-				_dir + orandom(10 * accuracy),
-				lerp(3, 6, _skill)
-			)){
-				if(weapon_get_gold(_wep) != 0){
-					sprite_index = spr.RedShankGold; // it's a small change but looks better
-				}
+	else{
+		var	_skill = skill_get(mut_long_arms),
+			_dis   = 10 * _skill,
+			_dir   = gunangle;
+			
+		 // Shank:
+		with(projectile_create(
+			x + lengthdir_x(_dis, _dir),
+			y + lengthdir_y(_dis, _dir),
+			"RedShank",
+			_dir + orandom(10 * accuracy),
+			lerp(3, 6, _skill)
+		)){
+			if(weapon_get_gold(_wep) != 0){
+				sprite_index = spr.RedShankGold; // it's awesome
 			}
-			
-			 // Sounds:
-			sound_play_gun(((weapon_get_gold(_wep) == 0) ? sndScrewdriver : sndGoldScrewdriver), 0.2, 0.6);
-			sound_set_track_position(
-				sound_play_pitchvol(sndHyperCrystalChargeExplo, 1 + random(0.5), 0.4),
-				1.5
-			);
-			
-			 // Effects:
-			weapon_post(-3, 8, 2);
-			motion_add(_dir, 3);
-			
-			 // Hold Your Metaphorical Horses:
-			wait(4);
-			if(!instance_exists(self)) break;
 		}
-		exit;
+		
+		 // Sounds:
+		sound_play_gun(((weapon_get_gold(_wep) == 0) ? sndScrewdriver : sndGoldScrewdriver), 0.2, 0.6);
+		sound_set_track_position(
+			sound_play_pitchvol(sndHyperCrystalChargeExplo, 1 + random(0.5), 0.4),
+			1.5
+		);
+		
+		 // Effects:
+		weapon_post(-3, 8, 2);
+		motion_add(_dir, 3);
 	}
 	
 #define step(_primary)

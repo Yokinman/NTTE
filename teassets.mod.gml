@@ -2087,7 +2087,7 @@
 						_type = "wep";
 					}
 					
-					if(lq_exists(ntte_mods, _type)){
+					if(_type in ntte_mods){
 						array_push(lq_get(ntte_mods, _type), _name);
 					}
 				}
@@ -2274,7 +2274,7 @@
 		_save = save_data;
 		
 	with(_path){
-		if(!lq_exists(_save, self)){
+		if(self not in _save){
 			return _default;
 		}
 		_save = lq_get(_save, self);
@@ -2890,9 +2890,9 @@ var _shine = argument_count > 4 ? argument[4] : shnNone;
 	if(lag) trace_time();
 	
 	 // Sprite Loading:
-	if(array_length(spr_load) > 0){
+	if(array_length(spr_load)){
 		repeat(spr_load_num){
-			while(array_length(spr_load) > 0){
+			while(array_length(spr_load)){
 				var	_num   = array_length(spr_load) - 1,
 					_load  = null,
 					_list  = spr_load[_num, 0],
@@ -3018,7 +3018,7 @@ var _shine = argument_count > 4 ? argument[4] : shnNone;
 		var _name = self;
 		if(mod_variable_get("weapon", _name, "sprWepLocked") == mskNone){
 			var _spr = mod_variable_get("weapon", _name, "sprWep");
-			if(sprite_get_number(_spr) != 1 || sprite_get_width(_spr) != 16 || sprite_get_height(_spr) != 16){
+			if(sprite_get_width(_spr) != 16 || sprite_get_height(_spr) != 16){
 				with(other){
 					mod_variable_set("weapon", _name, "sprWepLocked", wep_locked_sprite(_spr));
 				}

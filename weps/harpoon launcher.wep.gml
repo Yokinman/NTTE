@@ -24,13 +24,13 @@
 			var _rope = variable_instance_get(creator, "harpoon_rope", noone);
 			
 			if(!instance_exists(lq_defget(_rope, "link1", noone)) || lq_defget(_rope, "broken", true)){
-				_rope = Harpoon_rope(id, creator);
+				_rope = Harpoon_rope(self, creator);
 			}
 			else{
 				array_push(rope, _rope);
 				_rope.break_timer = 60;
-				_rope.link2 = id;
-				_rope = noone;
+				_rope.link2       = self;
+				_rope             = noone;
 			}
 			
 			variable_instance_set(creator, "harpoon_rope", _rope);

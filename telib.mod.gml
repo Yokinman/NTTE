@@ -15,12 +15,12 @@
 	 // Object List (Used for cheats mod, basically):
 	ntte_obj_list = ds_map_create();
 	ntte_obj_list[? "tegeneral"  ] = ["AlertIndicator", "BigDecal", "BigIDPDSpawn", "BoneArrow", "BoneSlash", "BoneFX", "BuriedVault", "BuriedShrine", "CustomBullet", "CustomFlak", "CustomShell", "CustomPlasma", "GroundFlameGreen", "Igloo", "MergeFlak", "Pet", "PetRevive", "PetWeaponBecome", "PetWeaponBoss", "PortalBullet", "PortalGuardian", "PortalPrevent", "ReviveNTTE", "SmallGreenExplosion", "TopDecal", "TopObject", "TopTiny", "WallDecal", "WallEnemy"];
-	ntte_obj_list[? "tepickups"  ] = ["Backpack", "Backpacker", "BackpackPickup", "BatChest", /*"BloodLustPickup",*/ "BoneBigPickup", "BonePickup", "BonusAmmoChest", "BonusAmmoMimic", "BonusAmmoPickup", "BonusHealthChest", "BonusHealthMimic", "BonusHealthPickup", "BuriedVaultChest", "BuriedVaultChestDebris", "BuriedVaultPedestal", "CatChest", "ChestShop", "CursedAmmoChest", "CursedMimic", "CustomChest", "CustomPickup", "HammerHeadPickup", "HarpoonPickup", "OrchidBall", "OrchidChest", "OrchidSkill", "PalaceAltar", "PalankingStatue", "ParrotFeather", "ParrotChester", "Pizza", "PizzaChest", "PizzaStack", "Prompt", "RedAmmoChest", "RedAmmoPickup", "SpiritPickup", "SunkenChest", "SunkenCoin", "VaultFlower", "VaultFlowerSparkle", "WepPickupGrounded", "WepPickupStick"];
+	ntte_obj_list[? "tepickups"  ] = ["Backpack", "Backpacker", "BackpackPickup", "BatChest", /*"BloodLustPickup",*/ "BoneBigPickup", "BonePickup", "BonusAmmoChest", "BonusAmmoMimic", "BonusAmmoPickup", "BonusHealthChest", "BonusHealthMimic", "BonusHealthPickup", "BuriedVaultChest", "BuriedVaultChestDebris", "BuriedVaultPedestal", "CatChest", "ChestShop", "CursedAmmoChest", "CursedMimic", "CustomChest", "CustomPickup", "GatorStatue", "GatorStatueFlak", "HammerHeadPickup", "HarpoonPickup", "OrchidBall", "OrchidChest", "OrchidSkill", "PalaceAltar", "PalankingStatue", "ParrotFeather", "ParrotChester", "Pizza", "PizzaChest", "PizzaStack", "Prompt", "RedAmmoChest", "RedAmmoPickup", "SpiritPickup", "SunkenChest", "SunkenCoin", "VaultFlower", "VaultFlowerSparkle", "WepPickupGrounded", "WepPickupStick"];
 	ntte_obj_list[? "tedesert"   ] = ["BabyScorpion", "BabyScorpionGold", "BanditCamper", "BanditHiker", "BanditTent", "BigCactus", "BigMaggotSpawn", "Bone", "CoastBossBecome", "CoastBoss", "CowSkull", "FlySpin", "VenomBlast", "ScorpionRock", "SilverScorpion", "SilverScorpionDevastator", "SilverScorpionFlak", "VenomFlak", "VenomPellet", "VenomPelletBack", "WantBigMaggot"];
 	ntte_obj_list[? "tecoast"    ] = ["BloomingAssassin", "BloomingAssassinHide", "BloomingBush", "BloomingCactus", "BuriedCar", "ClamShield", "ClamShieldSlash", "CoastBigDecal", "CoastDecal", "CoastDecalCorpse", "Creature", "Diver", "DiverHarpoon", "Gull", "Harpoon", "HarpoonStick", "NetNade", "Palanking", "PalankingDie", "PalankingSlash", "PalankingSlashGround", "PalankingToss", "Palm", "Pelican", "Seal", "SealAnchor", "SealDisc", "SealHeavy", "SealMine", "TrafficCrab", "Trident"];
 	ntte_obj_list[? "teoasis"    ] = ["BubbleBomb", "BubbleExplosion", "BubbleExplosionSmall", "BubbleSlash", "CrabTank", "HammerShark", "HyperBubble", "OasisPetBecome", "Puffer", "SunkenRoom", "SunkenSealSpawn", "WaterStreak"];
 	ntte_obj_list[? "tetrench"   ] = ["Angler", "AnglerGold", "Eel", "EelSkull", "ElectroPlasma", "ElectroPlasmaBig", "ElectroPlasmaImpact", "Jelly", "JellyElite", "Kelp", "LightningDisc", "PitSpark", "PitSquid", "PitSquidArm", "PitSquidBomb", "PitSquidDeath", "QuasarBeam", "QuasarRing", "TeslaCoil", "TopDecalWaterMine", "TrenchFloorChunk", "Vent", "WantEel"];
-	ntte_obj_list[? "tesewers"   ] = ["AlbinoBolt", "AlbinoGator", "AlbinoGrenade", "BabyGator", "Bat", "BatBoss", "BatCloud", "BatDisc", "BatScreech", "BoneGator", /*"BossHealFX",*/ "Cabinet", "Cat", "CatBoss", "CatBossAttack", "CatDoor", "CatDoorDebris", "CatGrenade", "CatHole", "CatHoleBig", "CatLight", "ChairFront", "ChairSide", "Couch", "GatorStatue", "GatorStatueFlak", "Manhole", "ManholeOpen", "NewTable", "Paper", "PizzaDrain", "PizzaManholeCover", "PizzaRubble", "PizzaTV", "SewerDrain", "SewerRug", "TurtleCool"];
+	ntte_obj_list[? "tesewers"   ] = ["AlbinoBolt", "AlbinoGator", "AlbinoGrenade", "BabyGator", "Bat", "BatBoss", "BatCloud", "BatDisc", "BatScreech", "BoneGator", /*"BossHealFX",*/ "Cabinet", "Cat", "CatBoss", "CatBossAttack", "CatDoor", "CatDoorDebris", "CatGrenade", "CatHole", "CatHoleBig", "CatLight", "ChairFront", "ChairSide", "Couch", "LairBorder", "Manhole", "ManholeOpen", "NewTable", "Paper", "PizzaDrain", "PizzaManholeCover", "PizzaRubble", "PizzaTV", "SewerDrain", "SewerRug", "TurtleCool"];
 	ntte_obj_list[? "tescrapyard"] = ["BoneRaven", "SawTrap", "SludgePool", "TopRaven", "TrapSpin", "Tunneler"];
 	ntte_obj_list[? "tecaves"    ] = ["BigCrystalProp", "ChaosHeart", "CrystalBat", "CrystalBrain", "CrystalBrainDeath", "CrystalClone", "CrystalHeart", "CrystalHeartBullet", "CrystalPropRed", "CrystalPropWhite", "EnergyBatSlash", "InvCrystalBat", "InvMortar", "MinerBandit", "Mortar", "MortarPlasma", "NewCocoon", "PlasmaImpactSmall", "RedBullet", "RedExplosion", "RedShank", "RedSlash", "RedSpider", "Spiderling", "Tesseract", "TesseractStrike", "TwinOrbital", "VlasmaBullet", "VlasmaCannon", "WallFake", "Warp", "WarpPortal"];
 	ntte_obj_list[? "telabs"     ] = ["Button", "ButtonChest", "ButtonOld", "ButtonPickup", "ButtonReviveArea", "FreakChamber", "MutantVat", "PickupReviveArea", "PopoSecurity", "WallSlide"];
@@ -367,12 +367,6 @@
 											on_hurt = enemy_hurt;
 											break;
 											
-										case "death":
-											if(instance_is(self, CustomEnemy)){
-												on_death = enemy_death;
-											}
-											break;
-											
 										case "draw":
 											if(instance_is(self, CustomEnemy)){
 												on_draw = draw_self_enemy;
@@ -560,6 +554,10 @@
 	
 	
 /// SCRIPTS
+#define trace_error(_error)
+	trace(_error);
+	trace_color(" ^ Screenshot that error and post it on NT:TE's itch.io page, thanks!", c_yellow);
+	
 #define draw_self_enemy()
 	/*
 		'draw_self()' for enemies
@@ -889,10 +887,7 @@
 	 // Hurt Sprite:
 	sprite_index = spr_hurt;
 	image_index  = 0;
-
-#define enemy_death
-	pickup_drop(16, 0); // Bandit drop-ness
-
+	
 #define enemy_target(_x, _y)
 	/*
 		Base game targeting for consistency, cause with consistency u can have clever solutions
@@ -2433,282 +2428,6 @@
 	
 	return false;
 	
-#define weapon_fire_init(_wep)
-	/*
-		Called from a 'weapon_fire' script to do some basic weapon firing setup
-		Returns a LWO with some useful variables
-		
-		Vars:
-			wep     - The weapon's value, may be modified from the given argument
-			creator - The actual instance firing, for 'player_fire_ext()' support
-			primary - The weapon is in the primary slot (true) or secondary slot (false)
-			wepheld - The weapon is physically stored in the creator's 'wep' variable
-			spec    - The weapon is being shot by an active (YV, Steroids, Skeleton)
-	*/
-	
-	var _fire = {
-		"wep"     : _wep,
-		"creator" : noone,
-		"primary" : true,
-		"wepheld" : false,
-		"spec"    : false
-	};
-	
-	 // Creator:
-	_fire.creator = self;
-	if(instance_is(self, FireCont) && "creator" in self){
-		_fire.creator = creator;
-	}
-	
-	 // Weapon Held by Creator:
-	_fire.wepheld = (variable_instance_get(_fire.creator, "wep") == _wep);
-	
-	 // Active / Secondary Firing:
-	_fire.spec = variable_instance_get(self, "specfiring", false);
-	if(race == "steroids" && _fire.spec){
-		_fire.primary = false;
-	}
-	
-	 // LWO Setup:
-	if(is_string(_wep)){
-		var _lwo = mod_variable_get("weapon", _wep, "lwoWep");
-		if(is_object(_lwo)){
-			_wep = lq_clone(_lwo);
-			_fire.wep = _wep;
-			if(_fire.wepheld){
-				_fire.creator.wep = _wep;
-			}
-		}
-	}
-	
-	 // Charge Weapon:
-	if(mod_script_call("weapon", wep_raw(_wep), "weapon_chrg", _wep) && _wep.chrg >= 0){
-		var	_load = variable_instance_get(self, "reloadspeed", 1) * current_time_scale,
-			_auto = ((race == "steroids") ? (weapon_get_auto(_wep) >= 0) : weapon_get_auto(_wep));
-			
-		 // Charging (chrg: -1==Released, 0==None, 1==Charging, 2==Charged):
-		_wep.chrg = ((_wep.chrg_num < _wep.chrg_max) ? 1 : 2);
-		if(_wep.chrg == 1){
-			_wep.chrg_num = min(_wep.chrg_num + _load, _wep.chrg_max);
-			
-			 // Pop Pop:
-			if(_fire.spec && _fire.primary){
-				_wep.chrg_num = _wep.chrg_max;
-			}
-		}
-		
-		 // Hold to Charge:
-		if(_auto || _wep.chrg_num >= _wep.chrg_max){
-			 // Manual Reload:
-			reload += _load - weapon_get_load(_wep);
-			
-			 // Charge Controller:
-			var _inst = instances_matching(instances_matching(CustomObject, "name", "WeaponCharger"), "wep", _wep);
-			if(!array_length(_inst)){
-				_inst = instance_create(x, y, CustomObject);
-				with(_inst){
-					name    = "WeaponCharger";
-					wep     = _wep;
-					on_step = weapon_chrg_step;
-				}
-			}
-			with(_inst){
-				x         = other.x;
-				y         = other.y;
-				direction = other.gunangle;
-				team      = other.team;
-				creator   = _fire.creator;
-				primary   = _fire.primary;
-				fire      = !_auto;
-			}
-		}
-	}
-	
-	 // Melee:
-	else if(weapon_is_melee(_wep)){
-		wepangle *= -1;
-	}
-	
-	return _fire;
-	
-#define weapon_chrg_step
-	if(fire){
-		if(is_object(wep) && "chrg" in wep){
-			if(wep.chrg){
-				wep.chrg = -1;
-				with(creator){
-					other.x = x;
-					other.y = y;
-					if(variable_instance_get(self, (other.primary ? "" : "b") + "wep") == other.wep){
-						 // Player:
-						if(instance_is(self, Player)){
-							 // Steroids:
-							if(!other.primary){
-								player_swap();
-								specfiring = true;
-							}
-							
-							 // Fire:
-							var	_type = weapon_get_type(wep),
-								_cost = weapon_get_cost(wep),
-								_rads = weapon_get_rads(wep),
-								_ammo = ammo[_type];
-								
-							if(infammo != 0 || (_ammo >= _cost && GameCont.rad >= _rads)){
-								var _lastTeam = team;
-								team = other.team;
-								player_fire(other.direction);
-								team = _lastTeam;
-							}
-							
-							 // Low Ammo:
-							else{
-								wkick     = -2;
-								clicked   = false;
-								drawempty = 30;
-								sound_play((_ammo < _cost) ? sndEmpty : sndUltraEmpty);
-								with(instance_create(x, y, PopupText)){
-									target = other.index;
-									text   = ((_ammo < _cost) ? ((_ammo > 0) ? "NOT ENOUGH " + other.typ_name[_type] : "EMPTY") : "NOT ENOUGH RADS");
-								}
-							}
-							
-							 // Steroids:
-							if(!other.primary){
-								specfiring = false;
-								player_swap();
-							}
-						}
-						
-						 // Non-Player:
-						else with(other){
-							player_fire_ext(direction, wep, x, y, team, other);
-						}
-					}
-				}
-				wep.chrg = 0;
-			}
-			wep.chrg_num = 0;
-		}
-		instance_destroy();
-	}
-	else fire = true;
-	
-#define weapon_ammo_fire(_wep)
-	/*
-		Called from a 'weapon_fire' script to process LWO weapons with internal ammo
-		Returns 'true' if the weapon had enough internal ammo to fire, 'false' otherwise
-	*/
-	
-	 // Gun Warrant:
-	if(infammo != 0){
-		return true;
-	}
-	
-	 // Ammo Cost:
-	var _cost = lq_defget(_wep, "cost", 1);
-	with(_wep) if(ammo >= _cost){
-		ammo -= _cost;
-		
-		 // Can Fire:
-		return true;
-	}
-	
-	 // Not Enough Ammo:
-	reload = variable_instance_get(self, "reloadspeed", 1) * current_time_scale;
-	if("anam" in _wep){
-		if(button_pressed(index, (specfiring ? "spec" : "fire"))){
-			wkick = -2;
-			sound_play(sndEmpty);
-			with(instance_create(x, y, PopupText)){
-				target = other.index;
-				text   = ((_wep.ammo > 0) ? "NOT ENOUGH " + _wep.anam : "EMPTY");
-			}
-		}
-	}
-	
-	return false;
-	
-#define weapon_ammo_hud(_wep)
-	/*
-		Called from a 'weapon_sprt_hud' script to draw HUD for LWO weapons with internal ammo
-		Returns the weapon's normal sprite for easy returning
-		
-		Ex:
-			#define weapon_sprt_hud(w)
-				return weapon_ammo_hud(w);
-	*/
-	
-	 // Draw Ammo:
-	if(
-		instance_is(self, Player)
-		&& (instance_is(other, TopCont) || instance_is(other, UberCont))
-		&& is_object(_wep)
-	){
-		var	_ammo    = lq_defget(_wep, "ammo", 0),
-			_ammoMax = lq_defget(_wep, "amax", _ammo),
-			_ammoMin = lq_defget(_wep, "amin", round(_ammoMax * 0.2));
-			
-		draw_ammo(index, (bwep != _wep), (race == "steroids"), _ammo, _ammoMin);
-	}
-	
-	 // Default Sprite:
-	return weapon_get_sprt(_wep);
-	
-#define draw_ammo(_index, _primary, _steroids, _ammo, _ammoMin)
-	/*
-		Draws ammo HUD text
-		
-		Args:
-			index    - The player to draw HUD for
-			primary  - Is a primary weapon, true/false
-			steroids - Player can dual wield, true/false
-			ammo     - Ammo, can be a string or number
-			ammoMin  - Low ammo threshold
-	*/
-	
-	var _local = player_find_local_nonsync();
-	
-	if(player_is_active(_local) && player_get_show_hud(_index, _local)){
-		if(!instance_exists(menubutton) || _index == _local){
-			var	_x = view_xview_nonsync + (_primary ? 42 : 86),
-				_y = view_yview_nonsync + 21;
-				
-			 // Co-op Offset:
-			var _active = 0;
-			for(var i = 0; i < maxp; i++){
-				_active += player_is_active(i);
-			}
-			if(_active > 1){
-				_x -= 19;
-			}
-			
-			 // Color:
-			var _text = "";
-			if(is_real(_ammo)){
-				_text += "@";
-				if(_ammo > 0){
-					if(_primary || _steroids){
-						if(_ammo > _ammoMin){
-							_text += "w";
-						}
-						else _text += "r";
-					}
-					else _text += "s";
-				}
-				else _text += "d";
-			}
-			_text += string(_ammo);
-			
-			 // !!!
-			draw_set_halign(fa_left);
-			draw_set_valign(fa_top);
-			draw_set_projection(2, _index);
-			draw_text_nt(_x, _y, _text);
-			draw_reset_projection();
-		}
-	}
-	
 #define skill_get_icon(_skill)
 	/*
 		Returns an array containing the [sprite_index, image_index] of a mutation's HUD icon
@@ -3390,229 +3109,6 @@
 	}
 	
 	return -1;
-	
-#define area_border(_y, _area, _color)
-	with(script_bind_draw(area_border_step, 1000, _y, _area, _color)){
-		cavein      = false;
-		cavein_dis  = 800;
-		cavein_inst = [];
-		cavein_pan  = 0;
-		
-		type = [
-			[Wall,		 0, [area_get_sprite(_area, sprWall1Bot), area_get_sprite(_area, sprWall1Top), area_get_sprite(_area, sprWall1Out)]],
-			[TopSmall,	 0, area_get_sprite(_area, sprWall1Trans)],
-			[FloorExplo, 0, area_get_sprite(_area, sprFloor1Explo)],
-			[Debris,	 0, area_get_sprite(_area, sprDebris1)]
-		];
-		
-		return id;
-	}
-	
-#define area_border_step(_y, _area, _color)
-	if(lag) trace_time();
-	
-	var	_fix = false,
-		_caveInst = cavein_inst;
-		
-	 // Cave-In:
-	if(cavein){
-		_fix = true;
-		if(cavein_dis > 0){
-			var d = 12;
-			if(!array_length(instances_matching_gt(Player, "y", _y - 64))){
-				d *= 1.5;
-			}
-			cavein_dis = max(0, cavein_dis - (max(4, random(d)) * current_time_scale));
-			
-			 // Debris:
-			var _floor = instances_matching_gt(Floor, "bbox_bottom", _y);
-			with(_floor) if(point_seen_ext(bbox_center_x, bbox_center_y, 16, 16, -1)){
-				var n = 2 * array_length(instances_matching_gt(Floor, "y", y));
-				if(chance_ct(1, n) && (object_index != FloorExplo || chance(1, 10))){
-					with(instance_create(choose(bbox_left + 4, bbox_right - 4), choose(bbox_top + 4, bbox_bottom - 4), Debris)){
-						motion_set(90 + orandom(90), 4 + random(4));
-					}
-				}
-			}
-			
-			 // Caving Level In:
-			if(cavein_dis < 400){
-				script_bind_step(area_border_cavein, 0, _y, cavein_dis, _caveInst);
-				
-				 // Effects:
-				if(current_frame_active){
-					with(instances_matching_gt(_floor, "bbox_bottom", _y + cavein_dis)){
-						repeat(choose(1, choose(1, 2))){
-							with(instance_create(random_range(bbox_left - 12, bbox_right + 12), bbox_bottom, Dust)){
-								image_xscale *= 2;
-								image_yscale *= 2;
-								depth = -8;
-								vspeed -= 5;
-								sound_play_hit(choose(sndWallBreak, sndWallBreakBrick), 0.3);
-							}
-						}
-					}
-				}
-			}
-			
-			 // Saved Caved Instances:
-			var f = noone;
-			with(instances_matching_lt(instances_matching_gt(Floor, "bbox_bottom", _y), "bbox_top", _y)){
-				f = id;
-				break;
-			}
-			with(_caveInst){
-				if(instance_exists(self)){
-					visible = false;
-					y = _y + 16 + other.cavein_dis;
-					with(f) other.x += (bbox_center_x - other.x) * 0.1 * current_time_scale;
-					
-					 // Why do health chests break walls again
-					if(instance_is(self, HealthChest)) mask_index = mskNone;
-				}
-				else other.cavein_inst = array_delete_value(other.cavein_inst, self);
-			}
-			
-			 // Screenshake:
-			if(cavein_pan < 1) cavein_pan += 1/20 * current_time_scale;
-			for(var i = 0; i < maxp; i++){
-				view_shake[i] = max(view_shake[i], 5);
-				with(instance_exists(view_object[i]) ? view_object[i] : player_find(i)){
-					view_shake_max_at(x, _y + other.cavein_dis, 20);
-					
-					 // Pan Down:
-					view_shift(i, 270, clamp(y - (_y - 64), 0, min(20, other.cavein_dis / 10)) * other.cavein_pan);
-				}
-			}
-		}
-		
-		 // Finished Caving In:
-		else{
-			cavein = -1;
-			
-			 // Fix Camera:
-			with(Revive){
-				if(view_object[p] == id) view_object[p] = noone;
-			}
-			
-			 // Wallerize:
-			with(instances_matching_gt(Floor, "bbox_bottom", _y)){
-				floor_walls();
-			}
-			with(instances_matching_gt(Wall, "bbox_bottom", _y)){
-				wall_tops();
-			}
-			
-			 // Rubble:
-			with(_caveInst) if(instance_exists(self)){
-				visible = true;
-			}
-			with(instances_matching_gt(FloorNormal, "bbox_bottom", _y)){
-				with(obj_create(x + 16, _y, "PizzaRubble")){
-					inst = _caveInst;
-					with(self){
-						event_perform(ev_step, ev_step_normal);
-					}
-				}
-				
-				 // Fix Potential Softlockyness:
-				var _x2 = bbox_center_x;
-				with(instances_matching_lt(instances_matching_gt(FloorExplo, "bbox_bottom", _y - 4), "bbox_top", _y - 4)){
-					var	_x1 = bbox_center_x,
-						_y1 = bbox_center_y;
-						
-					if(collision_line(_x1, _y1, _x2, _y1, Wall, false, false)){
-						floor_tunnel(_x1, _y - 8, _x2, _y - 8);
-					}
-				}
-			}
-		}
-	}
-	else if(cavein == false){
-		 // Start Cave In:
-		if(array_length(instances_matching_lt(Player, "y", _y))){
-			cavein = true;
-			sound_play_pitchvol(sndStatueXP, 0.2 + random(0.2), 3);
-		}
-	}
-	if(cavein != -1){
-		with(Revive){
-			if(!instance_exists(view_object[p]) && !instance_exists(player_find(p))){
-				view_object[p] = id;
-			}
-		}
-	}
-	
-	 // Sprite Fixes:
-	with(type){
-		var	_obj = self[0],
-			_num = self[1];
-			
-		if(_num < 0 || _num != instance_number(_obj)){
-			_fix = true;
-			self[@1] = instance_number(_obj);
-		}
-	}
-	if(_fix) with(type){
-		var	_obj = self[0],
-			_spr = self[2];
-			
-		with(instances_matching(_obj, "cat_border_fix", null)){
-			cat_border_fix = true;
-			if(y >= _y){
-				switch(_obj){
-					case Wall:
-						sprite_index = _spr[0];
-						topspr = _spr[1];
-						outspr = _spr[2];
-						break;
-						
-					default:
-						sprite_index = _spr;
-				}
-			}
-		}
-	}
-	
-	 // Background:
-	var	_vx = view_xview_nonsync,
-		_vy = view_yview_nonsync;
-		
-	draw_set_color(_color);
-	draw_rectangle(_vx, _y, _vx + game_width, max(_y, _vy + game_height), 0);
-	
-	if(lag) trace_time("area_border_step");
-	
-#define area_border_cavein(_y, _caveDis, _caveInst)
-	 // Destroy:
-	with(instances_matching_ne(instances_matching_gt(GameObject, "y", _y + _caveDis), "object_index", Dust)){
-		if(instance_exists(self)){
-			 // Kill:
-			if(y > _y + 64 && instance_is(self, hitme) && my_health > 0){
-				my_health = 0;
-				if("lasthit" in self){
-					lasthit = [sprTurtleDead, "CAVE IN"];
-				}
-			}
-			
-			 // Save:
-			else if(persistent || (instance_is(self, Pickup) && !instance_is(self, Rad)) || instance_is(self, chestprop) || (instance_is(self, Corpse) && y < _y + 240) || (instance_is(self, CustomHitme) && "name" in self && name == "Pet")){
-				if(array_find_index(_caveInst, id) < 0){
-					array_push(_caveInst, id);
-				}
-			}
-			
-			 // Destroy:
-			else instance_destroy();
-		}
-	}
-	
-	 // Hide Wall Shadows:
-	with(instances_matching_gt(Wall, "bbox_bottom", _y + _caveDis - 32)){
-		outspr = -1;
-	}
-	
-	instance_destroy();
 	
 #define floor_walls()
 	var	_x1    = bbox_left   - 16,
@@ -4638,6 +4134,434 @@
 	
 	 // Normal:
 	return 0;
+	
+#define weapon_fire_init(_wep)
+	/*
+		Called from a 'weapon_fire' script to do some basic weapon firing setup
+		Returns a LWO with some useful variables
+		
+		Vars:
+			wep     - The weapon's value, may be modified from the given argument
+			creator - The actual instance firing, for 'player_fire_ext()' support
+			primary - The weapon is in the primary slot (true) or secondary slot (false)
+			wepheld - The weapon is physically stored in the creator's 'wep' variable
+			spec    - The weapon is being shot by an active (YV, Steroids, Skeleton)
+			burst   - The current burst shot (starts at 1)
+	*/
+	
+	var _fire = {
+		"wep"     : _wep,
+		"creator" : noone,
+		"primary" : true,
+		"wepheld" : false,
+		"spec"    : false,
+		"burst"   : 1
+	};
+	
+	 // Creator:
+	_fire.creator = self;
+	if(instance_is(self, FireCont) && "creator" in self){
+		_fire.creator = creator;
+	}
+	
+	 // Weapon Held by Creator:
+	_fire.wepheld = (variable_instance_get(_fire.creator, "wep") == _wep);
+	
+	 // Active / Secondary Firing:
+	_fire.spec = variable_instance_get(self, "specfiring", false);
+	if(race == "steroids" && _fire.spec){
+		_fire.primary = false;
+	}
+	
+	 // LWO Setup:
+	if(is_string(_wep)){
+		var _lwo = mod_variable_get("weapon", _wep, "lwoWep");
+		if(is_object(_lwo)){
+			_wep = lq_clone(_lwo);
+			_fire.wep = _wep;
+			if(_fire.wepheld){
+				_fire.creator.wep = _wep;
+			}
+		}
+	}
+	
+	 // NT:TE Systems:
+	var _other = other;
+	with(instance_exists(_fire.creator) ? _fire.creator : self){
+		var _wepName = wep_raw(_wep);
+		
+		 // Charge Weapon:
+		if(
+			mod_script_exists("weapon", _wepName, "weapon_chrg")
+			&& mod_script_call("weapon", _wepName, "weapon_chrg", _wep)
+			&& _wep.chrg >= 0
+		){
+			var	_load = variable_instance_get(self, "reloadspeed", 1) * current_time_scale,
+				_auto = ((other.race == "steroids") ? (weapon_get_auto(_wep) >= 0) : weapon_get_auto(_wep));
+				
+			 // Charging (chrg: -1==Released, 0==None, 1==Charging, 2==Charged):
+			_wep.chrg = ((_wep.chrg_num < _wep.chrg_max) ? 1 : 2);
+			if(_wep.chrg == 1){
+				_wep.chrg_num = min(_wep.chrg_num + _load, _wep.chrg_max);
+				
+				 // Pop Pop:
+				if(_fire.spec && _fire.primary){
+					_wep.chrg_num = _wep.chrg_max;
+				}
+			}
+			
+			 // Hold to Charge:
+			if(_auto || _wep.chrg_num >= _wep.chrg_max){
+				 // Manual Reload:
+				other.reload += _load - weapon_get_load(_wep);
+				
+				 // Charge Controller:
+				with(other){
+					var _inst = instances_matching(instances_matching(CustomObject, "name", "WeaponCharger"), "wep", _wep);
+					if(!array_length(_inst)){
+						_inst = instance_create(x, y, CustomObject);
+						with(_inst){
+							name    = "WeaponCharger";
+							on_step = weapon_chrg_step;
+							wep     = _wep;
+						}
+					}
+					with(_inst){
+						x         = other.x;
+						y         = other.y;
+						direction = other.gunangle;
+						accuracy  = other.accuracy;
+						team      = other.team;
+						creator   = _fire.creator;
+						primary   = _fire.primary;
+						fire      = !_auto;
+					}
+				}
+			}
+		}
+		
+		 // Normal Weapon:
+		else{
+			 // Melee:
+			if(weapon_is_melee(_wep)){
+				other.wepangle *= -1;
+			}
+			
+			 // Burst Fire:
+			if(instance_is(_other, CustomObject) && "name" in _other && _other.name == "WeaponBurst"){
+				_fire.burst = _other.burst;
+			}
+			else if(mod_script_exists("weapon", _wepName, "weapon_burst")){
+				var _burst = ceil(mod_script_call("weapon", _wepName, "weapon_burst", _wep));
+				if(_burst > 1 || _burst < 0){
+					var _time = (
+						mod_script_exists("weapon", _wepName, "weapon_burst_time")
+						? mod_script_call("weapon", _wepName, "weapon_burst_time", _wep)
+						: weapon_get_load(_wep) / max(1, _burst)
+					);
+					with(other){
+						with(instance_create(x, y, CustomObject)){
+							name      = "WeaponBurst";
+							on_step   = weapon_burst_step;
+							wep       = _wep;
+							direction = other.gunangle;
+							accuracy  = other.accuracy;
+							team      = other.team;
+							creator   = _fire.creator;
+							primary   = _fire.primary;
+							burst     = 0;
+							ammo      = _burst - 1;
+							time      = _time;
+							time_max  = _time;
+							chrg      = lq_get(_wep, "chrg");
+							chrg_num  = lq_get(_wep, "chrg_num");
+							
+							 // Insta-Fire:
+							time -= random(current_time_scale);
+							if(time <= 0){
+								time += current_time_scale;
+								with(self){
+									event_perform(ev_step, ev_step_normal);
+								}
+							}
+							
+							 // Burst Level:
+							if(instance_exists(self)){
+								burst++;
+								_fire.burst = burst;
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+	
+	return _fire;
+	
+#define weapon_burst_step
+	if(time > 0 && ammo != 0){
+		time -= current_time_scale;
+		while(time <= 0 && time_max >= 0 && ammo-- != 0){
+			var	_wep     = wep,
+				_wepName = wep_raw(_wep);
+				
+			burst++;
+			
+			 // Delay:
+			if(mod_script_exists("weapon", _wepName, "weapon_burst_time")){
+				with(creator){
+					other.time_max = mod_script_call("weapon", _wepName, "weapon_burst_time", _wep);
+				}
+			}
+			time += time_max;
+			
+			 // Fire:
+			if(instance_exists(creator)){
+				x = creator.x;
+				y = creator.y;
+				if("gunangle" in creator){
+					direction = creator.gunangle;
+				}
+				
+				 // Charge Weapon Fix:
+				var	_lastChrg    = undefined,
+					_lastChrgNum = undefined;
+					
+				if(is_object(_wep)){
+					if("chrg"     in _wep && !is_undefined(chrg)    ){ _lastChrg     = _wep.chrg;     _wep.chrg     = chrg;     }
+					if("chrg_num" in _wep && !is_undefined(chrg_num)){ _lastChrgNum  = _wep.chrg_num; _wep.chrg_num = chrg_num; }
+				}
+				
+				 // Player:
+				if(instance_is(creator, Player)){
+					with(creator){
+						 // Steroids:
+						if(!other.primary){
+							player_swap();
+							specfiring = true;
+						}
+						
+						 // Fire:
+						var	_lastTeam     = team,
+							_lastAccuracy = accuracy;
+							
+						team     = other.team;
+						accuracy = other.accuracy;
+						
+						mod_script_call("weapon", _wepName, "weapon_fire", _wep);
+						
+						team     = _lastTeam;
+						accuracy = _lastAccuracy;
+						
+						 // Steroids:
+						if(!other.primary){
+							specfiring = false;
+							player_swap();
+						}
+					}
+				}
+				
+				 // Non-Player:
+				else with(player_fire_ext(direction, wep_none, x, y, team, creator, accuracy)){
+					wep = _wep;
+					mod_script_call("weapon", _wepName, "weapon_fire", wep);
+				}
+				
+				 // Charge Weapon Fix Reset:
+				if(is_object(_wep)){
+					if("chrg"     in _wep && !is_undefined(chrg)     && _wep.chrg     == chrg    ) _wep.chrg     = _lastChrg;
+					if("chrg_num" in _wep && !is_undefined(chrg_num) && _wep.chrg_num == chrg_num) _wep.chrg_num = _lastChrgNum;
+				}
+			}
+		}
+	}
+	else instance_destroy();
+	
+#define weapon_chrg_step
+	if(fire){
+		if(is_object(wep) && "chrg" in wep){
+			if(wep.chrg){
+				wep.chrg = -1;
+				
+				var _wepName = (primary ? "" : "b") + "wep";
+				
+				with(creator){
+					other.x = x;
+					other.y = y;
+					if(_wepName not in self || variable_instance_get(self, _wepName) == other.wep){
+						 // Player:
+						if(instance_is(self, Player)){
+							 // Steroids:
+							if(!other.primary){
+								player_swap();
+								specfiring = true;
+							}
+							
+							 // Fire:
+							var	_type = weapon_get_type(other.wep),
+								_cost = weapon_get_cost(other.wep),
+								_rads = weapon_get_rads(other.wep),
+								_ammo = ammo[_type];
+								
+							if(infammo != 0 || (_ammo >= _cost && GameCont.rad >= _rads)){
+								var	_lastTeam     = team,
+									_lastAccuracy = accuracy;
+									
+								team     = other.team;
+								accuracy = other.accuracy;
+								
+								player_fire(other.direction);
+								
+								team     = _lastTeam;
+								accuracy = _lastAccuracy;
+							}
+							
+							 // Low Ammo:
+							else{
+								wkick     = -2;
+								clicked   = false;
+								drawempty = 30;
+								sound_play((_ammo < _cost) ? sndEmpty : sndUltraEmpty);
+								with(instance_create(x, y, PopupText)){
+									target = other.index;
+									text   = ((_ammo < _cost) ? ((_ammo > 0) ? "NOT ENOUGH " + other.typ_name[_type] : "EMPTY") : "NOT ENOUGH RADS");
+								}
+							}
+							
+							 // Steroids:
+							if(!other.primary){
+								specfiring = false;
+								player_swap();
+							}
+						}
+						
+						 // Non-Player:
+						else player_fire_ext(other.direction, other.wep, other.x, other.y, other.team, other.creator, other.accuracy);
+					}
+				}
+				wep.chrg = 0;
+			}
+			wep.chrg_num = 0;
+		}
+		instance_destroy();
+	}
+	else fire = true;
+	
+#define weapon_ammo_fire(_wep)
+	/*
+		Called from a 'weapon_fire' script to process LWO weapons with internal ammo
+		Returns 'true' if the weapon had enough internal ammo to fire, 'false' otherwise
+	*/
+	
+	 // Gun Warrant:
+	if(infammo != 0){
+		return true;
+	}
+	
+	 // Ammo Cost:
+	var _cost = lq_defget(_wep, "cost", 1);
+	with(_wep) if(ammo >= _cost){
+		ammo -= _cost;
+		
+		 // Can Fire:
+		return true;
+	}
+	
+	 // Not Enough Ammo:
+	reload = variable_instance_get(self, "reloadspeed", 1) * current_time_scale;
+	if("anam" in _wep){
+		if(button_pressed(index, (specfiring ? "spec" : "fire"))){
+			wkick = -2;
+			sound_play(sndEmpty);
+			with(instance_create(x, y, PopupText)){
+				target = other.index;
+				text   = ((_wep.ammo > 0) ? "NOT ENOUGH " + _wep.anam : "EMPTY");
+			}
+		}
+	}
+	
+	return false;
+	
+#define weapon_ammo_hud(_wep)
+	/*
+		Called from a 'weapon_sprt_hud' script to draw HUD for LWO weapons with internal ammo
+		Returns the weapon's normal sprite for easy returning
+		
+		Ex:
+			#define weapon_sprt_hud(w)
+				return weapon_ammo_hud(w);
+	*/
+	
+	 // Draw Ammo:
+	if(
+		instance_is(self, Player)
+		&& (instance_is(other, TopCont) || instance_is(other, UberCont))
+		&& is_object(_wep)
+	){
+		var	_ammo    = lq_defget(_wep, "ammo", 0),
+			_ammoMax = lq_defget(_wep, "amax", _ammo),
+			_ammoMin = lq_defget(_wep, "amin", round(_ammoMax * 0.2));
+			
+		draw_ammo(index, (bwep != _wep), (race == "steroids"), _ammo, _ammoMin);
+	}
+	
+	 // Default Sprite:
+	return weapon_get_sprt(_wep);
+	
+#define draw_ammo(_index, _primary, _steroids, _ammo, _ammoMin)
+	/*
+		Draws ammo HUD text
+		
+		Args:
+			index    - The player to draw HUD for
+			primary  - Is a primary weapon, true/false
+			steroids - Player can dual wield, true/false
+			ammo     - Ammo, can be a string or number
+			ammoMin  - Low ammo threshold
+	*/
+	
+	var _local = player_find_local_nonsync();
+	
+	if(player_is_active(_local) && player_get_show_hud(_index, _local)){
+		if(!instance_exists(menubutton) || _index == _local){
+			var	_x = view_xview_nonsync + (_primary ? 42 : 86),
+				_y = view_yview_nonsync + 21;
+				
+			 // Co-op Offset:
+			var _active = 0;
+			for(var i = 0; i < maxp; i++){
+				_active += player_is_active(i);
+			}
+			if(_active > 1){
+				_x -= 19;
+			}
+			
+			 // Color:
+			var _text = "";
+			if(is_real(_ammo)){
+				_text += "@";
+				if(_ammo > 0){
+					if(_primary || _steroids){
+						if(_ammo > _ammoMin){
+							_text += "w";
+						}
+						else _text += "r";
+					}
+					else _text += "s";
+				}
+				else _text += "d";
+			}
+			_text += string(_ammo);
+			
+			 // !!!
+			draw_set_halign(fa_left);
+			draw_set_valign(fa_top);
+			draw_set_projection(2, _index);
+			draw_text_nt(_x, _y, _text);
+			draw_reset_projection();
+		}
+	}
 	
 #define path_create(_xstart, _ystart, _xtarget, _ytarget, _wall)
 	 // Auto-Determine Grid Size:
@@ -6056,10 +5980,6 @@
 	}
 	
 	return _inst;
-	
-#define trace_error(_error)
-	trace(_error);
-	trace_color(" ^ Screenshot that error and post it on NT:TE's itch.io page, thanks!", c_yellow);
 	
 #define sleep_max(_milliseconds)
 	/*

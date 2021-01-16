@@ -2624,6 +2624,219 @@
 	}
 	
 	
+#define GatorStatue_create(_x, _y)
+	/*
+		Homage to Blaac's Hardmode. You should play it.
+	*/
+
+	with(instance_create(_x, _y, CustomProp)){
+		 // Visual:
+		spr_idle     = spr.GatorStatueIdle;
+		spr_hurt     = spr.GatorStatueHurt;
+		spr_dead     = spr.GatorStatueDead;
+		spr_shadow   = shd32;
+		spr_shadow_y = 7;
+		sprite_index = spr_idle;
+		hitid        = [spr.GatorStatueIdle, "GATOR STATUE"];
+		depth        = -1;
+		
+		 // Sounds:
+		snd_hurt = sndHitRock;
+		snd_dead = sndWallBreak;
+		
+		 // Vars:
+		mask_index = mskScorpion;
+		maxhealth  = 56;
+		raddrop    = 8;
+		size       = 3;
+		team       = 1;
+		skill      = mut_shotgun_shoulders;
+		
+		 // Prompt:
+		prompt = prompt_create("BLESSING");
+		with(prompt){
+			mask_index = mskReviveArea;
+			yoff = -10;
+		}
+		
+		return id;
+	}
+	
+#define GatorStatue_step
+	 // Accept Blessing:
+	if(instance_exists(prompt) && player_is_active(prompt.pick)){
+		prompt.visible = false;
+		
+		 // Skill:
+		with(obj_create(x, y, "OrchidSkill")){
+			color1 = make_color_rgb(72, 253,  8); // make_color_rgb(252, 056, 000);
+			color2 = make_color_rgb( 3,  33, 18)
+			skill  = other.skill;
+			time   = 3600; // 2 minutes
+		}
+		
+		 // Effects:
+		var _icon = skill_get_icon(skill);
+		with(alert_create(self, _icon[0])){
+			image_index = _icon[1];
+			image_speed = 0;
+			alert       = { spr:sprEatRad, img:-0.25, x:6, y:6 };
+			blink       = 15;
+			alarm0      = 60;
+			snd_flash   = sndShotReload;
+		}
+		with(instance_create(x, y, PopupText)){
+			text   = "BLESSED!";
+			target = other.prompt.pick;
+		}
+		with(player_find(prompt.pick)){
+			sound_play(snd_valt);
+		}
+	}
+	
+#define GatorStatue_death
+	var _wepNum = 2;
+	
+	 // Revenge:
+	repeat(4){
+		projectile_create(x, y, "GatorStatueFlak", 0, 0);
+	}
+	if(instance_exists(prompt) && prompt.visible){
+		with(projectile_create(x, y, "CustomFlak", 90, 0.1)){
+			sprite_index = spr.EnemySuperFlak;
+			spr_dead     = spr.EnemySuperFlakHit;
+			depth        = -1;
+			snd_dead     = sndSuperFlakExplode;
+			mask_index   = mskSuperFlakBullet;
+			friction     = speed / 60;
+			damage       = 10;
+			bonus_damage = 0;
+			force        = 8;
+			typ          = 2;
+			flak         = array_create(5, EFlakBullet);
+			super        = true;
+			with(instance_create(x, y, BulletHit)){
+				sprite_index = other.spr_dead;
+				friction     = other.friction;
+				hspeed       = other.hspeed;
+				vspeed       = other.vspeed;
+			}
+		}
+		_wepNum *= 2;
+	}
+	
+	 // Merged Shell Weapons:
+	if(_wepNum > 0) repeat(_wepNum){
+		var	_wepNum   = 128,
+			_wepMod   = mod_get_names("weapon"),
+			_wepAvoid = [];
+			
+		 // Compile Non-Shell Weapons:
+		for(var i = _wepNum + array_length(_wepMod) - 1; i >= 0; i--){
+			var _wep = ((i < _wepNum) ? i : _wepMod[i - _wepNum]);
+			if(weapon_get_type(_wep) != type_shell){
+				array_push(_wepAvoid, _wep);
+			}
+		}
+		
+		 // Weapon:
+		var _part = mod_script_call("weapon", "merge", "weapon_merge_decide_raw", 0, GameCont.hard, -1, _wepAvoid, false);
+		if(array_length(_part) >= 2){
+			with(instance_create(x + orandom(4), y + orandom(4), WepPickup)){
+				wep  = wep_merge(_part[0], _part[1]);
+				ammo = true;
+			}
+		}
+	}
+	
+	 // Effects:
+	sound_play_hit_ext(sndCrownNo,      0.8, 0.4);
+	sound_play_hit_ext(sndStatueCharge, 0.8, 0.4);
+	repeat(10){
+		scrFX(    [x, 16], [y, 16], [90, 1 + random(4)], Dust);
+		scrFX(     x,       y,      2 + random(3),       Debris);
+		with(scrFX(x,       y,      1 + random(4),       Shell)){
+			sprite_index = sprShotShell;
+		}
+	}
+	sleep(100);
+	
+	
+#define GatorStatueFlak_create(_x, _y)
+	with(instance_create(_x, _y, CustomProjectile)){
+		 // Visual:
+		sprite_index = sprEFlak;
+		image_speed  = 0.4;
+		depth        = -1;
+		
+		 // Vars:
+		mask_index   = mskFlakBullet;
+		image_xscale = 0;
+		image_yscale = 0;
+		visible      = false;
+		damage       = 4;
+		typ          = 2;
+		grow         = 1/45;
+		effect_color = make_color_rgb(252, 56, 0);
+		
+		 // Alarms:
+		alarm0 = irandom_range(1, 10);
+		
+		 // Find Player:
+		if(instance_exists(Player)){
+			with(array_shuffle(instances_matching(Floor, "", null))){
+				if(!place_meeting(x, y, Wall)){
+					if(distance_to_object(Player) < 96 && !place_meeting(x, y, Player)){
+						other.x = bbox_center_x;
+						other.y = bbox_center_y;
+					}
+				}
+			}
+		}
+		
+		return id;
+	}
+	
+#define GatorStatueFlak_step
+	 // Alarms:
+	if(alarm0_run) exit;
+	
+	 // Active:
+	if(visible){
+		 // Grow:
+		image_xscale += grow * current_time_scale;
+		image_yscale += grow * current_time_scale;
+		var _scale = max(image_xscale, image_yscale);
+		
+		 // Particles:
+		if(chance_ct(1, 2)){
+			with(scrFX(x, y, random_range(2, 5) * _scale, PlasmaTrail)){
+				sprite_index = spr.QuasarBeamTrail;
+			}
+		}
+		
+		 // Explode:
+		if(_scale > 1){
+			instance_destroy();
+		}
+	}
+	
+#define GatorStatueFlak_alrm0
+	 // Activate:
+	visible = true;
+	with(instance_create(x, y, ThrowHit)){
+		image_blend = other.effect_color;
+	}
+	sound_play_hit_ext(sndServerBreak, 2 + orandom(0.2), 1.2);
+	
+#define GatorStatueFlak_destroy
+	 // Blammo:
+	team_instance_sprite(
+		sprite_get_team(sprite_index),
+		projectile_create(x, y, EFlakBullet, 0, 0)
+	);
+	
+	
 #define HammerHeadPickup_create(_x, _y)
 	with(obj_create(_x, _y, "CustomPickup")){
 		 // Visual:
@@ -5868,16 +6081,16 @@
 #macro  bbox_center_x                                                                           (bbox_left + bbox_right + 1) / 2
 #macro  bbox_center_y                                                                           (bbox_top + bbox_bottom + 1) / 2
 #macro  FloorNormal                                                                             instances_matching(Floor, 'object_index', Floor)
-#macro  alarm0_run                                                                              alarm0 >= 0 && --alarm0 == 0 && (script_ref_call(on_alrm0) || !instance_exists(self))
-#macro  alarm1_run                                                                              alarm1 >= 0 && --alarm1 == 0 && (script_ref_call(on_alrm1) || !instance_exists(self))
-#macro  alarm2_run                                                                              alarm2 >= 0 && --alarm2 == 0 && (script_ref_call(on_alrm2) || !instance_exists(self))
-#macro  alarm3_run                                                                              alarm3 >= 0 && --alarm3 == 0 && (script_ref_call(on_alrm3) || !instance_exists(self))
-#macro  alarm4_run                                                                              alarm4 >= 0 && --alarm4 == 0 && (script_ref_call(on_alrm4) || !instance_exists(self))
-#macro  alarm5_run                                                                              alarm5 >= 0 && --alarm5 == 0 && (script_ref_call(on_alrm5) || !instance_exists(self))
-#macro  alarm6_run                                                                              alarm6 >= 0 && --alarm6 == 0 && (script_ref_call(on_alrm6) || !instance_exists(self))
-#macro  alarm7_run                                                                              alarm7 >= 0 && --alarm7 == 0 && (script_ref_call(on_alrm7) || !instance_exists(self))
-#macro  alarm8_run                                                                              alarm8 >= 0 && --alarm8 == 0 && (script_ref_call(on_alrm8) || !instance_exists(self))
-#macro  alarm9_run                                                                              alarm9 >= 0 && --alarm9 == 0 && (script_ref_call(on_alrm9) || !instance_exists(self))
+#macro  alarm0_run                                                                              alarm0 && !--alarm0 && !--alarm0 && (script_ref_call(on_alrm0) || !instance_exists(self))
+#macro  alarm1_run                                                                              alarm1 && !--alarm1 && !--alarm1 && (script_ref_call(on_alrm1) || !instance_exists(self))
+#macro  alarm2_run                                                                              alarm2 && !--alarm2 && !--alarm2 && (script_ref_call(on_alrm2) || !instance_exists(self))
+#macro  alarm3_run                                                                              alarm3 && !--alarm3 && !--alarm3 && (script_ref_call(on_alrm3) || !instance_exists(self))
+#macro  alarm4_run                                                                              alarm4 && !--alarm4 && !--alarm4 && (script_ref_call(on_alrm4) || !instance_exists(self))
+#macro  alarm5_run                                                                              alarm5 && !--alarm5 && !--alarm5 && (script_ref_call(on_alrm5) || !instance_exists(self))
+#macro  alarm6_run                                                                              alarm6 && !--alarm6 && !--alarm6 && (script_ref_call(on_alrm6) || !instance_exists(self))
+#macro  alarm7_run                                                                              alarm7 && !--alarm7 && !--alarm7 && (script_ref_call(on_alrm7) || !instance_exists(self))
+#macro  alarm8_run                                                                              alarm8 && !--alarm8 && !--alarm8 && (script_ref_call(on_alrm8) || !instance_exists(self))
+#macro  alarm9_run                                                                              alarm9 && !--alarm9 && !--alarm9 && (script_ref_call(on_alrm9) || !instance_exists(self))
 #define orandom(_num)                                                                   return  random_range(-_num, _num);
 #define chance(_numer, _denom)                                                          return  random(_denom) < _numer;
 #define chance_ct(_numer, _denom)                                                       return  random(_denom) < _numer * current_time_scale;
@@ -5957,7 +6170,6 @@
 #define area_get_secret(_area)                                                          return  mod_script_call_nc  ('mod', 'telib', 'area_get_secret', _area);
 #define area_get_underwater(_area)                                                      return  mod_script_call_nc  ('mod', 'telib', 'area_get_underwater', _area);
 #define area_get_back_color(_area)                                                      return  mod_script_call_nc  ('mod', 'telib', 'area_get_back_color', _area);
-#define area_border(_y, _area, _color)                                                  return  mod_script_call_nc  ('mod', 'telib', 'area_border', _y, _area, _color);
 #define area_generate(_area, _sub, _loops, _x, _y, _setArea, _overlapFloor, _scrSetup)  return  mod_script_call_nc  ('mod', 'telib', 'area_generate', _area, _sub, _loops, _x, _y, _setArea, _overlapFloor, _scrSetup);
 #define floor_set(_x, _y, _state)                                                       return  mod_script_call_nc  ('mod', 'telib', 'floor_set', _x, _y, _state);
 #define floor_set_style(_style, _area)                                                  return  mod_script_call_nc  ('mod', 'telib', 'floor_set_style', _style, _area);

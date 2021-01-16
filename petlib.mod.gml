@@ -4429,210 +4429,214 @@
 	
 #define ntte_end_step
 	 // Spider Webbing:
-	var _instSpider = instances_matching(Pet, "pet", "Spider");
-	if(instance_exists(GenCont)){
-		 // Reset Webs:
-		if(array_length(_instSpider)) with(_instSpider){
-			web_list    = [];
-			web_timer   = web_timer_max;
-			web_list_x1 = +infinity;
-			web_list_y1 = +infinity;
-			web_list_x2 = -infinity;
-			web_list_y2 = -infinity;
-		}
-	}
-	with(surface_setup("PetWeb", game_width, game_height, option_get("quality:main"))){
-		x = view_xview_nonsync;
-		y = view_yview_nonsync;
-		
-		var	_surfX     = x,
-			_surfY     = y,
-			_surfScale = scale;
-			
-		surface_set_target(surf);
-		draw_clear_alpha(0, 0);
-		draw_set_color(c_black);
-		
+	if(instance_exists(CustomHitme)){
+		var _instSpider = instances_matching(Pet, "pet", "Spider");
 		if(array_length(_instSpider)){
-			with(_instSpider){
-				web_frame += current_time_scale;
+			 // Reset Webs:
+			if(instance_exists(GenCont)){
+				with(_instSpider){
+					web_list    = [];
+					web_timer   = web_timer_max;
+					web_list_x1 = +infinity;
+					web_list_y1 = +infinity;
+					web_list_x2 = -infinity;
+					web_list_y2 = -infinity;
+				}
+			}
+			
+			 // Web Slow + Drawing:
+			with(surface_setup("PetWeb", game_width, game_height, option_get("quality:main"))){
+				x = view_xview_nonsync;
+				y = view_yview_nonsync;
 				
-				var	_instWeb    = instance_rectangle_bbox(web_list_x1, web_list_y1, web_list_x2, web_list_y2, pet_target_inst),
-					_instSlow   = [],
-					_vertexNum  = 0,
-					_sprWeb     = spr_web,
-					_sprWebBits = spr_web_bits,
-					_sprWebKill = spr_web_kill,
-					_x1, _x2, _x3,
-					_y1, _y2, _y3;
+				var	_surfX     = x,
+					_surfY     = y,
+					_surfScale = scale;
 					
-				draw_primitive_begin(pr_trianglestrip);
+				surface_set_target(surf);
+				draw_clear_alpha(0, 0);
+				draw_set_color(c_black);
 				
-				with(web_list){
-					_x3 = _x2;
-					_y3 = _y2;
-					_x2 = _x1;
-					_y2 = _y1;
-					_x1 = x;
-					_y1 = y;
+				with(_instSpider){
+					web_frame += current_time_scale;
 					
-					 // Drawing Web Mask:
-					draw_vertex(
-						(x - _surfX) * _surfScale,
-						(y - _surfY) * _surfScale
-					);
+					var	_instWeb    = instance_rectangle_bbox(web_list_x1, web_list_y1, web_list_x2, web_list_y2, pet_target_inst),
+						_instSlow   = [],
+						_vertexNum  = 0,
+						_sprWeb     = spr_web,
+						_sprWebBits = spr_web_bits,
+						_sprWebKill = spr_web_kill,
+						_x1, _x2, _x3,
+						_y1, _y2, _y3;
+						
+					draw_primitive_begin(pr_trianglestrip);
 					
-					 // Slow Enemies:
-					if(_vertexNum++ >= 2){
-						var _inst = _instWeb;
-						if(array_length(_inst)){
-							_inst = instances_matching_ge(_inst, "bbox_right", min(_x1, _x2, _x3));
+					with(web_list){
+						_x3 = _x2;
+						_y3 = _y2;
+						_x2 = _x1;
+						_y2 = _y1;
+						_x1 = x;
+						_y1 = y;
+						
+						 // Drawing Web Mask:
+						draw_vertex(
+							(x - _surfX) * _surfScale,
+							(y - _surfY) * _surfScale
+						);
+						
+						 // Slow Enemies:
+						if(_vertexNum++ >= 2){
+							var _inst = _instWeb;
 							if(array_length(_inst)){
-								_inst = instances_matching_le(_inst, "bbox_left", max(_x1, _x2, _x3));
+								_inst = instances_matching_ge(_inst, "bbox_right", min(_x1, _x2, _x3));
 								if(array_length(_inst)){
-									_inst = instances_matching_ge(_inst, "bbox_bottom", min(_y1, _y2, _y3));
+									_inst = instances_matching_le(_inst, "bbox_left", max(_x1, _x2, _x3));
 									if(array_length(_inst)){
-										_inst = instances_matching_le(_inst, "bbox_top", max(_y1, _y2, _y3));
+										_inst = instances_matching_ge(_inst, "bbox_bottom", min(_y1, _y2, _y3));
 										if(array_length(_inst)){
-											with(_inst){
-												//if(point_in_triangle(x, bbox_bottom, _x1, _y1, _x2, _y2, _x3, _y3)){
-													if(!collision_line(x, y, xprevious, yprevious, Wall, false, false)){
-														array_push(_instSlow, id);
-													}
-													_instWeb = array_delete_value(_instWeb, id);
-												//}
+											_inst = instances_matching_le(_inst, "bbox_top", max(_y1, _y2, _y3));
+											if(array_length(_inst)){
+												with(_inst){
+													//if(point_in_triangle(x, bbox_bottom, _x1, _y1, _x2, _y2, _x3, _y3)){
+														if(!collision_line(x, y, xprevious, yprevious, Wall, false, false)){
+															array_push(_instSlow, id);
+														}
+														_instWeb = array_delete_value(_instWeb, id);
+													//}
+												}
 											}
 										}
 									}
 								}
 							}
 						}
-					}
-					
-					 // Dissipate:
-					if(frame < other.web_frame){
-						var	_x = x,
-							_y = y;
-							
-						 // Shrink Towards Next Point:
-						if(_vertexNum + 1 < array_length(other.web_list)){
-							with(other.web_list[_vertexNum + 1]){
-								_x = x;
-								_y = y;
-							}
-						}
-						x = lerp_ct(x, _x, 0.2);
-						y = lerp_ct(y, _y, 0.2);
 						
-						 // Delete:
-						if(point_distance(_x, _y, x, y) < 1){
-							with(other){
-								Spider_web_delete(--_vertexNum);
-							}
-						}
-					}
-					
-					 // In Coast Water:
-					else if(wading){
-						var _off = sin((current_frame + frame) / 10) * current_time_scale;
-						x += _off * 0.1;
-						y += _off * 0.15;
-					}
-				}
-				
-				 // Finish Web Mask:
-				if(instance_exists(leader)){
-					var	_l = web_add_l * (1 - (web_timer / web_timer_max)),
-						_d = web_add_d;
-						
-					draw_vertex(
-						(x           + lengthdir_x(_l, _d) - _surfX) * _surfScale,
-						(bbox_bottom + lengthdir_y(_l, _d) - _surfY) * _surfScale
-					);
-				}
-				draw_primitive_end();
-				
-				 // Particles:
-				if(web_bits > 0){
-					web_bits -= current_time_scale;
-				}
-				else{
-					web_bits = 10 + random(20);
-					if(array_length(web_list)) with(web_list[0]){
+						 // Dissipate:
 						if(frame < other.web_frame){
-							if(other.curse > 0){
-								instance_create(x, y, Curse);
+							var	_x = x,
+								_y = y;
+								
+							 // Shrink Towards Next Point:
+							if(_vertexNum + 1 < array_length(other.web_list)){
+								with(other.web_list[_vertexNum + 1]){
+									_x = x;
+									_y = y;
+								}
 							}
-							else with(instance_create(x, y, Dust)){
-								image_xscale /= 2;
-								image_yscale /= 2;
+							x = lerp_ct(x, _x, 0.2);
+							y = lerp_ct(y, _y, 0.2);
+							
+							 // Delete:
+							if(point_distance(_x, _y, x, y) < 1){
+								with(other){
+									Spider_web_delete(--_vertexNum);
+								}
 							}
-							with(instance_create(x, y, Feather)){
-								sprite_index = _sprWebBits;
-								image_index  = irandom(image_number - 1);
-								image_angle  = orandom(30);
-								image_speed  = 0;
-								speed       *= 0.5;
-								rot         *= 0.5;
-								alarm0       = 60 + random(30);
+						}
+						
+						 // In Coast Water:
+						else if(wading){
+							var _off = sin((current_frame + frame) / 10) * current_time_scale;
+							x += _off * 0.1;
+							y += _off * 0.15;
+						}
+					}
+					
+					 // Finish Web Mask:
+					if(instance_exists(leader)){
+						var	_l = web_add_l * (1 - (web_timer / web_timer_max)),
+							_d = web_add_d;
+							
+						draw_vertex(
+							(x           + lengthdir_x(_l, _d) - _surfX) * _surfScale,
+							(bbox_bottom + lengthdir_y(_l, _d) - _surfY) * _surfScale
+						);
+					}
+					draw_primitive_end();
+					
+					 // Particles:
+					if(web_bits > 0){
+						web_bits -= current_time_scale;
+					}
+					else{
+						web_bits = 10 + random(20);
+						if(array_length(web_list)) with(web_list[0]){
+							if(frame < other.web_frame){
+								if(other.curse > 0){
+									instance_create(x, y, Curse);
+								}
+								else with(instance_create(x, y, Dust)){
+									image_xscale /= 2;
+									image_yscale /= 2;
+								}
+								with(instance_create(x, y, Feather)){
+									sprite_index = _sprWebBits;
+									image_index  = irandom(image_number - 1);
+									image_angle  = orandom(30);
+									image_speed  = 0;
+									speed       *= 0.5;
+									rot         *= 0.5;
+									alarm0       = 60 + random(30);
+								}
 							}
 						}
 					}
-				}
-				
-				 // Slow Enemies on Web:
-				if(curse != 0 && !ds_map_valid(web_hit_list)){
-					web_hit_list = ds_map_create();
-				}
-				if(array_length(_instSlow)){
-					var	_slow    = 2/3 * current_time_scale,
-						_damage  = 10 * curse,
-						_hitList = web_hit_list,
-						_hitTime = web_frame;
-						
-					with(_instSlow){
-						x = lerp(x, xprevious, _slow);
-						y = lerp(y, yprevious, _slow);
-						
-						 // Special Stat:
-						if("ntte_statspider" not in self){
-							ntte_statspider = true;
-							other.stat.webbed++;
-						}
-						
-						 // Curse Damage:
-						if(_damage != 0 && my_health > 0){
-							if(!ds_map_exists(_hitList, id) || _hitList[? id] <= _hitTime){
-								_hitList[? id] = _hitTime + 30;
-								
-								 // Damage:
-								with(other){
-									projectile_hit(other, _damage);
-								}
-								
-								 // Killed:
-								if(instance_exists(self) && my_health <= 0){
-									sound_play_hit(sndPlantTBKill, 0.2);
-									with(instance_create(x, y, TangleKill)){
-										sprite_index = _sprWebKill;
+					
+					 // Slow Enemies on Web:
+					if(curse != 0 && !ds_map_valid(web_hit_list)){
+						web_hit_list = ds_map_create();
+					}
+					if(array_length(_instSlow)){
+						var	_slow    = 2/3 * current_time_scale,
+							_damage  = 10 * curse,
+							_hitList = web_hit_list,
+							_hitTime = web_frame;
+							
+						with(_instSlow){
+							x = lerp(x, xprevious, _slow);
+							y = lerp(y, yprevious, _slow);
+							
+							 // Special Stat:
+							if("ntte_statspider" not in self){
+								ntte_statspider = true;
+								other.stat.webbed++;
+							}
+							
+							 // Curse Damage:
+							if(_damage != 0 && my_health > 0){
+								if(!ds_map_exists(_hitList, id) || _hitList[? id] <= _hitTime){
+									_hitList[? id] = _hitTime + 30;
+									
+									 // Damage:
+									with(other){
+										projectile_hit(other, _damage);
+									}
+									
+									 // Killed:
+									if(instance_exists(self) && my_health <= 0){
+										sound_play_hit(sndPlantTBKill, 0.2);
+										with(instance_create(x, y, TangleKill)){
+											sprite_index = _sprWebKill;
+										}
 									}
 								}
 							}
 						}
 					}
 				}
+				
+				 // Draw Web Sprite Over Web Mask:
+				draw_set_blend_mode_ext(bm_inv_dest_alpha, bm_inv_dest_alpha);
+				draw_rectangle(0, 0, w * scale, h * scale, false);
+				with(other){
+					draw_sprite_tiled_ext(_sprWeb, 0, (0 - _surfX) * _surfScale, (0 - _surfY) * _surfScale, _surfScale, _surfScale, c_white, 1);
+				}
+				draw_set_blend_mode(bm_normal);
+				
+				surface_reset_target();
 			}
-			
-			 // Draw Web Sprite Over Web Mask:
-			draw_set_blend_mode_ext(bm_inv_dest_alpha, bm_inv_dest_alpha);
-			draw_rectangle(0, 0, w * scale, h * scale, false);
-			with(other){
-				draw_sprite_tiled_ext(_sprWeb, 0, (0 - _surfX) * _surfScale, (0 - _surfY) * _surfScale, _surfScale, _surfScale, c_white, 1);
-			}
-			draw_set_blend_mode(bm_normal);
 		}
-		
-		surface_reset_target();
 	}
 	
 #define octobubble_draw
@@ -4702,16 +4706,16 @@
 #macro  bbox_center_x                                                                           (bbox_left + bbox_right + 1) / 2
 #macro  bbox_center_y                                                                           (bbox_top + bbox_bottom + 1) / 2
 #macro  FloorNormal                                                                             instances_matching(Floor, 'object_index', Floor)
-#macro  alarm0_run                                                                              alarm0 >= 0 && --alarm0 == 0 && (script_ref_call(on_alrm0) || !instance_exists(self))
-#macro  alarm1_run                                                                              alarm1 >= 0 && --alarm1 == 0 && (script_ref_call(on_alrm1) || !instance_exists(self))
-#macro  alarm2_run                                                                              alarm2 >= 0 && --alarm2 == 0 && (script_ref_call(on_alrm2) || !instance_exists(self))
-#macro  alarm3_run                                                                              alarm3 >= 0 && --alarm3 == 0 && (script_ref_call(on_alrm3) || !instance_exists(self))
-#macro  alarm4_run                                                                              alarm4 >= 0 && --alarm4 == 0 && (script_ref_call(on_alrm4) || !instance_exists(self))
-#macro  alarm5_run                                                                              alarm5 >= 0 && --alarm5 == 0 && (script_ref_call(on_alrm5) || !instance_exists(self))
-#macro  alarm6_run                                                                              alarm6 >= 0 && --alarm6 == 0 && (script_ref_call(on_alrm6) || !instance_exists(self))
-#macro  alarm7_run                                                                              alarm7 >= 0 && --alarm7 == 0 && (script_ref_call(on_alrm7) || !instance_exists(self))
-#macro  alarm8_run                                                                              alarm8 >= 0 && --alarm8 == 0 && (script_ref_call(on_alrm8) || !instance_exists(self))
-#macro  alarm9_run                                                                              alarm9 >= 0 && --alarm9 == 0 && (script_ref_call(on_alrm9) || !instance_exists(self))
+#macro  alarm0_run                                                                              alarm0 && !--alarm0 && !--alarm0 && (script_ref_call(on_alrm0) || !instance_exists(self))
+#macro  alarm1_run                                                                              alarm1 && !--alarm1 && !--alarm1 && (script_ref_call(on_alrm1) || !instance_exists(self))
+#macro  alarm2_run                                                                              alarm2 && !--alarm2 && !--alarm2 && (script_ref_call(on_alrm2) || !instance_exists(self))
+#macro  alarm3_run                                                                              alarm3 && !--alarm3 && !--alarm3 && (script_ref_call(on_alrm3) || !instance_exists(self))
+#macro  alarm4_run                                                                              alarm4 && !--alarm4 && !--alarm4 && (script_ref_call(on_alrm4) || !instance_exists(self))
+#macro  alarm5_run                                                                              alarm5 && !--alarm5 && !--alarm5 && (script_ref_call(on_alrm5) || !instance_exists(self))
+#macro  alarm6_run                                                                              alarm6 && !--alarm6 && !--alarm6 && (script_ref_call(on_alrm6) || !instance_exists(self))
+#macro  alarm7_run                                                                              alarm7 && !--alarm7 && !--alarm7 && (script_ref_call(on_alrm7) || !instance_exists(self))
+#macro  alarm8_run                                                                              alarm8 && !--alarm8 && !--alarm8 && (script_ref_call(on_alrm8) || !instance_exists(self))
+#macro  alarm9_run                                                                              alarm9 && !--alarm9 && !--alarm9 && (script_ref_call(on_alrm9) || !instance_exists(self))
 #define orandom(_num)                                                                   return  random_range(-_num, _num);
 #define chance(_numer, _denom)                                                          return  random(_denom) < _numer;
 #define chance_ct(_numer, _denom)                                                       return  random(_denom) < _numer * current_time_scale;
@@ -4791,7 +4795,6 @@
 #define area_get_secret(_area)                                                          return  mod_script_call_nc  ('mod', 'telib', 'area_get_secret', _area);
 #define area_get_underwater(_area)                                                      return  mod_script_call_nc  ('mod', 'telib', 'area_get_underwater', _area);
 #define area_get_back_color(_area)                                                      return  mod_script_call_nc  ('mod', 'telib', 'area_get_back_color', _area);
-#define area_border(_y, _area, _color)                                                  return  mod_script_call_nc  ('mod', 'telib', 'area_border', _y, _area, _color);
 #define area_generate(_area, _sub, _loops, _x, _y, _setArea, _overlapFloor, _scrSetup)  return  mod_script_call_nc  ('mod', 'telib', 'area_generate', _area, _sub, _loops, _x, _y, _setArea, _overlapFloor, _scrSetup);
 #define floor_set(_x, _y, _state)                                                       return  mod_script_call_nc  ('mod', 'telib', 'floor_set', _x, _y, _state);
 #define floor_set_style(_style, _area)                                                  return  mod_script_call_nc  ('mod', 'telib', 'floor_set_style', _style, _area);

@@ -2534,30 +2534,36 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 		else wkick++;
 	}
 	
+	 // Normal AI:
 	else{
 		enemy_target(x, y);
 		
 		 // Normal AI:
 		if(active){
 			 // Notice Target:
-			if(
-				my_health < maxhealth
-				||
-				(
-					instance_near(x, y, target, 128) &&
-					(instance_seen(x, y, target) || (instance_near(x, y, target, 96) && variable_instance_get(target, "reload", 0) > 0))
-				)
-			){
-				cantravel = true;
-				if(sit && !instance_is(sit, enemy)){
-					sit = false;
-					instance_create(x, y, AssassinNotice);
+			if(!cantravel || sit){
+				if(
+					my_health < maxhealth
+					|| (
+						instance_near(x, y, target, 128)
+						&& (instance_seen(x, y, target) || (instance_near(x, y, target, 96) && variable_instance_get(target, "reload", 0) > 0))
+					)
+				){
+					cantravel = true;
+					if(sit && !instance_is(sit, enemy)){
+						sit = false;
+						instance_create(x, y, AssassinNotice);
+					}
 				}
 			}
 			
+			 // Do Something Bro:
 			if(!sit || instance_is(sit, enemy) || chance(1, 12)){
-				if(!instance_is(sit, enemy)) sit = false;
+				if(!instance_is(sit, enemy)){
+					sit = false;
+				}
 				
+				 // Aggroed:
 				if(instance_seen(x, y, target)){
 					scrAim(point_direction(x, y, target.x, target.y));
 					
@@ -2586,44 +2592,46 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 					}
 				}
 				
-				else{
-					 // To the CatHole:
-					if(cantravel && chance(3, 4)){
-						var _hole = instances_matching(instances_matching(CustomObject, "name", "CatHole"), "image_index", 0);
+				 // To the CatHole:
+				else if(cantravel && chance(3, 4)){
+					var _hole = instances_matching(instances_matching(CustomObject, "name", "CatHole"), "image_index", 0);
+					
+					if(array_length(_hole) && !array_length(instances_matching(_hole, "target", self))){
+						alarm1 = 30 + irandom(30);
 						
-						if(array_length(_hole) > 0 && array_length(instances_matching(_hole, "target", id)) <= 0){
-							alarm1 = 30 + irandom(30);
+						with(instance_nearest_array(x, y, _hole)){
+							 // Open CatHole:
+							if(instance_near(x, y, other, 48)){
+								target = other;
+								image_index = 1;
+								other.alarm1 += 45;
+							}
 							
-							with(instance_nearest_array(x, y, _hole)){
-								 // Open CatHole:
-								if(instance_near(x, y, other, 48)){
-									target = other;
-									image_index = 1;
-									other.alarm1 += 45;
-								}
-								
-								 // Walk to CatHole:
-								else with(other){
-									scrWalk(point_direction(x, y, other.x, other.y), [20, 40]);
-									scrAim(direction);
-								}
+							 // Walk to CatHole:
+							else with(other){
+								scrWalk(point_direction(x, y, other.x, other.y), [20, 40]);
+								scrAim(direction);
 							}
 						}
 					}
+				}
+				
+				 // Wander:
+				else if((instance_exists(target) && cantravel) || chance(3, 4)){
+					alarm1 = 30 + irandom(20);
+					scrWalk(direction + orandom(30), [20, 30]);
+					if(chance(1, 2)) direction = random(360);
+					scrAim(direction);
+				}
+				
+				 // Sittin:
+				else if(!sit){
+					sit = true;
 					
-					 // Wander:
-					else if((instance_exists(target) && cantravel) || chance(3, 4)){
-						alarm1 = 30 + irandom(20);
-						scrWalk(direction + orandom(30), [20, 30]);
-						if(chance(1, 2)) direction = random(360);
-						scrAim(direction);
-					}
-					
-					 // Sittin:
-					else if(!sit){
-						sit = true;
-						var n = instance_nearest(x, y, prop);
-						if(instance_seen(x, y, n)) scrAim(point_direction(x, y, n.x, n.y));
+					 // Face Prop:
+					var _look = instance_seen(x, y, prop);
+					if(instance_exists(_look)){
+						scrAim(point_direction(x, y, _look.x, _look.y));
 					}
 				}
 			}
@@ -2663,6 +2671,9 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 			view_shake[i] -= 1;
 		}
 	}
+	
+#define Cat_death
+	pickup_drop(20, 0);
 	
 #define Cat_cleanup
 	sound_stop(toxer_loop);
@@ -4174,217 +4185,290 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 	}
 	
 	
-#define GatorStatue_create(_x, _y)
+#define LairBorder_create(_x, _y)
 	/*
-		Homage to Blaac's Hardmode. You should play it.
+		Handles the border and cave-in between Pizza Sewers and Lair
 	*/
-
-	with(instance_create(_x, _y, CustomProp)){
+	
+	with(instance_create(_x, _y, CustomObject)){
 		 // Visual:
-		spr_idle     = spr.GatorStatueIdle;
-		spr_hurt     = spr.GatorStatueHurt;
-		spr_dead     = spr.GatorStatueDead;
-		spr_shadow   = shd32;
-		spr_shadow_y = 7;
-		sprite_index = spr_idle;
-		hitid        = [spr.GatorStatueIdle, "GATOR STATUE"];
-		depth        = -1;
-		
-		 // Sounds:
-		snd_hurt = sndHitRock;
-		snd_dead = sndWallBreak;
+		image_blend = background_color;
+		depth       = 1000;
 		
 		 // Vars:
-		mask_index = mskScorpion;
-		maxhealth  = 56;
-		raddrop    = 8;
-		size       = 3;
-		team       = 1;
-		skill      = mut_shotgun_shoulders;
+		area        = GameCont.area;
+		cavein      = false;
+		cavein_dis  = 800;
+		cavein_pan  = 0;
+		cavein_inst = [];
+		border_obj  = [
+			[Wall,		 0, [sprWall1Bot, sprWall1Top, sprWall1Out]],
+			[TopSmall,	 0, sprWall1Trans],
+			[FloorExplo, 0, sprFloor1Explo],
+			[Debris,	 0, sprDebris1]
+		];
 		
-		 // Prompt:
-		prompt = prompt_create("BLESSING");
-		with(prompt){
-			mask_index = mskReviveArea;
-			yoff = -10;
-		}
-		
-		return id;
+		return self;
 	}
 	
-#define GatorStatue_step
-	 // Accept Blessing:
-	if(instance_exists(prompt) && player_is_active(prompt.pick)){
-		prompt.visible = false;
-		
-		 // Skill:
-		with(obj_create(x, y, "OrchidSkill")){
-			color1 = make_color_rgb(72, 253,  8); // make_color_rgb(252, 056, 000);
-			color2 = make_color_rgb( 3,  33, 18)
-			skill  = other.skill;
-			time   = 3600; // 2 minutes
-		}
-		
-		 // Effects:
-		var _icon = skill_get_icon(skill);
-		with(alert_create(self, _icon[0])){
-			image_index = _icon[1];
-			image_speed = 0;
-			alert       = { spr:sprEatRad, img:-0.25, x:6, y:6 };
-			blink       = 15;
-			alarm0      = 60;
-			snd_flash   = sndShotReload;
-		}
-		with(instance_create(x, y, PopupText)){
-			text   = "BLESSED!";
-			target = other.prompt.pick;
-		}
-		with(player_find(prompt.pick)){
-			sound_play(snd_valt);
-		}
-	}
-	
-#define GatorStatue_death
-	var _wepNum = 2;
-	
-	 // Revenge:
-	repeat(4){
-		projectile_create(x, y, "GatorStatueFlak", 0, 0);
-	}
-	if(instance_exists(prompt) && prompt.visible){
-		with(projectile_create(x, y, "CustomFlak", 90, 0.1)){
-			sprite_index = spr.EnemySuperFlak;
-			spr_dead     = spr.EnemySuperFlakHit;
-			depth        = -1;
-			snd_dead     = sndSuperFlakExplode;
-			mask_index   = mskSuperFlakBullet;
-			friction     = speed / 60;
-			damage       = 10;
-			bonus_damage = 0;
-			force        = 8;
-			typ          = 2;
-			flak         = array_create(5, EFlakBullet);
-			super        = true;
-			with(instance_create(x, y, BulletHit)){
-				sprite_index = other.spr_dead;
-				friction     = other.friction;
-				hspeed       = other.hspeed;
-				vspeed       = other.vspeed;
-			}
-		}
-		_wepNum *= 2;
-	}
-	
-	 // Merged Shell Weapons:
-	if(_wepNum > 0) repeat(_wepNum){
-		var	_wepNum   = 128,
-			_wepMod   = mod_get_names("weapon"),
-			_wepAvoid = [];
+#define LairBorder_step
+	 // Cave-In:
+	if(cavein){
+		if(cavein_dis > 0){
+			var _add = max(4, random(
+				(instance_exists(Player) && array_length(instances_matching_gt(Player, "y", y - 64)))
+				? 12
+				: 18
+			));
+			cavein_dis  = max(0, cavein_dis - (_add * current_time_scale));
+			cavein_inst = instances_matching(cavein_inst, "", null);
 			
-		 // Compile Non-Shell Weapons:
-		for(var i = _wepNum + array_length(_wepMod) - 1; i >= 0; i--){
-			var _wep = ((i < _wepNum) ? i : _wepMod[i - _wepNum]);
-			if(weapon_get_type(_wep) != type_shell){
-				array_push(_wepAvoid, _wep);
+			 // Effects:
+			if(current_frame_active){
+				var _floors = instances_matching_gt(Floor, "bbox_bottom", y);
+				if(array_length(_floors)){
+					 // Debris:
+					with(instances_seen(_floors, 0, 0, -1)){
+						if(object_index != FloorExplo || chance(1, 10)){
+							if(chance(1, 2 * array_length(instances_matching_gt(_floors, "bbox_bottom", bbox_bottom)))){
+								with(instance_create(choose(bbox_left + 4, bbox_right - 3), choose(bbox_top + 4, bbox_bottom - 3), Debris)){
+									motion_set(90 + orandom(90), 4 + random(4));
+								}
+							}
+						}
+					}
+					
+					 // Dust:
+					_floors = instances_matching_gt(_floors, "bbox_bottom", y + cavein_dis);
+					if(array_length(_floors)) with(_floors){
+						repeat(choose(1, choose(1, 2))){
+							with(instance_create(random_range(bbox_left - 12, bbox_right + 13), bbox_bottom + 1, Dust)){
+								image_xscale *= 2;
+								image_yscale *= 2;
+								depth         = -8;
+								vspeed       -= 5;
+								sound_play_hit(choose(sndWallBreak, sndWallBreakBrick), 0.3);
+							}
+						}
+					}
+				}
 			}
-		}
-		
-		 // Weapon:
-		var _part = mod_script_call("weapon", "merge", "weapon_merge_decide_raw", 0, GameCont.hard, -1, _wepAvoid, false);
-		if(array_length(_part) >= 2){
-			with(instance_create(x + orandom(4), y + orandom(4), WepPickup)){
-				wep  = wep_merge(_part[0], _part[1]);
-				ammo = true;
+			
+			 // Screenshake:
+			if(cavein_pan < 1){
+				cavein_pan += current_time_scale / 20;
 			}
-		}
-	}
-	
-	 // Effects:
-	sound_play_hit_ext(sndCrownNo,      0.8, 0.4);
-	sound_play_hit_ext(sndStatueCharge, 0.8, 0.4);
-	repeat(10){
-		scrFX(    [x, 16], [y, 16], [90, 1 + random(4)], Dust);
-		scrFX(     x,       y,      2 + random(3),       Debris);
-		with(scrFX(x,       y,      1 + random(4),       Shell)){
-			sprite_index = sprShotShell;
-		}
-	}
-	sleep(100);
-	
-	
-#define GatorStatueFlak_create(_x, _y)
-	with(instance_create(_x, _y, CustomProjectile)){
-		 // Visual:
-		sprite_index = sprEFlak;
-		image_speed  = 0.4;
-		depth        = -1;
-		
-		 // Vars:
-		mask_index   = mskFlakBullet;
-		image_xscale = 0;
-		image_yscale = 0;
-		visible      = false;
-		damage       = 4;
-		typ          = 2;
-		grow         = 1/45;
-		effect_color = make_color_rgb(252, 56, 0);
-		
-		 // Alarms:
-		alarm0 = irandom_range(1, 10);
-		
-		 // Find Player:
-		if(instance_exists(Player)){
-			with(array_shuffle(instances_matching(Floor, "", null))){
-				if(!place_meeting(x, y, Wall)){
-					if(distance_to_object(Player) < 96 && !place_meeting(x, y, Player)){
-						other.x = bbox_center_x;
-						other.y = bbox_center_y;
+			for(var i = 0; i < maxp; i++){
+				view_shake[i] = max(view_shake[i], 5);
+				with(
+					instance_exists(view_object[i])
+					? view_object[i]
+					: player_find(i)
+				){
+					view_shake_max_at(x, other.y + other.cavein_dis, 20);
+					
+					 // Pan Down:
+					view_shift(i, 270, clamp(y - (other.y - 64), 0, min(20, other.cavein_dis / 10)) * other.cavein_pan);
+				}
+			}
+			
+			 // Destroy:
+			if(cavein_dis < 400){
+				var _inst = instances_matching_ne(instances_matching_gt(GameObject, "y", y + cavein_dis), "object_index", Dust);
+				if(array_length(_inst)){
+					var _y = y;
+					with(_inst){
+						if(instance_exists(self)){
+							 // Kill:
+							if(y > _y + 64 && instance_is(self, hitme) && my_health > 0){
+								my_health = 0;
+								if("lasthit" in self){
+									lasthit = [sprTurtleDead, "CAVE IN"];
+								}
+							}
+							
+							 // Save:
+							else if(
+								persistent
+								|| instance_is(self, chestprop)
+								|| (instance_is(self, Pickup) && object_index != Rad && object_index != BigRad)
+								|| (instance_is(self, Corpse) && y < _y + 240)
+								|| (instance_is(self, CustomHitme) && "name" in self && name == "Pet")
+							){
+								if(array_find_index(other.cavein_inst, self) < 0){
+									array_push(other.cavein_inst, self);
+								}
+							}
+							
+							 // Destroy:
+							else instance_destroy();
+						}
+					}
+				}
+				
+				 // Hide Wall Shadows:
+				if(instance_exists(Wall)){
+					var _inst = instances_matching_gt(Wall, "bbox_bottom", y + cavein_dis - 32);
+					if(array_length(_inst)) with(_inst){
+						outspr = -1;
+					}
+				}
+			}
+			
+			 // Saved Caved Instances:
+			if(array_length(cavein_inst)){
+				var	_x = x,
+					_y = y + cavein_dis + 16;
+					
+				with(instance_nearest_bbox(x, y, instances_matching_lt(instances_matching_gt(Floor, "bbox_bottom", y), "bbox_top", y))){
+					_x = bbox_center_x;
+				}
+				
+				with(cavein_inst){
+					visible = false;
+					x       = lerp_ct(x, _x, 0.1);
+					y       = _y;
+					
+					 // Why do health chests break walls again
+					if(instance_is(self, HealthChest)){
+						mask_index = mskNone;
 					}
 				}
 			}
 		}
 		
-		return id;
-	}
-	
-#define GatorStatueFlak_step
-	 // Alarms:
-	if(alarm0_run) exit;
-	
-	 // Active:
-	if(visible){
-		 // Grow:
-		image_xscale += grow * current_time_scale;
-		image_yscale += grow * current_time_scale;
-		var _scale = max(image_xscale, image_yscale);
-		
-		 // Particles:
-		if(chance_ct(1, 2)){
-			with(scrFX(x, y, random_range(2, 5) * _scale, PlasmaTrail)){
-				sprite_index = spr.QuasarBeamTrail;
+		 // Finished Caving In:
+		else{
+			cavein = -1;
+			
+			 // Reset Dead Player Camera:
+			with(Revive){
+				if(view_object[p] == id){
+					view_object[p] = noone;
+				}
+			}
+			
+			 // Reset Visibilities:
+			with(cavein_inst){
+				visible = true;
+			}
+			
+			 // Wallerize:
+			with(instances_matching_gt(Floor, "bbox_bottom", y)){
+				floor_walls();
+			}
+			with(instances_matching_gt(Wall, "bbox_bottom", y)){
+				wall_tops();
+			}
+			
+			 // Rubble:
+			var _inst = cavein_inst;
+			with(instance_nearest_bbox(x, y, instances_matching_gt(FloorNormal, "bbox_bottom", y))){
+				with(obj_create(bbox_center_x, other.y, "PizzaRubble")){
+					inst = _inst;
+					
+					 // Fix Potential Softlockyness:
+					var	_x2 = x,
+						_y2 = y - 8;
+						
+					with(instances_matching_lt(instances_matching_gt(FloorExplo, "bbox_bottom", y - 4), "bbox_top", y - 4)){
+						var	_x1 = bbox_center_x,
+							_y1 = bbox_center_y;
+							
+						if(collision_line(_x1, _y1, _x2, _y1, Wall, false, false)){
+							floor_tunnel(_x1, _y2, _x2, _y2);
+						}
+					}
+					
+					 // Lets goooo:
+					with(self){
+						event_perform(ev_step, ev_step_normal);
+					}
+				}
 			}
 		}
-		
-		 // Explode:
-		if(_scale > 1){
-			instance_destroy();
+	}
+	
+	 // Start Cave In:
+	else if(cavein == false){
+		if(instance_exists(Player) && array_length(instances_matching_lt(Player, "y", y))){
+			cavein = true;
+			sound_play_pitchvol(sndStatueXP, 0.2 + random(0.2), 3);
 		}
 	}
 	
-#define GatorStatueFlak_alrm0
-	 // Activate:
-	visible = true;
-	with(instance_create(x, y, ThrowHit)){
-		image_blend = other.effect_color;
+	 // Dead Player Camera:
+	if(cavein >= 0 && instance_exists(Revive)){
+		with(Revive){
+			if(!instance_exists(view_object[p]) && !instance_exists(player_find(p))){
+				view_object[p] = id;
+			}
+		}
 	}
-	sound_play_hit_ext(sndServerBreak, 2 + orandom(0.2), 1.2);
 	
-#define GatorStatueFlak_destroy
-	 // Blammo:
-	team_instance_sprite(
-		sprite_get_team(sprite_index),
-		projectile_create(x, y, EFlakBullet, 0, 0)
-	);
+#define LairBorder_end_step
+	 // Sprite Overrides:
+	var _update = cavein;
+	if(!_update){
+		with(border_obj){
+			if(instance_number(self[0]) != self[1]){
+				_update = true;
+				break;
+			}
+		}
+	}
+	if(_update){
+		var _y = y;
+		with(border_obj){
+			var _obj = self[0];
+			self[@1] = instance_number(_obj);
+			if(instance_exists(_obj)){
+				var _inst = instances_matching(_obj, "cat_border_fix", null);
+				if(array_length(_inst)){
+					var _spr = self[2];
+					
+					 // Fetch Sprites:
+					if(is_array(_spr)){
+						_spr = array_clone(_spr);
+						for(var i = 0; i < array_length(_spr); i++){
+							_spr[i] = area_get_sprite(other.area, _spr[i]);
+						}
+					}
+					else _spr = area_get_sprite(other.area, _spr);
+					
+					 // Set Sprites:
+					with(_inst){
+						cat_border_fix = (y >= _y);
+						if(cat_border_fix){
+							switch(_obj){
+								case Wall:
+									sprite_index = _spr[0];
+									topspr       = _spr[1];
+									outspr       = _spr[2];
+									break;
+									
+								default:
+									sprite_index = _spr;
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+	
+#define LairBorder_draw
+	 // Background:
+	if(y < view_yview_nonsync + game_height){
+		draw_set_color(image_blend);
+		draw_rectangle(
+			view_xview_nonsync,
+			y,
+			view_xview_nonsync + game_width,
+			view_yview_nonsync + game_height,
+			false
+		);
+	}
 	
 	
 #define Manhole_create(_x, _y)
@@ -4859,12 +4943,11 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 	
 	/// Entrance:
 		var	_sx = pfloor(x, 32),
-			_sy = pfloor(y, 32) - 16,
-			_bgColor = background_color;
+			_sy = pfloor(y, 32) - 16;
 			
 		 // Borderize Area:
 		var _borderY = _sy - hallway_size + 72;
-		area_border(_borderY, string(GameCont.area), _bgColor);
+		obj_create(x, _borderY, "LairBorder");
 		
 		 // Path Gen:
 		var	_dir = 90,
@@ -4894,7 +4977,8 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 		
 		 // Generate the Realm:
 		var	_lastArea = GameCont.area,
-			_scrSetup = null;
+			_scrSetup = null,
+			_bgColor  = background_color;
 			
 		if(crown_current == "red"){
 			_scrSetup = script_ref_create_ext("crown", "red", "step");
@@ -5549,7 +5633,7 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 	}
 	
 	 // Watchin Player:
-	if(array_length(_players) > 0 && notice > 0){
+	if(array_length(_players) && notice > 0){
 		var _target = instance_nearest_array(x, y, _players);
 		
 		if(notice_delay > 0){
@@ -5604,24 +5688,24 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 	}
 	
 	 // Angered:
-	var _angered = false;
-	if(my_health < maxhealth || !instance_exists(TV)){
-		_angered = true;
-	}
-	else{
-		with(instances_matching([Turtle, Rat], "", null)){
-			if(my_health < maxhealth && instance_seen(x, y, other)){
-				_angered = true;
-			}
+	var _angered = (my_health < maxhealth || !instance_exists(TV));
+	if(!_angered){
+		if(instance_exists(Corpse) && instance_seen(x, y, instances_matching(Corpse, "sprite_index", sprTurtleDead, sprRatDead))){
+			_angered = true;
 		}
-		with(instances_matching(Corpse, "sprite_index", sprTurtleDead, sprRatDead)){
-			if(instance_seen(x, y, other)){
-				_angered = true;
+		else if(instance_exists(Turtle) || instance_exists(Rat)){
+			with(instances_matching([Turtle, Rat], "", null)){
+				if(my_health < maxhealth && instance_seen(x, y, other)){
+					_angered = true;
+					break;
+				}
 			}
 		}
 	}
 	if(_angered){
-		with(instances_matching(object_index, "name", name)) patience = 0;
+		with(instances_matching(object_index, "name", name)){
+			patience = 0;
+		}
 	}
 	if(patience <= 0){
 		var	_damage = (my_health - maxhealth),
@@ -5758,6 +5842,7 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 			}
 			
 			break;
+			
 	}
 	
 #define ntte_bloom
@@ -5814,16 +5899,16 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 #macro  bbox_center_x                                                                           (bbox_left + bbox_right + 1) / 2
 #macro  bbox_center_y                                                                           (bbox_top + bbox_bottom + 1) / 2
 #macro  FloorNormal                                                                             instances_matching(Floor, 'object_index', Floor)
-#macro  alarm0_run                                                                              alarm0 >= 0 && --alarm0 == 0 && (script_ref_call(on_alrm0) || !instance_exists(self))
-#macro  alarm1_run                                                                              alarm1 >= 0 && --alarm1 == 0 && (script_ref_call(on_alrm1) || !instance_exists(self))
-#macro  alarm2_run                                                                              alarm2 >= 0 && --alarm2 == 0 && (script_ref_call(on_alrm2) || !instance_exists(self))
-#macro  alarm3_run                                                                              alarm3 >= 0 && --alarm3 == 0 && (script_ref_call(on_alrm3) || !instance_exists(self))
-#macro  alarm4_run                                                                              alarm4 >= 0 && --alarm4 == 0 && (script_ref_call(on_alrm4) || !instance_exists(self))
-#macro  alarm5_run                                                                              alarm5 >= 0 && --alarm5 == 0 && (script_ref_call(on_alrm5) || !instance_exists(self))
-#macro  alarm6_run                                                                              alarm6 >= 0 && --alarm6 == 0 && (script_ref_call(on_alrm6) || !instance_exists(self))
-#macro  alarm7_run                                                                              alarm7 >= 0 && --alarm7 == 0 && (script_ref_call(on_alrm7) || !instance_exists(self))
-#macro  alarm8_run                                                                              alarm8 >= 0 && --alarm8 == 0 && (script_ref_call(on_alrm8) || !instance_exists(self))
-#macro  alarm9_run                                                                              alarm9 >= 0 && --alarm9 == 0 && (script_ref_call(on_alrm9) || !instance_exists(self))
+#macro  alarm0_run                                                                              alarm0 && !--alarm0 && !--alarm0 && (script_ref_call(on_alrm0) || !instance_exists(self))
+#macro  alarm1_run                                                                              alarm1 && !--alarm1 && !--alarm1 && (script_ref_call(on_alrm1) || !instance_exists(self))
+#macro  alarm2_run                                                                              alarm2 && !--alarm2 && !--alarm2 && (script_ref_call(on_alrm2) || !instance_exists(self))
+#macro  alarm3_run                                                                              alarm3 && !--alarm3 && !--alarm3 && (script_ref_call(on_alrm3) || !instance_exists(self))
+#macro  alarm4_run                                                                              alarm4 && !--alarm4 && !--alarm4 && (script_ref_call(on_alrm4) || !instance_exists(self))
+#macro  alarm5_run                                                                              alarm5 && !--alarm5 && !--alarm5 && (script_ref_call(on_alrm5) || !instance_exists(self))
+#macro  alarm6_run                                                                              alarm6 && !--alarm6 && !--alarm6 && (script_ref_call(on_alrm6) || !instance_exists(self))
+#macro  alarm7_run                                                                              alarm7 && !--alarm7 && !--alarm7 && (script_ref_call(on_alrm7) || !instance_exists(self))
+#macro  alarm8_run                                                                              alarm8 && !--alarm8 && !--alarm8 && (script_ref_call(on_alrm8) || !instance_exists(self))
+#macro  alarm9_run                                                                              alarm9 && !--alarm9 && !--alarm9 && (script_ref_call(on_alrm9) || !instance_exists(self))
 #define orandom(_num)                                                                   return  random_range(-_num, _num);
 #define chance(_numer, _denom)                                                          return  random(_denom) < _numer;
 #define chance_ct(_numer, _denom)                                                       return  random(_denom) < _numer * current_time_scale;
@@ -5903,7 +5988,6 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 #define area_get_secret(_area)                                                          return  mod_script_call_nc  ('mod', 'telib', 'area_get_secret', _area);
 #define area_get_underwater(_area)                                                      return  mod_script_call_nc  ('mod', 'telib', 'area_get_underwater', _area);
 #define area_get_back_color(_area)                                                      return  mod_script_call_nc  ('mod', 'telib', 'area_get_back_color', _area);
-#define area_border(_y, _area, _color)                                                  return  mod_script_call_nc  ('mod', 'telib', 'area_border', _y, _area, _color);
 #define area_generate(_area, _sub, _loops, _x, _y, _setArea, _overlapFloor, _scrSetup)  return  mod_script_call_nc  ('mod', 'telib', 'area_generate', _area, _sub, _loops, _x, _y, _setArea, _overlapFloor, _scrSetup);
 #define floor_set(_x, _y, _state)                                                       return  mod_script_call_nc  ('mod', 'telib', 'floor_set', _x, _y, _state);
 #define floor_set_style(_style, _area)                                                  return  mod_script_call_nc  ('mod', 'telib', 'floor_set_style', _style, _area);
