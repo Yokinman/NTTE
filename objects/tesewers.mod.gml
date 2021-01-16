@@ -3608,7 +3608,7 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 	 // Shared Hurt:
 	if(_damage > 0){
 		if(instance_exists(partner) && partner.my_health > my_health){
-			with(other){
+			with(instance_exists(other) ? other : self){
 				projectile_hit(other.partner, _damage, _force, _direction);
 			}
 		}
@@ -3873,10 +3873,7 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 		
 		 // Cool Light:
 		with(obj_create(x, y - 48, "CatLight")){
-			w1 = 16;
-			w2 = 48;
-			h1 = 48;
-			h2 = 24;
+			sprite_index = spr.CatLightBig;
 		}
 		
 		 // No Portals:
@@ -4097,43 +4094,26 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 	
 #define CatLight_create(_x, _y)
 	with(instance_create(_x, _y, CustomObject)){
-		 // Vars:
-		w1     = 12;
-		w2     = 32;
-		h1     = 32;
-		h2     = 8;
-		offset = 0;
+		 // Visual:
+		sprite_index = spr.CatLight;
+		image_xscale = 1/4;
+		image_yscale = 1/4;
+		image_alpha  = -1;
+		light_angle  = image_angle;
 		
-		return id;
+		return self;
 	}
 	
 #define CatLight_step
-	offset = orandom(1);
-	
 	 // Flicker:
 	if(current_frame_active){
-		visible = !chance(1, 60);
+		image_angle = light_angle + orandom(1.5);
+		visible     = !chance(1, 60);
 	}
 	
-#define draw_catlight(_x, _y, _w1, _w2, _h1, _h2, _offset)
-	if(point_seen_ext(_x, _y, max(_w1, _w2), (_h1 + _h2), player_find_local_nonsync())){
-		var	_x1a = _x - (_w1 / 2),
-			_x2a = _x1a + _w1,
-			_y1 = _y,
-			_x1b = _x - (_w2 / 2) + _offset,
-			_x2b = _x1b + _w2,
-			_y2 = _y + _h1;
-			
-		 // Main Trapezoid:
-		draw_primitive_begin(pr_trianglestrip);
-		draw_vertex(_x1a, _y1);
-		draw_vertex(_x1b, _y2);
-		draw_vertex(_x2a, _y1);
-		draw_vertex(_x2b, _y2);
-		draw_primitive_end();
-		
-		 // Rounded Bottom:
-		draw_ellipse(_x1b - 1, _y2 - 1 - _h2,  _x2b - 1, _y2 - 1 + _h2, false);
+	 // Invert Alpha:
+	if(image_alpha > 0){
+		image_alpha *= -1;
 	}
 	
 	
@@ -5525,10 +5505,7 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 					
 					with(obj_create(x, y - 4, _roomType)){
 						with(obj_create(x, y - 22, "CatLight")){
-							w1 = 14;
-							w2 = 34;
-							h1 = 34;
-							h2 = 7;
+							image_xscale *= 1.1;
 						}
 					}
 					
@@ -5778,10 +5755,34 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 				 // Cat Light:
 				var _inst = instances_matching(instances_matching(CustomObject, "name", "CatLight"), "visible", true);
 				if(array_length(_inst)){
-					var _border = 2 * _gray;
-					with(_inst){
-						draw_catlight(x, y, w1 + _border, w2 + (6 * _border), h1 + (2 * _border), h2 + _border, offset);
+					draw_set_fog(true, draw_get_color(), 0, 0);
+					
+					 // Border:
+					if(_gray){
+						with(_inst){
+							var	_xscAdd = 16 / sprite_get_width(sprite_index),
+								_yscAdd = 8 / sprite_get_height(sprite_index);
+								
+							image_xscale += _xscAdd;
+							image_yscale += _yscAdd;
+							image_alpha   = abs(image_alpha);
+							
+							draw_self();
+							
+							image_xscale -= _xscAdd;
+							image_yscale -= _yscAdd;
+							image_alpha  *= -1;
+						}
 					}
+					
+					 // Normal:
+					else with(_inst){
+						image_alpha = abs(image_alpha);
+						draw_self();
+						image_alpha *= -1;
+					}
+					
+					draw_set_fog(false, 0, 0, 0);
 				}
 				
 				 // Manhole Cover:
@@ -5796,12 +5797,7 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 					
 					 // Hole in Ceiling:
 					else with(_inst){
-						var _off = (
-							chance(1, 2)
-							? orandom(1)
-							: 0
-						);
-						draw_catlight(xstart, ystart - 32, 16, 19, 28, 8, _off);
+						draw_sprite_ext(spr.CatLightThin, 0, xstart, ystart - 32, 1/3.5, 1/4.25, orandom(1), c_white, 1);
 					}
 				}
 				
@@ -5825,8 +5821,8 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 				
 				 // TV Beam:
 				else with(TV){
-					var _off = orandom(1);
-					draw_catlight(x + 1, y - 6, 12 + abs(_off), 48 + _off, 48, 8 + _off, 0);
+					var _scale = 1 + orandom(0.025);
+					draw_sprite_ext(spr.CatLight, 0, x, y - 5, _scale / 3.5, _scale / 2.5, 0, c_white, 1);
 				}
 			}
 			

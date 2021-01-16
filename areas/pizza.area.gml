@@ -208,7 +208,7 @@
 	
 	 // Light up specific things:
 	with(instances_matching([chestprop, RadChest], "", null)){
-		obj_create(x, y - 32, "CatLight");
+		obj_create(x, y - 28, "CatLight");
 	}
 	
 	 // Cooler Pizza Box:

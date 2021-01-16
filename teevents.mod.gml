@@ -1193,7 +1193,7 @@
 								
 								 // Light:
 								with(obj_create(x, y - 30, "CatLight")){
-									w1 = 16;
+									image_xscale *= 1.1;
 								}
 								
 								 // Table Variance:
@@ -1312,11 +1312,9 @@
 									}
 									
 									 // Light:
-									with(obj_create(_x, _y - 24, "CatLight")){
-										w1 = 12;
-										w2 = random_range(18, 22);
-										h1 = 28
-										h2 = 6;
+									with(obj_create(_x, _y - 28, "CatLight")){
+										sprite_index = spr.CatLightThin;
+										image_xscale *= 1.2;
 									}
 								}
 							}

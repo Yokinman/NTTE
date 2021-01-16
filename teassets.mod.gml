@@ -1414,6 +1414,16 @@
 				
 			//#endregion
 			
+			//#region LIGHTS
+			p = m + "Lights/";
+				
+				 // Ceiling Lights:
+				CatLight     = sprite(p + "sprCatLight",     1,  96, 16);
+				CatLightBig  = sprite(p + "sprCatLightBig",  1, 128, 16);
+				CatLightThin = sprite(p + "sprCatLightThin", 1,  72, 16);
+				
+			//#endregion
+			
 		//#endregion
 		
 		//#region RED

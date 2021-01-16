@@ -1057,10 +1057,8 @@
 			_canWatch = true;
 			/*
 			with(obj_create(_x, _y - 20, "CatLight")){
-				w1 *= 2;
-				w2 *= 3/2;
-				h1 *= 7/6;
-				h2 *= 2;
+				sprite_index = spr.CatLightBig;
+				image_xscale *= 0.75;
 			}
 			*/
 			break;

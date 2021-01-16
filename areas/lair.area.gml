@@ -580,13 +580,10 @@
 	
 	 // Light up specific things:
 	with(instances_matching([chestprop, RadChest], "", null)){
-		obj_create(x, y - 32, "CatLight");
+		obj_create(x, y - 28, "CatLight");
 	}
-	with(obj_create(10016, 10016 - 60, "CatLight")){
-		w1 = 24;
-		w2 = 60;
-		h1 = 64;
-		h2 = 16;
+	with(obj_create(10016, 10016 - 48, "CatLight")){
+		sprite_index = spr.CatLightBig;
 	}
 	
 #define area_effect
@@ -893,8 +890,7 @@
 			 // Props:
 			with(obj_create(_x + 16 + orandom(2), _y + 12, "ChairFront")){
 				with(obj_create(x, y - 28, "CatLight")){
-					w2 = 18;
-					h2 = 6;
+					sprite_index = spr.CatLightThin;
 				}
 			}
 			
@@ -972,8 +968,8 @@
 				create_enemies(_ox, _oy, 1 + irandom(1));
 				
 				 // Lights:
-				with(obj_create(_ox, _oy - 44, "CatLight")){
-					h1 = 48;
+				with(obj_create(_ox, _oy - 48, "CatLight")){
+					image_yscale *= 1.5;
 				}
 			}
 			

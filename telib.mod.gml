@@ -47,7 +47,7 @@
 					array_push(_eventList, self);
 				}
 			}
-			instance_delete(id);
+			instance_delete(self);
 		}
 		if(array_find_index(_eventList, "step") >= 0){
 			for(var i = ntte_alarm_min; i < ntte_alarm_max; i++){
@@ -866,7 +866,7 @@
 			&& !instance_is(self, EnergyHammerSlash)
 			&& !instance_is(other, FireCont)
 		){
-			script_bind_begin_step(projectile_euphoria, 0, id);
+			script_bind_begin_step(projectile_euphoria, 0, self);
 		}
 	}
 	
@@ -1001,7 +1001,7 @@
 	if(!_levelStart){
 		GameCont.norads = 0;
 		with(Player){
-			array_push(_health, [id, my_health]);
+			array_push(_health, [self, my_health]);
 			my_health = maxhealth;
 		}
 	}
@@ -1092,7 +1092,7 @@
 			var _dis = point_distance(_x, _y, x, y);
 			if(_dis < _disMax){
 				_disMax = _dis;
-				_inst = id;
+				_inst   = self;
 			}
 		}
 	}
@@ -1125,7 +1125,7 @@
 		var _d = point_distance(_x, _y, x, y);
 		if(_d <= _disMax && _d >= _disMin){
 			_disMax = _d;
-			_inst = id;
+			_inst   = self;
 		}
 	}
 	
@@ -1392,7 +1392,7 @@
 		creator = other;
 		depth   = other.depth;
 		
-		return id;
+		return self;
 	}
 	
 	return noone;
@@ -1441,7 +1441,7 @@
 			}
 			alert.x = (sprite_get_bbox_left(sprite_index) - sprite_get_xoffset(sprite_index));
 			
-			return id;
+			return self;
 		}
 	}
 	
@@ -1496,7 +1496,7 @@
 				}
 			}
 			
-			return id;
+			return self;
 		}
 	}
 	
@@ -1536,7 +1536,7 @@
 					event_perform(ev_alarm, 6);
 				}
 				sound_stop(sndBigBanditIntro);
-				instance_delete(id);
+				instance_delete(self);
 			}
 			
 			GameCont.subarea        = _lastSub;
@@ -1617,7 +1617,7 @@
 		speed = min(speed, 16);
 		if(size > 0) speed /= size;
 		
-        return id;
+        return self;
 	}
 
 #define player_swap()
@@ -1714,7 +1714,7 @@
 	
 	with(global.portal_pickups_bind.id){
 		visible = true;
-		return id;
+		return self;
 	}
 	
 #define portal_pickups_step
@@ -2032,7 +2032,7 @@
 		var _dis = point_distance(_x, _y, x, y);
 		if(_dis < _disMax){
 			_disMax  = _dis;
-			_nearest = id;
+			_nearest = self;
 		}
 	}
 	
@@ -2054,7 +2054,7 @@
 		var _dis = distance_to_point(_x, _y);
 		if(_dis < _disMax){
 			_disMax  = _dis;
-			_nearest = id;
+			_nearest = self;
 		}
 	}
 	
@@ -2083,7 +2083,7 @@
 		if(_disA < _disAMax || (_disA == _disAMax && _disB < _disBMax)){
 			_disAMax = _disA;
 			_disBMax = _disB;
-			_nearest = id;
+			_nearest = self;
 		}
 	}
 	
@@ -2114,7 +2114,7 @@
 		if(_disA < _disAMax || (_disA == _disAMax && _disB < _disBMax)){
 			_disAMax = _disA;
 			_disBMax = _disB;
-			_nearest = id;
+			_nearest = self;
 		}
 	}
 	
@@ -2502,7 +2502,7 @@
 				event_perform(ev_alarm, 6);
 			}
 			sound_stop(sndBigBanditIntro);
-			instance_delete(id);
+			instance_delete(self);
 		}
 		
 		 // Reset:
@@ -2510,7 +2510,7 @@
 		opt_bossintros = _lastIntro;
 		GameCont.loops = _lastLoops;
 		with(_player){
-			instance_delete(id);
+			instance_delete(self);
 		}
 		
 		 // Unpause Game, Then Deactivate Objects:
@@ -2535,7 +2535,7 @@
 		Ex:
 			var _genID = area_generate(area_scrapyards, 3, GameCont.loops, x, y, false, 0, null);
 			with(instances_matching_gt(chestprop, "id", _genID)){
-				instance_delete(id);
+				instance_delete(self);
 			}
 	*/
 	
@@ -2687,7 +2687,7 @@
 					}
 				}
 				with(instance_rectangle_bbox(_x1, _y1, _x2, _y2, [chestprop, RadChest])){
-					instance_delete(id);
+					instance_delete(self);
 				}
 			}
 			
@@ -2697,8 +2697,8 @@
 			}
 			event_perform(ev_alarm, 0);
 			if(!_setArea){
-				with(WantPopo) instance_delete(id);
-				with(WantVan ) instance_delete(id);
+				with(WantPopo) instance_delete(self);
+				with(WantVan ) instance_delete(self);
 			}
 			var _clearID = instance_max;
 			event_perform(ev_alarm, 1);
@@ -2729,7 +2729,7 @@
 					repeat(4) with(instance_nearest(x, y, PortalL)){
 						instance_destroy();
 					}
-					instance_delete(id);
+					instance_delete(self);
 					break;
 				}
 			}
@@ -2782,7 +2782,7 @@
 					if(object_index == Floor){
 						array_push(_overlapFloorFill, [bbox_left, bbox_top, bbox_right, bbox_bottom]);
 					}
-					instance_delete(id);
+					instance_delete(self);
 				}
 			}
 			
@@ -2793,7 +2793,7 @@
 			var _objOld = instances_matching_lt(_obj, "id", _genID);
 			with(instances_matching_gt(_overlapObj, "id", _genID)){
 				if(place_meeting(x, y, _obj) && array_length(instances_meeting(x, y, _objOld))){
-					instance_delete(id);
+					instance_delete(self);
 				}
 			}
 		}
@@ -2817,7 +2817,7 @@
 						if(!position_meeting(_fx, _fy, Floor)){
 							with(instance_create(_fx, _fy, FloorExplo)){
 								with(instances_meeting(x, y, _overlapObject)){
-									instance_delete(id);
+									instance_delete(self);
 								}
 							}
 						}
@@ -3158,7 +3158,7 @@
 					var _x = lerp(bbox_left, bbox_right + 1, _side);
 					with(obj_create(_x, _y, "WallDecal")){
 						image_xscale = ((_side > 0.5) ? -1 : 1);
-						array_push(_inst, id);
+						array_push(_inst, self);
 					}
 				}
 			}
@@ -3379,7 +3379,9 @@
 		 // Clear Floors:
 		if(!instance_exists(FloorMaker)){
 			if(_obj == FloorExplo){
-				with(instances_matching(instances_matching(_obj, "x", _x), "y", _y)) instance_delete(id);
+				with(instances_matching(instances_matching(_obj, "x", _x), "y", _y)){
+					instance_delete(self);
+				}
 			}
 			else{
 				floor_delete(_x, _y, _x + _w - 1, _y + _h - 1);
@@ -3393,7 +3395,9 @@
 		if(!is_undefined(global.floor_style)){
 			GameCont.area = area_campfire;
 			with(instance_create(_x, _y, FloorMaker)){
-				with(instances_matching_gt(Floor, "id", id)) instance_delete(id);
+				with(instances_matching_gt(Floor, "id", id)){
+					instance_delete(self);
+				}
 				styleb = global.floor_style;
 				_floormaker = self;
 			}
@@ -3483,7 +3487,7 @@
 					UberCont.opt_freeze = 0;
 					
 					with(instances_matching_gt(GameObject, "id", instance_create(_x, _y, FloorExplo))){
-						instance_delete(id);
+						instance_delete(self);
 					}
 					
 					UberCont.opt_shake = _shake;
@@ -3529,7 +3533,7 @@
 			}
 		}
 		
-		return id;
+		return self;
 	}
 	
 	return noone;
@@ -3703,10 +3707,10 @@
 					if(instance_exists(self) && place_meeting(x, y, Floor)){
 						with(instances_meeting(x, y, [Bones, TopPot])){
 							if(place_meeting(x, y, other)){
-								instance_delete(id);
+								instance_delete(self);
 							}
 						}
-						instance_delete(id);
+						instance_delete(self);
 					}
 				}
 			}
@@ -3763,7 +3767,7 @@
 		image_yscale = other.image_yscale;
 		image_angle  = other.image_angle;
 		
-		return id;
+		return self;
 	}
 	
 #define wall_delete(_x1, _y1, _x2, _y2)
@@ -3773,12 +3777,12 @@
 	
 	with(instance_rectangle_bbox(_x1, _y1, _x2, _y2, [Wall, InvisiWall])){
 		with(instances_matching(instances_matching(TrapScorchMark, "x", x), "y", y)){
-			instance_delete(id);
+			instance_delete(self);
 		}
-		instance_delete(id);
+		instance_delete(self);
 	}
 	with(instance_rectangle_bbox(_x1, _y1, _x2, _y2, [TopSmall, TopPot, Bones])){
-		instance_delete(id);
+		instance_delete(self);
 	}
 	
 #define wall_tops()
@@ -3957,7 +3961,7 @@
 			image_index     = _imgInd;
 			image_speed_raw = image_number;
 			
-			array_push(_inst, id);
+			array_push(_inst, self);
 		}
 		
 		_lx = _wx;
@@ -4592,7 +4596,7 @@
 	
 	 // Mark Walls:
 	with(instance_rectangle(_gridx, _gridy, _gridx + _areaWidth, _gridy + _areaHeight, _wall)){
-		if(position_meeting(x, y, id)){
+		if(position_meeting(x, y, self)){
 			_grid[# (x - _gridx) / _tileSize, (y - _gridy) / _tileSize] = -2;
 		}
 	}
@@ -5405,7 +5409,7 @@
 			target = _inst;
 			
 			if(instance_exists(target)){
-				target.top_object = id;
+				target.top_object = self;
 				spawn_dis = random_range(16, 48);
 				
 				 // Object-General Setup:
@@ -5968,14 +5972,14 @@
 			with(partner){
 				partner = other;
 			}
-			_partner = id;
+			_partner = self;
 			
 			 // Ensure LoS Wall Creation:
 			with(self){
 				event_perform(ev_step, ev_step_normal);
 			}
 			
-			array_push(_inst, id);
+			array_push(_inst, self);
 		}
 	}
 	
@@ -6014,7 +6018,7 @@
 				trace_error(_error);
 			}
 			
-			instance_delete(id);
+			instance_delete(self);
 		}
 		
 		UberCont.opt_shake = _shake;
@@ -6072,18 +6076,14 @@
 	var _inst = [];
 	
 	while(_raddrop > 0){
-		var r = (_raddrop > 15);
-		repeat(r ? 1 : _raddrop){
-			if(r) _raddrop -= 10;
-			with(instance_create(_x, _y, (r ? BigRad : Rad))){
-				speed = _spd;
-				direction = _dir;
-				motion_add(random(360), random(_raddrop / 2) + 3);
-				speed *= power(0.9, speed);
-				array_push(_inst, id);
-			}
+		var _big = (_raddrop > 15);
+		_raddrop -= (_big ? 10 : 1);
+		with(instance_create(_x, _y, (_big ? BigRad : Rad))){
+			motion_add(_dir, _spd);
+			motion_add(random(360), 3 + random(_raddrop / 2));
+			speed *= power(0.9, speed);
+			array_push(_inst, self);
 		}
-		if(!r) break;
 	}
 	
 	return _inst;
@@ -6448,7 +6448,7 @@
 									}
 								}
 							}
-							instance_delete(id);
+							instance_delete(self);
 						}
 					}
 				}

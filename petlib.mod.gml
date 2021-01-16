@@ -196,14 +196,14 @@
 	sound_play_hit_ext(sndGoldScorpionDead, 1.2 + random(0.2), 2.5);
 	
 	 // Venom Explo:
-	var a = random(360);
-	for(var d = a; d < a + 360; d += (360 / 5)){
+	var _ang = random(360);
+	for(var _dir = _ang; _dir < _ang + 360; _dir += (360 / 5)){
 		repeat(irandom_range(8, 12)){
-			projectile_create(x, y, "VenomPellet", d + orandom(12), 8 + random(8));
+			projectile_create(x, y, "VenomPellet", _dir + orandom(12), 8 + random(8));
 		}
 		
 		 // Effects:
-		scrFX(x, y, [_d, 4], AcidStreak);
+		scrFX(x, y, [_dir, 4], AcidStreak);
 	}
 	
 	
@@ -576,16 +576,18 @@
 		 // Spawn Animation End:
 		if(sprite_index == spr_spwn){
 			sprite_index = spr_hurt;
-			image_index = 0;
-			depth = -2;
+			image_index  = 0;
+			depth        = -2;
 			
 			 // Effects:
 			sound_play_hit_ext(snd_spwn, 1.2 + random(0.1), 1.2);
-			var l = -8;
-			for(var d = direction; d < direction + 360; d += (360 / 3)){
-				repeat(2) scrFX(x, y, [d + orandom(40), 4], Dust);
-				with(obj_create(x + lengthdir_x(l, d), y + lengthdir_y(l, d), "WaterStreak")){
-					motion_set(d + orandom(20), 1.5);
+			var _l = -8;
+			for(var _d = direction; _d < direction + 360; _d += (360 / 3)){
+				repeat(2){
+					scrFX(x, y, [_d + orandom(40), 4], Dust);
+				}
+				with(obj_create(x + lengthdir_x(_l, _d), y + lengthdir_y(_l, _d), "WaterStreak")){
+					motion_set(_d + orandom(20), 1.5);
 					image_angle = direction;
 					friction = 0.1;
 				}
