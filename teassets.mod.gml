@@ -607,7 +607,7 @@
 			PelicanWalk   = sprite(p + "sprPelicanWalk",   6, 24, 24);
 			PelicanHurt   = sprite(p + "sprPelicanHurt",   3, 24, 24);
 			PelicanDead   = sprite(p + "sprPelicanDead",   6, 24, 24);
-			PelicanHammer = sprite(p + "sprPelicanHammer", 1,  6,  8);
+			PelicanHammer = sprite(p + "sprPelicanHammer", 1,  6,  8, shnWep);
 			
 			 // Pit Squid:
 			p = m + "Pitsquid/";

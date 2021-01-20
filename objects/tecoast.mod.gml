@@ -2768,11 +2768,11 @@
 #define Pelican_draw
 	var	_charge = max(alarm2, 0),
 		_angOff = sign(wepangle) * (60 * (_charge / chrg_time));
-
+		
 	if(gunangle >  180) draw_self_enemy();
 	draw_weapon(spr_weap, 0, x, y, gunangle, wepangle - _angOff, wkick, 1, image_blend, image_alpha);
 	if(gunangle <= 180) draw_self_enemy();
-
+	
 #define Pelican_alrm1
 	alarm1 = 40 + random(20); // 1-2 Seconds
 	
@@ -2853,20 +2853,28 @@
 	var _minID = instance_max;
 	
 	 // Pickups:
-	pickup_drop(80, 0);
-	pickup_drop(60, 5, 0);
+	pickup_drop(60, 20, 0);
+	pickup_drop(80, 0, 1);
 	
 	 // Hmm:
-	with(instances_matching(instances_matching_gt(WepPickup, "id", _minID), "wep", wep_sledgehammer)){
-		sprite_index = other.spr_weap;
-		
-		var	_dis = 16,
-			_dir = rotation;
+	with(instances_matching_gt(WepPickup, "id", _minID)){
+		if(wep_raw(wep) == wep_sledgehammer){
+			var _wep = wep_wrap(wep);
+			_wep.tewrapper.scr_ref.weapon_sprt = script_ref_create(cool_hammer, other.spr_weap);
+			wep = _wep;
 			
-		with(instance_create(x + lengthdir_x(_dis, _dir), y + lengthdir_y(_dis, _dir), ThrowHit)){
-			image_speed = 0.35;
+			 // Sparkle:
+			var	_len = 16,
+				_dir = rotation;
+				
+			with(instance_create(x + lengthdir_x(_len, _dir), y + lengthdir_y(_len, _dir), ThrowHit)){
+				image_speed = 0.35;
+			}
 		}
 	}
+	
+#define cool_hammer(_sprHammer, _spr, _wep)
+	return _sprHammer;
 	
 	
 #define Seal_create(_x, _y)
@@ -5309,6 +5317,7 @@
 #define race_get_title(_race)                                                           return  mod_script_call_self('mod', 'telib', 'race_get_title', _race);
 #define player_swap()                                                                   return  mod_script_call_self('mod', 'telib', 'player_swap');
 #define wep_raw(_wep)                                                                   return  mod_script_call_nc  ('mod', 'telib', 'wep_raw', _wep);
+#define wep_wrap(_wep)                                                                  return  mod_script_call_nc  ('mod', 'telib', 'wep_wrap', _wep);
 #define wep_merge(_stock, _front)                                                       return  mod_script_call_nc  ('mod', 'telib', 'wep_merge', _stock, _front);
 #define wep_merge_decide(_hardMin, _hardMax)                                            return  mod_script_call_nc  ('mod', 'telib', 'wep_merge_decide', _hardMin, _hardMax);
 #define weapon_decide(_hardMin, _hardMax, _gold, _noWep)                                return  mod_script_call_self('mod', 'telib', 'weapon_decide', _hardMin, _hardMax, _gold, _noWep);
