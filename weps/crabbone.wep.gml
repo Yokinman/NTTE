@@ -130,10 +130,15 @@
 	else if(weapon_ammo_fire(_wep)){
 		 // Throw Bone:
 		with(projectile_create(x, y, "Bone", gunangle, lerp(16, 20, skill_get(mut_long_arms)))){
-			curse = _curse;
+			wep          = lq_clone(_wep);
+			wep.ammo     = 1;
+			curse        = _curse;
+			sprite_index = weapon_get_sprt(wep);
 			
 			 // Death to Free Bones:
-			if(other.infammo != 0) broken = true;
+			if(other.infammo != 0){
+				broken = true;
+			}
 		}
 		
 		 // Sound:

@@ -104,8 +104,9 @@
 		}
 	}
 	
-	 // Set Storable NTTE Weapon:
+	 // NT:TE Weapon Stuff:
 	with(Player){
+		 // Set Manually Stored Weapon:
 		var _wep = unlock_get(`loadout:wep:${race}:${save_get(`loadout:wep:${race}`, "")}`);
 		if(_wep != wep_none){
 			 // Take Ammo:
@@ -121,6 +122,24 @@
 			var _type = weapon_get_type(wep);
 			if(_type != type_melee){
 				ammo[_type] += round(typ_ammo[_type] * ((wep_raw(wep) == "merge") ? 1.25 : 3));
+			}
+		}
+		
+		 // Weapon Skin:
+		if(is_string(bskin) && array_find_index(ntte_mods.skin, bskin) >= 0){
+			if(mod_script_exists("skin", bskin, "skin_weapon_sprite")){
+				var	_ref  = script_ref_create_ext("skin", bskin, "skin_weapon_sprite"),
+					_sprA = weapon_get_sprt(wep),
+					_sprB = weapon_get_sprt(bwep);
+					
+				if(_sprA != script_ref_call(_ref, _sprA, wep)){
+					wep = wep_wrap(wep);
+					wep.tewrapper.scr_ref.weapon_sprt = _ref;
+				}
+				if(_sprB != script_ref_call(_ref, _sprB, bwep)){
+					bwep = wep_wrap(bwep);
+					bwep.tewrapper.scr_ref.weapon_sprt = _ref;
+				}
 			}
 		}
 	}
@@ -4975,6 +4994,7 @@
 #define race_get_title(_race)                                                           return  mod_script_call_self('mod', 'telib', 'race_get_title', _race);
 #define player_swap()                                                                   return  mod_script_call_self('mod', 'telib', 'player_swap');
 #define wep_raw(_wep)                                                                   return  mod_script_call_nc  ('mod', 'telib', 'wep_raw', _wep);
+#define wep_wrap(_wep)                                                                  return  mod_script_call_nc  ('mod', 'telib', 'wep_wrap', _wep);
 #define wep_merge(_stock, _front)                                                       return  mod_script_call_nc  ('mod', 'telib', 'wep_merge', _stock, _front);
 #define wep_merge_decide(_hardMin, _hardMax)                                            return  mod_script_call_nc  ('mod', 'telib', 'wep_merge_decide', _hardMin, _hardMax);
 #define weapon_decide(_hardMin, _hardMax, _gold, _noWep)                                return  mod_script_call_self('mod', 'telib', 'weapon_decide', _hardMin, _hardMax, _gold, _noWep);

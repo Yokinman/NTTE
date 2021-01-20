@@ -9,15 +9,16 @@
 	
 	 // LWO:
 	global.lwoWep = {
-		"wep"   : mod_current,
-		"ammo"  : 0,
-		"amax"  : 55,
-		"amin"  : 4,
-		"anam"  : "BONES",
-		"buff"  : false,
-		"mode"  : scythe_basic,
-		"cost"  : 0,
-		"combo" : 0
+		"wep"       : mod_current,
+		"ammo"      : 0,
+		"amax"      : 55,
+		"amin"      : 4,
+		"anam"      : "BONES",
+		"buff"      : false,
+		"mode"      : scythe_basic,
+		"cost"      : 0,
+		"combo"     : 0,
+		"swap_step" : noone
 	};
 	
 	 // Modes:
@@ -117,7 +118,7 @@
 		
 		 // !
 		with(instance_create(x, y, PopupText)){
-			text = weapon_get_name(_wep) + "!";
+			text   = weapon_get_name(_wep) + "!";
 			target = other.index;
 		}
 		
@@ -141,18 +142,15 @@
 		}
 	}
 	
-#define scythe_swap_step
-	for(var i = 0; i < maxp; i++){
-		if(button_pressed(i, "pick")){
-			with(instances_matching(Player, "index", i)){
-				if(wep_raw(wep) == mod_current && nearwep == noone){
-					 // Swap:
-					scythe_swap(true);
-					
-					 // Silence:
-					mod_variable_set("mod", "ntte", "scythe_tip_index", -1);
-				}
-			}
+#define scythe_swap_step(_index, _wep)
+	if(instance_exists(Player) && button_pressed(_index, "pick")){
+		var _inst = instances_matching(instances_matching(instances_matching(Player, "index", _index), "wep", _wep), "nearwep", noone);
+		if(array_length(_inst)) with(_inst){
+			 // Swap:
+			scythe_swap(true);
+			
+			 // Silence:
+			mod_variable_set("mod", "ntte", "scythe_tip_index", -1);
 		}
 	}
 	
@@ -326,11 +324,8 @@
 	}
 	
 	 // Bind End Step:
-	if(array_length(instances_matching(CustomScript, "name", "scythe_swap_step")) <= 0){
-		with(script_bind_end_step(scythe_swap_step, 0)){
-			name = script[2];
-			persistent = true;
-		}
+	if(!instance_exists(_wep.swap_step)){
+		_wep.swap_step = script_bind_end_step(scythe_swap_step, 0, index, _wep);
 	}
 	
 	

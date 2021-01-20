@@ -1118,14 +1118,14 @@
 									
 									 // Call Alarm Event:
 									with(self){
-										try{
-											if(_alarmNum != 2 || instance_exists(target) || !instance_is(self, Gator)){ // Gator Fix
+										if(_alarmNum != 2 || instance_exists(target) || !instance_is(self, Gator)){ // Gator Fix
+											try{
 												alarm_set(_alarmNum, 0);
 												event_perform(ev_alarm, _alarmNum);
 											}
-										}
-										catch(_error){
-											trace_error(_error);
+											catch(_error){
+												trace_error(_error);
+											}
 										}
 									}
 									
@@ -1489,12 +1489,10 @@
 		_playerPos = charm_target(_vars);
 		
 	 // Call Step Event:
-	try{
-		on_step = _vars.on_step;
+	on_step = _vars.on_step;
+	if(fork()){
 		script_ref_call(on_step);
-	}
-	catch(_error){
-		trace_error(_error);
+		exit;
 	}
 	
 	 // Return Moved Players:

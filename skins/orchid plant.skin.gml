@@ -13,12 +13,12 @@
 #define skin_unlock    return "FOR REROLLING HEAVY HEART";
 #define skin_ttip      return choose("YOU LOOK SO GOOD", "MILLION DOLLAR SMILE", "SHINY LIKE A LIMOUSINE", "ALL THAT TWINKLES IS GOLD", "PUMP YOUR VEINS WITH GUSHING GOLD");
 #define skin_avail     return unlock_get("skin:" + mod_current);
-#define skin_portrait  return spr.PlantOrchidPortrait;
-#define skin_mapicon   return spr.PlantOrchidMapIcon;
+#define skin_portrait  return skin_sprite(sprBigPortrait);
+#define skin_mapicon   return skin_sprite(sprMapIcon);
 
 #define skin_button
-	sprite_index = spr.PlantOrchidLoadout;
-	image_index  = skin_avail();
+	sprite_index = skin_sprite(sprLoadoutSkin);
+	image_index  = !skin_avail();
 	
 #define skin_sprite(_spr)
 	switch(_spr){
@@ -34,7 +34,15 @@
 		case sprTangle       : return spr.PlantOrchidTangle;
 		case sprTangleSeed   : return spr.PlantOrchidTangleSeed;
 	}
-	return -1;
+	
+#define skin_weapon_sprite(_spr, _wep)
+	switch(_spr){
+		case sprGoldMachinegun : return spr.PlantOrchidMachinegun;
+		
+		default: // Modded
+			if(_spr == spr.GoldTrident) return spr.PlantOrchidTrident;
+	}
+	return _spr;
 	
 	
 /// SCRIPTS

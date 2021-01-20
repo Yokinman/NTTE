@@ -4873,17 +4873,19 @@
 	);
 	
 #define Trident_cleanup // pls why do portals instance_delete everything
-	var w = wep;
-	if(is_object(w)) w.visible = true;
+	var _wep = wep;
+	if(is_object(_wep)){
+		_wep.visible = true;
+	}
 	
 	 // Return to Player:
 	if(curse_return) with(creator){
 		if(instance_is(self, Player)){
-			var _b = ((bwep == w) ? "b" : "");
-			if(is_object(w)){
-				w.wepangle = angle_difference(other.image_angle, gunangle)
-				if(chance(1, 8)) w.wepangle += 360 * sign(w.wepangle);
-				variable_instance_set(self, _b + "wepangle", w.wepangle);
+			var _b = ((bwep == _wep) ? "b" : "");
+			if(is_object(_wep)){
+				_wep.wepangle = angle_difference(other.image_angle, gunangle)
+				if(chance(1, 8)) _wep.wepangle += 360 * sign(_wep.wepangle);
+				variable_instance_set(self, _b + "wepangle", _wep.wepangle);
 			}
 		}
 		
@@ -4891,14 +4893,14 @@
 		if(instance_is(self, Player)){
 			with(instance_create(x, y, WepSwap)) creator = other;
 		}
-		sound_play(weapon_get_swap(w));
+		sound_play(weapon_get_swap(_wep));
 		sound_play(sndSwapCursed);
 	}
 	
 	 // Drop Weapon:
-	else if(w != wep_none){
+	else if(_wep != wep_none){
 		 // Delete Existing:
-		with(instances_matching([WepPickup, ThrownWep], "wep", w)){
+		with(instances_matching([WepPickup, ThrownWep], "wep", _wep)){
 			instance_destroy();
 		}
 		
@@ -4914,9 +4916,9 @@
 		 // WepPickup:
 		var _stickTarget = target;
 		with(obj_create(x, y, (instance_exists(_stickTarget) ? "WepPickupStick" : WepPickup))){
-			wep      = w;
-			curse    = other.curse;
 			rotation = other.image_angle;
+			curse    = other.curse;
+			wep      = _wep;
 			
 			 // Stick:
 			if(instance_exists(_stickTarget)){

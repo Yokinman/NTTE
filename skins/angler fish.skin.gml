@@ -13,12 +13,12 @@
 #define skin_unlock    return "FOR DEFEATING A @yGOLDEN ANGLER";
 #define skin_ttip      return choose("SO BRIGHT OUT", "MISSED THE SUN", "SHAPED BY THE DEPTHS", "LOST YOUR MIND");
 #define skin_avail     return unlock_get("skin:" + mod_current);
-#define skin_portrait  return spr.FishAnglerPortrait;
-#define skin_mapicon   return spr.FishAnglerMapIcon;
+#define skin_portrait  return skin_sprite(sprBigPortrait);
+#define skin_mapicon   return skin_sprite(sprMapIcon);
 
 #define skin_button
-	sprite_index = spr.FishAnglerLoadout;
-	image_index  = skin_avail();
+	sprite_index = skin_sprite(sprLoadoutSkin);
+	image_index  = !skin_avail();
 	
 #define skin_sprite(_spr)
 	switch(_spr){
@@ -32,7 +32,6 @@
 		case sprLoadoutSkin  : return spr.FishAnglerLoadout;
 		case sprMapIcon      : return spr.FishAnglerMapIcon;
 	}
-	return -1;
 	
 	
 /// SCRIPTS

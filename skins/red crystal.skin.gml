@@ -13,12 +13,12 @@
 #define skin_unlock    return "FOR REACHING " + area_get_name("red", 1, 0);
 #define skin_ttip      return choose("NEVER MORE ALIVE", "FAMILY CAN WAIT");
 #define skin_avail     return unlock_get("skin:" + mod_current);
-#define skin_portrait  return spr.CrystalRedPortrait;
-#define skin_mapicon   return spr.CrystalRedMapIcon;
+#define skin_portrait  return skin_sprite(sprBigPortrait);
+#define skin_mapicon   return skin_sprite(sprMapIcon);
 
 #define skin_button
-	sprite_index = spr.CrystalRedLoadout;
-	image_index  = skin_avail();
+	sprite_index = skin_sprite(sprLoadoutSkin);
+	image_index  = !skin_avail();
 	
 #define skin_sprite(_spr)
 	switch(_spr){
@@ -39,7 +39,6 @@
 		case sprCrystalShieldWalkBack  : return spr.CrystalRedShieldWalkBack;
 		case sprCrystTrail             : return spr.CrystalRedTrail;
 	}
-	return -1;
 	
 	
 /// SCRIPTS

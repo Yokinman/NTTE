@@ -74,7 +74,7 @@
 		p = "weps/";
 			
 			 // Bone:
-			Bone      = sprite(p + "sprBone",      1, 6, 6);
+			//Bone      = sprite(p + "sprBone",      1, 6, 6);
 			BoneShard = sprite(p + "sprBoneShard", 1, 3, 2, shnWep);
 			
 			 // Tunneller:
@@ -1751,12 +1751,84 @@
 				FishAnglerSit   = sprite(p + "sprFishAnglerSit",   1, 12, 12);
 				
 				 // Menu:
-				FishAnglerPortrait = sprite(p + "sprFishAnglerPortrait", 1, 20, 229);
+				FishAnglerPortrait = sprite(p + "sprFishAnglerPortrait", 1, 40, 243);
 				FishAnglerLoadout  = sprite(p + "sprFishAnglerLoadout",  2, 16,  16);
 				FishAnglerMapIcon  = sprite(p + "sprFishAnglerMapIcon",  1, 10,  10);
 				
 				 // Eye Trail:
 				FishAnglerTrail = sprite(p + "sprFishAnglerTrail", 4, 12, 12);
+				
+			//#endregion
+			
+			//#region BAT EYES
+			var p = m + "EyesBat/";
+				
+				 // Player:
+				EyesBatIdle  = sprite(p + "sprEyesBatIdle",  4, 12, 12);
+				EyesBatWalk  = sprite(p + "sprEyesBatWalk",  6, 12, 16);
+				EyesBatHurt  = sprite(p + "sprEyesBatHurt",  3, 12, 12);
+				EyesBatDead  = sprite(p + "sprEyesBatDead",  6, 12, 12);
+				EyesBatGoSit = sprite(p + "sprEyesBatGoSit", 3, 12, 12);
+				EyesBatSit   = sprite(p + "sprEyesBatSit",   1, 12, 12);
+				
+				 // Menu:
+				EyesBatPortrait = sprite(p + "sprEyesBatPortrait", 1, 40, 243);
+				EyesBatLoadout  = sprite(p + "sprEyesBatLoadout",  2, 16,  16);
+				EyesBatMapIcon  = sprite(p + "sprEyesBatMapIcon",  1, 10,  10);
+				
+			//#endregion
+			
+			//#region BONUS ROBOT
+			var p = m + "RobotBonus/";
+				
+				 // Player:
+				RobotBonusIdle  = sprite(p + "sprRobotBonusIdle",  15, 12, 12);
+				RobotBonusWalk  = sprite(p + "sprRobotBonusWalk",   6, 12, 12);
+				RobotBonusHurt  = sprite(p + "sprRobotBonusHurt",   3, 12, 12);
+				RobotBonusDead  = sprite(p + "sprRobotBonusDead",   6, 12, 12);
+				RobotBonusGoSit = sprite(p + "sprRobotBonusGoSit",  3, 12, 12);
+				RobotBonusSit   = sprite(p + "sprRobotBonusSit",    1, 12, 12);
+				
+				 // Menu:
+				RobotBonusPortrait = sprite(p + "sprRobotBonusPortrait", 1, 40, 243);
+				RobotBonusLoadout  = sprite(p + "sprRobotBonusLoadout",  2, 16,  16);
+				RobotBonusMapIcon  = sprite(p + "sprRobotBonusMapIcon",  1, 10,  10);
+				
+			//#endregion
+			
+			//#region COAT Y.V.
+			var p = m + "YVCoat/";
+				
+				 // Player:
+				YVCoatIdle  = sprite(p + "sprYVCoatIdle",  14, 12, 12);
+				YVCoatWalk  = sprite(p + "sprYVCoatWalk",   6, 12, 12);
+				YVCoatHurt  = sprite(p + "sprYVCoatHurt",   3, 12, 12);
+				YVCoatDead  = sprite(p + "sprYVCoatDead",  19, 24, 24);
+				YVCoatGoSit = sprite(p + "sprYVCoatGoSit",  3, 12, 12);
+				YVCoatSit   = sprite(p + "sprYVCoatSit",    1, 12, 12);
+				
+				 // Menu:
+				YVCoatPortrait = sprite(p + "sprYVCoatPortrait", 1, 40, 243);
+				YVCoatLoadout  = sprite(p + "sprYVCoatLoadout",  2, 16,  16);
+				YVCoatMapIcon  = sprite(p + "sprYVCoatMapIcon",  1, 10,  10);
+				
+			//#endregion
+			
+			//#region COOL FROG
+			var p = m + "FrogCool/";
+				
+				 // Player:
+				FrogCoolIdle  = sprite(p + "sprFrogCoolIdle",  6, 12, 12);
+				FrogCoolWalk  = sprite(p + "sprFrogCoolWalk",  6, 12, 12);
+				FrogCoolHurt  = sprite(p + "sprFrogCoolHurt",  3, 12, 12);
+				FrogCoolDead  = sprite(p + "sprFrogCoolDead",  6, 24, 24);
+				FrogCoolGoSit = sprite(p + "sprFrogCoolGoSit", 3, 12, 12);
+				FrogCoolSit   = sprite(p + "sprFrogCoolSit",   6, 12, 12);
+				
+				 // Menu:
+				FrogCoolPortrait = sprite(p + "sprFrogCoolPortrait", 1, 40, 243);
+				FrogCoolLoadout  = sprite(p + "sprFrogCoolLoadout",  2, 16,  16);
+				FrogCoolMapIcon  = sprite(p + "sprFrogCoolMapIcon",  1, 10,  10);
 				
 			//#endregion
 			
@@ -1772,13 +1844,18 @@
 				PlantOrchidSit   = sprite(p + "sprPlantOrchidSit",   1, 16, 16);
 				
 				 // Menu:
-				PlantOrchidPortrait = sprite(p + "sprPlantOrchidPortrait", 1, 20, 229);
+				PlantOrchidPortrait = sprite(p + "sprPlantOrchidPortrait", 1, 40, 243);
 				PlantOrchidLoadout  = sprite(p + "sprPlantOrchidLoadout",  2, 16,  16);
 				PlantOrchidMapIcon  = sprite(p + "sprPlantOrchidMapIcon",  1, 10,  10);
 				
 				 // Snare:
 				PlantOrchidTangle     = sprite(p + "sprPlantOrchidTangle",     6, 24, 24);
 				PlantOrchidTangleSeed = sprite(p + "sprPlantOrchidTangleSeed", 2,  4,  4);
+				
+				 // Weapons:
+				p += "Weapons/";
+				PlantOrchidMachinegun = sprite(p + "sprPlantOrchidMachinegun", 1,  3, 3, shnWep);
+				PlantOrchidTrident    = sprite(p + "sprPlantOrchidTrident",    1, 12, 7, shnWep);
 				
 			//#endregion
 			
@@ -1794,7 +1871,7 @@
 				CrystalRedSit   = sprite(p + "sprCrystalRedSit",   1, 12, 12);
 				
 				 // Menu:
-				CrystalRedPortrait = sprite(p + "sprCrystalRedPortrait", 1, 20, 229);
+				CrystalRedPortrait = sprite(p + "sprCrystalRedPortrait", 1, 40, 243);
 				CrystalRedLoadout  = sprite(p + "sprCrystalRedLoadout",  2, 16,  16);
 				CrystalRedMapIcon  = sprite(p + "sprCrystalRedMapIcon",  1, 10,  10);
 				

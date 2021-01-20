@@ -3984,13 +3984,62 @@
 #define wep_raw(_wep)
 	/*
 		For use with LWO weapons
+		Call a weapon's "weapon_raw" script in case of wrapper weapons
 		
 		Ex:
 			wep_raw({ wep:{ wep:{ wep:123 }}}) == 123
 	*/
 	
-	if(is_object(_wep)){
-		return wep_raw(lq_defget(_wep, "wep", wep_none));
+	var _raw = _wep;
+	
+	 // Break Down:
+	while(is_object(_raw)){
+		_raw = (("wep" in _raw) ? _raw.wep : wep_none);
+	}
+	
+	 // Wrapper:
+	if(is_string(_raw) && mod_script_exists("weapon", _raw, "weapon_raw")){
+		_raw = mod_script_call("weapon", _raw, "weapon_raw", _wep);
+	}
+	
+	return _raw;
+	
+#define wep_wrap(_wep)
+	/*
+		Returns the given weapon as an NT:TE wrapper weapon
+		The wrapper weapon LWO contains a "tewrapper" variable, which is a LWO that holds the variables below
+		
+		Vars:
+			wep     : The raw wrapped weapon (non-LWO)
+			lwo     : Is a LWO weapon (Uses the original weapon's LWO for the wrapper wep)
+			scr_use : LWO of (script name : boolean value) pairs, can be used to disable a weapon's script
+			scr_ref : LWO of (script name : script reference) pairs, can be used to execute custom code and/or return a custom value for a weapon's script
+			          The script is called with its 'argument0' being the original return value (0 if disabled by scr_use), and then the normal arguments
+			
+		Ex:
+			wep = wep_wrap(wep);
+			with(wep.tewrapper){
+				scr_ref.weapon_sprt = script_ref_create(coolspr);
+			}
+			
+			#define coolspr(_spr, _wep)
+				return sprBanditGun;
+	*/
+	
+	if(!is_object(_wep) || "tewrapper" not in _wep){
+		var _wrap = {
+			"wep"     : wep_raw(_wep),
+			"lwo"     : is_object(_wep),
+			"scr_use" : {},
+			"scr_ref" : {}
+		};
+		
+		if(!_wrap.lwo){
+			_wep = {};
+		}
+		
+		_wep.wep       = "tewrapper";
+		_wep.tewrapper = _wrap;
 	}
 	
 	return _wep;
@@ -4133,7 +4182,7 @@
 		
 	 // Custom:
 	if(is_string(_name) && mod_script_exists(_type, _name, _scrt)){
-		return mod_script_call_nc(_type, _name, _scrt);
+		return mod_script_call_self(_type, _name, _scrt, _wep);
 	}
 	
 	 // Normal:

@@ -5,8 +5,10 @@
 	
 	 // Bind Scripts:
 	//script_bind("OctoBubbleDraw", CustomDraw, script_ref_create(octobubble_draw), -3, true);
-	script_bind("WebDraw",        CustomDraw, script_ref_create(web_draw),         6, true);
-	script_bind("WebDrawPost",    CustomDraw, script_ref_create(web_draw_post),    1, true);
+	global.web_draw_bind = [
+		script_bind("WebDraw",     CustomDraw, script_ref_create(web_draw),      6, true),
+		script_bind("WebDrawPost", CustomDraw, script_ref_create(web_draw_post), 1, true)
+	];
 	
 	 // Pet Parrot Bobbing:
 	global.parrot_bob = ds_map_create();
@@ -2519,11 +2521,6 @@
 						var	_clone    = instance_clone(),
 							_accuracy = variable_instance_get(other.leader, "accuracy", 1);
 							
-						 // LWO Weapon Fix:
-						if("wep" in self){
-							_clone.wep = wep;
-						}
-						
 						 // Object-Specific:
 						switch(_clone.object_index){
 							
@@ -2595,6 +2592,11 @@
 									direction += _off;
 									image_angle += _off;
 									_off *= -1;
+								}
+								
+								 // Weapon Fix:
+								if(instance_is(self, CustomProjectile) && "wep" in self){
+									_clone.wep = wep;
 								}
 								
 						}
@@ -4431,9 +4433,12 @@
 	
 #define ntte_end_step
 	 // Spider Webbing:
+	var _webVisible = false;
 	if(instance_exists(CustomHitme)){
 		var _instSpider = instances_matching(Pet, "pet", "Spider");
 		if(array_length(_instSpider)){
+			_webVisible = true;
+			
 			 // Reset Webs:
 			if(instance_exists(GenCont)){
 				with(_instSpider){
@@ -4638,6 +4643,11 @@
 				
 				surface_reset_target();
 			}
+		}
+	}
+	with(global.web_draw_bind){
+		if(instance_exists(id)){
+			id.visible = _webVisible;
 		}
 	}
 	

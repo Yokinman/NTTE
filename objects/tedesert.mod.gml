@@ -625,20 +625,22 @@
 	
 #define Bone_create(_x, _y)
 	with(instance_create(_x, _y, CustomProjectile)){
-		 // Visual:
-		sprite_index = spr.Bone;
-		hitid        = [sprite_index, "BONE"];
-		
 		 // Vars:
 		mask_index = mskFlakBullet;
 		friction   = 1;
 		damage     = 34;
 		force      = 1;
 		typ        = 1;
+		wep        = "crabbone";
 		curse      = false;
 		creator    = noone;
 		rotspeed   = 1/3 * choose(-1, 1);
 		broken     = false;
+		
+		 // Visual:
+		image_speed  = 0;
+		sprite_index = weapon_get_sprt(wep);
+		hitid        = [sprite_index, "BONE"];
 		
 		 // Annoying Fix:
 		if(place_meeting(x, y, PortalShock)){
@@ -653,7 +655,7 @@
 	image_angle += speed_raw * rotspeed;
 	
 	 // Into Portal:
-	if(place_meeting(x, y, Portal)){
+	if(instance_exists(Portal) && place_meeting(x, y, Portal)){
 		if(speed > 0){
 			sound_play_pitchvol(sndMutant14Turn, 0.6 + random(0.2), 0.8);
 			repeat(3) instance_create(x, y, Smoke);
@@ -662,9 +664,9 @@
 	}
 	
 	 // Turn Back Into Weapon:
-	else if(speed <= 0 || place_meeting(x + hspeed_raw, y + vspeed_raw, PortalShock)){
+	else if(speed <= 0 || (instance_exists(PortalShock) && place_meeting(x + hspeed_raw, y + vspeed_raw, PortalShock))){
 		 // Don't Get Stuck on Wall:
-		mask_index = mskWepPickup;
+		mask_index = object_get_mask(WepPickup);
 		if(place_meeting(x, y, Wall) && instance_budge(Wall, -1)){
 			instance_create(x, y, Dust);
 		}
@@ -675,39 +677,40 @@
 	
 #define Bone_hit
 	 // Secret:
-	if(other.object_index = ScrapBoss){
-		with(other){
-			var c = charm_instance(self, true);
-			c.time = 300;
+	if(instance_is(other, ScrapBoss)){
+		with(charm_instance(other, true)){
+			time = 300;
 		}
 		sound_play(sndBigDogTaunt);
-		instance_delete(id);
-		exit;
+		instance_delete(self);
 	}
-
-	projectile_hit_push(other, damage, speed * force);
-	if(!instance_exists(self)) exit;
-
-	 // Sound:
-	sound_play_hit_ext(sndBloodGamble, 1.2 + random(0.2), 3);
-
-	 // Break:
-	if(!instance_near(x, y, instances_matching(CustomProp, "name", "CoastBossBecome"), 32)){
-		broken = true;
-		instance_destroy();
+	
+	 // Damage:
+	else{
+		projectile_hit_push(other, damage, speed * force);
+		
+		if(instance_exists(self)){
+			 // Sound:
+			sound_play_hit_ext(sndBloodGamble, 1.2 + random(0.2), 3);
+			
+			 // Break:
+			if(!instance_near(x, y, instances_matching(CustomProp, "name", "CoastBossBecome"), 32)){
+				broken = true;
+				instance_destroy();
+			}
+		}
 	}
-
+	
 #define Bone_wall
 	 // Bounce Off Wall:
-	if(place_meeting(x + hspeed, y, Wall)) hspeed *= -1;
-	if(place_meeting(x, y + vspeed, Wall)) vspeed *= -1;
+	move_bounce_solid(true);
 	speed /= 2;
 	rotspeed *= -1;
-
+	
 	 // Effects:
 	sound_play_hit(sndHitWall, 0.2);
 	instance_create(x, y, Dust);
-
+	
 #define Bone_destroy
 	instance_create(x, y, Dust);
 	
@@ -724,21 +727,21 @@
 	
 	 // Pickupable:
 	else with(instance_create(x, y, WepPickup)){
-		wep      = "crabbone";
-		curse    = other.curse;
 		rotation = other.image_angle;
+		curse    = other.curse;
+		wep      = other.wep;
 	}
 	
 	
 #define CoastBossBecome_create(_x, _y)
 	with(instance_create(_x, _y, CustomHitme)){
 		 // Visual:
-		spr_idle = spr.BigFishBecomeIdle;
-		spr_hurt = spr.BigFishBecomeHurt;
-		spr_dead = sprBigSkullDead;
-		spr_shadow = shd32;
+		spr_idle    = spr.BigFishBecomeIdle;
+		spr_hurt    = spr.BigFishBecomeHurt;
+		spr_dead    = sprBigSkullDead;
+		spr_shadow  = shd32;
 		image_speed = 0;
-		depth = -1;
+		depth       = -1;
 		
 		 // Sound:
 		snd_hurt = sndHitRock;
@@ -746,10 +749,10 @@
 		
 		 // Vars:
 		mask_index = mskScorpion;
-		maxhealth = 100 * (1 + GameCont.loops);
-		size = 2;
-		part = 0;
-		team = 0;
+		maxhealth  = 100 * (1 + GameCont.loops);
+		size       = 2;
+		part       = 0;
+		team       = 0;
 		
 		 // Easter:
 		prompt = prompt_create("DONATE");
