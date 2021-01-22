@@ -1854,8 +1854,24 @@
 				
 				 // Weapons:
 				p += "Weapons/";
-				PlantOrchidMachinegun = sprite(p + "sprPlantOrchidMachinegun", 1,  3, 3, shnWep);
-				PlantOrchidTrident    = sprite(p + "sprPlantOrchidTrident",    1, 12, 7, shnWep);
+				PlantOrchidAssaultRifle    = sprite(p + "sprPlantOrchidAssaultRifle",    1,  5, 4, shnWep);
+				PlantOrchidBazooka         = sprite(p + "sprPlantOrchidBazooka",         1, 12, 5, shnWep);
+				PlantOrchidCrossbow        = sprite(p + "sprPlantOrchidCrossbow",        1,  4, 4, shnWep);
+				PlantOrchidDiscGun         = sprite(p + "sprPlantOrchidDiscGun",         1, -3, 4, shnWep);
+				PlantOrchidFrogPistol      = sprite(p + "sprPlantOrchidFrogPistol",      1, -4, 4, shnWep);
+				PlantOrchidFrogPistolRusty = sprite(p + "sprPlantOrchidFrogPistolRusty", 1, -4, 4, shnWep);
+				PlantOrchidGrenadeLauncher = sprite(p + "sprPlantOrchidGrenadeLauncher", 1,  5, 5, shnWep);
+				PlantOrchidLaserPistol     = sprite(p + "sprPlantOrchidLaserPistol",     1, -2, 2, shnWep);
+				PlantOrchidMachinegun      = sprite(p + "sprPlantOrchidMachinegun",      1,  3, 3, shnWep);
+				PlantOrchidNukeLauncher    = sprite(p + "sprPlantOrchidNukeLauncher",    1,  8, 8, shnWep);
+				PlantOrchidPlasmaGun       = sprite(p + "sprPlantOrchidPlasmaGun",       1,  3, 4, shnWep);
+				PlantOrchidRevolver        = sprite(p + "sprPlantOrchidRevolver",        1, -3, 2, shnWep);
+				PlantOrchidScrewdriver     = sprite(p + "sprPlantOrchidScrewdriver",     1, -1, 3, shnWep);
+				PlantOrchidShotgun         = sprite(p + "sprPlantOrchidShotgun",         1,  5, 3, shnWep);
+				PlantOrchidSlugger         = sprite(p + "sprPlantOrchidSlugger",         1,  4, 4, shnWep);
+				PlantOrchidSplinterGun     = sprite(p + "sprPlantOrchidSplinterGun",     1,  3, 4, shnWep);
+				PlantOrchidTrident         = sprite(p + "sprPlantOrchidTrident",         1, 12, 7, shnWep);
+				PlantOrchidWrench          = sprite(p + "sprPlantOrchidWrench",          1,  1, 4, shnWep);
 				
 			//#endregion
 			
@@ -3114,13 +3130,24 @@ var _shine = argument_count > 4 ? argument[4] : shnNone;
 	
 	 // Locked Weapon Spriterize:
 	with(ntte_mods.wep){
-		var _name = self;
-		if(mod_variable_get("weapon", _name, "sprWepLocked") == mskNone){
-			var _spr = mod_variable_get("weapon", _name, "sprWep");
-			if(sprite_get_width(_spr) != 16 || sprite_get_height(_spr) != 16){
-				with(other){
-					mod_variable_set("weapon", _name, "sprWepLocked", wep_locked_sprite(_spr));
+		if(
+			mod_variable_get("weapon", self, "sprWepLocked") == mskNone &&
+			mod_variable_get("weapon", self, "sprWep") != sprTemp
+		){
+			mod_variable_set("weapon", self, "sprWepLocked", sprTemp);
+			
+			if(fork()){
+				var	_spr     = mod_variable_get("weapon", self, "sprWep"),
+					_waitMax = 90,
+					_waitBox = [sprite_get_bbox_left(_spr), sprite_get_bbox_top(_spr), sprite_get_bbox_right(_spr), sprite_get_bbox_bottom(_spr)];
+					
+				while(_waitMax-- > 0 && array_equals(_waitBox, [sprite_get_bbox_left(_spr), sprite_get_bbox_top(_spr), sprite_get_bbox_right(_spr), sprite_get_bbox_bottom(_spr)])){
+					wait 0;
 				}
+				
+				mod_variable_set("weapon", self, "sprWepLocked", wep_locked_sprite(_spr));
+				
+				exit;
 			}
 		}
 	}

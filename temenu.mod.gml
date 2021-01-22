@@ -1389,14 +1389,18 @@
 				 // Custom Crown:
 				if(!is_undefined(_crown) && _crown.custom.slct != -1){
 					with(_crown.custom.icon) if(crwn == _crown.custom.slct){
-						with(other) draw_sprite(other.sprite_index, other.image_index, _x - 60 - _off, _y - 39 - _off);
+						with(other){
+							draw_sprite(other.sprite_index, other.image_index, _x - 60 - _off, _y - 39 - _off);
+						}
 					}
 				}
 				
 				 // Custom Weapon:
 				var _wep = unlock_get(`loadout:wep:${_race}:${save_get(`loadout:wep:${_race}`, "")}`);
 				if(_wep != wep_none){
-					draw_loadoutwep(_wep, 0, _x - 60 - _off, _y - 14 + _off, 1, 1, 0, c_white, 1);
+					with(self){
+						draw_loadoutwep(_wep, 0, _x - 60 - _off, _y - 14 + _off, 1, 1, 0, c_white, 1);
+					}
 				}
 			}
 		}
@@ -2104,7 +2108,6 @@
 												lq_size(_petStat) > (lq_exists(_petStat, "found") + lq_exists(_petStat, "owned"))
 												|| lq_defget(_petStat, "found", 0) > 0
 												|| lq_defget(_petStat, "owned", 0) > 0
-												|| pet_get_sprite(_info.name, _info.mod_type, _info.mod_name, 0, "icon") != 0
 											){
 												array_push(_petListFull, _pet);
 											}
@@ -2398,7 +2401,7 @@
 																switch(_modType){
 																	case "weapon":
 																		var _pack = mod_script_call_nc(_modType, _modName, _modScrt, _modName);
-																		if(_pack in _packList){
+																		if(is_string(_pack) && _pack in _packList){
 																			array_push(
 																				lq_get(_packList, _pack),
 																				[_modType, _modName, mod_variable_get(_modType, _modName, "sprWep")]
@@ -2408,7 +2411,7 @@
 																		
 																	case "crown":
 																		var _pack = mod_script_call_nc(_modType, _modName, _modScrt);
-																		if(_pack in _packList){
+																		if(is_string(_pack) && _pack in _packList){
 																			array_push(
 																				lq_get(_packList, _pack),
 																				[_modType, _modName, mod_variable_get(_modType, _modName, "sprCrownIdle")]

@@ -107,10 +107,10 @@
 	 // NT:TE Weapon Stuff:
 	mod_script_call("mod", "teassets", "loadout_wep_reset");
 	with(Player){
-		 // Set Manually Stored Weapon:
 		var	_wepName = save_get(`loadout:wep:${race}`, ""),
 			_wep     = unlock_get(`loadout:wep:${race}:${_wepName}`);
 			
+		 // Set Manually Stored Weapon:
 		if(_wep != wep_none){
 			 // Store LWO Variables:
 			mod_script_call("mod", "teassets", "loadout_wep_save", race, _wepName);
@@ -2697,7 +2697,7 @@
 #define ntte_end_step
 	if(lag) trace_time();
 	
-	 // Weapon Unlock Stuff:
+	 // Locked Weapons:
 	if(instance_exists(Player)){
 		with(Player){
 			for(var i = 0; i < 2; i++){
@@ -2705,29 +2705,27 @@
 					_raw = wep_raw(_wep);
 					
 				if(is_string(_raw) && array_find_index(ntte_mods.wep, _raw) >= 0){
-					with(other){
-						 // No Cheaters (bro just play the mod):
-						if(!weapon_get("avail", _wep)){
-							var _b = ((i == 0) ? "" : "b");
-							
-							 // Boneify:
-							variable_instance_set(self, _b + "wep",      "crabbone");
-							variable_instance_set(self, _b + "wepangle", choose(-120, 120));
-							
-							 // Effects:
-							sound_play(sndCrownRandom);
-							view_shake_at(x, y, 20);
-							instance_create(x, y, GunWarrantEmpty);
-							repeat(2){
-								with(scrFX(x, y, [gunangle + variable_instance_get(self, _b + "wepangle"), 2.5], Smoke)){
-									depth = other.depth - 1;
-								}
+					 // No Cheaters (bro just play the mod):
+					if(!weapon_get("avail", _wep)){
+						var _b = ((i == 0) ? "" : "b");
+						
+						 // Boneify:
+						variable_instance_set(self, _b + "wep",      "crabbone");
+						variable_instance_set(self, _b + "wepangle", choose(-120, 120));
+						
+						 // Effects:
+						sound_play(sndCrownRandom);
+						view_shake_at(x, y, 20);
+						instance_create(x, y, GunWarrantEmpty);
+						repeat(2){
+							with(scrFX(x, y, [gunangle + variable_instance_get(self, _b + "wepangle"), 2.5], Smoke)){
+								depth = other.depth - 1;
 							}
 						}
-						
-						 // Weapon Found:
-						else stat_set("found:" + _raw + ".wep", true);
 					}
+					
+					 // Weapon Found:
+					else stat_set("found:" + _raw + ".wep", true);
 				}
 			}
 		}

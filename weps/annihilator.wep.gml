@@ -7,8 +7,8 @@
 	
 	 // LWO:
 	global.lwoWep = {
-		wep   : mod_current,
-		melee : true
+		"wep"   : mod_current,
+		"melee" : true
 	};
 	
 #define weapon_name         return (weapon_avail() ? "ANNIHILATOR" : "LOCKED");

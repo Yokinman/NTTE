@@ -8,8 +8,8 @@
 	
 	 // LWO:
 	global.lwoWep = {
-		wep  : mod_current,
-		inst : noone
+		"wep"  : mod_current,
+		"inst" : noone
 	};
 	
 #define weapon_name        return (weapon_avail() ? "CLAM SHIELD" : "LOCKED");

@@ -37,7 +37,23 @@
 	
 #define skin_weapon_sprite(_spr, _wep)
 	switch(_spr){
-		case sprGoldMachinegun : return spr.PlantOrchidMachinegun;
+		case sprGoldARifle       : return spr.PlantOrchidAssaultRifle;
+		case sprGoldBazooka      : return spr.PlantOrchidBazooka;
+		case sprGoldCrossbow     : return spr.PlantOrchidCrossbow;
+		case sprGoldDiscgun      : return spr.PlantOrchidDiscGun;
+		case sprGoldFrogBlaster  : return spr.PlantOrchidFrogPistol;
+		case sprFrogBlaster      : return spr.PlantOrchidFrogPistolRusty;
+		case sprGoldNader        : return spr.PlantOrchidGrenadeLauncher;
+		case sprGoldLaserGun     : return spr.PlantOrchidLaserPistol;
+		case sprGoldMachinegun   : return spr.PlantOrchidMachinegun;
+		case sprGoldNukeLauncher : return spr.PlantOrchidNukeLauncher;
+		case sprGoldPlasmaGun    : return spr.PlantOrchidPlasmaGun;
+		case sprGoldRevolver     : return spr.PlantOrchidRevolver;
+		case sprGoldScrewdriver  : return spr.PlantOrchidScrewdriver;
+		case sprGoldShotgun      : return spr.PlantOrchidShotgun;
+		case sprGoldSlugger      : return spr.PlantOrchidSlugger;
+		case sprGoldSplinterGun  : return spr.PlantOrchidSplinterGun;
+		case sprGoldWrench       : return spr.PlantOrchidWrench;
 		
 		default: // Modded
 			if(_spr == spr.GoldTrident) return spr.PlantOrchidTrident;
