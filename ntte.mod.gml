@@ -105,10 +105,16 @@
 	}
 	
 	 // NT:TE Weapon Stuff:
+	mod_script_call("mod", "teassets", "loadout_wep_reset");
 	with(Player){
 		 // Set Manually Stored Weapon:
-		var _wep = unlock_get(`loadout:wep:${race}:${save_get(`loadout:wep:${race}`, "")}`);
+		var	_wepName = save_get(`loadout:wep:${race}`, ""),
+			_wep     = unlock_get(`loadout:wep:${race}:${_wepName}`);
+			
 		if(_wep != wep_none){
+			 // Store LWO Variables:
+			mod_script_call("mod", "teassets", "loadout_wep_save", race, _wepName);
+			
 			 // Take Ammo:
 			var _type = weapon_get_type(wep);
 			if(_type != type_melee){
@@ -1630,7 +1636,7 @@
 	
 	 // Red Ammo Canisters:
 	with(Player){
-		if(weapon_get_red(wep) > 0 || weapon_get_red(bwep) > 0){
+		if(weapon_get("red", wep) > 0 || weapon_get("red", bwep) > 0){
 			 // Rad Chest Replacement:
 			with(RadChest){
 				obj_create(x, y, "RedAmmoChest");
@@ -2133,7 +2139,7 @@
 				
 				 // Red Ammo:
 				if("red_ammo" in self){
-					if(weapon_get_red(wep) > 0 || weapon_get_red(bwep) > 0){
+					if(weapon_get("red", wep) > 0 || weapon_get("red", bwep) > 0){
 						var _wish = red_amax;
 						red_ammo = min(red_ammo + (_wish * _wishDiff), red_amax);
 					}
@@ -2220,13 +2226,10 @@
 					var _wep = wep;
 					with(_eatInst){
 						 // Custom:
-						var _name = wep_raw(_wep);
-						if(is_string(_name)){
-							mod_script_call("weapon", _name, "weapon_ntte_eat", _wep);
-						}
+						weapon_get("ntte_eat", _wep);
 						
 						 // Red:
-						if(weapon_get_red(_wep) > 0){
+						if(weapon_get("red", _wep) > 0){
 							obj_create(x, y, "RedAmmoPickup");
 						}
 					}
@@ -2421,11 +2424,11 @@
 		if(array_length(_inst)) with(_inst){
 			ntte_wep_unlock = true;
 			with(Player){
-				with([wep, bwep]){
-					var _wep = self;
+				for(var i = 0; i < 2; i++){
+					var _wep = ((i == 0) ? wep : bwep);
 					if(weapon_get_gold(_wep) != 0){
 						if(array_find_index(ntte_mods.wep, wep_raw(_wep)) >= 0){
-							var	_path = `loadout:wep:${other.race}`,
+							var	_path = `loadout:wep:${race}`,
 								_name = "main";
 								
 							if(unlock_set(_path + ":" + _name, _wep)){
@@ -2697,16 +2700,15 @@
 	 // Weapon Unlock Stuff:
 	if(instance_exists(Player)){
 		with(Player){
-			var i = 0;
-			with([wep, bwep]){
-				var	_wep = self,
+			for(var i = 0; i < 2; i++){
+				var	_wep = ((i == 0) ? wep : bwep),
 					_raw = wep_raw(_wep);
 					
 				if(is_string(_raw) && array_find_index(ntte_mods.wep, _raw) >= 0){
 					with(other){
 						 // No Cheaters (bro just play the mod):
-						if(mod_script_exists("weapon", _raw, "weapon_avail") && !mod_script_call_self("weapon", _raw, "weapon_avail", _wep)){
-							var _b = ((i == 1) ? "b" : "");
+						if(!weapon_get("avail", _wep)){
+							var _b = ((i == 0) ? "" : "b");
 							
 							 // Boneify:
 							variable_instance_set(self, _b + "wep",      "crabbone");
@@ -2727,7 +2729,6 @@
 						else stat_set("found:" + _raw + ".wep", true);
 					}
 				}
-				i++;
 			}
 		}
 	}
@@ -4016,14 +4017,13 @@
 					
 					d3d_set_projection_ortho(-_hudX, -_hudY, w, h, 0);
 					
-					with(_player){
+					with(other) with(_player){
 						 // Red Ammo:
 						if("red_ammo" in self){
 							if(_hudDraw){
-								var _b = ["", "b"];
-								for(var i = 0; i < array_length(_b); i++){
-									var	_wep  = variable_instance_get(self, _b[i] + "wep", wep_none),
-										_cost = weapon_get_red(_wep),
+								for(var i = 0; i < 2; i++){
+									var	_wep  = ((i == 0) ? wep : bwep),
+										_cost = weapon_get("red", _wep),
 										_gold = (weapon_get_gold(_wep) != 0);
 										
 									if(_cost > 0){
@@ -4033,7 +4033,7 @@
 											_low = (
 												red_ammo < _cost
 												&& (wave % 10) < 5
-												&& variable_instance_get(self, "drawempty" + _b[i], 0) > 0
+												&& ((i == 0) ? drawempty : drawemptyb) > 0
 											);
 											
 										 // Main:
@@ -4998,7 +4998,7 @@
 #define wep_merge(_stock, _front)                                                       return  mod_script_call_nc  ('mod', 'telib', 'wep_merge', _stock, _front);
 #define wep_merge_decide(_hardMin, _hardMax)                                            return  mod_script_call_nc  ('mod', 'telib', 'wep_merge_decide', _hardMin, _hardMax);
 #define weapon_decide(_hardMin, _hardMax, _gold, _noWep)                                return  mod_script_call_self('mod', 'telib', 'weapon_decide', _hardMin, _hardMax, _gold, _noWep);
-#define weapon_get_red(_wep)                                                            return  mod_script_call_self('mod', 'telib', 'weapon_get_red', _wep);
+#define weapon_get(_name, _wep)                                                         return  mod_script_call     ('mod', 'telib', 'weapon_get', _name, _wep);
 #define skill_get_icon(_skill)                                                          return  mod_script_call_self('mod', 'telib', 'skill_get_icon', _skill);
 #define skill_get_avail(_skill)                                                         return  mod_script_call_self('mod', 'telib', 'skill_get_avail', _skill);
 #define string_delete_nt(_string)                                                       return  mod_script_call_nc  ('mod', 'telib', 'string_delete_nt', _string);

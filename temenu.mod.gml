@@ -500,14 +500,18 @@
 			with(wepLoadout){
 				if(!instance_exists(inst)){
 					if(name == "" || unlock_get(`loadout:wep:${player_get_race_fix(loadoutPlayer)}:${name}`) != wep_none){
-						inst   = instance_create(0, 0, GameObject);
+						inst   = instance_create(0, 0, FloorMaker);
 						alarm0 = 2;
 						overy  = 0;
 						addy   = 2;
 						
+						 // Destroy FloorMaker Things:
+						with(instances_matching_gt(GameObject, "id", inst)){
+							instance_delete(self);
+						}
+						
 						 // Become LoadoutWep:
 						with(inst){
-							instance_change(FloorMaker, false);
 							dix = other.dix;
 							instance_change(LoadoutWep, true);
 							other.alarm0 = alarm_get(0);
@@ -1403,7 +1407,7 @@
 		Draws a given weapon's loadout sprite as it would appear on the character selection screen
 	*/
 	
-	var _spr = weapon_get_loadout(_wep);
+	var _spr = weapon_get("loadout", _wep);
 	
 	 // Default to 2x Normal Sprite:
 	if(_spr == 0 || _spr == null){
@@ -2998,7 +3002,7 @@
 #define wep_merge(_stock, _front)                                                       return  mod_script_call_nc  ('mod', 'telib', 'wep_merge', _stock, _front);
 #define wep_merge_decide(_hardMin, _hardMax)                                            return  mod_script_call_nc  ('mod', 'telib', 'wep_merge_decide', _hardMin, _hardMax);
 #define weapon_decide(_hardMin, _hardMax, _gold, _noWep)                                return  mod_script_call_self('mod', 'telib', 'weapon_decide', _hardMin, _hardMax, _gold, _noWep);
-#define weapon_get_red(_wep)                                                            return  mod_script_call_self('mod', 'telib', 'weapon_get_red', _wep);
+#define weapon_get(_name, _wep)                                                         return  mod_script_call     ('mod', 'telib', 'weapon_get', _name, _wep);
 #define skill_get_icon(_skill)                                                          return  mod_script_call_self('mod', 'telib', 'skill_get_icon', _skill);
 #define skill_get_avail(_skill)                                                         return  mod_script_call_self('mod', 'telib', 'skill_get_avail', _skill);
 #define string_delete_nt(_string)                                                       return  mod_script_call_nc  ('mod', 'telib', 'string_delete_nt', _string);
@@ -3022,4 +3026,3 @@
 #define pool(_pool)                                                                     return  mod_script_call_nc  ('mod', 'telib', 'pool', _pool);
 #define unlock_get_name(_name)                                                          return  mod_script_call_nc  ('mod', 'telib', 'unlock_get_name', _name);
 #define draw_text_bn(_x, _y, _string, _angle)                                                   mod_script_call_nc  ('mod', 'telib', 'draw_text_bn', _x, _y, _string, _angle);
-#define weapon_get_loadout(_wep)                                                        return  mod_script_call     ('mod', 'telib', 'weapon_get_loadout', _wep)

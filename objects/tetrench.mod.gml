@@ -4361,8 +4361,7 @@
 			draw_set_color_write_enable(true, false, false, true);
 			
 			for(var i = 0; i < 2; i++){
-				var	_b    = ((i == 1) ? "b" : ""),
-					_inst = instances_matching_gt(_instPlayer, _b + "reload", 0);
+				var _inst = instances_matching_gt(_instPlayer, ((i == 0) ? "reload" : "breload"), 0);
 					
 				if(i == 1){
 					if(!array_length(_inst)){
@@ -4372,32 +4371,29 @@
 				}
 				
 				if(array_length(_inst)) with(_inst){
-					var	_wep    = variable_instance_get(self, _b + "wep", wep_none),
-						_wepRaw = wep_raw(_wep);
+					var	_wep    = ((i == 0) ? wep : bwep),
+						_quasar = weapon_get("ntte_quasar", _wep);
 						
-					if(is_string(_wepRaw)){
-						var _quasar = mod_script_call("weapon", _wepRaw, "weapon_ntte_quasar", _wep);
-						if(is_real(_quasar) && _quasar > 0){
-							var	_ang  = variable_instance_get(self, _b + "wepangle", 0),
-								_kick = variable_instance_get(self, _b + "wkick",    0),
-								_flip = (weapon_is_melee(_wep) ? variable_instance_get(self, _b + "wepflip", 1) : right) * ((i == 1) ? -1 : 1),
-								_alp  = image_alpha * (variable_instance_get(self, _b + "reload", 0) / weapon_get_load(_wep)) * (1 + (0.2 * skill_get(mut_laser_brain))) * _quasar,
-								_dis  = ((i == 1) ? -1 : -2) * sign(_flip),
-								_dir  = gunangle + (_ang * (1 - (_kick / 20))) - 90;
-								
-							draw_weapon(
-								weapon_get_sprt(_wep),
-								gunshine,
-								x + lengthdir_x(_dis, _dir),
-								y + lengthdir_y(_dis, _dir) + swapmove - (4 * i),
-								gunangle,
-								_ang,
-								_kick,
-								_flip,
-								image_blend,
-								_alp
-							);
-						}
+					if(_quasar > 0){
+						var	_ang  = ((i == 0) ? wepangle : bwepangle),
+							_kick = ((i == 0) ? wkick    : bwkick),
+							_flip = (weapon_is_melee(_wep) ? ((i == 0) ? wepflip : bwepflip) : right) * ((i == 1) ? -1 : 1),
+							_alp  = image_alpha * (((i == 0) ? reload : breload) / weapon_get_load(_wep)) * (1 + (0.2 * skill_get(mut_laser_brain))) * _quasar,
+							_dis  = ((i == 1) ? -1 : -2) * sign(_flip),
+							_dir  = gunangle + (_ang * (1 - (_kick / 20))) - 90;
+							
+						draw_weapon(
+							weapon_get_sprt(_wep),
+							gunshine,
+							x + lengthdir_x(_dis, _dir),
+							y + lengthdir_y(_dis, _dir) + swapmove - (4 * i),
+							gunangle,
+							_ang,
+							_kick,
+							_flip,
+							image_blend,
+							_alp
+						);
 					}
 				}
 			}
@@ -4888,7 +4884,7 @@
 #define wep_merge(_stock, _front)                                                       return  mod_script_call_nc  ('mod', 'telib', 'wep_merge', _stock, _front);
 #define wep_merge_decide(_hardMin, _hardMax)                                            return  mod_script_call_nc  ('mod', 'telib', 'wep_merge_decide', _hardMin, _hardMax);
 #define weapon_decide(_hardMin, _hardMax, _gold, _noWep)                                return  mod_script_call_self('mod', 'telib', 'weapon_decide', _hardMin, _hardMax, _gold, _noWep);
-#define weapon_get_red(_wep)                                                            return  mod_script_call_self('mod', 'telib', 'weapon_get_red', _wep);
+#define weapon_get(_name, _wep)                                                         return  mod_script_call     ('mod', 'telib', 'weapon_get', _name, _wep);
 #define skill_get_icon(_skill)                                                          return  mod_script_call_self('mod', 'telib', 'skill_get_icon', _skill);
 #define skill_get_avail(_skill)                                                         return  mod_script_call_self('mod', 'telib', 'skill_get_avail', _skill);
 #define string_delete_nt(_string)                                                       return  mod_script_call_nc  ('mod', 'telib', 'string_delete_nt', _string);

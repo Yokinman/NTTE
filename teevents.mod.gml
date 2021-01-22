@@ -2197,9 +2197,8 @@
 					default:
 						
 						 // Custom:
-						var _scrt = "weapon_shrine";
-						if(is_string(_raw) && mod_script_exists("weapon", _raw, _scrt)){
-							var _shrine = mod_script_call_self("weapon", _raw, _scrt, _wep);
+						var _shrine = weapon_get("shrine", _wep);
+						if(_shrine != mut_none){
 							_list = array_combine(
 								_list,
 								(is_array(_shrine) ? _shrine : [_shrine])
@@ -2672,7 +2671,7 @@
 #define wep_merge(_stock, _front)                                                       return  mod_script_call_nc  ('mod', 'telib', 'wep_merge', _stock, _front);
 #define wep_merge_decide(_hardMin, _hardMax)                                            return  mod_script_call_nc  ('mod', 'telib', 'wep_merge_decide', _hardMin, _hardMax);
 #define weapon_decide(_hardMin, _hardMax, _gold, _noWep)                                return  mod_script_call_self('mod', 'telib', 'weapon_decide', _hardMin, _hardMax, _gold, _noWep);
-#define weapon_get_red(_wep)                                                            return  mod_script_call_self('mod', 'telib', 'weapon_get_red', _wep);
+#define weapon_get(_name, _wep)                                                         return  mod_script_call     ('mod', 'telib', 'weapon_get', _name, _wep);
 #define skill_get_icon(_skill)                                                          return  mod_script_call_self('mod', 'telib', 'skill_get_icon', _skill);
 #define skill_get_avail(_skill)                                                         return  mod_script_call_self('mod', 'telib', 'skill_get_avail', _skill);
 #define string_delete_nt(_string)                                                       return  mod_script_call_nc  ('mod', 'telib', 'string_delete_nt', _string);

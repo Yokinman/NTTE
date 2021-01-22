@@ -4244,7 +4244,7 @@
 	}
 	
 #define RedAmmoPickup_pull
-	if(weapon_get_red(other.wep) > 0 || weapon_get_red(other.bwep) > 0){
+	if(weapon_get("red", other.wep) > 0 || weapon_get("red", other.bwep) > 0){
 		return true;
 	}
 	return false;
@@ -4435,10 +4435,8 @@
 	
 	 // Trident Unlock:
 	var _wepRaw = wep_raw(wep);
-	if(_wepRaw == "trident"){
-		if(mod_script_exists("weapon", _wepRaw, "weapon_avail") && !mod_script_call("weapon", _wepRaw, "weapon_avail", wep)){
-			unlock_set(`wep:${_wepRaw}`, true);
-		}
+	if(_wepRaw == "trident" && !weapon_get("avail", wep)){
+		unlock_set(`wep:${_wepRaw}`, true);
 	}
 	
 	 // Weapon:
@@ -5846,9 +5844,9 @@
 		 // Red Weapon Pickup Ammo:
 		if(instance_exists(WepPickup)){
 			var _inst = instances_matching_gt(WepPickup, "ammo", 0);
-			if(array_length(_inst)) with(_inst){ //
-				if(place_meeting(x, y, Player)){ // YOOO the triple alignment dude
-					if(weapon_get_red(wep) > 0){ //
+			if(array_length(_inst)) with(_inst){
+				if(place_meeting(x, y, Player)){
+					if(weapon_get("red", wep) > 0){
 						with(instance_nearest_array(x, y, instances_matching_ne(Player, "red_ammo", null))){
 							other.ammo = false;
 							
@@ -6196,7 +6194,7 @@
 #define wep_merge(_stock, _front)                                                       return  mod_script_call_nc  ('mod', 'telib', 'wep_merge', _stock, _front);
 #define wep_merge_decide(_hardMin, _hardMax)                                            return  mod_script_call_nc  ('mod', 'telib', 'wep_merge_decide', _hardMin, _hardMax);
 #define weapon_decide(_hardMin, _hardMax, _gold, _noWep)                                return  mod_script_call_self('mod', 'telib', 'weapon_decide', _hardMin, _hardMax, _gold, _noWep);
-#define weapon_get_red(_wep)                                                            return  mod_script_call_self('mod', 'telib', 'weapon_get_red', _wep);
+#define weapon_get(_name, _wep)                                                         return  mod_script_call     ('mod', 'telib', 'weapon_get', _name, _wep);
 #define skill_get_icon(_skill)                                                          return  mod_script_call_self('mod', 'telib', 'skill_get_icon', _skill);
 #define skill_get_avail(_skill)                                                         return  mod_script_call_self('mod', 'telib', 'skill_get_avail', _skill);
 #define string_delete_nt(_string)                                                       return  mod_script_call_nc  ('mod', 'telib', 'string_delete_nt', _string);

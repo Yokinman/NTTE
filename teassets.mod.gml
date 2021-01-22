@@ -2145,6 +2145,9 @@
 	global.shad        = ds_map_create();
 	global.shad_active = "";
 	
+	 // Cloned Starting Weapons:
+	global.loadout_wep_clone = ds_list_create();
+	
 	 // Compile Mod Lists:
 	ntte_mods = {
 		"mod"   : [],
@@ -2973,6 +2976,15 @@ var _shine = argument_count > 4 ? argument[4] : shnNone;
 		shine : _shine
 	};
 	
+#define game_start
+	 // Autosave:
+	if(save_auto){
+		save_ntte();
+	}
+	
+	 // Reset Active Shader (Beta Fix):
+	global.shad_active = "";
+	
 #define step
 	if(lag) trace_time();
 	
@@ -3113,14 +3125,11 @@ var _shine = argument_count > 4 ? argument[4] : shnNone;
 		}
 	}
 	
-	 // Autosave:
-	if(save_auto){
-		with(instances_matching(GameCont, "ntte_autosave", null)){
-			save_ntte();
+	 // Autosave (Return to Character Select):
+	if(instance_exists(Menu) && save_auto){
+		with(instances_matching(Menu, "ntte_autosave", null)){
 			ntte_autosave = true;
-			
-			 // Reset Active Shader (Beta Fix):
-			global.shad_active = "";
+			save_ntte();
 		}
 	}
 	
@@ -3592,7 +3601,41 @@ var _shine = argument_count > 4 ? argument[4] : shnNone;
 	
 	return _sprList;
 	
+#define loadout_wep_save(_race, _name)
+	/*
+		Saves a LWO starting weapon's variables to restore them later on mod unload/game_start
+	*/
+	
+	var _wep = unlock_get(`loadout:wep:${_race}:${_name}`);
+	
+	if(is_object(_wep)){
+		ds_list_add(global.loadout_wep_clone, [_race, _name, _wep, lq_clone(_wep)]);
+	}
+	
+#define loadout_wep_reset()
+	/*
+		Restores all of a LWO starting weapon's original variables
+	*/
+	
+	with(ds_list_to_array(global.loadout_wep_clone)){
+		var	_race    = self[0],
+			_name    = self[1],
+			_wep     = self[2],
+			_wepSave = unlock_get(`loadout:wep:${_race}:${_name}`);
+			
+		if(_wep == _wepSave){
+			var _wepCopy = self[3];
+			save_set(`unlock:loadout:wep:${_race}:${_name}`, _wepCopy);
+		}
+	}
+	
+	ds_list_clear(global.loadout_wep_clone);
+	
 #define cleanup
+	 // Reset Starting Weapons:
+	loadout_wep_reset();
+	ds_list_destroy(global.loadout_wep_clone);
+	
 	 // Save Game:
 	if(save_auto){
 		save_ntte();

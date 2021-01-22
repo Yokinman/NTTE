@@ -1394,23 +1394,25 @@
 	with(_wep){
 		 // Default to Weapon Stats:
 		if("weap" in self){
-			if("name" not in self) name = weapon_get_name(weap);
-			if("text" not in self) text = weapon_get_text(weap);
-			if("sprt" not in self) sprt = weapon_get_sprt(weap);
-			if("swap" not in self) swap = weapon_get_swap(weap);
-			if("area" not in self) area = weapon_get_area(weap);
-			if("type" not in self) type = weapon_get_type(weap);
-			if("load" not in self) load = weapon_get_load(weap);
-			if("cost" not in self) cost = weapon_get_cost(weap);
-			if("rads" not in self) rads = weapon_get_rads(weap);
-			if("auto" not in self) auto = weapon_get_auto(weap);
-			if("mele" not in self) mele = weapon_is_melee(weap);
-			if("gold" not in self) gold = weapon_get_gold(weap);
-			if("lasr" not in self) lasr = weapon_get_laser_sight(weap);
-			if("icon" not in self) icon = mod_script_call_nc("mod", "telib", "weapon_get_loadout", weap);
+			with(other){
+				if("name" not in other) other.name = weapon_get_name(other.weap);
+				if("text" not in other) other.text = weapon_get_text(other.weap);
+				if("sprt" not in other) other.sprt = weapon_get_sprt(other.weap);
+				if("swap" not in other) other.swap = weapon_get_swap(other.weap);
+				if("area" not in other) other.area = weapon_get_area(other.weap);
+				if("type" not in other) other.type = weapon_get_type(other.weap);
+				if("load" not in other) other.load = weapon_get_load(other.weap);
+				if("cost" not in other) other.cost = weapon_get_cost(other.weap);
+				if("rads" not in other) other.rads = weapon_get_rads(other.weap);
+				if("auto" not in other) other.auto = weapon_get_auto(other.weap);
+				if("mele" not in other) other.mele = weapon_is_melee(other.weap);
+				if("gold" not in other) other.gold = weapon_get_gold(other.weap);
+				if("lasr" not in other) other.lasr = weapon_get_laser_sight(other.weap);
+				if("icon" not in other) other.icon = weapon_get("loadout", other.weap);
+			}
 		}
 		
-		 // Default:
+		 // Default Variables:
 		for(var i = 0; i < lq_size(_default); i++){
 			var _key = lq_get_key(_default, i);
 			if(_key not in self){
@@ -1432,26 +1434,34 @@
 		}
 		
 		 // Sounds:
-		if(!is_array(soun)) soun = [soun];
+		if(!is_array(soun)){
+			soun = [soun];
+		}
 		for(var i = 0; i < array_length(soun); i++){
-			if(!is_object(soun[i])) soun[i] = { snd : soun[i] };
-			var s = soun[i];
+			if(!is_object(soun[i])){
+				soun[i] = { "snd": soun[i] };
+			}
+			var _s = soun[i];
 			
-			if("snd"       not in s) s.snd = -1;
-			if("pit"       not in s) s.pit = [0.9, 1.1];
-			if("vol"       not in s) s.vol = 1;
-			if("shot"      not in s) s.shot = -1;
-			if("loop"      not in s) s.loop = false;
-			if("loop_strt" not in s) s.loop_strt = -1;
-			if("loop_stop" not in s) s.loop_stop = -1;
-			if("loop_indx" not in s) s.loop_indx = -1;
+			if("snd"       not in _s) _s.snd       = -1;
+			if("pit"       not in _s) _s.pit       = [0.9, 1.1];
+			if("vol"       not in _s) _s.vol       = 1;
+			if("shot"      not in _s) _s.shot      = -1;
+			if("loop"      not in _s) _s.loop      = false;
+			if("loop_strt" not in _s) _s.loop_strt = -1;
+			if("loop_stop" not in _s) _s.loop_stop = -1;
+			if("loop_indx" not in _s) _s.loop_indx = -1;
 		}
 		
 		 // Flags:
-		if(!is_array(flag)) flag = [flag];
+		if(!is_array(flag)){
+			flag = [flag];
+		}
 		
 		 // Controller Script:
-		if(!is_array(cont)) cont = script_ref_create(cont);
+		if(!is_array(cont)){
+			cont = script_ref_create(cont);
+		}
 		if(array_length(cont) < 3){
 			cont = script_ref_create(cont_basic);
 		}
@@ -2356,8 +2366,8 @@
 		
 	 // Setup Loadout Sprite:
 	if(!sprite_exists(_spr)){
-		var	_stock = mod_script_call("mod", "telib", "weapon_get_loadout", wep_stat(_wep, "stock")),
-			_front = mod_script_call("mod", "telib", "weapon_get_loadout", wep_stat(_wep, "front"));
+		var	_stock = weapon_get("loadout", wep_stat(_wep, "stock")),
+			_front = weapon_get("loadout", wep_stat(_wep, "front"));
 			
 		_spr = mod_script_call("mod", "teassets", "weapon_merge_sprite_loadout", _stock, _front);
 	}
@@ -4633,7 +4643,7 @@
 #define wep_merge(_stock, _front)                                                       return  mod_script_call_nc  ('mod', 'telib', 'wep_merge', _stock, _front);
 #define wep_merge_decide(_hardMin, _hardMax)                                            return  mod_script_call_nc  ('mod', 'telib', 'wep_merge_decide', _hardMin, _hardMax);
 #define weapon_decide(_hardMin, _hardMax, _gold, _noWep)                                return  mod_script_call_self('mod', 'telib', 'weapon_decide', _hardMin, _hardMax, _gold, _noWep);
-#define weapon_get_red(_wep)                                                            return  mod_script_call_self('mod', 'telib', 'weapon_get_red', _wep);
+#define weapon_get(_name, _wep)                                                         return  mod_script_call     ('mod', 'telib', 'weapon_get', _name, _wep);
 #define skill_get_icon(_skill)                                                          return  mod_script_call_self('mod', 'telib', 'skill_get_icon', _skill);
 #define skill_get_avail(_skill)                                                         return  mod_script_call_self('mod', 'telib', 'skill_get_avail', _skill);
 #define string_delete_nt(_string)                                                       return  mod_script_call_nc  ('mod', 'telib', 'string_delete_nt', _string);

@@ -3992,7 +3992,7 @@
 	
 	var _raw = _wep;
 	
-	 // Break Down:
+	 // Find Base Weapon:
 	while(is_object(_raw)){
 		_raw = (("wep" in _raw) ? _raw.wep : wep_none);
 	}
@@ -4133,59 +4133,67 @@
 	
 	return _wepDecide;
 	
-#define weapon_get_loadout(_wep)
+#define weapon_get(_name, _wep)
 	/*
-		Returns the loadout sprite associated with a given weapon
+		Calls the given script from a weapon mod and fetches its return value
 	*/
 	
-	var _wepRaw = wep_raw(_wep);
+	var _raw = _wep;
 	
-	 // Custom:
-	if(is_string(_wepRaw)){
-		return mod_script_call("weapon", _wepRaw, "weapon_loadout", _wep);
+	 // Find Base Weapon:
+	while(is_object(_raw) && "wep" in _raw){
+		_raw = _raw.wep;
 	}
 	
-	 // Normal:
-	else switch(_wepRaw){
-		case wep_revolver                : return sprRevolverLoadout;
-		case wep_golden_revolver         : return sprGoldRevolverLoadout;
-		case wep_chicken_sword           : return sprChickenSwordLoadout;
-		case wep_rogue_rifle             : return sprRogueRifleLoadout;
-		case wep_rusty_revolver          : return sprRustyRevolverLoadout;
-		case wep_golden_wrench           : return sprGoldWrenchLoadout;
-		case wep_golden_machinegun       : return sprGoldMachinegunLoadout;
-		case wep_golden_shotgun          : return sprGoldShotgunLoadout;
-		case wep_golden_crossbow         : return sprGoldCrossbowLoadout;
-		case wep_golden_grenade_launcher : return sprGoldGrenadeLauncherLoadout;
-		case wep_golden_laser_pistol     : return sprGoldLaserPistolLoadout;
-		case wep_golden_screwdriver      : return sprGoldScrewdriverLoadout;
-		case wep_golden_assault_rifle    : return sprGoldAssaultRifleLoadout;
-		case wep_golden_slugger          : return sprGoldSluggerLoadout;
-		case wep_golden_splinter_gun     : return sprGoldSplintergunLoadout;
-		case wep_golden_bazooka          : return sprGoldBazookaLoadout;
-		case wep_golden_plasma_gun       : return sprGoldPlasmaGunLoadout;
-		case wep_golden_nuke_launcher    : return sprGoldNukeLauncherLoadout;
-		case wep_golden_disc_gun         : return sprGoldDiscgunLoadout;
-		case wep_golden_frog_pistol      : return sprGoldToxicGunLoadout;
+	 // Call Script:
+	if(is_string(_raw)){
+		var _scrt = "weapon_" + _name;
+		if(mod_script_exists("weapon", _raw, _scrt)){
+			return mod_script_call_self("weapon", _raw, _scrt, _wep);
+		}
 	}
 	
-	return 0;
-	
-#define weapon_get_red(_wep)
-	/*
-		Returns how much red ammo a weapon uses
-	*/
-	
-	var	_type = "weapon",
-		_name = wep_raw(_wep),
-		_scrt = "weapon_red";
+	 // Default:
+	switch(_name){
 		
-	 // Custom:
-	if(is_string(_name) && mod_script_exists(_type, _name, _scrt)){
-		return mod_script_call_self(_type, _name, _scrt, _wep);
+		case "avail":
+		case "burst":
+			
+			return 1;
+			
+		case "loadout":
+			
+			switch(_raw){
+				case wep_revolver                : return sprRevolverLoadout;
+				case wep_golden_revolver         : return sprGoldRevolverLoadout;
+				case wep_chicken_sword           : return sprChickenSwordLoadout;
+				case wep_rogue_rifle             : return sprRogueRifleLoadout;
+				case wep_rusty_revolver          : return sprRustyRevolverLoadout;
+				case wep_golden_wrench           : return sprGoldWrenchLoadout;
+				case wep_golden_machinegun       : return sprGoldMachinegunLoadout;
+				case wep_golden_shotgun          : return sprGoldShotgunLoadout;
+				case wep_golden_crossbow         : return sprGoldCrossbowLoadout;
+				case wep_golden_grenade_launcher : return sprGoldGrenadeLauncherLoadout;
+				case wep_golden_laser_pistol     : return sprGoldLaserPistolLoadout;
+				case wep_golden_screwdriver      : return sprGoldScrewdriverLoadout;
+				case wep_golden_assault_rifle    : return sprGoldAssaultRifleLoadout;
+				case wep_golden_slugger          : return sprGoldSluggerLoadout;
+				case wep_golden_splinter_gun     : return sprGoldSplintergunLoadout;
+				case wep_golden_bazooka          : return sprGoldBazookaLoadout;
+				case wep_golden_plasma_gun       : return sprGoldPlasmaGunLoadout;
+				case wep_golden_nuke_launcher    : return sprGoldNukeLauncherLoadout;
+				case wep_golden_disc_gun         : return sprGoldDiscgunLoadout;
+				case wep_golden_frog_pistol      : return sprGoldToxicGunLoadout;
+			}
+			
+			break;
+			
+		case "raw":
+			
+			return (is_object(_wep) ? wep_none : _wep);
+			
 	}
 	
-	 // Normal:
 	return 0;
 	
 #define weapon_fire_init(_wep)
@@ -4241,14 +4249,8 @@
 	 // NT:TE Systems:
 	var _other = other;
 	with(instance_exists(_fire.creator) ? _fire.creator : self){
-		var _wepName = wep_raw(_wep);
-		
 		 // Charge Weapon:
-		if(
-			mod_script_exists("weapon", _wepName, "weapon_chrg")
-			&& mod_script_call("weapon", _wepName, "weapon_chrg", _wep)
-			&& _wep.chrg >= 0
-		){
+		if(weapon_get("chrg", _wep) && _wep.chrg >= 0){
 			var	_load = variable_instance_get(self, "reloadspeed", 1) * current_time_scale,
 				_auto = ((other.race == "steroids") ? (weapon_get_auto(_wep) >= 0) : weapon_get_auto(_wep));
 				
@@ -4304,14 +4306,13 @@
 			if(instance_is(_other, CustomObject) && "name" in _other && _other.name == "WeaponBurst"){
 				_fire.burst = _other.burst;
 			}
-			else if(mod_script_exists("weapon", _wepName, "weapon_burst")){
-				var _burst = ceil(mod_script_call("weapon", _wepName, "weapon_burst", _wep));
+			else{
+				var _burst = ceil(weapon_get("burst", _wep));
 				if(_burst > 1 || _burst < 0){
-					var _time = (
-						mod_script_exists("weapon", _wepName, "weapon_burst_time")
-						? mod_script_call("weapon", _wepName, "weapon_burst_time", _wep)
-						: weapon_get_load(_wep) / max(1, _burst)
-					);
+					var _time = weapon_get("burst_time", _wep);
+					if(_time == 0){
+						_time = weapon_get_load(_wep) / max(1, _burst);
+					}
 					with(other){
 						with(instance_create(x, y, CustomObject)){
 							name      = "WeaponBurst";
@@ -4356,15 +4357,14 @@
 	if(time > 0 && ammo != 0){
 		time -= current_time_scale;
 		while(time <= 0 && time_max >= 0 && ammo-- != 0){
-			var	_wep     = wep,
-				_wepName = wep_raw(_wep);
-				
+			var _wep = wep;
 			burst++;
 			
 			 // Delay:
-			if(mod_script_exists("weapon", _wepName, "weapon_burst_time")){
-				with(creator){
-					other.time_max = mod_script_call("weapon", _wepName, "weapon_burst_time", _wep);
+			with(creator){
+				var _time = weapon_get("burst_time", _wep);
+				if(_time != 0){
+					other.time_max = _time;
 				}
 			}
 			time += time_max;
@@ -4402,7 +4402,7 @@
 						team     = other.team;
 						accuracy = other.accuracy;
 						
-						mod_script_call("weapon", _wepName, "weapon_fire", _wep);
+						weapon_get("fire", _wep);
 						
 						team     = _lastTeam;
 						accuracy = _lastAccuracy;
@@ -4418,7 +4418,7 @@
 				 // Non-Player:
 				else with(player_fire_ext(direction, wep_none, x, y, team, creator, accuracy)){
 					wep = _wep;
-					mod_script_call("weapon", _wepName, "weapon_fire", wep);
+					weapon_get("fire", wep);
 				}
 				
 				 // Charge Weapon Fix Reset:
@@ -4437,7 +4437,7 @@
 			if(wep.chrg){
 				wep.chrg = -1;
 				
-				var _wepName = (primary ? "" : "b") + "wep";
+				var _wepName = (primary ? "wep" : "bwep");
 				
 				with(creator){
 					other.x = x;

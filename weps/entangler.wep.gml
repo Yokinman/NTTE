@@ -33,15 +33,12 @@
 	
 #define weapon_sprt_hud(_wep)
 	 // Normal Outline:
-	if(instance_is(self, Player)){
-		if(
-			weapon_get_gold(_wep) != 0
-			|| weapon_get_rads(_wep) > 0
-			|| (wep  == _wep && curse  > 0)
-			|| (bwep == _wep && bcurse > 0)
-		){
-			return global.sprWepHUD;
-		}
+	if(
+		weapon_get_gold(_wep) != 0 ||
+		weapon_get_rads(_wep) > 0  ||
+		(instance_is(self, Player) && ((wep == _wep && curse > 0) || (bwep == _wep && bcurse > 0)))
+	){
+		return global.sprWepHUD;
 	}
 	
 	 // Red Outline:
@@ -83,7 +80,7 @@
 	)){
 		sprite_index = spr.EntanglerSlash;
 		image_yscale *= _flip;
-		//red_ammo      = weapon_get_red(_wep);
+		//red_ammo      = weapon_get("red", _wep);
 		//can_charm     = (red_ammo > 0);
 	}
 	
@@ -114,7 +111,7 @@
 #define weapon_fire_init(_wep)                                                          return  mod_script_call     ('mod', 'telib', 'weapon_fire_init', _wep);
 #define weapon_ammo_fire(_wep)                                                          return  mod_script_call     ('mod', 'telib', 'weapon_ammo_fire', _wep);
 #define weapon_ammo_hud(_wep)                                                           return  mod_script_call     ('mod', 'telib', 'weapon_ammo_hud', _wep);
-#define weapon_get_red(_wep)                                                            return  mod_script_call_self('mod', 'telib', 'weapon_get_red', _wep);
+#define weapon_get(_name, _wep)                                                         return  mod_script_call     ('mod', 'telib', 'weapon_get', _name, _wep);
 #define wep_raw(_wep)                                                                   return  mod_script_call_nc  ('mod', 'telib', 'wep_raw', _wep);
 #define wep_get(_primary, _name, _default)                                              return  variable_instance_get(self, (_primary ? '' : 'b') + _name, _default);
 #define wep_set(_primary, _name, _value)                                                        variable_instance_set(self, (_primary ? '' : 'b') + _name, _value);

@@ -2803,17 +2803,20 @@
 				_gml += _new + `	}`
 				_gml += _new + `	array_push(_ref, _arg);`
 				_gml += _new + `}`
-				_gml += _new
+				
 				                 // Weapon Slot Check:
 				_gml += _new + `if(is_undefined(_wep)){`
-				_gml += _new + `	if("wep" in self && wep_raw == mod_current){`
+				_gml += _new + `	var _primary   = array_find_index(_ref, true),`
+				_gml += _new + `	    _secondary = array_find_index(_ref, false);`
+				_gml += _new + `	    `
+				_gml += _new + `	if(_primary <= _secondary && "wep" in self && wep_raw == mod_current){`
 				_gml += _new + `		_wep = wep;`
 				_gml += _new + `	}`
-				_gml += _new + `	else if("bwep" in self && bwep_raw == mod_current){`
+				_gml += _new + `	else if(_secondary <= _primary && "bwep" in self && bwep_raw == mod_current){`
 				_gml += _new + `		_wep = bwep;`
 				_gml += _new + `	}`
 				_gml += _new + `}`
-				_gml += _new
+				
 				                 // Call Script:
 				_gml += _new + `if(is_object(_wep) && "${_name}" in _wep){`
 				_gml += _new + `	var _wrap = _wep.${_name},`
@@ -2872,8 +2875,9 @@
 			load     - An array containing an integer to help externally determine when the search is finished
 	*/
 	
-	var	_find  = [],
-		_tries = _triesMax;
+	var	_find       = [],
+		_tries      = _triesMax,
+		_scrListMax = 85; // Temporary just-in-case check until 9945
 		
 	if(fork()){
 		 // Reduce Game Freeze:
@@ -2882,64 +2886,66 @@
 		}
 		
 		 // Scan the Current Directory:
-		_load[@0]++;
-		file_find_all(_path, _find, 0);
-		while(!array_length(_find) && _tries-- > 0){
-			wait 0;
-		}
-		_load[@0]--;
-		
-		 // Scan Folders:
-		with(_find){
-			if(is_dir && string_pos(`../../data/${mod_current}.mod`, path) != 1){
-				wrapper_script_search(path, _scrList, _scrAvoid, _triesMax, _load);
+		if(ds_list_size(_scrList) < _scrListMax){
+			_load[@0]++;
+			file_find_all(_path, _find, 0);
+			while(!array_length(_find) && _tries-- > 0){
+				wait 0;
 			}
-		}
-		
-		 // Read Weapon Files for Scripts:
-		with(_find){
-			if(ext == ".gml" || ext == ".txt"){
-				var _nameLength = string_length(name);
-				if(
-					string_copy(name, _nameLength -  7, 4) == ".wep" ||
-					string_copy(name, _nameLength - 10, 7) == ".weapon"
-				){
-					if(fork()){
-						_load[@0]++;
-						var _text = file_read(path);
-						if(!is_undefined(_text)){
-							var i = 0;
-							with(string_split(_text, "#define")){
-								if(i++ > 0){
-									var	_scrText = string_ltrim(self),
-										_scrName = "weapon_";
-										
-									if(string_pos(_scrName, _scrText) == 1){
-										var _scrTextLength = string_length(_scrText);
-										
-										 // Read Script Name:
-										for(var j = string_length(_scrName) + 1; j <= _scrTextLength; j++){
-											var _char = string_char_at(_scrText, j);
-											if(string_lettersdigits(_char) == "" && _char != "_"){
-												break;
+			_load[@0]--;
+			
+			 // Scan Folders:
+			with(_find){
+				if(is_dir && string_pos(`../../data/${mod_current}.mod`, path) != 1){
+					wrapper_script_search(path, _scrList, _scrAvoid, _triesMax, _load);
+				}
+			}
+			
+			 // Read Weapon Files for Scripts:
+			with(_find){
+				if(ext == ".gml" || ext == ".txt"){
+					var _nameLength = string_length(name);
+					if(
+						string_copy(name, _nameLength -  7, 4) == ".wep" ||
+						string_copy(name, _nameLength - 10, 7) == ".weapon"
+					){
+						if(fork()){
+							_load[@0]++;
+							var _text = file_read(path);
+							if(!is_undefined(_text)){
+								var i = 0;
+								with(string_split(_text, "#define")){
+									if(i++ > 0){
+										var	_scrText = string_ltrim(self),
+											_scrName = "weapon_";
+											
+										if(string_pos(_scrName, _scrText) == 1){
+											var _scrTextLength = string_length(_scrText);
+											
+											 // Read Script Name:
+											for(var j = string_length(_scrName) + 1; j <= _scrTextLength; j++){
+												var _char = string_char_at(_scrText, j);
+												if(string_lettersdigits(_char) == "" && _char != "_"){
+													break;
+												}
+												_scrName += _char;
 											}
-											_scrName += _char;
-										}
-										
-										 // Add Script Name:
-										if(ds_list_find_index(_scrList, _scrName) < 0){
-											if(array_find_index(_scrAvoid, _scrName) < 0){
-												if(ds_list_size(_scrList) < 90){ // Temporary just-in-case check until 9945
-													ds_list_add(_scrList, _scrName);
+											
+											 // Add Script Name:
+											if(ds_list_find_index(_scrList, _scrName) < 0){
+												if(array_find_index(_scrAvoid, _scrName) < 0){
+													if(ds_list_size(_scrList) < _scrListMax){
+														ds_list_add(_scrList, _scrName);
+													}
 												}
 											}
 										}
 									}
 								}
 							}
+							_load[@0]--;
+							exit;
 						}
-						_load[@0]--;
-						exit;
 					}
 				}
 			}
