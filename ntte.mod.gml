@@ -134,17 +134,16 @@
 		 // Weapon Skin:
 		if(is_string(bskin) && array_find_index(ntte_mods.skin, bskin) >= 0){
 			if(mod_script_exists("skin", bskin, "skin_weapon_sprite")){
-				var	_ref  = script_ref_create_ext("skin", bskin, "skin_weapon_sprite"),
-					_sprA = weapon_get_sprt(wep),
-					_sprB = weapon_get_sprt(bwep);
-					
-				if(_sprA != script_ref_call(_ref, _sprA, wep)){
-					wep = wep_wrap(wep);
-					wep.tewrapper.scr_ref.weapon_sprt = _ref;
-				}
-				if(_sprB != script_ref_call(_ref, _sprB, bwep)){
-					bwep = wep_wrap(bwep);
-					bwep.tewrapper.scr_ref.weapon_sprt = _ref;
+				var _ref = script_ref_create_ext("skin", bskin, "skin_weapon_sprite");
+				for(var i = 0; i < 2; i++){
+					var	_wep = ((i == 0) ? wep : bwep),
+						_spr = weapon_get_sprt(_wep);
+						
+					if(_spr != script_ref_call(_ref, _spr, _wep)){
+						_wep = wep_wrap(_wep, "weapon_sprt", _ref);
+						_wep = wep_wrap(_wep, "weapon_fire", script_ref_create(skin_weapon_fire, bskin));
+						variable_instance_set(self, ((i == 0) ? "wep" : "bwep"), _wep);
+					}
 				}
 			}
 		}
@@ -1744,6 +1743,15 @@
 				depth = _depth;
 			}
 			exit;
+		}
+	}
+	
+#define skin_weapon_fire(_skin, _fireID, _wep)
+	 // Resprite Projectiles:
+	if(instance_exists(projectile)){
+		var _inst = instances_matching_gt(projectile, "id", _fireID);
+		if(array_length(_inst)) with(_inst){
+			sprite_index = mod_script_call("skin", _skin, "skin_weapon_sprite", sprite_index, _wep);
 		}
 	}
 	
@@ -4992,7 +5000,7 @@
 #define race_get_title(_race)                                                           return  mod_script_call_self('mod', 'telib', 'race_get_title', _race);
 #define player_swap()                                                                   return  mod_script_call_self('mod', 'telib', 'player_swap');
 #define wep_raw(_wep)                                                                   return  mod_script_call_nc  ('mod', 'telib', 'wep_raw', _wep);
-#define wep_wrap(_wep)                                                                  return  mod_script_call_nc  ('mod', 'telib', 'wep_wrap', _wep);
+#define wep_wrap(_wep, _scrName, _scrRef)                                               return  mod_script_call_nc  ('mod', 'telib', 'wep_wrap', _wep, _scrName, _scrRef);
 #define wep_merge(_stock, _front)                                                       return  mod_script_call_nc  ('mod', 'telib', 'wep_merge', _stock, _front);
 #define wep_merge_decide(_hardMin, _hardMax)                                            return  mod_script_call_nc  ('mod', 'telib', 'wep_merge_decide', _hardMin, _hardMax);
 #define weapon_decide(_hardMin, _hardMax, _gold, _noWep)                                return  mod_script_call_self('mod', 'telib', 'weapon_decide', _hardMin, _hardMax, _gold, _noWep);

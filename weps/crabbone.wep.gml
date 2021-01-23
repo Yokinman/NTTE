@@ -1,14 +1,18 @@
 #define init
+	spr = mod_variable_get("mod", "teassets", "spr");
+	
 	 // Sprites:
-	global.sprWep = sprite_add_weapon("../sprites/weps/sprBone.png", 6, 6);
+	global.sprWep = spr.Bone;
 	
 	 // LWO:
 	global.lwoWep = {
-		wep   : mod_current,
-		ammo  : 1,
-		combo : 0
+		"wep"   : mod_current,
+		"ammo"  : 1,
+		"combo" : 0
 	};
 	
+#macro spr global.spr
+
 #define weapon_name  return "BONE";
 #define weapon_text  return "BONE THE FISH"; // yokin no
 #define weapon_swap  return sndBloodGamble;

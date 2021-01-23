@@ -37,26 +37,34 @@
 	
 #define skin_weapon_sprite(_spr, _wep)
 	switch(_spr){
-		case sprGoldARifle       : return spr.PlantOrchidAssaultRifle;
-		case sprGoldBazooka      : return spr.PlantOrchidBazooka;
-		case sprGoldCrossbow     : return spr.PlantOrchidCrossbow;
-		case sprGoldDiscgun      : return spr.PlantOrchidDiscGun;
-		case sprGoldFrogBlaster  : return spr.PlantOrchidFrogPistol;
-		case sprFrogBlaster      : return spr.PlantOrchidFrogPistolRusty;
-		case sprGoldNader        : return spr.PlantOrchidGrenadeLauncher;
-		case sprGoldLaserGun     : return spr.PlantOrchidLaserPistol;
-		case sprGoldMachinegun   : return spr.PlantOrchidMachinegun;
-		case sprGoldNukeLauncher : return spr.PlantOrchidNukeLauncher;
-		case sprGoldPlasmaGun    : return spr.PlantOrchidPlasmaGun;
-		case sprGoldRevolver     : return spr.PlantOrchidRevolver;
-		case sprGoldScrewdriver  : return spr.PlantOrchidScrewdriver;
-		case sprGoldShotgun      : return spr.PlantOrchidShotgun;
-		case sprGoldSlugger      : return spr.PlantOrchidSlugger;
-		case sprGoldSplinterGun  : return spr.PlantOrchidSplinterGun;
-		case sprGoldWrench       : return spr.PlantOrchidWrench;
+		case sprGoldARifle       : return spr.OrchidAssaultRifle;
+		case sprGoldBazooka      : return spr.OrchidBazooka;
+		case sprGoldCrossbow     : return spr.OrchidCrossbow;
+		case sprGoldDiscgun      : return spr.OrchidDiscGun;
+		case sprGoldFrogBlaster  : return spr.OrchidFrogPistol;
+		case sprFrogBlaster      : return spr.OrchidFrogPistolRusty;
+		case sprGoldNader        : return spr.OrchidGrenadeLauncher;
+		case sprGoldLaserGun     : return spr.OrchidLaserPistol;
+		case sprGoldMachinegun   : return spr.OrchidMachinegun;
+		case sprGoldNukeLauncher : return spr.OrchidNukeLauncher;
+		case sprGoldPlasmaGun    : return spr.OrchidPlasmaGun;
+		case sprGoldRevolver     : return spr.OrchidRevolver;
+		case sprGoldScrewdriver  : return spr.OrchidScrewdriver;
+		case sprGoldShotgun      : return spr.OrchidShotgun;
+		case sprGoldSlugger      : return spr.OrchidSlugger;
+		case sprGoldSplinterGun  : return spr.OrchidSplinterGun;
+		case sprGoldWrench       : return spr.OrchidWrench;
+		
+		 // Projectiles:
+		case sprBoltGold    : return spr.OrchidBolt;
+		case sprGoldDisc    : return spr.OrchidDisc;
+		case sprGoldGrenade : return spr.OrchidGrenade;
+		case sprGoldNuke    : return spr.OrchidNuke;
+		case sprGoldRocket  : return spr.OrchidRocket;
 		
 		default: // Modded
-			if(_spr == spr.GoldTrident) return spr.PlantOrchidTrident;
+			if(_spr == spr.GoldTrident  ) return spr.OrchidTrident;
+			if(_spr == spr.GoldTunneller) return spr.OrchidTunneller;
 	}
 	return _spr;
 	

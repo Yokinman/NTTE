@@ -74,7 +74,7 @@
 		p = "weps/";
 			
 			 // Bone:
-			//Bone      = sprite(p + "sprBone",      1, 6, 6);
+			Bone      = sprite(p + "sprBone",      1, 6, 6, shnWep);
 			BoneShard = sprite(p + "sprBoneShard", 1, 3, 2, shnWep);
 			
 			 // Tunneller:
@@ -1852,27 +1852,6 @@
 				PlantOrchidTangle     = sprite(p + "sprPlantOrchidTangle",     6, 24, 24);
 				PlantOrchidTangleSeed = sprite(p + "sprPlantOrchidTangleSeed", 2,  4,  4);
 				
-				 // Weapons:
-				p += "Weapons/";
-				PlantOrchidAssaultRifle    = sprite(p + "sprPlantOrchidAssaultRifle",    1,  5, 4, shnWep);
-				PlantOrchidBazooka         = sprite(p + "sprPlantOrchidBazooka",         1, 12, 5, shnWep);
-				PlantOrchidCrossbow        = sprite(p + "sprPlantOrchidCrossbow",        1,  4, 4, shnWep);
-				PlantOrchidDiscGun         = sprite(p + "sprPlantOrchidDiscGun",         1, -3, 4, shnWep);
-				PlantOrchidFrogPistol      = sprite(p + "sprPlantOrchidFrogPistol",      1, -4, 4, shnWep);
-				PlantOrchidFrogPistolRusty = sprite(p + "sprPlantOrchidFrogPistolRusty", 1, -4, 4, shnWep);
-				PlantOrchidGrenadeLauncher = sprite(p + "sprPlantOrchidGrenadeLauncher", 1,  5, 5, shnWep);
-				PlantOrchidLaserPistol     = sprite(p + "sprPlantOrchidLaserPistol",     1, -2, 2, shnWep);
-				PlantOrchidMachinegun      = sprite(p + "sprPlantOrchidMachinegun",      1,  3, 3, shnWep);
-				PlantOrchidNukeLauncher    = sprite(p + "sprPlantOrchidNukeLauncher",    1,  8, 8, shnWep);
-				PlantOrchidPlasmaGun       = sprite(p + "sprPlantOrchidPlasmaGun",       1,  3, 4, shnWep);
-				PlantOrchidRevolver        = sprite(p + "sprPlantOrchidRevolver",        1, -3, 2, shnWep);
-				PlantOrchidScrewdriver     = sprite(p + "sprPlantOrchidScrewdriver",     1, -1, 3, shnWep);
-				PlantOrchidShotgun         = sprite(p + "sprPlantOrchidShotgun",         1,  5, 3, shnWep);
-				PlantOrchidSlugger         = sprite(p + "sprPlantOrchidSlugger",         1,  4, 4, shnWep);
-				PlantOrchidSplinterGun     = sprite(p + "sprPlantOrchidSplinterGun",     1,  3, 4, shnWep);
-				PlantOrchidTrident         = sprite(p + "sprPlantOrchidTrident",         1, 12, 7, shnWep);
-				PlantOrchidWrench          = sprite(p + "sprPlantOrchidWrench",          1,  1, 4, shnWep);
-				
 			//#endregion
 			
 			//#region RED CRYSTAL
@@ -1899,6 +1878,38 @@
 				CrystalRedShieldIdleBack  = sprite(p + "sprCrystalRedShieldIdleBack",  1, 32, 42);
 				CrystalRedShieldWalkBack  = sprite(p + "sprCrystalRedShieldWalkBack",  8, 32, 42);
 				CrystalRedTrail           = sprite(p + "sprCrystalRedTrail",           5,  8,  8);
+				
+			//#endregion
+			
+			//#region WEAPONS
+			m += "Weapons/";
+				
+				 // Orchid:
+				p = m + "Orchid/";
+				OrchidAssaultRifle    = sprite(p + "sprOrchidAssaultRifle",    1,  5, 4, shnWep);
+				OrchidBazooka         = sprite(p + "sprOrchidBazooka",         1, 12, 5, shnWep);
+				OrchidCrossbow        = sprite(p + "sprOrchidCrossbow",        1,  4, 4, shnWep);
+				OrchidDiscGun         = sprite(p + "sprOrchidDiscGun",         1, -3, 4, shnWep);
+				OrchidFrogPistol      = sprite(p + "sprOrchidFrogPistol",      1, -4, 4, shnWep);
+				OrchidFrogPistolRusty = sprite(p + "sprOrchidFrogPistolRusty", 1, -4, 4, shnWep);
+				OrchidGrenadeLauncher = sprite(p + "sprOrchidGrenadeLauncher", 1,  5, 5, shnWep);
+				OrchidLaserPistol     = sprite(p + "sprOrchidLaserPistol",     1, -2, 2, shnWep);
+				OrchidMachinegun      = sprite(p + "sprOrchidMachinegun",      1,  3, 3, shnWep);
+				OrchidNukeLauncher    = sprite(p + "sprOrchidNukeLauncher",    1,  8, 8, shnWep);
+				OrchidPlasmaGun       = sprite(p + "sprOrchidPlasmaGun",       1,  3, 4, shnWep);
+				OrchidRevolver        = sprite(p + "sprOrchidRevolver",        1, -3, 2, shnWep);
+				OrchidScrewdriver     = sprite(p + "sprOrchidScrewdriver",     1, -1, 3, shnWep);
+				OrchidShotgun         = sprite(p + "sprOrchidShotgun",         1,  5, 3, shnWep);
+				OrchidSlugger         = sprite(p + "sprOrchidSlugger",         1,  4, 4, shnWep);
+				OrchidSplinterGun     = sprite(p + "sprOrchidSplinterGun",     1,  3, 4, shnWep);
+				OrchidTrident         = sprite(p + "sprOrchidTrident",         1, 12, 7, shnWep);
+				OrchidTunneller       = sprite(p + "sprOrchidTunneller",       1, 10, 9, shnWep);
+				OrchidWrench          = sprite(p + "sprOrchidWrench",          1,  1, 4, shnWep);
+				OrchidBolt            = sprite(p + "sprOrchidBolt",            2,  4, 8);
+				OrchidDisc            = sprite(p + "sprOrchidDisc",            2,  6, 6);
+				OrchidGrenade         = sprite(p + "sprOrchidGrenade",         1,  3, 3);
+				OrchidNuke            = sprite(p + "sprOrchidNuke",            1,  8, 8);
+				OrchidRocket          = sprite(p + "sprOrchidRocket",          1,  4, 4);
 				
 			//#endregion
 			

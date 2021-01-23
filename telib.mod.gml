@@ -4004,28 +4004,26 @@
 	
 	return _raw;
 	
-#define wep_wrap(_wep)
+#define wep_wrap(_wep, _scrName, _scrRef)
 	/*
-		Returns the given weapon as an NT:TE wrapper weapon
-		The wrapper weapon LWO contains a "tewrapper" variable, which is a LWO that holds the variables below
+		Returns the given weapon as an NT:TE wrapper weapon, with the given script modification
 		
-		Vars:
-			wep     : The raw wrapped weapon (non-LWO)
-			lwo     : Is a LWO weapon (Uses the original weapon's LWO for the wrapper wep)
-			scr_use : LWO of (script name : boolean value) pairs, can be used to disable a weapon's script
-			scr_ref : LWO of (script name : script reference) pairs, can be used to execute custom code and/or return a custom value for a weapon's script
-			          The script is called with its 'argument0' being the original return value (0 if disabled by scr_use), and then the normal arguments
+		Args:
+			wep     - The weapon to modify
+			scrName - The name of the script to modify
+			scrAdd  - A script reference to call after the given script, which can return a custom value for the weapon
+			          The script is called with its 'argument0' being the weapon's current value, and then the normal script's arguments
+			          Can also be a boolean value to toggle the script's base execution
 			
 		Ex:
-			wep = wep_wrap(wep);
-			with(wep.tewrapper){
-				scr_ref.weapon_sprt = script_ref_create(coolspr);
-			}
+			wep  = wep_wrap(wep,  "weapon_sprt", script_ref_create(coolspr));
+			bwep = wep_wrap(bwep, "weapon_fire", false);
 			
 			#define coolspr(_spr, _wep)
 				return sprBanditGun;
 	*/
 	
+	 // Wrapper Setup:
 	if(!is_object(_wep) || "tewrapper" not in _wep){
 		var _wrap = {
 			"wep"     : wep_raw(_wep),
@@ -4040,6 +4038,21 @@
 		
 		_wep.wep       = "tewrapper";
 		_wep.tewrapper = _wrap;
+	}
+	
+	 // Toggle Base Script:
+	if(is_real(_scrRef)){
+		lq_set(_wep.tewrapper.scr_use, _scrName, _scrRef);
+	}
+	
+	 // Add Script:
+	else{
+		if(_scrName not in _wep.tewrapper.scr_ref){
+			lq_set(_wep.tewrapper.scr_ref, _scrName, [_scrRef]);
+		}
+		else{
+			array_push(lq_get(_wep.tewrapper.scr_ref, _scrName), _scrRef);
+		}
 	}
 	
 	return _wep;

@@ -2859,9 +2859,11 @@
 	 // Hmm:
 	with(instances_matching_gt(WepPickup, "id", _minID)){
 		if(wep_raw(wep) == wep_sledgehammer){
-			var _wep = wep_wrap(wep);
-			_wep.tewrapper.scr_ref.weapon_sprt = script_ref_create(cool_hammer, other.spr_weap);
-			wep = _wep;
+			wep = wep_wrap(
+				wep,
+				"weapon_sprt",
+				script_ref_create(cool_hammer, other.spr_weap)
+			);
 			
 			 // Sparkle:
 			var	_len = 16,
@@ -4594,7 +4596,7 @@
 	with(instance_create(_x, _y, CustomProjectile)){
 		 // Visual:
 		sprite_index = spr.Trident;
-		image_speed = 0.4;
+		image_speed  = 0.4;
 		
 		 // Vars:
 		mask_index         = msk.Trident;
@@ -5317,7 +5319,7 @@
 #define race_get_title(_race)                                                           return  mod_script_call_self('mod', 'telib', 'race_get_title', _race);
 #define player_swap()                                                                   return  mod_script_call_self('mod', 'telib', 'player_swap');
 #define wep_raw(_wep)                                                                   return  mod_script_call_nc  ('mod', 'telib', 'wep_raw', _wep);
-#define wep_wrap(_wep)                                                                  return  mod_script_call_nc  ('mod', 'telib', 'wep_wrap', _wep);
+#define wep_wrap(_wep, _scrName, _scrRef)                                               return  mod_script_call_nc  ('mod', 'telib', 'wep_wrap', _wep, _scrName, _scrRef);
 #define wep_merge(_stock, _front)                                                       return  mod_script_call_nc  ('mod', 'telib', 'wep_merge', _stock, _front);
 #define wep_merge_decide(_hardMin, _hardMax)                                            return  mod_script_call_nc  ('mod', 'telib', 'wep_merge_decide', _hardMin, _hardMax);
 #define weapon_decide(_hardMin, _hardMax, _gold, _noWep)                                return  mod_script_call_self('mod', 'telib', 'weapon_decide', _hardMin, _hardMax, _gold, _noWep);

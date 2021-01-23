@@ -2527,6 +2527,11 @@
 				_gml += _new + `	    _call = ${_scrCall};`
 				_gml += _new + `	    `
 				_gml += _new + `	if("${_scrName}" not in _wrap.scr_use || _wrap.scr_use.${_scrName}){`
+				
+				if(_scrName == "weapon_fire"){
+					_gml += _new + `		var _fireID = instance_create(0, 0, DramaCamera);`
+				}
+				
 				                		 // Modded:
 				_gml += _new + `		if(is_string(_wrap.wep) && mod_script_exists("weapon", _wrap.wep, "${_scrName}")){`
 				_gml += _new + `			var _swap = wep_swap(true, [true, false], _wep);`
@@ -2579,8 +2584,7 @@
 					case "weapon_fire": // Normal Firing
 						
 						_gml += _new + `		else{`
-						_gml += _new + `			var _minID    = instance_create(0, 0, DramaCamera),`
-						_gml +=	_new + `			    _lastLoad = reload,`
+						_gml += _new + `			var	_lastLoad = reload,`
 						_gml += _new + `			    _lastRads = GameCont.rad;`
 						_gml += _new + `			    `
 						                			 // Shoot:
@@ -2605,12 +2609,12 @@
 						_gml += _new + `			}`
 						_gml += _new + `			GameCont.rad = _lastRads;`
 						_gml += _new + `			if(instance_exists(LaserBrain)){`
-						_gml += _new + `				with(instances_matching_gt(LaserBrain, "id", _minID)){`
+						_gml += _new + `				with(instances_matching_gt(LaserBrain, "id", _fireID)){`
 						_gml += _new + `					instance_delete(self);`
 						_gml += _new + `				}`
 						_gml += _new + `			}`
 						_gml += _new + `			if(instance_exists(SteroidsTB)){`
-						_gml += _new + `				with(instances_matching_gt([SteroidsTB], "id", _minID)){`
+						_gml += _new + `				with(instances_matching_gt([SteroidsTB], "id", _fireID)){`
 						_gml += _new + `					if(instance_is(self + 1, PopupText)){`
 						_gml += _new + `						instance_delete(self + 1);`
 						_gml += _new + `					}`
@@ -2631,9 +2635,9 @@
 				_gml += _new + `	`
 				                	 // Custom:
 				_gml += _new + `	if("${_scrName}" in _wrap.scr_ref){`
-				_gml += _new + `		var _wrapRef = _wrap.scr_ref.${_scrName};`
-				_gml += _new + `		if(!is_undefined(_wrapRef)){`
-				_gml += _new + `			_call = script_ref_call(_wrapRef, _call, _wep);`
+				_gml += _new + `		var _wrapRefList = _wrap.scr_ref.${_scrName};`
+				_gml += _new + `		for(var i = 0; i < array_length(_wrapRefList); i++){`
+				_gml += _new + `			_call = script_ref_call(_wrapRefList[i], ${(_scrName == "weapon_fire") ? "_fireID" : "_call"}, _wep);`
 				_gml += _new + `		}`
 				_gml += _new + `	}`
 				_gml += _new + `	`
@@ -2774,9 +2778,9 @@
 				
 				_gml += _new;   	 // Custom:
 				_gml += _new + `	if("${_scrName}" in _wrap.scr_ref){`
-				_gml += _new + `		var _wrapRef = _wrap.scr_ref.${_scrName};`
-				_gml += _new + `		if(!is_undefined(_wrapRef)){`
-				_gml += _new + `			_call = script_ref_call(_wrapRef, _call, _primary);`
+				_gml += _new + `		var _wrapRefList = _wrap.scr_ref.${_scrName};`
+				_gml += _new + `		for(var i = 0; i < array_length(_wrapRefList); i++){`
+				_gml += _new + `			_call = script_ref_call(_wrapRefList[i], _call, _primary);`
 				_gml += _new + `		}`
 				_gml += _new + `	}`
 				_gml += _new + `	`
@@ -2841,14 +2845,12 @@
 				_gml += _new + `	`
 				                	 // Custom:
 				_gml += _new + `	if("${_scrName}" in _wrap.scr_ref){`
-				_gml += _new + `		var _swapRef = _wrap.scr_ref.${_scrName};`
-				_gml += _new + `		if(!is_undefined(_swapRef)){`
-				_gml += _new + `			if(is_array(_swapRef)){`
-				_gml += _new + `				_swapRef = array_clone(_swapRef);`
-				_gml += _new + `				array_push(_swapRef, _call);`
-				_gml += _new + `				array_copy(_swapRef, array_length(_swapRef), _ref, 3, array_length(_ref) - 3);`
-				_gml += _new + `			}`
-				_gml += _new + `			_call = script_ref_call(_swapRef);`
+				_gml += _new + `		var _wrapRefList = _wrap.scr_ref.${_scrName};`
+				_gml += _new + `		for(var i = 0; i < array_length(_wrapRefList); i++){`
+				_gml += _new + `			var _wrapRef = array_clone(_wrapRefList[i]);`
+				_gml += _new + `			array_push(_wrapRef, _call);`
+				_gml += _new + `			array_copy(_wrapRef, array_length(_wrapRef), _ref, 3, array_length(_ref) - 3);`
+				_gml += _new + `			_call = script_ref_call(_wrapRef);`
 				_gml += _new + `		}`
 				_gml += _new + `	}`
 				_gml += _new + `	`
