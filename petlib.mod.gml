@@ -2734,7 +2734,7 @@
 	depth        = -3;
 	
 	 // Vars:
-	mask_index  = mskExploder;
+	mask_index  = mskFlakBullet;
 	friction    = 0.1;
 	minspeed    = 0.2;
 	maxspeed    = 3;
@@ -2742,7 +2742,7 @@
 	path_wall   = [];
 	partner     = noone;
 	orbit_pull  = 0;
-	orbit_dis   = 24;
+	orbit_dis   = 28;
 	orbit_speed = 3;
 	flash       = 0;
 	walled      = false;
@@ -3072,7 +3072,7 @@
 							}
 							
 							 // Damage:
-							projectile_hit(other, 2);
+							projectile_hit(other, 1);
 						}
 					}
 				}

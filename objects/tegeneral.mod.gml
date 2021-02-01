@@ -5515,10 +5515,15 @@
 		if(array_length(_inst)) with(_inst){
 			nttepet_levelup = true;
 			if(instance_is(creator, Player)){
+				/*
 				if("ntte_pet" in creator) with(creator.ntte_pet){
 					if(instance_exists(self)) with(other){
 						instance_copy(false).creator = other;
 					}
+				}
+				*/
+				with(instances_matching(instances_matching(CustomHitme, "name", "Pet"), "leader", creator)){
+					with(other) instance_copy(false).creator = other;
 				}
 			}
 		}
