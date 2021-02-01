@@ -56,16 +56,21 @@
 		case sprGoldWrench       : return spr.OrchidWrench;
 		
 		 // Projectiles:
-		case sprBoltGold    : return spr.OrchidBolt;
-		case sprGoldDisc    : return spr.OrchidDisc;
-		case sprGoldGrenade : return spr.OrchidGrenade;
-		case sprGoldNuke    : return spr.OrchidNuke;
-		case sprGoldRocket  : return spr.OrchidRocket;
+		case sprBoltGold         : return spr.OrchidBolt;
+		case sprGoldDisc         : return spr.OrchidDisc;
+		case sprGoldGrenade      : return spr.OrchidGrenade;
+		case sprGoldNuke         : return spr.OrchidNuke;
+		case sprGoldRocket       : return spr.OrchidRocket;
 		
-		default: // Modded
+		 // Modded:
+		default:
 			if(_spr == spr.GoldTrident  ) return spr.OrchidTrident;
 			if(_spr == spr.GoldTunneller) return spr.OrchidTunneller;
 	}
+	return _spr;
+	
+#define skin_weapon_sprite_hud(_spr, _wep)
+	if(_spr == spr.TunnellerHUD) return spr.OrchidTunnellerHUD;
 	return _spr;
 	
 	

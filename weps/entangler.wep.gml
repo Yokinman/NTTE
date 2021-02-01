@@ -2,9 +2,9 @@
 	spr = mod_variable_get("mod", "teassets", "spr");
 	
 	 // Sprites:
-	global.sprWep       = sprite_add_weapon("../sprites/weps/sprEntangler.png",          8, 4);
-	global.sprWepHUD    = sprite_add(       "../sprites/weps/sprEntanglerHUD.png",    1, 0, 3)
-	global.sprWepHUDRed = sprite_add(       "../sprites/weps/sprEntanglerHUDRed.png", 1, 0, 3)
+	global.sprWep       = sprite_add_weapon("../sprites/weps/sprEntangler.png",       8, 4);
+	global.sprWepHUD    = sprite_add_weapon("../sprites/weps/sprEntanglerHUD.png",    0, 3);
+	global.sprWepHUDRed = sprite_add(       "../sprites/weps/sprEntanglerHUD.png", 1, 0, 3);
 	global.sprWepLocked = mskNone;
 	
 #macro spr global.spr

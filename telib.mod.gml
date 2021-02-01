@@ -3,6 +3,9 @@
 	snd = mod_variable_get("mod", "teassets", "snd");
 	lag = false;
 	
+	 // Mod Lists:
+	ntte_mods = mod_variable_get("mod", "teassets", "mods");
+	
 	 // Bind Events:
 	lag_bind = ds_map_create();
 	lag_bind[? "begin_step"]   = script_bind("LagBeginStep",  CustomBeginStep, script_ref_create(obj_step, "begin_step"), 0, false);
@@ -201,6 +204,8 @@
 
 #macro lag      global.debug_lag
 #macro lag_bind global.debug_lag_bind
+
+#macro ntte_mods global.mods
 
 #macro area_campfire     0
 #macro area_desert       1
@@ -4056,6 +4061,99 @@
 	}
 	
 	return _wep;
+	
+#define wep_skin(_wep, _race, _skin)
+	/*
+		Returns the given weapon as a resprited variant for the given skin if one exists
+	*/
+	
+	if(is_string(_skin) && array_find_index(ntte_mods.skin, _skin) >= 0){
+		var _refSprt = script_ref_create_ext("skin", _skin, "skin_weapon_sprite");
+		if(mod_script_exists(_refSprt[0], _refSprt[1], _refSprt[2])){
+			var _spr = weapon_get_sprt(_wep);
+			if(_spr != script_ref_call(_refSprt, _spr, _wep)){
+				_wep = wep_wrap(wep_wrap(wep_wrap(
+					_wep,
+					"weapon_sprt", _refSprt),
+					"weapon_name", script_ref_create(wep_skin_name, _race, _skin)),
+					"weapon_fire", script_ref_create(wep_skin_fire, _race, _skin)
+				);
+				with([
+					["weapon_sprt_hud", "skin_weapon_sprite_hud"],
+					["weapon_swap",     "skin_weapon_swap"]
+				]){
+					var _ref = script_ref_create_ext("skin", _skin, self[1]);
+					if(mod_script_exists(_ref[0], _ref[1], _ref[2])){
+						_wep = wep_wrap(_wep, self[0], _ref);
+					}
+				}
+			}
+		}
+	}
+	
+	return _wep;
+	
+#define wep_skin_name(_race, _skin, _name, _wep)
+	/*
+		Returns the given weapon's name with "GOLDEN" replaced by the given skin's name, or prefixed by it if "GOLDEN" isn't mentioned
+	*/
+	
+	if(!is_string(_name)){
+		_name = weapon_get_name(wep_raw(_wep));
+	}
+	
+	var	_nameSplit = string_split(_name, " "),
+		_skinName  = skin_get_name(_race, _skin);
+		
+	for(var i = array_length(_nameSplit) - 1; i >= 0; i--){
+		if(string_upper(_nameSplit[i]) == "GOLDEN"){
+			_nameSplit[i] = _skinName;
+		}
+	}
+	
+	return (
+		(array_find_index(_nameSplit, _skinName) >= 0)
+		? array_join(_nameSplit, " ")
+		: (
+			(wep_raw(_wep) == wep_frog_pistol)
+			? _name
+			: (_skinName + " " + _name)
+		)
+	);
+	
+#define wep_skin_fire(_race, _skin, _fireID, _wep)
+	/*
+		Resprites projectiles shot by the given weapon to the given skin
+	*/
+	
+	if(instance_exists(projectile)){
+		var _inst = instances_matching_gt(projectile, "id", _fireID);
+		if(array_length(_inst)) with(_inst){
+			var _spr = mod_script_call("skin", _skin, "skin_weapon_sprite", sprite_index, _wep);
+			if(sprite_index != _spr){
+				 // Cause of Death:
+				if(hitid == 101){
+					hitid = [sprGoldDisc, "GOLDEN DISC"];
+				}
+				if(array_length(hitid) && sprite_index == hitid[0]){
+					hitid[0] = _spr;
+					if(array_length(hitid) > 1 && is_string(hitid[1])){
+						hitid[1] = wep_skin_name(_race, _skin, hitid[1], _wep);
+					}
+				}
+				
+				 // Hitbox:
+				if(mask_index < 0){
+					mask_index = sprite_index;
+				}
+				
+				 // Sprite:
+				sprite_index = _spr;
+			}
+		}
+	}
+	
+	return _fireID;
 	
 #define wep_merge(_stock, _front)
 	return mod_script_call_nc("weapon", "merge", "weapon_merge", _stock, _front);

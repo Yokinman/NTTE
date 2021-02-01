@@ -40,6 +40,49 @@
 		case sprCrystTrail             : return spr.CrystalRedTrail;
 	}
 	
+#define skin_weapon_sprite(_spr, _wep)
+	switch(_spr){
+		case sprGoldARifle       : return spr.RedAssaultRifle;
+		case sprGoldBazooka      : return spr.RedBazooka;
+		case sprGoldCrossbow     : return spr.RedCrossbow;
+		case sprGoldDiscgun      : return spr.RedDiscGun;
+		case sprGoldNader        : return spr.RedGrenadeLauncher;
+		case sprGoldLaserGun     : return spr.RedLaserPistol;
+		case sprGoldMachinegun   : return spr.RedMachinegun;
+		case sprGoldNukeLauncher : return spr.RedNukeLauncher;
+		case sprGoldPlasmaGun    : return spr.RedPlasmaGun;
+		case sprGoldRevolver     : return spr.RedRevolver;
+		case sprGoldScrewdriver  : return spr.RedScrewdriver;
+		case sprGoldShotgun      : return spr.RedShotgun;
+		case sprGoldSlugger      : return spr.RedSlugger;
+		case sprGoldSplinterGun  : return spr.RedSplinterGun;
+		case sprGoldWrench       : return spr.RedWrench;
+		
+		 // Projectiles:
+		case sprBoltGold         : return spr.RedBolt;
+		case sprGoldDisc         : return spr.RedDisc;
+		case sprGoldGrenade      : return spr.RedGrenade;
+		case sprGoldNuke         : return spr.RedNuke;
+		case sprGoldRocket       : return spr.RedRocket;
+		
+		 // Modded:
+		default:
+			if(_spr == spr.GoldTrident  ) return spr.RedTrident;
+			if(_spr == spr.GoldTunneller) return spr.RedTunneller;
+	}
+	return _spr;
+	
+#define skin_weapon_sprite_hud(_spr, _wep)
+	if(_spr == spr.TunnellerHUD) return spr.RedTunnellerHUD;
+	return _spr;
+	
+#define skin_weapon_swap(_swap, _wep)
+	sound_set_track_position(
+		sound_play_pitchvol(sndHyperCrystalChargeExplo, 0.6, 0.5),
+		1.55
+	);
+	return _swap;
+	
 	
 /// SCRIPTS
 #macro  current_frame_active                                                                    (current_frame % 1) < current_time_scale

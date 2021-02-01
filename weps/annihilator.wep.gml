@@ -1,8 +1,8 @@
 #define init
 	 // Sprites:
-	global.sprWep       = sprite_add_weapon("../sprites/weps/sprAnnihilator.png",          8, 3);
-	global.sprWepHUD    = sprite_add(       "../sprites/weps/sprAnnihilatorHUD.png",    1, 0, 3);
-	global.sprWepHUDRed = sprite_add(       "../sprites/weps/sprAnnihilatorHUDRed.png", 1, 0, 3);
+	global.sprWep       = sprite_add_weapon("../sprites/weps/sprAnnihilator.png",       8, 3);
+	global.sprWepHUD    = sprite_add_weapon("../sprites/weps/sprAnnihilatorHUD.png",    0, 3);
+	global.sprWepHUDRed = sprite_add(       "../sprites/weps/sprAnnihilatorHUD.png", 1, 0, 3);
 	global.sprWepLocked = mskNone;
 	
 	 // LWO:

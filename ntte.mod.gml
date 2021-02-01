@@ -132,21 +132,20 @@
 		}
 		
 		 // Weapon Skin:
-		if(is_string(bskin) && array_find_index(ntte_mods.skin, bskin) >= 0){
-			if(mod_script_exists("skin", bskin, "skin_weapon_sprite")){
-				var _ref = script_ref_create_ext("skin", bskin, "skin_weapon_sprite");
-				for(var i = 0; i < 2; i++){
-					var	_wep = ((i == 0) ? wep : bwep),
-						_spr = weapon_get_sprt(_wep);
-						
-					if(_spr != script_ref_call(_ref, _spr, _wep)){
-						_wep = wep_wrap(_wep, "weapon_sprt", _ref);
-						_wep = wep_wrap(_wep, "weapon_fire", script_ref_create(skin_weapon_fire, bskin));
-						variable_instance_set(self, ((i == 0) ? "wep" : "bwep"), _wep);
-					}
-				}
+		wep  = wep_skin(wep,  race, bskin);
+		bwep = wep_skin(bwep, race, bskin);
+	}
+	with(instance_create(0, 0, ProtoChest)){
+		if(is_object(wep) && wep_raw(wep) == wep_frog_pistol && "tewrapper" in wep){
+			//wep.tewrapper.wep = wep_golden_frog_pistol;
+			wep = wep_golden_frog_pistol;
+			with(ProtoChest){
+				wep = other.wep;
 			}
+			sprite_index = sprProtoChest;
+			event_perform(ev_other, ev_room_end);
 		}
+		instance_delete(self);
 	}
 	
 	 // Determine Crystal Heart Area:
@@ -1746,15 +1745,6 @@
 		}
 	}
 	
-#define skin_weapon_fire(_skin, _fireID, _wep)
-	 // Resprite Projectiles:
-	if(instance_exists(projectile)){
-		var _inst = instances_matching_gt(projectile, "id", _fireID);
-		if(array_length(_inst)) with(_inst){
-			sprite_index = mod_script_call("skin", _skin, "skin_weapon_sprite", sprite_index, _wep);
-		}
-	}
-	
 #define step
 	ntte_begin_step();
 	
@@ -2403,25 +2393,66 @@
 		}
 	}
 	
-	 // Portal Weapons:
-	if(instance_exists(SpiralCont) && (instance_exists(GenCont) || instance_exists(LevCont)) && instance_exists(WepPickup)){
-		with(WepPickup){
-			if("portal_inst" not in self || !instance_exists(portal_inst)){
-				var _lastSeed = random_get_seed();
-				portal_inst = instance_create(SpiralCont.x, SpiralCont.y, SpiralDebris);
-				with(portal_inst){
-					sprite_index = other.sprite_index;
-					image_index = 0;
-					turnspeed = orandom(1);
-					rotspeed = orandom(15);
-					dist = random_range(80, 120);
+	 // Weapon Pickup Stuff:
+	if(instance_exists(WepPickup)){
+		 // Weapon Skins:
+		var _inst = instances_matching(WepPickup, "ntte_weapon_skin", null);
+		if(array_length(_inst)) with(_inst){
+			ntte_weapon_skin = (!roll && (ammo || instance_exists(GenCont) || instance_exists(LevCont)));
+			
+			if(ntte_weapon_skin){
+				var	_wep     = wep_raw(wep),
+					_wepNum  = 0;
+					
+				with(WepPickup){
+					if(_wep == wep_raw(wep)){
+						_wepNum++;
+						if(self == other){
+							break;
+						}
+					}
 				}
-				random_set_seed(_lastSeed);
+				
+				var	_race    = "",
+					_raceNum = 0;
+					
+				switch(_wep){
+					case wep_guitar      : _race = "fish";    break;
+					case wep_black_sword : _race = "chicken"; break;
+				}
+				
+				for(var i = 0; i < maxp; i++){
+					if(_race == "" || (player_get_race(i) == _race && (_raceNum++ % _wepNum) == 0)){
+						var _wepSkin = wep_skin(wep, player_get_race(i), player_get_skin(i));
+						if(wep != _wepSkin || weapon_get_sprt(wep) != weapon_get_sprt(_wepSkin)){
+							wep = _wepSkin;
+							break;
+						}
+					}
+				}
 			}
-			with(portal_inst){
-				image_xscale = 0.7 + (0.1 * sin((-image_angle / 2) / 200));
-				image_yscale = image_xscale;
-				grow = 0;
+		}
+		
+		 // Portal Weapons:
+		if(instance_exists(SpiralCont) && (instance_exists(GenCont) || instance_exists(LevCont))){
+			with(WepPickup){
+				if("portal_inst" not in self || !instance_exists(portal_inst)){
+					var _lastSeed = random_get_seed();
+					portal_inst = instance_create(SpiralCont.x, SpiralCont.y, SpiralDebris);
+					with(portal_inst){
+						sprite_index = other.sprite_index;
+						image_index  = 0;
+						turnspeed    = orandom(1);
+						rotspeed     = orandom(15);
+						dist         = random_range(80, 120);
+					}
+					random_set_seed(_lastSeed);
+				}
+				with(portal_inst){
+					image_xscale = 0.7 + (0.1 * sin((-image_angle / 2) / 200));
+					image_yscale = image_xscale;
+					grow         = 0;
+				}
 			}
 		}
 	}
@@ -5001,6 +5032,7 @@
 #define player_swap()                                                                   return  mod_script_call_self('mod', 'telib', 'player_swap');
 #define wep_raw(_wep)                                                                   return  mod_script_call_nc  ('mod', 'telib', 'wep_raw', _wep);
 #define wep_wrap(_wep, _scrName, _scrRef)                                               return  mod_script_call_nc  ('mod', 'telib', 'wep_wrap', _wep, _scrName, _scrRef);
+#define wep_skin(_wep, _race, _skin)                                                    return  mod_script_call_nc  ('mod', 'telib', 'wep_skin', _wep, _race, _skin);
 #define wep_merge(_stock, _front)                                                       return  mod_script_call_nc  ('mod', 'telib', 'wep_merge', _stock, _front);
 #define wep_merge_decide(_hardMin, _hardMax)                                            return  mod_script_call_nc  ('mod', 'telib', 'wep_merge_decide', _hardMin, _hardMax);
 #define weapon_decide(_hardMin, _hardMax, _gold, _noWep)                                return  mod_script_call_self('mod', 'telib', 'weapon_decide', _hardMin, _hardMax, _gold, _noWep);

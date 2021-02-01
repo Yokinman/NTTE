@@ -2082,6 +2082,7 @@
 						wep   = other.wep;
 						ammo  = other.ammo;
 						curse = other.curse;
+						roll  = other.ammo;
 					}
 					wep = wep_none;
 				}
@@ -2095,8 +2096,10 @@
 			}
 			
 			 // Not Holding Weapon:
-			if(wep == wep_none && !place_meeting(x, y, WepPickup) && instance_exists(prompt_mimic)){
-				with(prompt_mimic) visible = true;
+			if(wep == wep_none && (!instance_exists(WepPickup) || !place_meeting(x, y, WepPickup)) && instance_exists(prompt_mimic)){
+				with(prompt_mimic){
+					visible = true;
+				}
 				
 				 // Place Weapon:
 				with(player_find(prompt_mimic.pick)){
@@ -2110,7 +2113,7 @@
 							player_swap();
 							
 							 // Effects:
-							sound_play_hit(sndSwapGold, 0.1);
+							sound_play_hit(sndSwapGold,     0.1);
 							sound_play_hit(sndWeaponPickup, 0.1);
 							with(other) with(instance_create(x + orandom(4), y + orandom(4), CaveSparkle)){
 								depth = other.depth - 1;
@@ -2124,9 +2127,11 @@
 			}
 			
 			 // Weapon Collection Stat:
-			with(instance_nearest(x, y, WepPickup)){
-				if(array_find_index(other.stat.weapons, wep_raw(wep)) < 0){
-					array_push(other.stat.weapons, wep_raw(wep));
+			if(instance_exists(WepPickup)){
+				with(instance_nearest(x, y, WepPickup)){
+					if(array_find_index(other.stat.weapons, wep_raw(wep)) < 0){
+						array_push(other.stat.weapons, wep_raw(wep));
+					}
 				}
 			}
 		}
@@ -2140,7 +2145,7 @@
 					with(instance_nearest_array(x, y, instances_matching(WepPickup, "visible", true))){
 						if(place_meeting(x, y, other)){
 							other.wep   = wep;
-							other.ammo  = ammo;
+							other.ammo  = false;//ammo;
 							other.curse = curse;
 							instance_destroy();
 						}

@@ -33,6 +33,43 @@
 		case sprMapIcon      : return spr.FishAnglerMapIcon;
 	}
 	
+#define skin_weapon_sprite(_spr, _wep)
+	switch(_spr){
+		case sprGoldARifle       : return spr.AnglerAssaultRifle;
+		case sprGoldBazooka      : return spr.AnglerBazooka;
+		case sprGoldCrossbow     : return spr.AnglerCrossbow;
+		case sprGoldDiscgun      : return spr.AnglerDiscGun;
+		case sprGoldNader        : return spr.AnglerGrenadeLauncher;
+		case sprGoldLaserGun     : return spr.AnglerLaserPistol;
+		case sprGoldMachinegun   : return spr.AnglerMachinegun;
+		case sprGoldNukeLauncher : return spr.AnglerNukeLauncher;
+		case sprGoldPlasmaGun    : return spr.AnglerPlasmaGun;
+		case sprGoldRevolver     : return spr.AnglerRevolver;
+		case sprGoldScrewdriver  : return spr.AnglerScrewdriver;
+		case sprGoldShotgun      : return spr.AnglerShotgun;
+		case sprGoldSlugger      : return spr.AnglerSlugger;
+		case sprGoldSplinterGun  : return spr.AnglerSplinterGun;
+		case sprGoldWrench       : return spr.AnglerWrench;
+		case sprGuitar           : return spr.AnglerGuitar;
+		
+		 // Projectiles:
+		case sprBoltGold         : return spr.AnglerBolt;
+		case sprGoldDisc         : return spr.AnglerDisc;
+		case sprGoldGrenade      : return spr.AnglerGrenade;
+		case sprGoldNuke         : return spr.AnglerNuke;
+		case sprGoldRocket       : return spr.AnglerRocket;
+		
+		 // Modded:
+		default:
+			if(_spr == spr.GoldTrident  ) return spr.AnglerTrident;
+			if(_spr == spr.GoldTunneller) return spr.AnglerTunneller;
+	}
+	return _spr;
+	
+#define skin_weapon_sprite_hud(_spr, _wep)
+	if(_spr == spr.TunnellerHUD) return spr.AnglerTunnellerHUD;
+	return _spr;
+	
 	
 /// SCRIPTS
 #macro  current_frame_active                                                                    (current_frame % 1) < current_time_scale

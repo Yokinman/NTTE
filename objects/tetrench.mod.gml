@@ -877,7 +877,7 @@
 				}
 				
 				with(lightning_connect(_x1, _y1, _x2, _y2, (point_distance(_x1, _y1, _x2, _y2) / 4) * sin(wave / 90), false)){
-					damage       = floor(other.damage * 7/3);
+					damage       = floor(damage * (other.damage / 3));
 					sprite_index = spr.ElectroPlasmaTether;
 					depth        = -3;
 					

@@ -82,8 +82,8 @@
 			GoldTunneller        = sprite(p + "sprGoldTunneller",        1,  8,  6, shnWep);
 			TunnellerLoadout     = sprite(p + "sprTunnellerLoadout",     1, 24, 24);
 			GoldTunnellerLoadout = sprite(p + "sprGoldTunnellerLoadout", 1, 24, 24);
-			TunnellerHUD         = sprite(p + "sprTunnellerHUD",         1,  0,  3);
-			TunnellerHUDRed      = sprite(p + "sprTunnellerHUDRed",      1,  0,  3);
+			TunnellerHUD         = sprite(p + "sprTunnellerHUD",         1,  0,  3, shnWep);
+			TunnellerHUDRed      = sprite(p + "sprTunnellerHUD",         1,  0,  3);
 			
 			 // Trident:
 			Trident            = sprite(p + "sprTrident",            1, 11,  6, shnWep);
@@ -1884,6 +1884,33 @@
 			//#region WEAPONS
 			m += "Weapons/";
 				
+				 // Angler:
+				p = m + "Angler/";
+				AnglerAssaultRifle    = sprite(p + "sprAnglerAssaultRifle",    1,  4,  3, shnWep);
+				AnglerBazooka         = sprite(p + "sprAnglerBazooka",         1, 10,  7, shnWep);
+				AnglerCrossbow        = sprite(p + "sprAnglerCrossbow",        1,  2,  3, shnWep);
+				AnglerDiscGun         = sprite(p + "sprAnglerDiscGun",         1, -2,  3, shnWep);
+				AnglerGrenadeLauncher = sprite(p + "sprAnglerGrenadeLauncher", 1,  2,  3, shnWep);
+				AnglerGuitar          = sprite(p + "sprAnglerGuitar",          1,  2,  7, shnWep);
+				AnglerLaserPistol     = sprite(p + "sprAnglerLaserPistol",     1, -3,  3, shnWep);
+				AnglerMachinegun      = sprite(p + "sprAnglerMachinegun",      1,  0,  2, shnWep);
+				AnglerNukeLauncher    = sprite(p + "sprAnglerNukeLauncher",    1,  9, 10, shnWep);
+				AnglerPlasmaGun       = sprite(p + "sprAnglerPlasmaGun",       1,  1,  4, shnWep);
+				AnglerRevolver        = sprite(p + "sprAnglerRevolver",        1, -3,  2, shnWep);
+				AnglerScrewdriver     = sprite(p + "sprAnglerScrewdriver",     1, -2,  3, shnWep);
+				AnglerShotgun         = sprite(p + "sprAnglerShotgun",         1,  3,  3, shnWep);
+				AnglerSlugger         = sprite(p + "sprAnglerSlugger",         1,  1,  3, shnWep);
+				AnglerSplinterGun     = sprite(p + "sprAnglerSplinterGun",     1,  2,  3, shnWep);
+				AnglerTrident         = sprite(p + "sprAnglerTrident",         1, 12,  7, shnWep);
+				AnglerTunneller       = sprite(p + "sprAnglerTunneller",       1,  8,  6, shnWep);
+				AnglerTunnellerHUD    = sprite(p + "sprAnglerTunneller",       1, 16,  6, shnWep);
+				AnglerWrench          = sprite(p + "sprAnglerWrench",          1,  1,  4, shnWep);
+				AnglerBolt            = sprite(p + "sprAnglerBolt",            2,  4,  8);
+				AnglerDisc            = sprite(p + "sprAnglerDisc",            2,  9,  9);
+				AnglerGrenade         = sprite(p + "sprAnglerGrenade",         1,  3,  3);
+				AnglerNuke            = sprite(p + "sprAnglerNuke",            1,  8,  8);
+				AnglerRocket          = sprite(p + "sprAnglerRocket",          1,  4,  4);
+				
 				 // Orchid:
 				p = m + "Orchid/";
 				OrchidAssaultRifle    = sprite(p + "sprOrchidAssaultRifle",    1,  5, 4, shnWep);
@@ -1904,12 +1931,39 @@
 				OrchidSplinterGun     = sprite(p + "sprOrchidSplinterGun",     1,  3, 4, shnWep);
 				OrchidTrident         = sprite(p + "sprOrchidTrident",         1, 12, 7, shnWep);
 				OrchidTunneller       = sprite(p + "sprOrchidTunneller",       1, 10, 9, shnWep);
+				OrchidTunnellerHUD    = sprite(p + "sprOrchidTunneller",       1, 20, 9, shnWep);
 				OrchidWrench          = sprite(p + "sprOrchidWrench",          1,  1, 4, shnWep);
 				OrchidBolt            = sprite(p + "sprOrchidBolt",            2,  4, 8);
 				OrchidDisc            = sprite(p + "sprOrchidDisc",            2,  6, 6);
 				OrchidGrenade         = sprite(p + "sprOrchidGrenade",         1,  3, 3);
 				OrchidNuke            = sprite(p + "sprOrchidNuke",            1,  8, 8);
 				OrchidRocket          = sprite(p + "sprOrchidRocket",          1,  4, 4);
+				
+				 // Red:
+				p = m + "Red/";
+				RedAssaultRifle    = sprite(p + "sprRedAssaultRifle",    1,  4, 3, shnWep);
+				RedBazooka         = sprite(p + "sprRedBazooka",         1, 11, 2, shnWep);
+				RedCrossbow        = sprite(p + "sprRedCrossbow",        1,  2, 5, shnWep);
+				RedDiscGun         = sprite(p + "sprRedDiscGun",         1, -3, 4, shnWep);
+				RedGrenadeLauncher = sprite(p + "sprRedGrenadeLauncher", 1,  1, 2, shnWep);
+				RedLaserPistol     = sprite(p + "sprRedLaserPistol",     1, -2, 2, shnWep);
+				RedMachinegun      = sprite(p + "sprRedMachinegun",      1,  1, 0, shnWep);
+				RedNukeLauncher    = sprite(p + "sprRedNukeLauncher",    1,  7, 6, shnWep);
+				RedPlasmaGun       = sprite(p + "sprRedPlasmaGun",       1,  3, 3, shnWep);
+				RedRevolver        = sprite(p + "sprRedRevolver",        1, -2, 2, shnWep);
+				RedScrewdriver     = sprite(p + "sprRedScrewdriver",     1, -2, 3, shnWep);
+				RedShotgun         = sprite(p + "sprRedShotgun",         1,  4, 2, shnWep);
+				RedSlugger         = sprite(p + "sprRedSlugger",         1,  2, 2, shnWep);
+				RedSplinterGun     = sprite(p + "sprRedSplinterGun",     1,  2, 4, shnWep);
+				RedTrident         = sprite(p + "sprRedTrident",         1, 12, 7, shnWep);
+				RedTunneller       = sprite(p + "sprRedTunneller",       1, 10, 7, shnWep);
+				RedTunnellerHUD    = sprite(p + "sprRedTunneller",       1, 18, 8, shnWep);
+				RedWrench          = sprite(p + "sprRedWrench",          1,  1, 3, shnWep);
+				RedBolt            = sprite(p + "sprRedBolt",            2,  4, 8);
+				RedDisc            = sprite(p + "sprRedDisc",            2,  6, 6);
+				RedGrenade         = sprite(p + "sprRedGrenade",         1,  3, 3);
+				RedNuke            = sprite(p + "sprRedNuke",            1,  8, 8);
+				RedRocket          = sprite(p + "sprRedRocket",          1,  4, 4);
 				
 			//#endregion
 			
