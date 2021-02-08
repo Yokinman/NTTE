@@ -4368,8 +4368,8 @@
 /// GENERAL
 #define ntte_update(_newID)
 	 // Spider Cocoons:
-	if(instance_exists(Cocoon) && Cocoon.id > _minID){
-		with(instances_matching_gt(Cocoon, "id", _minID)){
+	if(instance_exists(Cocoon) && Cocoon.id > _newID){
+		with(instances_matching_gt(Cocoon, "id", _newID)){
 			obj_create(x, y, "NewCocoon");
 			instance_delete(self);
 		}
@@ -4377,8 +4377,8 @@
 	
 	 // Scramble Cursed Caves Weapons:
 	if(GameCont.area == area_cursed_caves){
-		if(instance_exists(WepPickup) && WepPickup.id > _minID){
-			with(instances_matching_gt(WepPickup, "id", _minID)){
+		if(instance_exists(WepPickup) && WepPickup.id > _newID){
+			with(instances_matching_gt(WepPickup, "id", _newID)){
 				if(roll && wep_raw(wep) != "merge"){
 					if(!position_meeting(xstart, ystart, ChestOpen) || chance(1, 3)){
 						 // Curse:

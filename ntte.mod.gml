@@ -92,15 +92,6 @@
 		ntte_pet_max += _diff;
 	}
 	
-	 // Projectile Team Spriterizer Controller:
-	if(array_length(instances_matching(CustomObject, "name", "DeflectTeamifier")) <= 0){
-		with(instance_create(0, 0, CustomObject)){
-			name        = "DeflectTeamifier";
-			on_end_step = DeflectTeamifier_end_step;
-			persistent  = true;
-		}
-	}
-	
 	 // Race Runs Stat:
 	for(var i = 0; i < maxp; i++){
 		var _race = player_get_race(i);
@@ -2104,6 +2095,19 @@
 		
 		 // This is it:
 		if(instance_exists(Effect)){
+			 // Teamify Deflections:
+			if(instance_exists(Deflect) && Deflect.id > _newID){
+				with(instances_matching_gt(Deflect, "id", _newID)){
+					if(distance_to_object(projectile) <= 0){
+						with(instances_meeting(x, y, projectile)){
+							if(sprite_get_team(sprite_index) != 3){
+								team_instance_sprite(((team == 3) ? 1 : team), self);
+							}
+						}
+					}
+				}
+			}
+			
 			 // Make Rain Splashes Appear Above Walls:
 			if(instance_exists(RainSplash) && RainSplash.id > _newID){
 				with(instances_matching_gt(RainSplash, "id", _newID)){
@@ -4719,22 +4723,6 @@
 				
 				 // Slow:
 				ntte_stairslow = 5;
-			}
-		}
-	}
-	
-#define DeflectTeamifier_end_step
-	 // Teamify Deflections:
-	if(instance_exists(Deflect)){
-		var _inst = instances_matching(Deflect, "ntte_teamdeflect", null);
-		if(array_length(_inst)) with(_inst){
-			ntte_teamdeflect = (distance_to_object(projectile) <= 0);
-			if(ntte_teamdeflect){
-				with(instances_meeting(x, y, projectile)){
-					if(sprite_get_team(sprite_index) != 3){
-						team_instance_sprite(((team == 3) ? 1 : team), self);
-					}
-				}
 			}
 		}
 	}
