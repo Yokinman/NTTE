@@ -2103,9 +2103,9 @@
 		}
 		
 		 // This is it:
-		if(instance_exists(Effect) && Effect.id > _newID){
+		if(instance_exists(Effect)){
 			 // Make Rain Splashes Appear Above Walls:
-			if(instance_exists(RainSplash)/* && RainSplash.id > _newID*/){
+			if(instance_exists(RainSplash) && RainSplash.id > _newID){
 				with(instances_matching_gt(RainSplash, "id", _newID)){
 					if(!place_meeting(x, y + 8, Floor)){
 						depth = -7;

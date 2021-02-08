@@ -2491,15 +2491,17 @@
 	
 	
 /// GENERAL
-#define ntte_update(_minID)
+#define ntte_update(_newID)
 	 // Rain Turns to Steam:
-	if(teevent_get_active("FirePit") && instance_exists(RainSplash)){
-		with(instances_matching_gt(RainSplash, "id", null)){
-			with(instance_create(x, y, Breath)){
-				image_yscale = choose(-1, 1);
-				image_angle  = random(90);
-				if(!place_meeting(x, y + 8, Floor)){
-					depth = -8;
+	if(teevent_get_active("FirePit")){
+		if(instance_exists(RainSplash) && RainSplash.id > _newID){
+			with(instances_matching_gt(RainSplash, "id", _newID)){
+				with(instance_create(x, y, Breath)){
+					image_yscale = choose(-1, 1);
+					image_angle  = random(90);
+					if(!place_meeting(x, y + 8, Floor)){
+						depth = -8;
+					}
 				}
 			}
 		}
@@ -2507,8 +2509,8 @@
 	
 	 // No Infinite Rads:
 	if(GameCont.loops <= 0){
-		if(instance_exists(PopoFreak) && PopoFreak.id > _minID){
-			with(instances_matching(instances_matching_gt(PopoFreak, "id", _minID), "kills", 0)){
+		if(instance_exists(PopoFreak) && PopoFreak.id > _newID){
+			with(instances_matching(instances_matching_gt(PopoFreak, "id", _newID), "kills", 0)){
 				raddrop = 0;
 			}
 		}
