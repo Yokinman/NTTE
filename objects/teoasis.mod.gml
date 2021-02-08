@@ -1,13 +1,11 @@
 #define init
-	spr = mod_variable_get("mod", "teassets", "spr");
-	snd = mod_variable_get("mod", "teassets", "snd");
-	lag = false;
+	mod_script_call("mod", "teassets", "ntte_init", script_ref_create(init));
 	
 	 // Mod Lists:
 	ntte_mods = mod_variable_get("mod", "teassets", "mods");
 	
 	 // Underwater Stuff:
-	global.underwater_bind_draw    = script_bind("UnderwaterDraw", CustomDraw, script_ref_create(underwater_draw), -3, false);
+	global.underwater_bind_draw    = script_bind(CustomDraw, underwater_draw, -3, false);
 	global.underwater_bubble_pop   = [];
 	global.underwater_sound_active = false;
 	global.underwater_sound        = {
@@ -237,6 +235,12 @@
 		]
 	};
 	
+#define cleanup
+	mod_script_call("mod", "teassets", "ntte_cleanup", script_ref_create(cleanup));
+	
+	 // Reset Water Sounds:
+	underwater_sound(false);
+	
 #macro spr global.spr
 #macro msk spr.msk
 #macro snd global.snd
@@ -297,7 +301,7 @@
 	image_angle += (sin(current_frame / 8) * 10) * current_time_scale;
 	
 	 // Charge FX:
-	if(speed <= 0 && chance_ct(1, 12)){
+	if(speed == 0 && chance_ct(1, 12)){
 		if(chance(1, 2)){
 			var _off = image_index / 3;
 			instance_create(x + orandom(_off), y + orandom(_off), PortalL);
@@ -315,12 +319,12 @@
 	}
 	
 	 // Hold Projectile:
-	if(array_length(held) > 0){
+	if(array_length(held)){
 		var	_x   = x,
 			_y   = y - z,
 			_num = 0;
 			
-		held = instances_matching(held, "", null);
+		held = instances_matching_ne(held, "id", null);
 		
 		with(held){
 			 // Push Bubble:
@@ -1292,7 +1296,7 @@
 			var _tunnel = false;
 			
 			 // Player/Enemy Check:
-			with(instances_matching(floors, "", null)){
+			with(instances_matching_ne(floors, "id", null)){
 				if(
 					place_meeting(x, y, Player) ||
 					place_meeting(x, y, Portal) ||
@@ -1539,25 +1543,236 @@
 	
 	
 /// GENERAL
-#define ntte_begin_step
+#define ntte_update(_newID)
 	 // Underwater Code:
 	if(underwater_active){
-		underwater_begin_step();
-	}
-	
-#define ntte_step
-	 // Reset Bubbles:
-	if(instance_exists(GenCont) || instance_exists(LevCont)){
-		if(array_length(global.underwater_bubble_pop)){
-			with(global.underwater_bubble_pop){
-				with(self[0]){
-					spr_bubble_pop_check = null;
+		 // Effects:
+		if(instance_exists(Effect) && Effect.id > _newID){
+			 // Extinguish Flames:
+			if(instance_exists(GroundFlame) || instance_exists(BlueFlame)){
+				with(instances_matching_gt([GroundFlame, BlueFlame], "id", _newID)){
+				    instance_create(x, y, Smoke);
+				    instance_destroy();
 				}
 			}
-			global.underwater_bubble_pop = [];
+			
+			 // Bubbles:
+			if(instance_exists(Dust)){
+				with(instances_matching_gt(Dust, "id", _newID)){
+					instance_create(x, y, Bubble);
+					instance_destroy();
+				}
+			}
+			if(instance_exists(Smoke) || instance_exists(BulletHit) || instance_exists(EBulletHit) || instance_exists(ScorpionBulletHit)){
+				var _inst = instances_matching_gt([Smoke, BulletHit, EBulletHit, ScorpionBulletHit], "id", _newID);
+				if(array_length(_inst)){
+					with(_inst){
+						instance_create(x, y, Bubble);
+						
+						 // Go Away Ugly Smoke:
+						if(object_index == Smoke && (distance_to_object(Flame) < 8 || distance_to_object(TrapFire) < 8)){
+							sprite_index = sprBubble;
+						}
+					}
+				}
+			}
+			if(instance_exists(BoltTrail)){
+				with(instances_matching_ne(instances_matching_gt(BoltTrail, "id", _newID), "image_xscale", 0)){
+					if(chance(1, 4)){
+						instance_create(x, y, Bubble);
+					}
+				}
+			}
+		}
+		
+		 // Clam Chests:
+		if(instance_exists(WeaponChest) && WeaponChest.id > _newID){
+			with(instances_matching(instances_matching_gt(WeaponChest, "id", _newID), "sprite_index", sprWeaponChest)){
+				sprite_index = sprClamChest;
+			}
+		}
+		if(instance_exists(ChestOpen) && ChestOpen.id > _newID){
+			with(instances_matching_gt(ChestOpen, "id", _newID)){
+				repeat(3){
+					instance_create(x, y, Bubble);
+				}
+				if(sprite_index == sprWeaponChestOpen){
+					sprite_index = sprClamChestOpen;
+				}
+			}
+		}
+		
+		 // Watery Enemy Sounds:
+		if(instance_exists(enemy) && enemy.id > _newID){
+			with(instances_matching_ne(instances_matching_gt(enemy, "id", _newID), "object_index", CustomEnemy)){
+				if(snd_hurt != -1) snd_hurt = sndOasisHurt;
+				if(snd_dead != -1) snd_dead = sndOasisDeath;
+				if(snd_mele != -1) snd_mele = sndOasisMelee;
+			}
 		}
 	}
 	
+	 // Air Bubble Setup:
+	if(instance_exists(hitme) && hitme.id > _newID){
+		with(instances_matching_gt(hitme, "id", _newID)){
+			if("spr_bubble" not in self){
+				spr_bubble     = -1;
+				spr_bubble_pop = -1;
+				spr_bubble_x   = 0;
+				spr_bubble_y   = 0;
+				
+				switch(object_index){
+					case Player:
+						switch(race){
+							case "fish":
+							case "robot":
+								spr_bubble     = -1;
+								spr_bubble_pop = -1;
+								break;
+								
+							case "bigdog":
+								spr_bubble     = spr.BigBubble;
+								spr_bubble_pop = spr.BigBubblePop;
+								spr_bubble_y   = 8;
+								break;
+								
+							default:
+								spr_bubble     = sprPlayerBubble;
+								spr_bubble_pop = sprPlayerBubblePop;
+						}
+						break;
+						
+					case Ally:
+					case Sapling:
+					case Bandit:
+					case Grunt:
+					case Inspector:
+					case Shielder:
+					case EliteGrunt:
+					case EliteInspector:
+					case EliteShielder:
+					case PopoFreak:
+					case Necromancer:
+					case FastRat:
+					case Rat:
+						spr_bubble     = sprPlayerBubble;
+						spr_bubble_pop = sprPlayerBubblePop;
+						break;
+						
+					case Salamander:
+						spr_bubble     = spr.BigBubble;
+						spr_bubble_pop = spr.BigBubblePop;
+						break;
+						
+					case Ratking:
+					case RatkingRage:
+						spr_bubble     = spr.BigBubble;
+						spr_bubble_pop = spr.BigBubblePop;
+						spr_bubble_y   = 2;
+						break;
+						
+					case FireBaller:
+					case SuperFireBaller:
+						spr_bubble     = spr.BigBubble;
+						spr_bubble_pop = spr.BigBubblePop;
+						spr_bubble_y   = -6;
+						break;
+				}
+			}
+			if(spr_bubble != -1){
+				array_push(
+					global.underwater_bubble_pop,
+					[self, x + spr_bubble_x, y + spr_bubble_y, spr_bubble_pop]
+				);
+			}
+		}
+	}
+	
+#define ntte_begin_step
+	 // Underwater Code:
+	if(underwater_active){
+		 // Lightning:
+		if(instance_exists(Lightning)){
+			with(Lightning){
+				image_index -= image_speed_raw * 0.75;
+				
+				 // Zap:
+				if(anim_end){
+					with(instance_create(x, y, EnemyLightning)){
+						image_speed  = 0.3;
+						image_xscale = other.image_xscale;
+						image_angle  = other.image_angle;
+						hitid        = 88;
+						
+						 // FX:
+						if(chance(1, 8)){
+							sound_play_hit(sndLightningHit,0.2);
+							with(instance_create(x, y, GunWarrantEmpty)){
+								image_angle = other.direction;
+							}
+						}
+						else if(chance(1, 3)){
+							instance_create(x + orandom(18), y + orandom(18), PortalL);
+						}
+					}
+					instance_destroy();
+				}
+			}
+		}
+		
+		 // Flames Boil Water:
+		if(instance_exists(Flame) || instance_exists(TrapFire)){
+			with(instances_matching_ne([Flame, TrapFire], "id", null)){
+				if(sprite_index != sprFishBoost){
+					if(image_index > 2){
+						sprite_index = sprFishBoost;
+						image_index  = 0;
+						
+						 // FX:
+						if(chance(1, 3)){
+							var	_x   = x,
+								_y   = y,
+								_vol = 0.4;
+								
+							if(fork()){
+								repeat(1 + irandom(3)){
+									instance_create(_x, _y, Bubble);
+									
+									view_shake_max_at(_x, _y, 3);
+									sleep(6);
+									
+									sound_play_pitchvol(sndOasisPortal, 1.4 + random(0.4), _vol);
+									audio_sound_set_track_position(sndOasisPortal, 0.52 + random(0.04));
+									_vol -= 0.1;
+									
+									wait(10 + irandom(20));
+								}
+								exit;
+							}
+						}
+					}
+				}
+				
+				 // Hot hot hot:
+				else if(chance_ct(1, 100)){
+					instance_create(x, y, Bubble);
+				}
+			}
+		}
+		
+		 // Replace Lame MineExplosion:
+		if(instance_exists(MineExplosion)){
+			var _inst = instances_matching_gt(instances_matching_le(MineExplosion, "alarm0", ceil(current_time_scale)), "alarm0", 0);
+			if(array_length(_inst)) with(_inst){
+				with(obj_create(x, y - 12, "SealMine")){
+					my_health = 0;
+				}
+				instance_destroy();
+			}
+		}
+	}
+	
+#define ntte_step
 	 // Underwater Sounds:
 	if(global.underwater_sound_active || array_find_index(ntte_mods.area, underwater_area) >= 0){
 		underwater_sound(area_get_underwater(underwater_area));
@@ -1567,7 +1782,27 @@
 	 // Underwater Code:
 	var _active = underwater_active;
 	if(_active){
-		underwater_end_step();
+		 // Air Bubble Pop:
+		if(array_length(global.underwater_bubble_pop)){
+			with(global.underwater_bubble_pop){
+				var _inst = self[0];
+				
+				 // Follow Papa:
+				if(instance_exists(_inst)){
+					self[@1] = _inst.x + _inst.spr_bubble_x;
+					self[@2] = _inst.y + _inst.spr_bubble_y;
+					self[@3] = _inst.spr_bubble_pop;
+				}
+				
+				 // Pop:
+				else{
+					with(instance_create(self[1], self[2], BubblePop)){
+						sprite_index = other[3];
+					}
+					global.underwater_bubble_pop = array_delete_value(global.underwater_bubble_pop, self);
+				}
+			}
+		}
 	}
 	with(global.underwater_bind_draw.id){
 		visible = _active;
@@ -1588,274 +1823,14 @@
 		}
 	}
 	
-#define underwater_begin_step
-	 // Lightning:
-	if(instance_exists(Lightning)){
-		with(Lightning){
-			image_index -= image_speed_raw * 0.75;
-			
-			 // Zap:
-			if(anim_end){
-				with(instance_create(x, y, EnemyLightning)){
-					image_speed  = 0.3;
-					image_xscale = other.image_xscale;
-					image_angle  = other.image_angle;
-					hitid        = 88;
-					
-					 // FX:
-					if(chance(1, 8)){
-						sound_play_hit(sndLightningHit,0.2);
-						with(instance_create(x, y, GunWarrantEmpty)){
-							image_angle = other.direction;
-						}
-					}
-					else if(chance(1, 3)){
-						instance_create(x + orandom(18), y + orandom(18), PortalL);
-					}
-				}
-				instance_destroy();
-			}
-		}
-	}
-	
-	 // Flames Boil Water:
-	if(instance_exists(Flame) || instance_exists(TrapFire)){
-		with(instances_matching([Flame, TrapFire], "", null)){
-			if(sprite_index != sprFishBoost){
-				if(image_index > 2){
-					sprite_index = sprFishBoost;
-					image_index  = 0;
-					
-					 // FX:
-					if(chance(1, 3)){
-						var	_x = x,
-							_y = y,
-							_vol = 0.4;
-							
-						if(fork()){
-							repeat(1 + irandom(3)){
-								instance_create(_x, _y, Bubble);
-								
-								view_shake_max_at(_x, _y, 3);
-								sleep(6);
-								
-								sound_play_pitchvol(sndOasisPortal, 1.4 + random(0.4), _vol);
-								audio_sound_set_track_position(sndOasisPortal, 0.52 + random(0.04));
-								_vol -= 0.1;
-								
-								wait(10 + irandom(20));
-							}
-							exit;
-						}
-					}
-				}
-			}
-			
-			 // Hot hot hot:
-			else if(chance_ct(1, 100)){
-				instance_create(x, y, Bubble);
-			}
-			
-			 // Go away ugly smoke:
-			if(place_meeting(x, y, Smoke)){
-				with(instance_nearest(x, y, Smoke)) instance_destroy();
-				if(chance(1, 2)) with(instance_create(x, y, Bubble)){
-					motion_add(other.direction, other.speed / 2);
-				}
-			}
-		}
-	}
-	
-	 // Replace Lame MineExplosion:
-	if(instance_exists(MineExplosion)){
-		var _inst = instances_matching_gt(instances_matching_le(MineExplosion, "alarm0", ceil(current_time_scale)), "alarm0", 0);
-		if(array_length(_inst)) with(_inst){
-			with(obj_create(x, y - 12, "SealMine")){
-				my_health = 0;
-			}
-			instance_destroy();
-		}
-	}
-	
-#define underwater_end_step
-	 // Effects:
-	if(instance_number(Effect) > instance_number(Bubble)){
-		 // Snuff Flames:
-		if(instance_exists(GroundFlame) || instance_exists(BlueFlame)){
-			var _inst = instances_matching([GroundFlame, BlueFlame], "waterbubble", null);
-			if(array_length(_inst)) with(_inst){
-			    instance_create(x, y, Smoke);
-			    instance_destroy();
-			}
-		}
-		
-		 // Bubbles:
-		if(instance_exists(Dust)){
-			var _inst = instances_matching(Dust, "waterbubble", null);
-			if(array_length(_inst)) with(_inst){
-				instance_create(x, y, Bubble);
-				instance_destroy();
-			}
-		}
-		if(instance_exists(Smoke) || instance_exists(BulletHit) || instance_exists(EBulletHit) || instance_exists(ScorpionBulletHit)){
-			var _inst = instances_matching([Smoke, BulletHit, EBulletHit, ScorpionBulletHit], "waterbubble", null);
-			if(array_length(_inst)) with(_inst){
-				waterbubble = true;
-				instance_create(x, y, Bubble);
-			}
-		}
-		if(instance_exists(BoltTrail)){
-			var _inst = instances_matching(BoltTrail, "waterbubble", null);
-			if(array_length(_inst)) with(_inst){
-				waterbubble = (image_xscale != 0 && chance(1, 4));
-				if(waterbubble){
-					instance_create(x, y, Bubble);
-				}
-			}
-		}
-	}
-	
-	 // Air Bubble Pop:
-	if(array_length(global.underwater_bubble_pop)){
-		with(global.underwater_bubble_pop){
-			var _inst = self[0];
-			
-			 // Follow Papa:
-			if(instance_exists(_inst) && _inst.visible){
-				self[@1] = _inst.x + _inst.spr_bubble_x;
-				self[@2] = _inst.y + _inst.spr_bubble_y;
-				self[@3] = _inst.spr_bubble_pop;
-			}
-			
-			 // Pop:
-			else{
-				with(_inst){
-					spr_bubble_pop_check = null;
-				}
-				with(instance_create(self[1], self[2], BubblePop)){
-					sprite_index = other[3];
-				}
-				global.underwater_bubble_pop = array_delete_value(global.underwater_bubble_pop, self);
-			}
-		}
-	}
-	
-	 // Clam Chests:
-	if(instance_exists(WeaponChest)){
-		var _inst = instances_matching(WeaponChest, "sprite_index", sprWeaponChest);
-		if(array_length(_inst)) with(_inst){
-			sprite_index = sprClamChest;
-		}
-	}
-	if(instance_exists(ChestOpen)){
-		var _inst = instances_matching(ChestOpen, "waterchest", null);
-		if(array_length(_inst)) with(_inst){
-			waterchest = true;
-			repeat(3) instance_create(x, y, Bubble);
-			if(sprite_index == sprWeaponChestOpen) sprite_index = sprClamChestOpen;
-		}
-	}
-	
-	 // Watery Enemy Hurt/Death Sounds:
-	if(instance_exists(enemy)){
-		var _inst = instances_matching(enemy, "underwater_sound_check", null);
-		if(array_length(_inst)) with(_inst){
-			underwater_sound_check = true;
-			if(object_index != CustomEnemy){
-				if(snd_hurt != -1) snd_hurt = sndOasisHurt;
-				if(snd_dead != -1) snd_dead = sndOasisDeath;
-				if(snd_mele != -1) snd_mele = sndOasisMelee;
-			}
-		}
-	}
-	
 #define underwater_draw
 	if(lag) trace_time();
 	
 	 // Air Bubbles:
 	if(instance_exists(hitme)){
-		 // Bubble Setup:
-		var _inst = instances_matching(hitme, "spr_bubble", null);
+		var _inst = instances_matching(instances_seen_nonsync(instances_matching_ne(hitme, "spr_bubble", -1, null), 16, 16), "visible", true);
 		if(array_length(_inst)) with(_inst){
-			spr_bubble     = -1;
-			spr_bubble_pop = -1;
-			spr_bubble_x   = 0;
-			spr_bubble_y   = 0;
-			
-			switch(object_index){
-				case Player:
-					switch(race){
-						case "fish":
-						case "robot":
-							spr_bubble     = -1;
-							spr_bubble_pop = -1;
-							break;
-							
-						case "bigdog":
-							spr_bubble     = spr.BigBubble;
-							spr_bubble_pop = spr.BigBubblePop;
-							spr_bubble_y   = 8;
-							break;
-							
-						default:
-							spr_bubble     = sprPlayerBubble;
-							spr_bubble_pop = sprPlayerBubblePop;
-					}
-					break;
-					
-				case Ally:
-				case Sapling:
-				case Bandit:
-				case Grunt:
-				case Inspector:
-				case Shielder:
-				case EliteGrunt:
-				case EliteInspector:
-				case EliteShielder:
-				case PopoFreak:
-				case Necromancer:
-				case FastRat:
-				case Rat:
-					spr_bubble     = sprPlayerBubble;
-					spr_bubble_pop = sprPlayerBubblePop;
-					break;
-					
-				case Salamander:
-					spr_bubble     = spr.BigBubble;
-					spr_bubble_pop = spr.BigBubblePop;
-					break;
-					
-				case Ratking:
-				case RatkingRage:
-					spr_bubble     = spr.BigBubble;
-					spr_bubble_pop = spr.BigBubblePop;
-					spr_bubble_y   = 2;
-					break;
-					
-				case FireBaller:
-				case SuperFireBaller:
-					spr_bubble     = spr.BigBubble;
-					spr_bubble_pop = spr.BigBubblePop;
-					spr_bubble_y   = -6;
-					break;
-			}
-		}
-		
-		var _instVisible = instances_matching(hitme, "visible", true);
-		
-		if(array_length(_instVisible)){
-			 // Draw Bubble:
-			var _inst = instances_seen_nonsync(instances_matching_ne(_instVisible, "spr_bubble", -1), 16, 16);
-			if(array_length(_inst)) with(_inst){
-				draw_sprite(spr_bubble, -1, x + spr_bubble_x, y + spr_bubble_y);
-			}
-			
-			 // Bubble Pop Setup:
-			var _inst = instances_matching(instances_matching_ne(_instVisible, "spr_bubble_pop", -1), "spr_bubble_pop_check", null);
-			if(array_length(_inst)) with(_inst){
-				spr_bubble_pop_check = true;
-				array_push(global.underwater_bubble_pop, [id, x, y, sprPlayerBubblePop]);
-			}
+			draw_sprite(spr_bubble, -1, x + spr_bubble_x, y + spr_bubble_y);
 		}
 	}
 	
@@ -1890,15 +1865,6 @@
 		}
 	}
 	global.underwater_sound_active = _active;
-	
-#define cleanup
-	 // Reset Water Sounds:
-	underwater_sound(false);
-	
-	 // Reset Bubble Pop:
-	with(global.underwater_bubble_pop){
-		with(self[0]) spr_bubble_pop_check = null;
-	}
 	
 	
 /// SCRIPTS
@@ -1970,7 +1936,7 @@
 #define surface_setup(_name, _w, _h, _scale)                                            return  mod_script_call_nc  ('mod', 'teassets', 'surface_setup', _name, _w, _h, _scale);
 #define shader_setup(_name, _texture, _args)                                            return  mod_script_call_nc  ('mod', 'teassets', 'shader_setup', _name, _texture, _args);
 #define shader_add(_name, _vertex, _fragment)                                           return  mod_script_call_nc  ('mod', 'teassets', 'shader_add', _name, _vertex, _fragment);
-#define script_bind(_name, _scriptObj, _scriptRef, _depth, _visible)                    return  mod_script_call_nc  ('mod', 'teassets', 'script_bind', _name, _scriptObj, _scriptRef, _depth, _visible);
+#define script_bind(_scriptObj, _scriptRef, _depth, _visible)                           return  mod_script_call_nc  ('mod', 'teassets', 'script_bind', script_ref_create(script_bind), _scriptObj, (is_real(_scriptRef) ? script_ref_create(_scriptRef) : _scriptRef), _depth, _visible);
 #define obj_create(_x, _y, _obj)                                                        return  (is_undefined(_obj) ? [] : mod_script_call_nc('mod', 'telib', 'obj_create', _x, _y, _obj));
 #define top_create(_x, _y, _obj, _spawnDir, _spawnDis)                                  return  mod_script_call_nc  ('mod', 'telib', 'top_create', _x, _y, _obj, _spawnDir, _spawnDis);
 #define projectile_create(_x, _y, _obj, _dir, _spd)                                     return  mod_script_call_self('mod', 'telib', 'projectile_create', _x, _y, _obj, _dir, _spd);

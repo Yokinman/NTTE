@@ -1,7 +1,5 @@
 #define init
-	spr = mod_variable_get("mod", "teassets", "spr");
-	snd = mod_variable_get("mod", "teassets", "snd");
-	lag = false;
+	mod_script_call("mod", "teassets", "ntte_init", script_ref_create(init));
 	
 	/*
 		0) Determine if X should be an event:
@@ -44,6 +42,9 @@
 	teevent_add("SeaCreature");
 	teevent_add("EelGrave");
 	teevent_add("BuriedVault");
+	
+#define cleanup
+	mod_script_call("mod", "teassets", "ntte_cleanup", script_ref_create(cleanup));
 	
 #macro spr global.spr
 #macro msk spr.msk
@@ -125,15 +126,15 @@
 		obj_create(x, y, "BanditHiker");
 		
 		 // Reduce Nearby Non-Bandits:
-		var	_park = instance_exists(teevent_get_active("MaggotPark")),
-			_city = instance_exists(teevent_get_active("ScorpionCity"));
+		var	_park = teevent_get_active("MaggotPark"),
+			_city = teevent_get_active("ScorpionCity");
 			
-		with(instances_matching([MaggotSpawn, BigMaggot], "", null)){
+		with(instances_matching_ne([MaggotSpawn, BigMaggot], "id", null)){
 			if(chance(1, point_distance(x, y, other.x, other.y) / (_park ? 64 : 160))){
 				instance_delete(id);
 			}
 		}
-		with(instances_matching([Scorpion, GoldScorpion], "", null)){
+		with(instances_matching_ne([Scorpion, GoldScorpion], "id", null)){
 			if(chance(1, point_distance(x, y, other.x, other.y) / (_city ? 32 : 160))){
 				instance_delete(id);
 			}
@@ -181,7 +182,7 @@
 		
 		 // Riders:
 		with(teevent_get_active("ScorpionCity")){
-			var	_rideList = array_shuffle(instances_matching([Scorpion, GoldScorpion], "", null)),
+			var	_rideList = array_shuffle(instances_matching_ne([Scorpion, GoldScorpion], "id", null)),
 				_rideNum  = 0;
 				
 			with(instances_matching(Bandit, "name", "BanditCamper")){
@@ -1520,7 +1521,7 @@
 		}
 		
 		 // Fire Pit:
-		if(instance_exists(teevent_get_active("FirePit"))){
+		if(teevent_get_active("FirePit")){
 			obj_create(x, y, "TrapSpin");
 			_wepDis += 32;
 		}
@@ -1628,14 +1629,14 @@
 		
 	 // More Traps:
 	var _num = floor(array_length(FloorNormal) / 30);
-	with(array_shuffle(instances_matching(Wall, "", null))){
+	with(array_shuffle(instances_matching_ne(Wall, "id", null))){
 		if(_num > 0){
 			if(place_meeting(x, y, Floor) && point_distance(bbox_center_x, bbox_center_y, _spawnX, _spawnY) > 64/* && chance(3, 5)*/){
 				if(array_length(instance_rectangle(bbox_left, bbox_top, bbox_right, bbox_bottom, Trap)) <= 0){
 					var _spawn = true;
 					with(teevent_get_active("RavenArena")){
 						var _wall = other;
-						with(instances_matching(floors, "", null)){
+						with(instances_matching_ne(floors, "id", null)){
 							if(place_meeting(x, y, _wall)){
 								_spawn = false;
 								break;
@@ -1659,7 +1660,7 @@
 	}*/
 	
 	 // Spinny Trap Room:
-	if(!instance_exists(teevent_get_active("RavenArena"))){
+	if(!teevent_get_active("RavenArena")){
 		var _cx  = 0,
 			_cy  = 0,
 			_num = 0;
@@ -1690,8 +1691,7 @@
 		}
 	}
 	
-#define FirePit_step
-	/*
+/*#define FirePit_step
 	 // Arcing Traps:
 	if(instance_exists(TrapFire){
 		var _inst = instances_matching(TrapFire, "firepitevent_check", null);
@@ -1706,22 +1706,6 @@
 		}
 	}
 	*/
-	
-	 // Rain Turns to Steam:
-	if(instance_exists(RainSplash)){
-		var _inst = instances_matching(RainSplash, "firepitevent_check", null);
-		if(array_length(_inst)) with(_inst){
-			firepitevent_check = true;
-			
-			with(instance_create(x, y, Breath)){
-				image_yscale = choose(-1, 1);
-				image_angle  = random(90);
-				if(!place_meeting(x, y + 8, Floor)){
-					depth = -8;
-				}
-			}
-		}
-	}
 	
 	
 #define SealPlaza_text    return `${event_tip}DISTANT RELATIVES`;
@@ -2161,7 +2145,7 @@
 	var _list = [];
 	
 	 // Normal:
-	with(instances_matching([Player, Revive], "", null)){
+	with(instances_matching_ne([Player, Revive], "id", null)){
 		with([wep, bwep]){
 			var	_wep = self,
 				_raw = wep_raw(_wep);
@@ -2312,19 +2296,19 @@
 	}
 	
 	 // Fewer Guardians:
-	with(instances_matching([DogGuardian, ExploGuardian], "", null)){
-		instance_delete(id);
+	with(instances_matching_ne([DogGuardian, ExploGuardian], "id", null)){
+		instance_delete(self);
 	}
 	with(Guardian){
 		if(chance(1, 4)){
-			instance_delete(id);
+			instance_delete(self);
 		}
 	}
 	
 	 // Replace Chest:
 	with(AmmoChest){
 		chest_create(x, y, IDPDChest, true);
-		instance_delete(id);
+		instance_delete(self);
 	}
 	
 	
@@ -2423,7 +2407,7 @@
 	var _scrt = (
 		is_array(_event)
 		? _event
-		: script_ref_create_ext(script_ref_create(0)[0], mod_current, _event)
+		: script_ref_create_ext(script_ref_create(teevent_add)[0], mod_current, _event)
 	);
 	
 	array_push(event_list, _scrt);
@@ -2446,10 +2430,10 @@
 		}
 		
 		 // Normal:
-		else if(!instance_exists(teevent_get_active(_name))){
+		else if(!teevent_get_active(_name)){
 			with(instance_create(0, 0, CustomObject)){
 				name     = "NTTEEvent";
-				mod_type = script_ref_create(0)[0];
+				mod_type = script_ref_create(teevent_set_active)[0];
 				mod_name = mod_current;
 				event    = _name;
 				tip      = mod_script_call(mod_type, mod_name, event + "_text");
@@ -2500,20 +2484,31 @@
 	
 	 // Normal:
 	with(instances_matching(_inst, "event", _name)){
-		return id;
+		return self;
 	}
 	
 	return noone;
 	
 	
 /// GENERAL
-#define ntte_begin_step
+#define ntte_update(_minID)
+	 // Rain Turns to Steam:
+	if(teevent_get_active("FirePit") && instance_exists(RainSplash)){
+		with(instances_matching_gt(RainSplash, "id", null)){
+			with(instance_create(x, y, Breath)){
+				image_yscale = choose(-1, 1);
+				image_angle  = random(90);
+				if(!place_meeting(x, y + 8, Floor)){
+					depth = -8;
+				}
+			}
+		}
+	}
+	
 	 // No Infinite Rads:
-	if(instance_exists(PopoFreak)){
-		var _inst = instances_matching(PopoFreak, "ntte_raddrop", null);
-		if(array_length(_inst)) with(_inst){
-			ntte_raddrop = (kills == 0 && GameCont.loops <= 0);
-			if(ntte_raddrop){
+	if(GameCont.loops <= 0){
+		if(instance_exists(PopoFreak) && PopoFreak.id > _minID){
+			with(instances_matching(instances_matching_gt(PopoFreak, "id", _minID), "kills", 0)){
 				raddrop = 0;
 			}
 		}
@@ -2589,7 +2584,7 @@
 #define surface_setup(_name, _w, _h, _scale)                                            return  mod_script_call_nc  ('mod', 'teassets', 'surface_setup', _name, _w, _h, _scale);
 #define shader_setup(_name, _texture, _args)                                            return  mod_script_call_nc  ('mod', 'teassets', 'shader_setup', _name, _texture, _args);
 #define shader_add(_name, _vertex, _fragment)                                           return  mod_script_call_nc  ('mod', 'teassets', 'shader_add', _name, _vertex, _fragment);
-#define script_bind(_name, _scriptObj, _scriptRef, _depth, _visible)                    return  mod_script_call_nc  ('mod', 'teassets', 'script_bind', _name, _scriptObj, _scriptRef, _depth, _visible);
+#define script_bind(_scriptObj, _scriptRef, _depth, _visible)                           return  mod_script_call_nc  ('mod', 'teassets', 'script_bind', script_ref_create(script_bind), _scriptObj, (is_real(_scriptRef) ? script_ref_create(_scriptRef) : _scriptRef), _depth, _visible);
 #define obj_create(_x, _y, _obj)                                                        return  (is_undefined(_obj) ? [] : mod_script_call_nc('mod', 'telib', 'obj_create', _x, _y, _obj));
 #define top_create(_x, _y, _obj, _spawnDir, _spawnDis)                                  return  mod_script_call_nc  ('mod', 'telib', 'top_create', _x, _y, _obj, _spawnDir, _spawnDis);
 #define projectile_create(_x, _y, _obj, _dir, _spd)                                     return  mod_script_call_self('mod', 'telib', 'projectile_create', _x, _y, _obj, _dir, _spd);

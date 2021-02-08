@@ -1,24 +1,25 @@
 #define init
+	mod_script_call("mod", "teassets", "ntte_init", script_ref_create(init));
+	
 	 // Sprites:
 	global.sprWep        = sprite_add_weapon("../sprites/weps/sprScythe.png",   5, 7);
 	global.sprWepHUD     = sprite_add_weapon("../sprites/weps/sprScythe.png",  10, 7);
 	global.sprShotbow    = sprite_add_weapon("../sprites/weps/sprShotbow.png",  6, 3);
 	global.sprSlugbow    = sprite_add_weapon("../sprites/weps/sprSlugbow.png",  6, 5);
 	global.sprSlugbowHUD = sprite_add_weapon("../sprites/weps/sprSlugbow.png", 11, 5);
-	global.sprWepLocked	 = mskNone;
+	global.sprWepLocked	 = sprTemp;
 	
 	 // LWO:
 	global.lwoWep = {
-		"wep"       : mod_current,
-		"ammo"      : 0,
-		"amax"      : 55,
-		"amin"      : 4,
-		"anam"      : "BONES",
-		"buff"      : false,
-		"mode"      : scythe_basic,
-		"cost"      : 0,
-		"combo"     : 0,
-		"swap_step" : noone
+		"wep"   : mod_current,
+		"ammo"  : 0,
+		"amax"  : 55,
+		"amin"  : 4,
+		"anam"  : "BONES",
+		"buff"  : false,
+		"mode"  : scythe_basic,
+		"cost"  : 0,
+		"combo" : 0
 	};
 	
 	 // Modes:
@@ -56,6 +57,9 @@
 		"auto"     : false,
 		"melee"    : false
 	};
+	
+#define cleanup
+	mod_script_call("mod", "teassets", "ntte_cleanup", script_ref_create(cleanup));
 	
 #macro scythe_mode    global.scythe_mode
 #macro scythe_basic   0
@@ -142,15 +146,21 @@
 		}
 	}
 	
-#define scythe_swap_step(_index, _wep)
-	if(instance_exists(Player) && button_pressed(_index, "pick")){
-		var _inst = instances_matching(instances_matching(instances_matching(Player, "index", _index), "wep", _wep), "nearwep", noone);
-		if(array_length(_inst)) with(_inst){
-			 // Swap:
-			scythe_swap(true);
-			
-			 // Silence:
-			mod_variable_set("mod", "ntte", "scythe_tip_index", -1);
+#define ntte_end_step
+	 // Swap Scythe Mode:
+	if(instance_exists(Player)){
+		for(var i = 0; i < maxp; i++){
+			if(button_pressed(i, "pick")){
+				with(instances_matching(instances_matching(Player, "index", i), "nearwep", noone)){
+					if(wep_raw(wep) == mod_current){
+						 // Swap:
+						scythe_swap(true);
+						
+						 // Silence:
+						mod_variable_set("mod", "ntte", "scythe_tip_index", -1);
+					}
+				}
+			}
 		}
 	}
 	
@@ -321,11 +331,6 @@
 				}
 			}
 		}
-	}
-	
-	 // Bind End Step:
-	if(!instance_exists(_wep.swap_step)){
-		_wep.swap_step = script_bind_end_step(scythe_swap_step, 0, index, _wep);
 	}
 	
 	

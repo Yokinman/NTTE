@@ -1,5 +1,5 @@
 #define init
-	spr = mod_variable_get("mod", "teassets", "spr");
+	mod_script_call("mod", "teassets", "ntte_init", script_ref_create(init));
 	
 	 // Sprites:
 	global.sprWep = spr.Bone;
@@ -10,6 +10,9 @@
 		"ammo"  : 1,
 		"combo" : 0
 	};
+	
+#define cleanup
+	mod_script_call("mod", "teassets", "ntte_cleanup", script_ref_create(cleanup));
 	
 #macro spr global.spr
 

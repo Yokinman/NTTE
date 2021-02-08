@@ -720,7 +720,7 @@
 #macro git_branch  global.git_branch
 #macro git_version global.git_version
 
-#macro wrapper_script_base  ["wep_base", "wep_swap", "weapon_raw", "weapon_name", "weapon_text", "weapon_swap", "weapon_sprt", "weapon_sprt_hud", "weapon_loadout", "weapon_area", "weapon_type", "weapon_cost", "weapon_rads", "weapon_load", "weapon_auto", "weapon_melee", "weapon_gold", "weapon_laser_sight", "weapon_fire", "weapon_reloaded", "step"]
+#macro wrapper_script_base  ["init", "cleanup", "wep_base", "wep_swap", "weapon_raw", "weapon_name", "weapon_text", "weapon_swap", "weapon_sprt", "weapon_sprt_hud", "weapon_loadout", "weapon_area", "weapon_type", "weapon_cost", "weapon_rads", "weapon_load", "weapon_auto", "weapon_melee", "weapon_gold", "weapon_laser_sight", "weapon_fire", "weapon_reloaded", "step"]
 #macro wrapper_script_avoid ["weapon_get_list", "weapon_get_name", "weapon_get_text", "weapon_get_swap", "weapon_get_sprt", "weapon_get_sprite", "weapon_get_sprt_hud", "weapon_get_area", "weapon_get_type", "weapon_get_cost", "weapon_get_rads", "weapon_get_load", "weapon_get_auto", "weapon_is_melee", "weapon_get_gold", "weapon_get_laser_sight", "weapon_set_name", "weapon_set_text", "weapon_set_swap", "weapon_set_sprt", "weapon_set_sprite", "weapon_set_area", "weapon_set_type", "weapon_set_cost", "weapon_set_rads", "weapon_set_load", "weapon_set_auto", "weapon_post"]
 
 #define game_start
@@ -2352,6 +2352,14 @@
 		
 		switch(_scrName){
 			
+			case "init":
+			case "cleanup":
+				
+				_gml += `#define ${_scrName}`
+				_gml += _new + `mod_script_call("mod", "teassets", "ntte_${_scrName}", script_ref_create(${_scrName}));`
+				
+				break;
+				
 			case "wep_base": // Returns the base "wep" value for a LWO weapon
 				
 				_gml += `#macro wep_raw  (is_object(wep)  ? ${_scrName}(wep)  : wep)`  + chr(13) + chr(10);
@@ -2879,7 +2887,7 @@
 	
 	var	_find       = [],
 		_tries      = _triesMax,
-		_scrListMax = 85; // Temporary just-in-case check until 9945
+		_scrListMax = 85; // Temporary just-in-case check until 9945(?)
 		
 	if(fork()){
 		 // Reduce Game Freeze:

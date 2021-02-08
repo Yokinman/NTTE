@@ -1,7 +1,5 @@
 #define init
-	spr = mod_variable_get("mod", "teassets", "spr");
-	snd = mod_variable_get("mod", "teassets", "snd");
-	lag = false;
+	mod_script_call("mod", "teassets", "ntte_init", script_ref_create(init));
 	
 	 // Rooms:
 	var L = true;
@@ -178,6 +176,9 @@
 	
 	 // Carpet Surface:
 	//surfCarpet = surface_setup("LairCarpet", 2000, 2000, null);
+	
+#define cleanup
+	mod_script_call("mod", "teassets", "ntte_cleanup", script_ref_create(cleanup));
 	
 #macro spr global.spr
 #macro msk spr.msk
@@ -492,8 +493,11 @@
 		
 	 // Loop Spawns:
 	if(GameCont.loops > 0 && chance(1, 4)){
-		if(styleb) instance_create(_x, _y, BecomeTurret);
-		else instance_create(_x, _y, choose(Molesarge, Jock));
+		instance_create(_x, _y,
+			styleb
+			? BecomeTurret
+			: choose(Molesarge, Jock)
+		);
 	}
 	
 	 // Rat packs:
@@ -505,9 +509,9 @@
 	else if(chance(1, 8)){
 		with(obj_create(_x, _y, "Cat")){
 			if(chance(1, 2)){
-				active = false;
+				active    = false;
 				cantravel = true;
-				alarm1 = random_range(30, 900);
+				alarm1    = random_range(30, 900);
 			}
 		}
 	}
@@ -579,7 +583,7 @@
 	}
 	
 	 // Light up specific things:
-	with(instances_matching([chestprop, RadChest], "", null)){
+	with(instances_matching_ne([chestprop, RadChest], "id", null)){
 		obj_create(x, y - 28, "CatLight");
 	}
 	with(obj_create(10016, 10016 - 48, "CatLight")){
@@ -601,6 +605,48 @@
 			}
 			
 			break;
+		}
+	}
+	
+#define ntte_update(_newID)
+	 // Resprite turrets iam smash brother and i dont want to recode turrets:
+	if(area_active){
+		if(instance_exists(Turret) && Turret.id > _newID){
+			with(instances_matching_gt(Turret, "id", _newID)){
+				spr_idle     = spr.LairTurretAppear;
+				spr_walk     = spr.LairTurretIdle;
+				spr_hurt     = spr.LairTurretHurt;
+				spr_dead     = spr.LairTurretDead;
+				spr_fire     = spr.LairTurretFire;
+				hitid        = [spr_idle, "LAIR TURRET"];
+				sprite_index = enemy_sprite;
+			}
+		}
+	}
+	if(instance_exists(EnemyBullet1) && EnemyBullet1.id > _newID){
+		with(instances_matching(instances_matching_gt(EnemyBullet1, "id", _newID), "object_index", EnemyBullet1)){
+			if(
+				is_array(hitid)
+				&& array_length(hitid) > 1
+				&& hitid[1] == "LAIR TURRET"
+			){
+				with(projectile_create(x, y, EnemyBullet2, direction, speed)){
+					 // Effects:
+					with(instance_create(x, y, AcidStreak)){
+						sprite_index = spr.AcidPuff;
+						image_angle  = other.direction + orandom(30);
+						depth        = other.depth - (image_angle >= 180);
+						
+						with(scrFX(x, y, [image_angle, 2 + random(2)], AcidStreak)){
+							depth = other.depth;
+						}
+					}
+					
+					 // Sounds:
+					sound_play_hit(sndFrogEggSpawn3, 0.4);
+				}
+				instance_delete(self);
+			}
 		}
 	}
 	
@@ -628,10 +674,9 @@
 					creator = other;
 					num     = ++other.maxselect;
 					alarm0	= num + 1;
-					
-					skill = _skill;
-					name  = skill_get_name(_skill);
-					text  = skill_get_text(_skill);
+					skill   = _skill;
+					name    = skill_get_name(_skill);
+					text    = skill_get_text(_skill);
 					mod_script_call("skill", _skill, "skill_button");
 				}
 			}
@@ -639,21 +684,16 @@
 	}
 	
 #define ntte_step
-	 // Resprite turrets iam smash brother and i dont want to recode turrets:
-	if(instance_exists(Turret)){
-		var _inst = instances_matching(Turret, "ntte_lairturret", null);
+	 // Dissipate Cat Gas Faster:
+	if(instance_exists(ToxicGas)){
+		var _inst = instances_matching_lt(instances_matching(ToxicGas, "cat_toxic", true), "speed", 0.1);
 		if(array_length(_inst)) with(_inst){
-			ntte_lairturret = area_active;
-			if(ntte_lairturret){
-				spr_idle     = spr.LairTurretAppear;
-				spr_walk     = spr.LairTurretIdle;
-				spr_hurt     = spr.LairTurretHurt;
-				spr_dead     = spr.LairTurretDead;
-				spr_fire     = spr.LairTurretFire;
-				hitid        = [spr_idle, "LAIR TURRET"];
-				sprite_index = enemy_sprite;
-			}
+			growspeed -= random(0.002 * current_time_scale);
 		}
+	}
+	
+	 // Resprited Turret (Fix Appear Animation):
+	if(instance_exists(Turret)){
 		var _inst = instances_matching(Turret, "spr_idle", spr.LairTurretAppear);
 		if(array_length(_inst)) with(_inst){
 			if(anim_end || sprite_index != spr_idle){
@@ -667,35 +707,7 @@
 			}
 		}
 	}
-	if(instance_exists(EnemyBullet1)){
-		var _inst = instances_matching(EnemyBullet1, "ntte_lairturret", null);
-		if(array_length(_inst)) with(_inst){
-			ntte_lairturret = (
-				object_index == EnemyBullet1
-				&& is_array(hitid)
-				&& array_length(hitid) > 1
-				&& hitid[1] == "LAIR TURRET"
-			);
-			if(ntte_lairturret){
-				with(projectile_create(x, y, EnemyBullet2, direction, speed)){
-					 // Effects:
-					with(instance_create(x, y, AcidStreak)){
-						sprite_index = spr.AcidPuff;
-						image_angle  = other.direction + orandom(30);
-						depth        = other.depth - (image_angle >= 180);
-						
-						with(scrFX(x, y, [image_angle, 2 + random(2)], AcidStreak)){
-							depth = other.depth;
-						}
-					}
-					
-					 // Sounds:
-					sound_play_hit(sndFrogEggSpawn3, 0.4);
-				}
-				instance_delete(id);
-			}
-		}
-	}
+	
 	
 /// ROOMS
 #define room_create(_x, _y, _type)
@@ -1387,7 +1399,7 @@
 #define surface_setup(_name, _w, _h, _scale)                                            return  mod_script_call_nc  ('mod', 'teassets', 'surface_setup', _name, _w, _h, _scale);
 #define shader_setup(_name, _texture, _args)                                            return  mod_script_call_nc  ('mod', 'teassets', 'shader_setup', _name, _texture, _args);
 #define shader_add(_name, _vertex, _fragment)                                           return  mod_script_call_nc  ('mod', 'teassets', 'shader_add', _name, _vertex, _fragment);
-#define script_bind(_name, _scriptObj, _scriptRef, _depth, _visible)                    return  mod_script_call_nc  ('mod', 'teassets', 'script_bind', _name, _scriptObj, _scriptRef, _depth, _visible);
+#define script_bind(_scriptObj, _scriptRef, _depth, _visible)                           return  mod_script_call_nc  ('mod', 'teassets', 'script_bind', script_ref_create(script_bind), _scriptObj, (is_real(_scriptRef) ? script_ref_create(_scriptRef) : _scriptRef), _depth, _visible);
 #define obj_create(_x, _y, _obj)                                                        return  (is_undefined(_obj) ? [] : mod_script_call_nc('mod', 'telib', 'obj_create', _x, _y, _obj));
 #define top_create(_x, _y, _obj, _spawnDir, _spawnDis)                                  return  mod_script_call_nc  ('mod', 'telib', 'top_create', _x, _y, _obj, _spawnDir, _spawnDis);
 #define projectile_create(_x, _y, _obj, _dir, _spd)                                     return  mod_script_call_self('mod', 'telib', 'projectile_create', _x, _y, _obj, _dir, _spd);

@@ -1,7 +1,12 @@
 #define init
+	mod_script_call("mod", "teassets", "ntte_init", script_ref_create(init));
+	
 	 // Sprites:
-	global.sprWep = sprHeavyARifle;
-	global.sprWepLocked = mskNone;
+	global.sprWep       = sprHeavyARifle;
+	global.sprWepLocked = sprTemp;
+	
+#define cleanup
+	mod_script_call("mod", "teassets", "ntte_cleanup", script_ref_create(cleanup));
 	
 #define weapon_name   return (weapon_avail() ? "VENOM RIFLE" : "LOCKED");
 #define weapon_text   return "A PIERCING STING";

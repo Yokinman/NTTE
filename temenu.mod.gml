@@ -1,19 +1,17 @@
 #define init
-	spr = mod_variable_get("mod", "teassets", "spr");
-	snd = mod_variable_get("mod", "teassets", "snd");
-	lag = false;
+	mod_script_call("mod", "teassets", "ntte_init", script_ref_create(init));
 	
 	 // Mod Lists:
 	ntte_mods = mod_variable_get("mod", "teassets", "mods");
 	
 	 // Bind Events:
-	script_bind("NTTEMenuDraw", CustomDraw, script_ref_create(draw_menu), object_get_depth(Menu) - 1, true);
+	script_bind(CustomDraw, draw_menu, object_get_depth(Menu) - 1, true);
 	global.loadout_bind = ds_map_create();
-	global.loadout_bind[? "behind" ] = script_bind("LoadoutDrawBehind",  CustomDraw, script_ref_create(draw_loadout_behind),  object_get_depth(Loadout) + 1,      false);
-	global.loadout_bind[? "above"  ] = script_bind("LoadoutDrawAbove",   CustomDraw, script_ref_create(draw_loadout_above),   object_get_depth(Loadout) - 1,      false);
-	global.loadout_bind[? "crown"  ] = script_bind("LoadoutCrownDraw",   CustomDraw, script_ref_create(draw_loadout_crown),   object_get_depth(LoadoutCrown) - 1, false);
-	global.loadout_bind[? "weapon" ] = script_bind("LoadoutWepDraw",     CustomDraw, script_ref_create(draw_loadout_weapon),  object_get_depth(LoadoutWep) - 1,   false);
-	global.loadout_bind[? "tooltip"] = script_bind("LoadoutTooltipDraw", CustomDraw, script_ref_create(draw_loadout_tooltip), -100000,                            false);
+	global.loadout_bind[? "behind" ] = script_bind(CustomDraw, draw_loadout_behind,  object_get_depth(Loadout) + 1,      false);
+	global.loadout_bind[? "above"  ] = script_bind(CustomDraw, draw_loadout_above,   object_get_depth(Loadout) - 1,      false);
+	global.loadout_bind[? "crown"  ] = script_bind(CustomDraw, draw_loadout_crown,   object_get_depth(LoadoutCrown) - 1, false);
+	global.loadout_bind[? "weapon" ] = script_bind(CustomDraw, draw_loadout_weapon,  object_get_depth(LoadoutWep) - 1,   false);
+	global.loadout_bind[? "tooltip"] = script_bind(CustomDraw, draw_loadout_tooltip, -100000,                            false);
 	
 	 // Menu Layout:
 	NTTEMenu = {
@@ -232,35 +230,41 @@
 	}
 	
 	 // Race Stats:
-	with(ntte_mods.race){
-		var	_race = self,
-			_path = "race:" + _race + ":",
-			_stat = [
-				{	name : "",
-					list : [
-						["Kills",  _path + "kill", stat_base],
-						["Loops",  _path + "loop", stat_base],
-						["Runs",   _path + "runs", stat_base],
-						["Deaths", _path + "lost", stat_base],
-						["Wins",   _path + "wins", stat_base],
-						["Time",   _path + "time", stat_time]
-						]
-					},
-				{	name : "Best Run",
-					list : [
-						["Area",  _path + "best:area", stat_area],
-						["Kills", _path + "best:kill", stat_base]
-						]
-					}
-			];
-			
-		switch(_race){
-			case "parrot":
-				array_push(_stat[0].list, ["Charmed", _path + "spec", stat_base]);
-				break;
+	if(fork()){
+		while(mod_exists("mod", "teloader")){
+			wait 0;
 		}
-		
-		lq_set(MenuList.stats.list.mutants.list, _race, _stat);
+		with(ntte_mods.race){
+			var	_race = self,
+				_path = "race:" + _race + ":",
+				_stat = [
+					{	name : "",
+						list : [
+							["Kills",  _path + "kill", stat_base],
+							["Loops",  _path + "loop", stat_base],
+							["Runs",   _path + "runs", stat_base],
+							["Deaths", _path + "lost", stat_base],
+							["Wins",   _path + "wins", stat_base],
+							["Time",   _path + "time", stat_time]
+							]
+						},
+					{	name : "Best Run",
+						list : [
+							["Area",  _path + "best:area", stat_area],
+							["Kills", _path + "best:kill", stat_base]
+							]
+						}
+				];
+				
+			switch(_race){
+				case "parrot":
+					array_push(_stat[0].list, ["Charmed", _path + "spec", stat_base]);
+					break;
+			}
+			
+			lq_set(MenuList.stats.list.mutants.list, _race, _stat);
+		}
+		exit;
 	}
 	
 	 // Loadout Crown System:
@@ -287,6 +291,28 @@
 	
 	 // Menu Command Helper:
 	chat_comp_add("ntte", "manually opens NT:TE's menu");
+	
+#define cleanup
+	mod_script_call("mod", "teassets", "ntte_cleanup", script_ref_create(cleanup));
+	
+	 // Remove Chat Command Helper:
+	chat_comp_remove("ntte");
+	
+	 // Fix Options:
+	if(MenuOpen){
+		with(Menu) mode = 0;
+		sound_volume(sndMenuCharSelect, 1);
+	}
+	
+	 // Reset Clock Parts:
+	if(global.clock_fix){
+		sprite_restore(sprClockParts);
+	}
+	
+	 // Destroy Inactive LoadoutWeps:
+	with(wepLoadout){
+		with(inst) instance_destroy();
+	}
 	
 #macro spr global.spr
 #macro msk spr.msk
@@ -2833,26 +2859,6 @@
 		}
 	}
 	
-#define cleanup
-	 // Remove Chat Command Helper:
-	chat_comp_remove("ntte");
-	
-	 // Fix Options:
-	if(MenuOpen){
-		with(Menu) mode = 0;
-		sound_volume(sndMenuCharSelect, 1);
-	}
-	
-	 // Reset Clock Parts:
-	if(global.clock_fix){
-		sprite_restore(sprClockParts);
-	}
-	
-	 // Destroy Inactive LoadoutWeps:
-	with(wepLoadout){
-		with(inst) instance_destroy();
-	}
-	
 	
 /// SCRIPTS
 #macro  type_melee                                                                              0
@@ -2923,7 +2929,7 @@
 #define surface_setup(_name, _w, _h, _scale)                                            return  mod_script_call_nc  ('mod', 'teassets', 'surface_setup', _name, _w, _h, _scale);
 #define shader_setup(_name, _texture, _args)                                            return  mod_script_call_nc  ('mod', 'teassets', 'shader_setup', _name, _texture, _args);
 #define shader_add(_name, _vertex, _fragment)                                           return  mod_script_call_nc  ('mod', 'teassets', 'shader_add', _name, _vertex, _fragment);
-#define script_bind(_name, _scriptObj, _scriptRef, _depth, _visible)                    return  mod_script_call_nc  ('mod', 'teassets', 'script_bind', _name, _scriptObj, _scriptRef, _depth, _visible);
+#define script_bind(_scriptObj, _scriptRef, _depth, _visible)                           return  mod_script_call_nc  ('mod', 'teassets', 'script_bind', script_ref_create(script_bind), _scriptObj, (is_real(_scriptRef) ? script_ref_create(_scriptRef) : _scriptRef), _depth, _visible);
 #define obj_create(_x, _y, _obj)                                                        return  (is_undefined(_obj) ? [] : mod_script_call_nc('mod', 'telib', 'obj_create', _x, _y, _obj));
 #define top_create(_x, _y, _obj, _spawnDir, _spawnDis)                                  return  mod_script_call_nc  ('mod', 'telib', 'top_create', _x, _y, _obj, _spawnDir, _spawnDis);
 #define projectile_create(_x, _y, _obj, _dir, _spd)                                     return  mod_script_call_self('mod', 'telib', 'projectile_create', _x, _y, _obj, _dir, _spd);

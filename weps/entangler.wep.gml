@@ -1,11 +1,14 @@
 #define init
-	spr = mod_variable_get("mod", "teassets", "spr");
+	mod_script_call("mod", "teassets", "ntte_init", script_ref_create(init));
 	
 	 // Sprites:
 	global.sprWep       = sprite_add_weapon("../sprites/weps/sprEntangler.png",       8, 4);
 	global.sprWepHUD    = sprite_add_weapon("../sprites/weps/sprEntanglerHUD.png",    0, 3);
 	global.sprWepHUDRed = sprite_add(       "../sprites/weps/sprEntanglerHUD.png", 1, 0, 3);
-	global.sprWepLocked = mskNone;
+	global.sprWepLocked = sprTemp;
+	
+#define cleanup
+	mod_script_call("mod", "teassets", "ntte_cleanup", script_ref_create(cleanup));
 	
 #macro spr global.spr
 

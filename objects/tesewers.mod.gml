@@ -1,7 +1,8 @@
 #define init
-	spr = mod_variable_get("mod", "teassets", "spr");
-	snd = mod_variable_get("mod", "teassets", "snd");
-	lag = false;
+	mod_script_call("mod", "teassets", "ntte_init", script_ref_create(init));
+	
+#define cleanup
+	mod_script_call("mod", "teassets", "ntte_cleanup", script_ref_create(cleanup));
 	
 #macro spr global.spr
 #macro msk spr.msk
@@ -2374,7 +2375,7 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 		alarm2 = 40 + irandom(20);
 		
 		 // Sittin:
-		with(array_shuffle(array_combine(instances_matching(CustomProp, "name", "ChairFront", "ChairSide", "Couch"), instances_matching(chestprop, "", null)))){
+		with(array_shuffle(array_combine(instances_matching(CustomProp, "name", "ChairFront", "ChairSide", "Couch"), instances_matching_ne(chestprop, "id", null)))){
 			if(instance_seen(x, y, other) || chance(1, 2)){
 				if(array_length(instances_matching(instances_matching(CustomEnemy, "name", "Cat"), "sit", id)) <= 0){
 					other.sit = id;
@@ -4201,7 +4202,7 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 				: 18
 			));
 			cavein_dis  = max(0, cavein_dis - (_add * current_time_scale));
-			cavein_inst = instances_matching(cavein_inst, "", null);
+			cavein_inst = instances_matching_ne(cavein_inst, "id", null);
 			
 			 // Effects:
 			if(current_frame_active){
@@ -5671,7 +5672,7 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 			_angered = true;
 		}
 		else if(instance_exists(Turtle) || instance_exists(Rat)){
-			with(instances_matching([Turtle, Rat], "", null)){
+			with(instances_matching_ne([Turtle, Rat], "id", null)){
 				if(my_health < maxhealth && instance_seen(x, y, other)){
 					_angered = true;
 					break;
@@ -5716,15 +5717,6 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 	
 	
 /// GENERAL
-#define ntte_step
-	 // Dissipate Cat Gas Faster:
-	if(instance_exists(ToxicGas)){
-		var _inst = instances_matching_lt(instances_matching(ToxicGas, "cat_toxic", true), "speed", 0.1);
-		if(array_length(_inst)) with(_inst){
-			growspeed -= random(0.002 * current_time_scale);
-		}
-	}
-	
 #define ntte_shadows
 	if(instance_exists(CustomHitme)){
 		 // Doors:
@@ -5928,7 +5920,7 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 #define surface_setup(_name, _w, _h, _scale)                                            return  mod_script_call_nc  ('mod', 'teassets', 'surface_setup', _name, _w, _h, _scale);
 #define shader_setup(_name, _texture, _args)                                            return  mod_script_call_nc  ('mod', 'teassets', 'shader_setup', _name, _texture, _args);
 #define shader_add(_name, _vertex, _fragment)                                           return  mod_script_call_nc  ('mod', 'teassets', 'shader_add', _name, _vertex, _fragment);
-#define script_bind(_name, _scriptObj, _scriptRef, _depth, _visible)                    return  mod_script_call_nc  ('mod', 'teassets', 'script_bind', _name, _scriptObj, _scriptRef, _depth, _visible);
+#define script_bind(_scriptObj, _scriptRef, _depth, _visible)                           return  mod_script_call_nc  ('mod', 'teassets', 'script_bind', script_ref_create(script_bind), _scriptObj, (is_real(_scriptRef) ? script_ref_create(_scriptRef) : _scriptRef), _depth, _visible);
 #define obj_create(_x, _y, _obj)                                                        return  (is_undefined(_obj) ? [] : mod_script_call_nc('mod', 'telib', 'obj_create', _x, _y, _obj));
 #define top_create(_x, _y, _obj, _spawnDir, _spawnDis)                                  return  mod_script_call_nc  ('mod', 'telib', 'top_create', _x, _y, _obj, _spawnDir, _spawnDis);
 #define projectile_create(_x, _y, _obj, _dir, _spd)                                     return  mod_script_call_self('mod', 'telib', 'projectile_create', _x, _y, _obj, _dir, _spd);

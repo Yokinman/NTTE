@@ -1,10 +1,10 @@
 #define init
-	spr = mod_variable_get("mod", "teassets", "spr");
+	mod_script_call("mod", "teassets", "ntte_init", script_ref_create(init));
 	
 	 // Sprites:
 	global.sprWep       = spr.ClamShieldWep;
 	global.sprWepHUD    = sprite_add_weapon("../sprites/weps/sprClamShieldHUD.png", 0, 6);
-	global.sprWepLocked = mskNone;
+	global.sprWepLocked = sprTemp;
 	
 	 // LWO:
 	global.lwoWep = {
@@ -12,6 +12,11 @@
 		"inst" : noone
 	};
 	
+#define cleanup
+	mod_script_call("mod", "teassets", "ntte_cleanup", script_ref_create(cleanup));
+	
+#macro spr global.spr
+
 #define weapon_name        return (weapon_avail() ? "CLAM SHIELD" : "LOCKED");
 #define weapon_text        return "ROYAL GUARD";
 #define weapon_swap        return sndSwapHammer;

@@ -1,5 +1,5 @@
 #define init
-	spr = mod_variable_get("mod", "teassets", "spr");
+	mod_script_call("mod", "teassets", "ntte_init", script_ref_create(init));
 	
 	 // Sprites:
 	global.sprWep            = spr.Tunneller;
@@ -8,13 +8,16 @@
 	global.sprWepGoldLoadout = spr.GoldTunnellerLoadout;
 	global.sprWepHUD         = spr.TunnellerHUD;
 	global.sprWepHUDRed      = spr.TunnellerHUDRed;
-	global.sprWepLocked      = mskNone;
+	global.sprWepLocked      = sprTemp;
 	
 	 // LWO:
 	global.lwoWep = {
 		"wep"  : mod_current,
 		"gold" : false
 	};
+	
+#define cleanup
+	mod_script_call("mod", "teassets", "ntte_cleanup", script_ref_create(cleanup));
 	
 #macro spr global.spr
 
@@ -86,49 +89,38 @@
 			
 			 // Area:
 			area_goal  = irandom_range(8, 12) + (4 * _skill) + (4 * (weapon_get_gold(_wep) != 0));
-			area_chaos = chance(1, 2); 
-			area_chest = [];
+			area_chaos = chance(1, 2);
 			
 			 // No Guarantees:
 			if(chance(3, 5)){
-				var _set = pool([
-					["normal",                              	 90     ],
-					["orchid", (save_get("orchid:seen", false) ? 5  : 0)],
-					["lair",   (unlock_get("crown:crime")      ? 5  : 0)]
-				]);
-				
-				switch(_set){
+				switch(pool([
+					["normal", 90],
+					["orchid", 5 * save_get("orchid:seen", false)],
+					["lair",   5 * unlock_get("crown:crime")]
+				])){
 					
 					case "orchid":
 						
-						 // Orchid Set:
-						chest_pos = "random";
-						array_push(area_chest, {
-							"chest" : "OrchidChest",
-							"count" : irandom_range(2, 4)
-						});	
+						area_chest_pos = "random";
+						area_chest     = array_create(irandom_range(2, 4), "OrchidChest");
 						
 						break;
 						
 					case "lair":
 						
-						 // Lair Set:
-						array_push(area_chest, "CatChest");
-						array_push(area_chest, "BatChest");
-					//	array_push(area_chest, "RatChest"); // one day...
+						area_chest = ["CatChest", "BatChest"]; //, "RatChest"]; one day...
 						
 						break;
 						
-					case "normal":
+					default:
 						
-						 // Normal Set:
-						array_push(area_chest, pool([
+						area_chest = [pool([
 							[AmmoChest,          5],
 							[WeaponChest,        5],
 							["Backpack",         3],
 							["BonusAmmoChest",   2],
 							["BonusHealthChest", 2],
-						]));
+						])];
 						
 						break;
 						

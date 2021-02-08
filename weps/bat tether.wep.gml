@@ -1,16 +1,21 @@
 #define init
+	mod_script_call("mod", "teassets", "ntte_init", script_ref_create(init));
+	
 	 // Sprites:
-	global.sprWep = sprite_add_weapon("../sprites/weps/sprBatTether.png", 4, 3);
-	global.sprWepLocked = mskNone;
+	global.sprWep       = sprite_add_weapon("../sprites/weps/sprBatTether.png", 4, 3);
+	global.sprWepLocked = sprTemp;
 	
 	 // LWO:
 	global.lwoWep = {
-		wep  : mod_current,
-		ammo : 6,
-		amax : 6,
-		cost : 1,
-		buff : false
+		"wep"  : mod_current,
+		"ammo" : 6,
+		"amax" : 6,
+		"cost" : 1,
+		"buff" : false
 	};
+	
+#define cleanup
+	mod_script_call("mod", "teassets", "ntte_cleanup", script_ref_create(cleanup));
 	
 #define weapon_name            return (weapon_avail() ? "VAMPIRE" : "LOCKED");
 #define weapon_text            return "HEMOELECTRICITY";

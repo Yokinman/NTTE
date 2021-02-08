@@ -1,13 +1,18 @@
 #define init
+	mod_script_call("mod", "teassets", "ntte_init", script_ref_create(init));
+	
 	 // Sprites:
 	global.sprWep = sprite_add_weapon("../sprites/weps/sprSuperTeleportGun.png", 6, 8);
 	
 	 // LWO:
 	global.lwoWep = {
-		wep      : mod_current,
-		inst     : [],
-		gunangle : 0
+		"wep"      : mod_current,
+		"inst"     : [],
+		"gunangle" : 0
 	};
+	
+#define cleanup
+	mod_script_call("mod", "teassets", "ntte_cleanup", script_ref_create(cleanup));
 	
 #define weapon_name   return "SUPER TELEPORT GUN";
 #define weapon_text   return "POSITION INDETERMINABLE";
@@ -86,7 +91,7 @@
 	}
 	
 	 // Portal Bullet Control:
-	_wep.inst = instances_matching(_wep.inst, "", null);
+	_wep.inst = instances_matching_ne(_wep.inst, "id", null);
 	if(array_length(_wep.inst)){
 		 // Dynamic Reload:
 		wep_set(_primary, "reload",    max(wep_get(_primary, "reload", 0), weapon_get_load(_wep)));

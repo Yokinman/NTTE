@@ -1,7 +1,8 @@
 #define init
-	spr = mod_variable_get("mod", "teassets", "spr");
-	snd = mod_variable_get("mod", "teassets", "snd");
-	lag = false;
+	mod_script_call("mod", "teassets", "ntte_init", script_ref_create(init));
+	
+#define cleanup
+	mod_script_call("mod", "teassets", "ntte_cleanup", script_ref_create(cleanup));
 	
 #macro spr global.spr
 #macro msk spr.msk
@@ -13,7 +14,7 @@
 	/*
 		A labs event prop.
 	*/
-
+	
 	with(instance_create(_x, _y, CustomProp)){
 		 // Visual:
 		spr_idle = spr.ButtonIdle;
@@ -1734,7 +1735,7 @@
 	}
 	
 #define WallSlide_end_step
-	slide_inst = instances_matching(slide_inst, "", null);
+	slide_inst = instances_matching_ne(slide_inst, "id", null);
 	
 	if(array_length(slide_inst) > 0){
 		 // Next:
@@ -1835,8 +1836,8 @@
 	
 #define WallSlide_destroy
 	 // Visual Fix:
-	with(instances_matching(slide_inst, "", null)){
-		depth = max(depth, 0);
+	with(instances_matching_ne(slide_inst, "id", null)){
+		depth   = max(depth, 0);
 		visible = place_meeting(x, y + 16, Floor);
 		l = (place_free(x - 16, y) ?  0 :  4);
 		w = (place_free(x + 16, y) ? 24 : 20) - l;
@@ -1846,6 +1847,29 @@
 	
 	
 /// GENERAL
+#define ntte_update(_newID)
+	 // Temporary Turret Fix:
+	if(instance_exists(Turret) && Turret.id > _newID){
+		with(instances_matching(instances_matching(instances_matching_gt(Turret, "id", _newID), "mask_index", mskNone), "canfly", false)){
+			mask_index = object_get_mask(Turret);
+		}
+	}
+	
+	 // Fish Freaks:
+	if(instance_exists(Freak) && Freak.id > _newID){
+		var _underwater = area_get_underwater(GameCont.area);
+		if(_underwater || (GameCont.area == area_labs && GameCont.loops > 0)){
+			with(instances_matching_gt(Freak, "id", _newID)){
+				if(_underwater || chance(1, 7)){
+					spr_idle = spr.FishFreakIdle;
+					spr_walk = spr.FishFreakWalk;
+					spr_hurt = spr.FishFreakHurt;
+					spr_dead = spr.FishFreakDead;
+				}
+			}
+		}
+	}
+	
 #define ntte_begin_step
 	 // Custom Necromancy:
 	if(instance_exists(ReviveArea) && (instance_exists(Corpse) || instance_exists(WepPickup))){
@@ -1898,24 +1922,6 @@
 						}
 					}
 				}
-			}
-		}
-	}
-	
-#define ntte_end_step
-	 // Fish Freaks:
-	if(instance_exists(Freak)){
-		var _inst = instances_matching(Freak, "fish_freak", null);
-		if(array_length(_inst)) with(_inst){
-			fish_freak = (
-				area_get_underwater(GameCont.area)
-				|| (GameCont.area == area_labs && GameCont.loops > 0 && chance(1, 7))
-			);
-			if(fish_freak){
-				spr_idle = spr.FishFreakIdle;
-				spr_walk = spr.FishFreakWalk;
-				spr_hurt = spr.FishFreakHurt;
-				spr_dead = spr.FishFreakDead;
 			}
 		}
 	}
@@ -2013,7 +2019,7 @@
 #define surface_setup(_name, _w, _h, _scale)                                            return  mod_script_call_nc  ('mod', 'teassets', 'surface_setup', _name, _w, _h, _scale);
 #define shader_setup(_name, _texture, _args)                                            return  mod_script_call_nc  ('mod', 'teassets', 'shader_setup', _name, _texture, _args);
 #define shader_add(_name, _vertex, _fragment)                                           return  mod_script_call_nc  ('mod', 'teassets', 'shader_add', _name, _vertex, _fragment);
-#define script_bind(_name, _scriptObj, _scriptRef, _depth, _visible)                    return  mod_script_call_nc  ('mod', 'teassets', 'script_bind', _name, _scriptObj, _scriptRef, _depth, _visible);
+#define script_bind(_scriptObj, _scriptRef, _depth, _visible)                           return  mod_script_call_nc  ('mod', 'teassets', 'script_bind', script_ref_create(script_bind), _scriptObj, (is_real(_scriptRef) ? script_ref_create(_scriptRef) : _scriptRef), _depth, _visible);
 #define obj_create(_x, _y, _obj)                                                        return  (is_undefined(_obj) ? [] : mod_script_call_nc('mod', 'telib', 'obj_create', _x, _y, _obj));
 #define top_create(_x, _y, _obj, _spawnDir, _spawnDis)                                  return  mod_script_call_nc  ('mod', 'telib', 'top_create', _x, _y, _obj, _spawnDir, _spawnDis);
 #define projectile_create(_x, _y, _obj, _dir, _spd)                                     return  mod_script_call_self('mod', 'telib', 'projectile_create', _x, _y, _obj, _dir, _spd);

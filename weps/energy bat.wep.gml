@@ -1,6 +1,11 @@
 #define init
+	mod_script_call("mod", "teassets", "ntte_init", script_ref_create(init));
+	
 	 // Sprites:
 	global.sprWep = sprite_add("../sprites/weps/sprEnergyBat.png", 7, 0, 4);
+	
+#define cleanup
+	mod_script_call("mod", "teassets", "ntte_cleanup", script_ref_create(cleanup));
 	
 #define weapon_name   return "ENERGY BAT";
 #define weapon_text   return "LOST BUT NOT FORGOTTEN"; // Rest in Peace stevesteven98

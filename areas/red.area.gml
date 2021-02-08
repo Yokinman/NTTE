@@ -1,10 +1,11 @@
 #define init
-	spr = mod_variable_get("mod", "teassets", "spr");
-	snd = mod_variable_get("mod", "teassets", "snd");
-	lag = false;
+	mod_script_call("mod", "teassets", "ntte_init", script_ref_create(init));
 	
 	 // For Manual Map Drawing:
 	global.mapdata_warp_draw = [];
+	
+#define cleanup
+	mod_script_call("mod", "teassets", "ntte_cleanup", script_ref_create(cleanup));
 	
 #macro spr global.spr
 #macro msk spr.msk
@@ -15,10 +16,9 @@
 #macro area_active variable_instance_get(GameCont, "ntte_active_" + mod_current, false) && (GameCont.area == mod_current || GameCont.lastarea == mod_current)
 #macro area_visits variable_instance_get(GameCont, "ntte_visits_" + mod_current, 0)
 
-#macro tesseract variable_instance_get(GenCont, "tesseract",  false)
 #macro warp_zone variable_instance_get(GenCont, "iswarpzone", true)
 
-#define area_subarea           return 1;
+#define area_subarea           return 3;
 #define area_goal              return 60;
 #define area_next              return [mod_current, 1]; // CAN'T LEAVE
 #define area_music             return mus.Red;
@@ -251,13 +251,12 @@
 		direction += _trn;
 		
 #define area_pop_enemies
-	var	_x = x + 16,
-		_y = y + 16;
-		
-	if(!tesseract){
-		
+	if(GameCont.subarea != 3){
+		var	_x = x + 16,
+			_y = y + 16;
+			
 		 // Big:
-		if(chance(1, 7)){
+		if(chance(1, 10)){
 			obj_create(_x, _y, "CrystalBrain");
 		}
 		
@@ -388,8 +387,8 @@
 				
 				 // Hallway:
 				with(instance_random(floors)){
-					var	_x = bbox_center_x,
-						_y = bbox_center_y,
+					var	_x       = bbox_center_x,
+						_y       = bbox_center_y,
 						_moveDis = 32;
 						
 					while(
@@ -445,26 +444,22 @@
 	}
 	
 	 // Tesseract Room:
-	if(tesseract){
-		/*
-		var _spawnX     = 10016,
-			_spawnY     = 10016,
-			_furthest   = instance_furthest(_spawnX, _spawnY, Floor),
-			_dirStart	= point_direction(_spawnX, _spawnY, _furthest.x, _furthest.y),
-			_type		= "",
-			_w			= 4,
-			_h			= 4,
-			_dirOff 	= 90,
-			_spawnDis	= 32,
-			_floorDis	= -64,
-			_spawnFloor = FloorNormal;
-		
-		with(floor_room_start(_spawnX, _spawnY, _spawnDis, _spawnFloor)){
-			with(floor_room_create(x, y, _w, _h, _type, _dirStart, _dirOff, _floorDis)){
+	if(GameCont.subarea == 3){
+		var	_x = 10016,
+			_y = 10016;
+			
+		with(instance_furthest(_x - 16, _y - 16, Floor)){
+			var	_w        = 4,
+				_h        = 4,
+				_type     = "",
+				_dirStart = point_direction(_x, _y, bbox_center_x, bbox_center_y),
+				_dirOff   = 30,
+				_floorDis = -32;
+				
+			with(floor_room_create(_x, _y, _w, _h, _type, _dirStart, _dirOff, _floorDis)){
 				obj_create(x, y, "Tesseract");
 			}
 		}
-		*/
 	}
 	
 #define area_effect
@@ -580,7 +575,7 @@
 #define surface_setup(_name, _w, _h, _scale)                                            return  mod_script_call_nc  ('mod', 'teassets', 'surface_setup', _name, _w, _h, _scale);
 #define shader_setup(_name, _texture, _args)                                            return  mod_script_call_nc  ('mod', 'teassets', 'shader_setup', _name, _texture, _args);
 #define shader_add(_name, _vertex, _fragment)                                           return  mod_script_call_nc  ('mod', 'teassets', 'shader_add', _name, _vertex, _fragment);
-#define script_bind(_name, _scriptObj, _scriptRef, _depth, _visible)                    return  mod_script_call_nc  ('mod', 'teassets', 'script_bind', _name, _scriptObj, _scriptRef, _depth, _visible);
+#define script_bind(_scriptObj, _scriptRef, _depth, _visible)                           return  mod_script_call_nc  ('mod', 'teassets', 'script_bind', script_ref_create(script_bind), _scriptObj, (is_real(_scriptRef) ? script_ref_create(_scriptRef) : _scriptRef), _depth, _visible);
 #define obj_create(_x, _y, _obj)                                                        return  (is_undefined(_obj) ? [] : mod_script_call_nc('mod', 'telib', 'obj_create', _x, _y, _obj));
 #define top_create(_x, _y, _obj, _spawnDir, _spawnDis)                                  return  mod_script_call_nc  ('mod', 'telib', 'top_create', _x, _y, _obj, _spawnDir, _spawnDis);
 #define projectile_create(_x, _y, _obj, _dir, _spd)                                     return  mod_script_call_self('mod', 'telib', 'projectile_create', _x, _y, _obj, _dir, _spd);

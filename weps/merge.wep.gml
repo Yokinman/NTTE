@@ -1,4 +1,6 @@
 #define init
+	mod_script_call("mod", "teassets", "ntte_init", script_ref_create(init));
+	
 	// weap - "Flavor" & "Stats" variables default to this weapon's values
 	
 	/// Flavor
@@ -38,8 +40,6 @@
 	/// Special
 	// cont - Script reference, plays code for fire controller's step,draw,init (See laser cannon)
 	// flag - Array of strings that apply unique mechanics (Wave Gun, Smart Gun, etc.)
-	
-	spr = mod_variable_get("mod", "teassets", "spr");
 	
 	wepList = [wepDefault];
 	
@@ -1347,6 +1347,15 @@
 	flagprojcont_set("cluster",		proj_cluster);
 	flagprojcont_set("hyper",		proj_hyper);
 	
+	 // Merged Weapon PopupText Fix:
+	global.wep_name_popup = [
+		ds_list_create(), // weapon key (makeshift ds_map, normal doesn't support LWO)
+		ds_list_create()  // text to delete
+	];
+	
+#define cleanup
+	mod_script_call("mod", "teassets", "ntte_cleanup", script_ref_create(cleanup));
+	
 #macro spr global.spr
 #macro msk spr.msk
 
@@ -2334,7 +2343,26 @@
 #define wep_stat(_wep, _stat)
 	return lq_defget(lq_defget(_wep, "base", wepDefault), _stat, lq_defget(wepDefault, _stat, -1));
 	
-#define weapon_name(_wep)         return wep_stat(_wep, "name");
+#define weapon_name(_wep)
+	var _name = wep_stat(_wep, "name");
+	
+	 // Cool Prompt Subtext:
+	if(instance_is(self, WepPickup) && is_object(_wep)){
+		if("stock" in _wep.base && "front" in wep.base){
+			if(ds_list_find_index(global.wep_name_popup[0], _wep) < 0){
+				var _spr = mod_script_call("mod", "teassets", "weapon_merge_subtext", _wep.base.stock, _wep.base.front);
+				if(sprite_exists(_spr)){
+					var _text = `#@(${_spr})`;
+					_name += _text;
+					ds_list_add(global.wep_name_popup[0], _wep);
+					ds_list_add(global.wep_name_popup[1], _text);
+				}
+			}
+		}
+	}
+	
+	return _name;
+	
 #define weapon_text(_wep)         return wep_stat(_wep, "text");
 #define weapon_swap(_wep)         return wep_stat(_wep, "swap");
 #define weapon_area(_wep)         return -1;
@@ -2410,6 +2438,26 @@
 				 // Insta-Use Ammo:
 				if(_primary && can_shoot == true){
 					clicked = true;
+				}
+			}
+		}
+	}
+	
+#define ntte_update(_newID)
+	 // Undo Merged Weapon Prompt Subtext:
+	if(ds_list_size(global.wep_name_popup[0])){
+		if(instance_exists(PopupText) && PopupText.id > _newID){
+			with(instances_matching_gt(PopupText, "id", _newID)){
+				with(ds_list_to_array(global.wep_name_popup[1])){
+					other.text = string_replace(other.text, self, "");
+				}
+			}
+			with(ds_list_to_array(global.wep_name_popup[0])){
+				if(!array_length(instances_matching(WepPickup, "wep", self))){
+					var _pos = ds_list_find_index(global.wep_name_popup[0], self);
+					with(global.wep_name_popup){
+						ds_list_delete(self, _pos);
+					}
 				}
 			}
 		}
@@ -4561,7 +4609,7 @@
 #define surface_setup(_name, _w, _h, _scale)                                            return  mod_script_call_nc  ('mod', 'teassets', 'surface_setup', _name, _w, _h, _scale);
 #define shader_setup(_name, _texture, _args)                                            return  mod_script_call_nc  ('mod', 'teassets', 'shader_setup', _name, _texture, _args);
 #define shader_add(_name, _vertex, _fragment)                                           return  mod_script_call_nc  ('mod', 'teassets', 'shader_add', _name, _vertex, _fragment);
-#define script_bind(_name, _scriptObj, _scriptRef, _depth, _visible)                    return  mod_script_call_nc  ('mod', 'teassets', 'script_bind', _name, _scriptObj, _scriptRef, _depth, _visible);
+#define script_bind(_scriptObj, _scriptRef, _depth, _visible)                           return  mod_script_call_nc  ('mod', 'teassets', 'script_bind', script_ref_create(script_bind), _scriptObj, (is_real(_scriptRef) ? script_ref_create(_scriptRef) : _scriptRef), _depth, _visible);
 #define obj_create(_x, _y, _obj)                                                        return  (is_undefined(_obj) ? [] : mod_script_call_nc('mod', 'telib', 'obj_create', _x, _y, _obj));
 #define top_create(_x, _y, _obj, _spawnDir, _spawnDis)                                  return  mod_script_call_nc  ('mod', 'telib', 'top_create', _x, _y, _obj, _spawnDir, _spawnDis);
 #define projectile_create(_x, _y, _obj, _dir, _spd)                                     return  mod_script_call_self('mod', 'telib', 'projectile_create', _x, _y, _obj, _dir, _spd);

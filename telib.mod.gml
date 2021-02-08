@@ -1,19 +1,17 @@
 #define init
-	spr = mod_variable_get("mod", "teassets", "spr");
-	snd = mod_variable_get("mod", "teassets", "snd");
-	lag = false;
+	mod_script_call("mod", "teassets", "ntte_init", script_ref_create(init));
 	
 	 // Mod Lists:
 	ntte_mods = mod_variable_get("mod", "teassets", "mods");
 	
 	 // Bind Events:
 	lag_bind = ds_map_create();
-	lag_bind[? "begin_step"]   = script_bind("LagBeginStep",  CustomBeginStep, script_ref_create(obj_step, "begin_step"), 0, false);
-	lag_bind[? "step"      ]   = script_bind("LagStep",       CustomStep,      script_ref_create(obj_step, "step"),       0, false);
-	lag_bind[? "end_step"  ]   = script_bind("LagEndStep",    CustomEndStep,   script_ref_create(obj_step, "end_step"),   0, false);
-	global.portal_pickups_bind = script_bind("PortalPickups", CustomStep,      script_ref_create(portal_pickups_step),    0, false);
-	global.floor_reveal_bind   = script_bind("FloorReveal",   CustomDraw,      script_ref_create(floor_reveal_draw),     -8, false);
-	global.rad_path_bind       = script_bind("RadPath",       CustomEndStep,   script_ref_create(rad_path_step),          0, false);
+	lag_bind[? "begin_step"]   = script_bind(CustomBeginStep, script_ref_create(obj_step, "begin_step"), 0, false);
+	lag_bind[? "step"      ]   = script_bind(CustomStep,      script_ref_create(obj_step, "step"),       0, false);
+	lag_bind[? "end_step"  ]   = script_bind(CustomEndStep,   script_ref_create(obj_step, "end_step"),   0, false);
+	global.portal_pickups_bind = script_bind(CustomStep,      portal_pickups_step,                       0, false);
+	global.floor_reveal_bind   = script_bind(CustomDraw,      floor_reveal_draw,                        -8, false);
+	global.rad_path_bind       = script_bind(CustomEndStep,   rad_path_step,                             0, false);
 	
 	 // Object List (Used for cheats mod, basically):
 	ntte_obj_list = ds_map_create();
@@ -25,7 +23,7 @@
 	ntte_obj_list[? "tetrench"   ] = ["Angler", "AnglerGold", "Eel", "EelSkull", "ElectroPlasma", "ElectroPlasmaBig", "ElectroPlasmaImpact", "Jelly", "JellyElite", "Kelp", "LightningDisc", "PitSpark", "PitSquid", "PitSquidArm", "PitSquidBomb", "PitSquidDeath", "QuasarBeam", "QuasarRing", "TeslaCoil", "TopDecalWaterMine", "TrenchFloorChunk", "Vent", "WantEel"];
 	ntte_obj_list[? "tesewers"   ] = ["AlbinoBolt", "AlbinoGator", "AlbinoGrenade", "BabyGator", "Bat", "BatBoss", "BatCloud", "BatDisc", "BatScreech", "BoneGator", /*"BossHealFX",*/ "Cabinet", "Cat", "CatBoss", "CatBossAttack", "CatDoor", "CatDoorDebris", "CatGrenade", "CatHole", "CatHoleBig", "CatLight", "ChairFront", "ChairSide", "Couch", "LairBorder", "Manhole", "ManholeOpen", "NewTable", "Paper", "PizzaDrain", "PizzaManholeCover", "PizzaRubble", "PizzaTV", "SewerDrain", "SewerRug", "TurtleCool"];
 	ntte_obj_list[? "tescrapyard"] = ["BoneRaven", "SawTrap", "SludgePool", "TopRaven", "TrapSpin", "Tunneler"];
-	ntte_obj_list[? "tecaves"    ] = ["BigCrystalProp", "ChaosHeart", "CrystalBat", "CrystalBrain", "CrystalBrainDeath", "CrystalClone", "CrystalHeart", "CrystalHeartBullet", "CrystalPropRed", "CrystalPropWhite", "EnergyBatSlash", "InvCrystalBat", "InvMortar", "MinerBandit", "Mortar", "MortarPlasma", "NewCocoon", "PlasmaImpactSmall", "RedBullet", "RedExplosion", "RedShank", "RedSlash", "RedSpider", "Spiderling", "Tesseract", "TesseractStrike", "TwinOrbital", "VlasmaBullet", "VlasmaCannon", "WallFake", "Warp", "WarpPortal"];
+	ntte_obj_list[? "tecaves"    ] = ["BigCrystalProp", "ChaosHeart", "CrystalBat", "CrystalBrain", "CrystalBrainDeath", "CrystalClone", "CrystalHeart", "CrystalHeartBullet", "CrystalPropRed", "CrystalPropWhite", "EnergyBatSlash", "InvCrystalBat", "InvMortar", "MinerBandit", "Mortar", "MortarPlasma", "NewCocoon", "PlasmaImpactSmall", "RedBullet", "RedExplosion", "RedShank", "RedSlash", "RedSpider", "Spiderling", "Tesseract", "TesseractArmDeath", "TesseractStrike", /*"TesseractWarp",*/ "TwinOrbital", "VlasmaBullet", "VlasmaCannon", "WallFake", "Warp", "WarpPortal"];
 	ntte_obj_list[? "telabs"     ] = ["Button", "ButtonChest", "ButtonOld", "ButtonPickup", "ButtonReviveArea", "FreakChamber", "MutantVat", "PickupReviveArea", "PopoSecurity", "WallSlide"];
 	
 	 // Object Create Event Script References:
@@ -63,9 +61,9 @@
 	 // Object Script Binding:
 	ntte_obj_bind      = ds_map_create();
 	ntte_obj_bind_list = ds_map_create();
-	ntte_obj_bind[? "begin_step"] = script_bind("ObjectBeginStep", CustomBeginStep, script_ref_create(obj_bind, "begin_step"), 0, true);
-	ntte_obj_bind[? "step"      ] = script_bind("ObjectStep",      CustomStep,      script_ref_create(obj_bind, "step"),       0, true);
-	ntte_obj_bind[? "end_step"  ] = script_bind("ObjectEndStep",   CustomEndStep,   script_ref_create(obj_bind, "end_step"),   0, true);
+	ntte_obj_bind[? "begin_step"] = script_bind(CustomBeginStep, script_ref_create(obj_bind, "begin_step"), 0, true);
+	ntte_obj_bind[? "step"      ] = script_bind(CustomStep,      script_ref_create(obj_bind, "step"),       0, true);
+	ntte_obj_bind[? "end_step"  ] = script_bind(CustomEndStep,   script_ref_create(obj_bind, "end_step"),   0, true);
 	ntte_obj_bind[? "draw"      ] = ds_map_create();
 	
 	 // Projectile Team Variants:
@@ -197,6 +195,9 @@
 	 // sleep_max():
 	global.sleep_max = 0;
 	
+#define cleanup
+	mod_script_call("mod", "teassets", "ntte_cleanup", script_ref_create(cleanup));
+	
 #macro spr global.spr
 #macro msk spr.msk
 #macro snd global.snd
@@ -316,7 +317,6 @@
 										 // Bind Draw Event:
 										if(_isDraw && !ds_map_exists(_bind, _depth)){
 											_bind[? _depth] = script_bind(
-												"ObjectDraw" + string(_depth),
 												CustomDraw,
 												script_ref_create(obj_bind, _event),
 												_depth,
@@ -444,7 +444,6 @@
 					with(instances_matching_ne(_bind.inst, "depth", depth)){
 						if(!ds_map_exists(_bindList, depth)){
 							_bindList[? depth] = script_bind(
-								"ObjectDraw" + string(depth),
 								CustomDraw,
 								script_ref_create(obj_bind, _type),
 								depth,
@@ -522,7 +521,7 @@
 				trace_time(`obj_${_type} (${array_length(_inst)})`);
 				
 				 // Disable Events:
-				with(instances_matching_ne(_inst, "", null)){
+				with(instances_matching_ne(_inst, "id", null)){
 					variable_instance_set(self, "ntte_" + _type, variable_instance_get(self, "on_" + _type));
 					variable_instance_set(self, "on_"   + _type, []);
 				}
@@ -1136,8 +1135,8 @@
 	
 	return _inst;
 	
-#define script_bind(_name, _scriptObj, _scriptRef, _depth, _visible)
-	return mod_script_call_nc("mod", "teassets", "script_bind", _name, _scriptObj, _scriptRef, _depth, _visible);
+#define script_bind(_scriptObj, _scriptRef, _depth, _visible)
+	return mod_script_call_nc('mod', 'teassets', 'script_bind', script_ref_create(script_bind), _scriptObj, (is_real(_scriptRef) ? script_ref_create(_scriptRef) : _scriptRef), _depth, _visible);
 	
 #define save_get(_name, _default)
 	return mod_script_call_nc("mod", "teassets", "save_get", _name, _default);
@@ -1733,7 +1732,7 @@
 			 // Normal Pickups:
 			if(instance_exists(AmmoPickup) || instance_exists(HPPickup) || instance_exists(RoguePickup)){
 				var _attractDis = 30 + (40 * _pluto);
-				with(instances_matching([AmmoPickup, HPPickup, RoguePickup], "", null)){
+				with(instances_matching_ne([AmmoPickup, HPPickup, RoguePickup], "id", null)){
 					var _p = instance_nearest(x, y, Player);
 					if(point_distance(x, y, _p.x, _p.y) >= _attractDis){
 						var	_dis = 6 * current_time_scale,
@@ -2033,7 +2032,7 @@
 	var	_disMax  = infinity,
 		_nearest = noone;
 		
-	with(instances_matching(_obj, "", null)){
+	with(instances_matching_ne(_obj, "id", null)){
 		var _dis = point_distance(_x, _y, x, y);
 		if(_dis < _disMax){
 			_disMax  = _dis;
@@ -2055,7 +2054,7 @@
 	var	_disMax  = infinity,
 		_nearest = noone;
 		
-	with(instances_matching(_obj, "", null)){
+	with(instances_matching_ne(_obj, "id", null)){
 		var _dis = distance_to_point(_x, _y);
 		if(_dis < _disMax){
 			_disMax  = _dis;
@@ -2081,7 +2080,7 @@
 		_disBMax = infinity,
 		_nearest = noone;
 		
-	with(instances_matching(_obj, "", null)){
+	with(instances_matching_ne(_obj, "id", null)){
 		var	_disA = point_distance(x, y, clamp(x, _x1, _x2), clamp(y, _y1, _y2)),
 			_disB = point_distance(x, y, _cx, _cy);
 			
@@ -2110,7 +2109,7 @@
 		_disBMax = infinity,
 		_nearest = noone;
 		
-	with(instances_matching(_obj, "", null)){
+	with(instances_matching_ne(_obj, "id", null)){
 		var	_x    = clamp(_cx, bbox_left, bbox_right + 1),
 			_y    = clamp(_cy, bbox_top, bbox_bottom + 1),
 			_disA = point_distance(_x, _y, clamp(_x, _x1, _x2), clamp(_y, _y1, _y2)),
@@ -2239,7 +2238,7 @@
 		Also accepts an array of instances
 	*/
 	
-	var	_inst = instances_matching(_obj, "", null),
+	var	_inst = instances_matching_ne(_obj, "id", null),
 		_size = array_length(_inst);
 		
 	return (
@@ -2805,7 +2804,7 @@
 		var _wallOld = instances_matching_lt(Wall, "id", _genID);
 		with(instances_matching_lt(hitme, "id", _genID)){
 			if(place_meeting(x, y, Wall) && !array_length(instances_meeting(x, y, _wallOld))){
-				instance_budge(Wall, -1);
+				wall_clear(x, y);
 			}
 		}
 		
@@ -3559,7 +3558,7 @@
 			}
 	*/
 	
-	with(array_shuffle(instances_matching(_spawnFloor, "", null))){
+	with(array_shuffle(instances_matching_ne(_spawnFloor, "id", null))){
 		var	_x = bbox_center_x,
 			_y = bbox_center_y;
 			
@@ -6616,7 +6615,7 @@
 		}
 	}
 	
-	_newInst = instances_matching(_newInst, "", null);
+	_newInst = instances_matching_ne(_newInst, "id", null);
 	
 	if(array_length(_newInst)){
 		return ((array_length(_newInst) == 1) ? _newInst[0] : _newInst);

@@ -1,13 +1,18 @@
 #define init
+	mod_script_call("mod", "teassets", "ntte_init", script_ref_create(init));
+	
 	 // Sprites:
-	global.sprWep = sprite_add_weapon("../sprites/weps/sprQuasarRifle.png", 8, 5);
-	global.sprWepLocked = mskNone;
+	global.sprWep       = sprite_add_weapon("../sprites/weps/sprQuasarRifle.png", 8, 5);
+	global.sprWepLocked = sprTemp;
 	
 	 // LWO:
 	global.lwoWep = {
-		wep  : mod_current,
-		beam : noone
+		"wep"  : mod_current,
+		"beam" : noone
 	};
+	
+#define cleanup
+	mod_script_call("mod", "teassets", "ntte_cleanup", script_ref_create(cleanup));
 	
 #define weapon_name         return (weapon_avail() ? "QUASAR RIFLE" : "LOCKED");
 #define weapon_text         return "BLINDING LIGHT";

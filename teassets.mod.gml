@@ -138,12 +138,14 @@
 			msk.ClamShieldSlash = sprite(p + "mskClamShieldSlash",  4, 12, 12);
 			
 			 // Crystal Heart:
-			CrystalHeartBullet          	 = sprite(p + "sprCrystalHeartBullet",          	 2, 10, 10);
-			CrystalHeartBulletHit       	 = sprite(p + "sprCrystalHeartBulletHit",       	 8, 16, 16);
-			CrystalHeartBulletRing      	 = sprite(p + "sprCrystalHeartBulletRing",      	 2, 10, 10);
-			CrystalHeartBulletTrail     	 = sprite(p + "sprCrystalHeartBulletTrail",     	 4, 10, 10);
-			CrystalHeartBulletTesseract 	 = sprite(p + "sprCrystalHeartBulletTesseract", 	 2, 24, 24);
-			CrystalHeartBulletTrailTesseract = sprite(p + "sprCrystalHeartBulletTrailTesseract", 4, 24, 24);
+			CrystalHeartBullet         = sprite(p + "sprCrystalHeartBullet",         2, 10, 10);
+			CrystalHeartBulletHit      = sprite(p + "sprCrystalHeartBulletHit",      8, 16, 16);
+			CrystalHeartBulletRing     = sprite(p + "sprCrystalHeartBulletRing",     2, 10, 10);
+			CrystalHeartBulletTrail    = sprite(p + "sprCrystalHeartBulletTrail",    4, 10, 10);
+			CrystalHeartBulletBig      = sprite(p + "sprCrystalHeartBulletBig",      2, 24, 24);
+			CrystalHeartBulletBigRed   = sprite(p + "sprCrystalHeartBulletBigRed",   2, 24, 24);
+			CrystalHeartBulletBigRing  = sprite(p + "sprCrystalHeartBulletBigRing",  2, 24, 24);
+			CrystalHeartBulletBigTrail = sprite(p + "sprCrystalHeartBulletBigTrail", 4, 24, 24);
 			
 			 // Electroplasma:
 			ElectroPlasma       = sprite(p + "sprElectroPlasma",       7, 12, 12);
@@ -1906,7 +1908,7 @@
 				AnglerTunnellerHUD    = sprite(p + "sprAnglerTunneller",       1, 16,  6, shnWep);
 				AnglerWrench          = sprite(p + "sprAnglerWrench",          1,  1,  4, shnWep);
 				AnglerBolt            = sprite(p + "sprAnglerBolt",            2,  4,  8);
-				AnglerDisc            = sprite(p + "sprAnglerDisc",            2,  9,  9);
+				AnglerDisc            = sprite(p + "sprAnglerDisc",            2,  7,  7);
 				AnglerGrenade         = sprite(p + "sprAnglerGrenade",         1,  3,  3);
 				AnglerNuke            = sprite(p + "sprAnglerNuke",            1,  8,  8);
 				AnglerRocket          = sprite(p + "sprAnglerRocket",          1,  4,  4);
@@ -2229,44 +2231,25 @@
 	 // Cloned Starting Weapons:
 	global.loadout_wep_clone = ds_list_create();
 	
-	 // Compile Mod Lists:
+	 // Mod Lists:
 	ntte_mods = {
-		"mod"   : [],
-		"wep"   : [],
-		"area"  : [],
-		"race"  : [],
-		"skin"  : [],
-		"skill" : [],
-		"crown" : []
+		"mod"    : [],
+		"area"   : [],
+		"race"   : [],
+		"skin"   : [],
+		"skill"  : [],
+		"crown"  : [],
+		"weapon" : []
 	};
-	if(fork()){
-		var _find = [];
-		
-		file_find_all(".", _find, 1);
-		while(array_length(_find) <= 0){
-			wait 0;
-		}
-		
-		with(_find){
-			if(!is_dir && ext == ".gml"){
-				var _split = string_split(name, ".");
-				if(array_length(_split) >= 2){
-					var	_type = _split[array_length(_split) - 2],
-						_name = string_copy(name, 1, string_length(name) - string_length("." + _type + ext));
-						
-					if(_type == "weapon"){
-						_type = "wep";
-					}
-					
-					if(_type in ntte_mods){
-						array_push(lq_get(ntte_mods, _type), _name);
-					}
-				}
-			}
-		}
-		
-		exit;
-	}
+	ntte_mods_call = {
+		"begin_step" : [],
+		"step"       : [],
+		"end_step"   : [],
+		"shadows"    : [],
+		"bloom"      : [],
+		"dark"       : [],
+		"update"     : []
+	};
 	
 	 // Reminders:
 	global.remind = [];
@@ -2381,14 +2364,43 @@
 		);
 	}
 	
+#define cleanup
+	 // Reset Starting Weapons:
+	loadout_wep_reset();
+	ds_list_destroy(global.loadout_wep_clone);
+	
+	 // Save Game:
+	if(save_auto){
+		save_ntte();
+	}
+	
+	 // Clear Surfaces, Shaders, Script Bindings:
+	with(ds_map_values(global.surf)) if(surf != -1) surface_destroy(surf);
+	with(ds_map_values(global.shad)) if(shad != -1) shader_destroy(shad);
+	with(ds_map_values(global.bind)) with(self) with(id) instance_destroy();
+	ds_map_destroy(global.surf);
+	ds_map_destroy(global.shad);
+	ds_map_destroy(global.bind);
+	
+	 // No Crash:
+	with(ntte_mods.race){
+		with(instances_matching([CampChar, CharSelect], "race", self)){
+			repeat(8) with(instance_create(random_range(bbox_left, bbox_right), random_range(bbox_top, bbox_bottom), Dust)){
+				motion_add(random(360), random(random(8)));
+			}
+			instance_delete(id);
+		}
+	}
+	
 #macro spr global.spr
 #macro msk spr.msk
 #macro snd global.snd
 #macro mus snd.mus
 #macro lag global.debug_lag
 
-#macro ntte_mods    global.mods
-#macro ntte_version global.version
+#macro ntte_mods      global.mods
+#macro ntte_mods_call global.mods_call
+#macro ntte_version   global.version
 
 #macro spr_load     global.spr_load
 #macro spr_load_num 20 // How many sprites to load per frame
@@ -2428,6 +2440,199 @@
 #macro  area_hq           106
 #macro  area_crib         107
 
+#define ntte_init(_ref)
+	/*
+		Called by NT:TE mods from their 'init' script to execute general setup code
+	*/
+	
+	var	_type = _ref[0],
+		_name = _ref[1];
+		
+	 // Set Global Variables:
+	mod_variable_set(_type, _name, "spr",       spr);
+	mod_variable_set(_type, _name, "snd",       snd);
+	mod_variable_set(_type, _name, "debug_lag", false);
+	
+	 // Add to Mod List:
+	if(_type in ntte_mods){
+		var _list = lq_get(ntte_mods, _type);
+		if(array_find_index(_list, _name) < 0){
+			array_push(_list, _name);
+		}
+		
+		 // Compile NT:TE Script References:
+		if(_name + "." + _type != "ntte.mod"){
+			var _modList = [];
+			for(var i = 0; i < lq_size(ntte_mods); i++){
+				var _modType = lq_get_key(ntte_mods, i);
+				with(lq_get_value(ntte_mods, i)){
+					array_push(_modList, _modType + ":" + self);
+				}
+			}
+			for(var i = lq_size(ntte_mods_call) - 1; i >= 0; i--){
+				if(mod_script_exists(_type, _name, "ntte_" + lq_get_key(ntte_mods_call, i))){
+					var	_refAdd  = [_type, _name],
+						_refList = lq_get_value(ntte_mods_call, i);
+						
+					 // Ensure Consistency Between Mod Reloads:
+					for(var j = 0; j < array_length(_refList); j++){
+						var _refCur = _refList[j];
+						if(array_find_index(_modList, array_join(_refAdd, ":")) < array_find_index(_modList, array_join(_refCur, ":"))){
+							_refList[j] = _refAdd;
+							_refAdd     = _refCur;
+						}
+					}
+					
+					 // Add:
+					array_push(_refList, _refAdd);
+				}
+			}
+		}
+	}
+	
+	 // Mod-Specific:
+	switch(_type){
+		
+		case "race":
+			
+			 // Loadout Fix:
+			with(Loadout){
+				instance_destroy();
+				with(loadbutton){
+					instance_destroy();
+				}
+			}
+			
+			break;
+			
+		case "weapon":
+			
+			 // Weapon Sprite Setup:
+			if(fork()){
+				wait 0;
+				
+				var _spr = mod_variable_get(_type, _name, "sprWep");
+				
+				if(is_real(_spr) && sprite_exists(_spr)){
+					 // Wait for Sprite to Load:
+					var	_waitMax = 90,
+						_waitBox = [sprite_get_bbox_left(_spr), sprite_get_bbox_top(_spr), sprite_get_bbox_right(_spr), sprite_get_bbox_bottom(_spr)];
+						
+					while(_waitMax-- > 0 && array_equals(_waitBox, [sprite_get_bbox_left(_spr), sprite_get_bbox_top(_spr), sprite_get_bbox_right(_spr), sprite_get_bbox_bottom(_spr)])){
+						wait 0;
+					}
+					
+					 // Locked Weapons:
+					if(mod_variable_get(_type, _name, "sprWepLocked") == sprTemp){
+						var	_sprX = sprite_get_xoffset(_spr) + 1,
+							_sprY = sprite_get_yoffset(_spr) + 1;
+							
+						with(surface_setup("sprWepLocked", sprite_get_width(_spr) + 2, sprite_get_height(_spr) + 2, 1)){
+							surface_set_target(surf);
+							draw_clear_alpha(0, 0);
+							
+							with(UberCont){
+								 // Outline:
+								draw_set_fog(true, c_white, 0, 0);
+								for(var _d = 0; _d < 360; _d += 90){
+									draw_sprite(_spr, 1, _sprX + dcos(_d), _sprY + dsin(_d));
+								}
+								
+								 // Main:
+								draw_set_fog(true, c_black, 0, 0);
+								draw_sprite(_spr, 1, _sprX, _sprY);
+								draw_set_fog(false, 0, 0, 0);
+							}
+							
+							 // Done:
+							surface_reset_target();
+							surface_save(surf, name + ".png");
+							mod_variable_set(_type, _name, "sprWepLocked", sprite_add_weapon(name + ".png", _sprX, _sprY));
+							free = true;
+						}
+					}
+					
+					 // Manually Split Bat Disc Sprites:
+					var _list = mod_variable_get(_type, _name, "sprWepImage");
+					if(is_array(_list) && !array_length(_list)){
+						var	_sprX = sprite_get_xoffset(_spr),
+							_sprY = sprite_get_yoffset(_spr);
+							
+						with(surface_setup("sprWepImage", sprite_get_width(_spr), sprite_get_height(_spr), 1)){
+							surface_set_target(surf);
+							
+							 // Load Each Frame as a Weapon Sprite:
+							for(var i = 0; i < sprite_get_number(_spr); i++){
+								draw_clear_alpha(0, 0);
+								with(UberCont){
+									draw_sprite(_spr, i, _sprX, _sprY);
+								}
+								surface_save(surf, name + ".png");
+								array_push(_list, sprite_add_weapon(name + ".png", _sprX, _sprY));
+							}
+							
+							 // Done:
+							surface_reset_target();
+							sprite_delete(_spr);
+							free = true;
+						}
+						
+						mod_variable_set(_type, _name, "sprWep", _list[array_length(_list) - 1]);
+					}
+				}
+				
+				exit;
+			}
+			
+			break;
+			
+	}
+	
+#define ntte_cleanup(_ref)
+	/*
+		Called by NT:TE mods from their 'cleanup' script to execute general unload code
+	*/
+	
+	var	_type = _ref[0],
+		_name = _ref[1];
+		
+	 // Remove NT:TE Script References:
+	for(var i = lq_size(ntte_mods_call) - 1; i >= 0; i--){
+		var	_list    = lq_get_value(ntte_mods_call, i),
+			_listNew = [];
+			
+		with(_list){
+			if(self[0] != _type || self[1] != _name){
+				array_push(_listNew, self);
+			}
+		}
+		
+		if(!array_equals(_list, _listNew)){
+			lq_set(ntte_mods_call, lq_get_key(ntte_mods_call, i), _listNew);
+		}
+	}
+	
+	 // Unbind Scripts:
+	var _bindKey = _name + ":" + _type;
+	if(ds_map_exists(global.bind, _bindKey)){
+		with(global.bind[? _bindKey]){
+			with(id){
+				instance_destroy();
+			}
+		}
+		ds_map_delete(global.bind, _bindKey);
+	}
+	
+	 // Race Mod Loadout Fix:
+	if(_type == "race"){
+		with(Loadout){
+			instance_destroy();
+			with(loadbutton){
+				instance_destroy();
+			}
+		}
+	}
+	
 #define save_ntte()
 	string_save(json_encode(save_data), save_path);
 	
@@ -2989,55 +3194,45 @@
 	
 	return _shad;
 	
-#define script_bind(_name, _scriptObj, _scriptRef, _depth, _visible)
+#define script_bind(_modRef, _scriptObj, _scriptRef, _depth, _visible)
 	/*
 		Binds the given script to the given event
-		Ensures that the script's controller object always exists, and deletes it when the parent mod is unloaded
+		Automatically ensures that the script object always exists, and deletes it when the parent mod is unloaded
 		
 		Args:
-			name      - The name used to store the script binding
 			scriptObj - The event type: CustomStep, CustomBeginStep, CustomEndStep, CustomDraw
 			scriptRef - The script's reference to call
 			depth     - The script's default depth
 			visible   - The script's default visibility, basically "will this event run all the time"
 			
 		Ex:
-			script_bind("draw_thing", CustomDraw, script_ref_create(draw_thing), true, -8)
+			script_bind(script_ref_create(0), CustomDraw, script_ref_create(draw_thing, true), -8, true)
 	*/
 	
-	var _bind = {
-		"name"    : _name,
-		"object"  : _scriptObj,
-		"script"  : _scriptRef,
-		"depth"   : _depth,
-		"visible" : _visible,
-		"id"      : noone
-	};
-	
-	 // Fetch Old Controller:
-	if(ds_map_exists(global.bind, _name)){
-		with(global.bind[? _name]){
-			_bind.id = id;
-			with(id){
-				script = _bind.script;
-				depth  = _bind.depth;
-			}
-		}
-	}
-	
-	 // Make New Controller:
-	if(!instance_exists(_bind.id)){
-		_bind.id = instance_create(0, 0, _bind.object);
-		with(_bind.id){
-			script     = _bind.script;
-			depth      = _bind.depth;
-			visible    = _bind.visible;
-			persistent = true;
-		}
+	var	_modType = _modRef[0],
+		_modName = _modRef[1],
+		_bindKey = _modName + ":" + _modType,
+		_bind    = {
+			"object"  : _scriptObj,
+			"script"  : _scriptRef,
+			"depth"   : _depth,
+			"visible" : _visible,
+			"id"      : noone
+		};
+		
+	_bind.id = instance_create(0, 0, _bind.object);
+	with(_bind.id){
+		script     = _bind.script;
+		depth      = _bind.depth;
+		visible    = _bind.visible;
+		persistent = true;
 	}
 	
 	 // Store:
-	global.bind[? _name] = _bind;
+	if(!ds_map_exists(global.bind, _bindKey)){
+		global.bind[? _bindKey] = [];
+	}
+	array_push(global.bind[? _bindKey], _bind);
 	
 	return _bind;
 	
@@ -3182,37 +3377,15 @@ var _shine = argument_count > 4 ? argument[4] : shnNone;
 	
 	 // Ensure Script Bindings Exist:
 	with(ds_map_values(global.bind)){
-		if(!instance_exists(id)){
-			id = instance_create(0, 0, object);
-			with(id){
-				script     = other.script;
-				depth      = other.depth;
-				visible    = other.visible;
-				persistent = true;
-			}
-		}
-	}
-	
-	 // Locked Weapon Spriterize:
-	with(ntte_mods.wep){
-		if(
-			mod_variable_get("weapon", self, "sprWepLocked") == mskNone &&
-			mod_variable_get("weapon", self, "sprWep") != sprTemp
-		){
-			mod_variable_set("weapon", self, "sprWepLocked", sprTemp);
-			
-			if(fork()){
-				var	_spr     = mod_variable_get("weapon", self, "sprWep"),
-					_waitMax = 90,
-					_waitBox = [sprite_get_bbox_left(_spr), sprite_get_bbox_top(_spr), sprite_get_bbox_right(_spr), sprite_get_bbox_bottom(_spr)];
-					
-				while(_waitMax-- > 0 && array_equals(_waitBox, [sprite_get_bbox_left(_spr), sprite_get_bbox_top(_spr), sprite_get_bbox_right(_spr), sprite_get_bbox_bottom(_spr)])){
-					wait 0;
+		with(self){
+			if(!instance_exists(id)){
+				id = instance_create(0, 0, object);
+				with(id){
+					script     = other.script;
+					depth      = other.depth;
+					visible    = other.visible;
+					persistent = true;
 				}
-				
-				mod_variable_set("weapon", self, "sprWepLocked", wep_locked_sprite(_spr));
-				
-				exit;
 			}
 		}
 	}
@@ -3605,43 +3778,6 @@ var _shine = argument_count > 4 ? argument[4] : shnNone;
 	}
 	
 	return -1;
-
-#define wep_locked_sprite(_sprite)
-	/*
-		Used to automatically create locked weapon sprites
-		Returns a new sprite made of the given sprite drawn in flat black with a white outline
-	*/
-	
-	var	_sprX  = sprite_get_xoffset(_sprite) + 1,
-		_sprY  = sprite_get_yoffset(_sprite) + 1,
-		_surfW = sprite_get_width(_sprite)  + 2,
-		_surfH = sprite_get_height(_sprite) + 2;
-		
-	with(surface_setup("sprLockedWep", _surfW, _surfH, 1)){
-		surface_set_target(surf);
-		draw_clear_alpha(0, 0);
-		
-		with(UberCont){
-			 // Outline:
-			draw_set_fog(true, c_white, 0, 0);
-			for(var _d = 0; _d < 360; _d += 90){
-				draw_sprite(_sprite, 0, _sprX + dcos(_d), _sprY + dsin(_d));
-			}
-			
-			 // Main:
-			draw_set_fog(true, c_black, 0, 0);
-			draw_sprite(_sprite, 0, _sprX, _sprY);
-			draw_set_fog(false, 0, 0, 0);
-		}
-		
-		 // Done:
-		surface_reset_target();
-		free = true;
-		
-		 // Add Sprite:
-		surface_save(surf, name + ".png");
-		return sprite_add_weapon(name + ".png", _sprX, _sprY);
-	}
 	
 #define sprite_add_toptiny(_spr)
 	/*
@@ -3722,31 +3858,3 @@ var _shine = argument_count > 4 ? argument[4] : shnNone;
 	}
 	
 	ds_list_clear(global.loadout_wep_clone);
-	
-#define cleanup
-	 // Reset Starting Weapons:
-	loadout_wep_reset();
-	ds_list_destroy(global.loadout_wep_clone);
-	
-	 // Save Game:
-	if(save_auto){
-		save_ntte();
-	}
-	
-	 // Clear Surfaces, Shaders, Script Bindings:
-	with(ds_map_values(global.surf)) if(surf != -1) surface_destroy(surf);
-	with(ds_map_values(global.shad)) if(shad != -1) shader_destroy(shad);
-	with(ds_map_values(global.bind)) with(id) instance_destroy();
-	ds_map_destroy(global.surf);
-	ds_map_destroy(global.shad);
-	ds_map_destroy(global.bind);
-	
-	 // No Crash:
-	with(ntte_mods.race){
-		with(instances_matching([CampChar, CharSelect], "race", self)){
-			repeat(8) with(instance_create(random_range(bbox_left, bbox_right), random_range(bbox_top, bbox_bottom), Dust)){
-				motion_add(random(360), random(random(8)));
-			}
-			instance_delete(id);
-		}
-	}

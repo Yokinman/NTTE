@@ -1,10 +1,8 @@
 #define init
-	spr = mod_variable_get("mod", "teassets", "spr");
-	snd = mod_variable_get("mod", "teassets", "snd");
-	lag = false;
+	mod_script_call("mod", "teassets", "ntte_init", script_ref_create(init));
 	
 	 // Bind Events:
-	global.pit_bind = script_bind("PitDraw", CustomDraw, script_ref_create(draw_pit), object_get_depth(BackCont) + 1, false);
+	global.pit_bind = script_bind(CustomDraw, draw_pit, object_get_depth(BackCont) + 1, false);
 	
 	 // Pit Surfaces:
 	surfPit        = surface_setup("TrenchPit",        null, null, null);
@@ -24,6 +22,9 @@
 	}
 	global.floor_num = 0;
 	global.floor_min = 0;
+	
+#define cleanup
+	mod_script_call("mod", "teassets", "ntte_cleanup", script_ref_create(cleanup));
 	
 #macro spr global.spr
 #macro msk spr.msk
@@ -426,7 +427,7 @@
 	
 #define area_pop_extras
 	 // The new bandits
-	with(instances_matching([WeaponChest, AmmoChest, RadChest], "", null)){
+	with(instances_matching_ne([WeaponChest, AmmoChest, RadChest], "id", null)){
 		obj_create(x, y, "Diver");
 	}
 	with(Bandit){
@@ -509,16 +510,18 @@
 		}
 		
 		 // Floaty Effects Above Pits:
-		var _inst = instances_matching([WepPickup, chestprop, RadChest], "speed", 0);
-		if(array_length(_inst)) with(_inst){
-			if(pit_get(x, bbox_bottom)){
-				var	_x = x + cos((current_frame + x + y) / 10) * 0.15,
-					_y = y + sin((current_frame + x + y) / 10) * 0.15;
-					
-				if(!place_meeting(_x, y, Wall)) x = _x;
-				if(!place_meeting(x, _y, Wall)) y = _y;
+		//if(instance_exists(WepPickup) || instance_exists(chestprop) || instance_exists(RadChest)){ // probably always true
+			var _inst = instances_matching([WepPickup, chestprop, RadChest], "speed", 0);
+			if(array_length(_inst)) with(_inst){
+				if(pit_get(x, bbox_bottom)){
+					var	_x = x + cos((current_frame + x + y) / 10) * 0.15,
+						_y = y + sin((current_frame + x + y) / 10) * 0.15;
+						
+					if(!place_meeting(_x, y, Wall)) x = _x;
+					if(!place_meeting(x, _y, Wall)) y = _y;
+				}
 			}
-		}
+		//}
 		
 		 // No Props Above Pits:
 		if(instance_exists(prop)){
@@ -542,7 +545,7 @@
 		if(instance_exists(Corpse)){
 			var _inst = instances_matching_ne(instances_matching(instances_matching(Corpse, "trenchpit_check", null), "image_speed", 0), "sprite_index", mskNone, sprPStatDead);
 			if(array_length(_inst)) with(_inst){
-				if(speed <= 0){
+				if(speed == 0){
 					trenchpit_check = true;
 				}
 				if(pit_get(x, y)){
@@ -562,7 +565,7 @@
 		if(instance_exists(ChestOpen) || instance_exists(Debris) || instance_exists(Shell) || instance_exists(Feather)){
 			var _inst = instances_matching_le(instances_matching([ChestOpen, Debris, Shell, Feather], "trenchpit_check", null), "speed", 1);
 			if(array_length(_inst)) with(_inst){
-				if(speed <= 0){
+				if(speed == 0){
 					trenchpit_check = true;
 				}
 				if(pit_get(x, bbox_bottom)){
@@ -573,17 +576,70 @@
 		}
 		
 		 // Destroy PitSink Objects, Lag Helper:
-		var	_max  = 80,
-			_inst = instances_matching(CustomObject, "name", "PitSink");
-			
-		if(array_length(_inst) > _max){
-			with(array_slice(_inst, _max, array_length(_inst) - _max)){
-				instance_destroy();
+		var _max = 80;
+		if(instance_number(CustomObject) > _max){
+			var _inst = instances_matching(CustomObject, "name", "PitSink");
+			if(array_length(_inst) > _max){
+				with(array_slice(_inst, _max, array_length(_inst) - _max)){
+					instance_destroy();
+				}
 			}
 		}
 	}
 	
 #define ntte_end_step
+	 // Open Pits:
+	if(instance_exists(PortalClear)){
+		var _inst = instances_matching_gt(PortalClear, "pit_clear", 0);
+		if(array_length(_inst)) with(_inst){
+			image_xscale *= pit_clear;
+			image_yscale *= pit_clear;
+			
+			var _instFloor = instances_meeting(x, y, FloorPitless);
+			if(array_length(_instFloor)) with(_instFloor){
+				if(place_meeting(x, y, other)){
+					var _floorSpr = sprite_index;
+					styleb = true;
+					sprite_index = area_get_sprite("trench", sprFloor1B);
+					
+					 // Sound:
+					sound_play_pitchvol(sndWallBreak, 0.6 + random(0.4), 1.5);
+					
+					 // Debris:
+					if("pit_smash" in other && other.pit_smash){
+						for(var _x = bbox_left; _x < bbox_right + 1; _x += 16){
+							for(var _y = bbox_top; _y < bbox_bottom + 1; _y += 16){
+								var	_dir = point_direction(other.x, other.y, _x + 8, _y + 8),
+									_spd = 8 - (point_distance(other.x, other.y - 16, _x + 8, _y + 8) / 16);
+									
+								if(chance(2, 3)){
+									with(obj_create(_x + random_range(4, 12), _y + random_range(4, 12), "TrenchFloorChunk")){
+										zspeed    = _spd;
+										direction = _dir;
+										
+										 // Normal Debris:
+										if(_floorSpr != spr.FloorTrench || chance(1, 2)){
+											sprite_index = area_get_sprite(GameCont.area, sprDebris1);
+											zspeed      /= 2;
+											zfriction   /= 2;
+											debris       = true;
+										}
+									}
+								}
+							}
+						}
+					}
+					else repeat(ceil((bbox_width + bbox_height) / 32)){
+						instance_create(random_range(bbox_left, bbox_right + 1), random_range(bbox_top, bbox_bottom + 1), Debris);
+					}
+				}
+			}
+			
+			image_xscale /= pit_clear;
+			image_yscale /= pit_clear;
+		}
+	}
+	
 	 // Update Pit Grid:
 	if(instance_exists(Floor) && !instance_exists(GenCont)){
 		if(global.floor_num != instance_number(Floor) || global.floor_min < Floor.id){
@@ -1168,7 +1224,7 @@
 #define surface_setup(_name, _w, _h, _scale)                                            return  mod_script_call_nc  ('mod', 'teassets', 'surface_setup', _name, _w, _h, _scale);
 #define shader_setup(_name, _texture, _args)                                            return  mod_script_call_nc  ('mod', 'teassets', 'shader_setup', _name, _texture, _args);
 #define shader_add(_name, _vertex, _fragment)                                           return  mod_script_call_nc  ('mod', 'teassets', 'shader_add', _name, _vertex, _fragment);
-#define script_bind(_name, _scriptObj, _scriptRef, _depth, _visible)                    return  mod_script_call_nc  ('mod', 'teassets', 'script_bind', _name, _scriptObj, _scriptRef, _depth, _visible);
+#define script_bind(_scriptObj, _scriptRef, _depth, _visible)                           return  mod_script_call_nc  ('mod', 'teassets', 'script_bind', script_ref_create(script_bind), _scriptObj, (is_real(_scriptRef) ? script_ref_create(_scriptRef) : _scriptRef), _depth, _visible);
 #define obj_create(_x, _y, _obj)                                                        return  (is_undefined(_obj) ? [] : mod_script_call_nc('mod', 'telib', 'obj_create', _x, _y, _obj));
 #define top_create(_x, _y, _obj, _spawnDir, _spawnDis)                                  return  mod_script_call_nc  ('mod', 'telib', 'top_create', _x, _y, _obj, _spawnDir, _spawnDis);
 #define projectile_create(_x, _y, _obj, _dir, _spd)                                     return  mod_script_call_self('mod', 'telib', 'projectile_create', _x, _y, _obj, _dir, _spd);
