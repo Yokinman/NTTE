@@ -1804,7 +1804,7 @@
 	if(
 		instance_exists(GameObject)
 		&& (
-			global.update_id < GameObject.id
+			global.update_id < variable_instance_get(GameObject, "id", 0)
 			|| (global.update_gen_id < global.update_id && !instance_exists(GenCont))
 		)
 	){
