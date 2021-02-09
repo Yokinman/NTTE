@@ -154,9 +154,6 @@
 			ElectroPlasmaImpact = sprite(p + "sprElectroPlasmaImpact", 7, 12, 12);
 			ElectroPlasmaTether = sprite(p + "sprElectroPlasmaTether", 4,  0,  1);
 			
-			 // Entangler:
-			EntanglerSlash = sprite(p + "sprEntanglerSlash", 3, 0, 24);
-			
 			 // Harpoon:
 			Harpoon      = sprite(p + "sprHarpoon",      1, 4, 3, shnWep);
 			HarpoonOpen  = sprite(p + "sprHarpoonOpen",  5, 4, 3);
@@ -195,8 +192,11 @@
 			RedBulletDisappear = sprite(p + "sprRedBulletDisappear", 5,  9,  9);
 			RedExplosion       = sprite(p + "sprRedExplosion",       7, 16, 16);
 			RedSlash           = sprite(p + "sprRedSlash",           3,  0, 24);
+			RedHeavySlash      = sprite(p + "sprRedHeavySlash",      3,  0, 24);
+			RedMegaSlash       = sprite(p + "sprRedMegaSlash",       3,  0, 36);
 			RedShank           = sprite(p + "sprRedShank",           2, -5,  8);
 			RedShankGold       = sprite(p + "sprRedShankGold",       2, -5,  8);
+			//EntanglerSlash     = sprite(p + "sprEntanglerSlash", 3, 0, 24);
 			
 			 // Small Green Explo:
 			SmallGreenExplosion = sprite(p + "sprSmallGreenExplosion", 7, 12, 12);

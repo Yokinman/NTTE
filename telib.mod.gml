@@ -4336,7 +4336,7 @@
 	}
 	
 	 // Weapon Held by Creator:
-	_fire.wepheld = (variable_instance_get(_fire.creator, "wep") == _wep);
+	_fire.wepheld = (variable_instance_get(_fire.creator, "wep") == _fire.wep);
 	
 	 // Active / Secondary Firing:
 	_fire.spec = variable_instance_get(self, "specfiring", false);
@@ -4345,13 +4345,18 @@
 	}
 	
 	 // LWO Setup:
-	if(is_string(_wep)){
-		var _lwo = mod_variable_get("weapon", _wep, "lwoWep");
-		if(is_object(_lwo)){
-			_wep = lq_clone(_lwo);
-			_fire.wep = _wep;
+	var _lwo = mod_variable_get("weapon", wep_raw(_fire.wep), "lwoWep");
+	if(is_object(_lwo)){
+		if(!is_object(_fire.wep)){
+			_fire.wep = { "wep" : _fire.wep };
 			if(_fire.wepheld){
-				_fire.creator.wep = _wep;
+				_fire.creator.wep = _fire.wep;
+			}
+		}
+		for(var i = lq_size(_lwo) - 1; i >= 0; i--){
+			var _key = lq_get_key(_lwo, i);
+			if(_key not in _fire.wep){
+				lq_set(_fire.wep, _key, lq_get_value(_lwo, i));
 			}
 		}
 	}
@@ -4360,35 +4365,35 @@
 	var _other = other;
 	with(instance_exists(_fire.creator) ? _fire.creator : self){
 		 // Charge Weapon:
-		if(weapon_get("chrg", _wep) && _wep.chrg >= 0){
+		if(weapon_get("chrg", _fire.wep) && _fire.wep.chrg >= 0){
 			var	_load = variable_instance_get(self, "reloadspeed", 1) * current_time_scale,
-				_auto = ((other.race == "steroids") ? (weapon_get_auto(_wep) >= 0) : weapon_get_auto(_wep));
+				_auto = ((other.race == "steroids") ? (weapon_get_auto(_fire.wep) >= 0) : weapon_get_auto(_fire.wep));
 				
 			 // Charging (chrg: -1==Released, 0==None, 1==Charging, 2==Charged):
-			_wep.chrg = ((_wep.chrg_num < _wep.chrg_max) ? 1 : 2);
-			if(_wep.chrg == 1){
-				_wep.chrg_num = min(_wep.chrg_num + _load, _wep.chrg_max);
+			_fire.wep.chrg = ((_fire.wep.chrg_num < _fire.wep.chrg_max) ? 1 : 2);
+			if(_fire.wep.chrg == 1){
+				_fire.wep.chrg_num = min(_fire.wep.chrg_num + _load, _fire.wep.chrg_max);
 				
 				 // Pop Pop:
 				if(_fire.spec && _fire.primary){
-					_wep.chrg_num = _wep.chrg_max;
+					_fire.wep.chrg_num = _fire.wep.chrg_max;
 				}
 			}
 			
 			 // Hold to Charge:
-			if(_auto || _wep.chrg_num >= _wep.chrg_max){
+			if(_auto || _fire.wep.chrg_num >= _fire.wep.chrg_max){
 				 // Manual Reload:
-				other.reload += _load - weapon_get_load(_wep);
+				other.reload += _load - weapon_get_load(_fire.wep);
 				
 				 // Charge Controller:
 				with(other){
-					var _inst = instances_matching(instances_matching(CustomObject, "name", "WeaponCharger"), "wep", _wep);
+					var _inst = instances_matching(instances_matching(CustomObject, "name", "WeaponCharger"), "wep", _fire.wep);
 					if(!array_length(_inst)){
 						_inst = instance_create(x, y, CustomObject);
 						with(_inst){
 							name    = "WeaponCharger";
 							on_step = weapon_chrg_step;
-							wep     = _wep;
+							wep     = _fire.wep;
 						}
 					}
 					with(_inst){
@@ -4408,7 +4413,7 @@
 		 // Normal Weapon:
 		else{
 			 // Melee:
-			if(weapon_is_melee(_wep)){
+			if(weapon_is_melee(_fire.wep)){
 				other.wepangle *= -1;
 			}
 			
@@ -4417,28 +4422,28 @@
 				_fire.burst = _other.burst;
 			}
 			else{
-				var _burst = ceil(weapon_get("burst", _wep));
+				var _burst = ceil(weapon_get("burst", _fire.wep));
 				if(_burst > 1 || _burst < 0){
-					var _time = weapon_get("burst_time", _wep);
+					var _time = weapon_get("burst_time", _fire.wep);
 					if(_time == 0){
-						_time = weapon_get_load(_wep) / max(1, _burst);
+						_time = weapon_get_load(_fire.wep) / max(1, _burst);
 					}
 					with(other){
 						with(instance_create(x, y, CustomObject)){
 							name      = "WeaponBurst";
 							on_step   = weapon_burst_step;
-							wep       = _wep;
 							direction = other.gunangle;
 							accuracy  = other.accuracy;
 							team      = other.team;
 							creator   = _fire.creator;
 							primary   = _fire.primary;
+							wep       = _fire.wep;
 							burst     = 0;
 							ammo      = _burst - 1;
 							time      = _time;
 							time_max  = _time;
-							chrg      = lq_get(_wep, "chrg");
-							chrg_num  = lq_get(_wep, "chrg_num");
+							chrg      = lq_get(_fire.wep, "chrg");
+							chrg_num  = lq_get(_fire.wep, "chrg_num");
 							
 							 // Insta-Fire:
 							time -= random(current_time_scale);
@@ -4949,15 +4954,15 @@
 	
 	return null;
 	
-#define path_draw(_path)
-	var	_x = x,
-		_y = y;
-		
-	with(_path){
-		draw_line(self[0], self[1], _x, _y);
-		_x = self[0];
-		_y = self[1];
-	}
+//#define path_draw(_path)
+//	var	_x = x,
+//		_y = y;
+//		
+//	with(_path){
+//		draw_line(self[0], self[1], _x, _y);
+//		_x = self[0];
+//		_y = self[1];
+//	}
 	
 #define race_get_sprite(_race, _sprite)
 	/*
@@ -5644,31 +5649,31 @@
 				
 				 // Object-Specific Setup:
 				switch((string_pos("Custom", object_get_name(target.object_index)) == 1 && "name" in target) ? target.name : target.object_index){
-					 /// ENEMIES ///
-					case BoneFish:
-					case "Puffer":
-					case "HammerShark":
-						idle_walk        = [0, 5];
-						idle_walk_chance = 1/2;
-						break;
-						
-					case Exploder:
-						jump_time = 1;
-						break;
-						
-					case ExploFreak:
-						jump *= 1.2;
-						idle_walk        = [0, 5];
-						idle_walk_chance = 1;
-						
-						 // Important:
-						target_save.my_health = 0;
-						break;
-						
-					case Freak:
-						idle_walk        = [0, 5];
-						idle_walk_chance = 1;
-						break;
+					// /// ENEMIES ///
+					//case BoneFish:
+					//case "Puffer":
+					//case "HammerShark":
+					//	idle_walk        = [0, 5];
+					//	idle_walk_chance = 1/2;
+					//	break;
+					//	
+					//case Exploder:
+					//	jump_time = 1;
+					//	break;
+					//	
+					//case ExploFreak:
+					//	jump *= 1.2;
+					//	idle_walk        = [0, 5];
+					//	idle_walk_chance = 1;
+					//	
+					//	 // Important:
+					//	target_save.my_health = 0;
+					//	break;
+					//	
+					//case Freak:
+					//	idle_walk        = [0, 5];
+					//	idle_walk_chance = 1;
+					//	break;
 						
 					case JungleFly:
 						jump = 0;
@@ -5682,14 +5687,14 @@
 						idle_walk_chance = 1/2;
 						break;
 						
-					case Necromancer:
-						jump *= 2/3;
-						idle_walk_chance = 1/16;
-						break;
-						
-					case "Seal":
-						idle_walk_chance = 1/12;
-						break;
+					//case Necromancer:
+					//	jump *= 2/3;
+					//	idle_walk_chance = 1/16;
+					//	break;
+					//	
+					//case "Seal":
+					//	idle_walk_chance = 1/12;
+					//	break;
 						
 					case "Spiderling":
 						jump *= 4/5;
@@ -5844,7 +5849,7 @@
 				}
 				
 				 // Hitbox:
-				if(mask_index == -1){
+				if(mask_index < 0){
 					image_xscale = 0.5;
 					image_yscale = 0.5;
 					
@@ -6010,13 +6015,13 @@
 					depth = object_get_depth(SubTopCont) + min(-1, depth);
 					
 					 // Search Zone:
-					var m = mask_index;
+					var _m = mask_index;
 					mask_index = -1;
 					other.search_x1 = min(x - 8, bbox_left);
 					other.search_x2 = max(x + 8, bbox_right);
 					other.search_y1 = min(y - 8, bbox_top);
 					other.search_y2 = max(y + 8, bbox_bottom);
-					mask_index = m;
+					mask_index = _m;
 				}
 			}
 			

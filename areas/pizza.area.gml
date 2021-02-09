@@ -80,9 +80,9 @@
 	try{
 		with(GameCont){
 			 // Save Vars & Seed:
-			var	_vars = [],
+			var	_vars       = [],
 				_crownAlarm = [],
-				_seed = random_get_seed();
+				_seed       = random_get_seed();
 				
 			with(variable_instance_get_names(self)){
 				array_push(_vars, [self, variable_instance_get(other, self)]);

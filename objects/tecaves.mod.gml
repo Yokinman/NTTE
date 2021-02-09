@@ -1384,7 +1384,7 @@
 		force          = 12;
 		typ            = 0;
 		area           = "red";
-		subarea        = 1;
+		subarea        = 0;
 		loops          = GameCont.loops;
 		area_seed      = irandom(random_get_seed());
 		area_goal      = irandom_range(8, 16);
@@ -1728,8 +1728,10 @@
 		}
 		
 		 // Red Crown Quality Assurance:
-		with(instances_matching_gt([PizzaEntrance, CarVenus, IceFlower], "id", _genID)){
-			instance_delete(self);
+		if(subarea == 0 && instance_exists(PizzaEntrance)){
+			with(instances_matching_gt(PizzaEntrance, "id", _genID)){
+				instance_delete(self);
+			}
 		}
 		if(loops <= 0 || GameCont.subarea != 3 || !instance_exists(enemy)){
 			with(instances_matching_gt(WantBoss, "id", _genID)){
@@ -3167,10 +3169,10 @@
 		draw_sprite_ext(spr_frnt, i, x, y, image_xscale, image_yscale, image_angle + _layer.rotation, image_blend, image_alpha);
 	}
 	
+	if(_hurt) draw_set_fog(false, 0, 0, 0);
+	
 	 // Eye:
 	draw_self();
-	
-	if(_hurt) draw_set_fog(false, c_white, 0, 0);
 	
 #define Tesseract_alrm1
 	alarm1 = 60 + random(30);
@@ -3334,6 +3336,21 @@
 	 // Boss Win Music:
 	with(MusCont){
 		alarm_set(1, 1);
+	}
+	
+	 // Pickups:
+	var _gold = false;
+	with(Player){
+		if(weapon_get_gold(wep) != 0 || weapon_get_gold(bwep) != 0){
+			_gold = true;
+			break;
+		}
+	}
+	if(_gold){
+		with(instance_create(x, y, WepPickup)){
+			wep  = { wep: "tunneller", gold: true };
+			ammo = true;
+		}
 	}
 	
 #define Tesseract_arm_break(_num)

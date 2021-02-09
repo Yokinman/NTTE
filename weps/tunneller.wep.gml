@@ -198,8 +198,14 @@
 	
 	 // LWO Setup:
 	if(!is_object(_wep)){
-		_wep = lq_clone(global.lwoWep);
+		_wep = { "wep" : _wep };
 		wep_set(_primary, "wep", _wep);
+	}
+	for(var i = lq_size(global.lwoWep) - 1; i >= 0; i--){
+		var _key = lq_get_key(global.lwoWep, i);
+		if(_key not in _wep){
+			lq_set(_wep, _key, lq_get_value(global.lwoWep, i));
+		}
 	}
 	
 	 // Unextend While Empty:

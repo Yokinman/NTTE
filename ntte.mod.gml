@@ -52,7 +52,7 @@
 		"@q@1(sprKeySmall:pick)"
 	];
 	
-	 // Player Weapon Skins:
+	 // Current Weapon Player Skin:
 	global.wep_skin_player = ds_map_create();
 	
 	 // Spawn Guarantees:
@@ -128,7 +128,7 @@
 			}
 		}
 		
-		 // Weapon Skin:
+		 // Weapon Skins:
 		wep  = wep_skin(wep,  race, bskin);
 		bwep = wep_skin(bwep, race, bskin);
 	}
@@ -1802,11 +1802,8 @@
 	*/
 	
 	if(
-		instance_exists(GameObject)
-		&& (
-			global.update_id < variable_instance_get(GameObject, "id", 0)
-			|| (global.update_gen_id < global.update_id && !instance_exists(GenCont))
-		)
+		global.update_id < variable_instance_get(GameObject, "id", global.update_id)
+		|| (global.update_gen_id < global.update_id && !instance_exists(GenCont))
 	){
 		var	_newID = global.update_id,
 			_genID = undefined;
@@ -1900,6 +1897,7 @@
 				 // Weapon Skins:
 				if(!roll && (ammo || instance_exists(GenCont) || instance_exists(LevCont))){
 					var	_wep       = wep_raw(wep),
+						_wepSprt   = weapon_get_sprt(wep),
 						_wepFirst  = true,
 						_wepPlayer = 0;
 						
@@ -1912,13 +1910,9 @@
 					 // Skin:
 					repeat(maxp){
 						if(player_is_active(_wepPlayer)){
-							var _wepSkin = wep_skin(wep, player_get_race(_wepPlayer), player_get_skin(_wepPlayer));
-							if(wep != _wepSkin || weapon_get_sprt(wep) != weapon_get_sprt(_wepSkin)){
-								wep = _wepSkin;
-								break;
-							}
+							wep = wep_skin(wep, player_get_race(_wepPlayer), player_get_skin(_wepPlayer));
 						}
-						if(!_wepFirst){
+						if(!_wepFirst || _wepSprt != weapon_get_sprt(wep)){
 							break;
 						}
 						_wepPlayer = (_wepPlayer + 1) % maxp;
@@ -2050,6 +2044,11 @@
 							);
 							break;
 					}
+				}
+			}
+			if(instance_exists(SuperFrog) && SuperFrog.id > _newID){
+				with(instances_matching(instances_matching(instances_matching(instances_matching_gt(SuperFrog, "id", _newID), "spr_shadow", -1), "spr_shadow_x", 0), "spr_shadow_y", 0)){
+					spr_shadow = shd24;
 				}
 			}
 			if(instance_exists(Nothing) && Nothing.id > _newID){
@@ -3361,133 +3360,139 @@
 	if(_lag) trace_time("ntte_shadows");
 	
 #define draw_shadows_top
-	if(!instance_exists(NothingSpiral) && instance_exists(BackCont) && (instance_exists(CustomObject) || instance_exists(CustomProjectile))){
-		if(lag) trace_time();
-		
-		var	_inst = instances_matching_ne(
-			instances_matching_ge(
-				instances_matching(
-					array_combine(
-						instances_matching(CustomObject, "name", "TopObject"),
-						instances_matching(CustomProjectile, "name", "MortarPlasma")
+	if(instance_exists(CustomObject) || instance_exists(CustomProjectile)){
+		if(!instance_exists(NothingSpiral) && instance_exists(BackCont)){
+			if(lag) trace_time();
+			
+			var	_inst = instances_matching_ne(
+				instances_matching_ge(
+					instances_matching(
+						array_combine(
+							instances_matching(CustomObject, "name", "TopObject"),
+							instances_matching(CustomProjectile, "name", "MortarPlasma")
+						),
+						"visible", true
 					),
-					"visible", true
+					"z", 8
 				),
-				"z", 8
-			),
-			"spr_shadow", -1
-		);
-		
-		if(array_length(_inst)){
-			var	_vx                = view_xview_nonsync,
-				_vy                = view_yview_nonsync,
-				_gw                = game_width,
-				_gh                = game_height,
-				_surfScale         = option_get("quality:minor"),
-				_surfTopShadowMask = surface_setup("TopShadowMask", _gw * 2, _gh * 2, _surfScale),
-				_surfTopShadow     = surface_setup("TopShadow",     _gw,     _gh,     _surfScale);
+				"spr_shadow", -1
+			);
+			
+			if(array_length(_inst)){
+				var	_vx                = view_xview_nonsync,
+					_vy                = view_yview_nonsync,
+					_gw                = game_width,
+					_gh                = game_height,
+					_surfScale         = option_get("quality:minor"),
+					_surfTopShadowMask = surface_setup("TopShadowMask", _gw * 2, _gh * 2, _surfScale),
+					_surfTopShadow     = surface_setup("TopShadow",     _gw,     _gh,     _surfScale);
+					
+				with(_surfTopShadowMask){
+					var	_surfX = pfloor(_vx, _gw),
+						_surfY = pfloor(_vy, _gh);
+						
+					if(
+						reset
+						|| x != _surfX
+						|| y != _surfY
+						|| (instance_number(Floor) != lq_defget(self, "floor_num", 0))
+						|| (instance_number(Wall)  != lq_defget(self, "wall_num",  0))
+						|| (instance_exists(Floor) && lq_defget(self, "floor_min", 0) < Floor.id)
+						|| (instance_exists(Wall)  && lq_defget(self, "wall_min",  0) < Wall.id)
+					){
+						reset = false;
+						
+						 // Update Vars:
+						x = _surfX;
+						y = _surfY;
+						floor_num = instance_number(Floor);
+						wall_num  = instance_number(Wall);
+						floor_min = instance_max;
+						wall_min  = instance_max;
+						
+						 // Floor Mask:
+						surface_set_target(surf);
+						draw_clear_alpha(0, 0);
+							
+							 // Draw Floors:
+							with(instance_rectangle_bbox(x, y, x + w, y + h, Floor)){
+								draw_sprite_ext(sprite_index, image_index, (x - _surfX) * _surfScale, (y - 8 - _surfY) * _surfScale, image_xscale * _surfScale, image_yscale * _surfScale, image_angle, image_blend, image_alpha);
+							}
+							
+							 // Cut Out Walls:
+							draw_set_blend_mode_ext(bm_zero, bm_inv_src_alpha);
+							with(instance_rectangle_bbox(x, y, x + w, y + h, Wall)){
+								draw_sprite_ext(outspr, outindex, (x - _surfX) * _surfScale, (y - _surfY) * _surfScale, _surfScale, _surfScale, 0, c_white, 1);
+							}
+							draw_set_blend_mode(bm_normal);
+							
+						surface_reset_target();
+					}
+				}
 				
-			with(_surfTopShadowMask){
-				var	_surfX = pfloor(_vx, _gw),
-					_surfY = pfloor(_vy, _gh);
+				with(_surfTopShadow){
+					x = _vx;
+					y = _vy;
 					
-				if(
-					reset
-					|| x != _surfX
-					|| y != _surfY
-					|| (instance_number(Floor) != lq_defget(self, "floor_num", 0))
-					|| (instance_number(Wall)  != lq_defget(self, "wall_num",  0))
-					|| (instance_exists(Floor) && lq_defget(self, "floor_min", 0) < Floor.id)
-					|| (instance_exists(Wall)  && lq_defget(self, "wall_min",  0) < Wall.id)
-				){
-					reset = false;
-					
-					 // Update Vars:
-					x = _surfX;
-					y = _surfY;
-					floor_num = instance_number(Floor);
-					wall_num  = instance_number(Wall);
-					floor_min = instance_max;
-					wall_min  = instance_max;
-					
-					 // Floor Mask:
 					surface_set_target(surf);
 					draw_clear_alpha(0, 0);
 						
-						 // Draw Floors:
-						with(instance_rectangle_bbox(x, y, x + w, y + h, Floor)){
-							draw_sprite_ext(sprite_index, image_index, (x - _surfX) * _surfScale, (y - 8 - _surfY) * _surfScale, image_xscale * _surfScale, image_yscale * _surfScale, image_angle, image_blend, image_alpha);
+						 // Draw Shadows:
+						with(instances_seen_nonsync(_inst, 8, 8)){
+							switch(name){
+								
+								case "MortarPlasma":
+									
+									var	_percent = clamp(96 / (z - 8), 0.1, 1),
+										_w = ceil(18 * _percent) * _surfScale,
+										_h = ceil(6 * _percent) * _surfScale,
+										_x = (x - other.x) * _surfScale,
+										_y = (y - other.y - 8) * _surfScale;
+										
+									draw_ellipse(_x - (_w / 2), _y - (_h / 2), _x + (_w / 2), _y + (_h / 2), false);
+									
+									break;
+									
+								default:
+									
+									var	_x = x + spr_shadow_x - other.x,
+										_y = y + spr_shadow_y - other.y - 8;
+										
+									if(_surfScale == 1){
+										draw_sprite(spr_shadow, 0, _x, _y);
+									}
+									else{
+										draw_sprite_ext(spr_shadow, 0, _x * _surfScale, _y * _surfScale, _surfScale, _surfScale, 0, c_white, 1);
+									}
+									
+							}
 						}
 						
-						 // Cut Out Walls:
-						draw_set_blend_mode_ext(bm_zero, bm_inv_src_alpha);
-						with(instance_rectangle_bbox(x, y, x + w, y + h, Wall)){
-							draw_sprite_ext(outspr, outindex, (x - _surfX) * _surfScale, (y - _surfY) * _surfScale, _surfScale, _surfScale, 0, c_white, 1);
+						 // Cut Out Floors:
+						with(_surfTopShadowMask){
+							draw_set_blend_mode_ext(bm_zero, bm_inv_src_alpha);
+							draw_surface_scale(
+								surf,
+								(x - other.x) * other.scale,
+								(y - other.y) * other.scale,
+								other.scale / scale
+							);
+							draw_set_blend_mode(bm_normal);
 						}
-						draw_set_blend_mode(bm_normal);
 						
 					surface_reset_target();
+					
+					 // Draw Surface:
+					draw_set_fog(true, BackCont.shadcol, 0, 0);
+					draw_set_alpha(BackCont.shadalpha * 0.9);
+					draw_surface_scale(surf, x, y, 1 / scale);
+					draw_set_fog(false, 0, 0, 0);
+					draw_set_alpha(1);
 				}
 			}
 			
-			with(_surfTopShadow){
-				x = _vx;
-				y = _vy;
-				
-				surface_set_target(surf);
-				draw_clear_alpha(0, 0);
-					
-					 // Draw Shadows:
-					with(instances_seen_nonsync(_inst, 8, 8)){
-						switch(name){
-							case "MortarPlasma":
-								var	_percent = clamp(96 / (z - 8), 0.1, 1),
-									_w = ceil(18 * _percent) * _surfScale,
-									_h = ceil(6 * _percent) * _surfScale,
-									_x = (x - other.x) * _surfScale,
-									_y = (y - other.y - 8) * _surfScale;
-									
-								draw_ellipse(_x - (_w / 2), _y - (_h / 2), _x + (_w / 2), _y + (_h / 2), false);
-								
-								break;
-								
-							default:
-								var	_x = x + spr_shadow_x - other.x,
-									_y = y + spr_shadow_y - other.y - 8;
-									
-								if(_surfScale == 1){
-									draw_sprite(spr_shadow, 0, _x, _y);
-								}
-								else{
-									draw_sprite_ext(spr_shadow, 0, _x * _surfScale, _y * _surfScale, _surfScale, _surfScale, 0, c_white, 1);
-								}
-						}
-					}
-					
-					 // Cut Out Floors:
-					with(_surfTopShadowMask){
-						draw_set_blend_mode_ext(bm_zero, bm_inv_src_alpha);
-						draw_surface_scale(
-							surf,
-							(x - other.x) * other.scale,
-							(y - other.y) * other.scale,
-							other.scale / scale
-						);
-						draw_set_blend_mode(bm_normal);
-					}
-					
-				surface_reset_target();
-				
-				 // Draw Surface:
-				draw_set_fog(true, BackCont.shadcol, 0, 0);
-				draw_set_alpha(BackCont.shadalpha * 0.9);
-				draw_surface_scale(surf, x, y, 1 / scale);
-				draw_set_fog(false, 0, 0, 0);
-				draw_set_alpha(1);
-			}
+			if(lag) trace_time(script[2]);
 		}
-		
-		if(lag) trace_time(script[2]);
 	}
 	
 #define draw_pause
@@ -3536,6 +3541,9 @@
 			}
 		}
 	}
+	
+	 // Instance Update:
+	ntte_update();
 	
 #define draw_gui
 	 // Game Over Skill HUD:

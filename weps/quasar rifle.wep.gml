@@ -54,13 +54,15 @@
 	
 	 // Charge Beam:
 	else with(_wep.beam){
-		if(image_yscale < 1) scale_goal = 1;
+		if(image_yscale < 1){
+			scale_goal = 1;
+		}
 		else{
-			var	a = 0.25,
-				m = 1 + (a * (1 + (0.4 * skill_get(mut_laser_brain))));
+			var	_a = 0.25,
+				_m = 1 + (_a * (1 + (0.4 * skill_get(mut_laser_brain))));
 				
-			if(scale_goal < m){
-				scale_goal = min((floor(image_yscale / a) * a) + a, m);
+			if(scale_goal < _m){
+				scale_goal = min((floor(image_yscale / _a) * _a) + _a, _m);
 				flash_frame = max(flash_frame, current_frame + 2);
 			}
 		}

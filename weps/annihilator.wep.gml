@@ -117,8 +117,14 @@
 	
 	 // LWO Setup:
 	if(!is_object(_wep)){
-		_wep = lq_clone(global.lwoWep);
+		_wep = { "wep" : _wep };
 		wep_set(_primary, "wep", _wep);
+	}
+	for(var i = lq_size(global.lwoWep) - 1; i >= 0; i--){
+		var _key = lq_get_key(global.lwoWep, i);
+		if(_key not in _wep){
+			lq_set(_wep, _key, lq_get_value(global.lwoWep, i));
+		}
 	}
 	
 	 // Transition Between Shooty/Melee:
@@ -127,9 +133,9 @@
 		
 	if("red_ammo" not in self || red_ammo < weapon_get("red", _wep)){
 		if(!_wep.melee){
-			_wep.melee   = true;
-			_wepangle = choose(-1, 1);
-			_wkick    = 4;
+			_wep.melee = true;
+			_wepangle  = choose(-1, 1);
+			_wkick     = 4;
 		}
 		_wepangle = lerp(_wepangle, max(abs(_wepangle), 120) * sign(_wepangle), 0.4 * current_time_scale);
 	}
@@ -139,7 +145,7 @@
 		 // Done:
 		if(abs(_wepangle) < 1){
 			_wep.melee = false;
-			_wkick = 2;
+			_wkick     = 2;
 		}
 	}
 	wep_set(_primary, "wepangle", _wepangle);

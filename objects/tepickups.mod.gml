@@ -4362,7 +4362,7 @@
 	with(obj_create(_x, _y, "CustomChest")){
 		 // Visual:
 		sprite_index = spr.SunkenChest;
-		spr_dead = spr.SunkenChestOpen;
+		spr_dead     = spr.SunkenChestOpen;
 		spr_shadow_y = 0;
 		
 		 // Sounds:
@@ -4373,11 +4373,7 @@
 		wep   = "merge";
 		skeal = false;
 		if(GameCont.area == "coast"){
-			wep = "trident";
-			if(mod_exists("weapon", wep)){
-				wep = lq_clone(mod_variable_get("weapon", wep, "lwoWep"));
-				wep.gold = true;
-			}
+			wep = { wep: "trident", gold: true };
 		}
 		
 		 // Events:
@@ -4467,7 +4463,6 @@
 				wep  = _wep;
 				ammo = true;
 			}
-			if(is_object(_wep)) _wep = lq_clone(_wep);
 		}
 	}
 	
