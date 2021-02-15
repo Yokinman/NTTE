@@ -1198,7 +1198,7 @@
 	}
 	
 #define Puffer_draw
-	var _hurt = (sprite_index != spr_hurt && nexthurt > current_frame + 3);
+	var _hurt = (sprite_index != spr_hurt && nexthurt >= current_frame + 4);
 	if(_hurt) draw_set_fog(true, image_blend, 0, 0);
 	draw_self_enemy();
 	if(_hurt) draw_set_fog(false, 0, 0, 0);
@@ -1547,9 +1547,12 @@
 	 // Underwater Code:
 	if(underwater_active){
 		 // Effects:
-		if(instance_exists(Effect) && Effect.id > _newID){
+		if(instance_exists(Effect)){
 			 // Extinguish Flames:
-			if(instance_exists(GroundFlame) || instance_exists(BlueFlame)){
+			if(
+				(instance_exists(GroundFlame) && GroundFlame.id > _newID) ||
+				(instance_exists(BlueFlame)   && BlueFlame.id   > _newID)
+			){
 				with(instances_matching_gt([GroundFlame, BlueFlame], "id", _newID)){
 				    instance_create(x, y, Smoke);
 				    instance_destroy();
@@ -1557,7 +1560,7 @@
 			}
 			
 			 // Bubbles:
-			if(instance_exists(Dust)){
+			if(instance_exists(Dust) && Dust.id > _newID){
 				with(instances_matching_gt(Dust, "id", _newID)){
 					instance_create(x, y, Bubble);
 					instance_destroy();
@@ -1576,10 +1579,22 @@
 					}
 				}
 			}
-			if(instance_exists(BoltTrail)){
+			if(instance_exists(BoltTrail) && BoltTrail.id > _newID){
 				with(instances_matching_ne(instances_matching_gt(BoltTrail, "id", _newID), "image_xscale", 0)){
 					if(chance(1, 4)){
 						instance_create(x, y, Bubble);
+					}
+				}
+			}
+			if(instance_exists(ChestOpen) && ChestOpen.id > _newID){
+				with(instances_matching_gt(ChestOpen, "id", _newID)){
+					repeat(3){
+						instance_create(x, y, Bubble);
+					}
+					
+					 // Clam Chests:
+					if(sprite_index == sprWeaponChestOpen){
+						sprite_index = sprClamChestOpen;
 					}
 				}
 			}
@@ -1589,16 +1604,6 @@
 		if(instance_exists(WeaponChest) && WeaponChest.id > _newID){
 			with(instances_matching(instances_matching_gt(WeaponChest, "id", _newID), "sprite_index", sprWeaponChest)){
 				sprite_index = sprClamChest;
-			}
-		}
-		if(instance_exists(ChestOpen) && ChestOpen.id > _newID){
-			with(instances_matching_gt(ChestOpen, "id", _newID)){
-				repeat(3){
-					instance_create(x, y, Bubble);
-				}
-				if(sprite_index == sprWeaponChestOpen){
-					sprite_index = sprClamChestOpen;
-				}
 			}
 		}
 		
@@ -2015,6 +2020,7 @@
 #define player_swap()                                                                   return  mod_script_call_self('mod', 'telib', 'player_swap');
 #define wep_raw(_wep)                                                                   return  mod_script_call_nc  ('mod', 'telib', 'wep_raw', _wep);
 #define wep_wrap(_wep, _scrName, _scrRef)                                               return  mod_script_call_nc  ('mod', 'telib', 'wep_wrap', _wep, _scrName, _scrRef);
+#define wep_skin(_wep, _race, _skin)                                                    return  mod_script_call_nc  ('mod', 'telib', 'wep_skin', _wep, _race, _skin);
 #define wep_merge(_stock, _front)                                                       return  mod_script_call_nc  ('mod', 'telib', 'wep_merge', _stock, _front);
 #define wep_merge_decide(_hardMin, _hardMax)                                            return  mod_script_call_nc  ('mod', 'telib', 'wep_merge_decide', _hardMin, _hardMax);
 #define weapon_decide(_hardMin, _hardMax, _gold, _noWep)                                return  mod_script_call_self('mod', 'telib', 'weapon_decide', _hardMin, _hardMax, _gold, _noWep);
@@ -2026,7 +2032,6 @@
 #define path_shrink(_path, _wall, _skipMax)                                             return  mod_script_call_nc  ('mod', 'telib', 'path_shrink', _path, _wall, _skipMax);
 #define path_reaches(_path, _xtarget, _ytarget, _wall)                                  return  mod_script_call_nc  ('mod', 'telib', 'path_reaches', _path, _xtarget, _ytarget, _wall);
 #define path_direction(_path, _x, _y, _wall)                                            return  mod_script_call_nc  ('mod', 'telib', 'path_direction', _path, _x, _y, _wall);
-#define path_draw(_path)                                                                return  mod_script_call_self('mod', 'telib', 'path_draw', _path);
 #define portal_poof()                                                                   return  mod_script_call_nc  ('mod', 'telib', 'portal_poof');
 #define portal_pickups()                                                                return  mod_script_call_nc  ('mod', 'telib', 'portal_pickups');
 #define pet_spawn(_x, _y, _name)                                                        return  mod_script_call_nc  ('mod', 'telib', 'pet_spawn', _x, _y, _name);

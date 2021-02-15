@@ -17,9 +17,10 @@
 	global.ultraboltfix_floors = [];
 	
 	 // Objects w/ Draw Events:
+	var _hasEvent = [Player, CrystalShield, Sapling, Ally, RogueStrike, DogMissile, PlayerSit, UberCont, BackCont, TopCont, KeyCont, GenCont, NothingSpiral, Credits, SubTopCont, BanditBoss, Drama, ScrapBossMissile, ScrapBoss, LilHunter, LilHunterFly, Nothing, NothingInactive, BecomeNothing, Carpet, NothingBeam, Nothing2, FrogQueen, HyperCrystal, TechnoMancer, LastIntro, LastCutscene, Last, DramaCamera, BigFish, ProtoStatue, Campfire, LightBeam, TV, SentryGun, Disc, PlasmaBall, PlasmaBig, Lightning, IonBurst, Laser, PlasmaHuge, ConfettiBall, Nuke, Rocket, RadMaggot, GoldScorpion, MaggotSpawn, BigMaggot, Maggot, Scorpion, Bandit, BigMaggotBurrow, Mimic, SuperFrog, Exploder, Gator, BuffGator, Ratking, GatorSmoke, Rat, FastRat, RatkingRage, MeleeBandit, SuperMimic, Sniper, Raven, RavenFly, Salamander, Spider, LaserCrystal, EnemyLightning, LightningCrystal, EnemyLaser, SnowTank, GoldSnowTank, SnowBot, CarThrow, Wolf, SnowBotCar, RhinoFreak, Freak, Turret, ExploFreak, Necromancer, ExploGuardian, DogGuardian, GhostGuardian, Guardian, CrownGuardianOld, CrownGuardian, Molefish, FireBaller, JockRocket, SuperFireBaller, Jock, Molesarge, Turtle, Van, PopoPlasmaBall, PopoRocket, PopoFreak, Grunt, EliteGrunt, Shielder, EliteShielder, Inspector, EliteInspector, PopoShield, Crab, OasisBoss, BoneFish, InvLaserCrystal, InvSpider, JungleAssassin, FiredMaggot, JungleFly, JungleBandit, EnemyHorror, RainDrop, SnowFlake, PopupText, Confetti, WepPickup, Menu, BackFromCharSelect, CharSelect, GoButton, Loadout, LoadoutCrown, LoadoutWep, LoadoutSkin, CampChar, MainMenu, PlayMenuButton, TutorialButton, MainMenuButton, StatMenu, StatButton, DailyArrow, WeeklyArrow, DailyScores, WeeklyScores, WeeklyProgress, DailyMenuButton, menubutton, BackMainMenu, UnlockAll, IntroLogo, MenuOLDOLD, OptionSelect, MusVolSlider, SfxVolSlider, AmbVolSlider, FullScreenToggle, FitScreenToggle, GamePadToggle, MouseCPToggle, CoopToggle, QToggle, ScaleUpDown, ShakeUpDown, AutoAimUpDown, BSkinLoadout, CrownLoadout, StatsSelect, CrownSelect, DailyToggle, UpdateSelect, CreditsSelect, LoadoutSelect, MenuOLD, Vlambeer, QuitSelect, CrownIcon, SkillIcon, EGSkillIcon, CoopSkillIcon, SkillText, LevCont, mutbutton, PauseButton, GameOverButton, UnlockPopup, UnlockScreen, BUnlockScreen, UnlockButton, OptionMenuButton, VisualsMenuButton, AudioMenuButton, GameMenuButton, ControlMenuButton, CustomObject, CustomHitme, CustomProjectile, CustomSlash, CustomEnemy, CustomDraw, Dispose, asset_get_index("MultiMenu")];
 	global.draw_event_exists = [];
-	with([Player, CrystalShield, Sapling, Ally, RogueStrike, DogMissile, PlayerSit, UberCont, BackCont, TopCont, KeyCont, GenCont, NothingSpiral, Credits, SubTopCont, BanditBoss, Drama, ScrapBossMissile, ScrapBoss, LilHunter, LilHunterFly, Nothing, NothingInactive, BecomeNothing, Carpet, NothingBeam, Nothing2, FrogQueen, HyperCrystal, TechnoMancer, LastIntro, LastCutscene, Last, DramaCamera, BigFish, ProtoStatue, Campfire, LightBeam, TV, SentryGun, Disc, PlasmaBall, PlasmaBig, Lightning, IonBurst, Laser, PlasmaHuge, ConfettiBall, Nuke, Rocket, RadMaggot, GoldScorpion, MaggotSpawn, BigMaggot, Maggot, Scorpion, Bandit, BigMaggotBurrow, Mimic, SuperFrog, Exploder, Gator, BuffGator, Ratking, GatorSmoke, Rat, FastRat, RatkingRage, MeleeBandit, SuperMimic, Sniper, Raven, RavenFly, Salamander, Spider, LaserCrystal, EnemyLightning, LightningCrystal, EnemyLaser, SnowTank, GoldSnowTank, SnowBot, CarThrow, Wolf, SnowBotCar, RhinoFreak, Freak, Turret, ExploFreak, Necromancer, ExploGuardian, DogGuardian, GhostGuardian, Guardian, CrownGuardianOld, CrownGuardian, Molefish, FireBaller, JockRocket, SuperFireBaller, Jock, Molesarge, Turtle, Van, PopoPlasmaBall, PopoRocket, PopoFreak, Grunt, EliteGrunt, Shielder, EliteShielder, Inspector, EliteInspector, PopoShield, Crab, OasisBoss, BoneFish, InvLaserCrystal, InvSpider, JungleAssassin, FiredMaggot, JungleFly, JungleBandit, EnemyHorror, RainDrop, SnowFlake, PopupText, Confetti, WepPickup, Menu, BackFromCharSelect, CharSelect, GoButton, Loadout, LoadoutCrown, LoadoutWep, LoadoutSkin, CampChar, MainMenu, PlayMenuButton, TutorialButton, MainMenuButton, StatMenu, StatButton, DailyArrow, WeeklyArrow, DailyScores, WeeklyScores, WeeklyProgress, DailyMenuButton, menubutton, BackMainMenu, UnlockAll, IntroLogo, MenuOLDOLD, OptionSelect, MusVolSlider, SfxVolSlider, AmbVolSlider, FullScreenToggle, FitScreenToggle, GamePadToggle, MouseCPToggle, CoopToggle, QToggle, ScaleUpDown, ShakeUpDown, AutoAimUpDown, BSkinLoadout, CrownLoadout, StatsSelect, CrownSelect, DailyToggle, UpdateSelect, CreditsSelect, LoadoutSelect, MenuOLD, Vlambeer, QuitSelect, CrownIcon, SkillIcon, EGSkillIcon, CoopSkillIcon, SkillText, LevCont, mutbutton, PauseButton, GameOverButton, UnlockPopup, UnlockScreen, BUnlockScreen, UnlockButton, OptionMenuButton, VisualsMenuButton, AudioMenuButton, GameMenuButton, ControlMenuButton, CustomObject, CustomHitme, CustomProjectile, CustomSlash, CustomEnemy, CustomDraw, Dispose, asset_get_index("MultiMenu")]){
-		global.draw_event_exists[self] = true;
+	for(var i = 0; object_exists(i); i++){
+		array_push(global.draw_event_exists, (array_find_index(_hasEvent, i) >= 0));
 	}
 	
 #define cleanup
@@ -464,8 +465,71 @@
 		}
 	}
 	
-#define ntte_update(_newID)
+#define ntte_update(_newID, _genID)
 	if(area_active){
+		 // Wall Stuff:
+		if(instance_exists(Wall)){
+			var _inst = instances_matching(Wall, "visible", false);
+			if(array_length(_inst)) with(_inst){
+				visible = true;
+			}
+		}
+		if(is_real(_genID)){
+			if(instance_exists(TopSmall) && TopSmall.id > _genID){
+				with(instances_matching_gt(TopSmall, "id", _genID)){
+					instance_delete(self);
+				}
+			}
+		}
+		
+		 // Watery Dust:
+		if(instance_exists(Dust) && Dust.id > _newID){
+			with(instances_matching_gt(Dust, "id", _newID)){
+				if(!position_meeting(x, y, Floor)){
+					if(chance(1, 10 + instance_number(AcidStreak))){
+						sound_play_hit(sndOasisCrabAttack, 0.1);
+						with(scrFX(x, y, 2, "WaterStreak")){
+							hspeed += other.hspeed / 2;
+							vspeed += other.vspeed / 2;
+						}
+					}
+					else{
+						if(chance(1, 5) && point_seen(x, y, -1)){
+							sound_play_hit(choose(sndOasisChest, sndOasisMelee), 0.2);
+						}
+						with(instance_create(x, y, Sweat)){
+							hspeed = other.hspeed / 2;
+							vspeed = other.vspeed / 2;
+						}
+					}
+					instance_destroy();
+				}
+			}
+		}
+		
+		 // Watery Explosion Sounds:
+		if(instance_exists(Explosion) && Explosion.id > _newID){
+			with(instances_matching_gt(Explosion, "id", _newID)){
+				if(!position_meeting(x, y, Floor)){
+					sound_volume(sound_play_hit(sndOasisExplosion, 0.2), 5);
+				}
+			}
+		}
+		
+		 // Watery Melting Scorch Marks:
+		if(instance_exists(MeltSplat) && MeltSplat.id > _newID){
+			with(instances_matching_gt(MeltSplat, "id", _newID)){
+				if(!position_meeting(x, y, Floor)){
+					sound_volume(sound_play_hit(sndOasisExplosionSmall, 0.2), 5);
+					repeat((sprite_index == sprMeltSplatBig) ? 16 : 8){
+						if(chance(1, 6)) scrFX(x, y, 4, "WaterStreak");
+						else instance_create(x, y, Sweat);
+					}
+					instance_destroy();
+				}
+			}
+		}
+		
 		 // Underwater Portal Setup:
 		if(instance_exists(Portal) && Portal.id > _newID){
 			with(instances_matching_gt(Portal, "id", _newID)){
@@ -833,76 +897,6 @@
 	else with(ds_map_values(global.sea_bind)){
 		if(instance_exists(id)){
 			id.visible = false;
-		}
-	}
-	
-#define ntte_end_step
-	if(area_active){
-		 // Wall Stuff:
-		if(instance_exists(Wall)){
-			var _inst = instances_matching(Wall, "visible", false);
-			if(array_length(_inst)) with(_inst){
-				visible = true;
-			}
-		}
-		if(instance_exists(TopSmall)){
-			with(TopSmall){
-				instance_destroy();
-			}
-		}
-		
-		 // Watery Dust:
-		if(instance_exists(Dust)){
-			var _inst = instances_matching(Dust, "coast_water", null);
-			if(array_length(_inst)) with(_inst){
-				coast_water = !position_meeting(x, y, Floor);
-				if(coast_water){
-					if(chance(1, 10 + instance_number(AcidStreak))){
-						sound_play_hit(sndOasisCrabAttack, 0.1);
-						with(scrFX(x, y, 2, "WaterStreak")){
-							hspeed += other.hspeed / 2;
-							vspeed += other.vspeed / 2;
-						}
-					}
-					else{
-						if(chance(1, 5) && point_seen(x, y, -1)){
-							sound_play_hit(choose(sndOasisChest, sndOasisMelee), 0.2);
-						}
-						with(instance_create(x, y, Sweat)){
-							hspeed = other.hspeed / 2;
-							vspeed = other.vspeed / 2;
-						}
-					}
-					instance_destroy();
-				}
-			}
-		}
-		
-		 // Watery Explosion Sounds:
-		if(instance_exists(Explosion)){
-			var _inst = instances_matching(Explosion, "coast_water", null);
-			if(array_length(_inst)) with(_inst){
-				coast_water = !position_meeting(x, y, Floor);
-				if(coast_water){
-					sound_volume(sound_play_hit(sndOasisExplosion, 0.2), 5);
-				}
-			}
-		}
-		
-		 // Watery Melting Scorch Marks:
-		if(instance_exists(MeltSplat)){
-			var _inst = instances_matching(MeltSplat, "coast_water", null);
-			if(array_length(_inst)) with(_inst){
-				coast_water = !position_meeting(x, y, Floor);
-				if(coast_water){
-					sound_volume(sound_play_hit(sndOasisExplosionSmall, 0.2), 5);
-					repeat((sprite_index == sprMeltSplatBig) ? 16 : 8){
-						if(chance(1, 6)) scrFX(x, y, 4, "WaterStreak");
-						else instance_create(x, y, Sweat);
-					}
-					instance_destroy();
-				}
-			}
 		}
 	}
 	
@@ -1601,6 +1595,7 @@
 #define player_swap()                                                                   return  mod_script_call_self('mod', 'telib', 'player_swap');
 #define wep_raw(_wep)                                                                   return  mod_script_call_nc  ('mod', 'telib', 'wep_raw', _wep);
 #define wep_wrap(_wep, _scrName, _scrRef)                                               return  mod_script_call_nc  ('mod', 'telib', 'wep_wrap', _wep, _scrName, _scrRef);
+#define wep_skin(_wep, _race, _skin)                                                    return  mod_script_call_nc  ('mod', 'telib', 'wep_skin', _wep, _race, _skin);
 #define wep_merge(_stock, _front)                                                       return  mod_script_call_nc  ('mod', 'telib', 'wep_merge', _stock, _front);
 #define wep_merge_decide(_hardMin, _hardMax)                                            return  mod_script_call_nc  ('mod', 'telib', 'wep_merge_decide', _hardMin, _hardMax);
 #define weapon_decide(_hardMin, _hardMax, _gold, _noWep)                                return  mod_script_call_self('mod', 'telib', 'weapon_decide', _hardMin, _hardMax, _gold, _noWep);
@@ -1612,7 +1607,6 @@
 #define path_shrink(_path, _wall, _skipMax)                                             return  mod_script_call_nc  ('mod', 'telib', 'path_shrink', _path, _wall, _skipMax);
 #define path_reaches(_path, _xtarget, _ytarget, _wall)                                  return  mod_script_call_nc  ('mod', 'telib', 'path_reaches', _path, _xtarget, _ytarget, _wall);
 #define path_direction(_path, _x, _y, _wall)                                            return  mod_script_call_nc  ('mod', 'telib', 'path_direction', _path, _x, _y, _wall);
-#define path_draw(_path)                                                                return  mod_script_call_self('mod', 'telib', 'path_draw', _path);
 #define portal_poof()                                                                   return  mod_script_call_nc  ('mod', 'telib', 'portal_poof');
 #define portal_pickups()                                                                return  mod_script_call_nc  ('mod', 'telib', 'portal_pickups');
 #define pet_spawn(_x, _y, _name)                                                        return  mod_script_call_nc  ('mod', 'telib', 'pet_spawn', _x, _y, _name);

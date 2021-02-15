@@ -2,18 +2,12 @@
 	mod_script_call("mod", "teassets", "ntte_init", script_ref_create(init));
 	
 	 // Charm:
-	charm_object = [hitme, becomenemy, MaggotExplosion, RadMaggotExplosion, ReviveArea, NecroReviveArea, RevivePopoFreak];
-	charm_bind = {
-		"step" : script_bind(CustomBeginStep, charm_step, 0, false),
-		"draw" : []
-	}
+	charm_object        = [hitme, becomenemy, MaggotExplosion, RadMaggotExplosion, ReviveArea, NecroReviveArea, RevivePopoFreak];
+	charm_instance_list = [];
+	charm_instance_vars = [];
+	charm_bind_draw     = [];
 	for(var i = -1; i < maxp; i++){
-		array_push(charm_bind.draw, script_bind(
-			CustomDraw,
-			script_ref_create(charm_draw, [], i),
-			0,
-			false
-		));
+		array_push(charm_bind_draw, script_bind(CustomDraw, script_ref_create(charm_draw, [], i), 0, false));
 	}
 	shader_add("Charm",
 		
@@ -134,14 +128,19 @@
 #define cleanup
 	mod_script_call("mod", "teassets", "ntte_cleanup", script_ref_create(cleanup));
 	
+	 // Uncharm:
+	charm_instance_raw(charm_instance_list, false);
+	
 #macro spr global.spr
 #macro msk spr.msk
 #macro snd global.snd
 #macro mus snd.mus
 #macro lag global.debug_lag
 
-#macro charm_object global.charm_object
-#macro charm_bind   global.charm_bind
+#macro charm_object        global.charm_object
+#macro charm_instance_list global.charm_instance_list
+#macro charm_instance_vars global.charm_instance_vars
+#macro charm_bind_draw     global.charm_bind_draw
 
 /// General
 #define race_name              return "PARROT";
@@ -684,417 +683,135 @@
 	if(lag) trace_time(mod_current + "_step");
 	
 #define ntte_update(_newID)
-	 // Allied Crystal Fixes:
-	if(instance_exists(LaserCharge) && LaserCharge.id > _newID){
-		with(instances_matching_gt(LaserCharge, "id", _newID)){
-			if(instance_exists(LaserCrystal) || instance_exists(InvLaserCrystal)){
-				var _instCharm = instances_matching_ne([LaserCrystal, InvLaserCrystal], "ntte_charm", null);
-				if(array_length(_instCharm)) with(_instCharm){
-					if(ntte_charm.charmed){
-						var	_x1  = other.xstart,
-							_y1  = other.ystart,
-							_x2  = x,
-							_y2  = y,
-							_dis = point_distance(_x1, _y1, _x2, _y2),
-							_dir = point_direction(_x1, _y1, _x2, _y2);
-							
-						if(_dis < 5 || (other.alarm0 == round(1 + (_dis / other.speed)) && abs(angle_difference(other.direction, _dir)) < 0.1)){
-							team_instance_sprite(team, other);
-							break;
-						}
-					}
-				}
-			}
-		}
-	}
-	if(instance_exists(EnemyLightning) && EnemyLightning.id > _newID){
-		with(instances_matching(instances_matching_gt(EnemyLightning, "id", _newID), "sprite_index", sprEnemyLightning)){
-			var _instCharm = instances_matching_ne(
-				(instance_exists(creator) ? creator : instances_matching(LightningCrystal, "team", team)),
-				"ntte_charm",
-				null
-			);
-			if(array_length(_instCharm)){
-				with(_instCharm){
-					if(ntte_charm.charmed && distance_to_object(other) < 56){
-						other.sprite_index = sprLightning;
-						break;
-					}
-				}
-			}
-		}
-	}
-	
-#define ntte_end_step
-	 /// ULTRA B : Flock Together / HP Link
-	if(instance_exists(Player)){
-		var _instParrot = instances_matching(Player, "race", mod_current);
-		if(array_length(_instParrot)) with(_instParrot){
-			if(ultra_get(mod_current, ult_flock) > 0){
-				var	_instHP     = ds_list_create(),
-					_instSearch = instances_matching_gt(instances_matching_ne([hitme, becomenemy], "ntte_charm", null), "my_health", 0);
-					
-				 // Gather Charmed Bros:
-				if(array_length(_instSearch)){
-					with(_instSearch){
-						if(ntte_charm.index == other.index){
-							ds_list_add(_instHP, id);
-						}
-					}
-				}
-				
-				 // Steal Charmed Bro HP:
-				var _num = ds_list_size(_instHP);
-				if(_num > 0){
-					if(sprite_index == spr_hurt && my_health < ntte_charm_flock_hp){
-						ntte_charm_flock_hp = ceil(lerp(ntte_charm_flock_hp, my_health, 0.5));
-						
-						ds_list_shuffle(_instHP);
-						
-						var _damageRaw = (ntte_charm_flock_hp - my_health) / _num;
-						
-						for(var i = 0; i < _num; i++){
-							var _damage = (
-								((i / _num) < frac(_damageRaw))
-								?  ceil(_damageRaw)
-								: floor(_damageRaw)
-							);
-							if(_damage > 0){
-								var _inst = _instHP[| i];
-								my_health += min(_damage, max(0, _inst.my_health));
-								projectile_hit_raw(_inst, _damage, true);
-								if(!instance_exists(_inst) || _inst.my_health <= 0){
-									ds_list_remove(_instHP, _inst);
-								}
-							}
-						}
-						
-						//my_health = ntte_charm_flock_hp;
-						//spiriteffect = max(spiriteffect, 6);
+	if(array_length(charm_instance_list)){
+		 // Grab Charmed Objects:
+		with(charm_object){
+			if(instance_exists(self) && self.id > _newID){
+				with(instances_matching_gt(self, "id", _newID)){
+					 // 'instance_copy()' Fix:
+					if("ntte_charm" in self && ntte_charm.charmed && array_find_index(charm_instance_list, self) < 0){
+						ntte_charm = lq_clone(ntte_charm);
+						array_push(charm_instance_list, self);
+						array_push(charm_instance_vars, ntte_charm);
 					}
 					
-					 // HUD Health:
-					ntte_charm_flock_hud_hp     = 0;
-					ntte_charm_flock_hud_hp_max = 0;
-					with(ds_list_to_array(_instHP)){
-						other.ntte_charm_flock_hud_hp     += my_health;
-						other.ntte_charm_flock_hud_hp_max += maxhealth;
-					}
-				}
-				else ntte_charm_flock_hud_hp = 0;
-				
-				ds_list_destroy(_instHP);
-			}
-			
-			 // Save Health:
-			ntte_charm_flock_hp = my_health;
-			
-			 // HUD Ghost Health:
-			if(ntte_charm_flock_hud_hp != ntte_charm_flock_hud_hp_lst){
-				var _add = 0.5 * current_time_scale;
-				ntte_charm_flock_hud_hp_lst += clamp(ntte_charm_flock_hud_hp - ntte_charm_flock_hud_hp_lst, -_add, _add);
-			}
-			ntte_charm_flock_hud_hp_lst = clamp(ntte_charm_flock_hud_hp_lst, ntte_charm_flock_hud_hp, ntte_charm_flock_hud_hp_max);
-			
-			 // Expand HUD:
-			var _hud = ((ntte_charm_flock_hud_hp > 0) ? 1 : 0);
-			if(ntte_charm_flock_hud != _hud){
-				if(abs(_hud - ntte_charm_flock_hud) > 0.01){
-					_hud = lerp_ct(ntte_charm_flock_hud, _hud, 1/3);
-				}
-				ntte_charm_flock_hud = _hud;
-			}
-		}
-	}
-	
-#define charm_instance_raw(_inst, _charm)
-	/*
-		Charms or uncharms the given instance(s) and returns a LWO containing their charm-related vars
-		
-		Ex:
-			with(charm_instance(Bandit, true)){
-				time = 300;
-			}
-	*/
-	
-	var _instVars = [];
-	
-	with(instances_matching_ne(_inst, "id", null)){
-		if("ntte_charm" not in self){
-			ntte_charm = {
-				"charmed" : false,
-				"target"  : noone,
-				"on_step" : [],    // Custom object step event
-				"index"   : -1,    // Player who charmed
-				"team"    : -1,    // Original team before charming
-				"time"    : -1,    // Charm duration in frames
-				"kill"    : false, // Kill when uncharmed (For dudes who were spawned by charmed dudes)
-				"feather" : false  // Was charmed using feathers
-			};
-		}
-		
-		var _vars = ntte_charm;
-		
-		if(_charm ^^ _vars.charmed){
-			_vars.charmed = _charm;
-			
-			 // Charm:
-			if(_charm){
-				 // Frienderize Team:
-				_vars.team = variable_instance_get(self, "team", -1);
-				if("team" in self){
-					team = 2;
-					
-					 // Teamerize Nearby Projectiles:
-					if(place_meeting(x, y, projectile)){
-						with(instances_meeting(x, y, instances_matching(instances_matching(projectile, "creator", self), "team", _vars.team))){
-							if(place_meeting(x, y, other)){
-								team = other.team;
-								if(sprite_get_team(sprite_index) != 3){
-									team_instance_sprite(team, self);
-								}
-							}
-						}
-					}
-				}
-				
-				 // Delay Alarms:
-				for(var i = 0; i <= 10; i++){
-					if(alarm_get(i) > 0){
-						alarm_set(i, alarm_get(i) + 1);
-					}
-				}
-				
-				 // Necromancer Charm:
-				switch(sprite_index){
-					case sprReviveArea      : sprite_index = spr.AllyReviveArea;      break;
-					case sprNecroReviveArea : sprite_index = spr.AllyNecroReviveArea; break;
-				}
-			}
-			
-			 // Uncharm:
-			else{
-				target = noone;
-				
-				 // I-Frames:
-				/*if("nexthurt" in self){
-					nexthurt = current_frame + 12;
-				}*/
-				
-				 // Delay Contact Damage:
-				if("canmelee" in self && canmelee){
-					alarm11 = 30;
-					canmelee = false;
-				}
-				
-				 // Reset Team:
-				if(_vars.team != -1){
-					if(fork()){
-						while("team" not in self && instance_is(self, becomenemy)){
-							wait 0;
-						}
-						if("team" in self){
-							 // Teamerize Nearby Projectiles:
-							if(place_meeting(x, y, projectile)){
-								with(instances_meeting(x, y, instances_matching(instances_matching(projectile, "creator", self), "team", team))){
-									if(place_meeting(x, y, other)){
-										team = _vars.team;
-										if(sprite_get_team(sprite_index) != 3){
-											team_instance_sprite(team, self);
+					 // Inherit Charm from Creator:
+					else if("creator" in self){
+						var _hitme = (instance_is(self, hitme) || instance_is(self, becomenemy));
+						with(charm_instance_list){
+							if(other.creator == self || ("creator" in self && !instance_is(self, hitme) && other.creator == creator)){
+								if(!_hitme || !instance_exists(self) || place_meeting(x, y, other)){
+									with(other){
+										var	_vars  = charm_instance_vars[array_find_index(charm_instance_list, other)],
+											_charm = charm_instance(self, true);
+											
+										_charm.time    = _vars.time;
+										_charm.index   = _vars.index;
+										_charm.kill    = _vars.kill;
+										_charm.feather = _vars.feather;
+										
+										if(_hitme){
+											 // Kill When Uncharmed if Infinitely Spawned:
+											if(instance_is(self, enemy) && !enemy_boss && kills <= 0){
+												_charm.kill = true;
+												raddrop = 0;
+											}
+											
+											 // Featherize:
+											if(_charm.feather && (_charm.time >= 0 || !_vars.charmed)){
+												do{
+													with(obj_create(x + orandom(24), y + orandom(24), "ParrotFeather")){
+														target = other;
+														index  = _charm.index;
+														with(player_find(index)){
+															other.bskin = bskin;
+														}
+														sprite_index = race_get_sprite(mod_current, sprite_index);
+														_charm.time -= stick_time * 1.5;
+													}
+												}
+												until(_charm.time <= 0);
+												
+												_charm.time = 15;
+											}
 										}
 									}
 								}
 							}
-							
-							team = _vars.team;
-							_vars.team = -1;
 						}
-						exit;
 					}
 				}
-				
-				 // Reset Step:
-				if(array_length(_vars.on_step) > 0){
-					on_step = _vars.on_step;
-					_vars.on_step = [];
-				}
-				
-				 // Kill:
-				if(_vars.kill){
-					my_health = 0;
-					sound_play_pitchvol(sndEnemyDie, 2 + orandom(0.3), 3);
-				}
-				
-				 // Effects:
-				else instance_create(x, bbox_top, AssassinNotice);
-				var _num = 10 * max(variable_instance_get(self, "size", 0), 0.5);
-				for(var _ang = direction; _ang < direction + 360; _ang += (360 / _num)){
-					scrFX(x, y, [_ang, 3], Dust);
-				}
-				
-				 // Sounds:
-				sound_play_hit_ext(sndAssassinGetUp, random_range(1.2, 1.5), 1.2);
 			}
-			
-			 // Reset:
-			_vars.target  = noone;
-			_vars.index   = -1;
-			_vars.time    = -1;
-			_vars.feather = false;
 		}
 		
-		array_push(_instVars, _vars);
-	}
-	
-	 // Activate Step:
-	if(_charm){
-		with(global.charm_bind.step.id){
-			visible = true;
-		}
-	}
-	
-	 // Return:
-	if(array_length(_instVars) > 0){
-		return (
-			(is_array(_inst) || array_length(_instVars) > 1)
-			? _instVars
-			: _instVars[0]
-		);
-	}
-	
-	return noone;
-	
-#define charm_target(_vars)
-	/*
-		Targets a nearby enemy and moves the player to their position
-		Returns an array containing the moved players and their previous position, [id, x, y]
-	*/
-	
-	var	_playerPos   = [],
-		_targetCrash = (!instance_exists(Player) && instance_is(self, Grunt)); // References player-specific vars in its alarm event, causing a crash
-		
-	 // Targeting:
-	if(
-		!instance_exists(_vars.target)
-		|| collision_line(x, y, _vars.target.x, _vars.target.y, Wall, false, false)
-		|| !instance_is(_vars.target, hitme)
-		|| _vars.target.team == variable_instance_get(self, "team")
-		|| _vars.target.team == variable_instance_get(player_find(_vars.index), "team")
-		|| _vars.target.mask_index == mskNone
-	){
-		_vars.target = noone;
-		
-		var _inst = instances_matching_ne(instances_matching_ne([enemy, Player, Sapling, Ally, SentryGun, CustomHitme], "team", 0), "mask_index", mskNone);
-		if(array_length(_inst)){
-			 // Team Check:
-			if("team" in self){
-				_inst = instances_matching_ne(_inst, "team", team);
-			}
-			if(player_is_active(_vars.index)){
-				with(player_find(_vars.index)){
-					_inst = instances_matching_ne(_inst, "team", team);
+		 // Allied Crystal Fixes:
+		if(instance_exists(crystaltype)){
+			 // Charge Particles:
+			if(instance_exists(LaserCrystal) || instance_exists(InvLaserCrystal)){
+				if(instance_exists(LaserCharge) && LaserCharge.id > _newID){
+					var _instCharm = instances_matching_ne([LaserCrystal, InvLaserCrystal], "ntte_charm", null);
+					if(array_length(_instCharm)){
+						with(instances_matching_gt(LaserCharge, "id", _newID)){
+							with(_instCharm){
+								if(ntte_charm.charmed){
+									var	_x1  = other.xstart,
+										_y1  = other.ystart,
+										_x2  = x,
+										_y2  = y,
+										_dis = point_distance(_x1, _y1, _x2, _y2),
+										_dir = point_direction(_x1, _y1, _x2, _y2);
+										
+									if(_dis < 5 || (other.alarm0 == floor(1 + (_dis / other.speed)) && abs(angle_difference(other.direction, _dir)) < 0.1)){
+										team_instance_sprite(team, other);
+										break;
+									}
+								}
+							}
+						}
+					}
 				}
 			}
 			
-			 // Target Nearest:
-			var _disMax = infinity;
-			if(array_length(_inst)) with(_inst){
-				var _dis = point_distance(x, y, other.x, other.y);
-				if(_dis < _disMax){
-					if(!instance_is(self, prop)){
-						_disMax = _dis;
-						_vars.target = id;
+			 // Lightning:
+			if(instance_exists(LightningCrystal)){
+				if(instance_exists(EnemyLightning) && EnemyLightning.id > _newID){
+					var _instCharm = instances_matching_ne(LightningCrystal, "ntte_charm", null);
+					if(array_length(_instCharm)){
+						with(instances_matching(instances_matching_gt(EnemyLightning, "id", _newID), "sprite_index", sprEnemyLightning)){
+							if(!instance_exists(creator)){
+								with(instances_matching(_instCharm, "team", team)){
+									if(ntte_charm.charmed && distance_to_object(other) < 56){
+										other.sprite_index = sprLightning;
+										break;
+									}
+								}
+							}
+						}
 					}
 				}
 			}
 		}
 	}
 	
-	 // Move Players to Target (the key to this system):
-	if("target" in self){
-		if(!_targetCrash){
-			target = _vars.target;
+#define ntte_begin_step
+	 // Charm Draw Setup:
+	with(charm_bind_draw){
+		if(instance_exists(id)){
+			id.visible = false;
 		}
-		
-		with(Player){
-			array_push(_playerPos, [id, x, y]);
-			
-			if(instance_exists(_vars.target)){
-				x = _vars.target.x;
-				y = _vars.target.y;
-			}
-			
-			else{
-				var	_l = 10000,
-					_d = random(360);
-					
-				x += lengthdir_x(_l, _d);
-				y += lengthdir_y(_l, _d);
-			}
-		}
+		script[3] = [];
 	}
 	
-	return _playerPos;
-	
-#define charm_grab(_vars, _minID)
-	/*
-		Finds any charmable instances above the given minimum ID to set 'creator' on unowned ones, and resprite any projectiles to the charmed enemy's team
-	*/
-	
-	if(instance_exists(GameObject) && GameObject.id > _minID){
-		 // Set Creator:
-		var _inst = instances_matching(instances_matching_gt(charm_object, "id", _minID), "creator", null, noone);
-		if(array_length(_inst)) with(_inst){
-			creator = other;
-		}
-		
-		 // Ally-ify Projectiles:
-		if(instance_exists(projectile) || instance_exists(LaserCannon)){
-			var _inst = instances_matching(instances_matching_gt([projectile, LaserCannon], "id", _minID), "creator", self, noone);
-			if(array_length(_inst)) with(_inst){
-				if(sprite_get_team(sprite_index) != 3){
-					team_instance_sprite(team, self);
-				}
-			}
-		}
-	}
-	
-#define charm_step
-	if(visible){
-		if(lag) trace_time();
-		
-		if("inst" not in self) inst = [];
-		if("vars" not in self) vars = [];
-		
-		 // Charm Draw Setup:
-		var _charmDraw = charm_bind.draw;
-		with(_charmDraw){
-			visible   = false;
-			script[3] = [];
-		}
-		
-		 // Collect Charmed Instances:
-		var _inst = instances_matching_ne(charm_object, "ntte_charm", null);
-		if(array_length(_inst)) with(_inst){
-			if(ntte_charm.charmed && array_find_index(other.inst, id) < 0){
-				array_push(other.inst, id);
-				array_push(other.vars, ntte_charm);
-			}
-		}
-		
-		 // Charm Step:
+	 // Charm Main Code:
+	if(array_length(charm_instance_list)){
 		var	_instNum  = 0,
-			_instList = array_clone(inst),
-			_varsList = array_clone(vars);
+			_instList = array_clone(charm_instance_list),
+			_instVars = array_clone(charm_instance_vars);
 			
-		if(array_length(_instList)) with(_instList){
-			var _vars = _varsList[_instNum++];
-			
+		with(_instList){
+			var _vars = _instVars[_instNum++];
 			if(_vars.charmed){
-				if(!instance_exists(self)){
-					_vars.charmed = false;
-				}
-				else{
+				if(instance_exists(self)){
 					if("ntte_charm_override" not in self || !ntte_charm_override){
 						var	_lastDir  = direction,
 							_isCustom = (string_pos("Custom", object_get_name(object_index)) == 1);
@@ -1134,9 +851,9 @@
 						
 						 // Custom (Replace Step Event):
 						if(_isCustom){
-							if(array_length(_vars.on_step) <= 0 && is_array(on_step)){
+							if(!array_length(_vars.on_step) && is_array(on_step)){
 								_vars.on_step = on_step;
-								on_step = script_ref_create(charm_step_obj);
+								on_step = script_ref_create(charm_obj_step);
 							}
 						}
 						
@@ -1195,7 +912,7 @@
 						if(instance_is(self, enemy)){
 							 // Add to Charm Drawing:
 							if(visible){
-								with(_charmDraw[_vars.index + 1].id){
+								with(charm_bind_draw[_vars.index + 1].id){
 									array_push(script[3], other);
 									if(!visible || other.depth - 1 < depth){
 										visible = true;
@@ -1235,15 +952,17 @@
 							
 							 // Contact Damage:
 							if(place_meeting(x, y, enemy)){
-								var _inst = instances_meeting(x, y, instances_matching_ne(instances_matching_ne(enemy, "team", team), "creator", self));
+								var _inst = instances_meeting(x, y, instances_matching_ne(enemy, "team", team));
 								if(array_length(_inst)) with(_inst){
 									if(place_meeting(x, y, other)) with(other){
+										var	_lastFreeze   = UberCont.opt_freeze,
+											_lastGamma    = skill_get(mut_gamma_guts),
+											_lastNextHurt = (("nexthurt" in other) ? other.nexthurt : 0);
+											
 										 // Disable Freeze Frames:
-										var _freeze = UberCont.opt_freeze;
 										UberCont.opt_freeze = 0;
 										
 										 // Gamma Guts Fix (It breaks contact damage idk):
-										var _gamma = skill_get(mut_gamma_guts);
 										skill_set(mut_gamma_guts, false);
 										
 										 // Speed Up 'canmelee' Reset:
@@ -1257,11 +976,13 @@
 										event_perform(ev_collision, Player);
 										
 										 // No I-Frames:
-										with(other) nexthurt = current_frame;
+										if("nexthurt" in other){
+											other.nexthurt = _lastNextHurt;
+										}
 										
 										 // Reset Stuff:
-										UberCont.opt_freeze = _freeze;
-										skill_set(mut_gamma_guts, _gamma);
+										UberCont.opt_freeze = _lastFreeze;
+										skill_set(mut_gamma_guts, _lastGamma);
 									}
 								}
 							}
@@ -1430,7 +1151,7 @@
 					}
 					
 					 // Reset Step Event:
-					else if(array_length(_vars.on_step) > 0){
+					else if(array_length(_vars.on_step)){
 						on_step = _vars.on_step;
 						_vars.on_step = [];
 					}
@@ -1439,88 +1160,417 @@
 						 // <3
 						if(random(200) < current_time_scale){
 							with(instance_create(x + orandom(8), y - random(8), AllyDamage)){
-								sprite_index = sprHealFX;
+								sprite_index  = sprHealFX;
+								image_xscale *= random_range(2/3, 1);
+								image_yscale  = image_xscale;
 								motion_add(other.direction, 1);
 								speed /= 2;
-								image_xscale *= random_range(2/3, 1);
-								image_yscale = image_xscale;
 							}
 						}
 						
-						 // Level Over:
-						if(_vars.kill && array_length(instances_matching_ne(instances_matching_ne(enemy, "team", team), "object_index", Van)) <= 0){
-							charm_instance(self, false);
+						 // Charm Decay:
+						if(instance_is(self, hitme) || instance_is(self, becomenemy)){
+							 // Level Over:
+							if(_vars.kill && instance_is(self, enemy) && !array_length(instances_matching_ne(instances_matching_ne(enemy, "team", team), "object_index", Van))){
+								charm_instance(self, false);
+							}
+							
+							 // Timer:
+							else if(_vars.time >= 0){
+								_vars.time -= current_time_scale;
+								if(_vars.time <= 0){
+									charm_instance(self, false);
+								}
+							}
+						}
+					}
+					else _vars.charmed = false;
+				}
+				else _vars.charmed = false;
+			}
+			
+			 // Done:
+			else{
+				var _pos = array_find_index(charm_instance_list, self);
+				charm_instance_list = array_delete(charm_instance_list, _pos);
+				charm_instance_vars = array_delete(charm_instance_vars, _pos);
+			}
+		}
+	}
+	
+#define ntte_end_step
+	 /// ULTRA B : Flock Together / HP Link
+	if(instance_exists(Player)){
+		var _instParrot = instances_matching(Player, "race", mod_current);
+		if(array_length(_instParrot)) with(_instParrot){
+			if(ultra_get(mod_current, ult_flock) > 0 && array_length(charm_instance_list)){
+				var _instHP = ds_list_create();
+				
+				 // Gather Charmed Bros:
+				with(instances_matching_gt(charm_instance_list, "my_health", 0)){
+					if(ntte_charm.index == other.index){
+						ds_list_add(_instHP, self);
+					}
+				}
+				
+				 // Steal Charmed Bro HP:
+				var _num = ds_list_size(_instHP);
+				if(_num > 0){
+					if(sprite_index == spr_hurt && my_health < ntte_charm_flock_hp){
+						ntte_charm_flock_hp = ceil(lerp(ntte_charm_flock_hp, my_health, 0.5));
+						
+						ds_list_shuffle(_instHP);
+						
+						var _damageRaw = (ntte_charm_flock_hp - my_health) / _num;
+						
+						for(var i = 0; i < _num; i++){
+							var _damage = (
+								((i / _num) < frac(_damageRaw))
+								?  ceil(_damageRaw)
+								: floor(_damageRaw)
+							);
+							if(_damage > 0){
+								var _inst = _instHP[| i];
+								my_health += min(_damage, max(0, _inst.my_health));
+								projectile_hit_raw(_inst, _damage, true);
+								if(!instance_exists(_inst) || _inst.my_health <= 0){
+									ds_list_remove(_instHP, _inst);
+								}
+							}
 						}
 						
-						 // Charm Timer:
-						else if(_vars.time >= 0 && (instance_is(self, hitme) || instance_is(self, becomenemy))){
-							_vars.time -= current_time_scale;
-							if(_vars.time <= 0){
-								charm_instance(self, false);
+						//my_health = ntte_charm_flock_hp;
+						//spiriteffect = max(spiriteffect, 6);
+					}
+					
+					 // HUD Health:
+					ntte_charm_flock_hud_hp     = 0;
+					ntte_charm_flock_hud_hp_max = 0;
+					with(ds_list_to_array(_instHP)){
+						other.ntte_charm_flock_hud_hp     += my_health;
+						other.ntte_charm_flock_hud_hp_max += maxhealth;
+					}
+				}
+				else ntte_charm_flock_hud_hp = 0;
+				
+				ds_list_destroy(_instHP);
+			}
+			else ntte_charm_flock_hud_hp = 0;
+			
+			 // Save Health:
+			ntte_charm_flock_hp = my_health;
+			
+			 // HUD Ghost Health:
+			if(ntte_charm_flock_hud_hp != ntte_charm_flock_hud_hp_lst){
+				var _add = 0.5 * current_time_scale;
+				ntte_charm_flock_hud_hp_lst += clamp(ntte_charm_flock_hud_hp - ntte_charm_flock_hud_hp_lst, -_add, _add);
+			}
+			ntte_charm_flock_hud_hp_lst = clamp(ntte_charm_flock_hud_hp_lst, ntte_charm_flock_hud_hp, ntte_charm_flock_hud_hp_max);
+			
+			 // Expand HUD:
+			var _hud = ((ntte_charm_flock_hud_hp > 0) ? 1 : 0);
+			if(ntte_charm_flock_hud != _hud){
+				if(abs(_hud - ntte_charm_flock_hud) > 0.01){
+					_hud = lerp_ct(ntte_charm_flock_hud, _hud, 1/3);
+				}
+				ntte_charm_flock_hud = _hud;
+			}
+		}
+	}
+	
+#define charm_instance_raw(_inst, _charm)
+	/*
+		Charms or uncharms the given instance(s) and returns a LWO containing their charm-related vars
+		
+		Ex:
+			with(charm_instance(Bandit, true)){
+				time = 300;
+			}
+	*/
+	
+	var _instVars = [];
+	
+	 // Charm:
+	with(instances_matching_ne(_inst, "id", null)){
+		if("ntte_charm" not in self){
+			ntte_charm = {
+				"charmed" : false, // Currently charmed, true/false
+				"target"  : noone, // The charmed enemy's custom target
+				"on_step" : [],    // Custom-type object's original step event
+				"index"   : -1,    // Player who charmed
+				"team"    : -1,    // Original team before charming
+				"time"    : -1,    // Charm duration in frames
+				"kill"    : false, // Kill when uncharmed (For dudes who were spawned by charmed dudes)
+				"feather" : false, // Was charmed using feathers
+			};
+		}
+		
+		var _vars = ntte_charm;
+		
+		if(_charm ^^ _vars.charmed){
+			_vars.charmed = _charm;
+			
+			 // Charm:
+			if(_charm){
+				 // Frienderize Team:
+				_vars.team = (("team" in self) ? team : -1);
+				if("team" in self){
+					team = 2;
+					
+					 // Teamerize Nearby Projectiles:
+					if(place_meeting(x, y, projectile)){
+						var _inst = instances_meeting(x, y, instances_matching(projectile, "team", _vars.team));
+						if(array_length(_inst)){
+							if("creator" in self && !instance_is(self, hitme)){
+								_inst = instances_matching(_inst, "creator", self, creator);
+							}
+							else{
+								_inst = instances_matching(_inst, "creator", self);
+							}
+							if(array_length(_inst)) with(_inst){
+								if(place_meeting(x, y, other)){
+									team = other.team;
+									if(sprite_get_team(sprite_index) != 3){
+										team_instance_sprite(team, self);
+									}
+								}
 							}
 						}
 					}
 				}
 				
-				 // Charm Spawned Enemies:
-				if(_vars.charmed){
-					var _inst = instances_matching(instances_matching(charm_object, "creator", self), "ntte_charm", null);
-					if(array_length(_inst)) with(_inst){
-						var _hitme = (instance_is(self, hitme) || instance_is(self, becomenemy));
-						if(!_hitme || !instance_exists(other) || place_meeting(x, y, other)){
-							var _charm = charm_instance(id, true);
-							
-							_charm.time    = _vars.time;
-							_charm.index   = _vars.index;
-							_charm.feather = _vars.feather;
-							
-							if(_hitme){
-								 // Kill When Uncharmed if Infinitely Spawned:
-								if(!enemy_boss && "kills" in self && kills <= 0){
-									_charm.kill = true;
-									if("raddrop" in self) raddrop = 0;
-								}
-								
-								 // Featherize:
-								if(_charm.feather && (_charm.time >= 0 || !_vars.charmed)){
-									do{
-										with(obj_create(x + orandom(24), y + orandom(24), "ParrotFeather")){
-											target = other;
-											index  = _charm.index;
-											with(player_find(index)){
-												other.bskin = bskin;
+				 // Delay Alarms:
+				for(var i = 0; i <= 10; i++){
+					if(alarm_get(i) > 0){
+						alarm_set(i, alarm_get(i) + 1);
+					}
+				}
+				
+				 // Necromancer Charm:
+				switch(sprite_index){
+					case sprReviveArea      : sprite_index = spr.AllyReviveArea;      break;
+					case sprNecroReviveArea : sprite_index = spr.AllyNecroReviveArea; break;
+				}
+				
+				 // Add:
+				array_push(charm_instance_list, self);
+				array_push(charm_instance_vars, _vars);
+			}
+			
+			 // Uncharm:
+			else{
+				if("target" in self){
+					target = noone;
+				}
+				
+				if(instance_is(self, hitme) || instance_is(self, becomenemy)){
+					 // Kill:
+					if(_vars.kill){
+						my_health = 0;
+						sound_play_pitchvol(sndEnemyDie, 2 + orandom(0.3), 3);
+					}
+					
+					 // Effects:
+					else instance_create(x, bbox_top, AssassinNotice);
+					var _num = 10 * max(variable_instance_get(self, "size", 0), 0.5);
+					for(var _ang = direction; _ang < direction + 360; _ang += (360 / _num)){
+						scrFX(x, y, [_ang, 3], Dust);
+					}
+					
+					 // Sound:
+					sound_play_hit_ext(sndAssassinGetUp, random_range(1.2, 1.5), 1.2);
+					
+					 // Delay Contact Damage:
+					if("canmelee" in self && canmelee){
+						alarm11  = 30;
+						canmelee = false;
+					}
+					
+					 // I-Frames:
+					/*if("nexthurt" in self){
+						nexthurt = current_frame + 12;
+					}*/
+				}
+				
+				 // Reset Team:
+				if(_vars.team != -1){
+					if(fork()){
+						while("team" not in self && instance_is(self, becomenemy)){
+							wait 0;
+						}
+						if("team" in self){
+							 // Teamerize Nearby Projectiles:
+							if(place_meeting(x, y, projectile)){
+								var _inst = instances_meeting(x, y, instances_matching(projectile, "team", team));
+								if(array_length(_inst)){
+									if("creator" in self && !instance_is(self, hitme)){
+										_inst = instances_matching(_inst, "creator", self, creator);
+									}
+									else{
+										_inst = instances_matching(_inst, "creator", self);
+									}
+									if(array_length(_inst)) with(_inst){
+										if(place_meeting(x, y, other)){
+											team = _vars.team;
+											if(sprite_get_team(sprite_index) != 3){
+												team_instance_sprite(team, self);
 											}
-											sprite_index = race_get_sprite(mod_current, sprite_index);
-											_charm.time -= stick_time * 1.5;
 										}
 									}
-									until(_charm.time <= 0);
-									
-									_charm.time = 15;
 								}
 							}
+							
+							team = _vars.team;
+							_vars.team = -1;
 						}
+						exit;
 					}
+				}
+				
+				 // Reset Step:
+				if(array_length(_vars.on_step)){
+					on_step = _vars.on_step;
+					_vars.on_step = [];
+				}
+				
+				 // Remove:
+				var _pos = array_find_index(charm_instance_list, self);
+				charm_instance_list = array_delete(charm_instance_list, _pos);
+				charm_instance_vars = array_delete(charm_instance_vars, _pos);
+			}
+			
+			 // Reset:
+			_vars.target  = noone;
+			_vars.index   = -1;
+			_vars.time    = -1;
+			_vars.feather = false;
+		}
+		
+		array_push(_instVars, _vars);
+	}
+	
+	 // Return:
+	if(array_length(_instVars)){
+		return (
+			(is_array(_inst) || array_length(_instVars) > 1)
+			? _instVars
+			: _instVars[0]
+		);
+	}
+	
+	return noone;
+	
+#define charm_target(_vars)
+	/*
+		Targets a nearby enemy and moves the player to their position
+		Returns an array containing the moved players and their previous position, [id, x, y]
+	*/
+	
+	var	_playerPos   = [],
+		_targetCrash = (!instance_exists(Player) && instance_is(self, Grunt)); // References player-specific vars in its alarm event, causing a crash
+		
+	 // Targeting:
+	if(
+		!instance_exists(_vars.target)
+		|| collision_line(x, y, _vars.target.x, _vars.target.y, Wall, false, false)
+		|| !instance_is(_vars.target, hitme)
+		|| _vars.target.team == variable_instance_get(self, "team")
+		|| _vars.target.team == variable_instance_get(player_find(_vars.index), "team")
+		|| _vars.target.mask_index == mskNone
+	){
+		_vars.target = noone;
+		
+		var _inst = instances_matching_ne(instances_matching_ne([enemy, Player, Sapling, Ally, SentryGun, CustomHitme], "team", 0), "mask_index", mskNone);
+		if(array_length(_inst)){
+			 // Team Check:
+			if("team" in self){
+				_inst = instances_matching_ne(_inst, "team", team);
+			}
+			if(player_is_active(_vars.index)){
+				with(player_find(_vars.index)){
+					_inst = instances_matching_ne(_inst, "team", team);
 				}
 			}
 			
-			 // Done:
+			 // Target Nearest:
+			var _disMax = infinity;
+			if(array_length(_inst)) with(_inst){
+				var _dis = point_distance(x, y, other.x, other.y);
+				if(_dis < _disMax){
+					if(!instance_is(self, prop)){
+						_disMax = _dis;
+						_vars.target = id;
+					}
+				}
+			}
+		}
+	}
+	
+	 // Move Players to Target (the key to this system):
+	if("target" in self){
+		if(!_targetCrash){
+			target = _vars.target;
+		}
+		
+		with(Player){
+			array_push(_playerPos, [id, x, y]);
+			
+			if(instance_exists(_vars.target)){
+				x = _vars.target.x;
+				y = _vars.target.y;
+			}
+			
 			else{
-				var _pos = array_find_index(other.inst, self);
-				other.inst = array_delete(other.inst, _pos);
-				other.vars = array_delete(other.vars, _pos);
+				var	_l = 10000,
+					_d = random(360);
+					
+				x += lengthdir_x(_l, _d);
+				y += lengthdir_y(_l, _d);
+			}
+		}
+	}
+	
+	return _playerPos;
+	
+#define charm_grab(_vars, _minID)
+	/*
+		Finds any charmable instances above the given minimum ID to set 'creator' on unowned ones, and resprite any projectiles to the charmed enemy's team
+	*/
+	
+	if(instance_exists(GameObject) && GameObject.id > _minID){
+		 // Set Creator:
+		var _inst = instances_matching(instances_matching_gt(charm_object, "id", _minID), "creator", null, noone);
+		if(array_length(_inst)){
+			var _creator = (
+				("creator" in self && !instance_is(self, hitme))
+				? creator
+				: self
+			);
+			with(_inst){
+				creator = _creator;
 			}
 		}
 		
-		 // Goodbye:
-		if(array_length(inst) <= 0){
-			visible = false;
+		 // Ally-ify Projectiles:
+		if(instance_exists(projectile) || instance_exists(LaserCannon)){
+			var _inst = instances_matching_gt([projectile, LaserCannon], "id", _minID);
+			if(array_length(_inst)){
+				if("creator" in self && !instance_is(self, hitme)){
+					_inst = instances_matching(_inst, "creator", self, noone, creator);
+				}
+				else{
+					_inst = instances_matching(_inst, "creator", self, noone);
+				}
+				if(array_length(_inst)) with(_inst){
+					if(sprite_get_team(sprite_index) != 3){
+						team_instance_sprite(team, self);
+					}
+				}
+			}
 		}
-		
-		if(lag) trace_time(script[2] + " " + string(_instNum));
 	}
 	
-#define charm_step_obj
+#define charm_obj_step
 	var	_vars      = ntte_charm,
 		_minID     = instance_max,
 		_playerPos = charm_target(_vars);
@@ -1543,7 +1593,7 @@
 	 // Reset Step:
 	if(instance_exists(self)){
 		_vars.on_step = on_step;
-		on_step = script_ref_create(charm_step_obj);
+		on_step = script_ref_create(charm_obj_step);
 	}
 	
 	 // Grab Spawned Things:
@@ -1581,7 +1631,7 @@
 				
 				 // Call Enemy Draw Events:
 				var _lastTimeScale = current_time_scale;
-				current_time_scale = 0.0000000001;
+				current_time_scale = 1/1000000000000000;
 				try{
 					with(instances_seen(_inst, 24, 24, -1)){
 						with(self){
@@ -1817,6 +1867,7 @@
 #define player_swap()                                                                   return  mod_script_call_self('mod', 'telib', 'player_swap');
 #define wep_raw(_wep)                                                                   return  mod_script_call_nc  ('mod', 'telib', 'wep_raw', _wep);
 #define wep_wrap(_wep, _scrName, _scrRef)                                               return  mod_script_call_nc  ('mod', 'telib', 'wep_wrap', _wep, _scrName, _scrRef);
+#define wep_skin(_wep, _race, _skin)                                                    return  mod_script_call_nc  ('mod', 'telib', 'wep_skin', _wep, _race, _skin);
 #define wep_merge(_stock, _front)                                                       return  mod_script_call_nc  ('mod', 'telib', 'wep_merge', _stock, _front);
 #define wep_merge_decide(_hardMin, _hardMax)                                            return  mod_script_call_nc  ('mod', 'telib', 'wep_merge_decide', _hardMin, _hardMax);
 #define weapon_decide(_hardMin, _hardMax, _gold, _noWep)                                return  mod_script_call_self('mod', 'telib', 'weapon_decide', _hardMin, _hardMax, _gold, _noWep);
@@ -1828,7 +1879,6 @@
 #define path_shrink(_path, _wall, _skipMax)                                             return  mod_script_call_nc  ('mod', 'telib', 'path_shrink', _path, _wall, _skipMax);
 #define path_reaches(_path, _xtarget, _ytarget, _wall)                                  return  mod_script_call_nc  ('mod', 'telib', 'path_reaches', _path, _xtarget, _ytarget, _wall);
 #define path_direction(_path, _x, _y, _wall)                                            return  mod_script_call_nc  ('mod', 'telib', 'path_direction', _path, _x, _y, _wall);
-#define path_draw(_path)                                                                return  mod_script_call_self('mod', 'telib', 'path_draw', _path);
 #define portal_poof()                                                                   return  mod_script_call_nc  ('mod', 'telib', 'portal_poof');
 #define portal_pickups()                                                                return  mod_script_call_nc  ('mod', 'telib', 'portal_pickups');
 #define pet_spawn(_x, _y, _name)                                                        return  mod_script_call_nc  ('mod', 'telib', 'pet_spawn', _x, _y, _name);

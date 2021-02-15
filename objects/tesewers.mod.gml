@@ -392,8 +392,8 @@
 	}
 	
 #define AlbinoGator_draw
-	var	h = (nexthurt > (current_frame + 3) && sprite_index != spr_hurt),
-		b = (gunangle > 180);
+	var	_hurt = (sprite_index != spr_hurt && nexthurt >= current_frame + 4),
+		_back = (gunangle > 180);
 		
 	 // Laser Sight:
 	if(gonnafire > 0){
@@ -403,13 +403,13 @@
 	}
 		
 	 // Body and Gun:
-	if(h) d3d_set_fog(true, c_black, 0, 0);
-	if(b) draw_self_enemy();
+	if(_hurt) d3d_set_fog(true, c_black, 0, 0);
+	if(_back) draw_self_enemy();
 	
 	draw_weapon(spr_weap, 0, x, y, gunangle, 0, wkick, right, image_blend, image_alpha);
 	
-	if(!b) draw_self_enemy();
-	if(h) d3d_set_fog(false, 0, 0, 0);
+	if(!_back) draw_self_enemy();
+	if(_hurt) d3d_set_fog(false, 0, 0, 0);
 	
 	 // Halo:
 	draw_sprite(spr_halo, halo_index, x, (y - 3) + sin(wave * 0.1));
@@ -600,7 +600,7 @@
 		zspeed     = 0;
 		zfriction  = 0.5;
 		zbounce    = 0;
-		kick_invul = (current_frame + 30);
+		kick_invul = current_frame + 30;
 		gunangle   = random(360);
 		direction  = gunangle;
 		
@@ -1138,14 +1138,14 @@
 	image_blend = merge_color(image_blend, c_black, cloud_blend);
 	
 	 // Self:
-	var h = (sprite_index != spr_hurt && nexthurt > current_frame + 3);
-	if(h) draw_set_fog(true, _blend, 0, 0);
+	var _hurt = (sprite_index != spr_hurt && nexthurt >= current_frame + 4);
+	if(_hurt) draw_set_fog(true, _blend, 0, 0);
 	
 	if(gunangle >  180) draw_self_enemy();
 	draw_weapon(spr_weap, 0, x, y, gunangle, 0, wkick, right, image_blend, image_alpha);
 	if(gunangle <= 180) draw_self_enemy();
 	
-	if(h) draw_set_fog(false, 0, 0, 0);
+	if(_hurt) draw_set_fog(false, 0, 0, 0);
 	
 	image_blend = _blend;
 	
@@ -3560,7 +3560,7 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 		_surfH = _surfW + ((image_number - 1) * 2);
 		
 	if(point_seen_ext(x, y, _surfW, _surfH, -1)){
-		var	_hurt = (nexthurt > current_frame + 3),
+		var	_hurt      = (nexthurt >= current_frame + 4),
 			_surfScale = option_get("quality:main");
 			
 		with(surface_setup(name + string(id), _surfW, _surfH, _surfScale)){
@@ -5999,6 +5999,7 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 #define player_swap()                                                                   return  mod_script_call_self('mod', 'telib', 'player_swap');
 #define wep_raw(_wep)                                                                   return  mod_script_call_nc  ('mod', 'telib', 'wep_raw', _wep);
 #define wep_wrap(_wep, _scrName, _scrRef)                                               return  mod_script_call_nc  ('mod', 'telib', 'wep_wrap', _wep, _scrName, _scrRef);
+#define wep_skin(_wep, _race, _skin)                                                    return  mod_script_call_nc  ('mod', 'telib', 'wep_skin', _wep, _race, _skin);
 #define wep_merge(_stock, _front)                                                       return  mod_script_call_nc  ('mod', 'telib', 'wep_merge', _stock, _front);
 #define wep_merge_decide(_hardMin, _hardMax)                                            return  mod_script_call_nc  ('mod', 'telib', 'wep_merge_decide', _hardMin, _hardMax);
 #define weapon_decide(_hardMin, _hardMax, _gold, _noWep)                                return  mod_script_call_self('mod', 'telib', 'weapon_decide', _hardMin, _hardMax, _gold, _noWep);
@@ -6010,7 +6011,6 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 #define path_shrink(_path, _wall, _skipMax)                                             return  mod_script_call_nc  ('mod', 'telib', 'path_shrink', _path, _wall, _skipMax);
 #define path_reaches(_path, _xtarget, _ytarget, _wall)                                  return  mod_script_call_nc  ('mod', 'telib', 'path_reaches', _path, _xtarget, _ytarget, _wall);
 #define path_direction(_path, _x, _y, _wall)                                            return  mod_script_call_nc  ('mod', 'telib', 'path_direction', _path, _x, _y, _wall);
-#define path_draw(_path)                                                                return  mod_script_call_self('mod', 'telib', 'path_draw', _path);
 #define portal_poof()                                                                   return  mod_script_call_nc  ('mod', 'telib', 'portal_poof');
 #define portal_pickups()                                                                return  mod_script_call_nc  ('mod', 'telib', 'portal_pickups');
 #define pet_spawn(_x, _y, _name)                                                        return  mod_script_call_nc  ('mod', 'telib', 'pet_spawn', _x, _y, _name);

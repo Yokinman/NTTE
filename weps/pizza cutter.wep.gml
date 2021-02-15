@@ -93,26 +93,29 @@
 		
 		 // Effects:
 		if(_wep.chrg == 1){
+			 // Sound:
 			sound_play_pitch(sndMeleeFlip, 1 / (1 - (0.25 * _num)));
 			sound_play_pitchvol(sndSwapBow, 0.3 + (2 * _num), 0.3);
 			
 			 // Full:
 			if(_num >= 1){
-				var	_l = 16,
-					_d = gunangle;
+				 // Sound:
+				sound_play_pitch(sndCrystalRicochet, 2);
+				sound_play_pitch(sndDiscBounce,      3);
+				
+				 // Flash:
+				var	_l = 18 - wkick,
+					_d = gunangle + (wepangle * (1 - (wkick / 20)));
 					
-				instance_create(x + lengthdir_x(_l, _d), y + lengthdir_y(_l, _d), ThrowHit);
-				instance_create(x + lengthdir_x(_l, _d), y + lengthdir_y(_l, _d), ImpactWrists);
-				sound_play_pitch(sndCrystalRicochet, 3);
-				sound_play_pitch(sndSewerDrip,       3);
+				with(instance_create(
+					x + lengthdir_x(_l, _d) + lengthdir_x(wepflip * 2, _d - 90),
+					y + lengthdir_y(_l, _d) + lengthdir_y(wepflip * 2, _d - 90),
+					ImpactWrists
+				)){
+					image_index = 2;
+					depth       = other.depth - 1;
+				}
 				sleep(5);
-			}
-		}
-		
-		 // Fully Charged - Blink:
-		else if((current_frame % 12) < current_time_scale){
-			with(_fire.creator) if(instance_is(self, Player)){
-				gunshine = 2;
 			}
 		}
 	}
@@ -120,7 +123,7 @@
 	 // Charged Disc Slash:
 	else if(_num > 0){
 		var _skill = skill_get(mut_long_arms),
-			_len   = (20 * _skill),
+			_len   = 20 * _skill,
 			_dir   = gunangle + orandom(8 * accuracy);
 			
 		with(projectile_create(

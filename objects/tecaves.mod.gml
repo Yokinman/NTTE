@@ -34,6 +34,13 @@
 		tops_inst = [];
 	}
 	
+	 // Objects w/ Draw Events:
+	var _hasEvent = [Player, CrystalShield, Sapling, Ally, RogueStrike, DogMissile, PlayerSit, UberCont, BackCont, TopCont, KeyCont, GenCont, NothingSpiral, Credits, SubTopCont, BanditBoss, Drama, ScrapBossMissile, ScrapBoss, LilHunter, LilHunterFly, Nothing, NothingInactive, BecomeNothing, Carpet, NothingBeam, Nothing2, FrogQueen, HyperCrystal, TechnoMancer, LastIntro, LastCutscene, Last, DramaCamera, BigFish, ProtoStatue, Campfire, LightBeam, TV, SentryGun, Disc, PlasmaBall, PlasmaBig, Lightning, IonBurst, Laser, PlasmaHuge, ConfettiBall, Nuke, Rocket, RadMaggot, GoldScorpion, MaggotSpawn, BigMaggot, Maggot, Scorpion, Bandit, BigMaggotBurrow, Mimic, SuperFrog, Exploder, Gator, BuffGator, Ratking, GatorSmoke, Rat, FastRat, RatkingRage, MeleeBandit, SuperMimic, Sniper, Raven, RavenFly, Salamander, Spider, LaserCrystal, EnemyLightning, LightningCrystal, EnemyLaser, SnowTank, GoldSnowTank, SnowBot, CarThrow, Wolf, SnowBotCar, RhinoFreak, Freak, Turret, ExploFreak, Necromancer, ExploGuardian, DogGuardian, GhostGuardian, Guardian, CrownGuardianOld, CrownGuardian, Molefish, FireBaller, JockRocket, SuperFireBaller, Jock, Molesarge, Turtle, Van, PopoPlasmaBall, PopoRocket, PopoFreak, Grunt, EliteGrunt, Shielder, EliteShielder, Inspector, EliteInspector, PopoShield, Crab, OasisBoss, BoneFish, InvLaserCrystal, InvSpider, JungleAssassin, FiredMaggot, JungleFly, JungleBandit, EnemyHorror, RainDrop, SnowFlake, PopupText, Confetti, WepPickup, Menu, BackFromCharSelect, CharSelect, GoButton, Loadout, LoadoutCrown, LoadoutWep, LoadoutSkin, CampChar, MainMenu, PlayMenuButton, TutorialButton, MainMenuButton, StatMenu, StatButton, DailyArrow, WeeklyArrow, DailyScores, WeeklyScores, WeeklyProgress, DailyMenuButton, menubutton, BackMainMenu, UnlockAll, IntroLogo, MenuOLDOLD, OptionSelect, MusVolSlider, SfxVolSlider, AmbVolSlider, FullScreenToggle, FitScreenToggle, GamePadToggle, MouseCPToggle, CoopToggle, QToggle, ScaleUpDown, ShakeUpDown, AutoAimUpDown, BSkinLoadout, CrownLoadout, StatsSelect, CrownSelect, DailyToggle, UpdateSelect, CreditsSelect, LoadoutSelect, MenuOLD, Vlambeer, QuitSelect, CrownIcon, SkillIcon, EGSkillIcon, CoopSkillIcon, SkillText, LevCont, mutbutton, PauseButton, GameOverButton, UnlockPopup, UnlockScreen, BUnlockScreen, UnlockButton, OptionMenuButton, VisualsMenuButton, AudioMenuButton, GameMenuButton, ControlMenuButton, CustomObject, CustomHitme, CustomProjectile, CustomSlash, CustomEnemy, CustomDraw, Dispose, asset_get_index("MultiMenu")];
+	global.draw_event_exists = [];
+	for(var i = 0; object_exists(i); i++){
+		array_push(global.draw_event_exists, (array_find_index(_hasEvent, i) >= 0));
+	}
+	
 	 // Client-Side Darkness:
 	//clientDarknessCoeff = array_create(maxp, 0);
 	//clientDarknessFloor = [];
@@ -281,7 +288,7 @@
 	}
 	
 #define CrystalBat_draw
-	var _hurt = (sprite_index != spr_hurt && nexthurt > current_frame + 3);
+	var _hurt = (sprite_index != spr_hurt && nexthurt >= current_frame + 4);
 	if(_hurt) draw_set_fog(true, image_blend, 0, 0);
 	draw_self_enemy();
 	if(_hurt) draw_set_fog(false, 0, 0, 0);
@@ -664,10 +671,8 @@
 	
 #define CrystalBrain_effect(_x, _y)
 	if(sprite_exists(spr_effect)){
-		with(instance_create(_x, _y, BulletHit)){
+		with(obj_create(_x, _y, "CrystalBrainEffect")){
 			sprite_index = other.spr_effect;
-			image_yscale = choose(1, -1);
-			image_angle  = pround(random(360), 90);
 			depth        = other.depth - chance(2, 3);
 			
 			return self;
@@ -859,15 +864,32 @@
 	}
 	
 	
+#define CrystalBrainEffect_create(_x, _y)
+	/*
+		The main "circuitry" particle used for Crystal Brains and their enemy clones
+	*/
+	
+	with(instance_create(_x, _y, BulletHit)){
+		 // Visual:
+		sprite_index = spr.CrystalBrainEffect;
+		image_yscale = choose(1, -1);
+		image_angle  = pround(random(360), 90);
+		depth        = choose(-2, -3);
+		
+		return self;
+	}
+	
+	
 #define CrystalClone_create(_x, _y)
 	/*
-		Clone handler object for enemies duplicated by crystal brains
+		Clone handler object for enemies duplicated by Crystal Brains
 		
 		Vars:
 			sprite_index - The clone's overlay sprite, set -1 for automatic
 			spr_effect   - The clone's effect sprite, set -1 for automatic
 			target       - The cloned instance
 			clone        - Searches this object, instance, or list of instances, and clones the nearest one
+			budge        - The cloned instance should be automatically offset from the original instance, true/false
 			time         - Time in frames until the cloned instance is killed
 			appear       - Timer, used for the clone's appearing visual
 	*/
@@ -880,12 +902,14 @@
 		image_alpha  = 0;
 		
 		 // Vars:
-		creator = noone;
-		target  = noone;
-		clone   = instances_matching_ne(instances_matching_ne(instances_matching_ne(instances_matching_lt(instances_matching_ne(enemy, "team", 2), "size", 6), "name", "CrystalBrain", "CrystalHeart", "ChaosHeart"), "mask_index", mskNone), "intro", false);
-		time    = 450;
-		team    = -1;
-		appear  = 1;
+		creator     = noone;
+		target      = noone;
+		clone       = instances_matching_ne(instances_matching_ne(instances_matching_ne(instances_matching_lt(instances_matching_ne(enemy, "team", 2), "size", 6), "name", "CrystalBrain", "CrystalHeart", "ChaosHeart"), "mask_index", mskNone), "intro", false);
+		time        = 450;
+		team        = -1;
+		appear      = 1;
+		appear_flip = false;
+		budge       = true;
 		
 		return self;
 	}
@@ -911,13 +935,13 @@
 	if(target == noone){
 		var	_disMax = 256,
 			_target = noone,
-			_clones = instances_matching(object_index, "name", name);
+			_clones = instances_matching(instances_matching(object_index, "name", name), "team", team);
 			
 		 // Find Nearest:
 		with(instances_matching_ne(clone, "id", null)){
 			var _dis = point_distance(x, y, other.x, other.y);
 			if(_dis < _disMax){
-				if(array_length(instances_matching(_clones, "target", self)) <= 0){
+				if(!array_length(instances_matching(_clones, "target", self))){
 					_disMax = _dis;
 					_target = self;
 				}
@@ -976,38 +1000,52 @@
 					 // Team:
 					if(team != other.team){
 						if(other.team == 2){
-							charm_instance(self, true);
+							var _charm = charm_instance(self, true);
+							_charm.time = other.time + 1;
+							_charm.kill = true;
 						}
 						team = other.team;
 					}
 					
 					 // Enemy Vars:
 					if(instance_is(self, enemy)){
-						kills     = 0;
-						wepseed   = -1;
-						my_health = ceil(my_health / 2);
+						kills   = 0;
+						wepseed = -1;
 						
-						 // Delay Contact Damage:
-						if(canmelee == true){
-							canmelee = false;
-							alarm11  = 30;
+						 // Weaken:
+						if(other.team != 2){
+							my_health = ceil(my_health / 2);
+							
+							 // Delay Contact Damage:
+							if(canmelee == true){
+								canmelee = false;
+								alarm11  = 30;
+							}
 						}
 					}
 				}
 				
 				 // Move Away:
-				direction = random(360);
-				if(!instance_budge(_target, -1)){
-					var	_dis = 16,
-						_dir = random(360);
+				if(speed == 0){
+					direction = random(360);
+				}
+				if(other.budge){
+					if(!instance_budge(_target, -1)){
+						var	_dis = 16,
+							_dir = random(360);
+							
+						x += lengthdir_x(_dis, _dir);
+						y += lengthdir_y(_dis, _dir);
+						xprevious = x;
+						yprevious = y;
 						
-					x += lengthdir_x(_dis, _dir);
-					y += lengthdir_y(_dis, _dir);
-					xprevious = x;
-					yprevious = y;
-					
-					 // Obliterate Wall:
-					wall_clear(x, y);
+						 // Obliterate Wall:
+						wall_clear(x, y);
+					}
+				}
+				else{
+					x += dcos(direction);
+					y -= dsin(direction);
 				}
 				xstart = x;
 				ystart = y;
@@ -1031,7 +1069,18 @@
 	if(appear > 0){
 		appear -= (current_time_scale / 24);
 		with(target){
-			speed = 0;
+			 // Stay Still:
+			if(instance_is(self, enemy)){
+				speed = 0;
+				if("walk" in self){
+					walk = min(1, walk);
+				}
+				if(sprite_index == spr_walk){
+					sprite_index = spr_idle;
+				}
+			}
+			
+			 // Done:
 			if(other.appear <= 0){
 				visible = true;
 			}
@@ -1062,8 +1111,10 @@
 		 // Death Timer:
 		if(time >= 0/* && !instance_exists(creator)*/){
 			time = max(0, time - current_time_scale);
-			if(time <= 0 && instance_is(target, hitme)){
-				target.my_health = 0;
+			if(time <= 0){
+				if(instance_is(target, hitme)){
+					target.my_health = 0;
+				}
 			}
 		}
 	}
@@ -1101,7 +1152,7 @@
 				
 				 // Draw Clone Overlays:
 				var _lastTimeScale = current_time_scale;
-				current_time_scale = 0.0000000000000001;
+				current_time_scale = 1/1000000000000000;
 				try{
 					with(_inst){
 						if(time > 60 || (time % 6) < 3){
@@ -1112,11 +1163,19 @@
 								if(visible){
 									 // Self:
 									with(self){
-										event_perform(ev_draw, 0);
+										if(global.draw_event_exists[object_index]){
+											event_perform(ev_draw, 0);
+										}
+										else draw_self();
 									}
 									
 									 // Appearing Visual:
 									if(other.appear > 0){
+										var _appear = min(1, other.appear);
+										if(other.appear_flip){
+											_appear = 1 - _appear;
+										}
+										
 										 // Set Hitbox to Sprite:
 										var	_lastMask   = mask_index,
 											_lastXScale = image_xscale;
@@ -1132,15 +1191,16 @@
 											_x2 = bbox_right  + 1,
 											_y2 = bbox_bottom + 1,
 											_h  = (_y2 - _y1) / 16,
-											_y  = lerp(_y1 - (_h * 2), _y2, min(1, other.appear));
+											_y  = lerp(_y1 - (_h * 2), _y2, _appear),
+											_ay = (other.appear_flip ? _y2 : _y1);
 											
 										draw_set_blend_mode_ext(bm_zero, bm_inv_src_alpha);
 										draw_primitive_begin(pr_trianglestrip);
 										
-										draw_vertex(_x1, _y1);
+										draw_vertex(_x1, _ay);
 										for(var _x = _x1; _x <= _x2; _x++){
-											draw_vertex(_x, max(_y1, _y + (_h * sin((_x - _x1 + current_frame) / (2 * _h))) + (_h * cos((_x - _x1 - current_frame) / (4 * _h)))));
-											draw_vertex(_x, _y1);
+											draw_vertex(_x, clamp(_y + (_h * sin((_x - _x1 + current_frame) / (2 * _h))) + (_h * cos((_x - _x1 - current_frame) / (4 * _h))), _y1, _y2));
+											draw_vertex(_x, _ay);
 										}
 										
 										draw_primitive_end();
@@ -1199,26 +1259,32 @@
 	}
 	
 #define CrystalClone_effect(_x1, _y1, _x2, _y2)
-	var	_inst   = [],
-		_dir    = point_direction(_x1, _y1, _x2, _y2),
-		_disMax = point_distance(_x1, _y1, _x2, _y2);
-		
-	for(var _dis = 0; _dis < _disMax; _dis += random_range(12, 24)){
-		with(CrystalBrain_effect(
-			_x1 + lengthdir_x(_dis, _dir) + orandom(8),
-			_y1 + lengthdir_y(_dis, _dir) + orandom(8)
-		)){
-			speed       = random_range(1, 1.5) * (1 - (_dis / _disMax));
-			direction   = point_direction(x, y, _x2, _y2);
-			image_speed = lerp(0.8, 0.4, _dis / _disMax) + orandom(0.1);
-			image_angle = pround(_dir + orandom(45), 90);
-			depth       = -9;
+	if(sprite_exists(spr_effect)){
+		var	_inst   = [],
+			_dir    = point_direction(_x1, _y1, _x2, _y2),
+			_disMax = point_distance(_x1, _y1, _x2, _y2);
 			
-			array_push(_inst, self);
+		for(var _dis = 0; _dis < _disMax; _dis += random_range(12, 24)){
+			with(obj_create(
+				_x1 + lengthdir_x(_dis, _dir) + orandom(8),
+				_y1 + lengthdir_y(_dis, _dir) + orandom(8),
+				"CrystalBrainEffect"
+			)){
+				sprite_index = other.spr_effect;
+				image_speed  = lerp(0.8, 0.4, _dis / _disMax) + orandom(0.1);
+				image_angle  = pround(_dir + orandom(45), 90);
+				depth        = -9;
+				direction    = point_direction(x, y, _x2, _y2);
+				speed        = random_range(1, 1.5) * (1 - (_dis / _disMax));
+				
+				array_push(_inst, self);
+			}
 		}
+		
+		return _inst;
 	}
 	
-	return _inst;
+	return noone;
 	
 	
 #define CrystalHeart_create(_x, _y)
@@ -1918,7 +1984,11 @@
 			_y   = bbox_center_y + vspeed_raw,
 			_col = ((image_yscale > 0) ? c_lime : c_white);
 			
-		with(instance_is(other, Wall) ? instance_nearest_bbox(_x, _y, instances_meeting(_x, _y, Wall)) : other){
+		with(
+			instance_is(other, Wall)
+			? instance_nearest_bbox(_x, _y, instances_meeting(_x, _y, Wall))
+			: other
+		){
 			with(instance_create(bbox_center_x, bbox_center_y, MeleeHitWall)){
 				image_angle = point_direction(_x, _y, x, y);
 				image_blend = _col;
@@ -2236,19 +2306,10 @@
 	}
 	
 #define Mortar_draw
-	 // Flash White w/ Hurt While Firing:
-	if(
-		sprite_index == spr_fire &&
-		nexthurt > current_frame &&
-		(nexthurt + current_frame) mod (room_speed/10) = 0
-	){
-		d3d_set_fog(true, image_blend, 0, 0);
-		draw_self_enemy();
-		d3d_set_fog(false, c_black, 0, 0);
-	}
-	
-	 // Normal Self:
-	else draw_self_enemy();
+	var _hurt = (sprite_index == spr_fire && nexthurt >= current_frame + 4);
+	if(_hurt) draw_set_fog(true, image_blend, 0, 0);
+	draw_self_enemy();
+	if(_hurt) draw_set_fog(false, 0, 0, 0);
 	
 #define Mortar_alrm1
 	alarm1 = 80 + random(20);
@@ -2687,8 +2748,51 @@
 		damage     = 8;
 		force      = 12;
 		walled     = false;
+		clone      = false;
 		
 		return self;
+	}
+	
+#define RedSlash_end_step
+	 // Clone Chests:
+	if(clone){
+		var _inst = [];
+		if(place_meeting(x, y, chestprop)){
+			_inst = array_combine(_inst, instances_matching(chestprop, "", null));
+		}
+		if(place_meeting(x, y, Pickup)){
+			_inst = array_combine(_inst, instances_matching(Pickup, "mask_index", mskPickup));
+		}
+		if(array_length(_inst)){
+			with(instances_meeting(x, y, _inst)){
+				if(place_meeting(x, y, other)){
+					if(!instance_exists(CustomObject) || !array_length(instances_matching(instances_matching(CustomObject, "name", "CrystalClone"), "target", self))){
+						var _clone = self;
+						with(other){
+							with(RedSlash_clone(_clone)){
+								time   = -1;
+								appear = 1/2;
+								with(target){
+									motion_add(random_range(180, 360), 1);
+								}
+								with(obj_create(_clone.x, _clone.y, "CrystalClone")){
+									clone       = _clone;
+									target      = clone;
+									creator     = other.creator;
+									team        = other.team;
+									time        = other.time;
+									appear      = 1 - other.appear;
+									appear_flip = true;
+									with(target){
+										motion_add(random(180), 1);
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+		}
 	}
 	
 #define RedSlash_wall
@@ -2696,11 +2800,15 @@
 		walled = true;
 		
 		 // Hit Wall FX:
-		var	_x = bbox_center_x + hspeed_raw,
-			_y = bbox_center_y + vspeed_raw,
+		var	_x   = bbox_center_x + hspeed_raw,
+			_y   = bbox_center_y + vspeed_raw,
 			_col = area_get_back_color("red");
 			
-		with(instance_is(other, Wall) ? instance_nearest_bbox(_x, _y, instances_meeting(_x, _y, Wall)) : other){
+		with(
+			instance_is(other, Wall)
+			? instance_nearest_bbox(_x, _y, instances_meeting(_x, _y, Wall))
+			: other
+		){
 			with(instance_create(bbox_center_x, bbox_center_y, MeleeHitWall)){
 				image_angle = point_direction(_x, _y, x, y);
 				image_blend = _col;
@@ -2711,8 +2819,74 @@
 	
 #define RedSlash_hit
 	if(projectile_canhit_melee(other)){
-		projectile_hit(other, damage, force, direction);
+		var _lastHealth = other.my_health;
+		
+		 // Damage:
+		projectile_hit_push(other, damage, force);
+		
+		 // Clone:
+		if(clone){
+			if(instance_exists(other) && _lastHealth > 0 && other.my_health <= 0){
+				with(RedSlash_clone(other)){
+					with(target){
+						my_health = _lastHealth;
+					}
+					//appear = 0.5;
+				}
+			}
+		}
 	}
+	
+#define RedSlash_clone(_inst)
+	/*
+		Clones the given instance for Entangler's mega slashes
+	*/
+	
+	with(_inst){
+		 // Effects:
+		/*with(instance_create(x, y, PlasmaTrail)){
+			sprite_index = sprThrowHit;
+			image_speed  = 0.4;
+			image_angle  = random(360);
+			image_blend  = area_get_back_color("red");
+			depth        = other.depth - 1;
+			with(instance_create(x, y, PlasmaTrail)){
+				sprite_index = other.sprite_index;
+				image_speed  = 1;
+				image_angle  = other.image_angle;
+				depth        = other.depth - 1;
+			}
+		}
+		repeat(3){
+			scrFX(x, y, 3, Dust);
+		}*/
+		repeat(3){
+			obj_create(x + orandom(8), y + orandom(8), "CrystalBrainEffect");
+		}
+		if(instance_is(self, hitme)){
+			sleep(8 * (1 + size));
+		}
+		else if("spr_shadow" in self){
+			sleep(sprite_get_width(spr_shadow));
+		}
+		
+		 // Clone the Bro:
+		var _slash = other;
+		with(obj_create(x, y, "CrystalClone")){
+			clone   = other;
+			creator = _slash.creator;
+			team    = _slash.team;
+			budge   = false;
+			
+			with(self){
+				event_perform(ev_step, ev_step_normal);
+			}
+			
+			return self;
+		}
+	}
+	
+	return noone;
 	
 	
 #define RedSpider_create(_x, _y)
@@ -2873,9 +3047,9 @@
 		alarm1 = irandom_range(20, 40);
 		
 		 // Hatch Delay:
-		var n = instance_nearest(x, y, Player);
-		if(instance_exists(n)){
-			alarm0 += point_distance(x, y, n.x, n.y);
+		var _n = instance_nearest(x, y, Player);
+		if(instance_exists(_n)){
+			alarm0 += point_distance(x, y, _n.x, _n.y);
 		}
 		
 		return self;
@@ -4397,7 +4571,7 @@
 		if(instance_exists(WepPickup) && WepPickup.id > _newID){
 			with(instances_matching_gt(WepPickup, "id", _newID)){
 				if(roll && wep_raw(wep) != "merge"){
-					if(!position_meeting(xstart, ystart, ChestOpen) || chance(1, 3)){
+					if(chance(1, 3) || !position_meeting(xstart, ystart, ChestOpen)){
 						 // Curse:
 						curse = max(1, curse);
 						
@@ -5242,6 +5416,7 @@
 #define player_swap()                                                                   return  mod_script_call_self('mod', 'telib', 'player_swap');
 #define wep_raw(_wep)                                                                   return  mod_script_call_nc  ('mod', 'telib', 'wep_raw', _wep);
 #define wep_wrap(_wep, _scrName, _scrRef)                                               return  mod_script_call_nc  ('mod', 'telib', 'wep_wrap', _wep, _scrName, _scrRef);
+#define wep_skin(_wep, _race, _skin)                                                    return  mod_script_call_nc  ('mod', 'telib', 'wep_skin', _wep, _race, _skin);
 #define wep_merge(_stock, _front)                                                       return  mod_script_call_nc  ('mod', 'telib', 'wep_merge', _stock, _front);
 #define wep_merge_decide(_hardMin, _hardMax)                                            return  mod_script_call_nc  ('mod', 'telib', 'wep_merge_decide', _hardMin, _hardMax);
 #define weapon_decide(_hardMin, _hardMax, _gold, _noWep)                                return  mod_script_call_self('mod', 'telib', 'weapon_decide', _hardMin, _hardMax, _gold, _noWep);
@@ -5253,7 +5428,6 @@
 #define path_shrink(_path, _wall, _skipMax)                                             return  mod_script_call_nc  ('mod', 'telib', 'path_shrink', _path, _wall, _skipMax);
 #define path_reaches(_path, _xtarget, _ytarget, _wall)                                  return  mod_script_call_nc  ('mod', 'telib', 'path_reaches', _path, _xtarget, _ytarget, _wall);
 #define path_direction(_path, _x, _y, _wall)                                            return  mod_script_call_nc  ('mod', 'telib', 'path_direction', _path, _x, _y, _wall);
-#define path_draw(_path)                                                                return  mod_script_call_self('mod', 'telib', 'path_draw', _path);
 #define portal_poof()                                                                   return  mod_script_call_nc  ('mod', 'telib', 'portal_poof');
 #define portal_pickups()                                                                return  mod_script_call_nc  ('mod', 'telib', 'portal_pickups');
 #define pet_spawn(_x, _y, _name)                                                        return  mod_script_call_nc  ('mod', 'telib', 'pet_spawn', _x, _y, _name);

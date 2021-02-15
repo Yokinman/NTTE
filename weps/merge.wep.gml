@@ -1326,7 +1326,8 @@
 	]);
 	
 	 // Set Flagged Projectile Control Scripts:
-	flagProjCont = [];
+	flagProjCont       = [];
+	flagProjContActive = false;
 	flagprojcont_set("bouncer",		proj_bouncer);
 	flagprojcont_set("disc",		proj_disc);
 	flagprojcont_set("lightning",	proj_lightning);
@@ -1395,8 +1396,9 @@
 		"cont" : script_ref_create(cont_basic)
 	}
 	
-#macro flagProjCont global.flag_cont
-#macro flagProjPref "nttemergeproj_"
+#macro flagProjCont       global.flag_cont
+#macro flagProjContActive global.flag_cont_active
+#macro flagProjPref       "nttemergeproj_"
 
 #define wep_add(_wep)
 	var _default = wepDefault;
@@ -2463,6 +2465,63 @@
 		}
 	}
 	
+	 // Collect Merged Projectiles, 'instance_copy()' Fix:
+	if(instance_exists(projectile) && projectile.id > _newID){
+		var _inst = instances_matching_gt(projectile, "id", _newID);
+		with(flagProjCont){
+			var _instFlag = instances_matching_ne(_inst, flag, null);
+			if(array_length(_instFlag)){
+				with(_instFlag){
+					if(array_find_index(other.inst, self) < 0){
+						flagProjContActive = true;
+						var _vars = lq_clone(variable_instance_get(self, other.flag));
+						variable_instance_set(self, other.flag, _vars);
+						array_push(other.inst, self);
+						array_push(other.vars, _vars);
+					}
+				}
+			}
+		}
+	}
+	
+#define ntte_step
+	 // Merged Projectile Code:
+	if(flagProjContActive){
+		flagProjContActive = false;
+		
+		with(flagProjCont){
+			if(array_length(inst)){
+				flagProjContActive = true;
+				
+				var	_scrType = scrt[0],
+					_scrMod  = scrt[1],
+					_scrName = scrt[2],
+					_varList = vars,
+					_instNum = 0;
+					
+				with(inst){
+					var _end = true;
+					
+					 // Call Events:
+					if(instance_exists(self)){
+						_end = mod_script_call_self(_scrType, _scrMod, _scrName, proj_step, _varList[_instNum]);
+					}
+					else mod_script_call_nc(_scrType, _scrMod, _scrName, proj_destroy, _varList[_instNum]);
+					
+					 // Done:
+					if(_end){
+						other.inst = array_delete(other.inst, _instNum);
+						other.vars = array_delete(other.vars, _instNum);
+						if(instance_exists(self)){
+							variable_instance_set(self, other.flag, null);
+						}
+					}
+					else _instNum++;
+				}
+			}
+		}
+	}
+	
 #define GunCont(_wep, _x, _y, _team, _creator, _gunangle, _accuracy)
 	with(instance_create(_x, _y, CustomObject)){
 		name = "GunCont";
@@ -2492,9 +2551,9 @@
 			if(array_find_index(_wep.flag, "smart") >= 0){
 				if(array_length(instances_matching(instances_matching(CustomBeginStep, "name", "step_smartaim"), "creator", _creator)) <= 0){
 					with(script_bind_begin_step(step_smartaim, 0)){
-						name = script[2];
+						name    = script[2];
 						creator = _creator;
-						time = 0;
+						time    = 0;
 					}
 				}
 				with(instances_matching(instances_matching(CustomBeginStep, "name", "step_smartaim"), "creator", _creator)){
@@ -3008,70 +3067,30 @@
 		index = creator.index;
 	}
 	
-	 // Bind Flagged Projectile Controller Script:
+	 // Projectile Flags:
 	with(flagProjCont){
-		var s = scrt;
-		with(_inst) if(other.flag in self){
-			var o = {};
-			variable_instance_set(id, other.flag, o);
+		var _scrt = scrt;
+		if(flag in other){
+			var	_vars = {},
+				_end  = true;
+				
+			variable_instance_set(other, flag, _vars);
 			
-			var _cancel = mod_script_call_self(s[0], s[1], s[2], proj_create, o);
-			if(instance_exists(self) && is_real(_cancel) && _cancel){
-				variable_instance_set(id, other.flag, null);
+			 // Call Create Event:
+			with(other){
+				_end = mod_script_call_self(_scrt[0], _scrt[1], _scrt[2], proj_create, _vars);
+			}
+			if(instance_exists(other) && is_real(_end) && _end){
+				variable_instance_set(other, flag, null);
+			}
+			
+			 // Add to Instance List:
+			else{
+				flagProjContActive = true;
+				array_push(inst, other);
+				array_push(vars, variable_instance_get(other, flag));
 			}
 		}
-	}
-	if(array_length(instances_matching(CustomScript, "name", "flagprojcont_step")) <= 0){
-		with(script_bind_step(flagprojcont_step, 0)){
-			name = script[2];
-			list = flagProjCont;
-			event_perform(ev_step, ev_step_normal);
-		}
-	}
-	
-#define flagprojcont_step
-	with(list){
-		var	_scrtTyp = scrt[0],
-			_scrtMod = scrt[1],
-			_scrtNam = scrt[2],
-			_flag    = flag,
-			_inst    = inst,
-			_vars    = vars;
-			
-		 // Add New:
-		var _instNew = instances_matching_ne(projectile, _flag, null);
-		if(array_length(_instNew)) with(_instNew){
-			if(array_find_index(_inst, id) < 0){
-				var o = lq_clone(variable_instance_get(id, _flag));
-				variable_instance_set(id, _flag, o);
-				array_push(_inst, id);
-				array_push(_vars, o);
-			}
-			else break;
-		}
-		
-		 // Main:
-		var	i = 0;
-		if(array_length(_inst)) with(_inst){
-			var _end = true;
-			
-			 // Call Projectile Events:
-			if(instance_exists(self)){
-				_end = mod_script_call_self(_scrtTyp, _scrtMod, _scrtNam, proj_step, _vars[i]);
-			}
-			else mod_script_call_nc(_scrtTyp, _scrtMod, _scrtNam, proj_destroy, _vars[i]);
-			
-			 // End:
-			if(_end){
-				_inst = array_delete(_inst, i);
-				_vars = array_delete(_vars, i);
-				if(instance_exists(self)) variable_instance_set(id, _flag, null);
-			}
-			else i++;
-		}
-		
-		inst = _inst;
-		vars = _vars;
 	}
 	
 #macro proj_create	0
@@ -4688,6 +4707,7 @@
 #define player_swap()                                                                   return  mod_script_call_self('mod', 'telib', 'player_swap');
 #define wep_raw(_wep)                                                                   return  mod_script_call_nc  ('mod', 'telib', 'wep_raw', _wep);
 #define wep_wrap(_wep, _scrName, _scrRef)                                               return  mod_script_call_nc  ('mod', 'telib', 'wep_wrap', _wep, _scrName, _scrRef);
+#define wep_skin(_wep, _race, _skin)                                                    return  mod_script_call_nc  ('mod', 'telib', 'wep_skin', _wep, _race, _skin);
 #define wep_merge(_stock, _front)                                                       return  mod_script_call_nc  ('mod', 'telib', 'wep_merge', _stock, _front);
 #define wep_merge_decide(_hardMin, _hardMax)                                            return  mod_script_call_nc  ('mod', 'telib', 'wep_merge_decide', _hardMin, _hardMax);
 #define weapon_decide(_hardMin, _hardMax, _gold, _noWep)                                return  mod_script_call_self('mod', 'telib', 'weapon_decide', _hardMin, _hardMax, _gold, _noWep);
@@ -4699,7 +4719,6 @@
 #define path_shrink(_path, _wall, _skipMax)                                             return  mod_script_call_nc  ('mod', 'telib', 'path_shrink', _path, _wall, _skipMax);
 #define path_reaches(_path, _xtarget, _ytarget, _wall)                                  return  mod_script_call_nc  ('mod', 'telib', 'path_reaches', _path, _xtarget, _ytarget, _wall);
 #define path_direction(_path, _x, _y, _wall)                                            return  mod_script_call_nc  ('mod', 'telib', 'path_direction', _path, _x, _y, _wall);
-#define path_draw(_path)                                                                return  mod_script_call_self('mod', 'telib', 'path_draw', _path);
 #define portal_poof()                                                                   return  mod_script_call_nc  ('mod', 'telib', 'portal_poof');
 #define portal_pickups()                                                                return  mod_script_call_nc  ('mod', 'telib', 'portal_pickups');
 #define pet_spawn(_x, _y, _name)                                                        return  mod_script_call_nc  ('mod', 'telib', 'pet_spawn', _x, _y, _name);

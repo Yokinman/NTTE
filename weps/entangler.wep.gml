@@ -92,53 +92,73 @@
 	 // Charging:
 	if(_wep.chrg){
 		 // Pullback:
-		var _kick = -3 * _num;
+		var _kick = -4 * _num;
 		if(wkick != _kick){
 			weapon_post(_kick, 8 * _num * current_time_scale, 0);
 		}
 		
 		 // Effects:
+		if((current_frame % 2) < current_time_scale && chance_ct(1, 3)){
+			var	_l = random_range(12, 32) - wkick,
+				_d = gunangle + (wepangle * (1 - (wkick / 20)));
+				
+			obj_create(x + lengthdir_x(_l, _d), y + lengthdir_y(_l, _d), "CrystalBrainEffect");
+		}
 		if(_wep.chrg == 1){
-			sound_play_pitch(sndMeleeFlip, 1 / (1 - (0.25 * _num)));
-			sound_play_pitchvol(sndSwapBow, 0.3 + (2 * _num), 0.3);
+			 // Sound:
+			sound_set_track_position(
+				sound_play_pitchvol(sndHyperCrystalChargeExplo, 0.4 + (0.2 * _num), 0.5),
+				1.55
+			);
+			sound_play_pitchvol(sndCrystalTB, 1 / (1 - (0.25 * _num)), 1);
 			
 			 // Full:
 			if(_num >= 1){
-				var	_l = 16,
-					_d = gunangle;
+				 // Looks goood:
+				wepflip = sign(wepangle);
+				
+				 // Sound:
+				sound_play_pitch(sndCrystalRicochet,   3);
+				sound_play_pitch(sndCrystalJuggernaut, 2);
+				
+				 // Flash:
+				var	_l = 24,
+					_d = gunangle + wepangle;
 					
-				instance_create(x + lengthdir_x(_l, _d), y + lengthdir_y(_l, _d), ThrowHit);
-				instance_create(x + lengthdir_x(_l, _d), y + lengthdir_y(_l, _d), ImpactWrists);
-				sound_play_pitch(sndCrystalRicochet, 3);
-				sound_play_pitch(sndSewerDrip,       3);
+				with(instance_create(x + lengthdir_x(_l, _d), y + lengthdir_y(_l, _d), PlasmaTrail)){
+					sprite_index = sprThrowHit;
+					image_speed  = 0.4;
+					image_angle  = random(360);
+					image_blend  = area_get_back_color("red");
+					depth        = other.depth - 1;
+					with(instance_create(x, y, PlasmaTrail)){
+						sprite_index = other.sprite_index;
+						image_speed  = 1;
+						image_angle  = other.image_angle;
+						depth        = other.depth - 1;
+					}
+				}
 				sleep(5);
-			}
-		}
-		
-		 // Fully Charged - Blink:
-		else if((current_frame % 12) < current_time_scale){
-			with(_fire.creator) if(instance_is(self, Player)){
-				gunshine = 2;
 			}
 		}
 	}
 	
-	 // :
+	 // Attack:
 	else{
-		var	_mega = false,
-			_cost = weapon_get("red", _wep);
+		var _skill = skill_get(mut_long_arms),
+			_flip  = sign(wepangle),
+			_dis   = 20 * _skill,
+			_dir   = gunangle,
+			_cost  = weapon_get("red", _wep),
+			_mega  = false;
 			
+		 // Mega:
 		if(_num >= 1 && "red_ammo" in _fire.creator && _fire.creator.red_ammo >= _cost){
 			_fire.creator.red_ammo -= _cost;
 			_mega = true;
 		}
 		
 		 // Slash:
-		var _skill = skill_get(mut_long_arms),
-			_flip  = sign(wepangle),
-			_dis   = 20 * _skill,
-			_dir   = gunangle;
-			
 		with(projectile_create(
 			x + lengthdir_x(_dis, _dir),
 			y + lengthdir_y(_dis, _dir),
@@ -148,28 +168,41 @@
 		)){
 			if(_mega){
 				sprite_index = spr.RedMegaSlash;
-				mask_index = mskMegaSlash;
+				mask_index   = mskMegaSlash;
+				damage       = 120;
+				//force        = 32;
+				clone        = true;
 			}
 			else{
-				//sprite_index = spr.EntanglerSlash;
 				sprite_index = spr.RedHeavySlash;
+				damage       = 20;
 			}
-			//image_yscale *= _flip;
-			//red_ammo      = weapon_get("red", _wep);
-			//can_charm     = (red_ammo > 0);
 		}
 		
 		 // Sounds:
 		sound_play_gun(sndChickenSword, 0.2, 0.3);
 		sound_play_gun(sndHammer,       0.2, 0.3);
 		if(_mega){
-			sound_play_gun(sndBlackSwordMega, 0.2, 0.3);
+			sound_play_gun(sndEnergyHammerUpg, 0.3,  0.3);
+			sound_play_gun(sndBlackSwordMega,  0.2, -0.5);
 		}
 		
 		 // Effects:
-		weapon_post(-4, 15, 8);
+		if(_mega){
+			repeat(3){
+				with(instance_create(x, y, Smoke)){
+					motion_add(random(360), 1);
+				}
+			}
+		}
+		else instance_create(x, y, Smoke);
+		weapon_post(
+			(_mega ? -5 : -4),
+			(_mega ? 32 : 16),
+			6
+		);
 		motion_add(_dir, 6);
-		instance_create(x, y, Smoke);
+		sleep(8);
 	}
 	
 /*#define step(_primary)

@@ -69,7 +69,7 @@
 			"weps/super teleport gun.wep.gml",
 			"weps/energy bat.wep.gml",
 			"weps/annihilator.wep.gml",
-		//	"weps/entangler.wep.gml",
+			"weps/entangler.wep.gml",
 			"weps/tunneller.wep.gml",
 			"weps/bat disc launcher.wep.gml",
 			"weps/bat disc cannon.wep.gml",

@@ -1200,10 +1200,10 @@
 		case "FishFreak":
 			with(instance_create(x, y, Freak)){
 				fish_freak = true;
-				spr_idle = spr.FishFreakIdle;
-				spr_walk = spr.FishFreakWalk;
-				spr_hurt = spr.FishFreakHurt;
-				spr_dead = spr.FishFreakDead;
+				spr_idle   = spr.FishFreakIdle;
+				spr_walk   = spr.FishFreakWalk;
+				spr_hurt   = spr.FishFreakHurt;
+				spr_dead   = spr.FishFreakDead;
 			}
 			break;
 			
@@ -1858,14 +1858,13 @@
 	 // Fish Freaks:
 	if(instance_exists(Freak) && Freak.id > _newID){
 		var _underwater = area_get_underwater(GameCont.area);
-		if(_underwater || (GameCont.area == area_labs && GameCont.loops > 0)){
-			with(instances_matching_gt(Freak, "id", _newID)){
-				if(_underwater || chance(1, 7)){
-					spr_idle = spr.FishFreakIdle;
-					spr_walk = spr.FishFreakWalk;
-					spr_hurt = spr.FishFreakHurt;
-					spr_dead = spr.FishFreakDead;
-				}
+		with(instances_matching(instances_matching_gt(Freak, "id", _newID), "fish_freak", null)){
+			fish_freak = (_underwater || (GameCont.area == area_labs && GameCont.loops > 0 && chance(1, 7)));
+			if(fish_freak){
+				spr_idle = spr.FishFreakIdle;
+				spr_walk = spr.FishFreakWalk;
+				spr_hurt = spr.FishFreakHurt;
+				spr_dead = spr.FishFreakDead;
 			}
 		}
 	}
@@ -2098,6 +2097,7 @@
 #define player_swap()                                                                   return  mod_script_call_self('mod', 'telib', 'player_swap');
 #define wep_raw(_wep)                                                                   return  mod_script_call_nc  ('mod', 'telib', 'wep_raw', _wep);
 #define wep_wrap(_wep, _scrName, _scrRef)                                               return  mod_script_call_nc  ('mod', 'telib', 'wep_wrap', _wep, _scrName, _scrRef);
+#define wep_skin(_wep, _race, _skin)                                                    return  mod_script_call_nc  ('mod', 'telib', 'wep_skin', _wep, _race, _skin);
 #define wep_merge(_stock, _front)                                                       return  mod_script_call_nc  ('mod', 'telib', 'wep_merge', _stock, _front);
 #define wep_merge_decide(_hardMin, _hardMax)                                            return  mod_script_call_nc  ('mod', 'telib', 'wep_merge_decide', _hardMin, _hardMax);
 #define weapon_decide(_hardMin, _hardMax, _gold, _noWep)                                return  mod_script_call_self('mod', 'telib', 'weapon_decide', _hardMin, _hardMax, _gold, _noWep);
@@ -2109,7 +2109,6 @@
 #define path_shrink(_path, _wall, _skipMax)                                             return  mod_script_call_nc  ('mod', 'telib', 'path_shrink', _path, _wall, _skipMax);
 #define path_reaches(_path, _xtarget, _ytarget, _wall)                                  return  mod_script_call_nc  ('mod', 'telib', 'path_reaches', _path, _xtarget, _ytarget, _wall);
 #define path_direction(_path, _x, _y, _wall)                                            return  mod_script_call_nc  ('mod', 'telib', 'path_direction', _path, _x, _y, _wall);
-#define path_draw(_path)                                                                return  mod_script_call_self('mod', 'telib', 'path_draw', _path);
 #define portal_poof()                                                                   return  mod_script_call_nc  ('mod', 'telib', 'portal_poof');
 #define portal_pickups()                                                                return  mod_script_call_nc  ('mod', 'telib', 'portal_pickups');
 #define pet_spawn(_x, _y, _name)                                                        return  mod_script_call_nc  ('mod', 'telib', 'pet_spawn', _x, _y, _name);

@@ -105,7 +105,6 @@
 		);
 		
 		 // Effects:
-		//wepangle *= -1;
 		instance_create(x, y, Smoke);
 		weapon_post(-4, 12, 1);
 		motion_add(_dir, 6);

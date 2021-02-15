@@ -57,25 +57,24 @@
 			
 			 // Effects:
 			if(_wep.chrg == 1){
+				 // Sound:
 				sound_play_pitch(sndOasisMelee, 1 / (1 - (_num * 0.25)));
 				
 				 // Full:
 				if(_num >= 1){
-					var	_l = 16,
-						_d = gunangle;
-						
-					instance_create(x + lengthdir_x(_l, _d), y + lengthdir_y(_l, _d), ThrowHit);
-					instance_create(x + lengthdir_x(_l, _d), y + lengthdir_y(_l, _d), ImpactWrists);
+					 // Sound:
 					sound_play_pitch(sndCrystalRicochet, 3);
 					sound_play_pitch(sndSewerDrip,       3);
+					
+					 // Flash:
+					var	_l = 16,
+						_d = gunangle + wepangle;
+						
+					with(instance_create(x + lengthdir_x(_l, _d), y + lengthdir_y(_l, _d), ThrowHit)){
+						depth = other.depth - 1;
+						instance_create(x, y, ImpactWrists);
+					}
 					sleep(5);
-				}
-			}
-			
-			 // Fully Charged - Blink:
-			else if((current_frame % 12) < current_time_scale){
-				with(_fire.creator) if(instance_is(self, Player)){
-					gunshine = 2;
 				}
 			}
 		}

@@ -1432,7 +1432,8 @@
 			"rogue"        : 0,
 			"parrot"       : 0,
 			"bone"         : 0,
-			"bones"        : 0
+			"bones"        : 0,
+			"red"          : 0
 		};
 		
 	with(Player){
@@ -1444,12 +1445,17 @@
 		
 		 // Bones:
 		if(_hard >= 4){
-			if((wep_raw(wep) == "crabbone" || wep_raw(bwep) == "crabbone")){
+			if(wep_raw(wep) == "crabbone" || wep_raw(bwep) == "crabbone"){
 				_pool.bone = 0.5;
 			}
 		}
 		if(wep_raw(wep) == "scythe" || wep_raw(bwep) == "scythe"){
 			_pool.bones++;
+		}
+		
+		 // Red Ammo:
+		if(weapon_get("red", wep) > 0 || weapon_get("red", bwep) > 0){
+			_pool.red++;
 		}
 	}
 	
@@ -1538,10 +1544,10 @@
 				case "health"             :
 				case "rads"               :
 				case "hammerhead"         :
-				case "spirit"             : drop = "ammo";             break;
+				case "spirit"             :
+				case "red"                : drop = "ammo";             break;
 				case "health_chest"       :
-				case "rads_chest"         :
-				case "turret"             : drop = "ammo_chest";       break;
+				case "rads_chest"         : drop = "ammo_chest";       break;
 				case "bonus_health"       : drop = "bonus_ammo";       break;
 				case "bonus_health_chest" : drop = "bonus_ammo_chest"; break;
 			}
@@ -1574,7 +1580,7 @@
 		case ChestShop_basic:
 			switch(drop){
 				case "ammo":
-					num = 2;
+					num *= 2;
 					text = "AMMO";
 					desc = `${num} PICKUPS`;
 					
@@ -1584,7 +1590,7 @@
 					break;
 					
 				case "health":
-					num = 2;
+					num *= 2;
 					text = "HEALTH";
 					desc = `${num} PICKUPS`;
 					
@@ -1594,7 +1600,7 @@
 					break;
 					
 				case "rads":
-					num  = 25;
+					num *= 25;
 					text = "RADS";
 					desc = `${num} ${text}`;
 					
@@ -1676,7 +1682,7 @@
 					break;
 					
 				case "parrot":
-					num = 6;
+					num *= 6;
 					text = "FEATHERS";
 					desc = `${num} ${text}`;
 					
@@ -1696,7 +1702,7 @@
 					break;
 					
 				case "infammo":
-					num = 90;
+					num *= 90;
 					text = "INFINITE AMMO";
 					desc = "FOR A MOMENT";
 					
@@ -1733,7 +1739,7 @@
 					break;
 					
 				case "bones":
-					num  = 30;
+					num *= 30;
 					text = "BONES";
 					desc = `${num} ${text}`;
 					
@@ -1742,16 +1748,25 @@
 					image_blend  = make_color_rgb(220, 220, 60);
 					break;
 					
+				case "red":
+					text = `@3(${spr.RedText}:-0.8) AMMO`;
+					desc = `${num} PICKUP`;
+					
+					 // Visual:
+					sprite_index = spr.RedAmmoPickup;
+					image_blend  = make_color_rgb(255, 120, 120);
+					break;
+					
 				case "soda":
 					 // Decide Brand:
-					var a = ["lightning blue lifting drink(tm)", "extra double triple coffee", "expresso", "saltshake", "munitions mist", "vinegar", "guardian juice"];
+					var _list = ["lightning blue lifting drink(tm)", "extra double triple coffee", "expresso", "saltshake", "munitions mist", "vinegar", "guardian juice"];
 					if(skill_get(mut_boiling_veins) > 0){
-						array_push(a, "sunset mayo");
+						array_push(_list, "sunset mayo");
 					}
 					if(array_length(instances_matching(Player, "notoxic", false))){
-						array_push(a, "frog milk");
+						array_push(_list, "frog milk");
 					}
-					soda = a[irandom(array_length(a) - 1)];
+					soda = _list[irandom(array_length(_list) - 1)];
 					
 					 // Vars:
 					text = "SODA";
@@ -1791,16 +1806,17 @@
 				&& "stock" in lq_get(drop, "base")
 				&& "front" in lq_get(drop, "base")
 			){
-				var	a = _hue[clamp(weapon_get_type(drop.base.stock), 0, array_length(_hue) - 1)],
-					b = _hue[clamp(weapon_get_type(drop.base.front), 0, array_length(_hue) - 1)],
-					_max = 256,
-					_diff = abs(a - b) % _max;
+				var	_hueA = _hue[clamp(weapon_get_type(drop.base.stock), 0, array_length(_hue) - 1)],
+					_hueB = _hue[clamp(weapon_get_type(drop.base.front), 0, array_length(_hue) - 1)],
+					_diff = abs(_hueA - _hueB) % 256;
 					
-				if(_diff > _max / 2) _diff -= _max;
+				if(_diff > 128){
+					_diff -= 256;
+				}
 					
 				image_blend = merge_color(
 					make_color_hsv(
-						(min(a, b) + (_diff / 2) + _max) % _max,
+						(min(_hueA, _hueB) + (_diff / 2) + 256) % 256,
 						255,
 						255
 					),
@@ -2040,6 +2056,11 @@
 								with(obj_create(_x, _y, ((_num > 10) ? "BoneBigPickup" : "BonePickup"))){
 									motion_set(random(360), 3 + random(1));
 								}
+								break;
+								
+							case "red":
+								obj_create(_x, _y, "RedAmmoPickup");
+								obj_create(_x, _y, "CrystalBrainEffect");
 								break;
 								
 							case "soda":
@@ -5143,27 +5164,15 @@
 			(instance_exists(AmmoChest) && AmmoChest.id > _genID) ||
 			(instance_exists(Mimic)     && Mimic.id     > _genID)
 		){
-			with(instances_matching_gt([AmmoChest, Mimic], "id", _genID)){
+			with(instances_matching(instances_matching_gt([AmmoChest, Mimic], "id", _genID), "ntte_curse_check", null)){
+				ntte_curse_check = true;
+				
 				if(!instance_is(self, IDPDChest)){
-					var	_spawn = false,
-						_mimic = instance_is(self, Mimic);
+					var	_mimic        = instance_is(self, Mimic),
+						_cursedArea   = (crown_current == crwn_curses || GameCont.area == area_cursed_caves),
+						_cursedPlayer = array_length(instances_matching_gt(instances_matching_gt(Player, "curse", 0), "bcurse", 0));
 						
-					 // Crown of Curses:
-					if(chance(1, (_mimic ? 3 : 5))){
-						if(crown_current == crwn_curses || GameCont.area == area_cursed_caves){
-							_spawn = true;
-						}
-					}
-					
-					 // Cursed Player:
-					if(chance(1, 2)){
-						if(array_length(instances_matching_gt(instances_matching_gt(Player, "curse", 0), "bcurse", 0))){
-							_spawn = true;
-						}
-					}
-					
-					 // Become Cursed:
-					if(_spawn){
+					if(chance(_cursedArea, (_mimic ? 3 : 5)) | chance(_cursedPlayer, _cursedPlayer + 1)){
 						chest_create(x, y, (_mimic ? "CursedMimic" : "CursedAmmoChest"), false);
 						instance_delete(self);
 					}
@@ -5178,6 +5187,7 @@
 				if(array_length(_inst)){
 					with(_inst){
 						bonus_pickup_check = true;
+						
 						if(!position_meeting(xstart, ystart, ChestOpen)){
 							var _num = 0;
 							with(instances_matching_gt(Player, "bonus_ammo", 0)){
@@ -6185,6 +6195,7 @@
 #define player_swap()                                                                   return  mod_script_call_self('mod', 'telib', 'player_swap');
 #define wep_raw(_wep)                                                                   return  mod_script_call_nc  ('mod', 'telib', 'wep_raw', _wep);
 #define wep_wrap(_wep, _scrName, _scrRef)                                               return  mod_script_call_nc  ('mod', 'telib', 'wep_wrap', _wep, _scrName, _scrRef);
+#define wep_skin(_wep, _race, _skin)                                                    return  mod_script_call_nc  ('mod', 'telib', 'wep_skin', _wep, _race, _skin);
 #define wep_merge(_stock, _front)                                                       return  mod_script_call_nc  ('mod', 'telib', 'wep_merge', _stock, _front);
 #define wep_merge_decide(_hardMin, _hardMax)                                            return  mod_script_call_nc  ('mod', 'telib', 'wep_merge_decide', _hardMin, _hardMax);
 #define weapon_decide(_hardMin, _hardMax, _gold, _noWep)                                return  mod_script_call_self('mod', 'telib', 'weapon_decide', _hardMin, _hardMax, _gold, _noWep);
@@ -6196,7 +6207,6 @@
 #define path_shrink(_path, _wall, _skipMax)                                             return  mod_script_call_nc  ('mod', 'telib', 'path_shrink', _path, _wall, _skipMax);
 #define path_reaches(_path, _xtarget, _ytarget, _wall)                                  return  mod_script_call_nc  ('mod', 'telib', 'path_reaches', _path, _xtarget, _ytarget, _wall);
 #define path_direction(_path, _x, _y, _wall)                                            return  mod_script_call_nc  ('mod', 'telib', 'path_direction', _path, _x, _y, _wall);
-#define path_draw(_path)                                                                return  mod_script_call_self('mod', 'telib', 'path_draw', _path);
 #define portal_poof()                                                                   return  mod_script_call_nc  ('mod', 'telib', 'portal_poof');
 #define portal_pickups()                                                                return  mod_script_call_nc  ('mod', 'telib', 'portal_pickups');
 #define pet_spawn(_x, _y, _name)                                                        return  mod_script_call_nc  ('mod', 'telib', 'pet_spawn', _x, _y, _name);
