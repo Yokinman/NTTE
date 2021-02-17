@@ -2595,7 +2595,7 @@
 								 // Offset Direction:
 								var _off = random_range(4, 16) * _accuracy;
 								with([id, _clone]){
-									direction += _off;
+									direction   += _off;
 									image_angle += _off;
 									_off *= -1;
 								}

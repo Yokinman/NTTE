@@ -3872,10 +3872,10 @@
 												}
 												
 												 // Star Flash:
-												var	_wave = current_frame + (i * 1000),
+												var	_wave   = current_frame + (i * 1000),
 													_frames = 60,
-													_scale = max(0, (1.1 + (0.1 * sin(_wave / 15))) * ((_time - (_timeMax - _frames)) / _frames)),
-													_angle = _wave / 10;
+													_scale  = max(0, (1.1 + (0.1 * sin(_wave / 15))) * ((_time - (_timeMax - _frames)) / _frames)),
+													_angle  = _wave / 10;
 													
 												if(_scale > 0){
 													if(_flash) draw_set_fog(true, c_white, 0, 0);
@@ -3993,12 +3993,28 @@
 										 // Main:
 										draw_sprite((_gold ? spr.RedAmmoHUDGold : spr.RedAmmoHUD), (red_amax > _max), _x, _y);
 										
-										 // Ammo Charges:
+										 // Ammo Meter:
 										if(red_ammo > 0){
-											draw_sprite_ext(spr.RedAmmoHUDFill, (red_amax > _max), _x + 2, _y, red_ammo, 1, 0, c_white, 1);
-											for(var j = 0; j < red_ammo; j++){
-												draw_sprite(spr.RedAmmoHUDAmmo, j / _max, _x + 4 + (4 * (j % _max)), _y + 4);
+											draw_sprite_ext(spr.RedAmmoHUDFill, 0, _x + 2, _y, red_ammo, 1, 0, c_white, 1);
+										}
+										
+										 // Charge Meter:
+										if(
+											is_object(_wep)
+											&& "chrg"     in _wep
+											&& "chrg_num" in _wep
+											&& "chrg_max" in _wep
+											&& _wep.chrg
+										){
+											var _scale = (_wep.chrg_num / _wep.chrg_max) * max(red_ammo, red_amax);
+											if(_scale >= 1){
+												draw_sprite_ext(spr.RedAmmoHUDFill, ((_wep.chrg_num < _wep.chrg_max) ? 1 : (current_frame / 12)), _x + 2, _y, _scale, 1, 0, c_white, 1);
 											}
+										}
+										
+										 // Ammo Charges:
+										for(var j = 0; j < red_ammo; j++){
+											draw_sprite(spr.RedAmmoHUDAmmo, j / _max, _x + 4 + (4 * (j % _max)), _y + 4);
 										}
 										
 										 // Cost Indicator:

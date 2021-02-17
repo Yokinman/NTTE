@@ -45,23 +45,23 @@
 	_wep = _fire.wep;
 	
 	if(_wep.visible){
-		var _num = (_wep.chrg_num / _wep.chrg_max);
+		var _charge = (_wep.chrg_num / _wep.chrg_max);
 		
 		 // Charging:
 		if(_wep.chrg){
 			 // Pullback:
-			var _kick = 9 * _num;
+			var _kick = 9 * _charge;
 			if(wkick != _kick){
-				weapon_post(_kick, 8 * _num * current_time_scale, 0);
+				weapon_post(_kick, 8 * _charge * current_time_scale, 0);
 			}
 			
 			 // Effects:
 			if(_wep.chrg == 1){
 				 // Sound:
-				sound_play_pitch(sndOasisMelee, 1 / (1 - (_num * 0.25)));
+				sound_play_pitch(sndOasisMelee, 1 / (1 - (_charge * 0.25)));
 				
 				 // Full:
-				if(_num >= 1){
+				if(_charge >= 1){
 					 // Sound:
 					sound_play_pitch(sndCrystalRicochet, 3);
 					sound_play_pitch(sndSewerDrip,       3);
@@ -79,10 +79,10 @@
 			}
 		}
 		
-		 // Attack:
-		else if(_num > 0){
+		 // Fire:
+		else if(_charge > 0){
 			 // Stab Trident:
-			if(_num < 1){
+			if(_charge < 1){
 				var	_dis = weapon_get_load(_wep) + (8 * skill_get(mut_long_arms)),
 					_dir = gunangle;
 					

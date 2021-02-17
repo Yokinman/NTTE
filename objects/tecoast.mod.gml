@@ -378,12 +378,12 @@
 						
 						 // Deflect:
 						if(_typ == 1){
-							speed += friction * 3;
-							direction = _deflectDir - clamp(angle_difference(direction + 180, _deflectDir), -40, 40);
+							speed      += friction * 3;
+							direction   = _deflectDir - clamp(angle_difference(direction + 180, _deflectDir), -40, 40);
 							image_angle = direction;
 							if(instance_is(other.creator, Player)){
 								deflected = true;
-								team = other.team;
+								team      = other.team;
 							}
 						}
 						
@@ -2479,7 +2479,7 @@
 			if(typ == 1 || typ == 2){
 				 // Deflect (No Team Change):
 				if(typ == 1 && other.candeflect){
-					direction = other.direction;
+					direction   = other.direction;
 					image_angle = direction;
 					
 					 // Effects:
@@ -3866,7 +3866,7 @@
 			if(typ == 1 || typ == 2){
 				 // Deflect (No Team Change):
 				if(typ == 1 && other.candeflect){
-					direction = other.direction;
+					direction   = other.direction;
 					image_angle = direction;
 					
 					 // Effects:
@@ -3876,9 +3876,7 @@
 				}
 				
 				 // Destroy:
-				else if(typ == 2){
-					instance_destroy();
-				}
+				else instance_destroy();
 			}
 		}
 	}

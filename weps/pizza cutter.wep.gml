@@ -27,7 +27,7 @@
 	
 #define weapon_name        return (weapon_avail() ? "PIZZA CUTTER" : "LOCKED");
 #define weapon_text        return "FOR THE CIVILIZED TURTLE";
-#define weapon_swap        return sndSwapHammer;
+#define weapon_swap        return sndSwapMotorized;
 #define weapon_area        return (weapon_avail() ? 7 : -1); // 3-2
 #define weapon_type        return type_melee;
 #define weapon_load        return 24; // 0.8 Seconds
@@ -81,35 +81,35 @@
 	var _fire = weapon_fire_init(_wep);
 	_wep = _fire.wep;
 	
-	var _num = (_wep.chrg_num / _wep.chrg_max);
+	var _charge = (_wep.chrg_num / _wep.chrg_max);
 	
 	 // Charging:
 	if(_wep.chrg){
 		 // Pullback:
-		var _kick = -3 * _num;
+		var _kick = -3 * _charge;
 		if(wkick != _kick){
-			weapon_post(_kick, 8 * _num * current_time_scale, 0);
+			weapon_post(_kick, 8 * _charge * current_time_scale, 0);
 		}
 		
 		 // Effects:
 		if(_wep.chrg == 1){
 			 // Sound:
-			sound_play_pitch(sndMeleeFlip, 1 / (1 - (0.25 * _num)));
-			sound_play_pitchvol(sndSwapBow, 0.3 + (2 * _num), 0.3);
+			sound_play_pitch(sndMeleeFlip, 1 / (1 - (0.25 * _charge)));
+			sound_play_pitchvol(sndSwapBow, 0.3 + (2 * _charge), 0.3);
 			
 			 // Full:
-			if(_num >= 1){
+			if(_charge >= 1){
 				 // Sound:
-				sound_play_pitch(sndCrystalRicochet, 2);
-				sound_play_pitch(sndDiscBounce,      3);
+				sound_play_pitchvol(sndSwapMotorized, 1.4,               0.5);
+				sound_play_pitchvol(sndDiscBounce,    1.4 + random(0.2), 0.8);
 				
 				 // Flash:
 				var	_l = 18 - wkick,
 					_d = gunangle + (wepangle * (1 - (wkick / 20)));
 					
 				with(instance_create(
-					x + lengthdir_x(_l, _d) + lengthdir_x(wepflip * 2, _d - 90),
-					y + lengthdir_y(_l, _d) + lengthdir_y(wepflip * 2, _d - 90),
+					x + hspeed_raw + lengthdir_x(_l, _d) + lengthdir_x(wepflip * 2, _d - 90),
+					y + vspeed_raw + lengthdir_y(_l, _d) + lengthdir_y(wepflip * 2, _d - 90),
 					ImpactWrists
 				)){
 					image_index = 2;
@@ -120,52 +120,13 @@
 		}
 	}
 	
-	 // Charged Disc Slash:
-	else if(_num > 0){
-		var _skill = skill_get(mut_long_arms),
-			_len   = 20 * _skill,
-			_dir   = gunangle + orandom(8 * accuracy);
-			
-		with(projectile_create(
-			x + lengthdir_x(_len, _dir),
-			y + lengthdir_y(_len, _dir),
-			Slash,
-			_dir,
-			3 + (2 * _skill)
-		)){
-			sprite_index = sprHeavySlash;
-			damage       = 20;
-		}
-		
-		 // Sounds:
-		var _pitch = random_range(0.8, 1.2);
-		sound_play_pitchvol(sndDiscHit, 1.7 * _pitch, 1.0);
-		sound_play_pitchvol(sndHammer,  0.8 * _pitch, 1.4);
-		sound_play_pitchvol(sndShovel,  1.5 * _pitch, 0.3);
-		
-		 // Effects:
-		weapon_post(-4, -5, 8);
-		motion_add(_dir, 3.5);
-		sleep(15);
-		
-		 // Fully Charged - Launch Disc:
-		if(_num >= 1){
-			if(weapon_ammo_fire(_wep)){
-				with(projectile_create(x, y, "BatDisc", gunangle + orandom(4 * accuracy), 0)){
-					ammo = _wep.cost;
-					wep  = _wep;
-				}
-			}
-			weapon_post(8, 40, 5);
-		}
-	}
-	
-	 // Disc-less Slash:
+	 // Fire:
 	else{
 		var _skill = skill_get(mut_long_arms),
 			_len   = 20 * _skill,
 			_dir   = gunangle + orandom(8 * accuracy);
 			
+		 // Slash:
 		with(projectile_create(
 			x + lengthdir_x(_len, _dir),
 			y + lengthdir_y(_len, _dir),
@@ -173,19 +134,48 @@
 			_dir,
 			3 + (2 * _skill)
 		)){
-			damage = 8;
-			force  = 6;
+			 // Disc Slash:
+			if(_charge > 0){
+				sprite_index = sprHeavySlash;
+				damage       = 20;
+			}
+			
+			 // Disc-less Slash:
+			else{
+				damage = 8;
+				force  = 6;
+			}
 		}
 		
 		 // Sounds:
 		var _pitch = random_range(0.8, 1.2);
-		sound_play_pitchvol(sndDiscBounce, 1.2 * _pitch, 0.7);
-		sound_play_pitchvol(sndHammer,     1.4 * _pitch, 1.4);
-		sound_play_pitchvol(sndWrench,     0.8 * _pitch, 0.3);
+		if(_charge > 0){
+			sound_play_pitchvol(sndDiscHit, 1.7 * _pitch, 1.0);
+		}
+		else{
+			sound_play_pitchvol(sndDiscBounce, 1.2 * _pitch, 0.7);
+		}
+		sound_play_pitchvol(sndHammer, ((_charge > 0) ? 0.8 : 1.4) * _pitch, 1.4);
+		sound_play_pitchvol(sndShovel, ((_charge > 0) ? 1.5 : 0.8) * _pitch, 0.3);
 		
 		 // Effects:
 		weapon_post(-4, -5, 8);
 		motion_add(_dir, 3.5);
+		if(_charge > 0){
+			sleep(15);
+		}
+		
+		 // Fully Charged - Launch Disc:
+		if(_charge >= 1){
+			if(weapon_ammo_fire(_wep)){
+				with(projectile_create(x, y, "BatDisc", gunangle + orandom(4 * accuracy), 0)){
+					ammo = _wep.cost;
+					wep  = _wep;
+				}
+				sound_play_gun(sndDiscDie, 0.4, 0.3);
+				weapon_post(8, 40, 5);
+			}
+		}
 	}
 	
 #define step(_primary)

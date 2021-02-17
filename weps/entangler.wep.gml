@@ -21,7 +21,7 @@
 #macro spr global.spr
 
 #define weapon_name        return (weapon_avail() ? "ENTANGLER" : "LOCKED");
-#define weapon_text        return `@(color:${area_get_back_color("red")})YOOOOOOO`;
+#define weapon_text        return choose(`@wSPLIT @sTHE @(color:${area_get_back_color("red")})CONTINUUM`, "MAKING NEW FRIENDS");
 #define weapon_sprt        return (weapon_avail() ? global.sprWep : global.sprWepLocked);
 #define weapon_area        return (weapon_avail() ? 22 : -1); // L1 3-1
 #define weapon_load        return 20; // 0.66 Seconds
@@ -87,19 +87,19 @@
 	var _fire = weapon_fire_init(_wep);
 	_wep = _fire.wep;
 	
-	var _num = (_wep.chrg_num / _wep.chrg_max);
+	var _charge = (_wep.chrg_num / _wep.chrg_max);
 	
 	 // Charging:
 	if(_wep.chrg){
 		 // Pullback:
-		var _kick = -4 * _num;
+		var _kick = -4 * _charge;
 		if(wkick != _kick){
-			weapon_post(_kick, 8 * _num * current_time_scale, 0);
+			weapon_post(_kick, 8 * _charge * current_time_scale, 0);
 		}
 		
 		 // Effects:
-		if((current_frame % 2) < current_time_scale && chance_ct(1, 3)){
-			var	_l = random_range(12, 32) - wkick,
+		if((current_frame % 5) < current_time_scale){
+			var	_l = random_range(8, 32) - wkick,
 				_d = gunangle + (wepangle * (1 - (wkick / 20)));
 				
 			obj_create(x + lengthdir_x(_l, _d), y + lengthdir_y(_l, _d), "CrystalBrainEffect");
@@ -107,13 +107,13 @@
 		if(_wep.chrg == 1){
 			 // Sound:
 			sound_set_track_position(
-				sound_play_pitchvol(sndHyperCrystalChargeExplo, 0.4 + (0.2 * _num), 0.5),
+				sound_play_pitchvol(sndHyperCrystalChargeExplo, 0.4 + (0.2 * _charge), 0.5),
 				1.55
 			);
-			sound_play_pitchvol(sndCrystalTB, 1 / (1 - (0.25 * _num)), 1);
+			sound_play_pitchvol(sndCrystalTB, 1 / (1 - (0.25 * _charge)), 1);
 			
 			 // Full:
-			if(_num >= 1){
+			if(_charge >= 1){
 				 // Looks goood:
 				wepflip = sign(wepangle);
 				
@@ -143,17 +143,16 @@
 		}
 	}
 	
-	 // Attack:
+	 // Fire:
 	else{
 		var _skill = skill_get(mut_long_arms),
-			_flip  = sign(wepangle),
 			_dis   = 20 * _skill,
 			_dir   = gunangle,
 			_cost  = weapon_get("red", _wep),
 			_mega  = false;
 			
 		 // Mega:
-		if(_num >= 1 && "red_ammo" in _fire.creator && _fire.creator.red_ammo >= _cost){
+		if(_charge >= 1 && "red_ammo" in _fire.creator && _fire.creator.red_ammo >= _cost){
 			_fire.creator.red_ammo -= _cost;
 			_mega = true;
 		}
@@ -169,8 +168,7 @@
 			if(_mega){
 				sprite_index = spr.RedMegaSlash;
 				mask_index   = mskMegaSlash;
-				damage       = 120;
-				//force        = 32;
+				damage       = 200;
 				clone        = true;
 			}
 			else{
@@ -180,11 +178,14 @@
 		}
 		
 		 // Sounds:
-		sound_play_gun(sndChickenSword, 0.2, 0.3);
-		sound_play_gun(sndHammer,       0.2, 0.3);
 		if(_mega){
-			sound_play_gun(sndEnergyHammerUpg, 0.3,  0.3);
-			sound_play_gun(sndBlackSwordMega,  0.2, -0.5);
+			sound_play_gun(sndBlackSword,   0.2,  0.3);
+			sound_play_gun(sndShovel,       0.2,  0.3);
+			sound_play_gun(sndUltraShotgun, 0.2, -0.5);
+		}
+		else{
+			sound_play_gun(sndChickenSword, 0.2, 0.3);
+			sound_play_gun(sndHammer,       0.2, 0.3);
 		}
 		
 		 // Effects:
@@ -204,27 +205,6 @@
 		motion_add(_dir, 6);
 		sleep(8);
 	}
-	
-/*#define step(_primary)
-	var _wep = wep_get(_primary, "wep", mod_current);
-	
-	 // Unextend While Empty:
-	if(abs(wepangle) >= 80 && abs(wepangle) <= 120){
-		if("red_ammo" not in self || red_ammo < weapon_get("red", _wep)){
-			wepangle = lerp(120 * sign(wepangle), wepangle, power(1 - 0.5, current_time_scale));
-		}
-		else{
-			wepangle = lerp(80 * sign(wepangle), wepangle, power(1 - 0.5, current_time_scale));
-			
-			var	_goal = -4,
-				_kick = wep_get(_primary, "wkick", 0);
-				
-			if(_kick <= 0 && _kick > _goal){
-				_kick = max(_goal, _kick - (2 * current_time_scale));
-				wep_set(_primary, "wkick", _kick);
-			}
-		}
-	}*/
 	
 	
 /// SCRIPTS

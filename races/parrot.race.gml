@@ -2,7 +2,7 @@
 	mod_script_call("mod", "teassets", "ntte_init", script_ref_create(init));
 	
 	 // Charm:
-	charm_object        = [hitme, becomenemy, MaggotExplosion, RadMaggotExplosion, ReviveArea, NecroReviveArea, RevivePopoFreak];
+	charm_object        = [hitme, becomenemy, ReviveArea, NecroReviveArea, RevivePopoFreak];
 	charm_instance_list = [];
 	charm_instance_vars = [];
 	charm_bind_draw     = [];
@@ -539,7 +539,7 @@
 						 // Uncharming:
 						with(target){
 							if("ntte_charm" in self && (ntte_charm.time >= 0 || ntte_charm.feather)){
-								ntte_charm.time -= other.stick_time;
+								ntte_charm.time -= min(ntte_charm.time, other.stick_time);
 								if(ntte_charm.time <= 0){
 									charm_instance(self, false);
 									
@@ -701,16 +701,16 @@
 						with(charm_instance_list){
 							if(other.creator == self || ("creator" in self && !instance_is(self, hitme) && other.creator == creator)){
 								if(!_hitme || !instance_exists(self) || place_meeting(x, y, other)){
-									with(other){
-										var	_vars  = charm_instance_vars[array_find_index(charm_instance_list, other)],
-											_charm = charm_instance(self, true);
-											
-										_charm.time    = _vars.time;
-										_charm.index   = _vars.index;
-										_charm.kill    = _vars.kill;
-										_charm.feather = _vars.feather;
+									var	_vars  = charm_instance_vars[array_find_index(charm_instance_list, self)],
+										_charm = charm_instance(other, true);
 										
-										if(_hitme){
+									_charm.time    = _vars.time;
+									_charm.index   = _vars.index;
+									_charm.kill    = _vars.kill;
+									_charm.feather = _vars.feather;
+									
+									if(_hitme){
+										with(other){
 											 // Kill When Uncharmed if Infinitely Spawned:
 											if(instance_is(self, enemy) && !enemy_boss && kills <= 0){
 												_charm.kill = true;
@@ -718,7 +718,7 @@
 											}
 											
 											 // Featherize:
-											if(_charm.feather && (_charm.time >= 0 || !_vars.charmed)){
+											if(_charm.feather && _charm.time >= 0){
 												do{
 													with(obj_create(x + orandom(24), y + orandom(24), "ParrotFeather")){
 														target = other;
@@ -806,12 +806,28 @@
 	if(array_length(charm_instance_list)){
 		var	_instNum  = 0,
 			_instList = array_clone(charm_instance_list),
-			_instVars = array_clone(charm_instance_vars);
+			_varsList = array_clone(charm_instance_vars);
 			
 		with(_instList){
-			var _vars = _instVars[_instNum++];
+			var _vars = _varsList[_instNum++];
 			if(_vars.charmed){
 				if(instance_exists(self)){
+					if(instance_is(self, hitme) || instance_is(self, becomenemy)){
+						 // Level Over:
+						if(_vars.kill && instance_is(self, enemy) && !array_length(instances_matching_ne(instances_matching_ne(enemy, "team", team), "object_index", Van))){
+							charm_instance(self, false);
+						}
+						
+						 // Charm Timer:
+						else if(_vars.time >= 0){
+							_vars.time -= min(_vars.time, current_time_scale);
+							if(_vars.time <= 0 && instance_is(self, hitme)){
+								charm_instance(self, false);
+							}
+						}
+					}
+					
+					 // Main Code:
 					if("ntte_charm_override" not in self || !ntte_charm_override){
 						var	_lastDir  = direction,
 							_isCustom = (string_pos("Custom", object_get_name(object_index)) == 1);
@@ -994,7 +1010,7 @@
 								
 								case BigMaggot:
 									if(alarm1 < 0 && instance_exists(_vars.target) && instance_seen(x, y, _vars.target)){
-										alarm1 = 90; // JW u did this to me
+										alarm1 = 900; // JW u did this to me
 									}
 								case MaggotSpawn:
 								case JungleFly:
@@ -1020,10 +1036,13 @@
 								case MeleeBandit:
 								case JungleAssassin:
 									
-									 // Move Towards Target:
 									if(walk > 0){
 										var _spd = ((object_index == JungleAssassin) ? 1 : 2) * current_time_scale;
 										
+										 // Fix Janky Movement:
+										direction = _lastDir;
+										
+										 // Undo Player Following:
 										if(instance_exists(Player)){
 											var	_ox = lengthdir_x(_spd, _lastDir),
 												_oy = lengthdir_y(_spd, _lastDir);
@@ -1031,6 +1050,8 @@
 											if(place_free(x - _ox, y)) x -= _ox;
 											if(place_free(x, y - _oy)) y -= _oy;
 										}
+										
+										 // Move Towards Target:
 										if(instance_exists(_vars.target)){
 											mp_potential_step(_vars.target.x, _vars.target.y, _spd, false);
 										}
@@ -1156,8 +1177,8 @@
 						_vars.on_step = [];
 					}
 					
+					 // <3
 					if(instance_exists(self)){
-						 // <3
 						if(random(200) < current_time_scale){
 							with(instance_create(x + orandom(8), y - random(8), AllyDamage)){
 								sprite_index  = sprHealFX;
@@ -1167,26 +1188,10 @@
 								speed /= 2;
 							}
 						}
-						
-						 // Charm Decay:
-						if(instance_is(self, hitme) || instance_is(self, becomenemy)){
-							 // Level Over:
-							if(_vars.kill && instance_is(self, enemy) && !array_length(instances_matching_ne(instances_matching_ne(enemy, "team", team), "object_index", Van))){
-								charm_instance(self, false);
-							}
-							
-							 // Timer:
-							else if(_vars.time >= 0){
-								_vars.time -= current_time_scale;
-								if(_vars.time <= 0){
-									charm_instance(self, false);
-								}
-							}
-						}
 					}
-					else _vars.charmed = false;
+					else charm_instance(self, false);
 				}
-				else _vars.charmed = false;
+				else charm_instance(self, false);
 			}
 			
 			 // Done:
@@ -1208,7 +1213,7 @@
 				
 				 // Gather Charmed Bros:
 				with(instances_matching_gt(charm_instance_list, "my_health", 0)){
-					if(ntte_charm.index == other.index){
+					if(ntte_charm.charmed && ntte_charm.index == other.index){
 						ds_list_add(_instHP, self);
 					}
 				}
@@ -1291,42 +1296,41 @@
 	var _instVars = [];
 	
 	 // Charm:
-	with(instances_matching_ne(_inst, "id", null)){
-		if("ntte_charm" not in self){
-			ntte_charm = {
-				"charmed" : false, // Currently charmed, true/false
-				"target"  : noone, // The charmed enemy's custom target
-				"on_step" : [],    // Custom-type object's original step event
-				"index"   : -1,    // Player who charmed
-				"team"    : -1,    // Original team before charming
-				"time"    : -1,    // Charm duration in frames
-				"kill"    : false, // Kill when uncharmed (For dudes who were spawned by charmed dudes)
-				"feather" : false, // Was charmed using feathers
-			};
-		}
-		
-		var _vars = ntte_charm;
-		
-		if(_charm ^^ _vars.charmed){
-			_vars.charmed = _charm;
+	with(is_array(_inst) ? _inst : [_inst]){
+		var	_pos  = array_find_index(charm_instance_list, self),
+			_vars = (
+				(_pos >= 0)
+				? charm_instance_vars[_pos]
+				: (
+					("ntte_charm" in self)
+					? ntte_charm
+					: {
+						"charmed" : false, // Currently charmed, true/false
+						"target"  : noone, // The charmed enemy's custom target
+						"on_step" : [],    // Custom-type object's original step event
+						"index"   : -1,    // Player who charmed
+						"team"    : -1,    // Original team before charming
+						"time"    : -1,    // Charm duration in frames
+						"kill"    : false, // Kill when uncharmed (For dudes who were spawned by charmed dudes)
+						"feather" : false, // Was charmed using feathers
+					}
+				)
+			);
 			
-			 // Charm:
-			if(_charm){
-				 // Frienderize Team:
-				_vars.team = (("team" in self) ? team : -1);
-				if("team" in self){
-					team = 2;
-					
-					 // Teamerize Nearby Projectiles:
-					if(place_meeting(x, y, projectile)){
-						var _inst = instances_meeting(x, y, instances_matching(projectile, "team", _vars.team));
-						if(array_length(_inst)){
-							if("creator" in self && !instance_is(self, hitme)){
-								_inst = instances_matching(_inst, "creator", self, creator);
-							}
-							else{
-								_inst = instances_matching(_inst, "creator", self);
-							}
+		if(_charm ^^ _vars.charmed){
+			if(instance_exists(self)){
+				ntte_charm = _vars;
+				
+				 // Charm:
+				if(_charm){
+					 // Frienderize Team:
+					_vars.team = (("team" in self) ? team : -1);
+					if("team" in self){
+						team = 2;
+						
+						 // Teamerize Nearby Projectiles:
+						if(instance_is(self, hitme) && place_meeting(x, y, projectile)){
+							var _inst = instances_meeting(x, y, instances_matching(instances_matching(projectile, "team", _vars.team), "creator", self));
 							if(array_length(_inst)) with(_inst){
 								if(place_meeting(x, y, other)){
 									team = other.team;
@@ -1337,114 +1341,155 @@
 							}
 						}
 					}
-				}
-				
-				 // Delay Alarms:
-				for(var i = 0; i <= 10; i++){
-					if(alarm_get(i) > 0){
-						alarm_set(i, alarm_get(i) + 1);
-					}
-				}
-				
-				 // Necromancer Charm:
-				switch(sprite_index){
-					case sprReviveArea      : sprite_index = spr.AllyReviveArea;      break;
-					case sprNecroReviveArea : sprite_index = spr.AllyNecroReviveArea; break;
-				}
-				
-				 // Add:
-				array_push(charm_instance_list, self);
-				array_push(charm_instance_vars, _vars);
-			}
-			
-			 // Uncharm:
-			else{
-				if("target" in self){
-					target = noone;
-				}
-				
-				if(instance_is(self, hitme) || instance_is(self, becomenemy)){
-					 // Kill:
-					if(_vars.kill){
-						my_health = 0;
-						sound_play_pitchvol(sndEnemyDie, 2 + orandom(0.3), 3);
-					}
 					
-					 // Effects:
-					else instance_create(x, bbox_top, AssassinNotice);
-					var _num = 10 * max(variable_instance_get(self, "size", 0), 0.5);
-					for(var _ang = direction; _ang < direction + 360; _ang += (360 / _num)){
-						scrFX(x, y, [_ang, 3], Dust);
-					}
-					
-					 // Sound:
-					sound_play_hit_ext(sndAssassinGetUp, random_range(1.2, 1.5), 1.2);
-					
-					 // Delay Contact Damage:
-					if("canmelee" in self && canmelee){
-						alarm11  = 30;
-						canmelee = false;
-					}
-					
-					 // I-Frames:
-					/*if("nexthurt" in self){
-						nexthurt = current_frame + 12;
-					}*/
-				}
-				
-				 // Reset Team:
-				if(_vars.team != -1){
-					if(fork()){
-						while("team" not in self && instance_is(self, becomenemy)){
-							wait 0;
+					 // Delay Alarms:
+					for(var i = 0; i <= 10; i++){
+						if(alarm_get(i) > 0){
+							alarm_set(i, alarm_get(i) + 1);
 						}
-						if("team" in self){
-							 // Teamerize Nearby Projectiles:
-							if(place_meeting(x, y, projectile)){
-								var _inst = instances_meeting(x, y, instances_matching(projectile, "team", team));
-								if(array_length(_inst)){
-									if("creator" in self && !instance_is(self, hitme)){
-										_inst = instances_matching(_inst, "creator", self, creator);
-									}
-									else{
-										_inst = instances_matching(_inst, "creator", self);
-									}
-									if(array_length(_inst)) with(_inst){
-										if(place_meeting(x, y, other)){
-											team = _vars.team;
-											if(sprite_get_team(sprite_index) != 3){
-												team_instance_sprite(team, self);
-											}
-										}
+					}
+					
+					 // Necromancer Charm:
+					switch(sprite_index){
+						case sprReviveArea      : sprite_index = spr.AllyReviveArea;      break;
+						case sprNecroReviveArea : sprite_index = spr.AllyNecroReviveArea; break;
+					}
+					
+					 // Add:
+					if(array_find_index(charm_instance_list, self) < 0){
+						array_push(charm_instance_list, self);
+						array_push(charm_instance_vars, _vars);
+					}
+				}
+				
+				 // Uncharm:
+				else{
+					 // Become Enemy:
+					var _lastObject = object_index;
+					if(instance_is(self, becomenemy)){
+						var	_lastMask       = mask_index,
+							_lastSprite     = sprite_index,
+							_lastImage      = image_index,
+							_lastDepth      = depth,
+							_lastVisible    = visible,
+							_lastPersistent = persistent,
+							_lastSolid      = solid;
+							
+						instance_change(enemy, false);
+						
+						mask_index   = _lastMask;
+						sprite_index = _lastSprite;
+						image_index  = _lastImage;
+						depth        = _lastDepth;
+						visible      = _lastVisible;
+						persistent   = _lastPersistent;
+						solid        = _lastSolid;
+					}
+					
+					 // Hittable Stuff:
+					if(instance_is(self, hitme)){
+						 // I-Frames:
+						//nexthurt = current_frame + 12;
+						
+						 // Enemy Stuff:
+						if(instance_is(self, enemy)){
+							 // Untarget:
+							target = noone;
+							
+							 // Delay Contact Damage:
+							if(canmelee == true){
+								alarm11  = 30;
+								canmelee = false;
+							}
+						}
+						
+						 // Kill:
+						if(_vars.kill){
+							my_health = 0;
+							sound_play_pitchvol(sndEnemyDie, 2 + orandom(0.3), 3);
+						}
+						
+						 // Effects:
+						else instance_create(x, bbox_top, AssassinNotice);
+						var _num = 10 * max((is_real(size) ? size : 0), 0.5);
+						for(var _ang = direction; _ang < direction + 360; _ang += (360 / _num)){
+							scrFX(x, y, [_ang, 3], Dust);
+						}
+						
+						 // Sound:
+						sound_play_hit_ext(sndAssassinGetUp, random_range(1.2, 1.5), 1.2);
+					}
+					
+					 // Reset Team:
+					if(_vars.team != -1){
+						 // Teamerize Nearby Projectiles:
+						if(instance_is(self, hitme) && place_meeting(x, y, projectile)){
+							var _inst = instances_meeting(x, y, instances_matching(instances_matching(projectile, "team", team), "creator", self));
+							if(array_length(_inst)) with(_inst){
+								if(place_meeting(x, y, other)){
+									team = _vars.team;
+									if(sprite_get_team(sprite_index) != 3){
+										team_instance_sprite(team, self);
 									}
 								}
 							}
-							
-							team = _vars.team;
-							_vars.team = -1;
 						}
-						exit;
+						
+						 // Set Team:
+						team = _vars.team;
+					}
+					
+					 // Necromancer Charm:
+					if(sprite_index == spr.AllyReviveArea){
+						sprite_index = sprReviveArea;
+					}
+					else if(sprite_index == spr.AllyNecroReviveArea){
+						sprite_index = sprNecroReviveArea;
+					}
+					
+					 // Unbecome Enemy:
+					if(object_index != _lastObject){
+						var	_lastMask       = mask_index,
+							_lastSprite     = sprite_index,
+							_lastImage      = image_index,
+							_lastDepth      = depth,
+							_lastVisible    = visible,
+							_lastPersistent = persistent,
+							_lastSolid      = solid;
+							
+						instance_change(_lastObject, false);
+						
+						mask_index   = _lastMask;
+						sprite_index = _lastSprite;
+						image_index  = _lastImage;
+						depth        = _lastDepth;
+						visible      = _lastVisible;
+						persistent   = _lastPersistent;
+						solid        = _lastSolid;
+					}
+					
+					 // Reset Step:
+					if(array_length(_vars.on_step)){
+						on_step = _vars.on_step;
+						_vars.on_step = [];
 					}
 				}
-				
-				 // Reset Step:
-				if(array_length(_vars.on_step)){
-					on_step = _vars.on_step;
-					_vars.on_step = [];
-				}
-				
-				 // Remove:
-				var _pos = array_find_index(charm_instance_list, self);
-				charm_instance_list = array_delete(charm_instance_list, _pos);
-				charm_instance_vars = array_delete(charm_instance_vars, _pos);
 			}
 			
 			 // Reset:
-			_vars.target  = noone;
-			_vars.index   = -1;
-			_vars.time    = -1;
-			_vars.feather = false;
+			if(_charm){
+				_vars.target  = noone;
+				_vars.index   = -1;
+				_vars.time    = -1;
+				_vars.kill    = false;
+				_vars.feather = false;
+			}
+			else{
+				_vars.time = 0;
+			}
 		}
+		
+		_vars.charmed = _charm;
 		
 		array_push(_instVars, _vars);
 	}

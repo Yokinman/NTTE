@@ -139,7 +139,7 @@
 		_wepangle = lerp(_wepangle, max(abs(_wepangle), 120) * sign(_wepangle), 0.4 * current_time_scale);
 	}
 	else if(_wep.melee){
-		_wepangle -= _wepangle * 0.4 * current_time_scale;
+		_wepangle *= power(0.4, current_time_scale);
 		
 		 // Done:
 		if(abs(_wepangle) < 1){

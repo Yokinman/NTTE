@@ -23,7 +23,7 @@
 	
 #define weapon_name            return (weapon_avail() ? "SAWBLADE GUN" : "LOCKED");
 #define weapon_text            return "LIKE DISCS BUT @ySMARTER";
-#define weapon_swap            return sndSwapShotgun;
+#define weapon_swap            return sndSwapMotorized;
 #define weapon_sprt_hud(_wep)  return weapon_ammo_hud(_wep);
 #define weapon_area            return (weapon_avail() ? 5 : -1); // 2-1
 #define weapon_type            return type_melee;

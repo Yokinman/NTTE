@@ -23,7 +23,7 @@
 	
 #define weapon_name            return (weapon_avail() ? "SAWBLADE CANNON" : "LOCKED");
 #define weapon_text            return "THEY STAND NO CHANCE";
-#define weapon_swap            return sndSwapShotgun;
+#define weapon_swap            return sndSwapMotorized;
 #define weapon_sprt_hud(_wep)  return weapon_ammo_hud(_wep);
 #define weapon_area            return (weapon_avail() ? 11 : -1); // 5-2
 #define weapon_type            return type_melee;

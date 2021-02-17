@@ -902,14 +902,15 @@
 		image_alpha  = 0;
 		
 		 // Vars:
-		creator     = noone;
-		target      = noone;
-		clone       = instances_matching_ne(instances_matching_ne(instances_matching_ne(instances_matching_lt(instances_matching_ne(enemy, "team", 2), "size", 6), "name", "CrystalBrain", "CrystalHeart", "ChaosHeart"), "mask_index", mskNone), "intro", false);
-		time        = 450;
-		team        = -1;
-		appear      = 1;
-		appear_flip = false;
-		budge       = true;
+		creator       = noone;
+		target        = noone;
+		clone         = instances_matching_ne(instances_matching_ne(instances_matching_ne(instances_matching_lt(instances_matching_ne(enemy, "team", 2), "size", 6), "name", "CrystalBrain", "CrystalHeart", "ChaosHeart"), "mask_index", mskNone), "intro", false);
+		time          = 450;
+		team          = -1;
+		appear        = 1;
+		appear_flip   = false;
+		appear_health = false;
+		budge         = true;
 		
 		return self;
 	}
@@ -1065,43 +1066,46 @@
 		}
 	}
 	
-	 // Appearing:
-	if(appear > 0){
-		appear -= (current_time_scale / 24);
-		with(target){
-			 // Stay Still:
-			if(instance_is(self, enemy)){
-				speed = 0;
-				if("walk" in self){
-					walk = min(1, walk);
-				}
-				if(sprite_index == spr_walk){
-					sprite_index = spr_idle;
-				}
-			}
-			
-			 // Done:
-			if(other.appear <= 0){
-				visible = true;
-			}
-		}
-	}
-	
 #define CrystalClone_end_step
 	 // Follow Target:
 	if(instance_exists(target)){
-		x = target.x;
-		y = target.y;
-		
-		 // Visual:
-		depth      = min(target.depth - 1, object_get_depth(SubTopCont));
+		x          = target.x;
+		y          = target.y;
 		mask_index = target.sprite_index;
+		depth      = min(target.depth - 1, object_get_depth(SubTopCont));
+		
+		 // Appearing:
 		if(appear > 0){
-			target.visible = false;
+			appear -= (current_time_scale / 24);
+			with(target){
+				 // Hide:
+				visible = (other.appear <= 0);
+				
+				 // Stay Still:
+				if(instance_is(self, enemy)){
+					speed  = 0;
+					x      = xprevious;
+					y      = yprevious;
+					if("walk" in self){
+						walk = min(1, walk);
+					}
+					if(sprite_index == spr_walk){
+						sprite_index = spr_idle;
+					}
+				}
+				
+				 // Lock Health:
+				if(other.appear_health > 0 && "my_health" in self){
+					if(my_health < other.appear_health){
+						my_health = other.appear_health;
+					}
+					other.appear_health = my_health;
+				}
+			}
 		}
 		
 		 // Effects:
-		if(chance_ct(1, 5)){
+		else if(target.visible && chance_ct(1, 5)){
 			CrystalBrain_effect(
 				random_range(bbox_left, bbox_right + 1) + orandom(10),
 				random_range(bbox_top, bbox_bottom + 1) + orandom(10)
@@ -1109,11 +1113,19 @@
 		}
 		
 		 // Death Timer:
-		if(time >= 0/* && !instance_exists(creator)*/){
-			time = max(0, time - current_time_scale);
+		if(time >= 0){
+			time -= min(time, current_time_scale);
 			if(time <= 0){
 				if(instance_is(target, hitme)){
 					target.my_health = 0;
+				}
+				else if(!instance_is(target, becomenemy)){
+					with(target){
+						repeat(3){
+							scrFX(x, y, 3, Smoke);
+						}
+						instance_destroy();
+					}
 				}
 			}
 		}
@@ -2768,24 +2780,22 @@
 				if(place_meeting(x, y, other)){
 					if(!instance_exists(CustomObject) || !array_length(instances_matching(instances_matching(CustomObject, "name", "CrystalClone"), "target", self))){
 						var _clone = self;
+						
+						motion_add(random(180), 1);
+						
 						with(other){
 							with(RedSlash_clone(_clone)){
-								time   = -1;
 								appear = 1/2;
 								with(target){
-									motion_add(random_range(180, 360), 1);
+									direction += 180;
 								}
 								with(obj_create(_clone.x, _clone.y, "CrystalClone")){
 									clone       = _clone;
 									target      = clone;
 									creator     = other.creator;
 									team        = other.team;
-									time        = other.time;
-									appear      = 1 - other.appear;
-									appear_flip = true;
-									with(target){
-										motion_add(random(180), 1);
-									}
+									appear      = other.appear;
+									appear_flip = !other.appear_flip;
 								}
 							}
 						}
@@ -2817,6 +2827,55 @@
 		}
 	}
 	
+#define RedSlash_projectile
+	if(instance_exists(self)){
+		with(other){
+			if(typ == 1 || typ == 2){
+				 // Deflect (No Team Change):
+				if(typ == 1 && other.candeflect){
+					deflected   = true;
+					team        = other.team;
+					direction   = other.direction;
+					image_angle = direction;
+					
+					 // Effects:
+					with(instance_create(x, y, Deflect)){
+						image_angle = other.image_angle;
+					}
+					
+					 // Clone:
+					if(other.clone){
+						var _clone = self;
+						with(other){
+							with(RedSlash_clone(_clone)){
+								appear = 2/3;
+								with(target){
+									var _lastVSpeed = vspeed;
+									direction  += random_range(10, 20) * choose(-1, 1);
+									image_angle = direction;
+									if(vspeed < _lastVSpeed){
+										other.appear_flip = true;
+									}
+								}
+								with(obj_create(_clone.x, _clone.y, "CrystalClone")){
+									clone       = _clone;
+									target      = clone;
+									creator     = other.creator;
+									team        = other.team;
+									appear      = other.appear;
+									appear_flip = !other.appear_flip;
+								}
+							}
+						}
+					}
+				}
+				
+				 // Destroy:
+				else instance_destroy();
+			}
+		}
+	}
+	
 #define RedSlash_hit
 	if(projectile_canhit_melee(other)){
 		var _lastHealth = other.my_health;
@@ -2825,14 +2884,21 @@
 		projectile_hit_push(other, damage, force);
 		
 		 // Clone:
-		if(clone){
-			if(instance_exists(other) && _lastHealth > 0 && other.my_health <= 0){
+		if(instance_exists(self) && clone && instance_is(other, enemy)){
+			if(_lastHealth > 0 && other.my_health <= 0){
 				with(RedSlash_clone(other)){
 					with(target){
 						my_health = _lastHealth;
 					}
-					//appear = 0.5;
+					appear        = 2/3;
+					appear_health = _lastHealth;
 				}
+				/*with(other){
+					with(corpse_drop(direction, speed)){
+						speed = min(speed, 6);
+					}
+					instance_delete(self);
+				}*/
 			}
 		}
 	}
@@ -2844,31 +2910,29 @@
 	
 	with(_inst){
 		 // Effects:
-		/*with(instance_create(x, y, PlasmaTrail)){
-			sprite_index = sprThrowHit;
-			image_speed  = 0.4;
-			image_angle  = random(360);
+		var _size = (
+			("size" in self)
+			? size
+			: floor(bbox_width / 16)
+		);
+		with(instance_create(x, y, BulletHit)){
+			sprite_index = spr.WaterStreak;
+			image_xscale = (2 + _size) / 3;
+			image_yscale = image_xscale / 3;
+			image_angle  = (((other.direction % 180) - 90) / 4.5) + orandom(8);
 			image_blend  = area_get_back_color("red");
-			depth        = other.depth - 1;
-			with(instance_create(x, y, PlasmaTrail)){
-				sprite_index = other.sprite_index;
-				image_speed  = 1;
-				image_angle  = other.image_angle;
-				depth        = other.depth - 1;
+			depth        = -4;
+			with(instance_copy(false)){
+				image_angle += 180;
 			}
 		}
 		repeat(3){
-			scrFX(x, y, 3, Dust);
-		}*/
-		repeat(3){
-			obj_create(x + orandom(8), y + orandom(8), "CrystalBrainEffect");
+			obj_create(x + orandom(6 * (_size + 1)), y + orandom(6 * (_size + 1)), "CrystalBrainEffect");
 		}
-		if(instance_is(self, hitme)){
-			sleep(8 * (1 + size));
-		}
-		else if("spr_shadow" in self){
-			sleep(sprite_get_width(spr_shadow));
-		}
+		sleep(8 * (1 + _size));
+		
+		 // Sound:
+		sound_play_hit_ext(sndSwapSword, 1.6 + random(0.2), 1);
 		
 		 // Clone the Bro:
 		var _slash = other;
