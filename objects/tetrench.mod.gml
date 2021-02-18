@@ -4584,13 +4584,15 @@
 				}
 				
 				 // Clear Over Time:
-				with(other){
-					var	_x = 32 * dcos(current_frame * 20),
-						_y =  8 * dsin(current_frame * 17);
-						
-					draw_set_blend_mode_ext(bm_zero, bm_inv_src_alpha);
-					draw_sprite_tiled_ext(sprBullet1, 0, (_x - _surfX) * _surfScale, (_y - _surfY) * _surfScale, _surfScale, _surfScale, c_white, 1);
-					draw_set_blend_mode(bm_normal);
+				if(current_frame_active){
+					with(other){
+						var	_x = 32 * dcos(current_frame * 20),
+							_y =  8 * dsin(current_frame * 17);
+							
+						draw_set_blend_mode_ext(bm_zero, bm_inv_src_alpha);
+						draw_sprite_tiled_ext(sprBullet1, 0, (_x - _surfX) * _surfScale, (_y - _surfY) * _surfScale, _surfScale, _surfScale, c_white, 1);
+						draw_set_blend_mode(bm_normal);
+					}
 				}
 				
 				 // Draw Trails:
@@ -4605,10 +4607,10 @@
 						var _isPlayer = instance_is(self, Player);
 						
 						if(_isPlayer || sprite_index != spr_appear){
-							var	_x1    = xprevious,
-								_y1    = yprevious,
-								_x2    = x,
-								_y2    = y,
+							var	_x1    = x,
+								_y1    = y,
+								_x2    = xprevious,
+								_y2    = yprevious,
 								_dis   = point_distance(_x1, _y1, _x2, _y2),
 								_dir   = point_direction(_x1, _y1, _x2, _y2),
 								_spr   = (_isPlayer ? spr.FishAnglerTrail : spr.AnglerTrail),

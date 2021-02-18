@@ -24,7 +24,7 @@
 #define weapon_text        return choose(`@wSPLIT @sTHE @(color:${area_get_back_color("red")})CONTINUUM`, "MAKING NEW FRIENDS");
 #define weapon_sprt        return (weapon_avail() ? global.sprWep : global.sprWepLocked);
 #define weapon_area        return (weapon_avail() ? 22 : -1); // L1 3-1
-#define weapon_load        return 20; // 0.66 Seconds
+#define weapon_load        return 20; // 0.67 Seconds
 #define weapon_auto(_wep)  return weapon_get("chrg", _wep);
 #define weapon_avail       return unlock_get("pack:" + weapon_ntte_pack());
 #define weapon_ntte_pack   return "red";
@@ -64,6 +64,15 @@
 	);
 	return sndSwapSword;
 	
+#define weapon_reloaded(_primary)
+	var _wep = wep_get(_primary, "wep", mod_current);
+	if(lq_defget(_wep, "chrg", false)){
+		wep_set(_primary, "wepflip", -wep_get(_primary, "wepflip", 1));
+	}
+	else if(weapon_is_melee(_wep)){
+		sound_play(sndMeleeFlip);
+	}
+	
 #define weapon_ntte_eat
 	 // Wtf:
 	if(!instance_is(self, Portal)){
@@ -72,15 +81,6 @@
 			creator = other;
 			team    = other.team;
 		}
-	}
-	
-#define weapon_reloaded(_primary)
-	var _wep = wep_get(_primary, "wep", mod_current);
-	if(lq_defget(_wep, "chrg", false)){
-		wep_set(_primary, "wepflip", -wep_get(_primary, "wepflip", 1));
-	}
-	else{
-		sound_play(sndMeleeFlip);
 	}
 	
 #define weapon_fire(_wep)
@@ -115,7 +115,7 @@
 			 // Full:
 			if(_charge >= 1){
 				 // Looks goood:
-				wepflip = sign(wepangle);
+				wepflip = sign(wepangle) * (_fire.primary ? 1 : -1);
 				
 				 // Sound:
 				sound_play_pitch(sndCrystalRicochet,   3);
@@ -138,6 +138,7 @@
 						depth        = other.depth - 1;
 					}
 				}
+				view_shake_at(x, y, 10);
 				sleep(5);
 			}
 		}
@@ -203,7 +204,7 @@
 			6
 		);
 		motion_add(_dir, 6);
-		sleep(8);
+		sleep(10);
 	}
 	
 	

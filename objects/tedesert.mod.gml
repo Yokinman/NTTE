@@ -47,7 +47,7 @@
 		 // Alarms:
 		alarm1 = 40 + irandom(30);
 		
-		return id;
+		return self;
 	}
 
 #define BabyScorpion_step
@@ -196,7 +196,7 @@
 		my_health = maxhealth;
 		raddrop   = 14;
 		
-		return id;
+		return self;
 	}
 	
 	
@@ -212,7 +212,7 @@
 		 // Vars:
 		rider_target = noone;
 		
-		return id;
+		return self;
 	}
 	
 #define BanditCamper_end_step
@@ -252,7 +252,7 @@
 		path_delay = 0;
 		can_path = true;
 		
-		return id;
+		return self;
 	}
 	
 #define BanditHiker_step
@@ -312,7 +312,7 @@
 			instance_budge(Wall, -1);
 		}
 		
-		return id;
+		return self;
 	}
 	
 #define BanditTent_step
@@ -387,7 +387,7 @@
 			}
 		}
 		
-		return id;
+		return self;
 	}
 
 #define BigCactus_death
@@ -452,7 +452,7 @@
 			sprite_index = mskScrapBoss;
 		}
 		
-		return id;
+		return self;
 	}
 
 #define BigMaggotSpawn_step
@@ -647,7 +647,7 @@
 			Bone_destroy();
 		}
 		
-		return id;
+		return self;
 	}
 	
 #define Bone_step
@@ -763,7 +763,7 @@
 		part += GameCont.loops;
 		part = min(part, sprite_get_number(spr_idle) - 2);
 		
-		return id;
+		return self;
 	}
 	
 #define CoastBossBecome_step
@@ -778,7 +778,7 @@
 	 // Boneman Feature:
 	if(instance_exists(prompt)){
 		with(player_find(prompt.pick)){
-			projectile_hit(id, 1);
+			projectile_hit(self, 1);
 			lasthit = [sprBone, "GENEROSITY"];
 			
 			with(other) with(obj_create(x, y, "Bone")){
@@ -812,13 +812,15 @@
 			with(BanditBoss) my_health = 0;
 			portal_poof();
 			
-			instance_delete(id);
+			instance_delete(self);
 			exit;
 		}
 	}
 	
 	 // Death:
-	if(my_health <= 0) instance_destroy();
+	if(my_health <= 0){
+		instance_destroy();
+	}
 	
 #define CoastBossBecome_hurt(_damage, _force, _direction)
 	my_health -= _damage;
@@ -849,7 +851,7 @@
 				}
 			}
 			
-			instance_delete(id);
+			instance_delete(self);
 		}
 	}
 	
@@ -942,7 +944,7 @@
 		bossname = "BIG FISH";
 		col      = c_red;
 		
-		return id;
+		return self;
 	}
 	
 #define CoastBoss_step
@@ -1140,7 +1142,7 @@
 		}
 		
 		 // Bolts No:
-		with(instances_matching(BoltStick, "target", id)){
+		with(instances_matching(BoltStick, "target", self)){
 			sound_play_hit(sndCrystalPropBreak, 0.3);
 			repeat(5) with(instance_create(x, y, Dust)){
 				motion_add(random(360), 3);
@@ -1197,7 +1199,7 @@
 	
 	 // Fish Train:
 	if(array_length(fish_train) > 0){
-		var	_leader    = id,
+		var	_leader    = self,
 			_broken    = false,
 			_fishSwim  = fish_swim,
 			_fishIndex = 0;
@@ -1276,7 +1278,7 @@
 							}
 							motion_add(_d, 1);
 						}
-						_leader = id;
+						_leader = self;
 					}
 				}
 				else{
@@ -1535,14 +1537,14 @@
 		sprite_index = spr_idle;
 		
 		 // Fly:
-		var	l = random(16),
-			d = 90 + orandom(110);
+		var	_l = random(16),
+			_d = 90 + orandom(110);
 			
-		with(obj_create(x + lengthdir_x(l, d), y + lengthdir_y(l, d), "FlySpin")){
+		with(obj_create(x + lengthdir_x(_l, _d), y + lengthdir_y(_l, _d), "FlySpin")){
 			depth = other.depth;
 		}
 		
-		return id;
+		return self;
 	}
 	
 	
@@ -1560,7 +1562,7 @@
 		target_x = 0;
 		target_y = 0;
 		
-		return id;
+		return self;
 	}
 	
 #define FlySpin_end_step
@@ -1592,7 +1594,7 @@
 		team      = 1;
 		friendly  = false;
 		
-		return id;
+		return self;
 	}
 	
 #define ScorpionRock_step
@@ -1690,7 +1692,7 @@
 		alarm1 = 90;
 		alarm2 = -1;
 		
-		return id;
+		return self;
 	}
 	
 #define SilverScorpion_step
@@ -1851,7 +1853,7 @@
 		force      = 0;
 		typ        = 2;
 		
-		return id;
+		return self;
 	}
 	
 #define SilverScorpionDevastator_step
@@ -1891,7 +1893,7 @@
 		time_max   = 20;
 		//wave       = random(360);
 		
-		return id;
+		return self;
 	}
 	
 #define SilverScorpionFlak_step
@@ -2006,7 +2008,7 @@
 		charge_goal  = 1;
 		charge_speed = 1/30;
 		
-		return id;
+		return self;
 	}
 	
 #define VenomBlast_step
@@ -2137,7 +2139,7 @@
 		 // Alarms:
 		alarm0 = charge_time;
 		
-		return id;
+		return self;
 	}
 	
 #define VenomFlak_step
@@ -2341,7 +2343,7 @@
 		minspeed   = 4;
 		hit_list   = [];
 		
-		return id;
+		return self;
 	}
 	
 #define VenomPellet_step
@@ -2407,7 +2409,7 @@
 		sprite_index = spr_idle;
 		depth++;
 		
-		return id;
+		return self;
 	}
 	
 	
@@ -2421,7 +2423,7 @@
 		 // Vars:
 		unburrow_check_timer = random_range(150, 450);
 		
-		return id;
+		return self;
 	}
 	
 #define WantBigMaggot_step
@@ -2454,7 +2456,7 @@
 			y = ystart;
 			right = other.right;
 		}
-		instance_delete(id);
+		instance_delete(self);
 	}
 	
 	

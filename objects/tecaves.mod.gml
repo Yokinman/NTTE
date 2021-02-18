@@ -1004,6 +1004,9 @@
 							var _charm = charm_instance(self, true);
 							_charm.time = other.time + 1;
 							_charm.kill = true;
+							if("index" in other.creator){
+								_charm.index = other.creator.index;
+							}
 						}
 						team = other.team;
 					}
@@ -1673,6 +1676,14 @@
 			instance_delete(self);
 		}
 		
+		 // Delay Enemy Contact Damage:
+		with(instances_matching_gt(enemy, "id", _genID)){
+			if(canmelee){
+				canmelee = false;
+				alarm11  = 30;
+			}
+		}
+		
 		 // Spawn Chests:
 		for(var i = 0; i < array_length(area_chest); i++){
 			var	_chest    = area_chest[i],
@@ -1683,7 +1694,7 @@
 				
 			 // Find Spawn Floor:
 			with(array_shuffle(instances_matching_gt(FloorNormal, "id", _genID))){
-				if(!place_meeting(x, y, Wall) && !place_meeting(x, y, chestprop)){
+				if(!place_meeting(x, y, Wall) && !place_meeting(x, y, prop) && !place_meeting(x, y, chestprop)){
 					var _canChest = true;
 					if(place_meeting(x, y, enemy)){
 						with(instances_meeting(x, y, instances_matching_gt(enemy, "size", 1))){
@@ -2757,7 +2768,7 @@
 		 // Vars:
 		mask_index = mskSlash;
 		friction   = 0.1;
-		damage     = 8;
+		damage     = 10;
 		force      = 12;
 		walled     = false;
 		clone      = false;
@@ -2893,12 +2904,6 @@
 					appear        = 2/3;
 					appear_health = _lastHealth;
 				}
-				/*with(other){
-					with(corpse_drop(direction, speed)){
-						speed = min(speed, 6);
-					}
-					instance_delete(self);
-				}*/
 			}
 		}
 	}

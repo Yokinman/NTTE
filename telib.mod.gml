@@ -4629,57 +4629,59 @@
 				var _wepName = (primary ? "wep" : "bwep");
 				
 				with(creator){
-					other.x = x;
-					other.y = y;
-					if(_wepName not in self || variable_instance_get(self, _wepName) == other.wep){
-						 // Player:
-						if(instance_is(self, Player)){
-							 // Steroids:
-							if(!other.primary){
-								player_swap();
-								specfiring = true;
-							}
-							
-							 // Fire:
-							var	_type = weapon_get_type(other.wep),
-								_cost = weapon_get_cost(other.wep),
-								_rads = weapon_get_rads(other.wep),
-								_ammo = ammo[_type];
+					if(visible){
+						other.x = x;
+						other.y = y;
+						if(_wepName not in self || variable_instance_get(self, _wepName) == other.wep){
+							 // Player:
+							if(instance_is(self, Player)){
+								 // Steroids:
+								if(!other.primary){
+									player_swap();
+									specfiring = true;
+								}
 								
-							if(infammo != 0 || (_ammo >= _cost && GameCont.rad >= _rads)){
-								var	_lastTeam     = team,
-									_lastAccuracy = accuracy;
+								 // Fire:
+								var	_type = weapon_get_type(other.wep),
+									_cost = weapon_get_cost(other.wep),
+									_rads = weapon_get_rads(other.wep),
+									_ammo = ammo[_type];
 									
-								team     = other.team;
-								accuracy = other.accuracy;
+								if(infammo != 0 || (_ammo >= _cost && GameCont.rad >= _rads)){
+									var	_lastTeam     = team,
+										_lastAccuracy = accuracy;
+										
+									team     = other.team;
+									accuracy = other.accuracy;
+									
+									player_fire(other.direction);
+									
+									team     = _lastTeam;
+									accuracy = _lastAccuracy;
+								}
 								
-								player_fire(other.direction);
+								 // Low Ammo:
+								else{
+									wkick     = -2;
+									clicked   = false;
+									drawempty = 30;
+									sound_play((_ammo < _cost) ? sndEmpty : sndUltraEmpty);
+									with(instance_create(x, y, PopupText)){
+										target = other.index;
+										text   = ((_ammo < _cost) ? ((_ammo > 0) ? "NOT ENOUGH " + other.typ_name[_type] : "EMPTY") : "NOT ENOUGH RADS");
+									}
+								}
 								
-								team     = _lastTeam;
-								accuracy = _lastAccuracy;
-							}
-							
-							 // Low Ammo:
-							else{
-								wkick     = -2;
-								clicked   = false;
-								drawempty = 30;
-								sound_play((_ammo < _cost) ? sndEmpty : sndUltraEmpty);
-								with(instance_create(x, y, PopupText)){
-									target = other.index;
-									text   = ((_ammo < _cost) ? ((_ammo > 0) ? "NOT ENOUGH " + other.typ_name[_type] : "EMPTY") : "NOT ENOUGH RADS");
+								 // Steroids:
+								if(!other.primary){
+									specfiring = false;
+									player_swap();
 								}
 							}
 							
-							 // Steroids:
-							if(!other.primary){
-								specfiring = false;
-								player_swap();
-							}
+							 // Non-Player:
+							else player_fire_ext(other.direction, other.wep, other.x, other.y, other.team, other.creator, other.accuracy);
 						}
-						
-						 // Non-Player:
-						else player_fire_ext(other.direction, other.wep, other.x, other.y, other.team, other.creator, other.accuracy);
 					}
 				}
 				wep.chrg = 0;

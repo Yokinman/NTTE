@@ -78,8 +78,8 @@
 			BoneShard = sprite(p + "sprBoneShard", 1, 3, 2, shnWep);
 			
 			 // Tunneller:
-			Tunneller            = sprite(p + "sprTunneller",            1,  8,  6, shnWep);
-			GoldTunneller        = sprite(p + "sprGoldTunneller",        1,  8,  6, shnWep);
+			Tunneller            = sprite(p + "sprTunneller",            1, 14,  6, shnWep);
+			GoldTunneller        = sprite(p + "sprGoldTunneller",        1, 14,  6, shnWep);
 			TunnellerLoadout     = sprite(p + "sprTunnellerLoadout",     1, 24, 24);
 			GoldTunnellerLoadout = sprite(p + "sprGoldTunnellerLoadout", 1, 24, 24);
 			TunnellerHUD         = sprite(p + "sprTunnellerHUD",         1,  0,  3, shnWep);
@@ -1758,7 +1758,7 @@
 				FishAnglerMapIcon  = sprite(p + "sprFishAnglerMapIcon",  1, 10,  10);
 				
 				 // Eye Trail:
-				FishAnglerTrail = sprite(p + "sprFishAnglerTrail", 4, 12, 12);
+				FishAnglerTrail = sprite(p + "sprFishAnglerTrail", 6, 12, 12);
 				
 			//#endregion
 			

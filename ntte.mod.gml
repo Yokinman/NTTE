@@ -4004,12 +4004,19 @@
 											&& "chrg"     in _wep
 											&& "chrg_num" in _wep
 											&& "chrg_max" in _wep
-											&& _wep.chrg
+											&& (_wep.chrg_num > 3 || _wep.chrg_num >= _wep.chrg_max)
 										){
-											var _scale = (_wep.chrg_num / _wep.chrg_max) * max(red_ammo, red_amax);
-											if(_scale >= 1){
-												draw_sprite_ext(spr.RedAmmoHUDFill, ((_wep.chrg_num < _wep.chrg_max) ? 1 : (current_frame / 12)), _x + 2, _y, _scale, 1, 0, c_white, 1);
-											}
+											draw_sprite_ext(
+												spr.RedAmmoHUDFill,
+												((_wep.chrg_num < _wep.chrg_max) ? 1 : (current_frame / 12)),
+												_x + 2,
+												_y,
+												(_wep.chrg_num / _wep.chrg_max) * max(red_ammo, red_amax),
+												1,
+												0,
+												c_white,
+												1
+											);
 										}
 										
 										 // Ammo Charges:
