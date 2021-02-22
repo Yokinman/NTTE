@@ -1328,25 +1328,25 @@
 	 // Set Flagged Projectile Control Scripts:
 	flagProjCont       = [];
 	flagProjContActive = false;
-	flagprojcont_set("bouncer",		proj_bouncer);
-	flagprojcont_set("disc",		proj_disc);
-	flagprojcont_set("lightning",	proj_lightning);
-	flagprojcont_set("plasma",		proj_plasma);
-	flagprojcont_set("seeker",		proj_seeker);
-	flagprojcont_set("nade",		proj_explo);
-	flagprojcont_set("mininade",	proj_explosmall);
-	flagprojcont_set("heavynade",	proj_exploheavy);
-	flagprojcont_set("bloodnade",	proj_exploblood);
-	flagprojcont_set("stickynade",	proj_explostick);
-	flagprojcont_set("ultranade",	proj_suck);
-	flagprojcont_set("ultrabow",	proj_wallbreak);
-	flagprojcont_set("rocket",		proj_rocket);
-	flagprojcont_set("nuke",		proj_nuke);
-	flagprojcont_set("flare",		proj_flare);
-	flagprojcont_set("flame",		proj_flame);
-	flagprojcont_set("toxic",		proj_toxic);
-	flagprojcont_set("cluster",		proj_cluster);
-	flagprojcont_set("hyper",		proj_hyper);
+	flagprojcont_set("bouncer",    proj_bouncer);
+	flagprojcont_set("disc",       proj_disc);
+	flagprojcont_set("lightning",  proj_lightning);
+	flagprojcont_set("plasma",     proj_plasma);
+	flagprojcont_set("seeker",     proj_seeker);
+	flagprojcont_set("nade",       proj_explo);
+	flagprojcont_set("mininade",   proj_explosmall);
+	flagprojcont_set("heavynade",  proj_exploheavy);
+	flagprojcont_set("bloodnade",  proj_exploblood);
+	flagprojcont_set("stickynade", proj_explostick);
+	flagprojcont_set("ultranade",  proj_suck);
+	flagprojcont_set("ultrabow",   proj_wallbreak);
+	flagprojcont_set("rocket",     proj_rocket);
+	flagprojcont_set("nuke",       proj_nuke);
+	flagprojcont_set("flare",      proj_flare);
+	flagprojcont_set("flame",      proj_flame);
+	flagprojcont_set("toxic",      proj_toxic);
+	flagprojcont_set("cluster",    proj_cluster);
+	flagprojcont_set("hyper",      proj_hyper);
 	
 	 // Merged Weapon PopupText Fix:
 	global.wep_name_popup = [
@@ -3409,7 +3409,7 @@
 				var	n = instance_nearest_array(x, y, instances_matching_ne(instances_matching_ne([enemy, Player, Sapling, Ally, SentryGun, CustomHitme], "team", team, 0), "mask_index", mskNone, sprVoid)),
 					a = orandom(speed / 4) * current_time_scale;
 					
-				if(instance_exists(n) && instance_seen(x, y, n)){
+				if(instance_exists(n) && !collision_line(x, y, n.x, n.y, Wall, false, false)){
 					var	_ang = angle_difference(point_direction(x, y, n.x, n.y), direction),
 						_turnSpeed = abs(_ang / (2 + abs(_ang / 5)));
 						
@@ -4472,7 +4472,7 @@
 	if(instance_exists(_target) && point_distance(x, y, _target.x, _target.y) < 120){
 		motion_add(point_direction(x, y, _target.x, _target.y), 1);
 	}
-	if(_seeker && instance_seen(x, y, _target)){
+	if(_seeker && !collision_line(x, y, _target.x, _target.y, Wall, false, false)){
 		motion_add(point_direction(x, y, _target.x, _target.y), 1);
 	}
 	if(_nuke){
@@ -4585,11 +4585,14 @@
 #macro  infinity                                                                                1/0
 #macro  instance_max                                                                            instance_create(0, 0, DramaCamera)
 #macro  current_frame_active                                                                    (current_frame % 1) < current_time_scale
+#macro  game_scale_nonsync                                                                      game_screen_get_width_nonsync() / game_width
 #macro  anim_end                                                                                (image_index + image_speed_raw >= image_number || image_index + image_speed_raw < 0)
 #macro  enemy_sprite                                                                            (sprite_index != spr_hurt || anim_end) ? ((speed <= 0) ? spr_idle : spr_walk) : sprite_index
 #macro  enemy_boss                                                                              ('boss' in self) ? boss : ('intro' in self || array_find_index([Nothing, Nothing2, BigFish, OasisBoss], object_index) >= 0)
 #macro  player_active                                                                           visible && !instance_exists(GenCont) && !instance_exists(LevCont) && !instance_exists(SitDown) && !instance_exists(PlayerSit)
-#macro  game_scale_nonsync                                                                      game_screen_get_width_nonsync() / game_width
+#macro  target_visible                                                                          !collision_line(x, y, target.x, target.y, Wall, false, false)
+#macro  target_direction                                                                        point_direction(x, y, target.x, target.y)
+#macro  target_distance                                                                         point_distance(x, y, target.x, target.y)
 #macro  bbox_width                                                                              (bbox_right + 1) - bbox_left
 #macro  bbox_height                                                                             (bbox_bottom + 1) - bbox_top
 #macro  bbox_center_x                                                                           (bbox_left + bbox_right + 1) / 2
@@ -4639,8 +4642,6 @@
 #define trace_error(_error)                                                                     mod_script_call_nc  ('mod', 'telib', 'trace_error', _error);
 #define view_shift(_index, _dir, _pan)                                                          mod_script_call_nc  ('mod', 'telib', 'view_shift', _index, _dir, _pan);
 #define sleep_max(_milliseconds)                                                                mod_script_call_nc  ('mod', 'telib', 'sleep_max', _milliseconds);
-#define instance_seen(_x, _y, _obj)                                                     return  mod_script_call_nc  ('mod', 'telib', 'instance_seen', _x, _y, _obj);
-#define instance_near(_x, _y, _obj, _dis)                                               return  mod_script_call_nc  ('mod', 'telib', 'instance_near', _x, _y, _obj, _dis);
 #define instance_budge(_objAvoid, _disMax)                                              return  mod_script_call_self('mod', 'telib', 'instance_budge', _objAvoid, _disMax);
 #define instance_random(_obj)                                                           return  mod_script_call_nc  ('mod', 'telib', 'instance_random', _obj);
 #define instance_clone()                                                                return  mod_script_call_self('mod', 'telib', 'instance_clone');

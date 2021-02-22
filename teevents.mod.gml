@@ -104,7 +104,7 @@
 			
 		with(instances_matching_ne([chestprop, RadChest], "object_index", RadMaggotChest)){
 			if(!position_meeting(x, y, PortalClear)){
-				array_push(_chest, id);
+				array_push(_chest, self);
 			}
 		}
 		
@@ -131,12 +131,12 @@
 			
 		with(instances_matching_ne([MaggotSpawn, BigMaggot], "id", null)){
 			if(chance(1, point_distance(x, y, other.x, other.y) / (_park ? 64 : 160))){
-				instance_delete(id);
+				instance_delete(self);
 			}
 		}
 		with(instances_matching_ne([Scorpion, GoldScorpion], "id", null)){
 			if(chance(1, point_distance(x, y, other.x, other.y) / (_city ? 32 : 160))){
-				instance_delete(id);
+				instance_delete(self);
 			}
 		}
 		
@@ -311,7 +311,7 @@
 				with(instance_nearest_bbox(x + orandom(1), y + orandom(1), _inst)){
 					with(instances_meeting(x, y, Wall)){
 						with(instances_matching_gt(Debris, "id", instance_create(x, y, FloorExplo))){
-							instance_delete(id);
+							instance_delete(self);
 						}
 						instance_destroy();
 					}
@@ -333,7 +333,7 @@
 						Wall
 					)){
 						if(!position_meeting(bbox_center_x + lengthdir_x(16, _dir), bbox_center_y + lengthdir_y(16, _dir), Wall)){
-							array_push(_wall, id);
+							array_push(_wall, self);
 						}
 					}
 				}
@@ -392,6 +392,7 @@
 		
 		 // Secrets Within:
 		switch(other.type){
+			
 			case "Chest":
 				
 				 // Offset:
@@ -404,7 +405,7 @@
 				var _chest = [];
 				with(instances_matching_ne([chestprop, RadChest, Mimic, SuperMimic], "object_index", RadMaggotChest)){
 					if(!position_meeting(x, y, PortalClear)){
-						array_push(_chest, id);
+						array_push(_chest, self);
 					}
 				}
 				with(instance_nearest_rectangle(x1, y1, x2, y2, _chest)){
@@ -616,14 +617,20 @@
 						dummy_spawn--;
 						dummy_music = true;
 						
+						 // B-Theme Next Level:
+						GameCont.proto = true;
+						
 						 // Move Player to Spawnable Position:
 						var	_wall      = [],
 							_playerPos = [];
 							
 						with(Wall){
-							if((!place_free(x - 16, y) && !place_free(x + 16, y)) || (!place_free(x, y + 16) && ! place_free(x, y - 16))){
+							if(
+								(!place_free(x - 16, y) && !place_free(x + 16, y)) ||
+								(!place_free(x, y + 16) && !place_free(x, y - 16))
+							){
 								if(array_length(instance_rectangle_bbox(bbox_left - 1, bbox_top - 1, bbox_right + 1, bbox_bottom + 1, TopSmall)) > 0){
-									array_push(_wall, id);
+									array_push(_wall, self);
 								}
 							}
 						}
@@ -635,7 +642,7 @@
 									
 								if(!collision_line(x, y, _fx, _fy, Wall, true, true)){
 									with(Player){
-										array_push(_playerPos, [id, x, y]);
+										array_push(_playerPos, [self, x, y]);
 										x = _fx;
 										y = _fy;
 									}
@@ -694,7 +701,7 @@
 			 // Nevermind...
 			else if(instance_exists(Portal) && position_meeting(x, y, TutorialTarget)){
 				with(instances_at(x, y, TutorialTarget)){
-					if(position_meeting(other.x, other.y, id)){
+					if(position_meeting(other.x, other.y, self)){
 						my_health = 0;
 					}
 				}
@@ -702,19 +709,6 @@
 			
 			break;
 			
-	}
-	
-#define BlockedRoom_cleanup
-	 // Play B-Theme on Next Level:
-	if(type == "Dummy" && dummy_spawn <= 0){
-		with(MusCont) with(self){
-			var _lastArea = GameCont.area;
-			GameCont.area = -1;
-			event_perform(ev_alarm, 11);
-			GameCont.area = _lastArea;
-			alarm_set(11, 1);
-		}
-		GameCont.proto = true;
 	}
 	
 #define MaggotPark_text    return `THE SOUND OF ${event_tip}FLIES`;
@@ -754,7 +748,7 @@
 				_y = _fy;
 			}
 		}
-		instance_delete(id);
+		instance_delete(self);
 	}
 	
 	 // Generate Area:
@@ -791,9 +785,9 @@
 			 // Delete Old Chest:
 			instance_create(x, y, Cactus);
 			with(instances_matching(instances_matching(PortalClear, "x", x), "y", y)){
-				instance_delete(id);
+				instance_delete(self);
 			}
-			instance_delete(id);
+			instance_delete(self);
 			
 			 // Upgrade:
 			with(chest_create(other.x, other.y, BigWeaponChest, true)){
@@ -915,7 +909,7 @@
 			with(instance_create(x, y, FloorExplo)){
 				depth = 10;
 				with(instances_matching_gt(Debris, "id", id)){
-					instance_delete(id);
+					instance_delete(self);
 				}
 			}
 			instance_destroy();
@@ -931,7 +925,7 @@
 					_baby  = (size <= 1);
 					
 				obj_create(x, y, _scorp[_gold, _baby]);
-				instance_delete(id);
+				instance_delete(self);
 			}
 		}
 	}
@@ -1043,14 +1037,14 @@
 	 // The Alpha:
 	with(instance_furthest(_spawnX, _spawnY, Scorpion)){
 		obj_create(x, y, "SilverScorpion");
-		instance_delete(id);
+		instance_delete(self);
 	}
 	
 	 // Oh No:
 	if(GameCont.loops > 0) repeat(GameCont.loops){
 		with(instance_random([Scorpion, GoldScorpion])){
 			obj_create(x, y, "SilverScorpion");
-			instance_delete(id);
+			instance_delete(self);
 		}
 	}
 	
@@ -1089,7 +1083,7 @@
 					}
 				}*/
 				if(_notEvent){
-					array_push(_spawnFloor, id);
+					array_push(_spawnFloor, self);
 				}
 			}
 		}
@@ -1219,7 +1213,7 @@
 								}
 								
 								 // The Boys:
-								array_push(_inst, id);
+								array_push(_inst, self);
 								for(var _side = -1; _side <= 1; _side += 2){
 									var	_off = 20,
 										_num = 2,
@@ -1260,13 +1254,13 @@
 															y += lengthdir_y(16, _d + _o);
 															right *= choose(-1, 1);
 															gunangle = 90 + (angle_difference(90, gunangle) * right) + orandom(20);
-															array_push(_inst, id);
+															array_push(_inst, self);
 														}
 													}
 													break;
 											}
 											
-											array_push(_inst, id);
+											array_push(_inst, self);
 										}
 										
 										_d += (_off * 2) / (_num - 1);
@@ -1337,7 +1331,11 @@
 	if(array_length(inst)){
 		with(inst){
 			 // Deactivate:
-			if(instance_exists(self) && !instance_near(x, y, Player, 96) && sprite_index != spr_hurt){
+			if(
+				instance_exists(self)
+				&& sprite_index != spr_hurt
+				&& distance_to_object(Player) > 80
+			){
 				alarm1 = -1;
 				if(instance_is(self, GatorSmoke)){
 					timer = 0;
@@ -1366,11 +1364,11 @@
 							if(alarm1 < 0) alarm1 = 25 + random(10);
 							
 							 // Alerted:
-							if(enemy_target(x, y) && instance_seen(x, y, target) && my_health > 0){
+							if(enemy_target(x, y) && target_visible && my_health > 0){
 								_alert = true;
 								
 								var _ready = (sign(right) == sign(dcos(gunangle)));
-								scrAim(point_direction(x, y, target.x, target.y) + orandom(20));
+								scrAim(target_direction + orandom(20));
 								
 								 // Move:
 								if(_ready){
@@ -1488,7 +1486,7 @@
 			if(place_meeting(x, y, Floor) && !collision_line(other.x, other.y, bbox_center_x, bbox_center_y, Wall, false, true)){
 				if(chance(1, 4)){
 					with(top_create(bbox_center_x + orandom(2), y - 8 + orandom(2), "TopRaven", 0, 0)){
-						array_push(_instTop, id);
+						array_push(_instTop, self);
 					}
 				}
 			}
@@ -1504,7 +1502,7 @@
 					 // Perched Raven:
 					with(top_create(x, y + 1, "TopRaven", 0, 0)){
 						z += max(0, ((sprite_get_bbox_bottom(other.spr_idle) + 1) - sprite_get_bbox_top(other.spr_idle)) - 5);
-						array_push(_instTop, id);
+						array_push(_instTop, self);
 					}
 					
 					 // Ravens:
@@ -1513,7 +1511,7 @@
 						
 					for(var _d = _dir; _d < _dir + 360; _d += (360 / _num)){
 						with(top_create(x + lengthdir_x(_l, _d), y + lengthdir_x(_l, _d), "TopRaven", _d + orandom(40), -1)){
-							array_push(_instTop, id);
+							array_push(_instTop, self);
 						}
 					}
 				}
@@ -1553,7 +1551,7 @@
 						_objNum = irandom(array_length(_obj) - 1);
 					}
 					with(obj_create(x, y, _obj[_objNum])){
-						array_push(_instIdle, id);
+						array_push(_instIdle, self);
 						move_contact_solid(_dir + orandom(20), random_range(16, 64));
 						
 						 // Loop Groups:
@@ -1608,14 +1606,17 @@
 	}
 	
 	 // Activate Ravens:
-	if(array_length(inst_top) && instance_near(x, y, Player, 96)){
-		var _time = 60;
-		with(instances_matching_lt(inst_top, "jump_time", 0)){
-			jump_time = _time * (128 / point_distance(x, y, other.x, other.y));
-			_time += random_range(15 + (2400 / _time), 60);
+	if(array_length(inst_top)){
+		var _player = instance_nearest(x, y, Player);
+		if(instance_exists(_player) && point_distance(x, y, _player.x, _player.y) < 96){
+			var _time = 60;
+			with(instances_matching_lt(inst_top, "jump_time", 0)){
+				jump_time = _time * (128 / point_distance(x, y, other.x, other.y));
+				_time += random_range(15 + (2400 / _time), 60);
+			}
+			inst_idle = [];
+			inst_top  = [];
 		}
-		inst_idle = [];
-		inst_top  = [];
 	}
 	
 	
@@ -1786,7 +1787,7 @@
 					true
 				)){
 					sprite_index = spr.FloorSeal;
-					//array_push(_floorRoad, id);
+					//array_push(_floorRoad, self);
 					
 					 // Props:
 					if(chance(1, 5)){
@@ -2284,7 +2285,7 @@
 	with(instance_nearest(spawn_x, spawn_y, IDPDSpawn)){
 		with(obj_create(x, y, "BigIDPDSpawn")){
 			instance_create(x, y, PortalClear);
-			with(alert_create(id, (freak ? spr.PopoFreakAlert : spr.PopoEliteAlert))){
+			with(alert_create(self, (freak ? spr.PopoFreakAlert : spr.PopoEliteAlert))){
 				image_speed = 0.1;
 				alert       = { spr:spr.AlertIndicatorPopo, x:-5, y:5 };
 				target_x    = -3;
@@ -2292,7 +2293,7 @@
 				alarm0      = other.alarm0;
 			}
 		}
-		instance_delete(id);
+		instance_delete(self);
 	}
 	
 	 // Fewer Guardians:
@@ -2543,11 +2544,14 @@
 #macro  infinity                                                                                1/0
 #macro  instance_max                                                                            instance_create(0, 0, DramaCamera)
 #macro  current_frame_active                                                                    (current_frame % 1) < current_time_scale
+#macro  game_scale_nonsync                                                                      game_screen_get_width_nonsync() / game_width
 #macro  anim_end                                                                                (image_index + image_speed_raw >= image_number || image_index + image_speed_raw < 0)
 #macro  enemy_sprite                                                                            (sprite_index != spr_hurt || anim_end) ? ((speed <= 0) ? spr_idle : spr_walk) : sprite_index
 #macro  enemy_boss                                                                              ('boss' in self) ? boss : ('intro' in self || array_find_index([Nothing, Nothing2, BigFish, OasisBoss], object_index) >= 0)
 #macro  player_active                                                                           visible && !instance_exists(GenCont) && !instance_exists(LevCont) && !instance_exists(SitDown) && !instance_exists(PlayerSit)
-#macro  game_scale_nonsync                                                                      game_screen_get_width_nonsync() / game_width
+#macro  target_visible                                                                          !collision_line(x, y, target.x, target.y, Wall, false, false)
+#macro  target_direction                                                                        point_direction(x, y, target.x, target.y)
+#macro  target_distance                                                                         point_distance(x, y, target.x, target.y)
 #macro  bbox_width                                                                              (bbox_right + 1) - bbox_left
 #macro  bbox_height                                                                             (bbox_bottom + 1) - bbox_top
 #macro  bbox_center_x                                                                           (bbox_left + bbox_right + 1) / 2
@@ -2597,8 +2601,6 @@
 #define trace_error(_error)                                                                     mod_script_call_nc  ('mod', 'telib', 'trace_error', _error);
 #define view_shift(_index, _dir, _pan)                                                          mod_script_call_nc  ('mod', 'telib', 'view_shift', _index, _dir, _pan);
 #define sleep_max(_milliseconds)                                                                mod_script_call_nc  ('mod', 'telib', 'sleep_max', _milliseconds);
-#define instance_seen(_x, _y, _obj)                                                     return  mod_script_call_nc  ('mod', 'telib', 'instance_seen', _x, _y, _obj);
-#define instance_near(_x, _y, _obj, _dis)                                               return  mod_script_call_nc  ('mod', 'telib', 'instance_near', _x, _y, _obj, _dis);
 #define instance_budge(_objAvoid, _disMax)                                              return  mod_script_call_self('mod', 'telib', 'instance_budge', _objAvoid, _disMax);
 #define instance_random(_obj)                                                           return  mod_script_call_nc  ('mod', 'telib', 'instance_random', _obj);
 #define instance_clone()                                                                return  mod_script_call_self('mod', 'telib', 'instance_clone');

@@ -148,7 +148,7 @@
 				image_yscale += 0.15 * _skill;
 				
 				 // Area:
-				area_goal  = irandom_range(8, 12) + (4 * _skill) + (4 * (weapon_get_gold(_wep) != 0));
+				area_goal  = irandom_range(8, 12)/* + (4 * _skill)*/ + (4 * (weapon_get_gold(_wep) != 0));
 				area_chaos = chance(1, 2);
 				area_chest = [];
 				

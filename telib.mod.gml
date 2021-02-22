@@ -3,6 +3,7 @@
 	
 	 // Mod Lists:
 	ntte_mods = mod_variable_get("mod", "teassets", "mods");
+	
 	 // Bind Events:
 	global.portal_pickups_bind = script_bind(CustomStep,      portal_pickups_step,                        0, false);
 	global.rad_path_bind       = script_bind(CustomEndStep,   rad_path_step,                              0, false);
@@ -11,9 +12,9 @@
 	 // Object List (Used for cheats mod, basically):
 	ntte_obj_list = ds_map_create();
 	ntte_obj_list[? "tegeneral"  ] = ["AlertIndicator", "BigDecal", "BigIDPDSpawn", "BoneArrow", "BoneSlash", "BoneFX", "BuriedVault", "BuriedShrine", "CustomBullet", "CustomFlak", "CustomShell", "CustomPlasma", "GroundFlameGreen", "Igloo", "MergeFlak", "Pet", "PetRevive", "PetWeaponBecome", "PetWeaponBoss", "PortalBullet", "PortalGuardian", "PortalPrevent", "ReviveNTTE", "SmallGreenExplosion", "TopDecal", "TopObject", "TopTiny", "WallDecal", "WallEnemy"];
-	ntte_obj_list[? "tepickups"  ] = ["Backpack", "Backpacker", "BackpackPickup", "BatChest", /*"BloodLustPickup",*/ "BoneBigPickup", "BonePickup", "BonusAmmoChest", "BonusAmmoMimic", "BonusAmmoPickup", "BonusHealthChest", "BonusHealthMimic", "BonusHealthPickup", "BuriedVaultChest", "BuriedVaultChestDebris", "BuriedVaultPedestal", "CatChest", "ChestShop", "CursedAmmoChest", "CursedMimic", "CustomChest", "CustomPickup", "GatorStatue", "GatorStatueFlak", "HammerHeadPickup", "HarpoonPickup", "OrchidBall", "OrchidChest", "OrchidSkill", "PalaceAltar", "PalankingStatue", "ParrotFeather", "ParrotChester", "Pizza", "PizzaChest", "PizzaStack", "Prompt", "RedAmmoChest", "RedAmmoPickup", "SpiritPickup", "SunkenChest", "SunkenCoin", "VaultFlower", "VaultFlowerSparkle", "WepPickupGrounded", "WepPickupStick"];
+	ntte_obj_list[? "tepickups"  ] = ["Backpack", "Backpacker", "BackpackPickup", "BatChest", /*"BloodLustPickup",*/ "BoneBigPickup", "BonePickup", "BonusAmmoChest", "BonusAmmoMimic", "BonusAmmoPickup", "BonusHealthChest", "BonusHealthMimic", "BonusHealthPickup", "BuriedVaultChest", "BuriedVaultChestDebris", "BuriedVaultPedestal", "CatChest", "ChestShop", "CursedAmmoChest", "CursedMimic", "CustomChest", "CustomPickup", "GatorStatue", "GatorStatueFlak", "HammerHeadPickup", "HarpoonPickup", "OrchidBall", "OrchidChest", "OrchidSkill", "PalaceAltar", "ParrotFeather", "ParrotChester", "Pizza", "PizzaChest", "PizzaStack", "Prompt", "RedAmmoChest", "RedAmmoPickup", "SpiritPickup", "SunkenChest", "SunkenCoin", "VaultFlower", "VaultFlowerSparkle", "WepPickupGrounded", "WepPickupStick"];
 	ntte_obj_list[? "tedesert"   ] = ["BabyScorpion", "BabyScorpionGold", "BanditCamper", "BanditHiker", "BanditTent", "BigCactus", "BigMaggotSpawn", "Bone", "CoastBossBecome", "CoastBoss", "CowSkull", "FlySpin", "VenomBlast", "ScorpionRock", "SilverScorpion", "SilverScorpionDevastator", "SilverScorpionFlak", "VenomFlak", "VenomPellet", "VenomPelletBack", "WantBigMaggot"];
-	ntte_obj_list[? "tecoast"    ] = ["BloomingAssassin", "BloomingAssassinHide", "BloomingBush", "BloomingCactus", "BuriedCar", "ClamShield", "ClamShieldSlash", "CoastBigDecal", "CoastDecal", "CoastDecalCorpse", "Creature", "Diver", "DiverHarpoon", "Gull", "Harpoon", "HarpoonStick", "NetNade", "Palanking", "PalankingDie", "PalankingSlash", "PalankingSlashGround", "PalankingToss", "Palm", "Pelican", "Seal", "SealAnchor", "SealDisc", "SealHeavy", "SealMine", "TrafficCrab", "Trident"];
+	ntte_obj_list[? "tecoast"    ] = ["BloomingAssassin", "BloomingAssassinHide", "BloomingBush", "BloomingCactus", "BuriedCar", "ClamShield", "ClamShieldSlash", "CoastBigDecal", "CoastDecal", "CoastDecalCorpse", "Creature", "Diver", "DiverHarpoon", "Gull", "Harpoon", "HarpoonStick", "NetNade", "Palanking", "PalankingDie", "PalankingSlash", "PalankingSlashGround", "PalankingStatue", "PalankingToss", "Palm", "Pelican", "Seal", "SealAnchor", "SealDisc", "SealHeavy", "SealMine", "TrafficCrab", "Trident"];
 	ntte_obj_list[? "teoasis"    ] = ["BubbleBomb", "BubbleExplosion", "BubbleExplosionSmall", "BubbleSlash", "CrabTank", "HammerShark", "HyperBubble", "OasisPetBecome", "Puffer", "SunkenRoom", "SunkenSealSpawn", "WaterStreak"];
 	ntte_obj_list[? "tetrench"   ] = ["Angler", "AnglerGold", "Eel", "EelSkull", "ElectroPlasma", "ElectroPlasmaBig", "ElectroPlasmaImpact", "Jelly", "JellyElite", "Kelp", "LightningDisc", "PitSpark", "PitSquid", "PitSquidArm", "PitSquidBomb", "PitSquidDeath", "QuasarBeam", "QuasarRing", "TeslaCoil", "TopDecalWaterMine", "TrenchFloorChunk", "Vent", "WantEel"];
 	ntte_obj_list[? "tesewers"   ] = ["AlbinoBolt", "AlbinoGator", "AlbinoGrenade", "BabyGator", "Bat", "BatBoss", "BatCloud", "BatDisc", "BatScreech", "BoneGator", /*"BossHealFX",*/ "Cabinet", "Cat", "CatBoss", "CatBossAttack", "CatDoor", "CatDoorDebris", "CatGrenade", "CatHole", "CatHoleBig", "CatLight", "ChairFront", "ChairSide", "Couch", "LairBorder", "Manhole", "ManholeOpen", "NewTable", "Paper", "PizzaDrain", "PizzaManholeCover", "PizzaRubble", "PizzaTV", "SewerDrain", "SewerRug", "TurtleCool"];
@@ -447,9 +448,7 @@
 	}
 	
 	 // Lag Debugging:
-	if(lag){
-		lag_bind_call("begin_step");
-	}
+	lag_bind_call("begin_step");
 	
 #define ntte_step
 	 // Bound Step Events:
@@ -458,9 +457,7 @@
 	}
 	
 	 // Lag Debugging:
-	if(lag){
-		lag_bind_call("step");
-	}
+	lag_bind_call("step");
 	
 #define ntte_end_step
 	 // Bound End Step Events:
@@ -485,9 +482,7 @@
 	}
 	
 	 // Lag Debugging:
-	if(lag){
-		lag_bind_call("end_step");
-	}
+	lag_bind_call("end_step");
 	
 #define obj_draw
 	if(lag) trace_time();
@@ -568,8 +563,8 @@
 			trace_time("pre-on_" + _event);
 			
 			 // Enable Events:
-			with(instances_matching_ne(_obj, "ntte_" + _event, null)){
-				variable_instance_set(self, "on_" + _event, variable_instance_get(self, "ntte_" + _event));
+			with(instances_matching_ne(_obj, "ntte_lag_" + _event, null)){
+				variable_instance_set(self, "on_" + _event, variable_instance_get(self, "ntte_lag_" + _event));
 			}
 			
 			 // Call Events:
@@ -585,8 +580,8 @@
 				
 				 // Disable Events:
 				with(instances_matching_ne(_inst, "id", null)){
-					variable_instance_set(self, "ntte_" + _event, variable_instance_get(self, "on_" + _event));
-					variable_instance_set(self, "on_"   + _event, []);
+					variable_instance_set(self, "ntte_lag_" + _event, variable_instance_get(self, "on_" + _event));
+					variable_instance_set(self, "on_"       + _event, []);
 				}
 			}
 			
@@ -594,9 +589,9 @@
 		}
 		
 		 // Reset Events:
-		else with(instances_matching_ne(_obj, "ntte_" + _event, null)){
-			variable_instance_set(self, "on_"   + _event, variable_instance_get(self, "ntte_" + _event));
-			variable_instance_set(self, "ntte_" + _event, null);
+		else with(instances_matching_ne(_obj, "ntte_lag_" + _event, null)){
+			variable_instance_set(self, "on_"       + _event, variable_instance_get(self, "ntte_lag_" + _event));
+			variable_instance_set(self, "ntte_lag_" + _event, null);
 		}
 	}
 	
@@ -1097,86 +1092,30 @@
 	
 	return (random(_denom) < _numer * current_time_scale);
 	
-//#define lerp_ct(_val1, _val2, _amount)
-//	/*
-//		Like 'lerp()', but used when modifying a persistent value every frame (for timescale support)
-//	*/
-//	
-//	return lerp(_val2, _val1, power(1 - _amount, current_time_scale));
-//	
-//#define angle_lerp(_ang1, _ang2, _num)
-//	/*
-//		Linearly interpolates between the two given angles
-//		
-//		Ex:
-//			lerp(90, 180, 0.5) == 135
-//			lerp(20, 270, 0.1) == 9
-//	*/
-//	
-//	return _ang1 + (angle_difference(_ang2, _ang1) * _num);
-//	
-//#define angle_lerp_ct(_ang1, _ang2, _num)
-//	/*
-//		Like 'angle_lerp()', but used when modifying a persistent value every frame (for timescale support)
-//	*/
-//	
-//	return _ang2 + (angle_difference(_ang1, _ang2) * power(1 - _num, current_time_scale));
-	
-#define instance_seen(_x, _y, _obj)
+#define lerp_ct(_val1, _val2, _amount)
 	/*
-		Returns the nearest instance of the given object that is seen by the given position (no walls between)
-		
-		Args:
-			x/y - The position to check
-			obj - An object, instance, or array of instances
+		Like 'lerp()', but used when modifying a persistent value every frame (for timescale support)
 	*/
 	
-	var	_disMax = infinity,
-		_inst   = noone;
-		
-	with(_obj){
-		if(!collision_line(_x, _y, x, y, Wall, false, false)){
-			var _dis = point_distance(_x, _y, x, y);
-			if(_dis < _disMax){
-				_disMax = _dis;
-				_inst   = self;
-			}
-		}
-	}
+	return lerp(_val2, _val1, power(1 - _amount, current_time_scale));
 	
-	return _inst;
-	
-#define instance_near(_x, _y, _obj, _dis)
+#define angle_lerp(_ang1, _ang2, _num)
 	/*
-		Returns the nearest instance of the given object that is within the given distance of the given position
+		Linearly interpolates between the two given angles
 		
-		Args:
-			x/y - The position to check
-			obj - An object, instance, or array of instances
-			dis - The distance to check, can be a single number for max distance or a 2-element array for [min, max]
-			
 		Ex:
-			instance_near(x, y, Player, 96)
-			instance_near(x, y, instances_matching(hitme, "team", 2), [32, 64])
+			lerp(90, 180, 0.5) == 135
+			lerp(20, 270, 0.1) == 9
 	*/
 	
-	var	_inst   = noone,
-		_disMin = (is_array(_dis) ? _dis[0] : 0),
-		_disMax = (is_array(_dis) ? _dis[1] : _dis);
-		
-	with(
-		(is_real(_obj) && object_exists(_obj) && _disMin <= 0)
-		? instance_nearest(_x, _y, _obj)
-		: _obj
-	){
-		var _d = point_distance(_x, _y, x, y);
-		if(_d <= _disMax && _d >= _disMin){
-			_disMax = _d;
-			_inst   = self;
-		}
-	}
+	return _ang1 + (angle_difference(_ang2, _ang1) * _num);
 	
-	return _inst;
+#define angle_lerp_ct(_ang1, _ang2, _num)
+	/*
+		Like 'angle_lerp()', but used when modifying a persistent value every frame (for timescale support)
+	*/
+	
+	return _ang2 + (angle_difference(_ang1, _ang2) * power(1 - _num, current_time_scale));
 	
 #define script_bind(_scriptObj, _scriptRef, _depth, _visible)
 	return mod_script_call_nc('mod', 'teassets', 'script_bind', script_ref_create(script_bind), _scriptObj, (is_real(_scriptRef) ? script_ref_create(_scriptRef) : _scriptRef), _depth, _visible);
@@ -1734,9 +1673,15 @@
 				 // Rescue Players:
 				if(timer > 30){
 					with(instances_matching(instances_matching_ne(Player, "angle", 0), "roll", 0)){
-						if(instance_near(x, y, instance_seen(x, y, other), 48)){
-							if(skill_get(mut_throne_butt) > 0) angle = 0;
-							else roll = true;
+						if(point_distance(x, y, other.x, other.y) < 48){
+							if(!collision_line(x, y, other.x, other.y, Wall, false, false)){
+								if(skill_get(mut_throne_butt) > 0){
+									angle = 0;
+								}
+								else{
+									roll = true;
+								}
+							}
 						}
 					}
 				}
@@ -1796,7 +1741,11 @@
 					
 				with(instances_matching([Rad, BigRad], "speed", 0)){
 					var _proto = instance_nearest(x, y, ProtoStatue);
-					if(distance_to_object(_proto) >= _attractDisProto || !instance_seen(x, y, _proto)){
+					if(
+						!instance_exists(_proto)
+						|| distance_to_object(_proto) >= _attractDisProto
+						|| collision_line(x, y, _proto.x, _proto.y, Wall, false, false)
+					){
 						if(distance_to_object(Player) >= _attractDis){
 							var	_p   = instance_nearest(x, y, Player),
 								_dis = 12 * current_time_scale,

@@ -317,8 +317,8 @@
 	
 	 // Prepare Dash:
 	if(enemy_target(x, y)){
-		if(curse > 0 || instance_seen(x, y, target)){
-			if(instance_near(x, y, target, 160)){
+		if(curse > 0 || target_visible){
+			if(target_distance < 160){
 				if(place_meeting(x, target.y, target) || place_meeting(target.x, y, target)){
 					alarm3 = 7;
 					
@@ -326,7 +326,7 @@
 					sprite_index = spr_chrg;
 					
 					 // Motion:
-					scrAim(pround(point_direction(x, y, target.x, target.y), 90));
+					scrAim(pround(target_direction, 90));
 					motion_set(gunangle + 180 + orandom(30), maxspeed);
 					move_contact_solid(direction, speed);
 					
@@ -508,10 +508,11 @@
 	
 	if(!teleport){
 		if(enemy_target(x, y)){
-			var _targetDir = point_direction(x, y, target.x, target.y),
-				_canWarp   = true; // (my_health < maxhealth);
+			var _targetDir  = target_direction,
+				_targetSeen = target_visible,
+				_canWarp    = true; // (my_health < maxhealth);
 				
-			if(instance_seen(x, y, target) || chance(1, 3)){
+			if(_targetSeen || chance(1, 3)){
 				 // Attempt Cloning:
 				var _cloneNum = 0;
 				with(instances_matching(instances_matching(CustomObject, "name", "CrystalClone"), "creator", self)){
@@ -526,7 +527,7 @@
 				}
 				
 				 // Get Back, Bro:
-				if(instance_near(x, y, target, 64)){
+				if(target_distance < 64){
 					scrWalk((_targetDir + 180) + orandom(30), random_range(10, 20));
 					alarm1 = walk + random(10);
 				}
@@ -554,7 +555,7 @@
 			}
 			
 			 // Watch Your Back:
-			if(instance_seen(x, y, target)){
+			if(_targetSeen){
 				scrRight(_targetDir);
 			}
 		}
@@ -577,7 +578,8 @@
 					_y = bbox_center_y;
 					
 				with(other){
-					if(instance_near(_x, _y, target, [teleport_dis_min, teleport_dis_max])){
+					var _targetDis = point_distance(_x, _y, target.x, target.y);
+					if(_targetDis >= teleport_dis_min && _targetDis <= teleport_dis_max){
 						if(!place_meeting(_x, _y, Wall)){
 							_floor = other;
 						}
@@ -598,7 +600,7 @@
 							_y = bbox_center_y;
 							
 						with(other){
-							if(!instance_near(_x, _y, target, teleport_dis_min)){
+							if(point_distance(_x, _y, target.x, target.y) >= teleport_dis_min){
 								if(!place_meeting(_x, _y, Wall)){
 									_floor = other;
 								}
@@ -771,6 +773,7 @@
 		with(obj_create(x, y, "CrystalClone")){
 			creator = other;
 			team    = other.team;
+			time    = 150;
 			clone   = instances_matching(instances_matching_lt(clone, "size", 3), "intro", null);
 		}
 		
@@ -1430,6 +1433,7 @@
 			if(i == 0 && other.tesseract){
 				area           = "red";
 				subarea        = 3;
+				area_goal      = irandom_range(5, 10);
 				area_chest     = [_chestTypes[i], AmmoChest, AmmoChest, WeaponChest, WeaponChest, "Backpack"];
 				area_chest_pos = "random";
 			}
@@ -1474,7 +1478,6 @@
 		area_chaos     = false;
 		big            = false;
 		setup          = true;
-		tesseract      = false;
 		
 		 // Alarms:
 		alarm0 = 12;
@@ -1531,7 +1534,7 @@
 			 // Vars:
 			friction *= 4/3;
 			maxspeed *= 2/3;
-			damage    = ceil(damage * 4/3);
+			damage   += floor(damage / 2);
 			big       = true;
 			
 			 // Alarms:
@@ -2338,14 +2341,14 @@
 	alarm1 = 80 + random(20);
 	
 	 // Near Target:
-	if(enemy_target(x, y) && instance_near(x, y, target, 240)){
-		scrAim(point_direction(x, y, target.x, target.y));
+	if(enemy_target(x, y) && target_distance < 240){
+		scrAim(target_direction);
 		
 		 // Attack:
 		if(chance(1, 3)){
-			alarm2 = 26;
-			target_x = target.x;
-			target_y = target.y;
+			alarm2       = 26;
+			target_x     = target.x;
+			target_y     = target.y;
 			sprite_index = spr_fire;
 			sound_play(sndCrystalJuggernaut);
 		}
@@ -2423,12 +2426,12 @@
 				i++;
 			}
 			var _ang = random(360);
-			for(var a = _ang; a < _ang + 360; a += 120 + orandom(30)){
-				var	l = 16,
-					_tx = _x,
-					_ty = _y;
+			for(var _dir = _ang; _dir < _ang + 360; _dir += 120 + orandom(30)){
+				var	_len = 16,
+					_tx  = _x,
+					_ty  = _y;
 					
-				with(instance_create(_x + lengthdir_x(l, a), _y + lengthdir_y(l, a), LaserCharge)){
+				with(instance_create(_x + lengthdir_x(_len, _dir), _y + lengthdir_y(_len, _dir), LaserCharge)){
 					motion_add(point_direction(x, y, _tx, _ty), (point_distance(x, y, _tx, _ty) / i));
 					alarm0 = i;
 				}
@@ -2440,12 +2443,12 @@
 		}
 		
 		 // Aim After Target:
-		if(instance_seen(x, y, target)){
-			var	l = 32,
-				d = point_direction(target_x, target_y, target.x, target.y);
+		if(instance_exists(target) && target_visible){
+			var	_l = 32,
+				_d = point_direction(target_x, target_y, target.x, target.y);
 				
-			target_x += lengthdir_x(l, d);
-			target_y += lengthdir_y(l, d);
+			target_x += lengthdir_x(_l, _d);
+			target_y += lengthdir_y(_l, _d);
 		}
 		
 		if(--ammo > 0) alarm2 = 4;
@@ -2718,13 +2721,14 @@
 		mask_index = mskPlasma;
 		damage     = 200;
 		force      = 2;
+		team       = 2;
 		target     = noone;
 		
 		 // Sounds:
 		sound_stop(sndMeatExplo);
-		audio_sound_set_track_position(sound_play_pitchvol(sndUltraEmpty,	 1.1 + random(0.2), 0.4), 0.1)
-		audio_sound_set_track_position(sound_play_pitchvol(sndExplosionS,	 0.8 + random(0.4), 0.6), 0.03);
-		audio_sound_set_track_position(sound_play_pitchvol(sndIDPDNadeExplo, 1.2 + random(0.4), 0.6), 0.4);
+		audio_sound_set_track_position(sound_play_hit_ext(sndUltraEmpty,    1.1 + random(0.2), 2), 0.1)
+		audio_sound_set_track_position(sound_play_hit_ext(sndExplosionS,    0.8 + random(0.4), 3), 0.03);
+		audio_sound_set_track_position(sound_play_hit_ext(sndIDPDNadeExplo, 1.2 + random(0.4), 3), 0.4);
 		
 		return self;
 	}
@@ -3007,43 +3011,38 @@
 	alarm1 = irandom_range(10, 30);
 	
 	if(enemy_target(x, y)){
-		var	_targetDir  = point_direction(x, y, target.x, target.y),
-			_targetSeen = instance_seen(x, y, target);
-			
-		if(_targetSeen) target_seen = true;
+		 // Permanent Aggro:
+		if(!target_seen && target_visible){
+			target_seen = true;
+		}
 		
 		 // Attack:
-		if(chance(2, 3) && instance_near(x, y, target, 96)){
+		if(chance(2, 3) && target_distance < 96){
 			alarm1 = 45;
-			walk = 0;
+			walk   = 0;
 			speed /= 2;
-			scrRight(_targetDir);
 			
-			var _last = noone;
+			var _dir = target_direction;
+			
+			scrRight(_dir);
 			
 			for(var i = -1; i <= 1; i++){
-				var	l = 128,
-					d = (i * 90) + pround(_targetDir, 45) + orandom(2);
+				var	_l = 128,
+					_d = (i * 90) + pround(_dir, 45) + orandom(2);
 					
-				with(projectile_create(x + lengthdir_x(l, d), y + lengthdir_y(l, d), "VlasmaBullet", d + 180, 1)){
+				with(projectile_create(x + lengthdir_x(_l, _d), y + lengthdir_y(_l, _d), "VlasmaBullet", _d + 180, 1)){
 					sprite_index = spr.EnemyVlasmaBullet;
 					target       = other;
 					target_x     = other.x;
 					target_y     = other.y;
-					
-					_last = self;
+					my_sound     = sound_play_hit_ext(sndHyperCrystalSpawn, 0.9 + random(0.3), 0.8);
 				}
-			}
-			
-			 // Effects:
-			with(_last){
-				my_sound = sound_play_hit_ext(sndHyperCrystalSpawn, 0.9 + random(0.3), 0.8);
 			}
 		}
 		
 		 // Towards Target:
-		else if(_targetSeen || target_seen){
-			scrWalk(_targetDir + orandom(10), 15);
+		else if(target_seen){
+			scrWalk(target_direction + orandom(10), 15);
 		}
 		
 		 // Wander:
@@ -3139,45 +3138,47 @@
 	 // Shhh dont tell anybody
 	var _obj = ((curse > 0) ? InvSpider : Spider);
 	with(instance_create(x, y, _obj)){
-		x = other.x;
-		y = other.y;
+		x       = other.x;
+		y       = other.y;
 		creator = other;
-		right = other.right;
-		alarm1 = 10 + random(10);
+		right   = other.right;
+		alarm1  = 10 + random(10);
 		
 		 // Out of Wall:
 		instance_budge(Wall, -1);
 	}
 
 	 // Effects:
-	for(var a = 0; a < 360; a += (360 / 6)){
-		var o = random(8);
-		with(instance_create(x + lengthdir_x(o, a), y + lengthdir_y(o, a), Smoke)){
-			motion_add(a + orandom(20), 1 + random(1.5));
+	for(var _dir = 0; _dir < 360; _dir += (360 / 6)){
+		var _len = random(8);
+		with(instance_create(x + lengthdir_x(_len, _dir), y + lengthdir_y(_len, _dir), Smoke)){
+			motion_add(_dir + orandom(20), 1 + random(1.5));
 			depth = -3;
 			with(instance_create(x, y, Dust)){
-				depth = other.depth;
 				motion_add(other.direction + orandom(90), 2);
+				depth = other.depth;
 			}
 		}
 	}
-	for(var a = direction; a < direction + 360; a += (360 / 3)){
+	for(var _dir = direction; _dir < direction + 360; _dir += (360 / 3)){
 		with(obj_create(x, y, "CatDoorDebris")){
 			sprite_index = other.spr_hatch;
 			image_index  = irandom(image_number - 1);
-			direction    = a + orandom(30);
+			direction    = _dir + orandom(30);
 			speed       += 1 + random(4);
 		}
 	}
-	sound_play_hit(sndHitRock, 0.3);
+	sound_play_hit(sndHitRock,       0.3);
 	sound_play_hit(sndBouncerBounce, 0.5);
 	sound_play_pitchvol(sndCocoonBreak, 2 + random(1), 0.8);
-
+	
+	 // Gone:
 	instance_delete(self);
 
 #define Spiderling_alrm1
 	alarm1 = 10 + irandom(10);
 	
+	 // Targeting:
 	if(instance_exists(Player)){
 		target = instance_nearest_array(x, y, [Player, CrystalProp, InvCrystal]);
 	}
@@ -3188,8 +3189,12 @@
 	}
 	
 	 // Move Towards Target:
-	if(instance_seen(x, y, target) && instance_near(x, y, target, 96)){
-		scrWalk(point_direction(x, y, target.x, target.y) + orandom(20), 14);
+	if(
+		instance_exists(target)
+		&& target_distance < 96
+		&& target_visible
+	){
+		scrWalk(target_direction + orandom(20), 14);
 		if(instance_is(target, prop)){
 			direction += orandom(60);
 			alarm1 *= random_range(1, 2);
@@ -3218,7 +3223,6 @@
 	}
 	
 	
-#macro  SOUNDDEBUG false
 #define Tesseract_create(_x, _y)
 	/*
 		Loop boss for the Warp Zone
@@ -3233,7 +3237,7 @@
 		spr_idle     = spr.TesseractEyeIdle;
 		spr_walk     = spr.TesseractEyeIdle;
 		spr_hurt     = spr.TesseractEyeHurt;
-		//spr_dead     = spr.TesseractGameover;
+	//	spr_dead     = spr.TesseractGameover;
 		spr_fire     = spr.TesseractEyeFire;
 		spr_tell	 = spr.TesseractEyeTell;
 		spr_arms     = spr.TesseractWeapon;
@@ -3243,15 +3247,16 @@
 		depth        = -3;
 		
 		 // Sound:
-		snd_hurt = sndHyperCrystalHurt;
+		snd_hurt = sndBigDogWalk;
 		snd_dead = sndHyperCrystalDead;
-		snd_lowh = sndHyperCrystalLowHP;
+		snd_lowh = sndNothingRise;
+		snd_mele = sndBasicUltra;
 		
 		 // Vars:
 		mask_index  = msk.CaveHole;
 		friction    = 0.2;
 		maxhealth   = boss_hp(600);
-		meleedamage = 200;
+		meleedamage = maxhealth;
 		canmelee    = false;
 		raddrop     = 24;
 		size        = 6;
@@ -3261,7 +3266,7 @@
 		minspeed    = 0.2;
 		intro       = false;
 		ammo        = 3;
-		tauntdelay  = 60;
+		tauntdelay  = 30;
 		direction   = random(360);
 		
 		 // Alarms:
@@ -3323,10 +3328,10 @@
 	}
 	
 	 // Bounce Around:
-	if(place_meeting(x + hspeed_raw, y + vspeed_raw, Wall)){
+	/*if(place_meeting(x + hspeed_raw, y + vspeed_raw, Wall)){
 		if(place_meeting(x + hspeed_raw, y, Wall)) hspeed_raw *= -0.1;
 		if(place_meeting(x, y + vspeed_raw, Wall)) vspeed_raw *= -0.1;
-	}
+	}*/
 	
 	 // Weapons:
 	with(weapons){
@@ -3371,7 +3376,8 @@
 	if(tauntdelay > 0 && !instance_exists(Player)){
 		tauntdelay -= current_time_scale;
 		if(tauntdelay <= 0){
-			if(SOUNDDEBUG) trace("tesseract:death taunt");
+			sound_play_pitch(sndLastGrowl,               0.3);
+			sound_play_pitch(sndHyperCrystalChargeExplo, 0.3);
 		}
 	}
 	
@@ -3421,7 +3427,10 @@
 	alarm1 = 60 + random(30);
 	 
 	 // Just Schmovin' About:
-	scrWalk(direction + orandom(90), 60 + random(60));
+	scrWalk(
+		direction + orandom(90),
+		60 + random(60)
+	);
 	 
 	 // Boss Intro:
 	if(!intro){
@@ -3430,7 +3439,12 @@
 		with(boss_intro("Tesseract")){
 			loops = GameCont.loops;
 		}
-		if(SOUNDDEBUG) trace("tesseract:intro");
+		
+		 // Sound:
+		sound_play_pitch(sndBigDogHit,     0.2);
+		sound_play_pitch(sndTVOn,          0.3);
+		sound_play_pitch(sndRogueCanister, 0.5);
+		sound_play_pitch(sndBallMamaLoop,  8.0);
 		
 		 // Clear Walls:
 		wall_clear(x, y);
@@ -3446,10 +3460,37 @@
 	}
 	
 	 // Where da hell is this guy:
-	else if(enemy_target(x, y) && (!instance_seen(x, y, target) || !instance_near(x, y, target, 192))){
-		direction = point_direction(x, y, target.x, target.y);
+	else if(enemy_target(x, y) && (!target_visible || target_distance > 192)){
+		direction = target_direction + orandom(30);
 		with(wall_clear(x, y)){
 			motion_add(other.direction, 8);
+		}
+		alarm1 = 15 + random(30);
+	}
+	
+	 // Move Toward Center of Area:
+	else if(instance_exists(Floor)){
+		var	_x1 = x,
+			_y1 = y,
+			_x2 = x,
+			_y2 = y;
+			
+		 // Find Boundary of Visible Floors:
+		with(Floor){
+			if(!collision_line(other.x, other.y, bbox_center_x, bbox_center_y, Wall, false, false)){
+				if(bbox_left   < _x1) _x1 = bbox_left;
+				if(bbox_top    < _y1) _y1 = bbox_top;
+				if(bbox_right  > _x2) _x2 = bbox_right;
+				if(bbox_bottom > _y2) _y2 = bbox_bottom;
+			}
+		}
+		
+		 // Move:
+		var	_tx = (_x1 + _x2) / 2,
+			_ty = (_y1 + _y2) / 2;
+			
+		if(point_distance(x, y, _tx, _ty) > 64){
+			direction = point_direction(x, y, _tx, _ty) + orandom(30);
 		}
 	}
 	
@@ -3481,7 +3522,7 @@
 				 // Aim:
 				if(instance_exists(target)){
 					var _lastRot = _wep.rotation;
-					_wep.rotation = point_direction(x, y, target.x, target.y);
+					_wep.rotation = target_direction;
 					_wep.rotspeed = 1.2 * sign(angle_difference(_wep.rotation, _lastRot));
 				}
 				
@@ -3500,8 +3541,8 @@
 				weapons[array_length(weapons) - 1] = _wep;
 				
 				 // Sounds:
-				audio_sound_set_track_position(sound_play_pitch(sndPortalStrikeLoop, 1.3 + random(0.25)), 0.93);
-				audio_sound_set_track_position(sound_play_pitch(sndSnowBotDead, 	 1.3 + random(0.2)),  0.55);
+				audio_sound_set_track_position(sound_play_hit_ext(sndPortalStrikeLoop, 1.3 + random(0.25), 10), 0.93);
+				audio_sound_set_track_position(sound_play_hit_ext(sndSnowBotDead,      1.3 + random(0.20), 10), 0.55);
 			}
 		}
 	}
@@ -3537,8 +3578,8 @@
 			image_index  = 0;
 			
 			 // Sounds:
-			audio_sound_set_track_position(sound_play_pitch(sndPortalStrikeLoop, 0.85 + random(0.15)), 1.33);
-			audio_sound_set_track_position(sound_play_pitchvol(sndSnowBotThrow, 0.6 + random(0.2), 0.8), 0.2);
+			audio_sound_set_track_position(sound_play_hit_ext(sndPortalStrikeLoop, 0.85 + random(0.15), 10), 1.33);
+			audio_sound_set_track_position(sound_play_hit_ext(sndSnowBotThrow,     0.60 + random(0.20),  8), 0.2);
 			
 			 // Cooldown:
 			if(ammo <= 0){
@@ -3551,21 +3592,17 @@
 	enemy_hurt(_damage, _force, _direction);
 	
 	 // Pitch Hurt Sound:
-	if(snd_hurt == sndHyperCrystalHurt){
-		sound_play_pitchvol(sndBigDogWalk, 1, 0.5);
-		sound_play_pitchvol(sndNothingHurtHigh, 0.8 + random(0.2), 0.5);
-	}
-	
-	 // Half HP:
-	var _half = maxhealth / 2;
-	if(my_health <= _half && my_health + _damage > _half){
-		if(snd_lowh == sndHyperCrystalLowHP){
-			sound_play(snd_lowh);
-		}
-		else sound_play(snd_lowh);
+	if(snd_hurt == sndBigDogWalk){
+		sound_play_hit_ext(sndHyperCrystalHurt, 0.5 + random(0.3), 1);
+		sound_play_hit_ext(sndNothingHurtHigh,  0.8 + random(0.2), 1);
 	}
 	
 #define Tesseract_death
+	 // Boss Win Music:
+	with(MusCont){
+		alarm_set(1, 1);
+	}
+	
 	 // Eject Arms:
 	while(array_length(weapons)){
 		Tesseract_arm_break(0);
@@ -3573,12 +3610,7 @@
 	
 	 // Pitch Death Sound:
 	if(snd_dead == sndHyperCrystalDead){
-		if(SOUNDDEBUG) trace("tesseract:death");
-	}
-	
-	 // Boss Win Music:
-	with(MusCont){
-		alarm_set(1, 1);
+		sound_play_pitch(sndHyperCrystalChargeExplo, 0.2);
 	}
 	
 	 // Pickups:
@@ -3612,6 +3644,17 @@
 		}
 		ammo = min(ammo, 0);
 		
+		 // Half Arms:
+		if(array_length(weapons) == floor(weapons_max / 2)){
+			if(snd_lowh == sndNothingRise){
+				sound_play_pitch(snd_lowh,                   0.7);
+				sound_play_pitch(sndLastMeleeCharge,         0.25);
+				sound_play_pitch(sndHyperCrystalChargeExplo, 1.5);
+			}
+			else sound_play(snd_lowh);
+			view_shake_at(x, y, 40);
+		}
+		
 		 // Exploding Arm:
 		with(projectile_create(
 			x + lengthdir_x((_wep.offset - _wep.kick) * image_xscale, _wep.rotation),
@@ -3628,16 +3671,18 @@
 			depth        = other.depth - 1;
 			strike       = _wep.strike;
 			
+			 // Effects:
 			repeat(8){
 				with(scrFX(x, y, [direction + choose(-45, 45), 3], Smoke)){
 					depth = other.depth;
 					growspeed /= 3;
 				}
 			}
+			view_shake_at(x, y, 20);
 			
 			 // Sound:
-			sound_play_hit_ext(sndIDPDNadeExplo, 0.6, 1);
-			sound_play_hit_ext(sndHeavyCrossbow, 0.6, 1.5);
+			sound_play_hit_ext(sndIDPDNadeExplo, 0.6, 3.5);
+			sound_play_hit_ext(sndHeavyCrossbow, 0.6, 5);
 			
 			return self;
 		}
@@ -3719,7 +3764,7 @@
 	
 	 // Pickups:
 	repeat(2){
-		pickup_drop(100, 0);
+		pickup_drop(60, 0);
 	}
 	rad_drop(x, y, 16, direction, speed);
 	
@@ -3739,9 +3784,9 @@
 	}
 	
 	 // Sound:
-	sound_play_hit_big(sndPlantPotBreak, 0.1);
-	sound_play_hit_big(sndExplosionS,    0.1);
-	sound_play_hit_ext(sndIDPDNadeExplo, 0.6 + orandom(0.1), 4);
+	sound_play_hit_ext(sndPlantPotBreak, 0.85 + orandom(0.15), 4);
+	sound_play_hit_ext(sndExplosion,     1.0  + orandom(0.1),  5);
+	sound_play_hit_ext(sndIDPDNadeExplo, 0.6  + orandom(0.1),  5);
 	
 	 // Activate Strike:
 	with(strike){
@@ -3894,7 +3939,7 @@
 	
 	 // Goodbye:
 	if(_dis <= 0){
-		/*if(instance_near(x, y, creator, 96)){ // Break Walls (Only when near creator to avoid infinite stage expansion):
+		/*if(instance_exists(creator) && point_distance(x, y, creator.x, creator.y) < 96){ // Break Walls (Only when near creator to avoid infinite stage expansion):
 			if(array_length(_inst)) with(_inst[0]){
 				wall_clear(x, y);
 			}
@@ -4426,8 +4471,15 @@
 	
 	 // Warp Time:
 	if(instance_number(enemy) - instance_number(Van) <= 0){
-		if(instance_seen(x, y, Player)){
-			open = true;
+		var _seen = false;
+		with(Player){
+			if(!collision_line(x, y, other.x, other.y, Wall, false, false)){
+				_seen = true;
+				break;
+			}
+		}
+		if(_seen){
+			open   = true;
 			alarm0 = -1;
 			var _snd = sound_play_hit_ext(sndHyperCrystalSearch, 0.5 + orandom(0.1), 4);
 			if(sound_play_ambient(sndHyperCrystalAppear)){
@@ -5363,11 +5415,14 @@
 #macro  infinity                                                                                1/0
 #macro  instance_max                                                                            instance_create(0, 0, DramaCamera)
 #macro  current_frame_active                                                                    (current_frame % 1) < current_time_scale
+#macro  game_scale_nonsync                                                                      game_screen_get_width_nonsync() / game_width
 #macro  anim_end                                                                                (image_index + image_speed_raw >= image_number || image_index + image_speed_raw < 0)
 #macro  enemy_sprite                                                                            (sprite_index != spr_hurt || anim_end) ? ((speed <= 0) ? spr_idle : spr_walk) : sprite_index
 #macro  enemy_boss                                                                              ('boss' in self) ? boss : ('intro' in self || array_find_index([Nothing, Nothing2, BigFish, OasisBoss], object_index) >= 0)
 #macro  player_active                                                                           visible && !instance_exists(GenCont) && !instance_exists(LevCont) && !instance_exists(SitDown) && !instance_exists(PlayerSit)
-#macro  game_scale_nonsync                                                                      game_screen_get_width_nonsync() / game_width
+#macro  target_visible                                                                          !collision_line(x, y, target.x, target.y, Wall, false, false)
+#macro  target_direction                                                                        point_direction(x, y, target.x, target.y)
+#macro  target_distance                                                                         point_distance(x, y, target.x, target.y)
 #macro  bbox_width                                                                              (bbox_right + 1) - bbox_left
 #macro  bbox_height                                                                             (bbox_bottom + 1) - bbox_top
 #macro  bbox_center_x                                                                           (bbox_left + bbox_right + 1) / 2
@@ -5417,8 +5472,6 @@
 #define trace_error(_error)                                                                     mod_script_call_nc  ('mod', 'telib', 'trace_error', _error);
 #define view_shift(_index, _dir, _pan)                                                          mod_script_call_nc  ('mod', 'telib', 'view_shift', _index, _dir, _pan);
 #define sleep_max(_milliseconds)                                                                mod_script_call_nc  ('mod', 'telib', 'sleep_max', _milliseconds);
-#define instance_seen(_x, _y, _obj)                                                     return  mod_script_call_nc  ('mod', 'telib', 'instance_seen', _x, _y, _obj);
-#define instance_near(_x, _y, _obj, _dis)                                               return  mod_script_call_nc  ('mod', 'telib', 'instance_near', _x, _y, _obj, _dis);
 #define instance_budge(_objAvoid, _disMax)                                              return  mod_script_call_self('mod', 'telib', 'instance_budge', _objAvoid, _disMax);
 #define instance_random(_obj)                                                           return  mod_script_call_nc  ('mod', 'telib', 'instance_random', _obj);
 #define instance_clone()                                                                return  mod_script_call_self('mod', 'telib', 'instance_clone');

@@ -78,22 +78,12 @@
 				instance_delete(self);
 			}
 			
-			 // Rock Decals:
-			else if(instance_is(self, TopSmall)){
-				if(instance_exists(GenCont)){
-					if(chance(1, 80) && !collision_rectangle(bbox_left - 1, bbox_top - 1, bbox_right + 1, bbox_bottom + 1, Floor, false, false)){
-						obj_create(bbox_center_x, bbox_center_y, "CoastDecal");
-					}
-				}
-				instance_delete(self);
-			}
-			
 			 // Destroy Wall Decals:
 			else if(instance_is(self, FloorExplo)){
 				if(instance_exists(Bones) || instance_exists(TopPot)){
 					with(instances_meeting(x, y, [Bones, TopPot])){
 						if(place_meeting(x, y, other)){
-							instance_delete(id);
+							instance_delete(self);
 						}
 					}
 				}
@@ -134,6 +124,14 @@
 #define area_start
 	 // Enable Area:
 	variable_instance_set(GameCont, "ntte_active_" + mod_current, true);
+	
+	 // Rock Props:
+	with(TopSmall){
+		if(chance(1, 80)){
+			obj_create(bbox_center_x, bbox_center_y, "CoastDecal");
+		}
+		instance_delete(self);
+	}
 	
 	 // Active Sea Drawing:
 	with(ds_map_values(global.sea_bind)){
@@ -212,7 +210,7 @@
 	 // Anglers:
 	with(RadChest) if(chance(1, 40)){
 		obj_create(x, y, "Angler");
-		instance_delete(id);
+		instance_delete(self);
 	}
 	
 	 // Reset Floor Surfaces:
@@ -611,7 +609,7 @@
 						yprevious  = y;
 						visible    = false;
 						creator    = other;
-						array_push(global.ultraboltfix_floors, id);
+						array_push(global.ultraboltfix_floors, self);
 					}
 				}
 			}
@@ -622,7 +620,7 @@
 	 // Ultra Bolt Fix Pt.2:
 	if(array_length(global.ultraboltfix_floors)){
 		with(instances_matching_ne(global.ultraboltfix_floors, "id", null)){
-			instance_delete(id);
+			instance_delete(self);
 		}
 	}
 	
@@ -792,7 +790,7 @@
 					}
 				}
 				
-				//_inst[i++] = [id, y];
+				//_inst[i++] = [self, y];
 			}
 			//array_sort_sub(_inst, 1, true);
 			global.sea_inst = instances_matching_gt(global.sea_inst, "wading", 0);
@@ -1473,11 +1471,14 @@
 #macro  infinity                                                                                1/0
 #macro  instance_max                                                                            instance_create(0, 0, DramaCamera)
 #macro  current_frame_active                                                                    (current_frame % 1) < current_time_scale
+#macro  game_scale_nonsync                                                                      game_screen_get_width_nonsync() / game_width
 #macro  anim_end                                                                                (image_index + image_speed_raw >= image_number || image_index + image_speed_raw < 0)
 #macro  enemy_sprite                                                                            (sprite_index != spr_hurt || anim_end) ? ((speed <= 0) ? spr_idle : spr_walk) : sprite_index
 #macro  enemy_boss                                                                              ('boss' in self) ? boss : ('intro' in self || array_find_index([Nothing, Nothing2, BigFish, OasisBoss], object_index) >= 0)
 #macro  player_active                                                                           visible && !instance_exists(GenCont) && !instance_exists(LevCont) && !instance_exists(SitDown) && !instance_exists(PlayerSit)
-#macro  game_scale_nonsync                                                                      game_screen_get_width_nonsync() / game_width
+#macro  target_visible                                                                          !collision_line(x, y, target.x, target.y, Wall, false, false)
+#macro  target_direction                                                                        point_direction(x, y, target.x, target.y)
+#macro  target_distance                                                                         point_distance(x, y, target.x, target.y)
 #macro  bbox_width                                                                              (bbox_right + 1) - bbox_left
 #macro  bbox_height                                                                             (bbox_bottom + 1) - bbox_top
 #macro  bbox_center_x                                                                           (bbox_left + bbox_right + 1) / 2
@@ -1527,8 +1528,6 @@
 #define trace_error(_error)                                                                     mod_script_call_nc  ('mod', 'telib', 'trace_error', _error);
 #define view_shift(_index, _dir, _pan)                                                          mod_script_call_nc  ('mod', 'telib', 'view_shift', _index, _dir, _pan);
 #define sleep_max(_milliseconds)                                                                mod_script_call_nc  ('mod', 'telib', 'sleep_max', _milliseconds);
-#define instance_seen(_x, _y, _obj)                                                     return  mod_script_call_nc  ('mod', 'telib', 'instance_seen', _x, _y, _obj);
-#define instance_near(_x, _y, _obj, _dis)                                               return  mod_script_call_nc  ('mod', 'telib', 'instance_near', _x, _y, _obj, _dis);
 #define instance_budge(_objAvoid, _disMax)                                              return  mod_script_call_self('mod', 'telib', 'instance_budge', _objAvoid, _disMax);
 #define instance_random(_obj)                                                           return  mod_script_call_nc  ('mod', 'telib', 'instance_random', _obj);
 #define instance_clone()                                                                return  mod_script_call_self('mod', 'telib', 'instance_clone');

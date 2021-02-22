@@ -495,7 +495,7 @@
 			visible    = false;
 			persistent = true;
 			stat_found = false;
-			array_push(other.ntte_pet, id);
+			array_push(other.ntte_pet, self);
 			
 			 // Skin:
 			pet_set_skin(other.bskin);
@@ -1019,7 +1019,11 @@
 							switch(object_index){
 								
 								case BigMaggot:
-									if(alarm1 < 0 && instance_exists(_vars.target) && instance_seen(x, y, _vars.target)){
+									if(
+										alarm1 < 0
+										&& instance_exists(_vars.target)
+										&& !collision_line(x, y, _vars.target.x, _vars.target.y, Wall, false, false)
+									){
 										alarm1 = 900; // JW u did this to me
 									}
 								case MaggotSpawn:
@@ -1074,7 +1078,7 @@
 									 // Aim at Target:
 									if(alarm2 > 5 && instance_exists(_vars.target)){
 										gunangle = point_direction(x, y, _vars.target.x, _vars.target.y);
-										script_bind_step(charm_sniper_gunangle, 0, id, gunangle);
+										script_bind_step(charm_sniper_gunangle, 0, self, gunangle);
 									}
 									
 									break;
@@ -1529,7 +1533,7 @@
 				if(_dis < _disMax){
 					if(!instance_is(self, prop)){
 						_disMax = _dis;
-						_vars.target = id;
+						_vars.target = self;
 					}
 				}
 			}
@@ -1543,7 +1547,7 @@
 		}
 		
 		with(Player){
-			array_push(_playerPos, [id, x, y]);
+			array_push(_playerPos, [self, x, y]);
 			
 			if(instance_exists(_vars.target)){
 				x = _vars.target.x;
@@ -1775,11 +1779,14 @@
 #macro  infinity                                                                                1/0
 #macro  instance_max                                                                            instance_create(0, 0, DramaCamera)
 #macro  current_frame_active                                                                    (current_frame % 1) < current_time_scale
+#macro  game_scale_nonsync                                                                      game_screen_get_width_nonsync() / game_width
 #macro  anim_end                                                                                (image_index + image_speed_raw >= image_number || image_index + image_speed_raw < 0)
 #macro  enemy_sprite                                                                            (sprite_index != spr_hurt || anim_end) ? ((speed <= 0) ? spr_idle : spr_walk) : sprite_index
 #macro  enemy_boss                                                                              ('boss' in self) ? boss : ('intro' in self || array_find_index([Nothing, Nothing2, BigFish, OasisBoss], object_index) >= 0)
 #macro  player_active                                                                           visible && !instance_exists(GenCont) && !instance_exists(LevCont) && !instance_exists(SitDown) && !instance_exists(PlayerSit)
-#macro  game_scale_nonsync                                                                      game_screen_get_width_nonsync() / game_width
+#macro  target_visible                                                                          !collision_line(x, y, target.x, target.y, Wall, false, false)
+#macro  target_direction                                                                        point_direction(x, y, target.x, target.y)
+#macro  target_distance                                                                         point_distance(x, y, target.x, target.y)
 #macro  bbox_width                                                                              (bbox_right + 1) - bbox_left
 #macro  bbox_height                                                                             (bbox_bottom + 1) - bbox_top
 #macro  bbox_center_x                                                                           (bbox_left + bbox_right + 1) / 2
@@ -1829,8 +1836,6 @@
 #define trace_error(_error)                                                                     mod_script_call_nc  ('mod', 'telib', 'trace_error', _error);
 #define view_shift(_index, _dir, _pan)                                                          mod_script_call_nc  ('mod', 'telib', 'view_shift', _index, _dir, _pan);
 #define sleep_max(_milliseconds)                                                                mod_script_call_nc  ('mod', 'telib', 'sleep_max', _milliseconds);
-#define instance_seen(_x, _y, _obj)                                                     return  mod_script_call_nc  ('mod', 'telib', 'instance_seen', _x, _y, _obj);
-#define instance_near(_x, _y, _obj, _dis)                                               return  mod_script_call_nc  ('mod', 'telib', 'instance_near', _x, _y, _obj, _dis);
 #define instance_budge(_objAvoid, _disMax)                                              return  mod_script_call_self('mod', 'telib', 'instance_budge', _objAvoid, _disMax);
 #define instance_random(_obj)                                                           return  mod_script_call_nc  ('mod', 'telib', 'instance_random', _obj);
 #define instance_clone()                                                                return  mod_script_call_self('mod', 'telib', 'instance_clone');

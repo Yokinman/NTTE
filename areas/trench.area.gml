@@ -147,7 +147,7 @@
 			 // Ensure Land:
 			floor_set_style(0, null);
 			with(FloorPit){
-				if(instance_near(bbox_center_x, bbox_center_y, other, random_range(64, 96))){
+				if(point_distance(bbox_center_x, bbox_center_y, other.x, other.y) < random_range(64, 96)){
 					floor_set(x, y, true);
 				}
 			}
@@ -157,7 +157,7 @@
 			/*var _num = irandom_range(1, 3) + GameCont.loops;
 			with(array_shuffle(FloorPitless)){
 				if(_num > 0){
-					if(instance_near(bbox_center_x, bbox_center_y, other, 64)){
+					if(point_distance(bbox_center_x, bbox_center_y, other.x, other.y) < 64){
 						if(
 							!place_meeting(x, y, Wall)  &&
 							!place_meeting(x, y, hitme) &&
@@ -173,7 +173,7 @@
 			
 			 // Man of the Hour:
 			obj_create(x, y, "AnglerGold");
-			instance_delete(id);
+			instance_delete(self);
 		}
 	}
 	
@@ -183,7 +183,7 @@
 		with(instance_random(WeaponChest)){
 			chest_create(x, y, "SunkenChest", true);
 			instance_create(x, y, PortalClear);
-			instance_delete(id);
+			instance_delete(self);
 		}
 	}
 	*/
@@ -205,7 +205,7 @@
 			var _spawnFloor = [];
 			
 			with(Floor) if(distance_to_object(Player) > 96){
-				array_push(_spawnFloor, id);
+				array_push(_spawnFloor, self);
 			}
 				
 			with(instance_random(_spawnFloor)){
@@ -269,7 +269,7 @@
 	variable_instance_set(GameCont, "ntte_active_" + mod_current, false);
 	
 	 // Reset Pit:
-	pit_clear(false);
+	pit_reset(false);
 	
 #define area_make_floor
 	var	_x = x,
@@ -432,14 +432,14 @@
 	}
 	with(Bandit){
 		obj_create(x, y, "Diver");
-		instance_delete(id);
+		instance_delete(self);
 	}
 	
 	 // Got too many eels, bro? No problem:
 	with(instances_matching(CustomEnemy, "name", "Eel")){
 		if(array_length(instances_matching(CustomEnemy, "name", "Eel")) > 8 + (4 * GameCont.loops)){
 			obj_create(x, y, "WantEel");
-			instance_delete(id);
+			instance_delete(self);
 		}
 		else break;
 	}
@@ -689,15 +689,15 @@
 		visible = false;
 		
 		 // Vars:
-		if(_dir == 0) direction = random(360);
-		else direction = _dir;
-		speed = max(_spd, 1);
-		friction = 0.01;
-		rotspeed = _rot;
+		direction = ((_dir == 0) ? random(360) : _dir);
+		speed     = max(_spd, 1);
+		friction  = 0.01;
+		rotspeed  = _rot;
 		
+		 // Events:
 		on_step = pit_sink_step;
 		
-		return id;
+		return self;
 	}
 	
 #define pit_sink_step
@@ -705,14 +705,14 @@
 	image_blend = merge_color(image_blend, c_black, 0.05 * current_time_scale);
 	
 	 // Shrink into Abyss:
-	var d = random_range(0.001, 0.01) * current_time_scale
-	image_xscale -= sign(image_xscale) * d;
-	image_yscale -= sign(image_yscale) * d;
+	var _d = random_range(0.001, 0.01) * current_time_scale
+	image_xscale -= sign(image_xscale) * _d;
+	image_yscale -= sign(image_yscale) * _d;
 	if(vspeed < 0) vspeed *= 0.9;
 	y += 1/3 * current_time_scale;
 	
 	 // Spins:
-	direction += rotspeed * current_time_scale;
+	direction   += rotspeed * current_time_scale;
 	image_angle += rotspeed * current_time_scale;
 	
 	 // He gone:
@@ -1146,7 +1146,7 @@
 		}
 	}
 	
-#define pit_clear(_bool)
+#define pit_reset(_bool)
 	ds_grid_clear(global.pit_grid, _bool);
 	
 	 // Set Pit Drawing:
@@ -1181,11 +1181,14 @@
 #macro  infinity                                                                                1/0
 #macro  instance_max                                                                            instance_create(0, 0, DramaCamera)
 #macro  current_frame_active                                                                    (current_frame % 1) < current_time_scale
+#macro  game_scale_nonsync                                                                      game_screen_get_width_nonsync() / game_width
 #macro  anim_end                                                                                (image_index + image_speed_raw >= image_number || image_index + image_speed_raw < 0)
 #macro  enemy_sprite                                                                            (sprite_index != spr_hurt || anim_end) ? ((speed <= 0) ? spr_idle : spr_walk) : sprite_index
 #macro  enemy_boss                                                                              ('boss' in self) ? boss : ('intro' in self || array_find_index([Nothing, Nothing2, BigFish, OasisBoss], object_index) >= 0)
 #macro  player_active                                                                           visible && !instance_exists(GenCont) && !instance_exists(LevCont) && !instance_exists(SitDown) && !instance_exists(PlayerSit)
-#macro  game_scale_nonsync                                                                      game_screen_get_width_nonsync() / game_width
+#macro  target_visible                                                                          !collision_line(x, y, target.x, target.y, Wall, false, false)
+#macro  target_direction                                                                        point_direction(x, y, target.x, target.y)
+#macro  target_distance                                                                         point_distance(x, y, target.x, target.y)
 #macro  bbox_width                                                                              (bbox_right + 1) - bbox_left
 #macro  bbox_height                                                                             (bbox_bottom + 1) - bbox_top
 #macro  bbox_center_x                                                                           (bbox_left + bbox_right + 1) / 2
@@ -1235,8 +1238,6 @@
 #define trace_error(_error)                                                                     mod_script_call_nc  ('mod', 'telib', 'trace_error', _error);
 #define view_shift(_index, _dir, _pan)                                                          mod_script_call_nc  ('mod', 'telib', 'view_shift', _index, _dir, _pan);
 #define sleep_max(_milliseconds)                                                                mod_script_call_nc  ('mod', 'telib', 'sleep_max', _milliseconds);
-#define instance_seen(_x, _y, _obj)                                                     return  mod_script_call_nc  ('mod', 'telib', 'instance_seen', _x, _y, _obj);
-#define instance_near(_x, _y, _obj, _dis)                                               return  mod_script_call_nc  ('mod', 'telib', 'instance_near', _x, _y, _obj, _dis);
 #define instance_budge(_objAvoid, _disMax)                                              return  mod_script_call_self('mod', 'telib', 'instance_budge', _objAvoid, _disMax);
 #define instance_random(_obj)                                                           return  mod_script_call_nc  ('mod', 'telib', 'instance_random', _obj);
 #define instance_clone()                                                                return  mod_script_call_self('mod', 'telib', 'instance_clone');

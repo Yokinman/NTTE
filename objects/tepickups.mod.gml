@@ -277,7 +277,8 @@
 	 // BONE!!!
 	if(wep != wep_none){
 		with(instance_create(x, y, WepPickup)){
-			wep = other.wep;
+			wep  = other.wep;
+			ammo = true;
 		}
 	}
 	
@@ -767,7 +768,7 @@
 	if(sprite_index != spr_chrg || anim_end){
 		sprite_index = enemy_sprite;
 	}
-	if(sprite_index == spr_hurt && instance_near(x, y, Player, 48)){
+	if(sprite_index == spr_hurt && enemy_target(x, y) && target_distance < 48){
 		sprite_index = spr_walk;
 	}
 	
@@ -842,7 +843,7 @@
 	if(pull_delay <= 0){
 		 // Pull FX:
 		if(chance_ct(1, 2)){
-			if(instance_near(x, y, other, pull_dis) || instance_exists(Portal)){
+			if(point_distance(x, y, other.x, other.y) < pull_dis || instance_exists(Portal)){
 				with(scrFX([x, 4], [y, 4], 0, FireFly)){
 					sprite_index = spr.BonusFX;
 					depth = other.depth - 1;
@@ -972,7 +973,7 @@
 	if(sprite_index != spr_chrg || anim_end){
 		sprite_index = enemy_sprite;
 	}
-	if(sprite_index == spr_hurt && instance_near(x, y, Player, 48)){
+	if(sprite_index == spr_hurt && enemy_target(x, y) && target_distance < 48){
 		sprite_index = spr_walk;
 	}
 	
@@ -1329,8 +1330,8 @@
 			
 			 // Hold Chest:
 			if(variable_instance_get(target, "name") == "BuriedVaultChest"){
-				target.x = x;
-				target.y = y;
+				target.x     = x;
+				target.y     = y;
 				target.speed = 0;
 			}
 		}
@@ -1875,10 +1876,10 @@
 		with(instance_create(_x + lengthdir_x(_l, _d) + orandom(4), _y + lengthdir_y(_l, _d) + orandom(4), BulletHit)){
 			motion_add(_d + choose(0, 180), random(0.5));
 			sprite_index = sprLightning;
-			image_blend = other.image_blend;
-			image_alpha = 1.5 * (_l / point_distance(_x, _y, other.x, other.y)) * random(abs(other.image_alpha));
-			image_angle = random(360);
-			depth = other.depth - 1;
+			image_blend  = other.image_blend;
+			image_alpha  = 1.5 * (_l / point_distance(_x, _y, other.x, other.y)) * random(abs(other.image_alpha));
+			image_angle  = random(360);
+			depth        = other.depth - 1;
 		}
 		
 		 // Curse:
@@ -1900,11 +1901,12 @@
 		}
 		
 		 // Take Item:
-		var _p = noone;
-		if(instance_exists(prompt)){
-			_p = player_find(prompt.pick);
-		}
-		if(!instance_exists(_p) && place_meeting(x, y, PortalShock)){
+		var _p = (
+			instance_exists(prompt)
+			? player_find(prompt.pick)
+			: noone
+		);
+		if(!instance_exists(_p) && instance_exists(PortalShock) && place_meeting(x, y, PortalShock)){
 			with(instances_meeting(x, y, PortalShock)){
 				if(place_meeting(x, y, other)){
 					var	_disMax  = infinity,
@@ -1913,7 +1915,7 @@
 					with(instances_meeting(x, y, instances_matching_gt(instances_matching(other.object_index, "name", other.name), "open", 0))){
 						var _dis = point_distance(x, y, other.x, other.y);
 						if(_dis < _disMax){
-							_disMax = _dis;
+							_disMax  = _dis;
 							_nearest = self;
 						}
 					}
@@ -1926,9 +1928,9 @@
 			}
 		}
 		if(instance_exists(_p)){
-			var	_x = x,
-				_y = y,
-				_num = num,
+			var	_x      = x,
+				_y      = y,
+				_num    = num,
 				_numDec = 1;
 				
 			 // Spawn From ChestOpen:
@@ -1945,38 +1947,52 @@
 			while(_num > 0){
 				_numDec = 1;
 				switch(type){
+					
 					case ChestShop_basic:
+						
 						switch(drop){
+							
 							case "ammo":
+								
 								instance_create(_x + orandom(2), _y + orandom(2), AmmoPickup);
+								
 								break;
 								
 							case "health":
+								
 								instance_create(_x + orandom(2), _y + orandom(2), HPPickup);
+								
 								break;
 								
 							case "rads":
+								
 								_numDec = _num;
 								with(rad_drop(_x, _y, _num, random(360), 4)){
 									depth--;
 								}
+								
 								break;
 								
 							case "ammo_chest":
+								
 								instance_create(_x, _y - 2, AmmoChest);
 								repeat(3) scrFX(_x, _y, [90 + orandom(60), 4], Dust);
 								instance_create(_x, _y, FXChestOpen);
 								sound_play_pitchvol(sndChest, 0.6 + random(0.2), 3);
+								
 								break;
 								
 							case "health_chest":
+								
 								instance_create(_x, _y - 2, HealthChest);
 								repeat(3) scrFX(_x, _y, [90 + orandom(60), 4], Dust);
 								instance_create(_x, _y, FXChestOpen);
 								sound_play_pitchvol(sndHealthChest, 0.8 + random(0.2), 1.5);
+								
 								break;
 								
 							case "rads_chest":
+								
 								with(instance_create(_x, _y - 6, RadChest)){
 									spr_idle = sprRadChestBig;
 									spr_hurt = sprRadChestBigHurt;
@@ -1984,64 +2000,84 @@
 									instance_create(x, y, ExploderExplo);
 								}
 								sound_play_pitch(sndRadMaggotDie, 0.6 + random(0.2));
+								
 								break;
 								
 							case "bonus_ammo":
+								
 								with(obj_create(_x, _y, "BonusAmmoPickup")) pull_delay = 0;
 								instance_create(_x, _y, GunWarrantEmpty);
+								
 								break;
 								
 							case "bonus_ammo_chest":
+								
 								obj_create(_x, _y - 2, "BonusAmmoChest");
 								repeat(3) scrFX(_x, _y, [90 + orandom(60), 4], Dust);
 								instance_create(_x, _y, GunWarrantEmpty);
 								sound_play_pitchvol(sndChest, 0.6 + random(0.2), 3);
+								
 								break;
 								
 							case "bonus_health":
+								
 								with(obj_create(_x, _y, "BonusHealthPickup")) pull_delay = 0;
 								instance_create(_x, _y, GunWarrantEmpty);
+								
 								break;
 								
 							case "bonus_health_chest":
+								
 								obj_create(_x, _y - 2, "BonusHealthChest");
 								repeat(3) scrFX(_x, _y, [90 + orandom(60), 4], Dust);
 								instance_create(_x, _y, GunWarrantEmpty);
 								sound_play_pitchvol(sndHealthChest, 0.8 + random(0.2), 1.5);
+								
 								break;
 								
 							case "rogue":
+								
 								with(instance_create(_x + orandom(2), _y + orandom(2), RoguePickup)){
 									motion_add(point_direction(x, y, _p.x, _p.y), 3);
 								}
+								
 								break;
 								
 							case "parrot":
+								
 								_numDec = _num;
 								with(obj_create(_x, _y, "ParrotChester")){
 									num = _num;
 								}
+								
 								break;
 								
 							case "infammo":
+								
 								_numDec = _num;
 								with(_p){
 									infammo = _num;
 									reload = max(reload, 1);
 								}
+								
 								break;
 								
 							case "hammerhead":
+								
 								obj_create(_x, _y, "HammerHeadPickup");
 								instance_create(_x, _y, Hammerhead);
+								
 								break;
 								
 							case "spirit":
+								
 								obj_create(_x, _y, "SpiritPickup");
 								instance_create(_x, _y, ImpactWrists);
+								
 								break;
 								
 							case "bone":
+								
 								with(instance_create(_x, _y, WepPickup)){
 									motion_set(point_direction(x, y, _p.x, _p.y) + orandom(8), 4);
 									wep  = "crabbone";
@@ -2049,21 +2085,27 @@
 								}
 								instance_create(_x, _y, Dust);
 								sound_play_pitchvol(sndBloodGamble, 0.8, 1);
+								
 								break;
 								
 							case "bones":
+								
 								_numDec = ((_num > 10) ? 10 : 1);
 								with(obj_create(_x, _y, ((_num > 10) ? "BoneBigPickup" : "BonePickup"))){
 									motion_set(random(360), 3 + random(1));
 								}
+								
 								break;
 								
 							case "red":
+								
 								obj_create(_x, _y, "RedAmmoPickup");
 								obj_create(_x, _y, "CrystalBrainEffect");
+								
 								break;
 								
 							case "soda":
+								
 								with(instance_create(_x, _y, WepPickup)){
 									motion_set(point_direction(x, y, _p.x, _p.y) + orandom(8), 5);
 									wep  = other.soda;
@@ -2077,9 +2119,11 @@
 									motion_add(random(360), 2 + random(3));
 								}
 								sound_play_pitch(sndSodaMachineBreak, 1 + orandom(0.3));
+								
 								break;
 								
 							case "turret":
+								
 								with(instance_create(_x, _y - 4, Turret)){
 									x = xstart;
 									y = ystart;
@@ -2092,16 +2136,21 @@
 										kill = true;
 									}
 								}
+								
 								break;
+								
 						}
 						
 						 // Effects:
 						instance_create(_x, _y, WepSwap);
 						sound_play_pitchvol(sndGunGun,    1.2 + random(0.4), 0.5);
 						sound_play_pitchvol(sndAmmoChest, 0.5 + random(0.2), 0.8);
+						
 						break;
 						
 					case ChestShop_wep:
+						
+						 // Weapon:
 						with(instance_create(_x, _y, WepPickup)){
 							motion_set(point_direction(x, y, _p.x, _p.y) + orandom(8), 5);
 							wep   = other.drop;
@@ -2117,23 +2166,27 @@
 							sound_play_pitchvol(sndCursedPickup, 1 + orandom(0.2), 1.4);
 						}
 						instance_create(_x, _y, GunGun);
+						
 						break;
+						
 				}
 				_num -= _numDec;
 			}
 			
-			instance_create(x, y, PopupText).text = text;
-			instance_create(x, y, PopupText).text = desc;
+			with(instance_create(x, y, PopupText)) text = other.text;
+			with(instance_create(x, y, PopupText)) text = other.desc;
 			
 			 // Sounds:
 			sound_play_pitchvol(sndGammaGutsProc, 1.4 + random(0.1), 0.6);
 			
 			 // Remove other options:
 			with(instances_matching(instances_matching(object_index, "name", name), "creator", creator)){
-				if(--open <= 0) open_state += random(1/3);
+				if(--open <= 0){
+					open_state += random(1/3);
+				}
 			}
 			open_state = 3/4;
-			open = 0;
+			open       = 0;
 			
 			 // Crown Time:
 			if(crown_current == "crime"){
@@ -2157,15 +2210,15 @@
 	image_alpha = abs(image_alpha);
 	
 	var	_openState = clamp(open_state, 0, 1),
-		_spr = sprite_index,
-		_img = image_index,
-		_xsc = image_xscale * max((open > 0) * 0.8, _openState),
-		_ysc = image_yscale * max((open > 0) * 0.8, _openState),
-		_ang = image_angle + (8 * sin(wave / 12)),
-		_col = merge_color(c_black, image_blend, _openState),
-		_alp = image_alpha,
-		_x = x,
-		_y = y;
+		_spr       = sprite_index,
+		_img       = image_index,
+		_xsc       = image_xscale * max((open > 0) * 0.8, _openState),
+		_ysc       = image_yscale * max((open > 0) * 0.8, _openState),
+		_ang       = image_angle + (8 * sin(wave / 12)),
+		_col       = merge_color(c_black, image_blend, _openState),
+		_alp       = image_alpha,
+		_x         = x,
+		_y         = y;
 		
 	if(type == ChestShop_basic && instance_exists(creator) && x < creator.x){
 		_xsc *= -1;
@@ -2175,12 +2228,12 @@
 	if(instance_exists(creator)){
 		var	_sx = creator.x,
 			_sy = creator.y,
-			_d = point_direction(_sx, _sy, _x, _y);
+			_d  = point_direction(_sx, _sy, _x, _y);
 			
 		//_d = angle_lerp(_d, 90, 1 - clamp(open_state, 0, 1));
 		
-		var	_w = point_distance(_sx, _sy, _x, _y) * ((open > 0) ? _openState : min(_openState * 3, 1)),
-			_h = ((sqrt(sqr(sprite_get_width(_spr) * image_xscale * dsin(_d)) + sqr(sprite_get_height(_spr) * image_yscale * dcos(_d))) * 2/3) + random(2)) * max(0, (_openState - 0.5) * 2),
+		var	_w  = point_distance(_sx, _sy, _x, _y) * ((open > 0) ? _openState : min(_openState * 3, 1)),
+			_h  = ((sqrt(sqr(sprite_get_width(_spr) * image_xscale * dsin(_d)) + sqr(sprite_get_height(_spr) * image_yscale * dcos(_d))) * 2/3) + random(2)) * max(0, (_openState - 0.5) * 2),
 			_x1 = _sx + lengthdir_x(0.5, _d),
 			_y1 = _sy + lengthdir_y(1,   _d),
 			_x2 = _sx + lengthdir_x(_w, _d) + lengthdir_x(_h / 2, _d - 90),
@@ -2238,10 +2291,10 @@
 	draw_sprite_ext(_spr, _img, _x, _y, _xsc, _ysc, _ang, merge_color(_col, c_black, 0.5 + (0.1 * sin(wave / 8))), image_alpha * 1.5);
 	draw_set_blend_mode(bm_normal);
 	
-	
+	 // CustomObject:
 	image_alpha = -abs(image_alpha);
-
-
+	
+	
 #define CursedAmmoChest_create(_x, _y)
 	with(obj_create(_x, _y, "CustomChest")){
 		 // Visual:
@@ -2354,7 +2407,7 @@
 	if(sprite_index != spr_chrg || anim_end){
 		sprite_index = enemy_sprite;
 	}
-	if(sprite_index == spr_hurt && instance_near(x, y, Player, 48)){
+	if(sprite_index == spr_hurt && enemy_target(x, y) && target_distance < 48){
 		sprite_index = spr_walk;
 	}
 	
@@ -2599,16 +2652,18 @@
 	
 	 // Attraction:
 	if(is_array(on_pull)){
-		var	_nearest = noone,
-			_disMax = (instance_exists(Portal) ? infinity : pull_dis);
+		var	_disMax  = (instance_exists(Portal) ? infinity : pull_dis),
+			_nearest = noone;
 			
 		 // Find Nearest Attractable Player:
 		with(Player){
 			var _dis = point_distance(x, y, other.x, other.y);
 			if(_dis < _disMax){
-				with(other) if(mod_script_call(on_pull[0], on_pull[1], on_pull[2])){
-					_disMax = _dis;
-					_nearest = other;
+				with(other){
+					if(mod_script_call(on_pull[0], on_pull[1], on_pull[2])){
+						_disMax  = _dis;
+						_nearest = other;
+					}
 				}
 			}
 		}
@@ -2969,8 +3024,8 @@
 #define HarpoonPickup_pull
 	if(instance_exists(target)){ // Stop Sticking
 		if(place_meeting(x, y, Wall)){
-			x = target.x;
-			y = target.y;
+			x         = target.x;
+			y         = target.y;
 			xprevious = x;
 			yprevious = y;
 		}
@@ -3064,10 +3119,7 @@
 				
 				 // Movin':
 				else{
-					motion_add_ct(
-						point_direction(x, y, target.x, target.y),
-						1.5
-					);
+					motion_add_ct(target_direction, 1.5);
 					speed = min(speed, 10);
 					
 					 // Trail:
@@ -3693,114 +3745,6 @@
 	sound_play_hit_ext(sndEnergyHammerUpg, 0.5,               0.8);
 	
 	
-#define PalankingStatue_create(_x, _y)
-	with(instance_create(_x, _y, CustomProp)){
-		var _phase = 0;
-		
-		 // Visual:
-		spr_idle     = spr.PalankingStatueIdle[_phase];
-		spr_hurt     = spr.PalankingStatueHurt[_phase];
-		spr_dead     = spr.PalankingStatueDead;
-		sprite_index = spr_idle;
-		
-		 // Sounds:
-		snd_hurt = sndHitRock;
-		snd_dead = sndPillarBreak;
-		
-		 // Vars:
-		mask_index = sprPortalClear;
-		maxhealth  = 260;
-		team       = 1;
-		size       = 4;
-		phase      = _phase;
-		
-		return self;
-	}
-	
-#define PalankingStatue_step
-	 // Change Phase:
-	if(sprite_index == spr_hurt){
-		var	_mPhase = 4,
-			_cPhase = floor(_mPhase - ((my_health / maxhealth) * _mPhase));
-			
-		while(phase < _cPhase){
-			phase++;
-			
-			 // Resprite:
-			spr_idle     = spr.PalankingStatueIdle[phase];
-			spr_hurt     = spr.PalankingStatueHurt[phase];
-			sprite_index = spr_hurt;
-			
-			 // Chunks:
-			repeat(3){
-				PalankingStatue_chunk(x, y, random(360), random_range(2, 5), random_range(4, 5));
-			}
-			
-			 // Sound:
-			sound_play_hit_ext(snd.PalankingHurt, 0.7 + random(0.2), 0.5);
-		}
-	}
-
-#define PalankingStatue_death
-	 // Boomba:
-	team = 2;
-	var _dis = 16;
-	for(var _dir = 0; _dir < 360; _dir += 90){
-		projectile_create(
-			x + lengthdir_x(_dis, _dir) + orandom(32),
-			y + lengthdir_y(_dis, _dir) + orandom(32),
-			"BubbleExplosion",
-			0,
-			0
-		);
-		projectile_create(x, y, "HyperBubble", _dir, 4);
-	}
-	
-	 // Pickups:
-	for(var i = 0; i < 3; i++){
-		pickup_drop(100, 10, i);
-	}
-	
-	 // Sound:
-	sound_play_hit_ext(snd.PalankingDead, 0.7 + random(0.2), 0.5);
-	
-	 // Effects:
-	repeat(5){
-		PalankingStatue_chunk(x, y, random(360), random_range(1, 3), random_range(6, 10));
-	}
-	for(var i = 0; i < maxp; i++){
-		var	_x = view_xview[i] + (game_width  / 2),
-			_y = view_yview[i] + (game_height / 2);
-			
-		view_shift(
-			i,
-			point_direction(_x, _y, x, y),
-			point_distance(_x, _y, x, y) * 1.5
-		);
-	}
-	sleep(100);
-	
-#define PalankingStatue_chunk(_x, _y, _dir, _spd, _zspd)
-	with(scrFX(_x, _y, [_dir, _spd], ScrapBossCorpse)){
-		sprite_index = spr.PalankingStatueChunk;
-		image_index  = irandom(image_number - 1);
-		friction	 = 0.2;
-		
-		 // Z-ify:
-		with(obj_create(_x, _y, "BackpackPickup")){
-			target    = other;
-			zfriction = 0.6;
-			zspeed    = _zspd;
-			speed     = _spd;
-			with(self){
-				event_perform(ev_step, ev_step_end);
-			}
-		}
-		
-		return self;
-	}
-	
-	
 #define ParrotChester_create(_x, _y)
 	/*
 		Follows a chestprop until it's opened, then sends ParrotFeathers to the nearest Player with race=="parrot"
@@ -3927,7 +3871,11 @@
 		
 		 // Targeting:
 		if(instance_exists(target)){
-			if(!stick){
+			if(stick){
+				visible = target.visible;
+				depth   = target.depth - 1;
+			}
+			else{
 				 // Orbit Target:
 				if(stick_wait != 0){
 					if(stick_wait > 0){
@@ -3935,7 +3883,7 @@
 					}
 					
 					var	_l = 16,
-						_d = point_direction(target.x, target.y, x, y);
+						_d = target_direction + 180;
 						
 					_d += 5 * sign(angle_difference(direction, _d));
 					
@@ -3947,8 +3895,8 @@
 				
 				 // Reach Target:
 				else{
-					var	_dis = point_distance(x, y, target.x, target.y),
-						_dir = point_direction(x, y, target.x, target.y);
+					var	_dis = target_distance,
+						_dir = target_direction;
 						
 					 // Fly Towards Enemy:
 					motion_add_ct(_dir + orandom(60), 1);
@@ -4045,15 +3993,8 @@
 	
 #define ParrotFeather_end_step
 	if(stick && instance_exists(target)){
-		x       = target.x + (stickx * image_xscale * (("right" in target) ? target.right : 1));
-		y       = target.y + (sticky * image_yscale);
-		visible = target.visible;
-		depth   = target.depth - 1;
-		
-		 // Target In Water:
-		if("wading" in target && target.wading != 0){
-			visible = true;
-		}
+		x = target.x + (stickx * image_xscale * (("right" in target) ? target.right : 1));
+		y = target.y + (sticky * image_yscale);
 		
 		 // Z-Axis Support:
 		if("z" in target){
@@ -4415,7 +4356,16 @@
 	 // Ancient Treasure Guards:
 	var _num = 3 * skeal;
 	if(_num > 0){
-		if(instance_near(x, y, instance_seen(x, y, Player), 192)){
+		var _spawn = false;
+		with(Player){
+			if(point_distance(x, y, other.x, other.y) < 192){
+				if(!collision_line(x, y, other.x, other.y, Wall, false, false)){
+					_spawn = true;
+					break;
+				}
+			}
+		}
+		if(_spawn){
 			skeal = 0;
 			
 			 // Skeals:
@@ -4957,7 +4907,23 @@
 	}
 	
 #define WepPickupGrounded_end_step
-	if(instance_exists(target) && (!instance_exists(Portal) || !instance_near(x, y, instance_seen(x, y, Portal), 96))){
+	var _stuck = false;
+	if(instance_exists(target)){
+		_stuck = true;
+		
+		 // Portal Attraction:
+		if(instance_exists(Portal)){
+			with(Portal){
+				if(point_distance(x, y, other.x, other.y) < 96){
+					if(!collision_line(x, y, other.x, other.y, Wall, false, false)){
+						_stuck = false;
+						break;
+					}
+				}
+			}
+		}
+	}
+	if(_stuck){
 		 // Spin:
 		if(instance_exists(top_object) && top_object.zfriction != 0){
 			image_angle += 4 * target.rotspeed * current_time_scale;
@@ -6073,11 +6039,14 @@
 #macro  infinity                                                                                1/0
 #macro  instance_max                                                                            instance_create(0, 0, DramaCamera)
 #macro  current_frame_active                                                                    (current_frame % 1) < current_time_scale
+#macro  game_scale_nonsync                                                                      game_screen_get_width_nonsync() / game_width
 #macro  anim_end                                                                                (image_index + image_speed_raw >= image_number || image_index + image_speed_raw < 0)
 #macro  enemy_sprite                                                                            (sprite_index != spr_hurt || anim_end) ? ((speed <= 0) ? spr_idle : spr_walk) : sprite_index
 #macro  enemy_boss                                                                              ('boss' in self) ? boss : ('intro' in self || array_find_index([Nothing, Nothing2, BigFish, OasisBoss], object_index) >= 0)
 #macro  player_active                                                                           visible && !instance_exists(GenCont) && !instance_exists(LevCont) && !instance_exists(SitDown) && !instance_exists(PlayerSit)
-#macro  game_scale_nonsync                                                                      game_screen_get_width_nonsync() / game_width
+#macro  target_visible                                                                          !collision_line(x, y, target.x, target.y, Wall, false, false)
+#macro  target_direction                                                                        point_direction(x, y, target.x, target.y)
+#macro  target_distance                                                                         point_distance(x, y, target.x, target.y)
 #macro  bbox_width                                                                              (bbox_right + 1) - bbox_left
 #macro  bbox_height                                                                             (bbox_bottom + 1) - bbox_top
 #macro  bbox_center_x                                                                           (bbox_left + bbox_right + 1) / 2
@@ -6127,8 +6096,6 @@
 #define trace_error(_error)                                                                     mod_script_call_nc  ('mod', 'telib', 'trace_error', _error);
 #define view_shift(_index, _dir, _pan)                                                          mod_script_call_nc  ('mod', 'telib', 'view_shift', _index, _dir, _pan);
 #define sleep_max(_milliseconds)                                                                mod_script_call_nc  ('mod', 'telib', 'sleep_max', _milliseconds);
-#define instance_seen(_x, _y, _obj)                                                     return  mod_script_call_nc  ('mod', 'telib', 'instance_seen', _x, _y, _obj);
-#define instance_near(_x, _y, _obj, _dis)                                               return  mod_script_call_nc  ('mod', 'telib', 'instance_near', _x, _y, _obj, _dis);
 #define instance_budge(_objAvoid, _disMax)                                              return  mod_script_call_self('mod', 'telib', 'instance_budge', _objAvoid, _disMax);
 #define instance_random(_obj)                                                           return  mod_script_call_nc  ('mod', 'telib', 'instance_random', _obj);
 #define instance_clone()                                                                return  mod_script_call_self('mod', 'telib', 'instance_clone');

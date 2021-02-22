@@ -110,7 +110,7 @@
 		 // Alarms:
 		alarm1 = -1;
 		
-		return id;
+		return self;
 	}
 	
 #define BoneRaven_step
@@ -190,7 +190,7 @@
 						sprite_index = mskNone;
 					}
 				}
-				instance_delete(id);
+				instance_delete(self);
 			}
 		}
 	}
@@ -207,10 +207,10 @@
 		 // Back Away:
 		if(
 			enemy_target(x, y)
-			&& instance_seen(x, y, target)
-			&& instance_near(x, y, target, 48)
+			&& target_distance < 48
+			&& target_visible
 		){
-			scrWalk(point_direction(target.x, target.y, x, y), random_range(10, 30));
+			scrWalk(target_direction + 180, random_range(10, 30));
 			scrRight(direction + 180);
 			alarm1 = walk;
 		}
@@ -234,8 +234,8 @@
 		 // Fly Away:
 		var _disMin = 96;
 		if(enemy_target(x, y)){
-			_disMin += point_distance(x, y, target.x, target.y);
-			scrRight(point_direction(x, y, target.x, target.y));
+			_disMin += target_distance;
+			scrRight(target_direction);
 		}
 		BoneRaven_fly(_disMin, _disMin + 160);
 	}
@@ -244,7 +244,9 @@
 	enemy_hurt(_damage, _force, _direction);
 	
 #define BoneRaven_death
-	with(top_object) instance_destroy();
+	with(top_object){
+		instance_destroy();
+	}
 	
 	 // Return That Which You Stole:
 	if(instance_exists(creator)){
@@ -349,7 +351,7 @@
 		 // Alarms:
 		alarm0 = random_range(30, 60);
 		
-		return id;
+		return self;
 	}
 
 #define SawTrap_step
@@ -400,7 +402,7 @@
 	image_angle += 4 * spd * side * current_time_scale;
 	
 	 // BoltStick Depth Fix:
-	with(instances_matching_lt(instances_matching(BoltStick, "target", id), "depth", depth)){
+	with(instances_matching_lt(instances_matching(BoltStick, "target", self), "depth", depth)){
 		depth = other.depth;
 	}
 	
@@ -471,7 +473,7 @@
 	image_yscale *= _scale;
 	if(place_meeting(x, y, hitme)){
 		with(instances_meeting(x, y, hitme)){
-			if(place_meeting(x, y, other) && instance_seen(x, y, other)){
+			if(place_meeting(x, y, other) && !collision_line(x, y, other.x, other.y, Wall, false, false)){
 				if(!instance_is(self, prop) || size <= 1){
 					 // Push:
 					if(!instance_is(self, prop) && (size < other.size || instance_is(self, Player))){
@@ -586,7 +588,7 @@
 		alarm0 = -1;
 		alarm1 = -1;
 		
-		return id;
+		return self;
 	}
 	
 #define SludgePool_setup
@@ -694,14 +696,22 @@
 		 // Raven Time:
 		if(num > 0){
 			if(instance_exists(CustomEnemy)){
-				var _ravens = instances_matching(instances_matching(CustomEnemy, "name", "BoneRaven"), "creator", id);
+				var _ravens = instances_matching(instances_matching(CustomEnemy, "name", "BoneRaven"), "creator", self);
 				if(array_length(_ravens)){
 					 // Wait for Player:
 					if(alarm0 < 0){
-						if(
-							(instance_seen(x, y, Player) && instance_near(x, y, Player, 96))
-							|| array_length(instances_matching(_ravens, "active", true))
-						){
+						var _start = (array_length(instances_matching(_ravens, "active", true)) > 0);
+						if(!_start){
+							with(Player){
+								if(point_distance(x, y, other.x, other.y) < 96){
+									if(!collision_line(x, y, other.x, other.y, Wall, false, false)){
+										_start = true;
+										break;
+									}
+								}
+							}
+						}
+						if(_start){
 							alarm0 = 120;
 						}
 					}
@@ -862,7 +872,7 @@
 	
 #define SludgePool_alrm0
 	 // Mishin Failed:
-	with(instances_matching(instances_matching(CustomEnemy, "name", "BoneRaven"), "creator", id)){
+	with(instances_matching(instances_matching(CustomEnemy, "name", "BoneRaven"), "creator", self)){
 		failed = true;
 	}
 	
@@ -926,7 +936,7 @@
 		top_object = noone;
 		setup      = true;
 		
-		return id;
+		return self;
 	}
 	
 #define TopRaven_setup
@@ -1015,23 +1025,25 @@
 			 // Target:
 			if(
 				enemy_target(x, y)
-				&& instance_seen(x, y, target)
 				&& sign(right) == sign(target.x - x)
+				&& target_visible
 			){
-				scrAim(point_direction(x, y, target.x, target.y));
+				scrAim(target_direction);
 			}
 			
 			 // Swappin:
-			var l = 4,
-				d = gunangle;
+			var _l = 4,
+				_d = gunangle;
 				
-			instance_create(x + lengthdir_x(l, d), y + lengthdir_y(l, d), WepSwap);
+			instance_create(x + lengthdir_x(_l, _d), y + lengthdir_y(_l, _d), WepSwap);
 			wkick = 4;
 			
 			 // Effects:
-			if(point_seen(x, y, -1)) sound_play(sndRavenLand);
+			if(point_seen(x, y, -1)){
+				sound_play(sndRavenLand);
+			}
 		}
-		instance_delete(id);
+		instance_delete(self);
 	}
 	
 	
@@ -1067,7 +1079,7 @@
 			instance_create(x, y, TrapScorchMark);
 		}
 		
-		return id;
+		return self;
 	}
 	
 #define TrapSpin_step
@@ -1183,7 +1195,7 @@
 		 // Alarms:
 		alarm1 = 20 + irandom(30);
 		
-		return id;
+		return self;
 	}
 	
 #define Tunneler_step
@@ -1214,8 +1226,8 @@
 			alarm1 = 2 + irandom(4);
 			
 			 // Target is near/alive:
-			if(instance_near(x, y, target, 256)) {
-				var _targetDir = pceil(point_direction(x, y, target.x, target.y), 90);
+			if(target_distance < 256) {
+				var _targetDir = pceil(target_direction, 90);
 			}
 			
 			 // Target is far/dead:
@@ -1244,10 +1256,10 @@
 	
 	 // Normal AI:
 	else {
-		if(instance_near(x, y, target, 256)) {
-			scrAim(point_direction(x, y, target.x, target.y));
+		if(target_distance < 256) {
+			scrAim(target_direction);
 			
-			if(instance_seen(x, y, target) && chance(2, 3)) {
+			if(target_visible && chance(2, 3)) {
 				projectile_create(x, y, EnemyBullet1, gunangle, 6);
 			}
 			
@@ -1446,11 +1458,14 @@
 #macro  infinity                                                                                1/0
 #macro  instance_max                                                                            instance_create(0, 0, DramaCamera)
 #macro  current_frame_active                                                                    (current_frame % 1) < current_time_scale
+#macro  game_scale_nonsync                                                                      game_screen_get_width_nonsync() / game_width
 #macro  anim_end                                                                                (image_index + image_speed_raw >= image_number || image_index + image_speed_raw < 0)
 #macro  enemy_sprite                                                                            (sprite_index != spr_hurt || anim_end) ? ((speed <= 0) ? spr_idle : spr_walk) : sprite_index
 #macro  enemy_boss                                                                              ('boss' in self) ? boss : ('intro' in self || array_find_index([Nothing, Nothing2, BigFish, OasisBoss], object_index) >= 0)
 #macro  player_active                                                                           visible && !instance_exists(GenCont) && !instance_exists(LevCont) && !instance_exists(SitDown) && !instance_exists(PlayerSit)
-#macro  game_scale_nonsync                                                                      game_screen_get_width_nonsync() / game_width
+#macro  target_visible                                                                          !collision_line(x, y, target.x, target.y, Wall, false, false)
+#macro  target_direction                                                                        point_direction(x, y, target.x, target.y)
+#macro  target_distance                                                                         point_distance(x, y, target.x, target.y)
 #macro  bbox_width                                                                              (bbox_right + 1) - bbox_left
 #macro  bbox_height                                                                             (bbox_bottom + 1) - bbox_top
 #macro  bbox_center_x                                                                           (bbox_left + bbox_right + 1) / 2
@@ -1500,8 +1515,6 @@
 #define trace_error(_error)                                                                     mod_script_call_nc  ('mod', 'telib', 'trace_error', _error);
 #define view_shift(_index, _dir, _pan)                                                          mod_script_call_nc  ('mod', 'telib', 'view_shift', _index, _dir, _pan);
 #define sleep_max(_milliseconds)                                                                mod_script_call_nc  ('mod', 'telib', 'sleep_max', _milliseconds);
-#define instance_seen(_x, _y, _obj)                                                     return  mod_script_call_nc  ('mod', 'telib', 'instance_seen', _x, _y, _obj);
-#define instance_near(_x, _y, _obj, _dis)                                               return  mod_script_call_nc  ('mod', 'telib', 'instance_near', _x, _y, _obj, _dis);
 #define instance_budge(_objAvoid, _disMax)                                              return  mod_script_call_self('mod', 'telib', 'instance_budge', _objAvoid, _disMax);
 #define instance_random(_obj)                                                           return  mod_script_call_nc  ('mod', 'telib', 'instance_random', _obj);
 #define instance_clone()                                                                return  mod_script_call_self('mod', 'telib', 'instance_clone');

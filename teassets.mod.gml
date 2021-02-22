@@ -2388,7 +2388,7 @@
 			repeat(8) with(instance_create(random_range(bbox_left, bbox_right), random_range(bbox_top, bbox_bottom), Dust)){
 				motion_add(random(360), random(random(8)));
 			}
-			instance_delete(id);
+			instance_delete(self);
 		}
 	}
 	

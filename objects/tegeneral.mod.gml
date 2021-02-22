@@ -65,7 +65,7 @@
 		 // Alarms:
 		alarm0 = 90;
 		
-		return id;
+		return self;
 	}
 	
 #define AlertIndicator_begin_step
@@ -194,7 +194,7 @@
 					
 					 // Nevermind:
 					if(place_meeting(x, y, Floor)){
-						instance_delete(id);
+						instance_delete(self);
 					}
 				}
 			}
@@ -236,7 +236,7 @@
 			 // Decal Setup:
 			BigDecal_step();
 			
-			return id;
+			return self;
 		}
 	}
 	
@@ -281,7 +281,7 @@
 				 // Override Top Decals:
 				with(instances_meeting(x, y, [TopPot, Bones])){
 					if(place_meeting(x, y, other)){
-						instance_delete(id);
+						instance_delete(self);
 					}
 				}
 			}
@@ -490,7 +490,7 @@
 							}
 						}
 						
-						array_push(_sort, [id, y]);
+						array_push(_sort, [self, y]);
 					}
 				}
 				
@@ -722,7 +722,7 @@
 		sound_stop(sndIDPDPortalSpawn);
 		sound_play(sndEliteIDPDPortalSpawn);
 		
-		return id;
+		return self;
 	}
 	
 #define BigIDPDSpawn_end_step
@@ -808,7 +808,7 @@
 		 // Alarms:
 		alarm2 = 2;
 		
-		return id;
+		return self;
 	}
 
 #define BoneArrow_setup
@@ -874,8 +874,8 @@
 					var _dis = distance_to_point(other.x + other.hspeed, other.y + other.vspeed);
 					if(_dis < _disMax){
 						if(place_meeting(other.x, other.y, other)){
-							_disMax = _dis;
-							_nearest = id;
+							_disMax  = _dis;
+							_nearest = self;
 						}
 					}
 				}
@@ -974,8 +974,9 @@
 			make_color_rgb(157, 133, 098),
 			make_color_rgb(111, 082, 043)
 		);
-		return id;
+		return self;
 	}
+	return noone;
 
 
 #define BoneFX_create(_x, _y)
@@ -995,7 +996,7 @@
 		speed = (8 - delay) + random(2);
 		direction = random(360);
 		
-		return id;
+		return self;
 	}
 	
 #define BoneFX_step
@@ -1047,7 +1048,7 @@
 		rotspeed   = 0;
 		setup      = true;
 		
-		return id;
+		return self;
 	}
 	
 #define BoneSlash_setup
@@ -1184,7 +1185,7 @@
 		x               = pfloor(bbox_left, 16);
 		y               = pfloor(bbox_top,  16);
 		
-		return id;
+		return self;
 	}
 	
 #define BuriedVault_step
@@ -1236,7 +1237,7 @@
 							!position_meeting(_sx, _sy, TopSmall)
 						){
 							with(instance_create(_sx, _sy, TopSmall)){
-								if(collision_line(_x1, _y1, _x2, _y2, id, false, false)){
+								if(collision_line(_x1, _y1, _x2, _y2, self, false, false)){
 									GameCont.area = other.area;
 									with(self){
 										event_perform(ev_create, 0);
@@ -1247,7 +1248,7 @@
 								else array_push(_tileOld, self);
 								
 								 // Variance:
-								if(position_meeting(_x2, _y2, id) || chance(2, 3)){
+								if(position_meeting(_x2, _y2, self) || chance(2, 3)){
 									sprite_index = area_get_sprite(GameCont.area, sprWall1Top);
 								}
 							}
@@ -1263,7 +1264,7 @@
 						if(array_length(instances_at(_x, _y, _tileNew)) <= 0){
 							if(chance(1, 10)){
 								with(obj_create(_x, _y, "TopTiny")){
-									array_push(_tileNew, id);
+									array_push(_tileNew, self);
 								}
 							}
 						}
@@ -1433,7 +1434,7 @@
 								if(_room >= 0){
 									image_index = _room;
 								}
-								variable_instance_set_list(id, ((_room < 0) ? other.floor_vars : other.floor_room_vars));
+								variable_instance_set_list(self, ((_room < 0) ? other.floor_vars : other.floor_room_vars));
 							}
 						}
 					}
@@ -1535,7 +1536,7 @@
 		obj_prop = Pillar;
 		area     = area_palace;
 		
-		return id;
+		return self;
 	}
 	
 	
@@ -1555,7 +1556,7 @@
 		force = 8;
 		typ = 1;
 		
-		return id;
+		return self;
 	}
 	
 #define CustomBullet_anim
@@ -1600,7 +1601,7 @@
 		 // Alarms:
 		alarm2 = 2;
 		
-		return id;
+		return self;
 	}
 	
 #define CustomFlak_step
@@ -1693,7 +1694,7 @@
 		 // Alarms:
 		alarm2 = 2;
 		
-		return id;
+		return self;
 	}
 	
 #define CustomShell_step
@@ -1776,7 +1777,7 @@
 		minscale   = 0.5;
 		flak       = [];
 		
-		return id;
+		return self;
 	}
 	
 #define CustomPlasma_step
@@ -1909,7 +1910,7 @@
 		sprite_index = (_big ? spr.GroundFlameGreenBig          : spr.GroundFlameGreen         );
 		spr_dead     = (_big ? spr.GroundFlameGreenBigDisappear : spr.GroundFlameGreenDisappear);
 		
-		return id;
+		return self;
 	}
 	
 	return noone;
@@ -1981,7 +1982,7 @@
 			creator = other;
 		}
 		
-		return id;
+		return self;
 	}
 	
 #define Igloo_step
@@ -1990,7 +1991,7 @@
 	
 	 // Allow Portals:
 	if(num <= 0){
-		with(instances_matching(instances_matching(becomenemy, "name", "PortalPrevent"), "creator", id)){
+		with(instances_matching(instances_matching(becomenemy, "name", "PortalPrevent"), "creator", self)){
 			instance_destroy();
 		}
 	}
@@ -2108,10 +2109,10 @@
 		rotation   = 0;
 		rotspeed   = random_range(12, 16) * choose(-1, 1);
 		inst       = [];
-		inst_vars  = {};
+		inst_vars  = ds_map_create();
 		flag       = [];
 		
-		return id;
+		return self;
 	}
 	
 #define MergeFlak_step
@@ -2257,34 +2258,36 @@
 	}
 	
 	 // Hold Instances:
+	if(!ds_map_valid(inst_vars)){
+		inst_vars = ds_map_create();
+	}
 	var _vars = inst_vars;
 	with(inst){
 		if(instance_exists(self) && speed > 0){
 			 // Store Vars:
-			var _id = string(id);
-			if(_id not in _vars){
-				var v = {
+			if(!ds_map_exists(_vars, self)){
+				var _v = {
 					mask_index	: mask_index,
 					image_index	: image_index,
 					speed		: speed,
 					alarm		: []
 				};
 				for(var i = 0; i < 12; i++){
-					var a = alarm_get(i);
-					if(a > 0){
-						array_push(v.alarm, [i, a + 1]);
+					var _a = alarm_get(i);
+					if(_a > 0){
+						array_push(_v.alarm, [i, _a + 1]);
 					}
 				}
-				lq_set(_vars, _id, v);
+				_vars[? self] = _v;
 			}
 			
 			 // Hold Vars:
-			var v = lq_get(_vars, _id);
-			image_index = v.image_index;
-			speed = v.speed;
-			var a = v.alarm;
-			for(var i = 0; i < array_length(a); i++){
-				alarm_set(a[i, 0], a[i, 1]);
+			var _v = _vars[? self];
+			image_index = _v.image_index;
+			speed = _v.speed;
+			var _a = _v.alarm;
+			for(var i = 0; i < array_length(_a); i++){
+				alarm_set(_a[i, 0], _a[i, 1]);
 			}
 			
 			 // Freeze Movement:
@@ -2318,7 +2321,7 @@
 			
 			 // Disable:
 			if(mask_index != mskNone){
-				v.mask_index = mask_index;
+				_v.mask_index = mask_index;
 				mask_index = mskNone;
 			}
 			image_alpha = -abs(image_alpha);
@@ -2369,10 +2372,8 @@
 		x = other.x;
 		y = other.y;
 		
-		var _id = string(id);
-		if(_id in _vars){
-			var v = lq_get(_vars, _id);
-			mask_index = v.mask_index;
+		if(ds_map_valid(_vars) && ds_map_exists(_vars, self)){
+			mask_index = _vars[? self].mask_index;
 		}
 		
 		 // Activate Lasers, Lightning, etc.
@@ -2390,6 +2391,9 @@
 				}
 				break;
 		}
+	}
+	if(ds_map_valid(inst_vars)){
+		ds_map_destroy(inst_vars);
 	}
 	
 	 // Effects:
@@ -2481,7 +2485,7 @@
 		 // Alarms:
 		alarm0 = 20 + random(10);
 		
-		return id;
+		return self;
 	}
 	
 #define Pet_begin_step
@@ -2525,7 +2529,7 @@
 	
 	 // Don't Persist to Menu:
 	if(instance_exists(Menu)){
-		instance_delete(id);
+		instance_delete(self);
 		exit;
 	}
 	
@@ -2708,8 +2712,8 @@
 	if(instance_exists(Portal)){
 		if(visible || instance_exists(revive)){
 			with(instances_matching_ne(Portal, "sprite_index", sprPortalSpawn, sprBigPortalSpawn)){
-				if(instance_near(x, y, other, 64) || (object_index == BigPortal && timer > 30)){
-					if(instance_seen(x, y, other)){
+				if(point_distance(x, y, other.x, other.y) < 64 || (object_index == BigPortal && timer > 30)){
+					if(!collision_line(x, y, other.x, other.y, Wall, false, false)){
 						with(other){
 							var	_l = 4 * current_time_scale,
 								_d = point_direction(x, y, other.x, other.y),
@@ -2802,7 +2806,7 @@
 		 // Time Stat:
 		if(
 			instance_is(leader, Player)
-			&& array_find_index(leader.ntte_pet, id) >= 0
+			&& array_find_index(leader.ntte_pet, self) >= 0
 			&& "owned" in stat
 		){
 			stat.owned += (current_time_scale / 30);
@@ -3183,7 +3187,7 @@
 			mask_index = mskReviveArea; // revive hahahahoho
 		}
 		
-		return id;
+		return self;
 	}
 	
 #define PetRevive_step
@@ -3269,7 +3273,7 @@
 			default          : curse = chance(1, 7);
 		}
 		
-		return id;
+		return self;
 	}
 	
 #define PetWeaponBecome_step
@@ -3367,7 +3371,7 @@
 		bossname = hitid[1];
 		col      = c_red;
 		
-		return id;
+		return self;
 	}
 	
 #define PetWeaponBoss_step
@@ -3421,7 +3425,7 @@
 		if(enemy_target(x, y)){
 			var	_tx        = target.x,
 				_ty        = target.y,
-				_targetDir = point_direction(x, y, _tx, _ty),
+				_targetDir = target_direction,
 				_pathWall  = Wall,
 				_pathX     = null,
 				_pathY     = null;
@@ -3431,7 +3435,7 @@
 				case type_melee: // MELEE
 					
 					 // Movement:
-					if(instance_seen(x, y, target)){
+					if(target_visible){
 						scrWalk(_targetDir + choose(-60, 60), 5 + random(10));
 						alarm1 = walk;
 					}
@@ -3445,7 +3449,7 @@
 					 // Avoid:
 					with(instances_matching_ne(instances_matching(projectile, "typ", 1), "team", team)){
 						if(abs(angle_difference(other.gunangle, point_direction(other.x, other.y, x, y))) < 60){
-							if(instance_near(x, y, other, 96)){
+							if(point_distance(other.x, other.y, x, y) < 96){
 								other.direction += 180;
 								break;
 							}
@@ -3457,7 +3461,7 @@
 				case type_shell: /// CLOSE RANGE
 					
 					 // Movement:
-					if(instance_seen(x, y, target)){
+					if(target_visible){
 						scrWalk(gunangle + orandom(60), 20);
 						alarm1 = walk;
 					}
@@ -3478,7 +3482,7 @@
 							 // Cover in Sight:
 							if(!collision_line(x, y, cover_x, cover_y, Wall, false, false)){
 								scrWalk(point_direction(x, y, cover_x, cover_y), (cover_peek ? [5, 10] : 1));
-								alarm1 = (cover_peek ? random_range(walk, 30) : walk);
+								alarm1     = (cover_peek ? random_range(walk, 30) : walk);
 								cover_peek = false;
 							}
 							
@@ -3491,18 +3495,18 @@
 						
 						 // Peek Out of Cover:
 						else{
-							cover_peek = true;
+							cover_peek    = true;
 							gunangle_goal = _targetDir;
 							
 							alarm1 = 15;
 							alarm2 = alarm1 - random(3);
 							
 							 // Peekin:
-							var	_l = 16,
-								_d = pround(point_direction(cover_x, cover_y, _tx, _ty), 90),
+							var	_l         = 16,
+								_d         = pround(point_direction(cover_x, cover_y, _tx, _ty), 90),
 								_peekLeft  = !collision_line(cover_x + lengthdir_x(_l, _d - 90), cover_y + lengthdir_y(_l, _d - 90), _tx, _ty, Wall, false, false),
 								_peekRight = !collision_line(cover_x - lengthdir_x(_l, _d - 90), cover_y - lengthdir_y(_l, _d - 90), _tx, _ty, Wall, false, false),
-								_peekSide = sign(_peekRight - _peekLeft);
+								_peekSide  = sign(_peekRight - _peekLeft);
 								
 							scrWalk(_d + (90 * ((_peekSide == 0) ? choose(-1, 1) : _peekSide)), 4);
 							
@@ -3515,31 +3519,36 @@
 					
 					 // Find Cover:
 					else{
-						cover_x = _tx;
-						cover_y = _ty;
-						cover_peek = false;
+						cover_x     = _tx;
+						cover_y     = _ty;
+						cover_peek  = false;
 						cover_delay = 30;
 						
 						scrWalk(point_direction(_tx, _ty, x, y), 15);
 						alarm1 = walk;
 						
-						var	_coverDisMax = null,
+						var	_coverDisMax  = null,
 							_targetDisMin = null;
 							
 						with(instance_rectangle_bbox(_tx - shootdis_max, _ty - shootdis_max, _tx + shootdis_max, _ty + shootdis_max, Floor)){
 							for(var _x = bbox_left; _x < bbox_right + 1; _x += 16){
 								for(var _y = bbox_top; _y < bbox_bottom + 1; _y += 16){
-									var	_cx = _x + 8,
-										_cy = _y + 8,
-										_coverDis = point_distance(_cx, _cy, other.x, other.y),
+									var	_cx        = _x + 8,
+										_cy        = _y + 8,
+										_coverDis  = point_distance(_cx, _cy, other.x, other.y),
 										_targetDis = point_distance(_cx, _cy, _tx, _ty);
 										
-									if((is_undefined(_coverDisMax) || _coverDis < _coverDisMax) && (is_undefined(_targetDisMin) || _targetDis > _targetDisMin)){
-										with(other) if(PetWeaponBoss_point_is_cover(_cx, _cy, _tx, _ty)){
-											_coverDisMax = _coverDis;
-											_targetDisMin = _targetDis;
-											cover_x = _cx;
-											cover_y = _cy;
+									if(
+										(is_undefined(_coverDisMax)  || _coverDis  < _coverDisMax) &&
+										(is_undefined(_targetDisMin) || _targetDis > _targetDisMin)
+									){
+										with(other){
+											if(PetWeaponBoss_point_is_cover(_cx, _cy, _tx, _ty)){
+												_coverDisMax  = _coverDis;
+												_targetDisMin = _targetDis;
+												cover_x = _cx;
+												cover_y = _cy;
+											}
 										}
 									}
 								}
@@ -3552,8 +3561,8 @@
 				case type_energy: /// BIG FIREPOWER, LOW MOVEMENT
 				
 					 // Movement:
-					if(instance_seen(x, y, target)){
-						if(instance_near(x, y, target, shootdis_max)){
+					if(target_visible){
+						if(target_distance < shootdis_max){
 							if(chance(1, 3)){
 								scrWalk(random(360), random_range(5, 20));
 							}
@@ -3575,8 +3584,8 @@
 				default: /// DEFAULT
 				
 					 // Movement:
-					if(instance_seen(x, y, target)){
-						if(instance_near(x, y, target, shootdis_max * 2/3)){
+					if(target_visible){
+						if(target_distance < shootdis_max * 2/3){
 							scrWalk(_targetDir + (90 * sign(angle_difference(direction, _targetDir))), 15);
 						}
 						else{
@@ -3599,8 +3608,8 @@
 			if(is_real(_pathX) && is_real(_pathY)){
 				 // Create Path:
 				if(path_delay <= 0 && !path_reaches(path, _pathX, _pathY, _pathWall)){
-					path = path_create(x, y, _pathX, _pathY, _pathWall);
-					path = path_shrink(path, _pathWall, 2);
+					path       = path_create(x, y, _pathX, _pathY, _pathWall);
+					path       = path_shrink(path, _pathWall, 2);
 					path_delay = 30;
 				}
 				
@@ -3611,11 +3620,11 @@
 					alarm1 = walk;
 					
 					 // Searching:
-					if(!instance_seen(x, y, target)){
+					if(!target_visible){
 						if(abs(angle_difference(gunangle_goal, _pathDir)) > 60){
 							gunangle_goal = _pathDir + orandom(60);
 						}
-						if(instance_near(x, y, target, 64)){
+						if(target_distance < 64){
 							alarm1 += random(random(random(30)));
 							gunangle_goal = angle_lerp(gunangle_goal, _targetDir, 1/2);
 						}
@@ -3642,23 +3651,22 @@
 	if(sprite_index != spr_spwn){
 		if(
 			enemy_target(x, y)
-			&& instance_seen(x, y, target)
-			&& instance_near(x, y, target, shootdis_max)
+			&& target_visible
+			&& target_distance < shootdis_max
 		){
-			if(abs(angle_difference(gunangle, point_direction(x, y, target.x, target.y))) < 30){
+			if(abs(angle_difference(gunangle, target_direction)) < 30){
 				var _shot = false;
 				with(["", "b"]){
-					var b = self;
+					var _b = self;
 					with(other){
-						var	_wep      = variable_instance_get(self, b + "wep"),
-							_reload   = variable_instance_get(self, b + "reload"),
-							_canShoot = variable_instance_get(self, b + "can_shoot");
+						var	_wep      = variable_instance_get(self, _b + "wep"),
+							_reload   = variable_instance_get(self, _b + "reload"),
+							_canShoot = variable_instance_get(self, _b + "can_shoot");
 							
 						if(_canShoot <= 0 && _wep != wep_none && _reload <= 0){
 							if(
-								(!weapon_get_laser_sight(_wep) && !instance_near(x, y, target, shootdis_min))
-								||
-								variable_instance_get(self, b + "wep_laser") >= 1
+								(!weapon_get_laser_sight(_wep) && target_distance >= shootdis_min)
+								|| variable_instance_get(self, _b + "wep_laser") >= 1
 							){
 								_shot = true;
 								_canShoot = 1;
@@ -3697,8 +3705,8 @@
 							}
 						}
 						
-						variable_instance_set(self, b + "reload",    _reload);
-						variable_instance_set(self, b + "can_shoot", _canShoot);
+						variable_instance_set(self, _b + "reload",    _reload);
+						variable_instance_set(self, _b + "can_shoot", _canShoot);
 					}
 					if(_shot) break;
 				}
@@ -3714,11 +3722,7 @@
 	
 #define PetWeaponBoss_death
 	 // Boss Win Music:
-	with(MusCont) with(self){
-		var _area = GameCont.area;
-		GameCont.area = -1;
-		event_perform(ev_alarm, 11);
-		GameCont.area = _area;
+	with(MusCont){
 		alarm_set(1, 1);
 	}
 	
@@ -3793,7 +3797,7 @@
 		spec       = false;
 		primary    = true;
 		
-		return id;
+		return self;
 	}
 	
 #define PortalBullet_anim
@@ -3824,7 +3828,7 @@
 				&& button_check(creator.index, (spec ? "spec" : "fire"))
 				&& is_object(_wep)
 				&& is_array(lq_get(_wep, "inst"))
-				&& array_find_index(_wep.inst, id) >= 0
+				&& array_find_index(_wep.inst, self) >= 0
 			)
 		){
 			if(instance_exists(creator)){
@@ -3961,9 +3965,13 @@
 		instance_exists(creator)
 		&& (creator.visible || ("wading" in creator && creator.wading > 0))
 		&& (
-			position_meeting(x, y, Floor) ||
-			place_meeting(x, y, Floor)    ||
-			(instance_near(x, y, creator, 512) && instance_seen(x, y, creator) && !collision_line(x, y, creator.x, creator.y, InvisiWall, false, false))
+			position_meeting(x, y, Floor)
+			|| place_meeting(x, y, Floor)
+			|| (
+				point_distance(x, y, creator.x, creator.y) < 512
+				&& !collision_line(x, y, creator.x, creator.y, Wall,       false, false)
+				&& !collision_line(x, y, creator.x, creator.y, InvisiWall, false, false)
+			)
 		)
 	){
 		with(creator){
@@ -4000,10 +4008,10 @@
 				sprite_index = spr.PortalBulletHit;
 				image_angle  = 0;
 			}
-			sound_play_hit_ext(sndPortalAppear, 3, (instance_is(id, Player) ? 0.5 : 1.5));
+			sound_play_hit_ext(sndPortalAppear, 3, (instance_is(self, Player) ? 0.5 : 1.5));
 			
 			 // Move Shield:
-			with(instances_matching(CrystalShield, "creator", id)){
+			with(instances_matching(CrystalShield, "creator", self)){
 				instance_create(x, y, CrystalShieldDisappear);
 				x = other.x;
 				y = other.y;
@@ -4018,7 +4026,7 @@
 					force       = 1.5;
 				}
 				with(instances_matching_gt(Dust, "id", _minID)){
-					instance_delete(id);
+					instance_delete(self);
 				}
 				
 				 // Effects:
@@ -4081,7 +4089,7 @@
 		 // Alarms:
 		alarm1 = 40 + irandom(20);
 		
-		return id;
+		return self;
 	}
 	
 #define PortalGuardian_step
@@ -4092,7 +4100,7 @@
 	enemy_walk(walkspeed, maxspeed);
 	
 	 // Hovery:
-	if(!place_meeting(x, y, projectile) || array_length(instances_meeting(x, y, instances_matching(projectile, "creator", id))) <= 0){
+	if(!place_meeting(x, y, projectile) || array_length(instances_meeting(x, y, instances_matching(projectile, "creator", self))) <= 0){
 		speed = max(1, speed);
 	}
 	
@@ -4131,11 +4139,11 @@
 	alarm1 = 20 + random(30);
 	
 	if(enemy_target(x, y)){
-		scrAim(point_direction(x, y, target.x, target.y));
+		scrAim(target_direction);
 		
-		if(instance_seen(x, y, target)){
+		if(target_visible){
 			 // Attack:
-			if(chance(2, 3) && array_length(instances_matching(projectile, "creator", id)) <= 0){
+			if(chance(2, 3) && !array_length(instances_matching(projectile, "creator", self))){
 				with(projectile_create(x, y, "PortalBullet", gunangle, 10)){
 					portal = other.portal;
 				}
@@ -4146,10 +4154,13 @@
 			
 			 // Move:
 			else{
-				scrWalk(gunangle + (random_range(60, 100) * choose(-1, 1)), [20, 40]);
+				scrWalk(
+					gunangle + (random_range(60, 100) * choose(-1, 1)),
+					[20, 40]
+				);
 				
 				 // Away From Target:
-				if(instance_near(x, y, target, 128)){
+				if(target_distance < 128){
 					direction = gunangle + 180 + orandom(30);
 				}
 			}
@@ -4188,7 +4199,7 @@
 	
 	with(instance_create(_x, _y, becomenemy)){
 		creator = noone;
-		return id;
+		return self;
 	}
 	
 #define PortalPrevent_step
@@ -4210,7 +4221,7 @@
 		vars       = {};
 		p          = -1;
 		
-		return id;
+		return self;
 	}
 	
 #define ReviveNTTE_step
@@ -4225,7 +4236,7 @@
 			var _vars = vars;
 			with(instance_nearest_array(x, y, instances_matching_gt(instances_matching(Player, "p", p), "id", id))){
 				for(var i = 0; i < lq_size(_vars); i++){
-					variable_instance_set(id, lq_get_key(_vars, i), lq_get_value(_vars, i));
+					variable_instance_set(self, lq_get_key(_vars, i), lq_get_value(_vars, i));
 				}
 				
 				 // Grab Back Pet:
@@ -4261,7 +4272,7 @@
 		damage = 12;
 		force  = 8;
 		
-		return id;
+		return self;
 	}
 	
 	
@@ -4366,7 +4377,7 @@
 		 // Up down:
 		y += z;
 		
-		return id;
+		return self;
 	}
 	
 #define TopObject_end_step
@@ -4413,7 +4424,7 @@
 					
 					 // Push Bros:
 					/*
-					var	_inst = id,
+					var	_inst = self,
 						_saveMask = mask_index;
 						
 					mask_index = lq_defget(other.target_save, "mask_index", mask_index);
@@ -4511,8 +4522,8 @@
 				else{
 					target.depth = max(12, target.depth);
 					if(!point_seen(x, bbox_top - z, -1)){
-						with(target) instance_delete(id);
-						instance_delete(id);
+						with(target) instance_delete(self);
+						instance_delete(self);
 					}
 				}
 			}
@@ -4536,7 +4547,7 @@
 									direction = point_direction(other.x, other.y, _target.x, _target.y - 8);
 									speed += current_time_scale;
 									
-									if("walk"     in self) walk = other.idle_time;
+									if("walk"     in self) walk     = other.idle_time;
 									if("gunangle" in self) gunangle = direction;
 									if("right"    in self) scrRight(direction);
 								}
@@ -4576,13 +4587,17 @@
 								if(GameCont.area == area_city && chance(2, 3)){
 									with(instance_create(x, y, Breath)){
 										image_xscale = sign(other.image_xscale) * variable_instance_get(other, "right", 1);
-										depth = other.depth - 1;
+										depth        = other.depth - 1;
 									}
 								}
 							}
 							
 							 // Let's Roll:
-							if(chance(1, 5) && instance_near(x, y, _target, 160)){
+							if(
+								chance(1, 5)
+								&& instance_exists(_target)
+								&& point_distance(x, y, _target.x, _target.y) < 160
+							){
 								jump_time = 1;
 							}
 						}
@@ -4597,7 +4612,11 @@
 							
 							 // Cmon Bros:
 							with(instances_matching_gt(instances_matching(object_index, "name", name), "jump_time", 0)){
-								if(instance_exists(target) && target.object_index == other.target.object_index && instance_near(x, y, other, 64)){
+								if(
+									instance_exists(target)
+									&& target.object_index == other.target.object_index
+									&& point_distance(x, y, other.x, other.y) < 64
+								){
 									jump_time = 0;
 									idle_time = random_range(10, 60);
 									canmove   = true;
@@ -4633,7 +4652,11 @@
 						 // Prepare to Fly w/ Bros:
 						if(zspeed == 0){
 							with(instances_matching(instances_matching(instances_matching_gt(instances_matching(object_index, "name", name), "jump_time", 0), "zspeed", 0), "speed", 0)){
-								if(instance_exists(target) && target.object_index == other.target.object_index && instance_near(x, y, other, 64)){
+								if(
+									instance_exists(target)
+									&& target.object_index == other.target.object_index
+									&& point_distance(x, y, other.x, other.y) < 64
+								){
 									jump_time = 0;
 									idle_time = min(idle_time, random_range(10, 60));
 								}
@@ -4760,7 +4783,7 @@
 			case projectile: // Damage Related
 				
 				with(target){
-					var	_inst     = id,
+					var	_inst     = self,
 						_saveMask = mask_index;
 						
 					mask_index = lq_defget(other.target_save, "mask_index", mask_index);
@@ -4814,7 +4837,7 @@
 		}
 		
 		 // Restore Vars:
-		variable_instance_set_list(id, other.target_save);
+		variable_instance_set_list(self, other.target_save);
 		
 		 // Not today, Walls:
 		if(other.unstick && place_meeting(x, y, Wall)){
@@ -4915,7 +4938,7 @@
 											exit;
 										}
 									}
-									instance_delete(id);
+									instance_delete(self);
 								}
 							}
 						}
@@ -4924,7 +4947,7 @@
 						catch(_error){
 							with(_inst){
 								instance_copy(false);
-								instance_delete(id);
+								instance_delete(self);
 							}
 						}
 					}
@@ -4932,7 +4955,7 @@
 				}
 			}
 			
-			return id;
+			return self;
 		}
 	}
 	
@@ -4965,7 +4988,7 @@
 		splash_timer          = 0;
 		splash_timer_max      = 150;
 		
-		return id;
+		return self;
 	}
 	
 #define UnlockCont_step
@@ -5299,7 +5322,7 @@
 				image_alpha  = other.image_alpha;
 			}
 			
-			return id;
+			return self;
 		}
 	}
 	
@@ -5318,19 +5341,16 @@
 				
 				 // Lookin'
 				var	_dir    = 90,
-					_target = instance_near(
-						x,
-						y,
-						instances_matching(Player, "visible", true),
-						8 + (64 * (1 + !position_meeting(x, y, Wall)) * (1 + instance_exists(enemy)))
-					);
+					_target = instance_nearest_array(x, y, instances_matching(Player, "visible", true));
 					
 				if(instance_exists(_target)){
-					if(_target.y < y - 8){
-						_dir = 270 + (30 * sin(eyeblink / 40));
-					}
-					else{
-						_dir = point_direction(x, y - 8, _target.x, _target.y);
+					if(point_distance(x, y, _target.x, _target.y) < 8 + (64 * (position_meeting(x, y, Wall) ? 1 : 2) * (instance_exists(enemy) ? 2 : 1))){
+						if(_target.y < y - 8){
+							_dir = 270 + (30 * sin(eyeblink / 40));
+						}
+						else{
+							_dir = point_direction(x, y - 8, _target.x, _target.y);
+						}
 					}
 				}
 				
@@ -5621,7 +5641,7 @@
 											case ChestOpen:
 											case Debris:
 											case Scorchmark:
-												top_create(x, y, id, 0, 0);
+												top_create(x, y, self, 0, 0);
 												break;
 												
 											case MeltSplat:
@@ -5640,7 +5660,7 @@
 									
 								default:
 									if(place_meeting(x, y, Wall) || !position_meeting(x, y, Floor)){
-										top_create(x, y, id, 0, 0);
+										top_create(x, y, self, 0, 0);
 									}
 							}
 						}
@@ -5953,11 +5973,14 @@
 #macro  infinity                                                                                1/0
 #macro  instance_max                                                                            instance_create(0, 0, DramaCamera)
 #macro  current_frame_active                                                                    (current_frame % 1) < current_time_scale
+#macro  game_scale_nonsync                                                                      game_screen_get_width_nonsync() / game_width
 #macro  anim_end                                                                                (image_index + image_speed_raw >= image_number || image_index + image_speed_raw < 0)
 #macro  enemy_sprite                                                                            (sprite_index != spr_hurt || anim_end) ? ((speed <= 0) ? spr_idle : spr_walk) : sprite_index
 #macro  enemy_boss                                                                              ('boss' in self) ? boss : ('intro' in self || array_find_index([Nothing, Nothing2, BigFish, OasisBoss], object_index) >= 0)
 #macro  player_active                                                                           visible && !instance_exists(GenCont) && !instance_exists(LevCont) && !instance_exists(SitDown) && !instance_exists(PlayerSit)
-#macro  game_scale_nonsync                                                                      game_screen_get_width_nonsync() / game_width
+#macro  target_visible                                                                          !collision_line(x, y, target.x, target.y, Wall, false, false)
+#macro  target_direction                                                                        point_direction(x, y, target.x, target.y)
+#macro  target_distance                                                                         point_distance(x, y, target.x, target.y)
 #macro  bbox_width                                                                              (bbox_right + 1) - bbox_left
 #macro  bbox_height                                                                             (bbox_bottom + 1) - bbox_top
 #macro  bbox_center_x                                                                           (bbox_left + bbox_right + 1) / 2
@@ -6007,8 +6030,6 @@
 #define trace_error(_error)                                                                     mod_script_call_nc  ('mod', 'telib', 'trace_error', _error);
 #define view_shift(_index, _dir, _pan)                                                          mod_script_call_nc  ('mod', 'telib', 'view_shift', _index, _dir, _pan);
 #define sleep_max(_milliseconds)                                                                mod_script_call_nc  ('mod', 'telib', 'sleep_max', _milliseconds);
-#define instance_seen(_x, _y, _obj)                                                     return  mod_script_call_nc  ('mod', 'telib', 'instance_seen', _x, _y, _obj);
-#define instance_near(_x, _y, _obj, _dis)                                               return  mod_script_call_nc  ('mod', 'telib', 'instance_near', _x, _y, _obj, _dis);
 #define instance_budge(_objAvoid, _disMax)                                              return  mod_script_call_self('mod', 'telib', 'instance_budge', _objAvoid, _disMax);
 #define instance_random(_obj)                                                           return  mod_script_call_nc  ('mod', 'telib', 'instance_random', _obj);
 #define instance_clone()                                                                return  mod_script_call_self('mod', 'telib', 'instance_clone');

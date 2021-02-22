@@ -111,7 +111,7 @@
 			 // Full:
 			if(_charge >= 1){
 				 // Sound:
-				sound_play_pitch(sndCrystalTB,         0.6 + random(0.2));
+				sound_play_pitch(sndCrystalTB,         0.5 + random(0.2));
 				sound_play_pitch(sndCrystalJuggernaut, 2);
 				
 				 // Flash:

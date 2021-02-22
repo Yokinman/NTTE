@@ -129,10 +129,8 @@
 	
 	if(sprite_index != spr_shield){
 		if(instance_exists(leader)){
-			var _leaderSeeTarget = instance_seen(leader.x, leader.y, target);
-			
 			 // Pathfinding:
-			if(path_dir != null && (!instance_seen(x, y, target) || _leaderDis > 48)){
+			if(path_dir != null && (_leaderDis > 48 || !instance_exists(target) || !target_visible)){
 				scrWalk(path_dir + orandom(15), 15);
 				return 1 + irandom(walk);
 			}
@@ -145,12 +143,16 @@
 				
 				 // Attacking:
 				if(instance_exists(target) && !instance_exists(my_venom)){
-					if(instance_seen(x, y, target) && _leaderSeeTarget && _leaderDis <= 96){
+					if(
+						target_visible
+						&& !collision_line(leader.x, leader.y, target.x, target.y, Wall, false, false)
+						&& _leaderDis <= 96
+					){
 						if(chance(2, 3)){
 							sound_play_hit_ext(snd_fire, 1.2, 3);
 							
 							 // Venom Ball:
-							var _targetDir = point_direction(x, y, target.x, target.y);
+							var _targetDir = target_direction;
 							my_venom = projectile_create(x, y, "VenomBlast", _targetDir, 0);
 							scrRight(_targetDir);
 						}
@@ -443,9 +445,9 @@
 					with(_inst){
 						var _dis = point_distance(x, y, other.x, other.y);
 						if(_dis < _disMax){
-							if(instance_seen(x, y, other)){
-								if(array_length(instances_matching(Pet, "pickup", id)) <= 0){
-									_pickup = id;
+							if(!collision_line(x, y, other.x, other.y, Wall, false, false)){
+								if(!array_length(instances_matching(Pet, "pickup", self))){
+									_pickup = self;
 									_disMax = _dis;
 								}
 							}
@@ -644,7 +646,7 @@
 				sound_play_hit_ext(sndExplosionS, 1.5, 1.2);
 				
 				var	_len = 8,
-					_dir = point_direction(x, y, target.x, target.y);
+					_dir = target_direction;
 					
 				for(var _ang = _dir; _ang < _dir + 360; _ang += (360 / 3)){
 					with(projectile_create(
@@ -706,7 +708,18 @@
 			rotation += angle_difference((10 + (10 * sin((x + y) / 10))) * other.right, rotation) * 0.5 * current_time_scale;
 			
 			 // Portal Takes Bone:
-			if(!visible || instance_near(x, y, Portal, 96)){
+			var _drop = !visible;
+			if(!_drop && instance_exists(Portal)){
+				with(Portal){
+					if(point_distance(x, y, other.x, other.y) < 96){
+						if(!collision_line(x, y, other.x, other.y, Wall, false, false)){
+							_drop = true;
+							break;
+						}
+					}
+				}
+			}
+			if(_drop){
 				other.my_bone = noone;
 			}
 		}
@@ -718,7 +731,7 @@
 	if(sprite_index != spr_fire && sprite_index != spr_spwn){
 		if(instance_exists(leader)){
 			 // Pathfinding:
-			if(path_dir != null && (!instance_seen(x, y, target) || _leaderDis > 96)){
+			if(path_dir != null && (_leaderDis > 96 || !instance_exists(target) || !target_visible)){
 				scrWalk(path_dir + orandom(20), 12);
 				return 1 + irandom(walk);
 			}
@@ -726,25 +739,25 @@
 			else{
 				if(
 					target != my_bone
-					&& instance_seen(x, y, target)
-					&& instance_near(leader.x, leader.y, target, 160)
+					&& instance_exists(target)
+					&& target_visible
+					&& point_distance(target.x, target.y, leader.x, leader.y) < 160
 				){
 					 // Bite:
 					if(
 						(target.visible || !instance_is(target, WepPickup))
-						&&
-						distance_to_object(target) < (instance_is(target, WepPickup) ? 2 : 32)
+						&& distance_to_object(target) < (instance_is(target, WepPickup) ? 2 : 32)
 					){
 						sprite_index = spr_fire;
-						image_index = 0;
-						speed = 0;
-						walk = 0;
-						scrRight(point_direction(x, y, target.x, target.y));
+						image_index  = 0;
+						speed        = 0;
+						walk         = 0;
+						scrRight(target_direction);
 					}
 					
 					 // Towards Enemy:
 					else{
-						scrWalk(point_direction(x, y, target.x, target.y) + orandom(20), [8, 16]);
+						scrWalk(target_direction + orandom(20), [8, 16]);
 						alarm0 = 10;
 					}
 				}
@@ -766,28 +779,28 @@
 					with(pet_target_inst){
 						var _dis = point_distance(x, y, other.x, other.y);
 						if(_dis < _disMax){
-							if(!instance_is(self, prop) && instance_seen(x, y, other)){
+							if(!instance_is(self, prop) && !collision_line(x, y, other.x, other.y, Wall, false, false)){
 								_disMax = _dis;
-								other.target = id;
+								other.target = self;
 							}
 						}
 					}
 					
 					 // Movin:
-					if(instance_exists(target) && instance_seen(leader.x, leader.y, target)){
-						motion_add(point_direction(x, y, target.x, target.y) + orandom(10), 2);
+					if(instance_exists(target) && !collision_line(leader.x, leader.y, target.x, target.y, Wall, false, false)){
+						motion_add(target_direction + orandom(10), 2);
 						scrRight(direction);
 					}
 					
 					 // Fetch:
-					if(!instance_exists(my_bone) && !instance_seen(x, y, target)){
+					if(!instance_exists(my_bone) && (!instance_exists(target) || !target_visible)){
 						var _disMax = 160;
 						with(instances_matching(WepPickup, "visible", true)){
 							var _dis = point_distance(x, y, other.x, other.y);
 							if(_dis < _disMax){
-								if(wep_raw(wep) == "crabbone" && instance_seen(x, y, other)){
+								if(wep_raw(wep) == "crabbone" && !collision_line(x, y, other.x, other.y, Wall, false, false)){
 									_disMax = _dis;
-									other.target = id;
+									other.target = self;
 								}
 							}
 						}
@@ -915,17 +928,21 @@
 	if(instance_exists(leader)){
 		 // Unhide:
 		if(hiding){
-			hiding = false;
-			light = true;
+			hiding     = false;
+			light      = true;
 			spr_shadow = shd16;
 		}
 		
-		var	_lx = leader.x,
-			_ly = leader.y,
+		var	_lx        = leader.x,
+			_ly        = leader.y,
 			_leaderDir = point_direction(x, y, _lx, _ly),
 			_leaderDis = point_distance(x, y, _lx, _ly);
 			
-		if(leader.visible && instance_seen(x, y, leader) && _leaderDis < 96 /*+ (45 * skill_get(mut_laser_brain))*/){
+		if(
+			leader.visible
+			&& _leaderDis < 96 /*+ (45 * skill_get(mut_laser_brain))*/
+			&& !collision_line(x, y, leader.x, leader.y, Wall, false, false)
+		){
 			 // Lightning Arcing Effects:
 			if(arcing < 1){
 				arcing += 0.15 * current_time_scale;
@@ -989,7 +1006,9 @@
 		}
 		
 		 // Arc to Nearby Things:
-		if(arcing_attack > 0) arcing_attack -= current_time_scale;
+		if(arcing_attack > 0){
+			arcing_attack -= current_time_scale;
+		}
 		else{
 			if(arcing >= 1){
 				var	_nearest = noone,
@@ -999,13 +1018,12 @@
 					var _dis = point_distance(x, y, other.x, other.y);
 					if(_dis < _disMax){
 						if(
-							(!instance_is(self, prop) && team != 0)
-							||
+							(!instance_is(self, prop) && team != 0) ||
 							(instance_is(self, prop) && sprite_get_width(sprite_index) <= 24 && sprite_get_height(sprite_index) <= 24)
 						){
-							if(instance_seen(x, y, other)){
-								_disMax = _dis;
-								_nearest = id;
+							if(!collision_line(x, y, other.x, other.y, Wall, false, false)){
+								_disMax  = _dis;
+								_nearest = self;
 							}
 						}
 					}
@@ -1091,7 +1109,7 @@
 #define Octo_alrm0(_leaderDir, _leaderDis)
 	if(instance_exists(leader)){
 		 // Follow Leader Around:
-		if(_leaderDis > 64 || !instance_seen(x, y, leader)){
+		if(_leaderDis > 64 || collision_line(x, y, leader.x, leader.y, Wall, false, false)){
 			 // Pathfinding:
 			if(path_dir != null){
 				scrWalk(path_dir + orandom(10), 6);
@@ -1112,8 +1130,11 @@
 			scrRight(direction);
 			
 			 // More Aggressive:
-			if(arcing >= 1 && instance_near(x, y, enemy, 160) && "index" in leader){
-				motion_add(point_direction(x, y, mouse_x[leader.index], mouse_y[leader.index]) + orandom(10), 2);
+			if(arcing >= 1 && "index" in leader && instance_exists(enemy)){
+				var _enemy = instance_nearest(x, y, enemy);
+				if(point_distance(x, y, _enemy.x, _enemy.y) < 160){
+					motion_add(point_direction(x, y, mouse_x[leader.index], mouse_y[leader.index]) + orandom(10), 2);
+				}
 			}
 			
 			return 20 + random(10);
@@ -1143,13 +1164,13 @@
 					_disMax = infinity;
 					
 				with(instances_matching(Floor, "sprite_index", spr.FloorTrenchB)){
-					var	_x = bbox_center_x,
-						_y = bbox_center_y,
+					var	_x   = bbox_center_x,
+						_y   = bbox_center_y,
 						_dis = point_distance(other.x, other.y, _x, _y);
 						
-					if(_dis < _disMax && instance_seen(_x, _y, other)){
-						_dir = point_direction(other.x, other.y, _x, _y);
+					if(_dis < _disMax && !collision_line(other.x, other.y, _x, _y, Wall, false, false)){
 						_disMax = _dis;
+						_dir    = point_direction(other.x, other.y, _x, _y);
 					}
 				}
 				
@@ -1840,7 +1861,7 @@
 			if(sprite_index == spr_walk) sprite_index = spr_idle;
 			
 			 // Disable Active:
-			var _inst = instances_matching(instances_matching(CustomObject, "name", "SalamanderCanSpec"), "creator", id);
+			var _inst = instances_matching(instances_matching(CustomObject, "name", "SalamanderCanSpec"), "creator", self);
 			if(array_length(_inst) <= 0){
 				_inst = instance_create(x, y, CustomObject);
 				with(_inst){
@@ -2250,7 +2271,7 @@
 		stat.webbed = 0;
 	}
 	
-#define Spider_ttip
+#define Spider_ttip(_skin)
 	return (
 		(_skin == 1)
 		? ["STUCK A BIT", "SITUATION STICKY", "GROSS", "COCOONED"]
@@ -2315,7 +2336,7 @@
 			stat.cursed = lq_defget(stat, "cursed", 0) + 1;
 			
 			 // Alert:
-			with(alert_create(id, spr_icon)){
+			with(alert_create(self, spr_icon)){
 				alert     = { spr:sprCurse, x:alert.x + 1, y:3 };
 				alarm0    = 90;
 				flash     = 10;
@@ -2344,14 +2365,18 @@
 			
 			 // Find Larget:	
 			with(leader){
-				_target = instance_near(x, y, instance_seen(x, y, other), 256));
+				if(point_distance(x, y, other.x, other.y) < 256){
+					if(!collision_line(x, y, other.x, other.y, Wall, false, false)){
+						_target = other;
+					}
+				}
 			}
 			
 			var t = array_length(instances_matching(instances_matching(CustomProjectile, "name", "SpiderTangle"), "creator", leader));
 			if(instance_exists(_target) && (t < 3 || chance(1, 3 + (4 * t)))){
 				
 				 // Snare Larget:
-				if(instance_seen(x, y, _target)){
+				if(!collision_line(x, y, _target.x, _target.y, Wall, false, false)){
 					var _targetDir = point_direction(x, y, _target.x, _target.y);
 					
 					with(obj_create(x, y, "SpiderTangle")){
@@ -2568,7 +2593,7 @@
 									image_angle = other.image_angle + (random_range(20, 40) * choose(-1, 1) * _accuracy);
 									
 									 // Grow:
-									var	_varCopy = variable_instance_get_names(id),
+									var	_varCopy = variable_instance_get_names(self),
 										_varNo = [
 											"id", "object_index", "bbox_bottom", "bbox_top", "bbox_right", "bbox_left", "image_number", "sprite_yoffset", "sprite_xoffset", "sprite_height", "sprite_width",
 											"ammo", "x", "y", "xstart", "ystart", "xprevious", "yprevious", "image_xscale", "image_yscale", "image_angle", "direction"
@@ -2594,7 +2619,7 @@
 								
 								 // Offset Direction:
 								var _off = random_range(4, 16) * _accuracy;
-								with([id, _clone]){
+								with([self, _clone]){
 									direction   += _off;
 									image_angle += _off;
 									_off *= -1;
@@ -2629,7 +2654,7 @@
 				_x = x,
 				_y = y;
 				
-			if(!collision_circle(leader.x, leader.y, _dis, id, true, false)){
+			if(!collision_circle(leader.x, leader.y, _dis, self, true, false)){
 				tp_delay = 15;
 				
 				var _dir = point_direction(leader.x, leader.y, _x, _y) + 180;
@@ -2802,7 +2827,7 @@
 		}
 	}
 	if(instance_exists(leader) && instance_exists(partner)){
-		if(instance_is(leader, Player) && array_find_index(leader.ntte_pet, id) >= 0){
+		if(instance_is(leader, Player) && array_find_index(leader.ntte_pet, self) >= 0){
 			partner.leader     = leader;
 			partner.can_take   = can_take;
 			partner.stat_found = stat_found;
@@ -2817,7 +2842,7 @@
 	 // Orbit Leader:
 	if(instance_exists(leader)){
 		var	_twinList  = instances_matching(instances_matching(instances_matching(object_index, "name", name), "pet", pet), "leader", leader),
-			_twinIndex = array_find_index(_twinList, id),
+			_twinIndex = array_find_index(_twinList, self),
 			_twinCount = array_length(_twinList),
 			_orbitX    = leader.x,
 			_orbitY    = leader.y,
@@ -2907,7 +2932,7 @@
 					var _inst = (
 						(typ == 0)
 						? noone
-						: id
+						: self
 					);
 					
 					 // Specifics:
@@ -2919,7 +2944,7 @@
 							
 						case Lightning:
 						case EnemyLightning:
-							_inst = id;
+							_inst = self;
 							
 							 // Delete Lightning Manually:
 							with(other){
@@ -3136,7 +3161,7 @@
 	if(!instance_exists(leader)){
 		if(instance_exists(partner)){
 			var _partnerDir = point_direction(x, y, partner.x, partner.y);
-			if(instance_near(x, y, partner, 48) || chance(1, 5)){
+			if(point_distance(x, y, partner.x, partner.y) < 48 || chance(1, 5)){
 				scrWalk(_partnerDir + (90 + orandom(30)), 5);
 			}
 			else{
@@ -3475,8 +3500,8 @@
 	if(
 		sprite_index != spr_spwn
 		&& name == "Pet"
-		&& (instance_seen(x, y, leader) || instance_seen(x, y, target))
 		&& instance_is(leader, Player)
+		&& (!collision_line(x, y, leader.x, leader.y, Wall, false, false) || (instance_exists(target) && target_visible))
 	){
 		gunangle_goal = point_direction(x, y, mouse_x[leader.index], mouse_y[leader.index]);
 		
@@ -3514,7 +3539,7 @@
 	}
 	
 	 // Aim:
-	if(instance_seen(x, y, target)){
+	if(instance_exists(target) && target_visible){
 		gunangle_goal = point_direction(x, y, target.x + target.hspeed, target.y + target.vspeed);
 	}
 	else target = noone;
@@ -3606,11 +3631,11 @@
 				 // Laser Sight:
 				if(weapon_get_laser_sight(wep)){
 					if(
-						instance_seen(x, y, target)
-						|| (name == "Pet" && instance_seen(x, y, leader))
+						(instance_exists(target) && target_visible)
+						|| (name == "Pet" && instance_exists(leader) && !collision_line(x, y, leader.x, leader.y, Wall, false, false))
 						|| (name == "PetWeaponBoss" && point_distance(x, y, cover_x, cover_y) < 24)
 					){
-						_wepLaser += current_time_scale / (instance_near(x, y, target, shootdis_min) ? 60 : 5);
+						_wepLaser += current_time_scale / ((instance_exists(target) && target_distance < shootdis_min) ? 60 : 5);
 					}
 					else if(_wepLaser > 0){
 						_wepLaser -= current_time_scale / 3;
@@ -3638,7 +3663,7 @@
 					}
 					
 					 // Fire:
-					with(player_fire_ext(gunangle, _wep, x, y, team, id)){
+					with(player_fire_ext(gunangle, _wep, x, y, team, self)){
 						_reload = reload;
 						_wkick = wkick * 1.5;
 					}
@@ -3702,7 +3727,7 @@
 	}
 	
 	 // Burst Weapon Fix:
-	with(instances_matching([LaserCannon, Burst, GoldBurst, HeavyBurst, HyperBurst, RogueBurst, SawBurst, SplinterBurst, NadeBurst, DragonBurst, ToxicBurst, FlameBurst, WaveBurst, SlugBurst, PopBurst], "creator", id)){
+	with(instances_matching([LaserCannon, Burst, GoldBurst, HeavyBurst, HyperBurst, RogueBurst, SawBurst, SplinterBurst, NadeBurst, DragonBurst, ToxicBurst, FlameBurst, WaveBurst, SlugBurst, PopBurst], "creator", self)){
 		direction = other.gunangle;
 	}
 	
@@ -3799,9 +3824,9 @@
 						var _disMax = 64;
 						with(pet_target_inst){
 							var _dis = point_distance(x, y, other.x, other.y);
-							if(_dis < _disMax && instance_seen(x, y, other)){
+							if(_dis < _disMax && !collision_line(x, y, other.x, other.y, Wall, false, false)){
 								_disMax = _dis;
-								other.target = id;
+								other.target = self;
 							}
 						}
 						
@@ -3810,9 +3835,9 @@
 							var _disMax = 64;
 							with(pet_target_inst){
 								var _dis = point_distance(x, y, _mx, _my);
-								if(_dis < _disMax && instance_seen(x, y, other)){
+								if(_dis < _disMax && !collision_line(x, y, other.x, other.y, Wall, false, false)){
 									_disMax = _dis;
-									other.target = id;
+									other.target = self;
 								}
 							}
 						}
@@ -4194,7 +4219,7 @@
 			}
 		}
 		with(instances_matching(Revive, "p", leader_index)){
-			instance_delete(id);
+			instance_delete(self);
 		}
 		with(button){
 			instance_destroy();
@@ -4205,7 +4230,7 @@
 		game_letterbox = false;
 		
 		 // Bye Bro:
-		instance_delete(id);
+		instance_delete(self);
 		exit;
 	}
 	
@@ -4240,12 +4265,23 @@
 			
 			 // Couch:
 			if(cuz == noone && instance_exists(VenuzCouch) && !instance_exists(leader)){
-				with(instance_seen(x, y, VenuzCouch)){
-					with(other){
-						direction = point_direction(x, y, other.x, other.y) + orandom(30);
-						scrRight(direction);
-						return walk;
+				var	_disMax = infinity,
+					_target = noone;
+					
+				with(VenuzCouch){
+					var _dis = point_distance(x, y, other.x, other.y);
+					if(_dis < _disMax){
+						if(!collision_line(x, y, other.x, other.y, Wall, false, false)){
+							_disMax = _dis;
+							_target = self;
+						}
 					}
+				}
+				
+				if(instance_exists(_target)){
+					direction = point_direction(x, y, _target.x, _target.y) + orandom(30);
+					scrRight(direction);
+					return walk;
 				}
 			}
 		}
@@ -4269,27 +4305,27 @@
 	
 	
 /// GENERAL
-#define ntte_step
+#define ntte_update(_newID, _genID)
 	var _petInst = Pet;
 	
 	if(array_length(_petInst)){
 		 // Mantis Rad Attraction:
-		if(instance_exists(Rad) || instance_exists(BigRad)){
+		if(
+			(instance_exists(Rad)    && Rad.id    > _newID) ||
+			(instance_exists(BigRad) && BigRad.id > _newID)
+		){
 			var _targetInst = instances_matching(instances_matching(_petInst, "pet", "Orchid"), "visible", true);
 			if(array_length(_targetInst)){
-				var _inst = instances_matching([Rad, BigRad], "orchidmantisradattract_check", null);
-				if(array_length(_inst)) with(_inst){
-					orchidmantisradattract_check = true;
-					
+				with(instances_matching_gt([Rad, BigRad], "id", _newID)){
 					var	_target = noone,
 						_disMax = infinity;
 						
 					with(_targetInst){
-						if(instance_exists(leader) && array_length(skill_inst) <= 0){
+						if(instance_exists(leader) && !array_length(skill_inst)){
 							var _dis = point_distance(x, y, other.x, other.y);
 							if(_dis < _disMax){
 								_disMax = _dis;
-								_target = id;
+								_target = self;
 							}
 						}
 					}
@@ -4307,43 +4343,44 @@
 		}
 		
 		 // Salamander Throne Butt Text:
-		if(instance_exists(SkillIcon) && array_length(instances_matching(_petInst, "pet", "Salamander"))){
-			var _inst = instances_matching(instances_matching(SkillIcon, "skill", mut_throne_butt), "petsalamander_check", null);
-			if(array_length(_inst)) with(_inst){
-				petsalamander_check = true;
-				
-				 // Append Player's Name:
-				for(var i = 0; i < maxp; i++){
-					if(player_is_active(i)){
-						var _title = race_get_title(player_get_race(i));
-						if(string_pos(_title, text) != 1){
-							text = _title + " - " + text;
+		if(instance_exists(SkillIcon) && SkillIcon.id > _newID){
+			if(array_length(instances_matching(_petInst, "pet", "Salamander"))){
+				with(instances_matching(instances_matching_gt(SkillIcon, "id", _newID), "skill", mut_throne_butt)){
+					 // Append Character Names:
+					for(var i = 0; i < maxp; i++){
+						if(player_is_active(i)){
+							var _title = race_get_title(player_get_race(i));
+							if(string_pos(_title, text) != 1){
+								text = _title + " - " + text;
+							}
+							break;
 						}
-						break;
 					}
+					
+					 // Add Salamander:
+					text += "@s#SALAMANDER - @wPUNTED @sENEMIES @rEXPLODE@s";
 				}
-				
-				 // Add Salamander:
-				text += "@s#SALAMANDER - @wPUNTED @sENEMIES @rEXPLODE@s";
 			}
 		}
 	}
 	
 	 // Spawn Cuz Pet:
-	if(instance_exists(YungCuz)){
-		var _inst = instances_matching(YungCuz, "ntte_cuz", null);
-		if(array_length(_inst)) with(_inst){
-			ntte_cuz = (
-				(spr_idle == sprCuzIdle)
-				? pet_spawn(x, y, "Cuz")
-				: noone
-			);
-			with(ntte_cuz){
-				cuz = other;
+	if(is_real(_genID)){
+		if(instance_exists(YungCuz) && YungCuz.id > _genID){
+			with(instances_matching(instances_matching_gt(YungCuz, "id", _genID), "ntte_cuz", null)){
+				ntte_cuz = (
+					(spr_idle == sprCuzIdle)
+					? pet_spawn(x, y, "Cuz")
+					: noone
+				);
+				with(ntte_cuz){
+					cuz = other;
+				}
 			}
 		}
 	}
 	
+#define ntte_step
 	 // Playing Cuz:
 	if(instance_exists(Player)){
 		var _inst = instances_matching(Player, "race", "cuz");
@@ -4513,9 +4550,9 @@
 												with(_inst){
 													//if(point_in_triangle(x, bbox_bottom, _x1, _y1, _x2, _y2, _x3, _y3)){
 														if(!collision_line(x, y, xprevious, yprevious, Wall, false, false)){
-															array_push(_instSlow, id);
+															array_push(_instSlow, self);
 														}
-														_instWeb = array_delete_value(_instWeb, id);
+														_instWeb = array_delete_value(_instWeb, self);
 													//}
 												}
 											}
@@ -4618,8 +4655,8 @@
 							
 							 // Curse Damage:
 							if(_damage != 0 && my_health > 0){
-								if(!ds_map_exists(_hitList, id) || _hitList[? id] <= _hitTime){
-									_hitList[? id] = _hitTime + 30;
+								if(!ds_map_exists(_hitList, self) || _hitList[? self] <= _hitTime){
+									_hitList[? self] = _hitTime + 30;
 									
 									 // Damage:
 									with(other){
@@ -4714,11 +4751,14 @@
 #macro  infinity                                                                                1/0
 #macro  instance_max                                                                            instance_create(0, 0, DramaCamera)
 #macro  current_frame_active                                                                    (current_frame % 1) < current_time_scale
+#macro  game_scale_nonsync                                                                      game_screen_get_width_nonsync() / game_width
 #macro  anim_end                                                                                (image_index + image_speed_raw >= image_number || image_index + image_speed_raw < 0)
 #macro  enemy_sprite                                                                            (sprite_index != spr_hurt || anim_end) ? ((speed <= 0) ? spr_idle : spr_walk) : sprite_index
 #macro  enemy_boss                                                                              ('boss' in self) ? boss : ('intro' in self || array_find_index([Nothing, Nothing2, BigFish, OasisBoss], object_index) >= 0)
 #macro  player_active                                                                           visible && !instance_exists(GenCont) && !instance_exists(LevCont) && !instance_exists(SitDown) && !instance_exists(PlayerSit)
-#macro  game_scale_nonsync                                                                      game_screen_get_width_nonsync() / game_width
+#macro  target_visible                                                                          !collision_line(x, y, target.x, target.y, Wall, false, false)
+#macro  target_direction                                                                        point_direction(x, y, target.x, target.y)
+#macro  target_distance                                                                         point_distance(x, y, target.x, target.y)
 #macro  bbox_width                                                                              (bbox_right + 1) - bbox_left
 #macro  bbox_height                                                                             (bbox_bottom + 1) - bbox_top
 #macro  bbox_center_x                                                                           (bbox_left + bbox_right + 1) / 2
@@ -4768,8 +4808,6 @@
 #define trace_error(_error)                                                                     mod_script_call_nc  ('mod', 'telib', 'trace_error', _error);
 #define view_shift(_index, _dir, _pan)                                                          mod_script_call_nc  ('mod', 'telib', 'view_shift', _index, _dir, _pan);
 #define sleep_max(_milliseconds)                                                                mod_script_call_nc  ('mod', 'telib', 'sleep_max', _milliseconds);
-#define instance_seen(_x, _y, _obj)                                                     return  mod_script_call_nc  ('mod', 'telib', 'instance_seen', _x, _y, _obj);
-#define instance_near(_x, _y, _obj, _dis)                                               return  mod_script_call_nc  ('mod', 'telib', 'instance_near', _x, _y, _obj, _dis);
 #define instance_budge(_objAvoid, _disMax)                                              return  mod_script_call_self('mod', 'telib', 'instance_budge', _objAvoid, _disMax);
 #define instance_random(_obj)                                                           return  mod_script_call_nc  ('mod', 'telib', 'instance_random', _obj);
 #define instance_clone()                                                                return  mod_script_call_self('mod', 'telib', 'instance_clone');

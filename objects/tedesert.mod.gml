@@ -73,8 +73,8 @@
 		alarm1 = (gold ? 2 : irandom_range(1, 3));
 		
 		 // Aim and walk:
-		if(instance_seen(x, y, target)){
-			scrAim(point_direction(x, y, target.x, target.y));
+		if(instance_exists(target) && target_visible){
+			scrAim(target_direction);
 		}
 		scrWalk(gunangle + orandom(10), alarm1 + 3);
 		
@@ -116,18 +116,20 @@
 	}
 	
 	 // Normal AI:
-	else if(instance_seen(x, y, target)){
+	else if(instance_exists(target) && target_visible){
 		scrAim(point_direction(x, y, target.x + target.hspeed, target.y + target.vspeed));
 		
+		var _targetDis = target_distance;
+		
 		 // Start attack:
-		if(instance_near(x, y, target, [32, 96]) && chance(2, 3)){
+		if(chance(2, 3) && _targetDis > 32 && _targetDis < 96){
 			alarm1 = 1;
-			ammo = 6 + irandom(2);
+			ammo   = 6 + irandom(2);
 			sound_play_pitch(snd_fire, 1.6);
 		}
 		
 		 // Move Away From Target:
-		else if(instance_near(x, y, target, 32)){
+		else if(_targetDis <= 32){
 			alarm1 = 20 + irandom(30);
 			scrWalk(gunangle + 180 + orandom(40), [10, 20]);
 			scrAim(direction);
@@ -257,29 +259,30 @@
 	
 #define BanditHiker_step
 	 // Aggro++
-	var d = ceil(current_time_scale);
-	if(alarm1 > d && current_frame_active) alarm1 -= d;
+	if(alarm1 > 1 && current_frame_active){
+		alarm1--;
+	}
 	
 	 // Path to Player:
 	if(path_delay > 0) path_delay -= current_time_scale;
 	if(walk > 0 && instance_exists(target)){
-		if(!instance_seen(x, y, target)){
-			var	_tx = target.x,
-				_ty = target.y,
+		if(!target_visible){
+			var	_tx      = target.x,
+				_ty      = target.y,
 				_pathDir = path_direction(path, x, y, Wall);
 				
 			 // Follow Path:
 			if(_pathDir != null && path_reaches(path, _tx, _ty, Wall)){
-				can_path = true;
+				can_path  = true;
 				direction = angle_lerp(direction, _pathDir, 0.25 * current_time_scale);
 			}
 			
 			 // Create Path:
 			else if(can_path && path_delay <= 0){
-				can_path = false;
+				can_path   = false;
 				path_delay = 60;
-				path = path_create(x, y, _tx, _ty, Wall);
-				path = path_shrink(path, Wall, 4);
+				path       = path_create(x, y, _tx, _ty, Wall);
+				path       = path_shrink(path, Wall, 4);
 			}
 		}
 		else can_path = true;
@@ -349,9 +352,9 @@
 #define BigCactus_create(_x, _y)
 	with(instance_create(_x, _y, CustomProp)){
 		 // Visual:
-		spr_shadow = shd32;
+		spr_shadow   = shd32;
 		spr_shadow_y = 4;
-		depth = -1;
+		depth        = -1;
 		switch(GameCont.area){
 			case area_campfire:
 				spr_idle = spr.BigNightCactusIdle;
@@ -379,11 +382,16 @@
 		maxhealth = 24;
 		size = 2;
 		
-		 // Spawn Enemies:
+		 // Clear Walls:
 		instance_create(x, y, PortalClear);
-		if(!instance_near(x, y, Player, 96) && place_meeting(x, y, Floor)){
-			repeat(choose(2, 3)){
-				obj_create(x, y, ((GameCont.area == "coast") ? "Gull" : "BabyScorpion"));
+		
+		 // Spawn Enemies:
+		if(place_meeting(x, y, Floor)){
+			var _player = instance_nearest(x, y, Player);
+			if(!instance_exists(_player) || point_distance(x, y, _player.x, _player.y) > 96){
+				repeat(choose(2, 3)){
+					obj_create(x, y, ((GameCont.area == "coast") ? "Gull" : "BabyScorpion"));
+				}
 			}
 		}
 		
@@ -550,7 +558,7 @@
 		if(
 			my_health <= 1
 			|| distance_to_object(target) < 64
-			|| (chance(1, 3) && instance_seen(x, y, target))
+			|| (chance(1, 3) && instance_exists(target) && target_visible)
 		){
 			my_health -= 2;
 		}
@@ -694,7 +702,14 @@
 			sound_play_hit_ext(sndBloodGamble, 1.2 + random(0.2), 3);
 			
 			 // Break:
-			if(!instance_near(x, y, instances_matching(CustomProp, "name", "CoastBossBecome"), 32)){
+			var _disSkull = infinity;
+			with(instances_matching(CustomProp, "name", "CoastBossBecome")){
+				var _dis = point_distance(x, y, other.x, other.y);
+				if(_dis < _disSkull){
+					_disSkull = _dis;
+				}
+			}
+			if(_disSkull > 32){
 				broken = true;
 				instance_destroy();
 			}
@@ -1026,7 +1041,7 @@
 			var	_x = swim_target.x,
 				_y = swim_target.y;
 				
-			if(instance_near(x, y, swim_target, 100)){
+			if(point_distance(x, y, _x, _y) < 100){
 				var	_dis = 80,
 					_dir = direction + (10 * right);
 					
@@ -1229,7 +1244,7 @@
 							var	_l = 2,
 								_d = _leader.direction + 180;
 								
-							while(instance_near(x, y, _leader, 24)){
+							while(point_distance(x, y, _leader.x, _leader.y) < 24){
 								x += lengthdir_x(_l, _d);
 								y += lengthdir_y(_l, _d);
 								direction = _d;
@@ -1435,11 +1450,12 @@
 	alarm1 = 30 + random(20);
 	
 	if(enemy_target(x, y)){
-		if(instance_near(x, y, target, 160) && (variable_instance_get(target, "reload", 0) <= 0 || chance(2, 3))){
-			scrAim(point_direction(x, y, target.x, target.y));
+		var _targetDis = target_distance;
+		if(_targetDis < 160 && ("reload" not in target || target.reload <= 0 || chance(2, 3))){
+			scrAim(target_direction);
 			
 			 // Move Towards Target:
-			if((instance_near(x, y, target, 64) && chance(1, 2)) || chance(1, 4)){
+			if((_targetDis < 64 && chance(1, 2)) || chance(1, 4)){
 				scrWalk(gunangle + orandom(10), [30, 40]);
 				alarm1 = walk + random(10);
 			}
@@ -1708,9 +1724,8 @@
 	if(instance_exists(flak)){
 		if(flak.time < flak.time_max){
 			 // Retarget:
-			if(instance_seen(x, y, target)){
-				var _d = point_direction(x, y, target.x, target.y);
-				scrAim(angle_lerp_ct(gunangle, _d, 1/3));
+			if(instance_exists(target) && target_visible){
+				scrAim(angle_lerp_ct(gunangle, target_direction, 1/3));
 			}
 			
 			 // Reposition:
@@ -1750,12 +1765,12 @@
 	
 	if(ammo <= 0){
 		 // Aggroed:
-		if(enemy_target(x, y) && (my_health < maxhealth || instance_seen(x, y, target))){
-			scrAim(point_direction(x, y, target.x, target.y));
+		if(enemy_target(x, y) && (my_health < maxhealth || target_visible)){
+			scrAim(target_direction);
 			direction = gunangle + orandom(40);
 			
 			 // Attack:
-			if(!chance(point_distance(x, y, target.x, target.y) - 128, 192)){
+			if(!chance(target_distance - 128, 192)){
 				alarm1 = irandom_range(75, 120);
 				alarm2 = 1;
 				/*
@@ -2415,10 +2430,11 @@
 	
 #define WantBigMaggot_create(_x, _y)
 	with(instance_create(_x, _y, BigMaggot)){
+		 // Burrow:
 		instance_change(BigMaggotBurrow, false);
 		sprite_index = sprBigMaggotBurrow;
-		visible = false;
-		alarm0 = -1;
+		visible      = false;
+		alarm0       = -1;
 		
 		 // Vars:
 		unburrow_check_timer = random_range(150, 450);
@@ -2434,19 +2450,20 @@
 		unburrow_check_timer = random_range(120, 300);
 		
 		 // Unburrow:
-		if(instance_near(x, y, Player, 160) || !instance_exists(enemy)){
+		var _player = instance_nearest(x, y, Player);
+		if((instance_exists(_player) && point_distance(x, y, _player.x, _player.y) < 160) || !instance_exists(enemy)){
 			sound_play_hit_big(sndBigMaggotUnburrowSand, 0.2);
 			sprite_index = sprBigMaggotAppear;
-			image_index = 0;
-			visible = true;
-			alarm1 = 12;
+			image_index  = 0;
+			visible      = true;
+			alarm1       = 12;
 		}
 	}
 	
 	 // Stay Burrowed:
 	if(!visible){
 		sprite_index = sprBigMaggotBurrow;
-		image_index = 0;
+		image_index  = 0;
 	}
 	
 	 // Unburrowing:
@@ -2603,11 +2620,14 @@
 #macro  infinity                                                                                1/0
 #macro  instance_max                                                                            instance_create(0, 0, DramaCamera)
 #macro  current_frame_active                                                                    (current_frame % 1) < current_time_scale
+#macro  game_scale_nonsync                                                                      game_screen_get_width_nonsync() / game_width
 #macro  anim_end                                                                                (image_index + image_speed_raw >= image_number || image_index + image_speed_raw < 0)
 #macro  enemy_sprite                                                                            (sprite_index != spr_hurt || anim_end) ? ((speed <= 0) ? spr_idle : spr_walk) : sprite_index
 #macro  enemy_boss                                                                              ('boss' in self) ? boss : ('intro' in self || array_find_index([Nothing, Nothing2, BigFish, OasisBoss], object_index) >= 0)
 #macro  player_active                                                                           visible && !instance_exists(GenCont) && !instance_exists(LevCont) && !instance_exists(SitDown) && !instance_exists(PlayerSit)
-#macro  game_scale_nonsync                                                                      game_screen_get_width_nonsync() / game_width
+#macro  target_visible                                                                          !collision_line(x, y, target.x, target.y, Wall, false, false)
+#macro  target_direction                                                                        point_direction(x, y, target.x, target.y)
+#macro  target_distance                                                                         point_distance(x, y, target.x, target.y)
 #macro  bbox_width                                                                              (bbox_right + 1) - bbox_left
 #macro  bbox_height                                                                             (bbox_bottom + 1) - bbox_top
 #macro  bbox_center_x                                                                           (bbox_left + bbox_right + 1) / 2
@@ -2657,8 +2677,6 @@
 #define trace_error(_error)                                                                     mod_script_call_nc  ('mod', 'telib', 'trace_error', _error);
 #define view_shift(_index, _dir, _pan)                                                          mod_script_call_nc  ('mod', 'telib', 'view_shift', _index, _dir, _pan);
 #define sleep_max(_milliseconds)                                                                mod_script_call_nc  ('mod', 'telib', 'sleep_max', _milliseconds);
-#define instance_seen(_x, _y, _obj)                                                     return  mod_script_call_nc  ('mod', 'telib', 'instance_seen', _x, _y, _obj);
-#define instance_near(_x, _y, _obj, _dis)                                               return  mod_script_call_nc  ('mod', 'telib', 'instance_near', _x, _y, _obj, _dis);
 #define instance_budge(_objAvoid, _disMax)                                              return  mod_script_call_self('mod', 'telib', 'instance_budge', _objAvoid, _disMax);
 #define instance_random(_obj)                                                           return  mod_script_call_nc  ('mod', 'telib', 'instance_random', _obj);
 #define instance_clone()                                                                return  mod_script_call_self('mod', 'telib', 'instance_clone');
