@@ -717,10 +717,15 @@
 		elite = true;
 		num   = 2 * (1 + GameCont.loops);
 		
-		 // Vars:
+		 // Delay:
 		alarm0 += 30;
+		
+		 // Sound:
 		sound_stop(sndIDPDPortalSpawn);
 		sound_play(sndEliteIDPDPortalSpawn);
+		
+		 // Clear Walls:
+		instance_create(x, y, PortalClear);
 		
 		return self;
 	}
@@ -729,13 +734,13 @@
 	 // Effects:
 	if(sprite_index == sprVanPortalCharge){
 		if(chance_ct(2, 3)){
-			var	l = 64,
-				d = random(360);
+			var	_l = 64,
+				_d = random(360);
 			
-			with(instance_create(x + lengthdir_x(l, d), y + lengthdir_y(l, d), IDPDPortalCharge)){
-				alarm0 = 20 + random(20);
-				speed = l / alarm0;
-				direction = d + 180;
+			with(instance_create(x + lengthdir_x(_l, _d), y + lengthdir_y(_l, _d), IDPDPortalCharge)){
+				alarm0    = 20 + random(20);
+				speed     = _l / alarm0;
+				direction = _d + 180;
 			}
 		}
 		if(chance_ct(1, 4)){
@@ -745,21 +750,28 @@
 		}
 	}
 	
-	 // Force Spawns:
+	 // Release Dudes:
 	if(alarm1 > 0 && alarm1 <= ceil(current_time_scale)){
-		depth = 0;
+		alarm1 = -1;
+		depth  = 0;
+		
+		 // Clear Walls:
+		with(instance_create(x, y, PortalClear)){
+			image_xscale = 2;
+			image_yscale = image_xscale;
+		}
+		
+		 // Force Spawns:
 		if(num > 0){
 			with(self){
 				repeat(num){
 					event_perform(ev_alarm, 1);
 				}
 			}
-			with(instance_create(x, y, PortalClear)){
-				image_xscale = 2;
-				image_yscale = image_xscale;
-			}
 		}
-		alarm1 = -1;
+		
+		 // Sound:
+		sound_play_hit_big(sndPortalOpen, 0.2);
 	}
 	
 	 // Animate:
@@ -3401,12 +3413,6 @@
 	with(instances_matching(LaserCannon, "creator", self)){
 		time = 1 + floor(abs(angle_difference(other.gunangle, other.gunangle_goal)) / 4);
 	}
-	with(instances_matching(instances_matching(Laser, "creator", self), "petweaponbosslaser_check", null)){
-		petweaponbosslaser_check = true;
-		image_yscale = 1.4;
-		hitid = other.hitid;
-		team_instance_sprite(1, self);
-	}
 	
 	 // Weapon Win:
 	if(!instance_exists(Player) && stat_battle){
@@ -5260,7 +5266,11 @@
 			break;
 			
 		case area_caves:
-			_spr = (position_meeting(_x, _y, Wall) ? spr.WallSpiderling : spr.WallSpiderlingTrans);
+			_spr = (
+				position_meeting(_x, _y, Wall)
+				? spr.WallSpiderling
+				: spr.WallSpiderlingTrans
+			);
 			break;
 	}
 	
@@ -5535,6 +5545,31 @@
 						instance_copy(false).creator = other;
 					}
 				}
+			}
+		}
+	}
+	
+	 // Weapon Mimic Boss, Burst Weapon Fix:
+	if(instance_exists(projectile) && projectile.id > _newID){
+		with(instances_matching_gt(projectile, "id", _newID)){
+			if(instance_is(creator, CustomEnemy) && "name" in creator && creator.name == "PetWeaponBoss"){
+				 // Laser Cannon, Brain Fix:
+				if(skill_get(mut_laser_brain) != 0 && object_index == Laser){
+					with(instance_create(x, y, object_index)){
+						if(image_yscale == other.image_yscale){
+							other.image_yscale = 1.4;
+						}
+						instance_delete(self);
+					}
+				}
+				
+				 // Cause of Death:
+				if(hitid == -1){
+					hitid = creator.hitid;
+				}
+				
+				 // Enemy Spriterize:
+				team_instance_sprite(1, self);
 			}
 		}
 	}

@@ -3656,9 +3656,9 @@
 					if(instance_is(self, enemy)){
 						var _muts = [[mut_long_arms, 0], [mut_recycle_gland, 0], [mut_shotgun_shoulders, 0], [mut_bolt_marrow, 0], [mut_boiling_veins, 0], [mut_laser_brain, 0]];
 						with(_muts){
-							var v = self[1];
+							var _set = self[1];
 							self[@1] = skill_get(self[0]);
-							skill_set(self[0], v);
+							skill_set(self[0], _set);
 						}
 					}
 					
@@ -3700,11 +3700,13 @@
 								default:
 									 // Time Nades:
 									if(instance_is(self, Grenade) && alarm0 > 0){
-										var a = (alarm2 - alarm0);
+										var _time = (alarm2 - alarm0);
 										alarm0 += (_canShoot * weapon_get_load(_wep));
 										if(alarm2 > 0){
-											if(TopCont.darkness) a -= 40;
-											alarm2 = max(1, alarm0 + a);
+											if(TopCont.darkness){
+												_time -= 40;
+											}
+											alarm2 = max(1, alarm0 + _time);
 										}
 									}
 							}
@@ -3902,6 +3904,9 @@
 	if("playtime" not in stat){
 		stat.playtime = 0;
 	}
+	
+#define Cuz_name
+	return "Cuz" + (array_length(instances_matching(Player, "spr_idle", sprMutant16Idle)) ? "?" : "");
 	
 #define Cuz_ttip
 	return [

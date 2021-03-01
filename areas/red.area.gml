@@ -16,8 +16,6 @@
 #macro area_active variable_instance_get(GameCont, "ntte_active_" + mod_current, false) && (GameCont.area == mod_current || GameCont.lastarea == mod_current)
 #macro area_visits variable_instance_get(GameCont, "ntte_visits_" + mod_current, 0)
 
-#macro warp_zone variable_instance_get(GenCont, "iswarpzone", true)
-
 #define area_subarea           return 3;
 #define area_goal              return 60;
 #define area_next              return [mod_current, 1]; // CAN'T LEAVE
@@ -228,7 +226,7 @@
 		}
 		
 	/// Don't Move:
-		if(!warp_zone){
+		if(GenCont.safedist <= 0){
 			if("direction_start" not in self){
 				direction_start = direction;
 			}
@@ -289,7 +287,7 @@
 	}
 	
 	 // Warp Rooms:
-	if(warp_zone && styleb == 0){
+	if(styleb == 0 && GameCont.subarea > 0 && GameCont.subarea != 3){
 		if(chance(1, 12 * array_length(instances_matching(CustomObject, "name", "Warp")))){
 			var _w          = 2,
 				_h          = 2,
@@ -356,110 +354,117 @@
 		}
 	}
 	
-	 // Secrets Upon Secrets:
-	if(warp_zone){
-		var	_w          = 3,
-			_h          = 3,
-			_type       = "",
-			_dirOff     = 60,
-			_floorDis   = random_range(80, 160),
-			_dirStart   = 90,
-			_spawnX     = 10016,
-			_spawnY     = 10016,
-			_spawnDis   = 64,
-			_spawnFloor = [],
-			_levelFloor = FloorNormal;
+	 // Rooms:
+	switch(GameCont.subarea){
+		
+		case 1: // Secrets Upon Secrets
 			
-		floor_set_align(null, null, 32, 32);
-		floor_set_style(1, null);
-		
-		 // Spawn From Highest Floors:
-		with(_levelFloor){
-			if(!array_length(instances_matching_lt(instances_matching(_levelFloor, "x", x), "y", y))){
-				array_push(_spawnFloor, self);
-			}
-		}
-		
-		 // Secret Room:
-		with(floor_room_start(_spawnX, _spawnY, _spawnDis, _spawnFloor)){
-			with(floor_room_create(x, y, _w, _h, _type, _dirStart, _dirOff, _floorDis)){
-				var _minID = instance_max;
+			var	_w          = 3,
+				_h          = 3,
+				_type       = "",
+				_dirOff     = 60,
+				_floorDis   = random_range(80, 160),
+				_dirStart   = 90,
+				_spawnX     = 10016,
+				_spawnY     = 10016,
+				_spawnDis   = 64,
+				_spawnFloor = [],
+				_levelFloor = FloorNormal;
 				
-				 // Hallway:
-				with(instance_random(floors)){
-					var	_x       = bbox_center_x,
-						_y       = bbox_center_y,
-						_moveDis = 32;
-						
-					while(
-						point_distance(_x, _y, other.xstart, other.ystart) > _moveDis / 2
-						&&
-						(!position_meeting(_x, _y, Floor) || !array_length(instances_at(_x, _y, _levelFloor)))
-					){
-						 // Floor & Fake Walls:
-						if(!position_meeting(_x, _y, Floor) || !array_length(instances_at(_x, _y, FloorNormal))){
-							with(floor_set(_x - 16, _y - 16, true)){
-								depth = 10;
-								for(var _wx = bbox_left; _wx < bbox_right + 1; _wx += 16){
-									for(var _wy = bbox_top; _wy < bbox_bottom + 1; _wy += 16){
-										obj_create(_wx, _wy, "WallFake");
+			floor_set_align(null, null, 32, 32);
+			floor_set_style(1, null);
+			
+			 // Spawn From Highest Floors:
+			with(_levelFloor){
+				if(!array_length(instances_matching_lt(instances_matching(_levelFloor, "x", x), "y", y))){
+					array_push(_spawnFloor, self);
+				}
+			}
+			
+			 // Secret Room:
+			with(floor_room_start(_spawnX, _spawnY, _spawnDis, _spawnFloor)){
+				with(floor_room_create(x, y, _w, _h, _type, _dirStart, _dirOff, _floorDis)){
+					var _minID = instance_max;
+					
+					 // Hallway:
+					with(instance_random(floors)){
+						var	_x       = bbox_center_x,
+							_y       = bbox_center_y,
+							_moveDis = 32;
+							
+						while(
+							point_distance(_x, _y, other.xstart, other.ystart) > _moveDis / 2
+							&&
+							(!position_meeting(_x, _y, Floor) || !array_length(instances_at(_x, _y, _levelFloor)))
+						){
+							 // Floor & Fake Walls:
+							if(!position_meeting(_x, _y, Floor) || !array_length(instances_at(_x, _y, FloorNormal))){
+								with(floor_set(_x - 16, _y - 16, true)){
+									depth = 10;
+									for(var _wx = bbox_left; _wx < bbox_right + 1; _wx += 16){
+										for(var _wy = bbox_top; _wy < bbox_bottom + 1; _wy += 16){
+											obj_create(_wx, _wy, "WallFake");
+										}
 									}
 								}
 							}
+							
+							 // Move:
+							var _moveDir = pround(point_direction(_x, _y, other.xstart, other.ystart) + orandom(60), 90);
+							_x += lengthdir_x(_moveDis, _moveDir);
+							_y += lengthdir_y(_moveDis, _moveDir);
 						}
-						
-						 // Move:
-						var _moveDir = pround(point_direction(_x, _y, other.xstart, other.ystart) + orandom(60), 90);
-						_x += lengthdir_x(_moveDis, _moveDir);
-						_y += lengthdir_y(_moveDis, _moveDir);
 					}
-				}
-				
-				 // Secrets Upon Secrets Upon Secres:
-				with(instance_random(floors)){
-					with(floor_room_create(bbox_center_x, bbox_center_y, 1, 2, "", 90, 0, 0)){
-						 // Fake Walls:
-						for(var _wx = x1; _wx < x2; _wx += 16){
-							for(var _wy = y1; _wy < y2; _wy += 16){
-								obj_create(_wx, _wy, "WallFake");
+					
+					 // Secrets Upon Secrets Upon Secres:
+					with(instance_random(floors)){
+						with(floor_room_create(bbox_center_x, bbox_center_y, 1, 2, "", 90, 0, 0)){
+							 // Fake Walls:
+							for(var _wx = x1; _wx < x2; _wx += 16){
+								for(var _wy = y1; _wy < y2; _wy += 16){
+									obj_create(_wx, _wy, "WallFake");
+								}
 							}
+							
+							 // Chest:
+							chest_create(x, y1 + 16, "Backpack", true);
 						}
-						
-						 // Chest:
-						chest_create(x, y1 + 16, "Backpack", true);
 					}
+					
+					 // Hidden:
+					with(instances_matching_gt(Wall,     "id", _minID)) topindex = 0;
+					with(instances_matching_gt(TopSmall, "id", _minID)) image_index = 0;
+					
+					 // Twins:
+					pet_spawn(x, y, "Twins");
 				}
-				
-				 // Hidden:
-				with(instances_matching_gt(Wall,     "id", _minID)) topindex = 0;
-				with(instances_matching_gt(TopSmall, "id", _minID)) image_index = 0;
-				
-				 // Twins:
-				pet_spawn(x, y, "Twins");
 			}
-		}
-		
-		floor_reset_align();
-		floor_reset_style();
-	}
-	
-	 // Tesseract Room:
-	if(GameCont.subarea == 3){
-		var	_x = 10016,
-			_y = 10016;
 			
-		with(instance_furthest(_x - 16, _y - 16, Floor)){
-			var	_w        = 4,
-				_h        = 4,
-				_type     = "",
-				_dirStart = point_direction(_x, _y, bbox_center_x, bbox_center_y),
-				_dirOff   = 30,
-				_floorDis = -32;
+			floor_reset_align();
+			floor_reset_style();
+			
+			break;
+			
+		case 3: // Tesseract Room
+			
+			var	_x = 10016,
+				_y = 10016;
 				
-			with(floor_room_create(_x, _y, _w, _h, _type, _dirStart, _dirOff, _floorDis)){
-				obj_create(x, y, "Tesseract");
+			with(instance_furthest(_x - 16, _y - 16, Floor)){
+				var	_w        = 4,
+					_h        = 4,
+					_type     = "",
+					_dirStart = point_direction(_x, _y, bbox_center_x, bbox_center_y),
+					_dirOff   = 30,
+					_floorDis = -32;
+					
+				with(floor_room_create(_x, _y, _w, _h, _type, _dirStart, _dirOff, _floorDis)){
+					obj_create(x, y, "Tesseract");
+				}
 			}
-		}
+			
+			break;
+			
 	}
 	
 #define area_effect

@@ -643,7 +643,9 @@
 	
 	 // Epic Death:
 	with(obj_create(x, y, "CrystalBrainDeath")){
+		sprite_index = other.spr_hurt;
 		spr_dead     = other.spr_dead;
+		spr_part     = other.spr_part;
 		spr_shadow   = other.spr_shadow;
 		spr_shadow_x = other.spr_shadow_x;
 		spr_shadow_y = other.spr_shadow_y;
@@ -689,21 +691,20 @@
 		The death sequence for the CrystalBrain enemy
 		
 		Vars:
-			throes - The remaining number of throes before dying
-			broken - If the brain has broken into fragments or not
-			flash  - A timer that flashes the brain white when above 0
-			alarm0 - Time until the next death throe
+			spr_part - Sprite of the fragments that the Crystal Brain smashes into
+			throes   - The remaining number of throes before dying
+			alarm0   - Time until the next death throe
 	*/
 	
 	with(instance_create(_x, _y, CustomObject)){
 		 // Visual:
-		spr_part     = spr.CrystalBrainPart;
+		sprite_index = spr.CrystalBrainHurt;
 		spr_dead     = spr.CrystalBrainDead;
+		spr_part     = spr.CrystalBrainPart;
 		spr_shadow   = shd32;
 		spr_shadow_x = 0;
 		spr_shadow_y = 6;
-		image_index  = 2;
-		image_speed  = 0;
+		image_speed  = 0.4;
 		depth        = -2;
 		
 		 // Sound:
@@ -717,8 +718,6 @@
 		team       = 1;
 		raddrop    = 20;
 		throes     = irandom_range(2, 3);
-		broken     = false;
-		flash      = 3;
 		
 		 // Alarms:
 		alarm0 = 15;
@@ -726,15 +725,19 @@
 		return self;
 	}
 	
-#define CrystalBrainDeath_begin_step
-	 // Flash:
-	if(flash > 0){
-		flash -= current_time_scale;
-	}
-	
 #define CrystalBrainDeath_step
 	 // Alarms:
 	if(alarm0_run) exit;
+	
+	 // Animate:
+	if(sprite_index != -1 && anim_end){
+		image_index = image_number - 1;
+		image_speed = 0;
+	}
+	
+	 // Shake:
+	x += orandom(2 * current_time_scale);
+	y += orandom(2 * current_time_scale);
 	
 	 // Wall Collision:
 	motion_step(1);
@@ -749,8 +752,8 @@
 	alarm0 = 15;
 	
 	 // Fragment:
-	if(!broken){
-		broken = true;
+	if(sprite_index != -1){
+		sprite_index = -1;
 		sound_play_hit_ext(sndCrystalPropBreak, 1.4 + orandom(0.1), 4);
 	}
 	
@@ -762,7 +765,10 @@
 	 // Agony:
 	if(throes > 0){
 		throes--;
-		flash = 3;
+		
+		 // Flash:
+		image_index = 0;
+		image_speed = 0.4;
 		
 		 // Jerk Around:
 		speed     = random_range(3, 6);
@@ -795,51 +801,41 @@
 	else instance_destroy();
 	
 #define CrystalBrainDeath_draw
-	if(flash > 0){
-		draw_set_fog(true, image_blend, 0, 0);
-	}
+	 // Normal:
+	draw_self();
 	
-	var	_img = image_index,
-		_x   = x,
-		_y   = y,
-		_xsc = image_xscale,
-		_ysc = image_yscale,
-		_ang = image_angle,
-		_col = image_blend,
-		_alp = image_alpha;
-		
 	 // Fragments:
-	if(broken){
-		var	_offset   = 10 / max(1, 1 + throes),
+	if(sprite_index == -1){
+		var	_flash    = (image_index < 1),
+			_offset   = 10 / max(1, 1 + throes),
 			_lastSeed = random_get_seed();
 			
+		random_set_seed(id + throes);
+		random(1); // important
+		
+		if(_flash){
+			draw_set_fog(true, image_blend, 0, 0);
+		}
+		
 		for(var i = 0; i < sprite_get_number(spr_part); i++){
-			var	_ox = orandom(2),
-				_oy = orandom(2);
-				
-			random_set_seed(id + throes + i);
-			
 			draw_sprite_ext(
 				spr_part,
 				i,
-				_x + orandom(_offset) + _ox,
-				_y + orandom(_offset) + _oy,
-				_xsc,
-				_ysc,
-				_ang,
-				_col,
-				_alp
+				x + orandom(_offset),
+				y + orandom(_offset),
+				image_xscale,
+				image_yscale,
+				image_angle,
+				image_blend,
+				image_alpha
 			);
-			
-			random_set_seed(_lastSeed);
 		}
-	}
-	
-	 // Normal:
-	else draw_sprite_ext(spr_dead, _img, _x + orandom(2), _y + orandom(2), _xsc, _ysc, _ang, _col, _alp);
-	
-	if(flash > 0){
-		draw_set_fog(false, 0, 0, 0);
+		
+		if(_flash){
+			draw_set_fog(false, 0, 0, 0);
+		}
+		
+		random_set_seed(_lastSeed);
 	}
 	
 #define CrystalBrainDeath_destroy
@@ -1471,7 +1467,7 @@
 		area           = "red";
 		subarea        = 0;
 		loops          = GameCont.loops;
-		area_seed      = irandom(random_get_seed());
+		area_seed      = random_get_seed() + random(0);
 		area_goal      = irandom_range(8, 16);
 		area_chest     = [];
 		area_chest_pos = "furthest";
@@ -1885,9 +1881,8 @@
 	
 #define CrystalHeartBullet_area_generate_setup(_goal, _direction, _seed)
 	with(GenCont){
-		goal       = _goal;
-		safedist   = 0;
-		iswarpzone = false;
+		goal     = _goal;
+		safedist = 0;
 	}
 	with(FloorMaker){
 		goal      = _goal;
@@ -2610,11 +2605,11 @@
 	for(var d = _ang; d < _ang + 360; d += (360 / 5)){
 		with(scrFX(x, y, [d, 1.5], Feather)){
 			sprite_index = spr.PetSpiderWebBits;
-			image_blend = make_color_rgb(165, 165, 165);
-			image_angle = orandom(30);
-			image_index = irandom(image_number - 1);
-			image_speed = 0;
-			rot /= 2;
+			image_blend  = make_color_hsv(0, 0, 165);
+			image_angle  = orandom(30);
+			image_index  = irandom(image_number - 1);
+			image_speed  = 0;
+			rot         /= 2;
 		}
 	}
 	
@@ -3232,23 +3227,20 @@
 		boss = true;
 		
 		 // Visual:
-		spr_frnt     = spr.Tesseract;
-		spr_back     = spr.TesseractOutline;
-		spr_idle     = spr.TesseractEyeIdle;
-		spr_walk     = spr.TesseractEyeIdle;
-		spr_hurt     = spr.TesseractEyeHurt;
-	//	spr_dead     = spr.TesseractGameover;
-		spr_fire     = spr.TesseractEyeFire;
-		spr_tell	 = spr.TesseractEyeTell;
-		spr_arms     = spr.TesseractWeapon;
+		spr_idle     = spr.TesseractIdle;
+		spr_walk     = spr.TesseractIdle;
+		spr_hurt     = spr.TesseractHurt;
+		spr_fire     = spr.TesseractFire;
+		spr_tell	 = spr.TesseractTell;
 		spr_shadow   = mskNone;
 		spr_shadow_y = 12;
-		hitid        = [spr.TesseractGameover, `@9(${spr.TesseractGameoverText}:-0.7)`];
+		hitid        = [spr.TesseractDeathCause, `@9(${spr.TesseractDeathCauseText}:-0.7)`];
+		sprite_index = spr_tell;
 		depth        = -3;
 		
 		 // Sound:
-		snd_hurt = sndBigDogWalk;
-		snd_dead = sndHyperCrystalDead;
+		snd_hurt = sndHyperCrystalHurt;
+		snd_dead = sndHyperCrystalChargeExplo;
 		snd_lowh = sndNothingRise;
 		snd_mele = sndBasicUltra;
 		
@@ -3258,12 +3250,13 @@
 		maxhealth   = boss_hp(600);
 		meleedamage = maxhealth;
 		canmelee    = false;
-		raddrop     = 24;
+		raddrop     = 65;
 		size        = 6;
 		walk        = 0;
 		walkspeed   = 0.4;
 		maxspeed    = 2;
 		minspeed    = 0.2;
+		corpse      = false;
 		intro       = false;
 		ammo        = 3;
 		tauntdelay  = 30;
@@ -3273,29 +3266,34 @@
 		alarm1 = 200;
 		alarm2 = 240;
 		
-		 // Main Layers:
-		layers = [];
-		repeat(3){
-			array_push(layers, {
-				"rotation"    : image_angle,
+		 // Layers:
+		layers = array_create(array_length(spr.TesseractLayer));
+		for(var i = 0; i < array_length(layers); i++){
+			layers[i] = {
+				"spr_idle"    : spr.TesseractLayer[i],
+				"spr_dead"    : spr.TesseractDeathLayer[i],
+				"rotation"    : 0,
 				"rotspeed"    : 0,
 				"rotfriction" : 0.2
-			});
+			};
 		}
 		
 		 // Arms:
 		weapons     = [];
-		weapons_max = 5;
-		for(var _rot = 0; _rot < 360; _rot += (360 / weapons_max)){
-			array_push(weapons, {
-				"rotation"    : _rot,
-				"rotspeed"    : 0,
-				"rotfriction" : 0.1,
-				"offset"      : 64 * 2/3,
-				"kick"        : 16,
-				"kick_goal"   : 0,
-				"strike"      : noone
-			});
+		weapons_max = 4 + GameCont.loops;
+		if(weapons_max > 0){
+			for(var _rot = 0; _rot < 360; _rot += (360 / weapons_max)){
+				array_push(weapons, {
+					"spr_idle"    : spr.TesseractWeapon,
+					"rotation"    : _rot + pround(direction, 90),
+					"rotspeed"    : 0,
+					"rotfriction" : 0.1,
+					"offset"      : 64 * 2/3,
+					"kick"        : 16,
+					"kick_goal"   : 0,
+					"strike"      : noone
+				});
+			}
 		}
 		
 		 // Music:
@@ -3318,7 +3316,11 @@
 	
 	 // Animate:
 	if((sprite_index != spr_tell && sprite_index != spr_fire) || anim_end){
-		sprite_index = enemy_sprite;
+		sprite_index = (
+			(intro || sprite_index == spr_hurt)
+			? enemy_sprite
+			: spr_tell
+		);
 	}
 	
 	 // Movement:
@@ -3327,22 +3329,24 @@
 		speed = minspeed;
 	}
 	
+	/*
 	 // Bounce Around:
-	/*if(place_meeting(x + hspeed_raw, y + vspeed_raw, Wall)){
+	if(place_meeting(x + hspeed_raw, y + vspeed_raw, Wall)){
 		if(place_meeting(x + hspeed_raw, y, Wall)) hspeed_raw *= -0.1;
 		if(place_meeting(x, y + vspeed_raw, Wall)) vspeed_raw *= -0.1;
-	}*/
+	}
+	*/
 	
 	 // Weapons:
 	with(weapons){
 		rotation += rotspeed * current_time_scale;
 		rotspeed -= clamp(rotspeed, -rotfriction * current_time_scale, rotfriction * current_time_scale);
-		kick     -= clamp(kick, -current_time_scale, current_time_scale);
+		kick     -= clamp(kick,                   -current_time_scale,               current_time_scale);
 		
 		 // Preparing Strike:
 		if(instance_exists(strike) && strike.active){
-			strike.xstart = other.x + lengthdir_x(offset * other.image_xscale, rotation);
-			strike.ystart = other.y + lengthdir_y(offset * other.image_yscale, rotation);
+			strike.xstart      = other.x + lengthdir_x(offset * other.image_xscale, rotation);
+			strike.ystart      = other.y + lengthdir_y(offset * other.image_yscale, rotation);
 			strike.image_angle = rotation;
 			
 			 // Strike Launched:
@@ -3387,14 +3391,28 @@
 	}
 	
 #define Tesseract_draw
-	var _hurt = (sprite_index == spr_hurt && image_index < 1);
-	if(_hurt) draw_set_fog(true, image_blend, 0, 0);
+	var	_max  = array_length(layers),
+		_hurt = (sprite_index == spr_hurt && image_index < 1);
+		
+	 // Flash:
+	if(_hurt){
+		draw_set_fog(true, image_blend, 0, 0);
+	}
 	
 	 // Outline Layers:
-	var _max = array_length(layers);
 	for(var i = 0; i < _max; i++){
 		var _layer = layers[i];
-		draw_sprite_ext(spr_back, i, x, y, image_xscale, image_yscale, image_angle + _layer.rotation, image_blend, image_alpha);
+		draw_sprite_ext(
+			_layer.spr_idle,
+			0,
+			x,
+			y,
+			image_xscale,
+			image_yscale,
+			image_angle + _layer.rotation,
+			image_blend,
+			image_alpha
+		);
 	}
 	
 	 // Main Layers:
@@ -3404,21 +3422,42 @@
 		 // Weapons:
 		if(i == (_max - 1)){
 			for(var j = 0; j < array_length(weapons); j++){
-				var _wep  = weapons[j],
-					_len  = _wep.offset - _wep.kick,
-					_dir  = _wep.rotation,
-					_wepX = x + lengthdir_x(_len * image_xscale, _dir),
-					_wepY = y + lengthdir_y(_len * image_yscale, _dir);
+				var _wep = weapons[j],
+					_len = _wep.offset - _wep.kick,
+					_dir = _wep.rotation;
 					
-				draw_sprite_ext(spr_arms, image_index, _wepX, _wepY, image_xscale, image_yscale, _dir, image_blend, image_alpha);
+				draw_sprite_ext(
+					_wep.spr_idle,
+					image_index,
+					x + lengthdir_x(_len * image_xscale, _dir),
+					y + lengthdir_y(_len * image_yscale, _dir),
+					image_xscale,
+					image_yscale,
+					_dir,
+					image_blend,
+					image_alpha
+				);
 			}
 		}
 		
 		 // Layer:
-		draw_sprite_ext(spr_frnt, i, x, y, image_xscale, image_yscale, image_angle + _layer.rotation, image_blend, image_alpha);
+		draw_sprite_ext(
+			_layer.spr_idle,
+			1,
+			x,
+			y,
+			image_xscale,
+			image_yscale,
+			image_angle + _layer.rotation,
+			image_blend,
+			image_alpha
+		);
 	}
 	
-	if(_hurt) draw_set_fog(false, 0, 0, 0);
+	 // Un-Flash:
+	if(_hurt){
+		draw_set_fog(false, 0, 0, 0);
+	}
 	
 	 // Eye:
 	draw_self();
@@ -3501,7 +3540,7 @@
 	
 	if(ammo <= 0){
 		 // Begin Orderly Attack:
-		if(chance(array_length(weapons) - 1, 10)){
+		if(chance(array_length(weapons) - 1, weapons_max * 2)){
 			ammo = min(array_length(weapons), irandom_range(2, 4));
 			with(weapons){
 				kick = -16;
@@ -3592,9 +3631,10 @@
 	enemy_hurt(_damage, _force, _direction);
 	
 	 // Pitch Hurt Sound:
-	if(snd_hurt == sndBigDogWalk){
-		sound_play_hit_ext(sndHyperCrystalHurt, 0.5 + random(0.3), 1);
-		sound_play_hit_ext(sndNothingHurtHigh,  0.8 + random(0.2), 1);
+	if(snd_hurt == sndHyperCrystalHurt){
+		sound_play_hit_ext(snd_hurt,           0.5 + random(0.3), 1);
+		sound_play_hit_ext(sndNothingHurtHigh, 0.8 + random(0.2), 1);
+		sound_play_hit(sndBigDogWalk, 0.3);
 	}
 	
 #define Tesseract_death
@@ -3609,24 +3649,35 @@
 	}
 	
 	 // Pitch Death Sound:
-	if(snd_dead == sndHyperCrystalDead){
-		sound_play_pitch(sndHyperCrystalChargeExplo, 0.2);
+	if(snd_dead == sndHyperCrystalChargeExplo){
+		sound_play_pitch(snd_dead, 0.2);
+		snd_dead = -1;
 	}
 	
-	 // Pickups:
-	var _gold = false;
-	with(Player){
-		if(weapon_get_gold(wep) != 0 || weapon_get_gold(bwep) != 0){
-			_gold = true;
-			break;
-		}
+	 // Epic Death:
+	with(obj_create(x, y, "TesseractDeath")){
+		sprite_index = other.spr_hurt;
+		spr_dead     = other.spr_dead;
+		spr_shadow   = other.spr_shadow;
+		spr_shadow_x = other.spr_shadow_x;
+		spr_shadow_y = other.spr_shadow_y;
+		hitid        = other.hitid;
+		layers       = other.layers;
+		image_xscale = other.image_xscale;
+		image_yscale = other.image_yscale;
+		image_angle  = other.image_angle;
+		image_blend  = other.image_blend;
+		image_alpha  = other.image_alpha;
+		depth        = other.depth;
+		mask_index   = other.mask_index;
+		snd_hurt     = other.snd_hurt;
+		raddrop      = other.raddrop;
+		size         = other.size;
+		team         = other.team;
+		direction    = other.direction;
+		speed        = min(other.speed / 2.5, 6);
 	}
-	if(_gold){
-		with(instance_create(x, y, WepPickup)){
-			wep  = { wep: "tunneller", gold: true };
-			ammo = true;
-		}
-	}
+	raddrop = 0;
 	
 #define Tesseract_arm_break(_num)
 	/*
@@ -3663,7 +3714,7 @@
 			_wep.rotation,
 			5.5
 		)){
-			sprite_index = other.spr_arms;
+			sprite_index = _wep.spr_idle;
 			image_xscale = other.image_xscale;
 			image_yscale = other.image_yscale;
 			image_blend  = other.image_blend;
@@ -3709,6 +3760,7 @@
 		strike     = noone;
 		force      = 8;
 		damage     = 4;
+		raddrop    = 16;
 		
 		return self;
 	}
@@ -3766,7 +3818,7 @@
 	repeat(2){
 		pickup_drop(60, 0);
 	}
-	rad_drop(x, y, 16, direction, speed);
+	rad_drop(x, y, raddrop, direction, speed);
 	
 	 // Chunks:
 	for(var i = 0; i < 10; i++){
@@ -3784,7 +3836,7 @@
 	}
 	
 	 // Sound:
-	sound_play_hit_ext(sndPlantPotBreak, 0.85 + orandom(0.15), 4);
+	sound_play_hit_ext(sndPlantPotBreak, 0.85 + orandom(0.15), 5);
 	sound_play_hit_ext(sndExplosion,     1.0  + orandom(0.1),  5);
 	sound_play_hit_ext(sndIDPDNadeExplo, 0.6  + orandom(0.1),  5);
 	
@@ -3793,6 +3845,303 @@
 		ammo   = min(ammo, 1);
 		alarm1 = min(alarm1, time);
 	}
+	
+	
+#define TesseractDeath_create(_x, _y)
+	/*
+		The death sequence for the Tesseract boss
+		
+		Vars:
+			throes - The remaining number of throes before dying
+			alarm0 - Time until the next death throe
+	*/
+	
+	with(instance_create(_x, _y, CustomObject)){
+		 // Visual:
+		sprite_index = spr.TesseractHurt;
+		spr_shadow   = mskNone;
+		spr_shadow_x = 0;
+		spr_shadow_y = 12;
+		hitid        = -1;
+		image_speed  = 0.2;
+		depth        = -3;
+		
+		 // Sound:
+		snd_hurt = sndHyperCrystalHurt;
+		snd_dead = sndHyperCrystalHalfHP;
+		
+		 // Vars:
+		mask_index = msk.CaveHole;
+		friction   = 0.2;
+		size       = 6;
+		team       = 1;
+		raddrop    = 65;
+		throes     = 3;
+		
+		 // Layers:
+		layers = array_create(array_length(spr.TesseractLayer));
+		for(var i = 0; i < array_length(layers); i++){
+			layers[i] = {
+				"spr_idle"    : spr.TesseractLayer[i],
+				"spr_dead"    : spr.TesseractDeathLayer[i],
+				"rotation"    : 0,
+				"rotspeed"    : 0,
+				"rotfriction" : 0.2
+			};
+		}
+		
+		 // Alarms:
+		alarm0 = 1;
+		
+		return self;
+	}
+	
+#define TesseractDeath_step
+	 // Alarms:
+	if(alarm0_run) exit;
+	
+	 // Layers:
+	var	_num = 0,
+		_max = array_length(layers);
+		
+	with(layers){
+		rotation += rotspeed * current_time_scale;
+		rotspeed -= clamp(rotspeed, -rotfriction * current_time_scale, rotfriction * current_time_scale);
+		
+		 // Orbit Fragments:
+		if(_num < _max - other.throes){
+			var _spd = 2 + (1.333 * _num);
+			if(abs(rotspeed) < _spd){
+				rotspeed = _spd * ((rotspeed == 0) ? choose(-1, 1) : sign(rotspeed));
+			}
+		}
+		_num++;
+	}
+	
+	 // Animate:
+	if(sprite_index != -1 && anim_end){
+		image_index = image_number - 1;
+		image_speed = 0;
+	}
+	
+	 // Shake:
+	x += orandom(2 * current_time_scale);
+	y += orandom(2 * current_time_scale);
+	
+	 // Black Gas:
+	if(chance_ct(1, 1 + (1.5 * throes))){
+		with(scrFX(x, y, 3, Smoke)){
+			image_blend = c_black;
+		}
+	}
+	
+	 // Wall Collision:
+	motion_step(1);
+	if(place_meeting(x, y, Wall)){
+		x = xprevious;
+		y = yprevious;
+		move_bounce_solid(true);
+	}
+	motion_step(-1);
+	
+#define TesseractDeath_alrm0
+	alarm0 = 30;
+	
+	 // Agony:
+	if(throes > 0){
+		throes--;
+		
+		 // Flash:
+		image_index = 0;
+		image_speed = 0.2;
+		
+		 // Jerk Around:
+		speed     = 4;
+		direction = point_direction(x, y, xstart, ystart) + orandom(30);
+		move_contact_solid(direction, 4);
+		
+		 // Chunk Off:
+		repeat(2){
+			with(scrFX(x, y, random_range(2, 5), Shell)){
+				sprite_index = spr.CrystalBrainChunk;
+				image_index  = irandom(image_number - 1);
+				image_speed  = 0;
+			}
+		}
+		
+		 // FX:
+		if(snd_hurt == sndHyperCrystalHurt){
+			sound_play_hit_ext(sndLaserCrystalHit, 0.5 + random(0.3),                8);
+			sound_play_hit_ext(sndPlantPotBreak,   1.2 + random(0.6 / (1 + throes)), 8);
+		}
+		sound_play_hit_big(snd_hurt, 0.3);
+		view_shake_at(x, y, 30);
+	}
+	
+	 // Perish:
+	else instance_destroy();
+	
+#define TesseractDeath_draw
+	var	_max  = array_length(layers),
+		_hurt = (image_index < 1);
+		
+	 // Flash:
+	if(_hurt){
+		draw_set_fog(true, image_blend, 0, 0);
+	}
+	
+	 // Outline Layers:
+	for(var i = clamp(_max - throes, 0, _max - 1); i < _max; i++){
+		var _layer = layers[i];
+		draw_sprite_ext(
+			_layer.spr_idle,
+			0,
+			x,
+			y,
+			image_xscale,
+			image_yscale,
+			image_angle + _layer.rotation,
+			image_blend,
+			image_alpha
+		);
+	}
+	
+	 // Main Layers:
+	for(var i = 0; i < _max; i++){
+		var	_layer = layers[i],
+			_ang   = image_angle + _layer.rotation;
+			
+		 // Normal:
+		if(i >= (_max - throes)){
+			draw_sprite_ext(
+				_layer.spr_idle,
+				1,
+				x,
+				y,
+				image_xscale,
+				image_yscale,
+				_ang,
+				image_blend,
+				image_alpha
+			);
+		}
+		
+		 // Fragments:
+		else{
+			var	_spr    = _layer.spr_dead,
+				_sprNum = sprite_get_number(_layer.spr_dead);
+				
+			for(var _img = 0; _img < _sprNum; _img++){
+				var	_len = 16 + (4 * dsin(4 * ((360 * (_img / _sprNum)) + _ang))),
+					_dir = _ang + ((_img / _sprNum) * 360);
+					
+				if(image_speed != 0 && i >= (_max - throes) - 1){
+					_len *= clamp((image_index / image_number) * 1.5, 0, 1);
+				}
+				
+				draw_sprite_ext(
+					_spr,
+					_img,
+					x + (lengthdir_x(_len, _dir) * image_xscale),
+					y + (lengthdir_y(_len, _dir) * image_yscale),
+					image_xscale,
+					image_yscale,
+					_ang,
+					image_blend,
+					image_alpha
+				);
+			}
+		}
+	}
+	
+	 // Un-Flash:
+	if(_hurt){
+		draw_set_fog(false, 0, 0, 0);
+	}
+	
+	 // Eye:
+	draw_self();
+	
+#define TesseractDeath_destroy
+	 // Corpse Chunks:
+	for(var i = 0; i < max(1, array_length(layers) - 1); i++){
+		var	_layer  = layers[i],
+			_spr    = _layer.spr_dead,
+			_sprNum = sprite_get_number(_spr),
+			_ang    = image_angle + _layer.rotation;
+			
+		for(var _img = 0; _img < _sprNum; _img++){
+			var	_len = 16,
+				_dir = ((_img / _sprNum) * 360) + _ang;
+				
+			with(instance_create(x + lengthdir_x(_len, _dir), y + lengthdir_y(_len, _dir), ScrapBossCorpse)){
+				sprite_index = _spr;
+				image_index  = _img;
+				image_xscale = other.image_xscale;
+				image_yscale = other.image_yscale;
+				image_angle  = _ang;
+				mask_index   = -1;
+				friction     = 0.5;
+				size         = 3;
+				motion_add(_dir, 4 + random(6) + (4 * skill_get(mut_impact_wrists)));
+				speed = min(speed, 16);
+			}
+		}
+	}
+	
+	 // Eye Explo:
+	with(projectile_create(x, y, "RedExplosion", 0, 0)){
+		mask_index  = mskPopoPlasmaImpact;
+		image_angle = other.image_angle;
+	}
+	view_shake_at(x, y, 50);
+	
+	 // Spooky Gas:
+	for(var _dir = 0; _dir < 360; _dir += (360 / 30)){
+		var _len = random(20);
+		with(scrFX(
+			x + lengthdir_x(_len * image_xscale, _dir),
+			y + lengthdir_y(_len * image_yscale, _dir),
+			[_dir, random_range(3, 4)],
+			Smoke
+		)){
+			image_xscale = other.image_xscale;
+			image_yscale = other.image_yscale;
+			image_blend  = c_black;
+			depth        = other.depth;
+		}
+	}
+	
+	 // Pickups:
+	repeat(3){
+		pickup_drop(100, 0);
+	}
+	rad_drop(x, y, raddrop, direction, speed);
+	var _gold = false;
+	with(Player){
+		if(
+			weapon_get_gold(wep)  != 0   ||
+			weapon_get_gold(bwep) != 0   ||
+			wep_raw(wep)  == "tunneller" ||
+			wep_raw(bwep) == "tunneller"
+		){
+			_gold = true;
+			break;
+		}
+	}
+	if(_gold){
+		with(instance_create(x, y, WepPickup)){
+			wep  = { wep: "tunneller", gold: true };
+			ammo = true;
+		}
+	}
+	
+	 // Sound:
+	sound_play_hit_ext(sndPlantPotBreak,     0.8 +  random(0.2), 6);
+	sound_play_hit_ext(sndPortalOpen,        1.8 +  random(0.2), 4);
+	sound_play_hit_ext(sndPortalStrikeFire,  2.5 + orandom(0.1), 4);
+	sound_play_hit_ext(sndHyperCrystalTaunt, 3.0 + orandom(0.1), 4);
+	sound_play_hit_big(snd_dead, 0.2);
 	
 	
 #define TesseractStrike_create(_x, _y)
@@ -3939,11 +4288,6 @@
 	
 	 // Goodbye:
 	if(_dis <= 0){
-		/*if(instance_exists(creator) && point_distance(x, y, creator.x, creator.y) < 96){ // Break Walls (Only when near creator to avoid infinite stage expansion):
-			if(array_length(_inst)) with(_inst[0]){
-				wall_clear(x, y);
-			}
-		}*/
 		instance_destroy();
 	}
 	
@@ -4903,28 +5247,58 @@
 	}
 	
 	 // Tesseract:
-	if(instance_exists(CustomEnemy)){
-		var _inst = instances_matching(instances_matching(instances_matching(CustomEnemy, "name", "Tesseract"), "visible", true), "spr_shadow", mskNone);
-		if(array_length(_inst)) with(_inst){
-			var	_scale = 0.9,
-				_offX  = spr_shadow_x,
-				_offY  = spr_shadow_y;
+	if(instance_exists(CustomObject) || instance_exists(CustomEnemy)){
+		var _inst = array_combine(
+			(instance_exists(CustomEnemy)  ? instances_matching(CustomEnemy,  "name", "Tesseract")      : []),
+			(instance_exists(CustomObject) ? instances_matching(CustomObject, "name", "TesseractDeath") : [])
+		);
+		if(array_length(_inst)){
+			_inst = instances_matching(instances_matching(_inst, "visible", true), "spr_shadow", mskNone);
+			if(array_length(_inst)) with(_inst){
+				var	_scale = 0.9,
+					_offX  = spr_shadow_x,
+					_offY  = spr_shadow_y;
+					
+				image_xscale *= _scale;
+				image_yscale *= _scale;
+				x += _offX;
+				y += _offY;
 				
-			image_xscale *= _scale;
-			image_yscale *= _scale;
-			x += _offX;
-			y += _offY;
-			
-			with(self) event_perform(ev_draw, 0);
-			
-			image_xscale /= _scale;
-			image_yscale /= _scale;
-			x -= _offX;
-			y -= _offY;
+				with(self) event_perform(ev_draw, 0);
+				
+				image_xscale /= _scale;
+				image_yscale /= _scale;
+				x -= _offX;
+				y -= _offY;
+			}
 		}
 	}
 	
 #define ntte_bloom
+	if(instance_exists(CustomObject)){
+		 // Warp Portals:
+		var _inst = instances_matching(CustomObject, "name", /*"TesseractStrike", "TesseractWarp",*/ "WarpPortal");
+		if(array_length(_inst)) with(_inst){
+			var	_scale = 2,
+				_alpha = 0.1;
+				
+			image_xscale *= _scale;
+			image_yscale *= _scale;
+			image_alpha  *= _alpha;
+			event_perform(ev_draw, 0);
+			image_xscale /= _scale;
+			image_yscale /= _scale;
+			image_alpha  /= _alpha;
+		}
+		
+		 // Tesseract Death:
+		var _inst = instances_matching(CustomObject, "name", "TesseractDeath");
+		if(array_length(_inst)) with(_inst){
+			draw_sprite_ext(sprite_index, 0.4 * current_frame, x, y, image_xscale * 2, image_yscale * 2, image_angle, image_blend, (image_alpha * 0.2) / max(1, 1 + throes));
+		}
+	}
+	
+	 // Projectiles:
 	if(instance_exists(projectile)){
 		if(instance_exists(CustomProjectile)){
 			 // Red Bullets:
@@ -4965,23 +5339,6 @@
 			if(array_length(_inst)) with(_inst){
 				draw_sprite_ext(sprite_index, image_index, x, y, 1.2 * image_xscale, 1.2 * image_yscale, image_angle, image_blend, 0.1 * image_alpha);
 			}
-		}
-	}
-	
-	 // Warp Portals:
-	if(instance_exists(CustomObject)){
-		var _inst = instances_matching(CustomObject, "name", /*"TesseractStrike", "TesseractWarp",*/ "WarpPortal");
-		if(array_length(_inst)) with(_inst){
-			var	_scale = 2,
-				_alpha = 0.1;
-				
-			image_xscale *= _scale;
-			image_yscale *= _scale;
-			image_alpha  *= _alpha;
-			event_perform(ev_draw, 0);
-			image_xscale /= _scale;
-			image_yscale /= _scale;
-			image_alpha  /= _alpha;
 		}
 	}
 	

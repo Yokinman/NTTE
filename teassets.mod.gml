@@ -752,16 +752,23 @@
 			
 			 // Tesseract:
 			p = m + "Tesseract/";
-			TesseractEyeIdle	  = sprite(p + "sprTesseractEyeIdle",	   8,  8,  8);
-			TesseractEyeHurt	  = sprite(p + "sprTesseractEyeHurt",	   3,  8,  8);
-			TesseractEyeFire	  = sprite(p + "sprTesseractEyeFire",	   4,  8,  8);
-			TesseractEyeTell	  = sprite(p + "sprTesseractEyeTell",	   6,  8,  8);
-			Tesseract       	  = sprite(p + "sprTesseract",      	   3,  48, 48);
-			TesseractOutline	  = sprite(p + "sprTesseractOutline",	   3,  48, 48);
-			TesseractGameover	  = sprite(p + "sprTesseractGameover",	   8,  48, 48);
-			TesseractGameoverText = sprite(p + "sprTesseractGameoverText", 12, 36, 4);
-			TesseractWeapon 	  = sprite(p + "sprTesseractWeapon",       1,  24, 24);
-			TesseractStrike 	  = sprite(p + "sprTesseractStrike",       4,  26, 12);
+			TesseractIdle           = sprite(p + "sprTesseractEyeIdle",           8,  8,  8);
+			TesseractHurt           = sprite(p + "sprTesseractEyeHurt",           3,  8,  8);
+			TesseractFire           = sprite(p + "sprTesseractEyeFire",           4,  8,  8);
+			TesseractTell           = sprite(p + "sprTesseractEyeTell",           6,  8,  8);
+			TesseractLayer          =[sprite(p + "sprTesseractLayerBottom",       2, 48, 48),
+			                          sprite(p + "sprTesseractLayerMiddle",       2, 48, 48),
+			                          sprite(p + "sprTesseractLayerTop",          2, 48, 48)];
+			TesseractDeathLayer     =[sprite(p + "sprTesseractDeathLayerBottom",  3, 48, 48),
+			                          sprite(p + "sprTesseractDeathLayerMiddle",  6, 48, 48),
+			                          sprite(p + "sprTesseractDeathLayerTop",    11, 48, 48)];
+			TesseractDeathCause     = sprite(p + "sprTesseractDeathCause",        8, 48, 48);
+			TesseractDeathCauseText = sprite(p + "sprTesseractDeathCauseText",   12, 36,  4);
+			TesseractWeapon         = sprite(p + "sprTesseractWeapon",            1, 24, 24);
+			TesseractStrike         = sprite(p + "sprTesseractStrike",            4, 26, 12);
+			with(TesseractDeathLayer){
+				mask = [true, 0];
+			}
 			
 			 // Traffic Crab:
 			p = m + "Crab/";

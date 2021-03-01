@@ -1684,8 +1684,8 @@
 		image_index = 0;
 		image_speed = 0;
 		alert.col   = make_color_rgb(245, 184, 0);
-		alarm0      = 45;
-		blink       = 20;
+		alarm0      = 30;
+		blink       = 10;
 		flash       = 6;
 		snd_flash   = sndEliteIDPDPortalSpawn;
 	}

@@ -2275,27 +2275,24 @@
 	
 #define PopoAmbush_text    return choose(`${event_tip}THE ${(player_count_race(char_venuz) > 0) ? "POPO" : "I.D.P.D."} @sIS @wWAITING FOR YOU`, `${event_tip}AMBUSHED`);
 #define PopoAmbush_area    return area_palace;
-#define PopoAmbush_chance  return ((GameCont.subarea != 3) ? clamp((GameCont.popolevel - 2), 0, 5) / 10 : 0);
+#define PopoAmbush_chance  return ((GameCont.subarea == 1) ? (clamp((GameCont.popolevel - 5) / 10, 0, 1) / (1 + GameCont.loops)) : 0);
 
 #define PopoAmbush_create
 	 // Ambush:
-	repeat(2 + irandom(2)){
+	if(GameCont.loops > 0) repeat(GameCont.loops){
 		instance_create(x, y, IDPDSpawn);
 	}
-	with(instance_nearest(spawn_x, spawn_y, IDPDSpawn)){
-		with(obj_create(x, y, "BigIDPDSpawn")){
-			instance_create(x, y, PortalClear);
-			with(alert_create(self, (freak ? spr.PopoFreakAlert : spr.PopoEliteAlert))){
-				image_speed = 0.1;
-				alert       = { spr:spr.AlertIndicatorPopo, x:-5, y:5 };
-				target_x    = -3;
-				target_y    = -24;
-				alarm0      = other.alarm0;
-			}
+	with(obj_create(spawn_x, spawn_y, "BigIDPDSpawn")){
+		with(alert_create(self, (freak ? spr.PopoFreakAlert : spr.PopoEliteAlert))){
+			image_speed = 0.1;
+			alert       = { spr:spr.AlertIndicatorPopo, x:-5, y:5 };
+			target_x    = -3;
+			target_y    = -24;
+			alarm0      = other.alarm0;
 		}
-		instance_delete(self);
 	}
 	
+	/*
 	 // Fewer Guardians:
 	with(instances_matching_ne([DogGuardian, ExploGuardian], "id", null)){
 		instance_delete(self);
@@ -2305,6 +2302,7 @@
 			instance_delete(self);
 		}
 	}
+	*/
 	
 	 // Replace Chest:
 	with(AmmoChest){

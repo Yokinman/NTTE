@@ -71,28 +71,6 @@
 	];
 	
 #define area_sprite(_spr)
-	 // No Walls:
-	if(instance_number(Wall) <= 1 || area_active){
-		with([self, other]){
-			if(instance_is(self, Wall)){
-				instance_delete(self);
-			}
-			
-			 // Destroy Wall Decals:
-			else if(instance_is(self, FloorExplo)){
-				if(instance_exists(Bones) || instance_exists(TopPot)){
-					with(instances_meeting(x, y, [Bones, TopPot])){
-						if(place_meeting(x, y, other)){
-							instance_delete(self);
-						}
-					}
-				}
-				instance_delete(self);
-			}
-		}
-	}
-	
-	 // Sprites:
 	switch(_spr){
 		 // Floors:
 		case sprFloor1      : with([self, other]) if(instance_is(self, Floor)){ area_setup_floor(); break; } return spr.FloorCoast;
@@ -124,14 +102,6 @@
 #define area_start
 	 // Enable Area:
 	variable_instance_set(GameCont, "ntte_active_" + mod_current, true);
-	
-	 // Rock Props:
-	with(TopSmall){
-		if(chance(1, 80)){
-			obj_create(bbox_center_x, bbox_center_y, "CoastDecal");
-		}
-		instance_delete(self);
-	}
 	
 	 // Active Sea Drawing:
 	with(ds_map_values(global.sea_bind)){
@@ -219,7 +189,9 @@
 	}
 	
 	 // who's that bird?
-	unlock_set("race:parrot", true);
+	if(GameCont.subarea > 0){
+		unlock_set("race:parrot", true);
+	}
 	
 #define area_finish
 	 // Remember:
@@ -279,13 +251,13 @@
 			}
 			
 			 // Start New Island:
-			if(chance(1, 2)){
-				var d = direction + 180;
-				_x += lengthdir_x(96, d);
-				_y += lengthdir_y(96, d);
+			if(chance(1, 2) && GameCont.subarea > 0){
+				var _dir = direction + 180;
+				_x += lengthdir_x(96, _dir);
+				_y += lengthdir_y(96, _dir);
 				
 				with(instance_create(_x, _y, FloorMaker)){
-					direction = d + choose(-90, 0, 90);
+					direction = _dir + choose(-90, 0, 90);
 				}
 				
 				if(_outOfSpawn){
@@ -295,8 +267,8 @@
 		}
 		
 		 // Ammo Chests + End Branch:
-		var n = instance_number(FloorMaker);
-		if(!chance(22, 19 + n)){
+		var _num = instance_number(FloorMaker);
+		if(!chance(22, 19 + _num)){
 			if(_outOfSpawn){
 				instance_create(_x + 16, _y + 16, AmmoChest);
 			}
@@ -396,9 +368,11 @@
 		
 	if(chance(1, 12)){
 		if(_spawnDis > 48){
-			var o = choose("BloomingCactus", "BloomingCactus", "BloomingCactus", "Palm");
-			if(!styleb && chance(1, 8)) o = "BuriedCar";
-			obj_create(_x, _y, o);
+			obj_create(_x, _y,
+				(styleb == 0 && chance(1, 8))
+				? "BuriedCar"
+				: choose("BloomingCactus", "BloomingCactus", "BloomingCactus", "Palm")
+			);
 		}
 	}
 	
@@ -465,16 +439,31 @@
 	
 #define ntte_update(_newID, _genID)
 	if(area_active){
-		 // Wall Stuff:
-		if(instance_exists(Wall)){
-			var _inst = instances_matching(Wall, "visible", false);
-			if(array_length(_inst)) with(_inst){
-				visible = true;
-			}
-		}
 		if(is_real(_genID)){
+			 // No Walls:
+			if(instance_exists(Wall)){
+				if(Wall.id > _genID){
+					with(instances_matching(instances_matching_gt(Wall, "id", _genID), "area", mod_current)){
+						instance_delete(self);
+					}
+				}
+				var _inst = instances_matching(Wall, "visible", false);
+				if(array_length(_inst)) with(_inst){
+					visible = true;
+				}
+			}
+			if(instance_exists(FloorExplo) && FloorExplo.id > _genID){
+				with(instances_matching_gt(FloorExplo, "id", _genID)){
+					instance_delete(self);
+				}
+			}
+			
+			 // Spawn Rock Props:
 			if(instance_exists(TopSmall) && TopSmall.id > _genID){
 				with(instances_matching_gt(TopSmall, "id", _genID)){
+					if(chance(1, 80)){
+						obj_create(bbox_center_x, bbox_center_y, "CoastDecal");
+					}
 					instance_delete(self);
 				}
 			}

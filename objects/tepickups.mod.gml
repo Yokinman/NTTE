@@ -5506,6 +5506,7 @@
 					bonus_ammo_flash = 1;
 				}
 			}
+			else bonus_ammo_tick = 0;
 		}
 		
 		 // Eyes Custom Pickup Attraction:

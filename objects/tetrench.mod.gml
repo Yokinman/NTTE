@@ -629,7 +629,7 @@
 #define Eel_draw
 	var _spr = sprite_index;
 	if(elite > 0){
-		if(_spr == spr_idle) _spr = spr.EeliteIdle;
+		     if(_spr == spr_idle) _spr = spr.EeliteIdle;
 		else if(_spr == spr_walk) _spr = spr.EeliteWalk;
 		else if(_spr == spr_hurt) _spr = spr.EeliteHurt;
 	}
@@ -680,6 +680,12 @@
 		spr_dead = spr.EeliteDead;
 		
 		 // Death Lightning:
+		with(projectile_create(x, y, "LightningDisc", direction + 180 + orandom(15), 6)){
+			is_enemy = true;
+			maxspeed *= 0.5;
+			radius   *= 4/3;
+			charge   *= 0.5;
+		}
 		repeat(2){
 			with(projectile_create(x, y, EnemyLightning, random(360), 0.5)){
 				alarm0       = 2 + random(4);

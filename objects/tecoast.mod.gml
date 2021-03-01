@@ -2,7 +2,7 @@
 	mod_script_call("mod", "teassets", "ntte_init", script_ref_create(init));
 	
 	 // Bind Events:
-	script_bind(CustomDraw, draw_diver_laser, -4, true);
+	script_bind(CustomDraw, draw_diver_laser, -5, true);
 	
 	 // Palanking Camera Pan (During Pause Screen):
 	global.palanking_pan = [0, 0];
@@ -186,12 +186,14 @@
 	
 	 // Break Floor:
 	with(my_floor){
-		repeat(4){
-			instance_create(bbox_center_x + orandom(8), bbox_center_y + orandom(8), Debris);
-		}
 		with(instances_meeting(x, y, Detail)){
 			if(place_meeting(x, y, other)){
 				instance_destroy();
+			}
+		}
+		for(var _x = bbox_left; _x < bbox_right + 1; _x += 16){
+			for(var _y = bbox_top; _y < bbox_bottom + 1; _y += 16){
+				instance_create(_x, _y, FloorExplo);
 			}
 		}
 		instance_destroy();
@@ -697,6 +699,16 @@
 	
 	
 #define Diver_create(_x, _y)
+	/*
+		The bandit of the aquatic route, fires a harpoon (bolt) at the player after a short delay
+		
+		Vars
+			gonnafire - About to fire a harpoon, true/false
+			reload    - Cooldown before firing again in frames
+			laser     - The width of their laser sight
+			palm      - Their palm tree fort's 'id', if residing in one
+	*/
+	
 	with(instance_create(_x, _y, CustomEnemy)){
 		 // Visual:
 		spr_idle   = spr.DiverIdle;
@@ -726,6 +738,7 @@
 		gonnafire  = false;
 		reload     = 0;
 		laser      = 0;
+		palm       = noone;
 		
 		 // Alarms:
 		alarm1 = 90 + irandom(90);
@@ -776,9 +789,8 @@
 	draw_self_enemy();
 	
 	 // Tree:
-	if(instance_exists(CustomProp)){
-		var _inst = instances_matching(instances_matching(CustomProp, "name", "Palm"), "creator", self);
-		if(array_length(_inst)) with(_inst){
+	if(instance_exists(palm)){
+		with(palm){
 			draw_self();
 		}
 	}
@@ -814,7 +826,7 @@
 			
 			var _targetDis = target_distance;
 			
-			if((_targetDis > 64 && _targetDis < 320) || array_length(instances_matching(instances_matching(CustomProp, "name", "Palm"), "creator", self))){
+			if((_targetDis > 64 && _targetDis < 320) || instance_exists(palm)){
 				 // Prepare to Shoot:
 				if(reload <= 0 && chance(1, 2)){
 					alarm1 = 12;
@@ -913,15 +925,17 @@
 	
 #define DiverHarpoon_hit
 	var _inst = other;
-	if(speed > 0 && projectile_canhit(_inst) && variable_instance_get(other, "creator") != creator){
+	if(speed > 0 && projectile_canhit(_inst)){
 		projectile_hit(_inst, damage, force, direction);
 		
 		 // Stick in Player:
-		with(instance_create(x, y, BoltStick)){
-			image_angle = other.image_angle;
-			target = _inst;
+		if(instance_exists(self)){
+			with(instance_create(x, y, BoltStick)){
+				image_angle = other.image_angle;
+				target      = _inst;
+			}
+			instance_destroy();
 		}
-		instance_destroy();
 	}
 	
 #define DiverHarpoon_wall
@@ -2765,11 +2779,11 @@
 #define Palm_create(_x, _y)
 	with(instance_create(_x, _y, CustomProp)){
 		 // Visual:
-		spr_idle = spr.PalmIdle;
-		spr_hurt = spr.PalmHurt;
-		spr_dead = spr.PalmDead;
+		spr_idle   = spr.PalmIdle;
+		spr_hurt   = spr.PalmHurt;
+		spr_dead   = spr.PalmDead;
 		spr_shadow = -1;
-		depth = -3;
+		depth      = -7;
 		
 		 // Sound:
 		snd_hurt = sndHitRock;
@@ -2777,20 +2791,39 @@
 		
 		 // Vars:
 		mask_index = mskStreetLight;
-		maxhealth = 30;
-		size = 2;
-		creator = noone;
-		creator_mask = mskNone;
+		maxhealth  = 30;
+		my_health  = maxhealth;
+		size       = 2;
+		target     = noone;
 		
 		 // Fortify:
 		if(chance(1, 8)){
-			creator = obj_create(x, y, "Diver");
-			with(creator) depth = -3;
-			
+			 // Visual:
 			spr_idle = spr.PalmFortIdle;
 			spr_hurt = spr.PalmFortHurt;
+			depth    = -4;
+			
+			 // Sound:
 			snd_dead = sndGeneratorBreak;
-			maxhealth = 40;
+			
+			 // Bro:
+			target = obj_create(x, y, "Diver");
+			with(target){
+				depth      = other.depth - 1;
+				mask_index = mskNone;
+				canfly     = true;
+				palm       = other;
+				
+				 // Become Tree:
+				with(palm){
+					team       = other.team;
+					maxhealth += other.maxhealth;
+					my_health += other.my_health;
+				}
+			}
+			
+			 // Clear Walls:
+			instance_create(x, y - 24, PortalClear);
 		}
 		
 		return self;
@@ -2798,34 +2831,44 @@
 	
 #define Palm_step
 	 // Hold Bro:
-	with(creator){
-		x            = other.x;
-		y            = other.y - 44;
-		walk         = 0;
-		speed        = 0;
-		sprite_index = spr_idle;
-		
-		 // Disable Hitbox:
-		if(mask_index != mskNone){
-			other.creator_mask = mask_index;
-			mask_index         = mskNone;
-			canfly             = true;
+	if(instance_exists(target)){
+		with(target){
+			x         = other.x;
+			y         = other.y - 46;
+			xprevious = x;
+			yprevious = y;
+			speed     = 0;
+			walk      = 0;
+			if(sprite_index == spr_walk){
+				sprite_index = spr_idle;
+			}
 		}
 	}
 
 #define Palm_death
-	with(creator){
-		y += 8;
-		vspeed += 10;
-		mask_index = other.creator_mask;
+	 // Fall to Death:
+	with(target){
+		mask_index = -1;
+		my_health  = 0;
+		vspeed     = 5;
+		motion_add(other.direction, clamp(-other.my_health / 4, 0, 6));
 	}
-
+	
 	 // Leaves:
-	repeat(15) with(instance_create(x + orandom(15), y - 30 + orandom(10), Feather)){
-		sprite_index = sprLeaf;
-		image_yscale = random_range(1, 3);
-		motion_add(point_direction(other.x, other.y, x, y), 1 + random(1));
-		vspeed += 2;
+	repeat(15){
+		with(scrFX(
+			[x,      15],
+			[y - 30, 10],
+			[270,     2],
+			Feather
+		)){
+			sprite_index = sprLeaf;
+			image_yscale = random_range(1, 3);
+			motion_add(
+				point_direction(other.x, other.y, x, y),
+				1 + random(1)
+			);
+		}
 	}
 
 

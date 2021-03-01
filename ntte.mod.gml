@@ -1192,7 +1192,7 @@
 			}
 			
 			 // Loot:
-			chest_create(x, y - 4, choose("CatChest", "BatChest"), true);
+			chest_create(x, y - 4, choose("CatChest", "BatChest"/*, "RatChest"*/), true);
 			
 			 // Crate Walls:
 			var _img = 0;
@@ -1366,62 +1366,66 @@
 				if(_topSpecial){
 					_topSpecial = false;
 					
-					var	_x = x,
-						_y = y,
-						_dis = 64,
-						_dir = random(360),
+					var	_x    = x,
+						_y    = y,
+						_dis  = 64,
+						_dir  = random(360),
 						_type = choose("Bandit", "Cactus", "Chest", "Wep");
 						
 					 // Avoid Floors:
 					if(instance_exists(Floor)){
-						var	l = 8,
-							d = _dir;
+						var	_l = 8,
+							_d = _dir;
 							
 						with(instance_nearest_bbox(_x, _y, Floor)){
-							d = point_direction(bbox_center_x, bbox_center_y, _x, _y);
+							_d = point_direction(bbox_center_x, bbox_center_y, _x, _y);
 						}
 						
 						while(collision_circle(_x, _y, _dis, Floor, false, false)){
-							_x += lengthdir_x(l, d);
-							_y += lengthdir_y(l, d);
+							_x += lengthdir_x(_l, _d);
+							_y += lengthdir_y(_l, _d);
 						}
 						
-						_dir = d;
+						_dir = _d;
 					}
 					
 					 // Create:
-					var	_num = 3,
-						_ang = random(360),
-						_decalNum = _num,
+					var	_num       = 3,
+						_ang       = random(360),
+						_decalNum  = _num,
 						_cactusNum = irandom_range(1, _num),
 						_banditNum = 0,
-						_flyNum = 0;
+						_flyNum    = 0;
 						
 					if(GameCont.loops > 0){
 						_flyNum = irandom_range(1, _num);
 					}
 					
 					switch(_type){
+						
 						case "Bandit":
+							
 							_banditNum = irandom_range(1, _num);
 							_cactusNum = max(_cactusNum, _banditNum - 1);
 							obj_create(_x, _y - 4, "WallEnemy");
+							
 							break;
 							
 						case "Cactus":
+							
 							_cactusNum = _num;
 							top_create(_x, _y - 28, BonePile, 0, 0);
 							
 							 // Hmmm:
-							var	l = 160,
-								d = _dir;
+							var	_l = 160,
+								_d = _dir;
 								
-							with(chest_create(_x + lengthdir_x(l, d), _y + lengthdir_y(l, d), BigWeaponChest, false)){
-								with(top_create(x, y, self, d, l)){
-									with(chest_create(x + lengthdir_x(16, d), y + lengthdir_y(16, d), AmmoChest, false)){
+							with(chest_create(_x + lengthdir_x(_l, _d), _y + lengthdir_y(_l, _d), BigWeaponChest, false)){
+								with(top_create(x, y, self, _d, _l)){
+									with(chest_create(x + lengthdir_x(16, _d), y + lengthdir_y(16, _d), AmmoChest, false)){
 										top_create(x, y, self, -1, -1);
 									}
-									top_create(x, y, Cactus, d + 180 + orandom(90), -1);
+									top_create(x, y, Cactus, _d + 180 + orandom(90), -1);
 								}
 								
 								 // Skipping Doesn't Count:
@@ -1429,9 +1433,11 @@
 									GameCont.nochest -= 2;
 								}
 							}
+							
 							break;
 							
 						case "Chest":
+							
 							var _obj = AmmoChest;
 							if(crown_current == crwn_life && chance(2, 3)){
 								_obj = HealthChest;
@@ -1442,9 +1448,11 @@
 							with(chest_create(_x, _y - 16, _obj, false)){
 								with(top_create(x, y, self, 0, 0)) spr_shadow_y--;
 							}
+							
 							break;
 							
 						case "Wep":
+							
 							_cactusNum = irandom_range(2, _num);
 							with(obj_create(_x, _y - 16, "WepPickupGrounded")){
 								target = instance_create(x, y, WepPickup);
@@ -1455,42 +1463,47 @@
 								}
 								top_create(x, y, self, 0, 0);
 							}
+							
 							break;
+							
 					}
 					
-					for(var a = _ang; a < _ang + 360; a += (360 / _num)){
-						var l = _dis * random_range(0.3, 0.7),
-							d = a + orandom(15);
+					for(var _a = _ang; _a < _ang + 360; _a += (360 / _num)){
+						var _l = _dis * random_range(0.3, 0.7),
+							_d = _a + orandom(15);
 							
 						 // Rocks:
 						if(_decalNum > 0){
 							_decalNum--;
-							with(obj_create(_x + lengthdir_x(l, d), _y + lengthdir_y(l, d), "TopDecal")){
+							with(obj_create(_x + lengthdir_x(_l, _d), _y + lengthdir_y(_l, _d), "TopDecal")){
 								x = xstart;
 								y = ystart;
 								instance_create(pfloor(x - 16, 16), pfloor(y - 16, 16), Top);
 							}
 						}
-						d += (360 / _num) / 2;
+						_d += (360 / _num) / 2;
 						
 						 // Enemy:
 						if(_banditNum > 0){
 							_banditNum--;
-							obj_create(_x + lengthdir_x(l, d), _y + lengthdir_y(l, d), "WallEnemy");
+							obj_create(_x + lengthdir_x(_l, _d), _y + lengthdir_y(_l, _d), "WallEnemy");
+							_l *= random_range(0.5, 0.7);
+						}
+						else{
+							_l = _dis * random_range(0.15, 0.5);
 						}
 						
 						 // Cacti:
 						if(_cactusNum > 0){
 							_cactusNum--;
-							var l = _dis * random_range(0.15, 0.5);
-							top_create(_x + lengthdir_x(l, d), _y - 20 + lengthdir_y(l, d), Cactus, 0, 0);
+							top_create(_x + lengthdir_x(_l, _d), _y - 20 + lengthdir_y(_l, _d), Cactus, 0, 0);
 						}
 						
 						 // Flies:
 						if(_flyNum > 0){
 							_flyNum--;
-							var l = _dis * random_range(0.5, 1);
-							top_create(_x + lengthdir_x(l, d), _y - 16 + lengthdir_y(l, d), JungleFly, d + orandom(30), l);
+							var _l = _dis * random_range(0.5, 1);
+							top_create(_x + lengthdir_x(_l, _d), _y - 16 + lengthdir_y(_l, _d), JungleFly, _d + orandom(30), _l);
 						}
 					}
 					
@@ -2256,16 +2269,16 @@
 					case area_desert: // Another Universe Fallen
 						
 						if(GameCont.lastarea == area_campfire && instance_exists(GenCont)){
-							var s = spr.SpiralDebrisNothing;
-							for(var i = 0; i < sprite_get_number(s); i++){
-								var	l = 24,
-									d = random(360);
+							var _spr = spr.SpiralDebrisNothing;
+							for(var _img = 0; _img < sprite_get_number(_spr); _img++){
+								var	_l = 24,
+									_d = random(360);
 									
-								with(instance_create((game_width / 2) + lengthdir_x(l, d), (game_height / 2) + lengthdir_y(l, d), SpiralDebris)){
-									sprite_index = s;
-									image_index = i;
-									turnspeed *= 2/3;
-									angle = d;
+								with(instance_create((game_width / 2) + lengthdir_x(_l, _d), (game_height / 2) + lengthdir_y(_l, _d), SpiralDebris)){
+									sprite_index = _spr;
+									image_index  = _img;
+									turnspeed   *= 2/3;
+									angle        = _d;
 									
 									 // Fast Forward:
 									repeat(irandom_range(25, 40)){
@@ -4276,7 +4289,7 @@
 									_w   = sprite_get_width(_spr) * clamp(bonus_ammo / _max, 0, 1),
 									_h   = sprite_get_height(_spr);
 									
-								if(bonus_ammo > 2 * _tick * current_time_scale){
+								if(bonus_ammo > 2 * _tick){
 									 // Back:
 									draw_sprite(spr.BonusAmmoHUD, 0, _x, _y);
 									draw_sprite_ext(_spr, 0, _x, _y, 1, 1, 0, make_color_hsv(wave % 256, 80, 80), 1);
@@ -4667,12 +4680,17 @@
 		 // Boss Music:
 		if(alarm_get(2) > 0 && alarm_get(2) <= ceil(current_time_scale)){
 			 // Make Music Restart Next Sub-Area:
-			var _lastArea = GameCont.area;
-			GameCont.area = -1;
-			with(self){
-				event_perform(ev_alarm, 11);
+			try{
+				if(!null){
+					var _lastArea = GameCont.area;
+					GameCont.area = -1;
+					with(self){
+						event_perform(ev_alarm, 11);
+					}
+					GameCont.area = _lastArea;
+				}
 			}
-			GameCont.area = _lastArea;
+			catch(_error){}
 			
 			 // Play Custom Music:
 			if(array_length(instances_matching(CustomEnemy, "name", "Tesseract"))){
