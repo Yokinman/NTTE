@@ -3910,7 +3910,7 @@
 		
 		 // Orbit Fragments:
 		if(_num < _max - other.throes){
-			var _spd = 2 + (1.333 * _num);
+			var _spd = 2 + (1.5 * _num);
 			if(abs(rotspeed) < _spd){
 				rotspeed = _spd * ((rotspeed == 0) ? choose(-1, 1) : sign(rotspeed));
 			}
@@ -4425,6 +4425,7 @@
 		target_y   = y;
 		my_sound   = -1;
 		cannon     = 0;
+		wall_frame = 0;
 		setup      = true;
 		
 		return self;
@@ -4472,7 +4473,7 @@
 		var _turn = angle_difference(point_direction(x, y, target_x, target_y), direction);
 		_turn *= clamp(speed / point_distance(x, y, target_x, target_y), 0.1, 1);
 		_turn *= min(current_time_scale, 1);
-		direction += _turn;
+		direction   += _turn;
 		image_angle += _turn;
 	}
 	
@@ -4494,17 +4495,6 @@
 		){
 			instance_destroy();
 		}
-	}
-	
-#define VlasmaBullet_end_step
-	 // Pass Through Walls:
-	if(
-		x == xprevious &&
-		y == yprevious &&
-		place_meeting(x + hspeed_raw, y + vspeed_raw, Wall)
-	){
-		x += hspeed_raw;
-		y += vspeed_raw;
 	}
 	
 #define VlasmaBullet_draw
@@ -4542,7 +4532,18 @@
 	}
 	
 #define VlasmaBullet_wall
-	// Passing through...
+	 // Pass Through Walls:
+	if(
+		wall_frame != current_frame
+		&& x == xprevious
+		&& y == yprevious
+	){
+		wall_frame = current_frame;
+		x += hspeed_raw;
+		y += vspeed_raw;
+		xprevious = x;
+		yprevious = y;
+	}
 	
 #define VlasmaBullet_destroy
 	 // Sound:

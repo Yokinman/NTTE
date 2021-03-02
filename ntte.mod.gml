@@ -2112,7 +2112,7 @@
 								 // Weapon Mimic Fix:
 								if(
 									hitid == -1
-									&& instance_is(creator, Player)
+									//&& instance_is(creator, Player)
 									&& place_meeting(x, y, projectile)
 								){
 									with(instances_meeting(x, y, instances_matching_ne(instances_matching([Slash, GuitarSlash, BloodSlash, EnergySlash, EnergyHammerSlash, LightningSlash, CustomSlash], "team", team), "hitid", -1))){
