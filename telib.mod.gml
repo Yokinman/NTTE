@@ -11,7 +11,7 @@
 	
 	 // Object List (Used for cheats mod, basically):
 	ntte_obj_list = ds_map_create();
-	ntte_obj_list[? "tegeneral"  ] = ["AlertIndicator", "BigDecal", "BigIDPDSpawn", "BoneArrow", "BoneSlash", "BoneFX", "BuriedVault", "BuriedShrine", "CustomBullet", "CustomFlak", "CustomShell", "CustomPlasma", "GroundFlameGreen", "Igloo", "MergeFlak", "Pet", "PetRevive", "PetWeaponBecome", "PetWeaponBoss", "PortalBullet", "PortalGuardian", "PortalPrevent", "ReviveNTTE", "SmallGreenExplosion", "TopDecal", "TopObject", "TopTiny", "WallDecal", "WallEnemy"];
+	ntte_obj_list[? "tegeneral"  ] = ["AlertIndicator", "BigDecal", "BigIDPDSpawn", "BoneArrow", "BoneSlash", "BoneFX", "BuriedVault", "BuriedShrine", "CustomBullet", "CustomFlak", "CustomShell", "CustomPlasma", "GroundFlameGreen", "Igloo", "MergeFlak", "Pet", "PetRevive", "PetWeaponBecome", "PetWeaponBoss", "PortalPrevent", "ReviveNTTE", "SmallGreenExplosion", "TopDecal", "TopObject", "TopTiny", "WallDecal", "WallEnemy"];
 	ntte_obj_list[? "tepickups"  ] = ["Backpack", "Backpacker", "BackpackPickup", "BatChest", /*"BloodLustPickup",*/ "BoneBigPickup", "BonePickup", "BonusAmmoChest", "BonusAmmoMimic", "BonusAmmoPickup", "BonusHealthChest", "BonusHealthMimic", "BonusHealthPickup", "BuriedVaultChest", "BuriedVaultChestDebris", "BuriedVaultPedestal", "CatChest", "ChestShop", "CursedAmmoChest", "CursedMimic", "CustomChest", "CustomPickup", "GatorStatue", "GatorStatueFlak", "HammerHeadPickup", "HarpoonPickup", "OrchidBall", "OrchidChest", "OrchidSkill", "PalaceAltar", "ParrotFeather", "ParrotChester", "Pizza", "PizzaChest", "PizzaStack", "Prompt", "RedAmmoChest", "RedAmmoPickup", "SpiritPickup", "SunkenChest", "SunkenCoin", "VaultFlower", "VaultFlowerSparkle", "WepPickupGrounded", "WepPickupStick"];
 	ntte_obj_list[? "tedesert"   ] = ["BabyScorpion", "BabyScorpionGold", "BanditCamper", "BanditHiker", "BanditTent", "BigCactus", "BigMaggotSpawn", "Bone", "CoastBossBecome", "CoastBoss", "CowSkull", "FlySpin", "VenomBlast", "ScorpionRock", "SilverScorpion", "SilverScorpionDevastator", "SilverScorpionFlak", "VenomFlak", "VenomPellet", "VenomPelletBack", "WantBigMaggot"];
 	ntte_obj_list[? "tecoast"    ] = ["BloomingAssassin", "BloomingAssassinHide", "BloomingBush", "BloomingCactus", "BuriedCar", "ClamShield", "ClamShieldSlash", "CoastBigDecal", "CoastDecal", "CoastDecalCorpse", "Creature", "Diver", "DiverHarpoon", "Gull", "Harpoon", "HarpoonStick", "NetNade", "Palanking", "PalankingDie", "PalankingSlash", "PalankingSlashGround", "PalankingStatue", "PalankingToss", "Palm", "Pelican", "Seal", "SealAnchor", "SealDisc", "SealHeavy", "SealMine", "TrafficCrab", "Trident"];
@@ -20,7 +20,7 @@
 	ntte_obj_list[? "tesewers"   ] = ["AlbinoBolt", "AlbinoGator", "AlbinoGrenade", "BabyGator", "Bat", "BatBoss", "BatCloud", "BatDisc", "BatScreech", "BoneGator", /*"BossHealFX",*/ "Cabinet", "Cat", "CatBoss", "CatBossAttack", "CatDoor", "CatDoorDebris", "CatGrenade", "CatHole", "CatHoleBig", "CatLight", "ChairFront", "ChairSide", "Couch", "LairBorder", "Manhole", "ManholeOpen", "NewTable", "Paper", "PizzaDrain", "PizzaManholeCover", "PizzaRubble", "PizzaTV", "SewerDrain", "SewerRug", "TurtleCool"];
 	ntte_obj_list[? "tescrapyard"] = ["BoneRaven", "SawTrap", "SludgePool", "TopRaven", "TrapSpin", "Tunneler"];
 	ntte_obj_list[? "tecaves"    ] = ["BigCrystalProp", "ChaosHeart", "CrystalBat", "CrystalBrain", "CrystalBrainDeath", "CrystalBrainEffect", "CrystalClone", "CrystalHeart", "CrystalHeartBullet", "CrystalPropRed", "CrystalPropWhite", "EnergyBatSlash", "InvCrystalBat", "InvMortar", "MinerBandit", "Mortar", "MortarPlasma", "NewCocoon", "PlasmaImpactSmall", "RedBullet", "RedExplosion", "RedShank", "RedSlash", "RedSpider", "Spiderling", "Tesseract", "TesseractArmDeath", "TesseractDeath", "TesseractStrike", /*"TesseractWarp",*/ "TwinOrbital", "VlasmaBullet", "VlasmaCannon", "WallFake", "Warp", "WarpPortal"];
-	ntte_obj_list[? "telabs"     ] = ["Button", "ButtonChest", "ButtonOld", "ButtonPickup", "ButtonReviveArea", "FreakChamber", "MutantVat", "PickupReviveArea", "PopoSecurity", "WallSlide"];
+	ntte_obj_list[? "telabs"     ] = ["Button", "ButtonChest", "ButtonOld", "ButtonPickup", "ButtonReviveArea", "FreakChamber", "MutantVat", "PickupReviveArea", "PopoSecurity", "PortalBullet", "PortalGuardian", "WallSlide"];
 	
 	 // Object Create Event Script References:
 	ntte_obj_scrt = ds_map_create();
@@ -830,26 +830,6 @@
 	}
 	
 	return _string;
-	
-#define scrWalk(_dir, _walk)
-	walk      = (is_array(_walk) ? random_range(_walk[0], _walk[1]) : _walk);
-	speed     = max(speed, friction);
-	direction = _dir;
-	
-	if("gunangle" not in self){
-		scrRight(direction);
-	}
-	
-#define scrRight(_dir)
-	_dir = ((_dir % 360) + 360) % 360;
-	if(_dir < 90 || _dir > 270) right = 1;
-	if(_dir > 90 && _dir < 270) right = -1;
-	
-#define scrAim(_dir)
-	if("gunangle" in self){
-		gunangle = ((_dir % 360) + 360) % 360;
-	}
-	scrRight(_dir);
 	
 #define projectile_create(_x, _y, _obj, _dir, _spd)
 	/*
@@ -5614,7 +5594,12 @@
 						if(target.direction == 0 && "walk" not in target && "right" in target){
 							with(target){
 								direction = random(360);
-								scrRight(direction);
+								if(direction < 90 || direction > 270){
+									right = 1;
+								}
+								else if(direction > 90 && direction < 270){
+									right = -1;
+								}
 							}
 						}
 					}

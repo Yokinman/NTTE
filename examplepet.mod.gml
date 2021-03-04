@@ -208,9 +208,14 @@
 		to a given angle. Put this wherever the pet will change directions.
 	*/
 	
-	_dir = (_dir + 360) mod 360;
-	if(_dir < 90 || _dir > 270) right = 1;
-	if(_dir > 90 && _dir < 270) right = -1;
+	_dir = ((_dir % 360) + 360) % 360;
+	
+	if(_dir < 90 || _dir > 270){
+		right = 1;
+	}
+	else if(_dir > 90 && _dir < 270){
+		right = -1;
+	}
 	
 #define pet_create(_x, _y, _pet)
 	return mod_script_call_nc("mod", "telib", "pet_create", _x, _y, _pet, "mod", mod_current);

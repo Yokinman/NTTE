@@ -26,8 +26,9 @@
 ",
 
 "remove" : [
-	"weapon_get_red",
-	"weapon_get_loadout"
+	"scrRight",
+	"scrAim",
+	"scrWalk"
 ],
 
 "rename" : {

@@ -13,7 +13,7 @@
 #define crown_name        return "CROWN OF BONUS";
 #define crown_text        return "@bBONUS AMMO PICKUPS#@sREPLACE @wAMMO @sAND @wHP DROPS";
 #define crown_tip         return "ALL EXTRA";
-#define crown_avail       return (GameCont.loops <= 0);//unlock_get(`crown:${mod_current}`);
+#define crown_avail       return (GameCont.loops > 0);
 #define crown_menu_avail  return unlock_get(`loadout:crown:${mod_current}`);
 #define crown_loadout     return global.sprCrownLoadout;
 #define crown_ntte_pack   return "crown";

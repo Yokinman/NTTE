@@ -2587,7 +2587,13 @@
 	
 	if(visible){
 		 // Movement:
-		enemy_walk(walkspeed, maxspeed);
+		if(walk > 0){
+			walk -= current_time_scale;
+			speed += walkspeed * current_time_scale;
+		}
+		if(speed > maxspeed){
+			speed = maxspeed;
+		}
 		
 		 // Animate:
 		var _scrt = pet + "_anim";
@@ -3090,20 +3096,25 @@
 				if(_leaderDis > 24){
 					 // Pathfinding:
 					if(path_dir != null){
-						scrWalk(path_dir + orandom(20), 8);
+						enemy_walk(path_dir + orandom(20), 8);
+						enemy_look(direction);
 						alarm0 = walk;
 					}
 					
 					 // Move Toward Leader:
 					else{
-						scrWalk(_leaderDir + orandom(10), 10);
+						enemy_walk(_leaderDir + orandom(10), 10);
+						enemy_look(direction);
 						alarm0 = 10 + random(5);
 					}
 				}
 			}
 			
 			 // Wander:
-			else scrWalk(random(360), 15);
+			else{
+				enemy_walk(random(360), 15);
+				enemy_look(direction);
+			}
 		}
 	}
 	
@@ -3396,7 +3407,13 @@
 	if(cover_delay > 0) cover_delay -= current_time_scale;
 	
 	 // Movement:
-	enemy_walk(walkspeed, maxspeed);
+	if(walk > 0){
+		walk -= current_time_scale;
+		speed += walkspeed * current_time_scale;
+	}
+	if(speed > maxspeed){
+		speed = maxspeed;
+	}
 	
 	 // Base Code:
 	mod_script_call("mod", "petlib", "Weapon_anim");
@@ -3442,7 +3459,7 @@
 					
 					 // Movement:
 					if(target_visible){
-						scrWalk(_targetDir + choose(-60, 60), 5 + random(10));
+						enemy_walk(_targetDir + choose(-60, 60), 5 + random(10));
 						alarm1 = walk;
 					}
 					
@@ -3468,7 +3485,7 @@
 					
 					 // Movement:
 					if(target_visible){
-						scrWalk(gunangle + orandom(60), 20);
+						enemy_walk(gunangle + orandom(60), 20);
 						alarm1 = walk;
 					}
 					
@@ -3487,7 +3504,10 @@
 						if(point_distance(x, y, cover_x, cover_y) > 8 || cover_peek){
 							 // Cover in Sight:
 							if(!collision_line(x, y, cover_x, cover_y, Wall, false, false)){
-								scrWalk(point_direction(x, y, cover_x, cover_y), (cover_peek ? [5, 10] : 1));
+								enemy_walk(
+									point_direction(x, y, cover_x, cover_y),
+									(cover_peek ? random_range(5, 10) : 1)
+								);
 								alarm1     = (cover_peek ? random_range(walk, 30) : walk);
 								cover_peek = false;
 							}
@@ -3514,7 +3534,10 @@
 								_peekRight = !collision_line(cover_x - lengthdir_x(_l, _d - 90), cover_y - lengthdir_y(_l, _d - 90), _tx, _ty, Wall, false, false),
 								_peekSide  = sign(_peekRight - _peekLeft);
 								
-							scrWalk(_d + (90 * ((_peekSide == 0) ? choose(-1, 1) : _peekSide)), 4);
+							enemy_walk(
+								_d + (90 * ((_peekSide == 0) ? choose(-1, 1) : _peekSide)),
+								4
+							);
 							
 							 // Stay in Cover:
 							if(_peekRight || _peekLeft){
@@ -3530,7 +3553,7 @@
 						cover_peek  = false;
 						cover_delay = 30;
 						
-						scrWalk(point_direction(_tx, _ty, x, y), 15);
+						enemy_walk(point_direction(_tx, _ty, x, y), 15);
 						alarm1 = walk;
 						
 						var	_coverDisMax  = null,
@@ -3570,11 +3593,11 @@
 					if(target_visible){
 						if(target_distance < shootdis_max){
 							if(chance(1, 3)){
-								scrWalk(random(360), random_range(5, 20));
+								enemy_walk(random(360), random_range(5, 20));
 							}
 						}
 						else{
-							scrWalk(gunangle, 20);
+							enemy_walk(gunangle, 20);
 							alarm1 = walk;
 						}
 					}
@@ -3592,10 +3615,10 @@
 					 // Movement:
 					if(target_visible){
 						if(target_distance < shootdis_max * 2/3){
-							scrWalk(_targetDir + (90 * sign(angle_difference(direction, _targetDir))), 15);
+							enemy_walk(_targetDir + (90 * sign(angle_difference(direction, _targetDir))), 15);
 						}
 						else{
-							scrWalk(gunangle, 20);
+							enemy_walk(gunangle, 20);
 						}
 						alarm1 = walk;
 					}
@@ -3622,7 +3645,7 @@
 				 // Follow Path:
 				var _pathDir = path_direction(path, x, y, _pathWall);
 				if(_pathDir != null){
-					scrWalk(_pathDir, [1, 5]);
+					enemy_walk(_pathDir, random_range(1, 5));
 					alarm1 = walk;
 					
 					 // Searching:
@@ -3645,7 +3668,7 @@
 		else{
 			sprite_index = spr_hide;
 			image_index  = 0;
-			//scrWalk(random(360), [15, 30]);
+			//enemy_walk(random(360), random_range(15, 30));
 			//gunangle_goal = direction;
 		}
 	}
@@ -3774,425 +3797,6 @@
 	}
 	
 	return false;
-	
-	
-#define PortalBullet_create(_x, _y)
-	/*
-		A projectile that teleports its creator to itself when destroyed
-		Also teleports non-prop hitmes that it damages to its creator's position, basically swapping their positions
-	*/
-	
-	with(instance_create(_x, _y, CustomProjectile)){
-		 // Visual:
-		spr_spwn     = spr.PortalBulletSpawn;
-		spr_idle     = spr.PortalBullet;
-		sprite_index = spr_spwn;
-		image_speed  = 0.4;
-		depth        = -5;
-		
-		 // Vars:
-		mask_index = mskNone;
-		mask       = mskSuperFlakBullet;
-		damage     = 2;
-		force      = 0;
-		typ        = 1;
-		offset     = 12;
-		creator    = noone;
-		portal     = false;
-		hold       = true;
-		spec       = false;
-		primary    = true;
-		
-		return self;
-	}
-	
-#define PortalBullet_anim
-	if(sprite_index == spr_spwn){
-		sprite_index = spr_idle;
-		mask_index   = mask;
-		
-		 // FX:
-		var _snd = audio_play_sound(sndGuardianHurt, 0, false);
-		audio_sound_pitch(_snd, 0.4 + random(0.1));
-		audio_sound_gain(_snd, 0.3, 0);
-		repeat(3){
-			scrFX(x, y, 3, Smoke);
-		}
-	}
-	
-#define PortalBullet_step
-	 // Charging:
-	if(hold){
-		 // Hold Still:
-		var _wep = variable_instance_get(creator, (primary ? "" : "b") + "wep");
-		if(
-			sprite_index == spr_spwn
-			|| (
-				instance_is(creator, Player)
-				&& creator.visible
-				&& array_length(instances_matching(CrystalShield, "creator", creator)) <= 0
-				&& button_check(creator.index, (spec ? "spec" : "fire"))
-				&& is_object(_wep)
-				&& is_array(lq_get(_wep, "inst"))
-				&& array_find_index(_wep.inst, self) >= 0
-			)
-		){
-			if(instance_exists(creator)){
-				var _lastMask = mask_index;
-				mask_index = mskAlly;
-				
-				x = creator.x;
-				y = creator.y;
-				move_contact_solid(
-					direction,
-					offset - variable_instance_get(creator, (primary ? "" : "b") + "wkick", 0)
-				);
-				
-				mask_index = _lastMask;
-			}
-			motion_step(-1);
-		}
-		
-		 // Fire:
-		else{
-			hold = false;
-			
-			 // FX:
-			var _kick = (primary ? "" : "b") + "wkick";
-			if(_kick in creator){
-				variable_instance_set(creator, _kick, 10);
-			}
-			sound_play_pitch(sndGuardianHurt, 1.5 + orandom(0.2));
-			repeat(5) scrFX(x, y, [direction + orandom(60), 3], Dust);
-		}
-	}
-	
-	 // Slow Down:
-	else{
-		var	_slowMax = 0.5,
-			_slowDis = 32;
-			
-		if(distance_to_object(hitme) < _slowDis){
-			with(instance_rectangle_bbox(x - _slowDis, y - _slowDis, x + _slowDis, y + _slowDis, instances_matching_gt(instances_matching(hitme, "team", team), "size", 0))){
-				if(_slowMax > 0){
-					if(distance_to_object(other) < _slowDis){
-						var _slow = min(_slowMax, size / 20);
-						with(other){
-							_slowMax -= _slow;
-							x -= hspeed_raw * _slow;
-							y -= vspeed_raw * _slow;
-						}
-					}
-				}
-				else break;
-			}
-		}
-	}
-	
-	 // FX:
-	if(chance_ct(1, 15)){
-		with(instance_create(x + hspeed_raw, y + vspeed_raw, PortalL)){
-			depth = other.depth + choose(0, -1);
-		}
-	}
-	
-#define PortalBullet_hit
-	if(projectile_canhit(other) && other.my_health > 0){
-		if(instance_is(creator, Player) || (!instance_is(other, prop) && other.team != 0)){
-			projectile_hit_push(other, damage, force);
-			
-			 // Portal:
-			var _portal = (portal && instance_is(other, Player));
-			if(_portal){
-				with(creator){
-					speed     = 0;
-					my_health = 0;
-				}
-			}
-			
-			 // Swap Positions:
-			with(other){
-				if(size < 6){
-					if(
-						(!instance_is(self, prop) && team != 0)
-						|| instance_is(self, RadChest)
-						|| instance_is(self, Car)
-						|| instance_is(self, CarVenus)
-						|| instance_is(self, CarVenusFixed)
-						|| instance_is(self, CarThrow)
-						|| instance_is(self, MeleeFake)
-						|| instance_is(self, JungleAssassinHide)
-					){
-						if(instance_exists(other.creator)){
-							x = other.creator.x;
-							y = other.creator.y;
-						}
-						else{
-							x = other.xstart;
-							y = other.ystart;
-						}
-						xprevious = x;
-						yprevious = y;
-						
-						 // Effects:
-						with(instance_create(x, y, BulletHit)){
-							sprite_index = sprPortalDisappear;
-							depth        = other.depth - 1;
-							image_angle  = 0;
-						}
-						repeat(3) scrFX(x, y, 2, Smoke);
-						sound_play_hit_ext(sndPortalAppear, 2.5, 2);
-						
-						 // Just in Case:
-						wall_clear(x, y);
-					}
-				}
-			}
-			
-			 // Portal:
-			if(_portal){
-				instance_destroy();
-				if(instance_exists(other)){
-					instance_create(other.x, other.y, Portal);
-				}
-			}
-			
-			 // Death:
-			else instance_destroy();
-		}
-	}
-	
-#define PortalBullet_destroy
-	repeat(5) scrFX(x, y, [direction, 2], Smoke);
-	sound_play_hit_ext(sndGuardianDisappear, 2, 2);
-	
-	 // Teleport:
-	if(
-		instance_exists(creator)
-		&& (creator.visible || ("wading" in creator && creator.wading > 0))
-		&& (
-			position_meeting(x, y, Floor)
-			|| place_meeting(x, y, Floor)
-			|| (
-				point_distance(x, y, creator.x, creator.y) < 512
-				&& !collision_line(x, y, creator.x, creator.y, Wall,       false, false)
-				&& !collision_line(x, y, creator.x, creator.y, InvisiWall, false, false)
-			)
-		)
-	){
-		with(creator){
-			 // Disappear:
-			if("name" in self && name == "PortalGuardian"){
-				with(instance_create(x, y, BulletHit)){
-					sprite_index = other.spr_disappear;
-					image_xscale = other.image_xscale * other.right;
-					image_yscale = other.image_yscale;
-					image_angle  = other.image_angle;
-					depth        = other.depth - 1;
-				}
-			}
-			else with(instance_create(x, y, BulletHit)){
-				sprite_index = sprPortalDisappear;
-				image_angle  = 0;
-			}
-			
-			 // Move & Avoid Walls:
-			x = other.x;
-			y = other.y;
-			if(!instance_budge(Wall, 40)){
-				wall_clear(x, y);
-			}
-			xprevious = x;
-			yprevious = y;
-			
-			 // Appear:
-			image_index = 0;
-			if("name" in self && name == "PortalGuardian"){
-				sprite_index = spr_appear;
-			}
-			else with(instance_create(x, y, BulletHit)){
-				sprite_index = spr.PortalBulletHit;
-				image_angle  = 0;
-			}
-			sound_play_hit_ext(sndPortalAppear, 3, (instance_is(self, Player) ? 0.5 : 1.5));
-			
-			 // Move Shield:
-			with(instances_matching(CrystalShield, "creator", self)){
-				instance_create(x, y, CrystalShieldDisappear);
-				x = other.x;
-				y = other.y;
-			}
-			
-			 // Player Impact Zone:
-			if(instance_is(self, Player)){
-				var _minID = instance_max;
-				with(projectile_create(x, y, "BatScreech", 0, 0)){
-					image_alpha = 0;
-					damage      = 4;
-					force       = 1.5;
-				}
-				with(instances_matching_gt(Dust, "id", _minID)){
-					instance_delete(self);
-				}
-				
-				 // Effects:
-				sleep(80);
-				view_shake_at(x, y, 40);
-				motion_add(direction + 180, 4);
-				var _ang = random(360);
-				for(var _dir = _ang; _dir < _ang + 360; _dir += (360 / 5)){
-					with(instance_create(x, y, PortalL)){
-						mask_index = mskAlly;
-						move_contact_solid(_dir + orandom(30), random_range(32, 40));
-					}
-				}
-			}
-		}
-	}
-	
-	 // Can't Teleport:
-	else with(instance_create(x, y, BulletHit)){
-		sprite_index = sprPortalDisappear;
-		image_xscale = 0.7;
-		image_yscale = image_xscale;
-	}
-	
-	
-#define PortalGuardian_create(_x, _y)
-	/*
-		A rare palace enemy, shoots a projectile that swaps positions with itself and whatever it hit
-	*/
-	
-	with(instance_create(_x, _y, CustomEnemy)){
-		 // Visual:
-		spr_idle      = spr.PortalGuardianIdle;
-		spr_walk      = spr.PortalGuardianIdle;
-		spr_hurt      = spr.PortalGuardianHurt;
-		spr_dead      = spr.PortalGuardianDead;
-		spr_appear    = spr.PortalGuardianAppear;
-		spr_disappear = spr.PortalGuardianDisappear;
-		spr_shadow    = shd24;
-		hitid         = [spr_idle, "PORTAL GUARDIAN"];
-		depth         = -2;
-		
-		 // Sound:
-		snd_hurt = sndExploGuardianHurt;
-		snd_dead = sndDogGuardianDead;
-		snd_mele = sndGuardianFire;
-		
-		 // Vars:
-		mask_index  = mskBandit;
-		maxhealth   = 55; //45
-		raddrop     = 16;
-		meleedamage = 2;
-		size        = 2;
-		walk        = 0;
-		walkspeed   = 0.8;
-		maxspeed    = 4;
-		gunangle    = random(360);
-		portal      = false;
-		
-		 // Alarms:
-		alarm1 = 40 + irandom(20);
-		
-		return self;
-	}
-	
-#define PortalGuardian_step
-	 // Alarms:
-	if(alarm1_run) exit;
-	
-	 // Movement:
-	enemy_walk(walkspeed, maxspeed);
-	
-	 // Hovery:
-	if(!place_meeting(x, y, projectile) || array_length(instances_meeting(x, y, instances_matching(projectile, "creator", self))) <= 0){
-		speed = max(1, speed);
-	}
-	
-	 // Animate:
-	if(sprite_index == spr_appear){
-		speed = 0;
-		
-		if(anim_end){
-			image_index = 0;
-			sprite_index = spr_idle;
-			
-			 // Effects:
-			repeat(8){
-				scrFX(x, y, 3, Dust);
-			}
-			repeat(3){
-				with(instance_create(x + orandom(16), y + orandom(16), PortalL)){
-					depth = other.depth - 1;
-				}
-			}
-			sound_play_hit_ext(sndGuardianFire, 1.5 + orandom(0.2), 2);
-		}
-	}
-	else if(sprite_index != spr_disappear || anim_end){
-		sprite_index = enemy_sprite;
-	}
-	
-	 // FX:
-	if(chance_ct(1, 30)){
-		with(instance_create(x + hspeed_raw, y + vspeed_raw, PortalL)){
-			depth = other.depth + choose(0, -1);
-		}
-	}
-	
-#define PortalGuardian_alrm1
-	alarm1 = 20 + random(30);
-	
-	if(enemy_target(x, y)){
-		scrAim(target_direction);
-		
-		if(target_visible){
-			 // Attack:
-			if(chance(2, 3) && !array_length(instances_matching(projectile, "creator", self))){
-				with(projectile_create(x, y, "PortalBullet", gunangle, 10)){
-					portal = other.portal;
-				}
-				
-				 // Sound:
-				sound_play_pitchvol(sndPortalOld, 2 + random(2), 1.5);
-			}
-			
-			 // Move:
-			else{
-				scrWalk(
-					gunangle + (random_range(60, 100) * choose(-1, 1)),
-					[20, 40]
-				);
-				
-				 // Away From Target:
-				if(target_distance < 128){
-					direction = gunangle + 180 + orandom(30);
-				}
-			}
-		}
-		
-		 // Wander:
-		else{
-			scrWalk(gunangle + orandom(40), [10, 20]);
-			scrAim(direction);
-		}
-	}
-	
-	 // Wander:
-	else{
-		scrWalk(random(360), 30);
-		scrAim(direction);
-	}
-	
-#define PortalGuardian_death
-	with(instance_create(x, y, PortalClear)){
-		image_xscale = 2/3;
-		image_yscale = image_xscale;
-	}
-	
-	 // Pickups:
-	pickup_drop(40, 10, 0);
 	
 	
 #define PortalPrevent_create(_x, _y)
@@ -4555,7 +4159,7 @@
 									
 									if("walk"     in self) walk     = other.idle_time;
 									if("gunangle" in self) gunangle = direction;
-									if("right"    in self) scrRight(direction);
+									if("right"    in self) enemy_face(direction);
 								}
 							}
 						}
@@ -4577,7 +4181,7 @@
 										if("gunangle" not in self){
 											direction = _targetDir;
 										}
-										scrRight(_targetDir);
+										enemy_face(_targetDir);
 									}
 								 }
 								
@@ -4709,7 +4313,7 @@
 									right *= choose(-1, 1);
 									if(instance_exists(Player)){
 										var _target = instance_nearest(x, y, Player);
-										scrRight(point_direction(x, y, _target.x, _target.y));
+										enemy_look(point_direction(x, y, _target.x, _target.y));
 									}
 								}
 							}
@@ -4737,7 +4341,7 @@
 								 // Search Floors by Player:
 								var _target = instance_nearest(_x, _y, Player);
 								if(instance_exists(_target)){
-									scrRight(point_direction(_x, _y, _target.x, _target.y));
+									enemy_look(point_direction(_x, _y, _target.x, _target.y));
 									
 									_x = _target.x;
 									_y = _target.y;
@@ -5824,7 +5428,7 @@
 									if(speed > 0){
 										with(target){
 											if("gunangle" in self) gunangle = other.direction;
-											if("right" in self) scrRight(other.direction);
+											if("right"    in self) enemy_face(other.direction);
 										}
 									}
 									
@@ -5904,19 +5508,6 @@
 				if(array_length(_inst)) with(_inst){
 					if(light && light_radius[_gray] > 0){
 						draw_circle(x, y, light_radius[_gray] + orandom(1), false);
-					}
-				}
-			}
-			
-			 // Portal Guardians:
-			if(instance_exists(CustomEnemy)){
-				var _inst = instances_matching(CustomEnemy, "name", "PortalGuardian");
-				if(array_length(_inst)){
-					var _r = 24 + (68 * _gray),
-						_o = 4  + (2  * _gray);
-						
-					with(_inst){
-						draw_circle(x, y, _r + random(_o), false);
 					}
 				}
 			}
@@ -6042,7 +5633,10 @@
 #define angle_lerp(_ang1, _ang2, _num)                                                  return  _ang1 + (angle_difference(_ang2, _ang1) * _num);
 #define angle_lerp_ct(_ang1, _ang2, _num)                                               return  _ang2 + (angle_difference(_ang1, _ang2) * power(1 - _num, current_time_scale));
 #define draw_self_enemy()                                                                       image_xscale *= right; draw_self(); image_xscale /= right;
-#define enemy_walk(_add, _max)                                                                  if(walk > 0){ walk -= current_time_scale; motion_add_ct(direction, _add); } if(speed > _max) speed = _max;
+#define enemy_walk(_dir, _num)                                                                  direction = _dir; walk = _num; if(speed < friction_raw) speed = friction_raw;
+#define enemy_face(_dir)                                                                        _dir = ((_dir % 360) + 360) % 360; if(_dir < 90 || _dir > 270) right = 1; else if(_dir > 90 && _dir < 270) right = -1;
+#define enemy_look(_dir)                                                                        _dir = ((_dir % 360) + 360) % 360; if(_dir < 90 || _dir > 270) right = 1; else if(_dir > 90 && _dir < 270) right = -1; if('gunangle' in self) gunangle = _dir;
+#define enemy_target(_x, _y)                                                                    target = (instance_exists(Player) ? instance_nearest(_x, _y, Player) : ((instance_exists(target) && target >= 0) ? target : noone)); return (target != noone);
 #define save_get(_name, _default)                                                       return  mod_script_call_nc  ('mod', 'teassets', 'save_get', _name, _default);
 #define save_set(_name, _value)                                                                 mod_script_call_nc  ('mod', 'teassets', 'save_set', _name, _value);
 #define option_get(_name)                                                               return  mod_script_call_nc  ('mod', 'teassets', 'option_get', _name);
@@ -6091,11 +5685,7 @@
 #define array_shuffle(_array)                                                           return  mod_script_call_nc  ('mod', 'telib', 'array_shuffle', _array);
 #define data_clone(_value, _depth)                                                      return  mod_script_call_nc  ('mod', 'telib', 'data_clone', _value, _depth);
 #define scrFX(_x, _y, _motion, _obj)                                                    return  mod_script_call_nc  ('mod', 'telib', 'scrFX', _x, _y, _motion, _obj);
-#define scrRight(_dir)                                                                          mod_script_call_self('mod', 'telib', 'scrRight', _dir);
-#define scrWalk(_dir, _walk)                                                                    mod_script_call_self('mod', 'telib', 'scrWalk', _dir, _walk);
-#define scrAim(_dir)                                                                            mod_script_call_self('mod', 'telib', 'scrAim', _dir);
 #define enemy_hurt(_damage, _force, _direction)                                                 mod_script_call_self('mod', 'telib', 'enemy_hurt', _damage, _force, _direction);
-#define enemy_target(_x, _y)                                                            return  mod_script_call_self('mod', 'telib', 'enemy_target', _x, _y);
 #define boss_hp(_hp)                                                                    return  mod_script_call_nc  ('mod', 'telib', 'boss_hp', _hp);
 #define boss_intro(_name)                                                               return  mod_script_call_nc  ('mod', 'telib', 'boss_intro', _name);
 #define corpse_drop(_dir, _spd)                                                         return  mod_script_call_self('mod', 'telib', 'corpse_drop', _dir, _spd);

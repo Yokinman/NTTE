@@ -258,7 +258,13 @@
 	if(alarm2_run) exit;
 	
 	 // Movement:
-	enemy_walk(walkspeed, maxspeed);
+	if(walk > 0){
+		walk -= current_time_scale;
+		speed += walkspeed * current_time_scale;
+	}
+	if(speed > maxspeed){
+		speed = maxspeed;
+	}
 	
 	 // Halo Animation:
 	var _haloNumber = sprite_get_number(spr_halo);
@@ -287,7 +293,7 @@
 		if(place_meeting(x + hspeed_raw, y, Wall)) hspeed_raw *= -0.5;
 		if(place_meeting(x, y + vspeed_raw, Wall)) vspeed_raw *= -0.5;
 		if(gonnafire <= 0){
-			scrAim(angle_lerp(gunangle, direction, 2/3));
+			enemy_look(angle_lerp(gunangle, direction, 2/3));
 		}
 	}
 	
@@ -306,7 +312,7 @@
 		 // Can't Aim if you Can't See:
 		if(enemy_target(x, y) && target_visible){
 			var _clamp = 2.4 * aim_factor;
-			scrAim(gunangle + clamp(angle_difference(target_direction, gunangle), -_clamp, _clamp));
+			enemy_look(gunangle + clamp(angle_difference(target_direction, gunangle), -_clamp, _clamp));
 		}
 		
 		 // Fire:
@@ -327,7 +333,7 @@
 		var _targetDir = target_direction;
 		
 		if(target_visible){
-			scrAim(_targetDir);
+			enemy_look(_targetDir);
 			cangrenade = true;
 			
 			 // Begin Attack:
@@ -340,7 +346,10 @@
 			}
 			
 			 // Approach Target:
-			else scrWalk(gunangle + orandom(15), [40, 60]);
+			else enemy_walk(
+				gunangle + orandom(15),
+				random_range(40, 60)
+			);
 		}
 		
 		 // Grenades:
@@ -356,7 +365,7 @@
 			
 			 // Re-aim:
 			if(abs(angle_difference(_targetDir, gunangle)) > 60){
-				scrAim(_targetDir + orandom(30));
+				enemy_look(_targetDir + orandom(30));
 			}
 			
 			 // Throw Grenade:
@@ -369,8 +378,8 @@
 		
 		 // Wander:
 		else{
-			scrWalk(gunangle + orandom(30), [20, 60]);
-			scrAim(direction);
+			enemy_walk(gunangle + orandom(30), random_range(20, 60));
+			enemy_look(direction);
 		}
 	}
 	
@@ -654,20 +663,23 @@
 	 // Movin:
 	if(z > 0){
 		motion_add(direction, abs(zspeed));
-		speed = min(speed, maxspeed);
 		if(current_frame_active){
-			alarm1 += ceil(current_time_scale);
+			alarm1++;
 		}
 	}
-	else{
-		enemy_walk(walkspeed, maxspeed);
+	else if(walk > 0){
+		walk -= current_time_scale;
+		speed += walkspeed * current_time_scale;
+	}
+	if(speed > maxspeed){
+		speed = maxspeed;
 	}
 
 	 // Bounce:
 	if(place_meeting(x + hspeed_raw, y + vspeed_raw, Wall)){
 		if(place_meeting(x + hspeed_raw, y, Wall)) hspeed_raw *= -1;
 		if(place_meeting(x, y + vspeed_raw, Wall)) vspeed_raw *= -1;
-		scrAim(direction);
+		enemy_look(direction);
 	}
 	
 	 // Animate:
@@ -681,7 +693,7 @@
 		&& target_distance < 160
 		&& target_visible
 	){
-		scrAim(target_direction);
+		enemy_look(target_direction);
 		
 		 // Attack:
 		if(chance(1, 2)){
@@ -701,14 +713,14 @@
 		
 		 // Wander:
 		else if(chance(1, 3)){
-			scrWalk(random(360), [30, 70]);
-			scrAim(direction);
+			enemy_walk(random(360), random_range(30, 70));
+			enemy_look(direction);
 		}
 	}
 	
 	else{
-		scrWalk(direction + orandom(60), [40, 70]);
-		scrAim(direction);
+		enemy_walk(direction + orandom(60), random_range(40, 70));
+		enemy_look(direction);
 	}
 	
 #define BabyGator_draw
@@ -787,7 +799,13 @@
 	if(alarm1_run) exit;
 	
 	 // Movement:
-	enemy_walk(walkspeed, maxspeed);
+	if(walk > 0){
+		walk -= current_time_scale;
+		speed += walkspeed * current_time_scale;
+	}
+	if(speed > maxspeed){
+		speed = maxspeed;
+	}
 	
 	 // Bounce:
 	if(speed > 0){
@@ -846,20 +864,26 @@
 	
 	else{
 		if(instance_exists(target) && target_visible){
-			scrAim(target_direction);
+			enemy_look(target_direction);
 			
 			var _targetDis = target_distance;
 			
 			 // Walk to target:
 			if(_targetDis > 72){
 				if(chance(4, 5)){
-					scrWalk(gunangle + orandom(8), [15, 35]);
+					enemy_walk(
+						gunangle + orandom(8),
+						random_range(15, 35)
+					);
 				}
 			}
 			
 			 // Walk away from target:
 			else if(_targetDis < 48){
-				scrWalk(gunangle + 180 + orandom(12), [10, 15]);
+				enemy_walk(
+					gunangle + 180 + orandom(12),
+					random_range(10, 15)
+				);
 				alarm1 = walk;
 			}
 			
@@ -898,18 +922,21 @@
 				&& point_distance(x, y, _follow.x, _follow.y) > 64
 				&& !collision_line(x, y, _follow.x, _follow.y, Wall, false, false)
 			){
-				scrWalk(
+				enemy_walk(
 					point_direction(x, y, _follow.x, _follow.y) + orandom(8),
-					[15, 35]
+					random_range(15, 35)
 				);
 			}
 			
 			 // Wander:
 			else if(chance(1, 3)){
-				scrWalk(direction + orandom(24), [10, 30]);
+				enemy_walk(
+					direction + orandom(24),
+					random_range(10, 30)
+				);
 			}
 			
-			scrAim(direction);
+			enemy_look(direction);
 		}
 	}
 	
@@ -1123,9 +1150,15 @@
 	else cloud_blend = 0;
 	
 	 // Movement:
-	enemy_walk(walkspeed, maxspeed);
-	if(walk <= 0){
-		speed = min(speed, maxspeed / 2);
+	if(walk > 0){
+		walk -= current_time_scale;
+		speed += walkspeed * current_time_scale;
+		if(speed > maxspeed){
+			speed = maxspeed;
+		}
+	}
+	else if(speed > maxspeed / 2){
+		speed = maxspeed / 2;
 	}
 	
 	 // Bounce:
@@ -1181,11 +1214,14 @@
 	if(active){
 		if(enemy_target(x, y)){
 			if(target_distance < 240 && target_visible){
-				scrAim(target_direction);
+				enemy_look(target_direction);
 				
 				 // Move Away:
 				if(chance(1, 5)){
-					scrWalk(gunangle + 180 + (irandom_range(25, 45) * right), [20, 35]);
+					enemy_walk(
+						gunangle + 180 + (irandom_range(25, 45) * right),
+						random_range(20, 35)
+					);
 					
 					 // Bat Morph:
 					if(chance(1, 8) && !chance(maxhealth, my_health)){
@@ -1220,15 +1256,18 @@
 					&& point_distance(x, y, _cat.x, _cat.y) > 64
 					&& !collision_line(x, y, _cat.x, _cat.y, Wall, false, false)
 				){
-					scrWalk(
+					enemy_walk(
 						point_direction(x, y, _cat.x, _cat.y) + orandom(8),
-						[15, 35]
+						random_range(15, 35)
 					);
 				}
 				
 				 // Wander:
 				else if(chance(2, 3)){
-					scrWalk(direction + orandom(24), [10, 30]);
+					enemy_walk(
+						direction + orandom(24),
+						random_range(10, 30)
+					);
 				}
 				
 				 // Bat Morph:
@@ -1239,15 +1278,15 @@
 					}
 				}
 				
-				scrAim(direction);
+				enemy_look(direction);
 			}
 		}
 		
 		 // Wander:
 		else{
 			alarm1 = 45 + random(60);
-			scrWalk(random(360), 5);
-			scrAim(direction);
+			enemy_walk(random(360), 5);
+			enemy_look(direction);
 		}
 	}
 	
@@ -1257,8 +1296,8 @@
 		
 		if(enemy_target(x, y)){
 			if(target_visible && target_distance < 128){
-				scrWalk(target_direction, alarm1);
-				scrAim(direction);
+				enemy_walk(target_direction, alarm1);
+				enemy_look(direction);
 			}
 			
 			 // Zoom Ovah:
@@ -1534,7 +1573,7 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 		
 		 // Aim:
 		if(instance_exists(other.target)){
-			scrAim(point_direction(x, y, other.target.x, other.target.y));
+			enemy_look(point_direction(x, y, other.target.x, other.target.y));
 		}
 		
 		 // Effects:
@@ -2075,7 +2114,13 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 	if(alarm1_run) exit;
 	
 	 // Movement:
-	enemy_walk(walkspeed, maxspeed);
+	if(walk > 0){
+		walk -= current_time_scale;
+		speed += walkspeed * current_time_scale;
+	}
+	if(speed > maxspeed){
+		speed = maxspeed;
+	}
 	
 	 // Animate:
 	sprite_index = enemy_sprite;
@@ -2096,7 +2141,7 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 		 // Move Gun:
 		if(enemy_target(x, y)){
 			var _clamp = 20;
-			scrAim(gunangle + clamp(angle_difference(target_direction, gunangle), -_clamp, _clamp) + orandom(5));
+			enemy_look(gunangle + clamp(angle_difference(target_direction, gunangle), -_clamp, _clamp) + orandom(5));
 		}
 		
 		var	_x = x + lengthdir_x(6, gunangle),
@@ -2140,7 +2185,7 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 	 // Normal Behavior:
 	else if(enemy_target(x, y)){
 		if(target_visible){
-			scrAim(target_direction);
+			enemy_look(target_direction);
 			
 			var _targetDis = target_distance;
 			
@@ -2156,25 +2201,32 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 				}
 				
 				 // Advance:
-				else{
-					scrWalk(gunangle + orandom(20), [30, 50]);
-				}
+				else enemy_walk(
+					gunangle + orandom(20),
+					random_range(30, 50)
+				);
 				
 				 // Retreat:
 				if(_targetDis < 32){
-					scrWalk(gunangle + 180 + orandom(30), [20, 50]);
+					enemy_walk(
+						gunangle + 180 + orandom(30),
+						random_range(20, 50)
+					);
 				}
 			}
 			
 			 // Chase:
-			else scrWalk(gunangle + orandom(60), [20, 50]);
+			else enemy_walk(
+				gunangle + orandom(60),
+				random_range(20, 50)
+			);
 		}
 		
 		 // Wander:
 		else if(chance(2, 5)){
 			alarm1 += random(10);
-			scrWalk(direction + orandom(40), [20, 40]);
-			scrAim(direction);
+			enemy_walk(direction + orandom(40), random_range(20, 40));
+			enemy_look(direction);
 		}
 	}
 	
@@ -2471,7 +2523,13 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 		 // Normal:
 		else{
 			 // Movement:
-			enemy_walk(walkspeed, maxspeed);
+			if(walk > 0){
+				walk -= current_time_scale;
+				speed += walkspeed * current_time_scale;
+			}
+			if(speed > maxspeed){
+				speed = maxspeed;
+			}
 			
 			 // Animation:
 			sprite_index = enemy_sprite;
@@ -2595,7 +2653,7 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 				
 				 // Aggroed:
 				if(instance_exists(target) && target_visible){
-					scrAim(target_direction);
+					enemy_look(target_direction);
 					
 					 // Start Attack:
 					if(target_distance < 140 && chance(1, 3)){
@@ -2618,7 +2676,10 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 					 // Walk Toward Player:
 					else{
 						alarm1 = 20 + irandom(20);
-						scrWalk(gunangle + orandom(20), [20, 25]);
+						enemy_walk(
+							gunangle + orandom(20),
+							random_range(20, 25)
+						);
 					}
 				}
 				
@@ -2639,8 +2700,8 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 							
 							 // Walk to CatHole:
 							else with(other){
-								scrWalk(point_direction(x, y, other.x, other.y), [20, 40]);
-								scrAim(direction);
+								enemy_walk(point_direction(x, y, other.x, other.y), random_range(20, 40));
+								enemy_look(direction);
 							}
 						}
 					}
@@ -2649,11 +2710,11 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 				 // Wander:
 				else if((instance_exists(target) && cantravel) || chance(3, 4)){
 					alarm1 = 30 + irandom(20);
-					scrWalk(direction + orandom(30), [20, 30]);
-					if(chance(1, 2)){
-						direction = random(360);
-					}
-					scrAim(direction);
+					enemy_walk(
+						choose(random(360), direction + orandom(30)),
+						random_range(20, 30)
+					);
+					enemy_look(direction);
 				}
 				
 				 // Sittin:
@@ -2675,7 +2736,7 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 					}
 					
 					if(instance_exists(_nearest)){
-						scrAim(point_direction(x, y, _nearest.x, _nearest.y));
+						enemy_look(point_direction(x, y, _nearest.x, _nearest.y));
 					}
 				}
 			}
@@ -2822,14 +2883,21 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 	
 	 // Movement:
 	else{
-		enemy_walk(walkspeed, maxspeed + (3.5 * (dash > 0)));
+		var _max = maxspeed + (3.5 * (dash > 0));
+		if(walk > 0){
+			walk -= current_time_scale;
+			speed += walkspeed * current_time_scale;
+		}
+		if(speed > _max){
+			speed = _max;
+		}
 		
 		 // Bounce:
 		if(dash <= 0 && walk > 0 && place_meeting(x + hspeed_raw, y + vspeed_raw, Wall)){
-			if(array_length(instances_matching(instances_matching(CustomObject, "name", "CatBossAttack"), "creator", self)) <= 0){
+			if(!array_length(instances_matching(instances_matching(CustomObject, "name", "CatBossAttack"), "creator", self))){
 				if(place_meeting(x + hspeed_raw, y, Wall)) hspeed_raw *= -1;
 				if(place_meeting(x, y + vspeed_raw, Wall)) vspeed_raw *= -1;
-				scrAim(angle_lerp(gunangle, direction, 0.5));
+				enemy_look(angle_lerp(gunangle, direction, 0.5));
 			}
 		}
 	}
@@ -2883,8 +2951,8 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 		supertime -= 1;
 		
 		 // Mid charge:
-		wkick = 6;
-		gunangle = (right ? 320 : 220) + orandom(5);
+		wkick    = 6;
+		gunangle = 270 + (50 * right) + orandom(5);
 		
 		 // Effects:
 		view_shake_max_at(x, y, 4);
@@ -2937,7 +3005,7 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 			}
 			
 			else{
-				scrAim(target_direction);
+				enemy_look(target_direction);
 				
 				if(chance(4, 5)){
 					 // Attack:
@@ -2982,9 +3050,9 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 						
 					_d += 30 * sign(angle_difference(direction, _d));
 					
-					scrWalk(
+					enemy_walk(
 						point_direction(x, y, target.x + lengthdir_x(_l, _d), target.y + lengthdir_y(_l, _d)),
-						[15, 40]
+						random_range(15, 40)
 					);
 				}
 			}
@@ -2992,8 +3060,8 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 		
 		 // Wander:
 		else{
-			scrWalk(direction + orandom(30), [15, 40]);
-			scrAim(direction);
+			enemy_walk(direction + orandom(30), random_range(15, 40));
+			enemy_look(direction);
 		}
 	}
 
@@ -3064,7 +3132,10 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 		canmelee = false;
 		
 		 // Movin'
-		scrWalk(direction + orandom(20), [15, 30]);
+		enemy_walk(
+			direction + orandom(20),
+			random_range(15, 30)
+		);
 		sprite_index = spr_walk;
 		
 		 // Effects:
@@ -3073,7 +3144,7 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 		sound_stop(jetpack_loop);
 	}
 	
-	scrAim(angle_lerp(
+	enemy_look(angle_lerp(
 		gunangle,
 		angle_lerp(_targetDir, direction, 0.5),
 		0.5
@@ -3260,7 +3331,7 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 				_m = 60;
 				
 			with(creator){
-				scrAim(gunangle + ((clamp(angle_difference(_d, gunangle), -_m, _m) / 20) * current_time_scale));
+				enemy_look(gunangle + ((clamp(angle_difference(_d, gunangle), -_m, _m) / 20) * current_time_scale));
 			}
 			direction += (clamp(angle_difference(_d, direction), -_m, _m) / 16) * current_time_scale;
 		}
@@ -3819,20 +3890,20 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 				if(!target.visible){
 					with(target){
 						visible = true;
-						alarm1 = 15 + random(30);
-						active = true;
-						canfly = false;
-						x = other.x;
-						y = other.y;
+						alarm1  = 15 + random(30);
+						active  = true;
+						canfly  = false;
+						x       = other.x;
+						y       = other.y;
 						
 						 // Move:
 						if(instance_exists(target)){
-							scrAim(target_direction + orandom(50));
+							enemy_look(target_direction + orandom(50));
 						}
 						else{
-							scrAim(random(360));
+							enemy_look(random(360));
 						}
-						scrWalk(gunangle, [4, 8]);
+						enemy_walk(gunangle, random_range(4, 8));
 						
 						 // Effects:
 						sound_play_pitchvol(sndFireballerHurt, 1.4, 0.6);
@@ -3849,7 +3920,7 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 					with(target){
 						if(point_distance(x, y, _x, _y) > 5){
 							motion_add(point_direction(x, y, _x, _y), 1);
-							scrRight(direction);
+							enemy_face(direction);
 						}
 					}
 				}
@@ -5690,7 +5761,7 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 		 // Face Player:
 		else{
 			notice -= current_time_scale;
-			scrRight(point_direction(x, y, _target.x, _target.y));
+			enemy_look(point_direction(x, y, _target.x, _target.y));
 		}
 	}
 	
@@ -5698,7 +5769,7 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 	else if(instance_exists(TV)){
 		var _target = instance_nearest(x, y, TV);
 		if(point_distance(x, y, _target.x, _target.y) < 96){
-			scrRight(point_direction(x, y, _target.x, _target.y));
+			enemy_look(point_direction(x, y, _target.x, _target.y));
 		}
 	}
 	
@@ -5771,7 +5842,7 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 				depth = -8;
 			}
 			if(my_health < maxhealth){
-				scrRight(direction + 180);
+				enemy_look(direction + 180);
 			}
 		}
 		
@@ -5980,7 +6051,10 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 #define angle_lerp(_ang1, _ang2, _num)                                                  return  _ang1 + (angle_difference(_ang2, _ang1) * _num);
 #define angle_lerp_ct(_ang1, _ang2, _num)                                               return  _ang2 + (angle_difference(_ang1, _ang2) * power(1 - _num, current_time_scale));
 #define draw_self_enemy()                                                                       image_xscale *= right; draw_self(); image_xscale /= right;
-#define enemy_walk(_add, _max)                                                                  if(walk > 0){ walk -= current_time_scale; motion_add_ct(direction, _add); } if(speed > _max) speed = _max;
+#define enemy_walk(_dir, _num)                                                                  direction = _dir; walk = _num; if(speed < friction_raw) speed = friction_raw;
+#define enemy_face(_dir)                                                                        _dir = ((_dir % 360) + 360) % 360; if(_dir < 90 || _dir > 270) right = 1; else if(_dir > 90 && _dir < 270) right = -1;
+#define enemy_look(_dir)                                                                        _dir = ((_dir % 360) + 360) % 360; if(_dir < 90 || _dir > 270) right = 1; else if(_dir > 90 && _dir < 270) right = -1; if('gunangle' in self) gunangle = _dir;
+#define enemy_target(_x, _y)                                                                    target = (instance_exists(Player) ? instance_nearest(_x, _y, Player) : ((instance_exists(target) && target >= 0) ? target : noone)); return (target != noone);
 #define save_get(_name, _default)                                                       return  mod_script_call_nc  ('mod', 'teassets', 'save_get', _name, _default);
 #define save_set(_name, _value)                                                                 mod_script_call_nc  ('mod', 'teassets', 'save_set', _name, _value);
 #define option_get(_name)                                                               return  mod_script_call_nc  ('mod', 'teassets', 'option_get', _name);
@@ -6029,11 +6103,7 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 #define array_shuffle(_array)                                                           return  mod_script_call_nc  ('mod', 'telib', 'array_shuffle', _array);
 #define data_clone(_value, _depth)                                                      return  mod_script_call_nc  ('mod', 'telib', 'data_clone', _value, _depth);
 #define scrFX(_x, _y, _motion, _obj)                                                    return  mod_script_call_nc  ('mod', 'telib', 'scrFX', _x, _y, _motion, _obj);
-#define scrRight(_dir)                                                                          mod_script_call_self('mod', 'telib', 'scrRight', _dir);
-#define scrWalk(_dir, _walk)                                                                    mod_script_call_self('mod', 'telib', 'scrWalk', _dir, _walk);
-#define scrAim(_dir)                                                                            mod_script_call_self('mod', 'telib', 'scrAim', _dir);
 #define enemy_hurt(_damage, _force, _direction)                                                 mod_script_call_self('mod', 'telib', 'enemy_hurt', _damage, _force, _direction);
-#define enemy_target(_x, _y)                                                            return  mod_script_call_self('mod', 'telib', 'enemy_target', _x, _y);
 #define boss_hp(_hp)                                                                    return  mod_script_call_nc  ('mod', 'telib', 'boss_hp', _hp);
 #define boss_intro(_name)                                                               return  mod_script_call_nc  ('mod', 'telib', 'boss_intro', _name);
 #define corpse_drop(_dir, _spd)                                                         return  mod_script_call_self('mod', 'telib', 'corpse_drop', _dir, _spd);

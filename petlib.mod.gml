@@ -110,14 +110,14 @@
 				depth = other.depth - (direction >= 180);
 			}
 		}
-		scrRight(my_venom.direction);
+		enemy_look(my_venom.direction);
 		
 		 // Bouncy:
 		with(path_wall) with(other){
 			if(place_meeting(x + hspeed_raw, y + vspeed_raw, other)){
 				if(place_meeting(x + hspeed_raw, y, other)) hspeed_raw *= -1;
 				if(place_meeting(x, y + vspeed_raw, other)) vspeed_raw *= -1;
-				scrRight(direction);
+				enemy_look(direction);
 			}
 		}
 	}
@@ -131,14 +131,16 @@
 		if(instance_exists(leader)){
 			 // Pathfinding:
 			if(path_dir != null && (_leaderDis > 48 || !instance_exists(target) || !target_visible)){
-				scrWalk(path_dir + orandom(15), 15);
+				enemy_walk(path_dir + orandom(15), 15);
+				enemy_look(direction);
 				return 1 + irandom(walk);
 			}
 			
 			else{
 				 // Follow Leader:
 				if(_leaderDis > 28){
-					scrWalk(_leaderDir + orandom(20), [10, 30]);
+					enemy_walk(_leaderDir + orandom(20), random_range(10, 30));
+					enemy_look(direction);
 				}
 				
 				 // Attacking:
@@ -153,8 +155,8 @@
 							
 							 // Venom Ball:
 							var _targetDir = target_direction;
+							enemy_look(_targetDir);
 							my_venom = projectile_create(x, y, "VenomBlast", _targetDir, 0);
-							scrRight(_targetDir);
 						}
 					}
 				}
@@ -163,7 +165,8 @@
 		
 		 // Wander:
 		else{
-			scrWalk(random(360), [10, 20]);
+			enemy_walk(random(360), random_range(10, 20));
+			enemy_look(direction);
 			return 20 + irandom(20);
 		}
 	}
@@ -338,14 +341,19 @@
 	else{
 		 // Unperch:
 		if(perched != noone){
-			perched = noone;
-			x += perched_x;
-			y += perched_y;
+			perched       = noone;
+			x            += perched_x;
+			y            += perched_y;
 			spr_bubble_y -= perched_y;
-			perched_x = 0;
-			perched_y = 0;
-			scrWalk(random(360), 16);
-			if(!instance_exists(leader)) can_take = true;
+			perched_x     = 0;
+			perched_y     = 0;
+			
+			enemy_walk(random(360), 16);
+			enemy_look(direction);
+			
+			if(!instance_exists(leader)){
+				can_take = true;
+			}
 		}
 		
 		 // Perch on Leader:
@@ -428,7 +436,8 @@
 		 // Fly Toward Pickup:
 		if(instance_exists(pickup)){
 			if(!pickup_held){
-				scrWalk(point_direction(x, y, pickup.x, pickup.y) + orandom(5), [6, 10]);
+				enemy_walk(point_direction(x, y, pickup.x, pickup.y) + orandom(5), random_range(6, 10));
+				enemy_look(direction);
 				return walk;
 			}
 		}
@@ -466,14 +475,18 @@
 		if(perched != leader){
 			 // Pathfinding:
 			if(path_dir != null){
-				scrWalk(path_dir + orandom(4), [4, 8]);
+				enemy_walk(path_dir + orandom(4), random_range(4, 8));
+				enemy_look(direction);
 				return walk;
 			}
 			
 			 // Wander Toward Leader:
 			else{
-				scrWalk(_leaderDir + orandom(30), [10, 20]);
-				if(_leaderDis > 32) return walk;
+				enemy_walk(_leaderDir + orandom(30), random_range(10, 20));
+				enemy_look(direction);
+				if(_leaderDis > 32){
+					return walk;
+				}
 			}
 		}
 		
@@ -500,7 +513,7 @@
 	
 	 // Look Around:
 	if(!instance_exists(leader) || instance_exists(perched)){
-		scrRight(random(360));
+		enemy_look(random(360));
 		return 30 + random(30);
 	}
 	
@@ -512,11 +525,10 @@
 		image_index  = 0;
 		
 		 // Movin'
-		if(speed <= 0){
-			scrWalk(_direction, maxspeed);
-			var _off = 6;
-			x += lengthdir_x(_off, direction);
-			y += lengthdir_y(_off, direction);
+		if(speed == 0){
+			enemy_walk(_direction, 4);
+			enemy_look(direction);
+			move_contact_solid(direction, 6);
 		}
 	}
 	
@@ -732,7 +744,8 @@
 		if(instance_exists(leader)){
 			 // Pathfinding:
 			if(path_dir != null && (_leaderDis > 96 || !instance_exists(target) || !target_visible)){
-				scrWalk(path_dir + orandom(20), 12);
+				enemy_walk(path_dir + orandom(20), 12);
+				enemy_look(direction);
 				return 1 + irandom(walk);
 			}
 			
@@ -740,8 +753,8 @@
 				if(
 					target != my_bone
 					&& instance_exists(target)
-					&& target_visible
 					&& point_distance(target.x, target.y, leader.x, leader.y) < 160
+					&& target_visible
 				){
 					 // Bite:
 					if(
@@ -752,12 +765,13 @@
 						image_index  = 0;
 						speed        = 0;
 						walk         = 0;
-						scrRight(target_direction);
+						enemy_look(target_direction);
 					}
 					
 					 // Towards Enemy:
 					else{
-						scrWalk(target_direction + orandom(20), [8, 16]);
+						enemy_walk(target_direction + orandom(20), random_range(8, 16));
+						enemy_look(direction);
 						alarm0 = 10;
 					}
 				}
@@ -765,11 +779,15 @@
 				 // Towards Leader:
 				else{
 					if(_leaderDis > 48){
-						scrWalk(_leaderDir + orandom(20), [15, 25]);
-						if(instance_exists(my_bone)) walk = alarm0;
+						enemy_walk(_leaderDir + orandom(20), random_range(15, 25));
+						enemy_look(direction);
+						if(instance_exists(my_bone)){
+							walk = alarm0;
+						}
 					}
 					else if(!instance_exists(my_bone)){
-						scrWalk(_leaderDir + orandom(90), [8, 16]);
+						enemy_walk(_leaderDir + orandom(90), random_range(8, 16));
+						enemy_look(direction);
 					}
 				}
 				
@@ -789,7 +807,7 @@
 					 // Movin:
 					if(instance_exists(target) && !collision_line(leader.x, leader.y, target.x, target.y, Wall, false, false)){
 						motion_add(target_direction + orandom(10), 2);
-						scrRight(direction);
+						enemy_look(direction);
 					}
 					
 					 // Fetch:
@@ -813,7 +831,8 @@
 		
 		 // Wander:
 		else{
-			scrWalk(random(360), [8, 16]);
+			enemy_walk(random(360), random_range(8, 16));
+			enemy_look(direction);
 			return 30 + random(10);
 		}
 	}
@@ -851,11 +870,11 @@
 			
 			 // Eat:
 			else if(!instance_exists(other) || ("typ" in other && other.typ != 0)){
-				nexthurt = current_frame + 6;
+				enemy_look(direction);
 				sprite_index = spr_fire;
 				image_index  = 2;
-				scrRight(direction);
-				walk = 0;
+				nexthurt     = current_frame + 6;
+				walk         = 0;
 			}
 		}
 		
@@ -1058,12 +1077,12 @@
 	else arcing = 0;
 	
 	 // He is bouncy:
-	if(array_length(path) <= 0){
+	if(!array_length(path)){
 		with(path_wall) with(other){
 			if(place_meeting(x + hspeed_raw, y + vspeed_raw, other)){
 				if(place_meeting(x + hspeed_raw, y, other)) hspeed_raw *= -0.5;
 				if(place_meeting(x, y + vspeed_raw, other)) vspeed_raw *= -0.5;
-				scrRight(direction);
+				enemy_look(direction);
 			}
 		}
 	}
@@ -1112,13 +1131,15 @@
 		if(_leaderDis > 64 || collision_line(x, y, leader.x, leader.y, Wall, false, false)){
 			 // Pathfinding:
 			if(path_dir != null){
-				scrWalk(path_dir + orandom(10), 6);
+				enemy_walk(path_dir + orandom(10), 6);
+				enemy_look(direction);
 				return 1 + irandom(walk) + irandom(6);
 			}
 			
 			 // Toward Leader:
 			else{
-				scrWalk(_leaderDir + orandom(20), [5, 15]);
+				enemy_walk(_leaderDir + orandom(20), random_range(5, 15));
+				enemy_look(direction);
 			}
 			
 			return walk + random(5);
@@ -1127,7 +1148,7 @@
 		 // Idle Around Leader:
 		else{
 			motion_add(_leaderDir + orandom(60), 1.5 + random(1.5));
-			scrRight(direction);
+			enemy_look(direction);
 			
 			 // More Aggressive:
 			if(arcing >= 1 && "index" in leader && instance_exists(enemy)){
@@ -1175,7 +1196,8 @@
 				}
 				
 				if(_dir >= 0){
-					scrWalk(_dir, [10, 15]);
+					enemy_walk(_dir, random_range(10, 15));
+					enemy_look(direction);
 					return walk + random(5);
 				}
 			}
@@ -1183,7 +1205,8 @@
 		
 		 // Idle Movement:
 		instance_create(x, y, Bubble);
-		scrWalk(direction + orandom(60), [5, 15]);
+		enemy_walk(direction + orandom(60), random_range(5, 15));
+		enemy_look(direction);
 		return walk + random_range(30, 60);
 	}
 	
@@ -1193,8 +1216,8 @@
 		image_index  = 0;
 		
 		 // Movin'
-		scrWalk(_direction, 10);
-		scrRight(direction + 180);
+		enemy_walk(_direction, 10);
+		enemy_look(direction + 180);
 	}
 	
 	
@@ -1292,7 +1315,9 @@
 	}
 	
 	 // Combo End:
-	if(combo_delay > 0) combo_delay -= current_time_scale;
+	if(combo_delay > 0){
+		combo_delay -= current_time_scale;
+	}
 	else{
 		if(combo > 0){
 			 // Launch Combo Text:
@@ -1328,7 +1353,9 @@
 	}
 	
 	 // Poopin'
-	if(!instance_exists(leader)) poop_delay = 30;
+	if(!instance_exists(leader) && poop_delay < 30){
+		poop_delay = 30;
+	}
 	if(poop_delay > 0){
 		poop_delay -= current_time_scale;
 	}
@@ -1399,8 +1426,10 @@
 	}
 	
 	 // He just keep movin
-	if(poop <= 0 || poop_delay > 10) speed = maxspeed;
-	if(array_length(path) <= 0){
+	if(poop <= 0 || poop_delay > 10){
+		speed = maxspeed;
+	}
+	if(!array_length(path)){
 		with(path_wall) with(other){
 			if(place_meeting(x + hspeed_raw, y + vspeed_raw, other)){
 				if(place_meeting(x + hspeed_raw, y, other)) hspeed_raw *= -1;
@@ -1408,7 +1437,7 @@
 			}
 		}
 	}
-	scrRight(direction);
+	enemy_face(direction);
 	
 #define CoolGuy_draw(_spr, _img, _x, _y, _xsc, _ysc, _ang, _col, _alp)
 	 // Poopy Shake:
@@ -1425,15 +1454,20 @@
 		if(_leaderDis > 24){
 			 // Pathfinding:
 			if(path_dir != null){
-				if(chance(1, 3)) direction = path_dir + orandom(20);
-				else direction += angle_difference(path_dir, direction) / 2;
+				if(chance(1, 3)){
+					direction = path_dir + orandom(20);
+				}
+				else{
+					direction += angle_difference(path_dir, direction) / 2;
+				}
 			}
 			
 			 // Turn Toward Leader:
 			else direction += angle_difference(_leaderDir, direction) / 2;
 		}
 		else direction += orandom(16);
-		scrRight(direction);
+		
+		enemy_look(direction);
 		
 		return 8;
 	}
@@ -1441,8 +1475,7 @@
 	 // Idle Movement:
 	else{
 		direction += orandom(16);
-		scrRight(direction);
-		
+		enemy_look(direction);
 		return 10 + random(10);
 	}
 	
@@ -1927,39 +1960,46 @@
 	else dash_charging = false;
 	
 	 // Facing:
-	if(right_delay > 0) right_delay -= current_time_scale;
+	if(right_delay > 0){
+		right_delay -= current_time_scale;
+	}
 	else{
 		if(!dash && dash_charge > 0){
-			scrRight(dash_direction);
+			enemy_look(dash_direction);
 		}
 		else if(hspeed != 0){
-			scrRight(direction);
+			enemy_look(direction);
 		}
 	}
 	
 #define Salamander_alrm0(_leaderDir, _leaderDis)
-	alarm0 = 30;
-	
 	if(!mount && !dash && dash_charge <= 0){
 		if(instance_exists(leader)){
 			if(_leaderDis > 24){
 				 // Pathfinding:
 				if(path_dir != null){
-					scrWalk(path_dir + orandom(20), 8);
-					alarm0 = walk;
+					enemy_walk(path_dir + orandom(20), 8);
+					enemy_look(direction);
+					return walk;
 				}
 				
 				 // Move Toward Leader:
 				else{
-					scrWalk(_leaderDir + orandom(10), 10);
-					alarm0 = 10 + random(5);
+					enemy_walk(_leaderDir + orandom(10), 10);
+					enemy_look(direction);
+					return walk + random(5);
 				}
 			}
 		}
 		
 		 // Wander:
-		else scrWalk(random(360), 15);
+		else{
+			enemy_walk(random(360), 15);
+			enemy_look(direction);
+		}
 	}
+	
+	return 30;
 	
 #define Salamander_prompt_meet
 	if(creator == other || variable_instance_get(creator, "leader") == other){
@@ -2217,13 +2257,15 @@
 		if(_leaderDis > 16){
 			 // Pathfinding:
 			if(path_dir != null){
-				scrWalk(path_dir, 12);
+				enemy_walk(path_dir, 12);
+				enemy_look(direction);
 				return irandom_range(3, walk);
 			}
 			
 			 // Wander Toward Leader:
 			else if(_leaderDis > 48){
-				scrWalk(_leaderDir + orandom(10), 20 + random(max(0, _leaderDis - 64)));
+				enemy_walk(_leaderDir + orandom(10), 20 + random(max(0, _leaderDis - 64)));
+				enemy_look(direction);
 			}
 		}
 	}
@@ -2351,14 +2393,18 @@
 	if(instance_exists(leader)){
 		 // Pathfinding:
 		if(path_dir != null){
-			scrWalk(path_dir + orandom(15), [5, 10]);
+			enemy_walk(path_dir + orandom(15), random_range(5, 10));
+			enemy_look(direction);
 			return walk;
 		}
 		
 		 // Move Towards Leader:
 		else{
-			scrWalk(_leaderDir + orandom(30), 20);
-			if(_leaderDis > 160) return walk;
+			enemy_walk(_leaderDir + orandom(30), 20);
+			enemy_look(direction);
+			if(_leaderDis > 160){
+				return walk;
+			}
 			
 			/*
 			var _target = noone;
@@ -2388,19 +2434,21 @@
 					
 					 // Effects:
 					motion_add(_targetDir + 180, 2);
-					scrRight(_targetDir);
+					enemy_look(_targetDir);
 				}
 			}
 			
 			else{
 				 // Follow Leader:
 				if(_leaderDis > 64){
-					scrWalk(_leaderDir, [20, 30]);
+					enemy_walk(_leaderDir, random_range(20, 30));
+					enemy_look(direction);
 				}
 				
 				 // Wander:
 				else{
-					scrWalk(direction + orandom(45), [10, 20]);
+					enemy_walk(direction + orandom(45), random_range(10, 20));
+					enemy_look(direction);
 				}
 			}
 			*/
@@ -2409,7 +2457,8 @@
 	
 	 // Wander:
 	else{
-		scrWalk(random(360), [5, 10]);
+		enemy_walk(random(360), random_range(5, 10));
+		enemy_look(direction);
 	}
 	
 #define Spider_cleanup
@@ -2486,7 +2535,8 @@
 	if(instance_exists(leader)){
 		spawn_loc = [x, y];
 		
-		scrWalk(direction, 1); // Aimlessly floats
+		 // Aimlessly Float:
+		enemy_walk(direction, 1);
 		
 		 // Duplicate Friendly Bullets:
 		with(
@@ -2648,11 +2698,13 @@
 		}
 		
 		 // TP Around Player:
-		if(tp_delay > 0) tp_delay -= current_time_scale;
+		if(tp_delay > 0){
+			tp_delay -= current_time_scale;
+		}
 		else{
 			var	_dis = 96,
-				_x = x,
-				_y = y;
+				_x   = x,
+				_y   = y;
 				
 			if(!collision_circle(leader.x, leader.y, _dis, self, true, false)){
 				tp_delay = 15;
@@ -2757,6 +2809,7 @@
 	spr_fx_trail = Twins_sprite(0, "fx_trail");
 	spr_fx_ring  = Twins_sprite(0, "fx_ring");
 	spr_fx_star  = Twins_sprite(0, "fx_star");
+	right        = 1;
 	depth        = -3;
 	
 	 // Vars:
@@ -3162,18 +3215,15 @@
 		if(instance_exists(partner)){
 			var _partnerDir = point_direction(x, y, partner.x, partner.y);
 			if(point_distance(x, y, partner.x, partner.y) < 48 || chance(1, 5)){
-				scrWalk(_partnerDir + (90 + orandom(30)), 5);
+				enemy_walk(_partnerDir + 90 + orandom(30), 5);
 			}
 			else{
-				scrWalk(_partnerDir + orandom(10), 5 + random(10));
+				enemy_walk(_partnerDir + orandom(10), random_range(5, 15));
 			}
 		}
 		else{
-			scrWalk(random(360), 10 + random(20));
+			enemy_walk(random(360), random_range(10, 30));
 		}
-		
-		 // Face Right:
-		right = 1;
 		
 		return walk + random(10);
 	}
@@ -3543,7 +3593,7 @@
 		gunangle_goal = point_direction(x, y, target.x + target.hspeed, target.y + target.vspeed);
 	}
 	else target = noone;
-	scrAim(angle_lerp_ct(gunangle, gunangle_goal, gunangle_turn));
+	enemy_look(angle_lerp_ct(gunangle, gunangle_goal, gunangle_turn));
 	
 	 // Weapons:
 	with(["", "b"]){
@@ -3798,15 +3848,21 @@
 		if(instance_exists(leader)){
 			 // Pathfind:
 			if(path_dir != null){
-				scrWalk(path_dir + orandom(20), [5, 10]);
-				alarm0 = walk;
+				enemy_walk(
+					path_dir + orandom(20),
+					random_range(5, 10)
+				);
 				gunangle_goal = angle_lerp(gunangle_goal, direction, 0.1);
+				return walk;
 			}
 				
 			 // Walkin':
 			else{
 				if(_leaderDis > 128){
-					scrWalk(_leaderDir + orandom(30), [30, 60]);
+					enemy_walk(
+						_leaderDir + orandom(30),
+						random_range(30, 60)
+					);
 				}
 				
 				 // Near Leader:
@@ -3816,7 +3872,7 @@
 						_tx = lerp(leader.x, _mx, 0.5),
 						_ty = lerp(leader.y, _my, 0.5);
 						
-					scrWalk(
+					enemy_walk(
 						point_direction(x, y, _tx + orandom(24), _ty + orandom(24)),
 						(point_distance(x, y, _tx, _ty) / 4) + irandom(20)
 					);
@@ -4034,7 +4090,7 @@
 				}
 				
 				 // Lets GO:
-				else scrWalk(270, 10);
+				else enemy_walk(270, 10);
 				sound_play(snd_chst);
 				instance_delete(cuz);
 			}
@@ -4250,23 +4306,26 @@
 		if(instance_exists(leader) && (_leaderDis > 64 || path_dir != null)){
 			 // Pathfinding:
 			if(path_dir != null){
-				scrWalk(path_dir + orandom(10), 8);
+				enemy_walk(path_dir + orandom(10), 8);
+				enemy_look(direction);
 				return walk;
 			}
 			
 			 // Move Toward Leader:
 			else{
-				scrWalk(_leaderDir + orandom(10), 10);
+				enemy_walk(_leaderDir + orandom(10), 10);
+				enemy_look(direction);
 				return 10 + random(5);
 			}
 		}
 		
 		 // Wandering:
 		else{
-			scrWalk(
+			enemy_walk(
 				(instance_exists(leader) ? _leaderDir : direction) + (random_range(30, 60) * choose(-1, 1)),
-				[12, 24]
+				random_range(12, 24)
 			);
+			enemy_look(direction);
 			
 			 // Couch:
 			if(cuz == noone && instance_exists(VenuzCouch) && !instance_exists(leader)){
@@ -4285,7 +4344,7 @@
 				
 				if(instance_exists(_target)){
 					direction = point_direction(x, y, _target.x, _target.y) + orandom(30);
-					scrRight(direction);
+					enemy_look(direction);
 					return walk;
 				}
 			}
@@ -4790,7 +4849,10 @@
 #define angle_lerp(_ang1, _ang2, _num)                                                  return  _ang1 + (angle_difference(_ang2, _ang1) * _num);
 #define angle_lerp_ct(_ang1, _ang2, _num)                                               return  _ang2 + (angle_difference(_ang1, _ang2) * power(1 - _num, current_time_scale));
 #define draw_self_enemy()                                                                       image_xscale *= right; draw_self(); image_xscale /= right;
-#define enemy_walk(_add, _max)                                                                  if(walk > 0){ walk -= current_time_scale; motion_add_ct(direction, _add); } if(speed > _max) speed = _max;
+#define enemy_walk(_dir, _num)                                                                  direction = _dir; walk = _num; if(speed < friction_raw) speed = friction_raw;
+#define enemy_face(_dir)                                                                        _dir = ((_dir % 360) + 360) % 360; if(_dir < 90 || _dir > 270) right = 1; else if(_dir > 90 && _dir < 270) right = -1;
+#define enemy_look(_dir)                                                                        _dir = ((_dir % 360) + 360) % 360; if(_dir < 90 || _dir > 270) right = 1; else if(_dir > 90 && _dir < 270) right = -1; if('gunangle' in self) gunangle = _dir;
+#define enemy_target(_x, _y)                                                                    target = (instance_exists(Player) ? instance_nearest(_x, _y, Player) : ((instance_exists(target) && target >= 0) ? target : noone)); return (target != noone);
 #define save_get(_name, _default)                                                       return  mod_script_call_nc  ('mod', 'teassets', 'save_get', _name, _default);
 #define save_set(_name, _value)                                                                 mod_script_call_nc  ('mod', 'teassets', 'save_set', _name, _value);
 #define option_get(_name)                                                               return  mod_script_call_nc  ('mod', 'teassets', 'option_get', _name);
@@ -4839,11 +4901,7 @@
 #define array_shuffle(_array)                                                           return  mod_script_call_nc  ('mod', 'telib', 'array_shuffle', _array);
 #define data_clone(_value, _depth)                                                      return  mod_script_call_nc  ('mod', 'telib', 'data_clone', _value, _depth);
 #define scrFX(_x, _y, _motion, _obj)                                                    return  mod_script_call_nc  ('mod', 'telib', 'scrFX', _x, _y, _motion, _obj);
-#define scrRight(_dir)                                                                          mod_script_call_self('mod', 'telib', 'scrRight', _dir);
-#define scrWalk(_dir, _walk)                                                                    mod_script_call_self('mod', 'telib', 'scrWalk', _dir, _walk);
-#define scrAim(_dir)                                                                            mod_script_call_self('mod', 'telib', 'scrAim', _dir);
 #define enemy_hurt(_damage, _force, _direction)                                                 mod_script_call_self('mod', 'telib', 'enemy_hurt', _damage, _force, _direction);
-#define enemy_target(_x, _y)                                                            return  mod_script_call_self('mod', 'telib', 'enemy_target', _x, _y);
 #define boss_hp(_hp)                                                                    return  mod_script_call_nc  ('mod', 'telib', 'boss_hp', _hp);
 #define boss_intro(_name)                                                               return  mod_script_call_nc  ('mod', 'telib', 'boss_intro', _name);
 #define corpse_drop(_dir, _spd)                                                         return  mod_script_call_self('mod', 'telib', 'corpse_drop', _dir, _spd);

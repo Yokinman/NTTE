@@ -81,7 +81,19 @@
 	//if(alarm2_run) exit;
 	
 	 // Movement:
-	enemy_walk(walkspeed, maxspeed + (8 * (ammo >= 0 && walk > 0)));
+	var _max = maxspeed;
+	if(walk > 0){
+		walk -= current_time_scale;
+		speed += walkspeed * current_time_scale;
+		
+		 // Charging:
+		if(ammo >= 0){
+			_max += 8;
+		}
+	}
+	if(speed > _max){
+		speed = _max;
+	}
 	
 	 // Animate:
 	if(hiding){
@@ -132,7 +144,8 @@
 			alarm1 = (gold ? 6 : 8);
 			
 			 // Charge:
-			scrWalk(((instance_exists(target) && target_visible) ? target_direction : direction) + orandom(40), 5);
+			enemy_walk(((instance_exists(target) && target_visible) ? target_direction : direction) + orandom(40), 5);
+			enemy_look(direction);
 			speed = maxspeed + 10;
 			
 			 // Effects:
@@ -160,7 +173,8 @@
 			alarm1 = 15;
 			
 			 // Back up:
-			scrWalk(direction + 180, 8);
+			enemy_walk(direction + 180, 8);
+			enemy_look(direction);
 		}
 		
 		 // Normal AI:
@@ -173,7 +187,8 @@
 				&& target_distance < 96 * (1 + gold)
 				&& (gold || target_visible)
 			){
-				scrWalk(target_direction + orandom(20), [25, 50]);
+				enemy_walk(target_direction + orandom(20), random_range(25, 50));
+				enemy_look(direction);
 				if(chance(1, 2)){
 					ammo = irandom_range(1, 3) + (2 * gold);
 					if(gold){
@@ -201,7 +216,8 @@
 			
 			 // Wander:
 			else{
-				scrWalk(direction + orandom(30), [20, 50]);
+				enemy_walk(direction + orandom(30), [20, 50]);
+				enemy_look(direction);
 				
 				 // Go to Nearest Non-Pit Floor:
 				with(instance_nearest_bbox(x + (hspeed * 4), y + (vspeed * 4), FloorPitless)){
@@ -619,7 +635,13 @@
 	}
 	
 	 // Movement:
-	enemy_walk(walkspeed, maxspeed);
+	if(walk > 0){
+		walk -= current_time_scale;
+		speed += walkspeed * current_time_scale;
+	}
+	if(speed > maxspeed){
+		speed = maxspeed;
+	}
 	
 	 // Animate:
 	if(sprite_index != spr_chrg || anim_end){
@@ -662,11 +684,16 @@
 	
 	 // When you walking:
 	if(instance_exists(target) && target_visible){
-		scrWalk(target_direction + orandom(20), [23, 30]);
+		enemy_walk(
+			target_direction + orandom(20),
+			random_range(23, 30)
+		);
 	}
-	else{
-		scrWalk(direction + orandom(30), [17, 30]);
-	}
+	else enemy_walk(
+		direction + orandom(30),
+		random_range(17, 30)
+	);
+	enemy_look(direction);
 	
 	 // Stay Near Papa:
 	if(instance_exists(arc_inst)){
@@ -1193,15 +1220,21 @@
 	if(alarm2_run) exit;
 
 	 // Movement:
-	var _maxSpd = min(max(1, 0.07 * walk), maxspeed); // arbitrary values, feel free to fiddle
-	enemy_walk(walkspeed, _maxSpd);
+	var _max = min(maxspeed, max(1, 0.07 * walk));
+	if(walk > 0){
+		walk -= current_time_scale;
+		speed += walkspeed * current_time_scale;
+	}
+	if(speed > _max){
+		speed = _max;
+	}
 
 	 // Bouncy Boy:
 	if(speed > 0){
 		if(place_meeting(x + hspeed_raw, y + vspeed_raw, Wall)) {
 			if(place_meeting(x + hspeed_raw, y, Wall)) hspeed_raw *= -1;
 			if(place_meeting(x, y + vspeed_raw, Wall)) vspeed_raw *= -1;
-			scrRight(direction);
+			enemy_look(direction);
 		}
 	}
 	
@@ -1214,14 +1247,13 @@
 	alarm1 = 40 + random(20);
 	
 	 // Always movin':
-	scrWalk(direction, alarm1);
+	enemy_walk(direction, alarm1);
 	
 	if(enemy_target(x, y) && target_visible){
 		var _targetDir = target_direction;
 		
 		 // Steer towards target:
 		motion_add(_targetDir, 0.4);
-		scrRight(direction);
 		
 		 // Attack:
 		if(chance(1, 3)){
@@ -1249,16 +1281,18 @@
 				
 				 // Effects:
 				sound_play_hit(sndLightningHit, 0.25);
-				sound_play_pitch(sndLightningCrystalCharge,0.8);
+				sound_play_pitch(sndLightningCrystalCharge, 0.8);
 				sprite_index = spr_fire;
 				alarm2 = 30;
 			}
 		}
 	}
-
+	
+	enemy_look(direction);
+	
 #define Jelly_alrm2
 	sprite_index = spr_walk;
-
+	
 #define Jelly_death
 	if(type <= 2){
 		pickup_drop(50, 2, 0);
@@ -1266,8 +1300,8 @@
 	else{
 		pickup_drop(100, 10, 0);
 	}
-
-
+	
+	
 #define JellyElite_create(_x, _y)
 	/*
 		The elite Jelly
@@ -2540,6 +2574,7 @@
 		kills       = 0;
 		walk        = 0;
 		walkspeed   = 2;
+		minspeed    = 1.2;
 		maxspeed    = 3.5;
 		meleedamage = 1;
 		canmelee    = false;
@@ -2592,8 +2627,16 @@
 	
 	else{
 		 // Movement:
-		enemy_walk(walkspeed, maxspeed);
-		speed = max(speed, 0.4 + friction_raw);
+		if(walk > 0){
+			walk -= current_time_scale;
+			speed += walkspeed * current_time_scale;
+		}
+		if(speed < minspeed){
+			speed = minspeed;
+		}
+		if(speed > maxspeed){
+			speed = maxspeed;
+		}
 		
 		 // Animate:
 		if(sprite_index != spr_appear){
@@ -2646,7 +2689,7 @@
 			if(pitless_meeting(x + hspeed_raw, y)) hspeed_raw *= -1;
 			if(pitless_meeting(x, y + vspeed_raw)) vspeed_raw *= -1;
 			speed *= 0.5;
-			scrRight(direction);
+			enemy_look(direction);
 			
 			 // Smash Floors:
 			with(wall_clear(x, y)){
@@ -2679,7 +2722,8 @@
 					
 				 // Keep away:
 				if(_targetDis < 16){
-					scrWalk(_targetDir + 180 + orandom(30), [10, 20]);
+					enemy_walk(_targetDir + 180 + orandom(30), random_range(10, 20));
+					enemy_look(direction);
 					alarm1 = walk + irandom(10);
 				}
 				
@@ -2697,7 +2741,7 @@
 				 // Wander Passively:
 				else if(_targetDis < 96){
 					direction += orandom(30);
-					scrRight(direction);
+					enemy_look(direction);
 					
 					 // Effects:
 					instance_create(x, y, Bubble);
@@ -2705,7 +2749,8 @@
 				
 				 // Get closer:
 				else{
-					scrWalk(_targetDir + orandom(10), [10, 20]);
+					enemy_walk(_targetDir + orandom(10), random_range(10, 20));
+					enemy_look(direction);
 					alarm1 = walk + random(5);
 				}
 			}
@@ -2876,7 +2921,7 @@
 	sound_play_hit(snd_hurt, 0.3);
 	
 	 // Visual:
-	scrRight(_direction + 180);
+	enemy_look(_direction + 180);
 	if(sprite_index != spr_appear && sprite_index != spr_disappear){
 		sprite_index = spr_hurt;
 		image_index  = 0;
@@ -3781,8 +3826,8 @@
 			if(string_pos("quasar", string(wep_raw(other.primary ? wep : bwep))) == 1){
 				if(other.primary){
 					wepangle += other.angle;
-					back = (((((gunangle + other.angle) + 360) % 360) > 180) ? -1 : 1);
-					scrRight(gunangle + other.angle);
+					enemy_face(gunangle + other.angle);
+					back = ((dsin(gunangle + other.angle) > 0) ? 1 : -1);
 				}
 				else{
 					bwepangle += other.angle;
@@ -4194,7 +4239,13 @@
 	 // Active:
 	if(visible){
 		 // Movement:
-		enemy_walk(walkspeed, maxspeed);
+		if(walk > 0){
+			walk -= current_time_scale;
+			speed += walkspeed * current_time_scale;
+		}
+		if(speed > maxspeed){
+			speed = maxspeed;
+		}
 		
 		 // Effects:
 		if(chance_ct(1, 30)){
@@ -4283,13 +4334,9 @@
 	 // Motionize:
 	if(visible){
 		alarm1 = 20 + random(20);
-		scrWalk(
-			(
-				(instance_exists(target) && target_visible)
-				? target_direction + orandom(30)
-				: random(360)
-			),
-			[20, 60]
+		enemy_walk(
+			((instance_exists(target) && target_visible) ? (target_direction + orandom(30)) : random(360)),
+			random_range(20, 60)
 		);
 		if(hspeed != 0){
 			image_xscale = abs(image_xscale) * sign(hspeed);
@@ -4811,7 +4858,10 @@
 #define angle_lerp(_ang1, _ang2, _num)                                                  return  _ang1 + (angle_difference(_ang2, _ang1) * _num);
 #define angle_lerp_ct(_ang1, _ang2, _num)                                               return  _ang2 + (angle_difference(_ang1, _ang2) * power(1 - _num, current_time_scale));
 #define draw_self_enemy()                                                                       image_xscale *= right; draw_self(); image_xscale /= right;
-#define enemy_walk(_add, _max)                                                                  if(walk > 0){ walk -= current_time_scale; motion_add_ct(direction, _add); } if(speed > _max) speed = _max;
+#define enemy_walk(_dir, _num)                                                                  direction = _dir; walk = _num; if(speed < friction_raw) speed = friction_raw;
+#define enemy_face(_dir)                                                                        _dir = ((_dir % 360) + 360) % 360; if(_dir < 90 || _dir > 270) right = 1; else if(_dir > 90 && _dir < 270) right = -1;
+#define enemy_look(_dir)                                                                        _dir = ((_dir % 360) + 360) % 360; if(_dir < 90 || _dir > 270) right = 1; else if(_dir > 90 && _dir < 270) right = -1; if('gunangle' in self) gunangle = _dir;
+#define enemy_target(_x, _y)                                                                    target = (instance_exists(Player) ? instance_nearest(_x, _y, Player) : ((instance_exists(target) && target >= 0) ? target : noone)); return (target != noone);
 #define save_get(_name, _default)                                                       return  mod_script_call_nc  ('mod', 'teassets', 'save_get', _name, _default);
 #define save_set(_name, _value)                                                                 mod_script_call_nc  ('mod', 'teassets', 'save_set', _name, _value);
 #define option_get(_name)                                                               return  mod_script_call_nc  ('mod', 'teassets', 'option_get', _name);
@@ -4860,11 +4910,7 @@
 #define array_shuffle(_array)                                                           return  mod_script_call_nc  ('mod', 'telib', 'array_shuffle', _array);
 #define data_clone(_value, _depth)                                                      return  mod_script_call_nc  ('mod', 'telib', 'data_clone', _value, _depth);
 #define scrFX(_x, _y, _motion, _obj)                                                    return  mod_script_call_nc  ('mod', 'telib', 'scrFX', _x, _y, _motion, _obj);
-#define scrRight(_dir)                                                                          mod_script_call_self('mod', 'telib', 'scrRight', _dir);
-#define scrWalk(_dir, _walk)                                                                    mod_script_call_self('mod', 'telib', 'scrWalk', _dir, _walk);
-#define scrAim(_dir)                                                                            mod_script_call_self('mod', 'telib', 'scrAim', _dir);
 #define enemy_hurt(_damage, _force, _direction)                                                 mod_script_call_self('mod', 'telib', 'enemy_hurt', _damage, _force, _direction);
-#define enemy_target(_x, _y)                                                            return  mod_script_call_self('mod', 'telib', 'enemy_target', _x, _y);
 #define boss_hp(_hp)                                                                    return  mod_script_call_nc  ('mod', 'telib', 'boss_hp', _hp);
 #define boss_intro(_name)                                                               return  mod_script_call_nc  ('mod', 'telib', 'boss_intro', _name);
 #define corpse_drop(_dir, _spd)                                                         return  mod_script_call_self('mod', 'telib', 'corpse_drop', _dir, _spd);

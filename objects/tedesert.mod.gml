@@ -55,7 +55,13 @@
 	if(alarm1_run) exit;
 	
 	 // Movement:
-	enemy_walk(walkspeed, maxspeed);
+	if(walk > 0){
+		walk -= current_time_scale;
+		speed += walkspeed * current_time_scale;
+	}
+	if(speed > maxspeed){
+		speed = maxspeed;
+	}
 	
 	 // Animate:
 	if(sprite_index != spr_hurt || anim_end){
@@ -74,20 +80,23 @@
 		
 		 // Aim and walk:
 		if(instance_exists(target) && target_visible){
-			scrAim(target_direction);
+			enemy_look(target_direction);
 		}
-		scrWalk(gunangle + orandom(10), alarm1 + 3);
+		enemy_walk(
+			gunangle + orandom(10),
+			alarm1 + 3
+		);
 		
 		 // Golden venom shot:
 		if(gold){
-			var o = random_range(20, 60);
-			for(var a = -o; a <= o; a += o){
+			var _off = random_range(20, 60);
+			for(var _ang = -_off; _ang <= _off; _ang += _off){
 				projectile_create(
 					x,
 					y,
 					"VenomPellet",
-					gunangle + a,
-					((a == 0) ? 10 : 6) + random(2)
+					gunangle + _ang,
+					((_ang == 0) ? 10 : 6) + random(2)
 				);
 			}
 		}
@@ -117,7 +126,7 @@
 	
 	 // Normal AI:
 	else if(instance_exists(target) && target_visible){
-		scrAim(point_direction(x, y, target.x + target.hspeed, target.y + target.vspeed));
+		enemy_look(point_direction(x, y, target.x + target.hspeed, target.y + target.vspeed));
 		
 		var _targetDis = target_distance;
 		
@@ -131,21 +140,21 @@
 		 // Move Away From Target:
 		else if(_targetDis <= 32){
 			alarm1 = 20 + irandom(30);
-			scrWalk(gunangle + 180 + orandom(40), [10, 20]);
-			scrAim(direction);
+			enemy_walk(gunangle + 180 + orandom(40), random_range(10, 20));
+			enemy_look(direction);
 		}
 		
 		 // Move Towards Target:
 		else{
 			alarm1 = 30 + irandom(20);
-			scrWalk(gunangle + orandom(40), [20, 35]);
+			enemy_walk(gunangle + orandom(40), random_range(20, 35));
 		}
 	}
 	
 	 // Wander:
 	else{
-		scrWalk(random(360), 30);
-		scrAim(direction);
+		enemy_walk(random(360), 30);
+		enemy_look(direction);
 	}
 
 #define BabyScorpion_hurt(_damage, _force, _direction)
@@ -487,8 +496,8 @@
 	if(sprite_index != spr_chrg || anim_end){
 		sprite_index = enemy_sprite;
 		if(image_index < 1 && sprite_index == spr_idle){
-			var a = ((loop_snd == -1) ? 0.2 : 0.3);
-			image_index += random(image_speed_raw * a) - image_speed_raw;
+			var _num = ((loop_snd == -1) ? 0.2 : 0.3);
+			image_index += random(image_speed_raw * _num) - image_speed_raw;
 		}
 	}
 	
@@ -884,8 +893,8 @@
 			repeat(2) instance_create(x, y, Bubble);
 		}
 	}
-	else for(var a = direction; a < direction + 360; a += (360 / 10)){
-		with(instance_create(x, y, Dust)) motion_add(a, 3);
+	else for(var _ang = direction; _ang < direction + 360; _ang += (360 / 10)){
+		scrFX(x, y, [_ang, 3], Dust);
 	}
 	
 #define CoastBossBecome_prompt_meet
@@ -969,7 +978,13 @@
 	if(alarm3_run) exit;
 	
 	 // Movement:
-	enemy_walk(walkspeed, maxspeed);
+	if(walk > 0){
+		walk -= current_time_scale;
+		speed += walkspeed * current_time_scale;
+	}
+	if(speed > maxspeed){
+		speed = maxspeed;
+	}
 	
 	 // Animate:
 	if(array_find_index([spr_hurt, spr_spwn, spr_chrg, spr_fire, spr_efir, spr_dive, spr_rise], sprite_index) < 0){
@@ -1099,18 +1114,18 @@
 			 // Ripping Through Ground:
 			var	_oDis = [16, -4],
 				_oDir = [swim_ang_frnt, swim_ang_back],
-				_ang = [20, 30];
+				_ang  = [20, 30];
 				
-			for(var o = 0; o < array_length(_oDis); o++){
+			for(var _o = 0; _o < array_length(_oDis); _o++){
 				for(var i = -1; i <= 1; i += 2){
-					var	_x = _cx + lengthdir_x(_oDis[o], _oDir[o]),
-						_y = _cy + lengthdir_y(_oDis[o], _oDir[o]),
-						a = (i * _ang[o]);
+					var	_x = _cx + lengthdir_x(_oDis[_o], _oDir[_o]),
+						_y = _cy + lengthdir_y(_oDis[_o], _oDir[_o]),
+						_a = (i * _ang[_o]);
 						
 					 // Cool Trail FX:
 					if(speed > 1){
 						with(instance_create(_x, _y, BoltTrail)){
-							motion_add(_oDir[o] + 180 + a, other.speed * random_range(0.5, 1));
+							motion_add(_oDir[_o] + 180 + _a, other.speed * random_range(0.5, 1));
 							image_xscale = speed * 2;
 							image_yscale = (skill_get(mut_bolt_marrow) ? 0.6 : 1);
 							image_angle  = direction;
@@ -1127,7 +1142,7 @@
 						with(instance_create(_x, _y, Dust)){
 							hspeed += other.hspeed / 2;
 							vspeed += other.vspeed / 2;
-							motion_add(_oDir[o] + 180 + (2 * a), other.speed);
+							motion_add(_oDir[_o] + 180 + (2 * _a), other.speed);
 							image_xscale *= .75;
 							image_yscale  = image_xscale;
 							depth         = other.depth;
@@ -1137,21 +1152,27 @@
 			}
 			
 			 // Quakes:
-			if(chance(1, 4)) view_shake_at(_cx, _cy, 4);
+			if(chance(1, 4)){
+				view_shake_at(_cx, _cy, 4);
+			}
 		}
 		
 		 // Manual Collisions:
 		if(place_meeting(x, y, Player)){
 			with(instances_meeting(x, y, instances_matching_ne(Player, "team", team))){
-				if(place_meeting(x, y, other)) with(other){
-					event_perform(ev_collision, Player);
+				if(place_meeting(x, y, other)){
+					with(other){
+						event_perform(ev_collision, Player);
+					}
 				}
 			}
 		}
 		if(place_meeting(x, y, prop)){
 			with(instances_meeting(x, y, prop)){
-				if(place_meeting(x, y, other)) with(other){
-					event_perform(ev_collision, prop);
+				if(place_meeting(x, y, other)){
+					with(other){
+						event_perform(ev_collision, prop);
+					}
 				}
 			}
 		}
@@ -1166,23 +1187,29 @@
 		}
 		
 		 // Disable Hitbox:
-		if(swim_mask == -1) swim_mask = mask_index;
+		if(swim_mask == -1){
+			swim_mask = mask_index;
+		}
 		mask_index = mskNone;
 		
 		 // Un-Dive:
 		if(swim <= 0){
-			swim = 0;
+			swim   = 0;
 			alarm3 = -1;
-			scrRight(direction);
+			
+			 // Facing:
+			enemy_face(direction);
 			speed = 0;
 			
+			 // Visual:
 			spr_shadow   = spr_shad;
 			sprite_index = spr_rise;
 			image_index  = 0;
 			depth        = -2;
 			
+			 // Reset Hitbox:
 			mask_index = swim_mask;
-			swim_mask = -1;
+			swim_mask  = -1;
 			
 			 // Babbies:
 			/*if(GameCont.loops > 0) repeat(GameCont.loops * 3){
@@ -1213,7 +1240,7 @@
 	}
 	
 	 // Fish Train:
-	if(array_length(fish_train) > 0){
+	if(array_length(fish_train)){
 		var	_leader    = self,
 			_broken    = false,
 			_fishSwim  = fish_swim,
@@ -1237,7 +1264,7 @@
 						_fish = obj_create(_leader.x, _leader.y, (chance(1, 100) ? "Puffer" : BoneFish));
 						
 						with(_fish){
-							kills = 0;
+							kills   = 0;
 							creator = other;
 							
 							 // Keep Distance:
@@ -1268,12 +1295,12 @@
 						 // Swimming w/ Big Fish:
 						visible = !_fishSwim[_fishIndex];
 						if(_fishSwim[_fishIndex]){
-							scrRight(point_direction(x, y, _leader.x, _leader.y));
+							enemy_look(point_direction(x, y, _leader.x, _leader.y));
 							
 							if(speed > 0 && chance(1, 3)){
 								with(instance_create(x + orandom(6), y + random(8), Sweat)){
 									direction = other.direction + choose(-60, 60) + orandom(10);
-									speed = 0.5;
+									speed     = 0.5;
 								}
 							}
 						}
@@ -1452,26 +1479,27 @@
 	if(enemy_target(x, y)){
 		var _targetDis = target_distance;
 		if(_targetDis < 160 && ("reload" not in target || target.reload <= 0 || chance(2, 3))){
-			scrAim(target_direction);
+			enemy_look(target_direction);
 			
 			 // Move Towards Target:
 			if((_targetDis < 64 && chance(1, 2)) || chance(1, 4)){
-				scrWalk(gunangle + orandom(10), [30, 40]);
+				enemy_walk(gunangle + orandom(10), random_range(30, 40));
 				alarm1 = walk + random(10);
 			}
 			
 			 // Bubble Blow:
 			else{
-				ammo = 4 * (GameCont.loops + 2);
-				
-				scrWalk(gunangle + orandom(30), 8);
-				
-				image_index  = 0;
-				sprite_index = spr_chrg;
-				sound_play_pitch(sndOasisBossFire, 1 + orandom(0.2));
-				
+				ammo   = 4 * (GameCont.loops + 2);
 				alarm2 = 3;
 				alarm1 = -1;
+				
+				enemy_walk(gunangle + orandom(30), 8);
+				
+				sprite_index = spr_chrg;
+				image_index  = 0;
+				
+				 // Sound:
+				sound_play_pitch(sndOasisBossFire, 1 + orandom(0.2));
 			}
 		}
 		
@@ -1482,8 +1510,8 @@
 	 // Passive Movement:
 	else{
 		alarm1 = 40 + random(20);
-		scrWalk(random(360), 20);
-		scrAim(direction);
+		enemy_walk(random(360), 20);
+		enemy_look(direction);
 	}
 	
 #define CoastBoss_alrm2
@@ -1717,7 +1745,13 @@
 	if(alarm2_run) exit;
 	
 	 // Movement:
-	enemy_walk(walkspeed, maxspeed);
+	if(walk > 0){
+		walk -= current_time_scale;
+		speed += walkspeed * current_time_scale;
+	}
+	if(speed > maxspeed){
+		speed = maxspeed;
+	}
 	
 	/*
 	 // Flak Target Tracking:
@@ -1725,7 +1759,7 @@
 		if(flak.time < flak.time_max){
 			 // Retarget:
 			if(instance_exists(target) && target_visible){
-				scrAim(angle_lerp_ct(gunangle, target_direction, 1/3));
+				enemy_look(angle_lerp_ct(gunangle, target_direction, 1/3));
 			}
 			
 			 // Reposition:
@@ -1761,12 +1795,15 @@
 	alarm1 = irandom_range(60, 90);
 	
 	 // Movin'
-	scrWalk(random(360), random_range(20, 30));
+	enemy_walk(
+		random(360),
+		random_range(20, 30)
+	);
 	
 	if(ammo <= 0){
 		 // Aggroed:
 		if(enemy_target(x, y) && (my_health < maxhealth || target_visible)){
-			scrAim(target_direction);
+			enemy_look(target_direction);
 			direction = gunangle + orandom(40);
 			
 			 // Attack:
@@ -1781,7 +1818,7 @@
 		}
 		
 		 // Wander:
-		else scrAim(direction);
+		else enemy_look(direction);
 	}
 	
 #define SilverScorpion_alrm2
@@ -2291,8 +2328,8 @@
 	}
 	
 	 // Effects:
-	for(var a = 0; a < 360; a += (360 / 20)){
-		scrFX(x, y, [a, 4 + random(4)], Smoke);
+	for(var _ang = 0; _ang < 360; _ang += (360 / 20)){
+		scrFX(x, y, [_ang, 4 + random(4)], Smoke);
 	}
 	
 	view_shake_at(x, y, 20);
@@ -2654,7 +2691,10 @@
 #define angle_lerp(_ang1, _ang2, _num)                                                  return  _ang1 + (angle_difference(_ang2, _ang1) * _num);
 #define angle_lerp_ct(_ang1, _ang2, _num)                                               return  _ang2 + (angle_difference(_ang1, _ang2) * power(1 - _num, current_time_scale));
 #define draw_self_enemy()                                                                       image_xscale *= right; draw_self(); image_xscale /= right;
-#define enemy_walk(_add, _max)                                                                  if(walk > 0){ walk -= current_time_scale; motion_add_ct(direction, _add); } if(speed > _max) speed = _max;
+#define enemy_walk(_dir, _num)                                                                  direction = _dir; walk = _num; if(speed < friction_raw) speed = friction_raw;
+#define enemy_face(_dir)                                                                        _dir = ((_dir % 360) + 360) % 360; if(_dir < 90 || _dir > 270) right = 1; else if(_dir > 90 && _dir < 270) right = -1;
+#define enemy_look(_dir)                                                                        _dir = ((_dir % 360) + 360) % 360; if(_dir < 90 || _dir > 270) right = 1; else if(_dir > 90 && _dir < 270) right = -1; if('gunangle' in self) gunangle = _dir;
+#define enemy_target(_x, _y)                                                                    target = (instance_exists(Player) ? instance_nearest(_x, _y, Player) : ((instance_exists(target) && target >= 0) ? target : noone)); return (target != noone);
 #define save_get(_name, _default)                                                       return  mod_script_call_nc  ('mod', 'teassets', 'save_get', _name, _default);
 #define save_set(_name, _value)                                                                 mod_script_call_nc  ('mod', 'teassets', 'save_set', _name, _value);
 #define option_get(_name)                                                               return  mod_script_call_nc  ('mod', 'teassets', 'option_get', _name);
@@ -2703,11 +2743,7 @@
 #define array_shuffle(_array)                                                           return  mod_script_call_nc  ('mod', 'telib', 'array_shuffle', _array);
 #define data_clone(_value, _depth)                                                      return  mod_script_call_nc  ('mod', 'telib', 'data_clone', _value, _depth);
 #define scrFX(_x, _y, _motion, _obj)                                                    return  mod_script_call_nc  ('mod', 'telib', 'scrFX', _x, _y, _motion, _obj);
-#define scrRight(_dir)                                                                          mod_script_call_self('mod', 'telib', 'scrRight', _dir);
-#define scrWalk(_dir, _walk)                                                                    mod_script_call_self('mod', 'telib', 'scrWalk', _dir, _walk);
-#define scrAim(_dir)                                                                            mod_script_call_self('mod', 'telib', 'scrAim', _dir);
 #define enemy_hurt(_damage, _force, _direction)                                                 mod_script_call_self('mod', 'telib', 'enemy_hurt', _damage, _force, _direction);
-#define enemy_target(_x, _y)                                                            return  mod_script_call_self('mod', 'telib', 'enemy_target', _x, _y);
 #define boss_hp(_hp)                                                                    return  mod_script_call_nc  ('mod', 'telib', 'boss_hp', _hp);
 #define boss_intro(_name)                                                               return  mod_script_call_nc  ('mod', 'telib', 'boss_intro', _name);
 #define corpse_drop(_dir, _spd)                                                         return  mod_script_call_self('mod', 'telib', 'corpse_drop', _dir, _spd);
