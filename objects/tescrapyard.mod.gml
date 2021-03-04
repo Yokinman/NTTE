@@ -318,12 +318,14 @@
 #define SawTrap_create(_x, _y)
 	with(instance_create(_x, _y, CustomHitme)){
 		 // Visual:
-		spr_idle    = spr.SawTrap;
-		spr_walk    = spr.SawTrap;
-		spr_hurt    = spr.SawTrapHurt;
-		hitid       = [spr_idle, "SAWBLADE TRAP"];
-		image_speed = 0.4;
-		depth       = 1;
+		spr_idle     = spr.SawTrap;
+		spr_walk     = spr.SawTrap;
+		spr_hurt     = spr.SawTrapHurt;
+		spr_shadow   = mskNone;
+		spr_shadow_y = 6;
+		hitid        = [spr_idle, "SAWBLADE TRAP"];
+		image_speed  = 0.4;
+		depth        = 1;
 		
 		 // Sound:
 		snd_hurt = sndHitMetal;
@@ -1332,12 +1334,12 @@
 		}
 	}
 	
-#define ntte_shadows
+#define ntte_draw_shadows
 	 // Saw Traps:
 	if(instance_exists(CustomHitme)){
-		var _inst = instances_matching(instances_matching(CustomHitme, "name", "SawTrap"), "visible", true);
+		var _inst = instances_matching(instances_matching(instances_matching(CustomHitme, "name", "SawTrap"), "visible", true), "spr_shadow", mskNone);
 		if(array_length(_inst)) with(_inst){
-			draw_sprite_ext(sprite_index, image_index, x, y + 6, image_xscale * 0.9, image_yscale * 0.9, image_angle, image_blend, image_alpha);
+			draw_sprite_ext(sprite_index, image_index, x + spr_shadow_x, y + spr_shadow_y, image_xscale * 0.9, image_yscale * 0.9, image_angle, image_blend, 1);
 		}
 	}
 	
@@ -1346,7 +1348,7 @@
 		var _inst = instances_matching(instances_matching(CustomObject, "name", "TrapSpin"), "visible", true);
 		if(array_length(_inst)) with(_inst){
 			for(var i = 0; i < image_number; i++){
-				draw_sprite_ext(sprite_index, i, x, y + i, image_xscale, image_yscale, image_angle, image_blend, abs(image_alpha));
+				draw_sprite_ext(sprite_index, i, x, y + i, image_xscale, image_yscale, image_angle, image_blend, 1);
 			}
 		}
 	}

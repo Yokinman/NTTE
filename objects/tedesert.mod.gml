@@ -1935,6 +1935,7 @@
 		sprite_index = spr.SilverScorpionFlak;
 		image_speed  = 0.4;
 		depth        = -4;
+		ntte_bloom   = 0.2;
 		
 		 // Vars:
 		mask_index = mskBullet1;
@@ -2385,6 +2386,7 @@
 		sprite_index = spr_idle;
 		image_speed  = 0.4;
 		depth        = -3;
+		ntte_bloom   = 0.2;
 		
 		 // Vars:
 		mask_index = mskEnemyBullet1;
@@ -2587,7 +2589,7 @@
 		}
 	}
 	
-#define ntte_bloom
+#define ntte_draw_bloom
 	if(instance_exists(CustomProjectile)){
 		 // Silver Scorpion Pet Attack:
 		var _inst = instances_matching(CustomProjectile, "name", "VenomBlast");
@@ -2610,22 +2612,19 @@
 			image_yscale /= _ysc;
 			image_alpha  /= _alp;
 		}
-		var _inst = instances_matching(CustomProjectile, "name", "SilverScorpionFlak");
-		if(array_length(_inst)) with(_inst){
-			draw_sprite_ext(sprite_index, image_index, x, y, 2 * image_xscale, 2 * image_yscale, image_angle, image_blend, 0.2 * image_alpha);
-		}
 	}
 	
-#define ntte_shadows
+#define ntte_draw_shadows
 	 // SharkBoss Loop Train:
 	if(instance_exists(CustomEnemy)){
 		var _inst = instances_matching(CustomEnemy, "name", "CoastBoss");
 		if(array_length(_inst)) with(_inst){
 			var _fishIndex = 0;
 			with(fish_train){
-				if(instance_exists(self) && other.fish_swim[_fishIndex++]){
+				if(instance_exists(self) && other.fish_swim[_fishIndex]){
 					draw_sprite(spr_shadow, 0, x + spr_shadow_x, y + spr_shadow_y);
 				}
+				_fishIndex++;
 			}
 		}
 	}

@@ -1560,13 +1560,14 @@
 	with(instance_create(_x, _y, CustomProjectile)){
 		 // Visual:
 		sprite_index = sprBullet1;
-		spr_dead = sprBulletHit;
+		spr_dead     = sprBulletHit;
+		ntte_bloom   = 0.1;
 		
 		 // Vars:
 		mask_index = mskBullet1;
-		damage = 3;
-		force = 8;
-		typ = 1;
+		damage     = 3;
+		force      = 8;
+		typ        = 1;
 		
 		return self;
 	}
@@ -1595,6 +1596,7 @@
 		 // Visual:
 		sprite_index = sprFlakBullet;
 		spr_dead     = sprFlakHit;
+		ntte_bloom   = 0.1;
 		
 		 // Sounds:
 		snd_dead = sndFlakExplode;
@@ -1690,6 +1692,7 @@
 		sprite_index = sprBullet2;
 		spr_fade     = sprBullet2Disappear;
 		spr_dead     = sprBullet2Disappear;
+		ntte_bloom   = 0.1;
 		
 		 // Vars:
 		mask_index   = mskBullet2;
@@ -1776,6 +1779,7 @@
 		spr_dead     = sprPlasmaImpact;
 		spr_trail    = sprPlasmaTrail;
 		image_speed  = 0.5;
+		ntte_bloom   = 0.1;
 		
 		 // Sound:
 		snd_dead = sndPlasmaHit;
@@ -5485,7 +5489,7 @@
 		}
 	}
 	
-#define ntte_dark(_type)
+#define ntte_draw_dark(_type)
 	switch(_type){
 		
 		case "normal":
@@ -5515,27 +5519,22 @@
 			break;
 	}
 	
-#define ntte_bloom
+#define ntte_draw_bloom
 	if(instance_exists(CustomProjectile)){
-		 // Custom Bullets/Plasma & Portal Balls:
-		var _inst = instances_matching(CustomProjectile, "name", "CustomBullet", "CustomPlasma", "PortalBullet");
-		if(array_length(_inst)) with(_inst){
-			draw_sprite_ext(sprite_index, image_index, x, y, 2 * image_xscale, 2 * image_yscale, image_angle, image_blend, 0.1 * image_alpha);
-		}
-		
-		 // Custom Shells/Flak:
-		var _inst = instances_matching(CustomProjectile, "name", "CustomFlak", "CustomShell");
-		if(array_length(_inst)) with(_inst){
-			if(bonus > 0){
-				draw_sprite_ext(sprite_index, image_index, x, y, 2 * image_xscale, 2 * image_yscale, image_angle, image_blend, 0.3 * bonus * image_alpha);
+		 // General Projectile Bloom:
+		var _inst = instances_matching_gt(CustomProjectile, "ntte_bloom", 0);
+		if(array_length(_inst)){
+			with(_inst){
+				draw_sprite_ext(sprite_index, image_index, x, y, image_xscale * 2, image_yscale * 2, image_angle, image_blend, image_alpha * ntte_bloom);
 			}
-			draw_sprite_ext(sprite_index, image_index, x, y, 2 * image_xscale, 2 * image_yscale, image_angle, image_blend, 0.1 * image_alpha);
-		}
-		
-		 // Crab Venom:
-		var _inst = instances_matching(CustomProjectile, "name", "VenomPellet");
-		if(array_length(_inst)) with(_inst){
-			draw_sprite_ext(sprite_index, image_index, x, y, 2 * image_xscale, 2 * image_yscale, image_angle, image_blend, 0.2 * image_alpha);
+			
+			 // Bonus Damage Bloom (Shells):
+			var _instBonus = instances_matching_gt(_inst, "bonus", 0);
+			if(array_length(_instBonus)){
+				with(_instBonus){
+					draw_sprite_ext(sprite_index, image_index, x, y, image_xscale * 2, image_yscale * 2, image_angle, image_blend, image_alpha * ntte_bloom * bonus * 3);
+				}
+			}
 		}
 		
 		 // Merged Flak Ball:
@@ -5552,7 +5551,7 @@
 		}
 	}
 	
-#define ntte_shadows
+#define ntte_draw_shadows
 	 // Top Objects:
 	if(!instance_exists(NothingSpiral) && instance_exists(CustomObject)){
 		var _inst = instances_matching(instances_matching_ne(instance_rectangle_bbox(global.floor_left, global.floor_top, global.floor_right, global.floor_bottom, instances_matching(CustomObject, "name", "TopObject")), "spr_shadow", -1), "visible", true);

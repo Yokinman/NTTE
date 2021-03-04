@@ -2845,6 +2845,7 @@
 		sprite_index = sprEFlak;
 		image_speed  = 0.4;
 		depth        = -1;
+		ntte_bloom   = 0.1;
 		
 		 // Vars:
 		mask_index   = mskFlakBullet;
@@ -5855,7 +5856,7 @@
 		}
 	}
 	
-#define ntte_shadows
+#define ntte_draw_shadows
 	 // Weapons Stuck in Ground:
 	if(instance_exists(CustomObject)){
 		var _inst = instances_matching(CustomObject, "name", "WepPickupGrounded");
@@ -5864,7 +5865,7 @@
 		}
 	}
 	
-#define ntte_bloom
+#define ntte_draw_bloom
 	 // Bonus Ammo FX:
 	if(instance_exists(WepSwap)){
 		var _inst = instances_matching(WepSwap, "name", "BonusAmmoFire");
@@ -5873,7 +5874,7 @@
 		}
 	}
 	
-#define ntte_dark(_type)
+#define ntte_draw_dark(_type)
 	switch(_type){
 		
 		case "normal":

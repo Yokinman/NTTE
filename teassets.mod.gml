@@ -2223,7 +2223,7 @@
 		file_unload(_path);
 		
 		 // Re-Save:
-		save_ntte();
+		ntte_save();
 		save_auto = true;
 		
 		exit;
@@ -2249,13 +2249,13 @@
 		"weapon" : []
 	};
 	ntte_mods_call = {
-		"begin_step" : [],
-		"step"       : [],
-		"end_step"   : [],
-		"shadows"    : [],
-		"bloom"      : [],
-		"dark"       : [],
-		"update"     : []
+		"begin_step"   : [],
+		"step"         : [],
+		"end_step"     : [],
+		"draw_shadows" : [],
+		"draw_bloom"   : [],
+		"draw_dark"    : [],
+		"update"       : []
 	};
 	
 	 // Reminders:
@@ -2378,7 +2378,7 @@
 	
 	 // Save Game:
 	if(save_auto){
-		save_ntte();
+		ntte_save();
 	}
 	
 	 // Clear Surfaces, Shaders, Script Bindings:
@@ -2640,7 +2640,11 @@
 		}
 	}
 	
-#define save_ntte()
+#define ntte_save()
+	/*
+		Sends NT:TE's save data to the save file
+	*/
+	
 	string_save(json_encode(save_data), save_path);
 	
 #define save_get(_name, _default)
@@ -3262,7 +3266,7 @@ var _shine = argument_count > 4 ? argument[4] : shnNone;
 #define game_start
 	 // Autosave:
 	if(save_auto){
-		save_ntte();
+		ntte_save();
 	}
 	
 	 // Reset Active Shader (Beta Fix):
@@ -3401,7 +3405,7 @@ var _shine = argument_count > 4 ? argument[4] : shnNone;
 	if(instance_exists(Menu) && save_auto){
 		with(instances_matching(Menu, "ntte_autosave", null)){
 			ntte_autosave = true;
-			save_ntte();
+			ntte_save();
 		}
 	}
 	

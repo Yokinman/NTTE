@@ -1721,7 +1721,6 @@
 	/*
 		A projectile that teleports its creator to itself when destroyed
 		Also teleports non-prop hitmes that it damages to its creator's position, basically swapping their positions
-		NOTE - Bloom is drawn in tegeneral.mod
 	*/
 	
 	with(instance_create(_x, _y, CustomProjectile)){
@@ -1731,6 +1730,7 @@
 		sprite_index = spr_spwn;
 		image_speed  = 0.4;
 		depth        = -5;
+		ntte_bloom   = 0.1;
 		
 		 // Vars:
 		mask_index = mskNone;
@@ -2375,7 +2375,7 @@
 		}
 	}
 	
-#define ntte_dark(_type)
+#define ntte_draw_dark(_type)
 	switch(_type){
 		
 		case "normal":

@@ -1772,8 +1772,8 @@
 			call - A string or array, referencing the script to call
 			
 		Ex:
-			ntte_call("bloom")         == Calls all 'ntte_bloom' scripts
-			ntte_call(["dark", "end"]) == Calls all 'ntte_dark' scripts with an argument0 of "end"
+			ntte_call("step")               == Calls all 'ntte_step' scripts
+			ntte_call(["draw_dark", "end"]) == Calls all 'ntte_draw_dark' scripts with an argument0 of "end"
 	*/
 	
 	_call = (
@@ -3294,9 +3294,9 @@
 	}
 	
 	 // Call Scripts:
-	ntte_call(["dark", "normal"]);
+	ntte_call(["draw_dark", "normal"]);
 	
-	if(lag) trace_time("ntte_dark");
+	if(lag) trace_time("ntte_draw_dark");
 	
 #define draw_dark_end // Drawing Clear
 	draw_set_color(c_black);
@@ -3312,15 +3312,15 @@
 	}
 
 	 // Call Scripts:
-	ntte_call(["dark", "end"]);
+	ntte_call(["draw_dark", "end"]);
 	
-	if(lag) trace_time("ntte_dark_end");
+	if(lag) trace_time("ntte_draw_dark_end");
 	
 #define draw_bloom
 	if(lag) trace_time();
 	
 	 // Call Scripts:
-	ntte_call("bloom");
+	ntte_call("draw_bloom");
 	
 	 // GunCont (Merged Laser Cannon):
 	if(instance_exists(CustomObject)){
@@ -3345,7 +3345,7 @@
 		}
 	}
 	
-	if(lag) trace_time("ntte_bloom");
+	if(lag) trace_time("ntte_draw_bloom");
 	
 #define draw_shadows
 	var _lag = (lag && !instance_exists(PauseButton) && !instance_exists(BackMainMenu));
@@ -3380,9 +3380,9 @@
 	}
 	
 	 // Call Scripts:
-	ntte_call("shadows");
+	ntte_call("draw_shadows");
 	
-	if(_lag) trace_time("ntte_shadows");
+	if(_lag) trace_time("ntte_draw_shadows");
 	
 #define draw_shadows_top
 	if(instance_exists(CustomObject) || instance_exists(CustomProjectile)){

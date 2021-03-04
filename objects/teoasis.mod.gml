@@ -1824,7 +1824,7 @@
 		visible = _active;
 	}
 	
-#define ntte_shadows
+#define ntte_draw_shadows
 	 // Bubble Bombs:
 	if(instance_exists(CustomProjectile)){
 		var _inst = instances_matching(instances_matching(instances_matching(CustomProjectile, "name", "BubbleBomb"), "big", true), "visible", true);

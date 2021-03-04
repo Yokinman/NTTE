@@ -5286,7 +5286,7 @@
 	}
 	*/
 	
-#define ntte_shadows
+#define ntte_draw_shadows
 	 // Mortar Plasma:
 	if(instance_exists(CustomProjectile)){
 		var _inst = instances_matching(instances_matching(CustomProjectile, "name", "MortarPlasma"), "visible", true);
@@ -5339,7 +5339,7 @@
 		}
 	}
 	
-#define ntte_bloom
+#define ntte_draw_bloom
 	if(instance_exists(CustomObject)){
 		 // Warp Portals:
 		var _inst = instances_matching(CustomObject, "name", /*"TesseractStrike", "TesseractWarp",*/ "WarpPortal");
@@ -5366,21 +5366,6 @@
 	 // Projectiles:
 	if(instance_exists(projectile)){
 		if(instance_exists(CustomProjectile)){
-			 // Red Bullets:
-			var _inst = instances_matching(CustomProjectile, "name", "RedBullet");
-			if(array_length(_inst)) with(_inst){
-				if(bonus > 0){
-					draw_sprite_ext(sprite_index, image_index, x, y, 2 * image_xscale, 2 * image_yscale, image_angle, image_blend, 0.3 * bonus * image_alpha);
-				}
-				draw_sprite_ext(sprite_index, image_index, x, y, 2 * image_xscale, 2 * image_yscale, image_angle, image_blend, 0.1 * image_alpha);
-			}
-			
-			 // Red Slashes:
-			var _inst = instances_matching(CustomProjectile, "name", "RedSlash");
-			if(array_length(_inst)) with(_inst){
-				draw_sprite_ext(sprite_index, image_index, x, y, 1.2 * image_xscale, 1.2 * image_yscale, image_angle, image_blend, 0.1 * image_alpha);
-			}
-			
 			 // Crystal Heart Projectiles:
 			var _inst = instances_matching(CustomProjectile, "name", "CrystalHeartBullet");
 			if(array_length(_inst)) with(_inst){
@@ -5396,6 +5381,14 @@
 				image_yscale /= _scale;
 				image_alpha  /= _alpha;
 			}
+			
+			 // Red Slashes:
+			if(instance_exists(CustomSlash)){
+				var _inst = instances_matching(CustomSlash, "name", "RedSlash");
+				if(array_length(_inst)) with(_inst){
+					draw_sprite_ext(sprite_index, image_index, x, y, 1.2 * image_xscale, 1.2 * image_yscale, image_angle, image_blend, 0.1 * image_alpha);
+				}
+			}
 		}
 		
 		 // Red Shanks:
@@ -5407,7 +5400,7 @@
 		}
 	}
 	
-#define ntte_dark(_type)
+#define ntte_draw_dark(_type)
 	switch(_type){
 		
 		case "normal":

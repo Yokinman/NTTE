@@ -5857,7 +5857,7 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 	
 	
 /// GENERAL
-#define ntte_shadows
+#define ntte_draw_shadows
 	if(instance_exists(CustomHitme)){
 		 // Doors:
 		var _inst = instances_matching(instances_matching(CustomHitme, "name", "CatDoor"), "visible", true);
@@ -5875,7 +5875,7 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 		}
 	}
 	
-#define ntte_dark(_type)
+#define ntte_draw_dark(_type)
 	switch(_type){
 		
 		case "normal":
@@ -5973,20 +5973,12 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 			
 	}
 	
-#define ntte_bloom
+#define ntte_draw_bloom
 	 // Flame Spark:
 	if(instance_exists(Sweat)){
 		var _inst = instances_matching(Sweat, "name", "FlameSpark");
 		if(array_length(_inst)) with(_inst){
 			draw_sprite_ext(sprite_index, image_index, x, y, image_xscale * 3, image_yscale * 3, image_angle, image_blend, image_alpha * 0.1);
-		}
-	}
-	
-	 // Gator Statue Flak:
-	if(instance_exists(CustomProjectile)){
-		var _inst = instances_matching(CustomProjectile, "name", "GatorStatueFlak");
-		if(array_length(_inst)) with(_inst){
-			draw_sprite_ext(sprite_index, image_index, x, y, image_xscale * 2, image_yscale * 2, image_angle, image_blend, image_alpha * 0.1);
 		}
 	}
 	

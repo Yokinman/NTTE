@@ -5366,7 +5366,7 @@
 		}
 	}
 	
-#define ntte_shadows
+#define ntte_draw_shadows
 	 // Shield Shadows:
 	if(instance_exists(CustomSlash)){
 		var _inst = instances_matching(instances_matching(CustomSlash, "name", "ClamShield"), "visible", true)
@@ -5380,7 +5380,7 @@
 		}
 	}
 	
-#define ntte_dark(_type)
+#define ntte_draw_dark(_type)
 	switch(_type){
 		
 		case "normal":

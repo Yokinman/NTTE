@@ -803,6 +803,7 @@
 		image_speed  = 0.4;
 		image_index  = 1 - image_speed_raw;
 		depth        = -3;
+		ntte_bloom   = 0.1;
 		
 		 // Vars:
 		mask_index   = mskEnemyBullet1;
@@ -1693,19 +1694,19 @@
 	
 #define LightningDisc_draw
 	scrDrawLightningDisc(sprite_index, image_index, x, y, ammo, radius, stretch, image_xscale, image_yscale, image_angle + rotation, image_blend, image_alpha);
-
+	
 #define scrDrawLightningDisc(_spr, _img, _x, _y, _num, _radius, _stretch, _xscale, _yscale, _angle, _blend, _alpha)
 	var	_off = (360 / _num),
 		_ysc = _stretch * (0.5 + random(1));
 		
 	for(var d = _angle; d < _angle + 360; d += _off){
-		var	_ro = random(2),
-			_rx = (_radius * _xscale) + _ro,
-			_ry = (_radius * _yscale) + _ro,
-			_x1 = _x + lengthdir_x(_rx, d),
-			_y1 = _y + lengthdir_y(_ry, d),
-			_x2 = _x + lengthdir_x(_rx, d + _off),
-			_y2 = _y + lengthdir_y(_ry, d + _off),
+		var	_ro  = random(2),
+			_rx  = (_radius * _xscale) + _ro,
+			_ry  = (_radius * _yscale) + _ro,
+			_x1  = _x + lengthdir_x(_rx, d),
+			_y1  = _y + lengthdir_y(_ry, d),
+			_x2  = _x + lengthdir_x(_rx, d + _off),
+			_y2  = _y + lengthdir_y(_ry, d + _off),
 			_xsc = point_distance(_x1, _y1, _x2, _y2) / 2,
 			_ang = point_direction(_x1, _y1, _x2, _y2);
 			
@@ -4373,7 +4374,7 @@
 	
 	
 /// GENERAL
-#define ntte_bloom
+#define ntte_draw_bloom
 	 // Canister Bloom:
 	if(instance_exists(CustomEnemy)){
 		var _inst = instances_matching(instances_matching(CustomEnemy, "name", "Angler", "AnglerGold"), "hiding", true);
@@ -4408,12 +4409,6 @@
 					QuasarBeam_draw_laser(_xsc * image_xscale, _ysc * image_yscale, _alp * image_alpha);
 				}
 			}*/
-		}
-		
-		 // Electroplasma:
-		var _inst = instances_matching(CustomProjectile, "name", "ElectroPlasma", "ElectroPlasmaBig");
-		if(array_length(_inst)) with(_inst){
-			draw_sprite_ext(sprite_index, image_index, x, y, image_xscale * 2, image_yscale * 2, image_angle, image_blend, image_alpha * 0.1);
 		}
 	}
 	
@@ -4479,7 +4474,7 @@
 		}
 	}
 	
-#define ntte_shadows
+#define ntte_draw_shadows
 	 // Squid-Launched Floor Chunks:
 	if(instance_exists(CustomObject)){
 		var _inst = instances_matching(instances_matching(CustomObject, "name", "TrenchFloorChunk"), "visible", true);
@@ -4491,7 +4486,7 @@
 		}
 	}
 	
-#define ntte_dark(_type)
+#define ntte_draw_dark(_type)
 	switch(_type){
 		
 		case "normal":
