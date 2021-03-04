@@ -1,3 +1,79 @@
+2.04 ~ 
+	
+	  @(sprite:menu/banners/sprHeartMain.png:1)
+	+	New loop boss for @rCrystal Heart @schunks
+	+	Golden Tunneller
+	+	Entangler weapon
+	+	Cuz pet
+	+	Reworked Parrot's active and ultra abilities
+	+	Angler Fish and Orchid Plant skins now reskin their golden weapons
+	+	Enormous significant optimizations
+	+	New API for custom pets
+	+	Cat chests can now spawn red weapon ammo
+	+	Elite eels now spawn lightning rings on death
+	~	Crown of Crime is now only a preloop crown
+	~	Crown of Bonus is now a loop crown
+	~	Bonus ammo's timer now stops ticking down when you enter a new level
+	~	Reduced the Popo Ambush event's intensity, and reduced its spawn chance
+	~	Improved Pizza Cutter's charge effects
+	~	Red weapons are now all charge weapons
+	~	Increased Annihilator's slash damage from 8 to 10
+	~	Reduced Annihilator's reload speed from 0.8 to 0.6 seconds
+	~	Increased Tunneller's orb damage by 50%
+	~	Laser Brain no longer increases the size of Tunneller's area chunks
+	~	Tweaked Tunneller's area chunk loot spawns
+	~	Increased Warp Zone's music volume a bit
+	~	Reduced the size of Crystal Heart area chunks by about 20%, but increased their enemy spawns
+	~	Reduced the chance for Warp Zone to lead to Crib
+	~	Reduced the spawn chance for Crystal Brains
+	~	Reduced how long Crystal Brain clones last
+	~	Reduced Twins pet's contact damage from 2 to 1
+	~	Reduced how much the Coast's ocean slows down the player
+	~	Improved the mod compatibility of Coast's ocean
+	~	Increased the Pelican enemy's weapon drop chance
+	~	Divers in palm tree forts now fall to their death when the tree is killed
+	~	Slightly increased the Cat enemy's pickup drop chance
+	~	Cat chest turrets no longer get turned into ammo chests by Crown of Love
+	*	Partial fix for shaders in GMS2 versions
+	*	Fixed multiple Crystal Hearts being able to spawn on a loop if none were found on a previous loop
+	*	Fixed Chaos Heart Coast area chunks spawning Parrot pets, and spawning without walls outside of Coast
+	*	Fixed Chaos Heart Oasis chunks spawning Slaughter pets
+	*	Fixed TechnoMancer never spawning from Chaos Heart Labs area chunks
+	*	Fixed vaults entered on the area right after Warp Zone sending you back to the area you entered Warp Zone on
+	*	Seal King's no longer pans the camera during their intro if an enemy is alive
+	*	Seal King no longer gets stuck in their intro due to mod incompatibilities
+	*	Fixed Seal King sometimes erroring on death
+	*	Fixed Albino Gator laser sights appearing below Coast's ocean when aiming down
+	*	Fixed Parrot pet hypersplashing in Coast's ocean if they were sitting too far out
+	*	Fixed rocks occasionally spawning over floors in Coast
+	*	Fixed Diver's death sprite being incorrectly offset
+	*	Fixed Hammerhead Sharks not supporting timescale quite right
+	*	Fixed Pit Squid's tentacles flashing multiple times when hurt
+	*	Fixed bonus ammo's HUD being offset incorrectly in co-op
+	*	Fixed charge weapons erroring if shot by non-players in other mods
+	*	Fixed Bat Disc Cannon's homing sprite being offset incorrectly
+	*	Fixed charmed enemies getting rid of i-frames from any enemies they touched
+	*	Fixed charmed Snipers aiming at the player until they're about to fire
+	*	Fixed charmed Crystal Brains not charming enemies they clone
+	*	Fixed charmed Campsite Bandits having partially green bandanas with shaders enabled
+	*	Fixed feathers appearing below charmed enemies when outlines are enabled
+	*	Fixed Parrot's "Best Area" stat breaking with areas that use custom sprites in their name
+	*	Fixed Parrot's "Loops" stat increasing when they visited a Crown Vault
+	*	Fixed the Revolver's swap sound getting randomly pitched after playing Parrot
+	*	Fixed Angler Fish skin's eye trails not quite lining up with their actual eyes
+	*	Fixed the Pizza Sewers manhole sometimes getting covered by Mom's pool
+	*	Fixed Lair manholes rarely appearing in the air above the player when on the ground
+	*	Fixed Silver Tongue being obtainable without fighting Big Shots
+	*	Fixed NT:TE's Pet and Scythe loading tips affecting the seed
+	*	Fixed pets running around during the Captain cutscene
+	*	Fixed pets getting occasionally getting stuck in walls
+	*	Fixed pets that don't exist appearing on the stats screen, if another mod tried to spawn one incorrectly
+	*	Fixed Prism pet having buggy duplications for a few weapons (Bat Disc guns, Clam Shield, etc.)
+	*	Fixed Golden Mimic pet appearing under weapon pickups when closed
+	*	Fixed Weapon Mimic pet not setting a cause of death for some melee attacks
+	*	Fixed Anomaly portals being able to spawn outside the level due to wall-top enemies
+	*	Fixed Super Ballguys not having a shadow
+	
 2.03 ~ Go for the Gold
 	
 	    @(sprite:menu/banners/sprGoldMain.png:1)

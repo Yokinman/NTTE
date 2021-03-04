@@ -2876,7 +2876,6 @@
 	}
 	else if(global.level_start){
 		global.level_start = false;
-		ntte_update();
 		level_start();
 	}
 	

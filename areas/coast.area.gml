@@ -113,6 +113,21 @@
 		flash = 0;
 	}
 	
+	 // No Walls:
+	if(GameCont.subarea > 0){
+		with(instances_matching(Wall, "area", mod_current)){
+			instance_delete(self);
+		}
+		
+		 // Spawn Rock Props:
+		with(TopSmall){
+			if(chance(1, 80)){
+				obj_create(bbox_center_x, bbox_center_y, "CoastDecal");
+			}
+			instance_delete(self);
+		}
+	}
+	
 	 // Subarea-Specific Spawns:
 	switch(GameCont.subarea){
 		
@@ -439,8 +454,8 @@
 	
 #define ntte_update(_newID, _genID)
 	if(area_active){
+		 // No Walls:
 		if(is_real(_genID)){
-			 // No Walls:
 			if(instance_exists(Wall)){
 				if(Wall.id > _genID){
 					with(instances_matching(instances_matching_gt(Wall, "id", _genID), "area", mod_current)){
@@ -452,18 +467,13 @@
 					visible = true;
 				}
 			}
-			if(instance_exists(FloorExplo) && FloorExplo.id > _genID){
-				with(instances_matching_gt(FloorExplo, "id", _genID)){
+			if(instance_exists(TopSmall) && TopSmall.id > _genID){
+				with(instances_matching_gt(TopSmall, "id", _genID)){
 					instance_delete(self);
 				}
 			}
-			
-			 // Spawn Rock Props:
-			if(instance_exists(TopSmall) && TopSmall.id > _genID){
-				with(instances_matching_gt(TopSmall, "id", _genID)){
-					if(chance(1, 80)){
-						obj_create(bbox_center_x, bbox_center_y, "CoastDecal");
-					}
+			if(instance_exists(FloorExplo) && FloorExplo.id > _genID){
+				with(instances_matching_gt(FloorExplo, "id", _genID)){
 					instance_delete(self);
 				}
 			}
