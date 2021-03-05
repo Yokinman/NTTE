@@ -1067,7 +1067,7 @@
 				
 				 // Dim Screen:
 				draw_set_color(c_black);
-				draw_set_alpha(0.75);
+				draw_set_alpha(0.8);
 				draw_rectangle(_vx, _vy, _vx + _gw, _vy + _gh, false);
 				draw_set_alpha(1);
 				

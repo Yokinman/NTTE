@@ -142,16 +142,16 @@
 #macro charm_instance_vars global.charm_instance_vars
 #macro charm_bind_draw     global.charm_bind_draw
 #macro charm_vars          {
-	"charmed" : false, // Currently charmed, true/false
-	"on_step" : [],    // Custom-type object's original step event
-	"target"  : noone, // The charmed enemy's custom target
-	"team"    : 2,     // Original team before charming
-	"time"    : -1,    // Charm duration in frames
-	"index"   : -1,    // Player who charmed
-	"kill"    : false, // Kill when uncharmed
-	"feather" : false  // Was charmed using feathers
-}
-
+		"charmed" : false, // Currently charmed, true/false
+		"on_step" : [],    // Custom-type object's original step event
+		"target"  : noone, // The charmed enemy's custom target
+		"team"    : 2,     // Original team before charming
+		"time"    : -1,    // Charm duration in frames
+		"index"   : -1,    // Player who charmed
+		"kill"    : false, // Kill when uncharmed
+		"feather" : false  // Was charmed using feathers
+	}
+	
 /// General
 #define race_name              return "PARROT";
 #define race_text              return "MANY FRIENDS#@rCHARM ENEMIES";
@@ -346,7 +346,7 @@
 	sprite_index = race_sprite_raw("Loadout", _skin);
 	image_index = !race_skin_avail(_skin);
 	
-
+	
 /// Ultras
 #macro ult_feather 1
 #macro ult_flock   2
@@ -822,21 +822,6 @@
 			var _vars = _varsList[_instNum++];
 			if(_vars.charmed){
 				if(instance_exists(self)){
-					if(instance_is(self, hitme) || instance_is(self, becomenemy)){
-						 // Level Over:
-						if(_vars.kill && instance_is(self, enemy) && !array_length(instances_matching_ne(instances_matching_ne(enemy, "team", team), "object_index", Van))){
-							charm_instance(self, false);
-						}
-						
-						 // Charm Timer:
-						else if(_vars.time >= 0){
-							_vars.time -= min(_vars.time, current_time_scale);
-							if(_vars.time <= 0 && instance_is(self, hitme)){
-								charm_instance(self, false);
-							}
-						}
-					}
-					
 					 // Main Code:
 					if("ntte_charm_override" not in self || !ntte_charm_override){
 						var	_lastDir  = direction,
@@ -875,7 +860,7 @@
 							}
 						}
 						
-						 // Custom (Replace Step Event):
+						 // Custom (Override Step Event):
 						if(_isCustom){
 							if(!array_length(_vars.on_step) && is_array(on_step)){
 								_vars.on_step = on_step;
@@ -1019,30 +1004,13 @@
 							switch(object_index){
 								
 								case BigMaggot:
+									
 									if(
 										alarm1 < 0
 										&& instance_exists(_vars.target)
 										&& !collision_line(x, y, _vars.target.x, _vars.target.y, Wall, false, false)
 									){
 										alarm1 = 900; // JW u did this to me
-									}
-								case MaggotSpawn:
-								case JungleFly:
-								case FiredMaggot:
-								case RatkingRage:
-								case InvSpider:
-									
-									 // Charm Spawned Bros:
-									if(
-										my_health <= 0
-										|| (object_index == FiredMaggot && place_meeting(x + hspeed_raw, y + vspeed_raw, Wall))
-										|| (object_index == RatkingRage && walk > 0 && walk <= current_time_scale)
-									){
-										var _minID = instance_max;
-										instance_destroy();
-										with(instances_matching_gt(charm_object, "id", _minID)){
-											creator = other;
-										}
 									}
 									
 									break;
@@ -1191,8 +1159,8 @@
 						_vars.on_step = [];
 					}
 					
-					 // <3
-					if(instance_exists(self)){
+					if(instance_is(self, hitme) || instance_is(self, becomenemy)){
+						 // <3
 						if(random(200) < current_time_scale){
 							with(instance_create(x + orandom(8), y - random(8), AllyDamage)){
 								sprite_index  = sprHealFX;
@@ -1202,8 +1170,49 @@
 								speed /= 2;
 							}
 						}
+						
+						 // Level Over:
+						if(_vars.kill && instance_is(self, enemy) && !array_length(instances_matching_ne(instances_matching_ne(enemy, "team", team), "object_index", Van))){
+							charm_instance(self, false);
+						}
+						
+						 // Charm Timer:
+						else if(_vars.time >= 0){
+							_vars.time -= min(_vars.time, current_time_scale);
+							if(_vars.time <= 0 && instance_is(self, hitme)){
+								charm_instance(self, false);
+							}
+						}
+						
+						 // Charm Bros Spawned on Death:
+						switch(object_index){
+							
+							case BigMaggot:
+							case MaggotSpawn:
+							case JungleFly:
+							case FiredMaggot:
+							case RatkingRage:
+							case InvSpider:
+								
+								if(
+									my_health <= 0
+									|| (object_index == FiredMaggot && place_meeting(x + hspeed_raw, y + vspeed_raw, Wall))
+									|| (object_index == RatkingRage && walk > 0 && walk <= current_time_scale)
+								){
+									var _minID = instance_max;
+									instance_destroy();
+									with(instances_matching_gt(charm_object, "id", _minID)){
+										creator = other;
+									}
+								}
+								
+								break;
+								
+						}
 					}
-					else _vars.charmed = false;
+					else if(!instance_exists(self)){
+						_vars.charmed = false;
+					}
 				}
 				else _vars.charmed = false;
 			}
@@ -1356,8 +1365,16 @@
 			
 			 // Charm:
 			if(_charm){
+				 // Override Step Event:
+				if(string_pos("Custom", object_get_name(object_index)) == 1){
+					if(!array_length(_vars.on_step) && is_array(on_step)){
+						_vars.on_step = on_step;
+						on_step = script_ref_create(charm_obj_step);
+					}
+				}
+				
 				 // Delay Alarms:
-				for(var i = 0; i <= 10; i++){
+				else for(var i = 0; i <= 10; i++){
 					if(alarm_get(i) > 0){
 						alarm_set(i, alarm_get(i) + 1);
 					}
@@ -1421,7 +1438,7 @@
 					sprite_index = sprNecroReviveArea;
 				}
 				
-				 // Reset Step:
+				 // Reset Step Event:
 				if(array_length(_vars.on_step)){
 					on_step = _vars.on_step;
 					_vars.on_step = [];
@@ -1605,33 +1622,36 @@
 	}
 	
 #define charm_obj_step
-	var	_vars      = ntte_charm,
-		_minID     = instance_max,
-		_playerPos = charm_target(_vars);
-		
-	 // Call Step Event:
-	on_step = _vars.on_step;
-	if(fork()){
-		script_ref_call(on_step);
-		exit;
-	}
-	
-	 // Return Moved Players:
-	with(_playerPos){
-		with(self[0]){
-			x = other[1];
-			y = other[2];
+	var _vars = ntte_charm;
+	if(array_length(_vars.on_step) >= 3){
+		var	_minID     = instance_max,
+			_playerPos = charm_target(_vars);
+			
+		 // Call Step Event:
+		if(fork()){
+			on_step = _vars.on_step;
+			_vars.on_step = [];
+			script_ref_call(on_step);
+			exit;
 		}
+		
+		 // Return Moved Players:
+		with(_playerPos){
+			with(self[0]){
+				x = other[1];
+				y = other[2];
+			}
+		}
+		
+		 // Reset Step:
+		if(instance_exists(self)){
+			_vars.on_step = on_step;
+			on_step = script_ref_create(charm_obj_step);
+		}
+		
+		 // Grab Spawned Things:
+		charm_grab(_vars, _minID);
 	}
-	
-	 // Reset Step:
-	if(instance_exists(self)){
-		_vars.on_step = on_step;
-		on_step = script_ref_create(charm_obj_step);
-	}
-	
-	 // Grab Spawned Things:
-	charm_grab(_vars, _minID);
 	
 #define charm_draw(_inst, _index)
 	/*

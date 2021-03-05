@@ -22,6 +22,8 @@
 		"chrg_max" : 9
 	};
 	
+#macro spr global.spr
+
 #define cleanup
 	mod_script_call("mod", "teassets", "ntte_cleanup", script_ref_create(cleanup));
 	
@@ -110,10 +112,11 @@
 				with(instance_create(
 					x + hspeed_raw + lengthdir_x(_l, _d) + lengthdir_x(wepflip * 2, _d - 90),
 					y + vspeed_raw + lengthdir_y(_l, _d) + lengthdir_y(wepflip * 2, _d - 90),
-					ImpactWrists
+					DiscTrail
 				)){
-					image_index = 2;
-					depth       = other.depth - 1;
+					sprite_index = spr.BigDiscTrail;
+					image_speed  = 0.4;
+					depth        = other.depth - 1;
 				}
 				sleep(5);
 			}
