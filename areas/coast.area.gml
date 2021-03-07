@@ -818,22 +818,26 @@
 			}
 			
 			 // Walk into Sea for Next Level:
-			var _nearest = instance_nearest(x, y, Portal);
-			if(instance_exists(_nearest) && _nearest.endgame >= 100){
-				if(wading > 120 || !instance_exists(Floor)){
-					if(_nearest.type == 1){
-						_nearest.x      = x;
-						_nearest.y      = y;
-						_nearest.xstart = x;
-						_nearest.ystart = y;
+			if(instance_exists(Portal)){
+				var _nearest = instance_nearest(x, y, Portal);
+				if(instance_exists(_nearest)){
+					if(_nearest.endgame >= 100){
+						if(wading > 120 || !instance_exists(Floor)){
+							if(_nearest.type == 1){
+								_nearest.x      = x;
+								_nearest.y      = y;
+								_nearest.xstart = x;
+								_nearest.ystart = y;
+							}
+							else{
+								instance_create(x, y, Portal);
+							}
+						}
 					}
-					else{
-						instance_create(x, y, Portal);
+					else if(wading_sink >= 0){
+						wading_sink += 0.6 * current_time_scale;
 					}
 				}
-			}
-			else if(wading_sink >= 0){
-				wading_sink += 0.6 * current_time_scale;
 			}
 		}
 		
