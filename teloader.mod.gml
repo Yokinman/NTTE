@@ -50,6 +50,7 @@
 			"skins/angler fish.skin.gml",
 			"skins/red crystal.skin.gml",
 			"skins/orchid plant.skin.gml",
+			"skins/cool frog.skin.gml",
 			"skills/compassion.skill.gml",
 			"skills/silver tongue.skill.gml",
 			"skills/reroll.skill.gml",

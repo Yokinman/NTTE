@@ -1339,6 +1339,11 @@
 				}
 			}
 			
+			 // COOL:
+			if(combo >= 100 && player_count_race(char_frog) > 0){
+				unlock_set("skin:cool frog", true);
+			}
+			
 			 // Poop Time:
 			var _add = floor(combo / 5);
 			if(_add > 0){

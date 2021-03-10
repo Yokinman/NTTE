@@ -11,13 +11,37 @@
 
 #define skin_race      return "frog";
 #define skin_name      return ((argument_count <= 0 || argument0) ? "COOL" : skin_lock());
-#define skin_lock      return "???";
-#define skin_unlock    return "???";
-#define skin_ttip      return "???";
-#define skin_avail     return unlock_get("skin:" + mod_current) || 1;
+#define skin_lock      return `REACH @q@(color:${make_color_rgb(255, 110, 25)})COMBO x100`;
+#define skin_unlock    return `REACHED @q@(color:${make_color_rgb(255, 110, 25)})COMBO x100`;
+#define skin_avail     return unlock_get("skin:" + mod_current);
 #define skin_portrait  return skin_sprite(sprBigPortrait);
 #define skin_mapicon   return skin_sprite(sprMapIcon);
 
+#define skin_ttip
+	return (
+		(chance(1, 5) && GameCont.level >= 10)
+		? choose(
+			"SLIME TIME",
+			"TOO MUCH PIZZA",
+			"MAKE SURE YOU FLUSH",
+			"WANNA SEE A FROG?",
+			`@q@(color:${choose(make_color_rgb(255, 230, 70), make_color_rgb(50, 210, 255), make_color_rgb(255, 110, 25), make_color_rgb(255, 110, 150))})COMBO x${GameCont.kills}`
+		)
+		: choose(
+			"JUST A COOL FROG",
+			"WHAT THE COOL",
+			"TOO COOL FOR SCHOOL",
+			"STRAIGHT FROM THE SEWERS",
+			"ROCKIN' THE SHADES",
+			"FROGGING AROUND",
+			(
+				array_length(instances_matching(instances_matching(CustomHitme, "name", "Pet"), "pet", "CoolGuy"))
+				? `@(color:${make_color_rgb(255, 110, 150)})FUNKY`
+				: ""
+			)
+		)
+	);
+	
 #define skin_button
 	sprite_index = skin_sprite(sprLoadoutSkin);
 	image_index  = !skin_avail();

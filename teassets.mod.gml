@@ -1748,6 +1748,10 @@
 		//#region SKINS
 		m = "skins/";
 			
+			 // Frog Icon ENHANCED:
+			p = "sprites/" + m;
+			sprite_replace_image(sprLoadoutSkin, p + "sprFrogLoadout.png", 28);
+			
 			//#region ANGLER FISH
 			var p = m + "FishAngler/";
 				
@@ -1822,24 +1826,24 @@
 			//	YVCoatMapIcon  = sprite(p + "sprYVCoatMapIcon",  1, 10,  10);
 			//	
 			////#endregion
-			//
-			////#region COOL FROG
-			//var p = m + "FrogCool/";
-			//	
-			//	 // Player:
-			//	FrogCoolIdle  = sprite(p + "sprFrogCoolIdle",  6, 12, 12);
-			//	FrogCoolWalk  = sprite(p + "sprFrogCoolWalk",  6, 12, 12);
-			//	FrogCoolHurt  = sprite(p + "sprFrogCoolHurt",  3, 12, 12);
-			//	FrogCoolDead  = sprite(p + "sprFrogCoolDead",  6, 24, 24);
-			//	FrogCoolGoSit = sprite(p + "sprFrogCoolGoSit", 3, 12, 12);
-			//	FrogCoolSit   = sprite(p + "sprFrogCoolSit",   6, 12, 12);
-			//	
-			//	 // Menu:
-			//	FrogCoolPortrait = sprite(p + "sprFrogCoolPortrait", 1, 40, 243);
-			//	FrogCoolLoadout  = sprite(p + "sprFrogCoolLoadout",  2, 16,  16);
-			//	FrogCoolMapIcon  = sprite(p + "sprFrogCoolMapIcon",  1, 10,  10);
-			//	
-			////#endregion
+			
+			//#region COOL FROG
+			var p = m + "FrogCool/";
+				
+				 // Player:
+				FrogCoolIdle  = sprite(p + "sprFrogCoolIdle",  6, 12, 12);
+				FrogCoolWalk  = sprite(p + "sprFrogCoolWalk",  6, 12, 12);
+				FrogCoolHurt  = sprite(p + "sprFrogCoolHurt",  3, 12, 12);
+				FrogCoolDead  = sprite(p + "sprFrogCoolDead",  6, 24, 24);
+				FrogCoolGoSit = sprite(p + "sprFrogCoolGoSit", 3, 12, 12);
+				FrogCoolSit   = sprite(p + "sprFrogCoolSit",   6, 12, 12);
+				
+				 // Menu:
+				FrogCoolPortrait = sprite(p + "sprFrogCoolPortrait", 1, 40, 243);
+				FrogCoolLoadout  = sprite(p + "sprFrogCoolLoadout",  2, 16,  16);
+				FrogCoolMapIcon  = sprite(p + "sprFrogCoolMapIcon",  1, 10,  10);
+				
+			//#endregion
 			
 			//#region ORCHID PLANT
 			var p = m + "PlantOrchid/";

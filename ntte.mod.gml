@@ -2680,6 +2680,17 @@
 				else if("ntte_foot_time" in self){
 					ntte_foot_time = 0;
 				}
+				
+			// UNUSED FROG SOUNDS:
+				if(frogcharge > 3){
+					if(alarm3 > 0 && alarm3 <= ceil(current_time_scale)){
+						var _butt = (skill_get(mut_throne_butt) > 0);
+						sound_play_hit(_butt ? sndFrogGasReleaseButt : sndFrogGasRelease, 0.1);
+						if(frogcharge > 30){
+							sound_play_hit(_butt ? sndFrogEndButt : sndFrogEnd, 0.1);
+						}
+					}
+				}
 		}
 	}
 	
