@@ -1,7 +1,7 @@
 "path" : {
 	"skills/" : ["annihilation.skill", "bat ears.skill", "compassion.skill", "lead ribs.skill", "magnetic pulse.skill", "reroll.skill", "silver tongue.skill", "toad breath.skill"],
 	"crowns/" : ["bonus.crown", "crime.crown", "red.crown"],
-	"skins/"  : ["angler fish.skin", "bat eyes.skin", "bonus robot.skin", "coat venuz.skin", "orchid plant.skin", "red crystal.skin"]
+	"skins/"  : ["angler fish.skin", "bat eyes.skin", "bonus robot.skin", "coat venuz.skin", "cool frog.skin", "orchid plant.skin", "red crystal.skin"]
 },
 
 "script" : "
