@@ -8,16 +8,15 @@
 #define cleanup
 	mod_script_call("mod", "teassets", "ntte_cleanup", script_ref_create(cleanup));
 	
-#define weapon_name   return (weapon_avail() ? "VENOM RIFLE" : "LOCKED");
-#define weapon_text   return "A PIERCING STING";
-#define weapon_swap   return sndSwapMachinegun;
-#define weapon_sprt   return (weapon_avail() ? global.sprWep : global.sprWepLocked);
-#define weapon_area   return (weapon_avail() ? 7 : -1); // 3-2
-#define weapon_type   return type_bullet;
-#define weapon_cost   return 2;
-#define weapon_load   return 3; // 0.1 Seconds
-#define weapon_auto   return true;
-#define weapon_avail  return true;
+#define weapon_name  return (weapon_avail() ? "VENOM RIFLE" : "LOCKED");
+#define weapon_text  return "A PIERCING STING";
+#define weapon_swap  return sndSwapMachinegun;
+#define weapon_sprt  return (weapon_avail() ? global.sprWep : global.sprWepLocked);
+#define weapon_area  return (weapon_avail() ? 7 : -1); // 3-2
+#define weapon_type  return type_bullet;
+#define weapon_cost  return 2;
+#define weapon_load  return 3; // 0.1 Seconds
+#define weapon_auto  return true;
 
 #define weapon_fire(_wep)
 	var _fire = weapon_fire_init(_wep);

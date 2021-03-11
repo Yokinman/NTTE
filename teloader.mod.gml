@@ -68,6 +68,7 @@
 			"weps/scythe.wep.gml",
 			"weps/teleport gun.wep.gml",
 			"weps/super teleport gun.wep.gml",
+			"weps/rogue carbine.wep.gml",
 			"weps/energy bat.wep.gml",
 			"weps/annihilator.wep.gml",
 			"weps/entangler.wep.gml",

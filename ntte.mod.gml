@@ -304,28 +304,48 @@
 	*/
 	
 	 // Backpack Setpieces:
-	var	_canBackpack = chance(1 + (2 * skill_get(mut_last_wish)), 12),
-		_forceSpawn  = (GameCont.area == area_campfire);
-		
-	if(GameCont.hard > 4 && ((_canBackpack && _normalArea && GameCont.area != area_hq) || _forceSpawn)){
-		with(array_shuffle(FloorNormal)){
-			if(distance_to_object(Player) > 80){
-				if(!place_meeting(x, y, hitme) && !place_meeting(x, y, chestprop)){
-					 // Backpack:
-					if(!_forceSpawn or 
-					  (array_length(instances_matching(Player, "wep", wep_rogue_rifle)) = 0 and 
-					   array_length(instances_matching(Player, "bwep", wep_rogue_rifle)) = 0)) {
-						chest_create(bbox_center_x + orandom(4), bbox_center_y - 6, "Backpack", true);
+	if(GameCont.hard > 4 && GameCont.area != area_hq){
+		if(GameCont.area == area_campfire || (chance(1 + (2 * skill_get(mut_last_wish)), 12) && _normalArea)){
+			with(array_shuffle(FloorNormal)){
+				if(
+					distance_to_object(Player) > 80
+					&& !place_meeting(x, y, hitme)
+					&& !place_meeting(x, y, chestprop)
+				){
+					var _rogue = 0;
+					
+					 // Find Rogue / Rogue Rifle:
+					if(GameCont.area == area_campfire){
+						with(instances_matching_ne([Player, Revive], "id", null)){
+							if(
+								(race_get_name(race) == "rogue" && GameCont.loops <= 1)
+								|| wep_raw(wep)  == wep_rogue_rifle
+								|| wep_raw(bwep) == wep_rogue_rifle
+							){
+								_rogue++;
+							}
+						}
 					}
-					
-					else chest_create(bbox_center_x + orandom(4), bbox_center_y - 6, "Strikepack", true);
-					
-					instance_create(bbox_center_x, bbox_center_y, PortalClear);
 					
 					 // Flavor Corpse:
-					if(GameCont.area != area_campfire){
-						obj_create(bbox_center_x + orandom(8), bbox_center_y + irandom(8), "Backpacker");
+					else obj_create(
+						bbox_center_x + orandom(8),
+						bbox_center_y + irandom(8),
+						"Backpacker"
+					);
+					
+					 // Backpack:
+					repeat((_rogue > 0) ? _rogue : 1){
+						chest_create(
+							bbox_center_x + orandom(4),
+							bbox_center_y - 6 + orandom(min(4, _rogue)),
+							(_rogue ? "RogueBackpack" : "Backpack"),
+							true
+						);
 					}
+					
+					 // Clear Walls:
+					instance_create(bbox_center_x, bbox_center_y, PortalClear);
 					
 					break;
 				}

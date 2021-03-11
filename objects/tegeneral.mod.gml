@@ -1568,6 +1568,7 @@
 		damage     = 3;
 		force      = 8;
 		typ        = 1;
+		gland      = 0;
 		
 		return self;
 	}
@@ -1575,6 +1576,27 @@
 #define CustomBullet_anim
 	image_index = image_number - 1;
 	image_speed = 0;
+	
+#define CustomBullet_hit
+	if(projectile_canhit(other)){
+		 // Recycle Gland:
+		if(gland != 0 && instance_is(creator, Player)){
+			if(chance(3 * skill_get(mut_recycle_gland), 5)){
+				var	_ammo = creator.ammo[type_bullet],
+					_amax = creator.typ_amax[type_bullet];
+					
+				if(_ammo < _amax){
+					creator.ammo[type_bullet] = min(_ammo + gland, _amax);
+					instance_create(x, y, RecycleGland);
+					sound_play_hit(sndRecGlandProc, 0.1);
+				}
+			}
+		}
+		
+		 // Damage:
+		projectile_hit_push(other, damage, force);
+		instance_destroy();
+	}
 	
 #define CustomBullet_wall
 	instance_create(x, y, Dust);

@@ -17,6 +17,11 @@
 #macro lag global.debug_lag
 
 #define Backpack_create(_x, _y)
+	/*
+		Goody bag chest
+		Gives ammo, HP, rads, a merged weapon, and restores strong spirit
+	*/
+	
 	with(obj_create(_x, _y, "CustomChest")){
 		 // Visual:
 		sprite_index = spr.Backpack;
@@ -28,7 +33,7 @@
 		snd_open = choose(sndMenuASkin, sndMenuBSkin);
 		
 		 // Vars:
-		num = 2;
+		num     = 2;
 		raddrop = 8;
 		
 		 // Cursed:
@@ -59,8 +64,10 @@
 	
 #define Backpack_open
 	 // Sound:
-	if(curse > 0) sound_play(sndCursedChest);
 	sound_play_pitchvol(sndPickupDisappear, 1 + orandom(0.4), 2);
+	if(curse > 0){
+		sound_play(sndCursedChest);
+	}
 	
 	 // Weapon:
 	var _wepNum = 1 + ultra_get("steroids", 1);
@@ -204,7 +211,7 @@
 			with(instances_matching_gt([Pickup, chestprop, hitme], "id", _minID)){
 				with(obj_create(x, y, "BackpackPickup")){
 					direction = _dir;
-					target = other;
+					target    = other;
 					with(self){
 						event_perform(ev_step, ev_step_end);
 					}
@@ -4232,6 +4239,86 @@
 	}
 	
 	
+#define RogueBackpack_create(_x, _y)
+	/*
+		Rogue's backpack in chest form, spawns portal strike ammo and upgrades IDPD tech
+	*/
+	
+	with(obj_create(_x, _y, "CustomChest")){
+		 // Visual:
+		sprite_index = spr.RogueBackpack;
+		spr_dead     = spr.RogueBackpackOpen;
+		spr_shadow   = shd16;
+		spr_shadow_y = 2;
+		
+		 // Sounds:
+		snd_open = choose(sndMenuASkin, sndMenuBSkin);
+		
+		 // Vars:
+		num = 2;
+		
+		 // Events:
+		on_open = script_ref_create(RogueBackpack_open);
+		
+		return self;
+	}
+	
+#define RogueBackpack_open
+	 // Sound:
+	if(snd_open == sndMenuASkin || snd_open == sndMenuBSkin){
+		sound_play_pitch(sndWeaponChest, 0.5);
+	}
+	
+	 // Strike Ammo:
+	if(num > 0){
+		var _ang = random(360);
+		for(var _dir = _ang; _dir < _ang + 360; _dir += (360 / num)){
+			with(instance_create(x, y, RoguePickup)){
+				with(obj_create(x, y, "BackpackPickup")){
+					direction = _dir;
+					target    = other;
+					with(self){
+						event_perform(ev_step, ev_step_end);
+					}
+				}
+			}
+		}
+	}
+	
+	 // Upgrade Rogue Rifle:
+	if(instance_is(other, Player)){
+		with(other){
+			var _wep = "rogue carbine";
+			if(wep_raw(wep) == wep_rogue_rifle){
+				wep       = _wep;
+				drawempty = 30;
+				swapmove  = 1;
+			}
+			else if(wep_raw(bwep) == wep_rogue_rifle){
+				bwep       = _wep;
+				drawemptyb = 30;
+			}
+			else _wep = wep_none;
+			
+			 // Swapped:
+			if(_wep != wep_none){
+				pickup_text(weapon_get_name(_wep) + "!", 0);
+				
+				 // Explosion:
+				with(projectile_create(other.x, other.y, PopoExplosion, 0, 0)){
+					sprite_index = sprRogueExplosion;
+					mask_index   = mskExplosion;
+				}
+				sound_play_hit_big(sndIDPDNadeExplo, 0.2);
+				
+				 // Sounds:
+				sound_play(snd_chst);
+				sound_play_pitch(weapon_get_swap(_wep), 0.6);
+			}
+		}
+	}
+	
+	
 #define SpiritPickup_create(_x, _y)
 	with(obj_create(_x, _y, "CustomPickup")){
 		 // Visual:
@@ -4315,71 +4402,6 @@
 	
 #define SpiritPickup_pull
 	return (pull_delay <= 0);
-	
-	
-#define Strikepack_create(_x, _y)
-	with(obj_create(_x, _y, "Backpack")) {
-		curse = 0;
-		on_open = script_ref_create(Strikepack_open);
-	}
-	
-#define Strikepack_open
-	 // Strike ammo and rifle:
-	if(instance_is(other, Player)) {
-		with(Player) {
-			if(wep == wep_rogue_rifle) wep = "roguecarbine";
-			else if(bwep == wep_rogue_rifle) wep = "roguecarbine";
-			
-			with(instance_create(x, y, PopupText)) {
-				mytext = "@bUPGRADED RIFLE";
-			}
-		}
-		
-		var _rogueAmount = 0,
-			_nearRogue = instance_nearest_array(x, y, instances_matching(Player, "race", "rogue"));
-		
-		
-		with(_nearRogue) {
-			_rogueAmount = min(2 * (ultra_get("rogue", 1) + 1), (3 + ultra_get("rogue", 2) - rogueammo));
-			rogueammo += _rogueAmount;
-		}
-		
-		var _rogueText = `+${_rogueAmount} PORTAL STRIKES`;
-		
-		if(_rogueAmount < 2 * (ultra_get("rogue", 1) + 1)) {
-			if(array_length(instances_matching(Player, "race", "rogue")) = 0) _rogueText = "";
-			else _rogueText = "MAX PORTAL STRIKES";
-		}
-		
-		if(_rogueText != "") with(instance_create(x, y, PopupText)) {
-			mytext = _rogueText;
-		}
-	}
-	else {
-		repeat(2) {
-			instance_create(x, y, RoguePickup);
-		}
-		
-		with(instance_create(x, y, WepPickup)) {
-			wep = "roguecarbine";
-			ammo = true;
-		}
-	}
-	
-	with(instance_create(x, y, SmallExplosion)) {
-		damage = 0;
-		sprite_index = sprPopoExplo;
-		mask_index = mskNone;
-		image_xscale = 0.2;
-		image_yscale = 0.2;
-	}
-	
-	 // Effects:
-	sound_play_pitchvol(sndRogueCanister, 0.7, 0.7);
-	sound_play_pitch(sndWeaponChest,      0.5);
-	sound_play_pitch(sndRogueAim,         1.8);
-	sound_play_pitch(sndIDPDNadeLoad,     2.4);
-	sound_play_pitch(sndSwapMachinegun, 0.6);
 	
 	
 #define SunkenChest_create(_x, _y)

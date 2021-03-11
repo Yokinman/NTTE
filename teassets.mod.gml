@@ -173,10 +173,6 @@
 				mask = [true, 0];
 			}
 			
-			 // Heavy Popo Bullet:
-			PopoHeavyBullet    = sprite(p + "sprPopoHeavyBullet", 2, 12, 12);
-			PopoHeavyBulletHit = sprite(p + "sprPopoHeavyBulletHit", 4, 12, 12);
-			
 			 // Portal Bullet:
 			PortalBullet          = sprite(p + "sprPortalBullet",          4, 12, 12);
 			PortalBulletHit       = sprite(p + "sprPortalBulletHit",       4, 16, 16);
@@ -243,6 +239,8 @@
 			EnemyPlasmaTrail        = sprite(p + "sprEnemyPlasmaTrail",        3,  4,  4);
 			AllySniperBullet        = sprite(p + "sprAllySniperBullet",        2,  6,  8);
 			AllyLaserCharge         = sprite(p + "sprAllyLaserCharge",         4,  3,  3);
+			IDPDHeavyBullet         = sprite(p + "sprIDPDHeavyBullet",         2, 12, 12);
+			IDPDHeavyBulletHit      = sprite(p + "sprIDPDHeavyBulletHit",      4, 12, 12);
 			
 		//#endregion
 		
@@ -1632,6 +1630,10 @@
 			ButtonPickup       = sprite(p + "sprButtonPickup",       1, 6, 6, shn12);
 			ButtonPickupDebris = sprite(p + "sprButtonPickupDebris", 2, 6, 6);
 			
+			 // Orchid Chest:
+			OrchidChest     = sprite(p + "sprOrchidChest",     1, 12, 8, shn24);
+			OrchidChestOpen = sprite(p + "sprOrchidChestOpen", 1, 12, 8);
+			
 			 // Red Ammo:
 			RedAmmoChest       = sprite(p + "sprRedAmmoChest",       1, 8, 8, shn16);
 			RedAmmoChestOpen   = sprite(p + "sprRedAmmoChestOpen",   1, 8, 8);
@@ -1647,23 +1649,23 @@
 			RedChest     = sprite(p + "sprRedChest",     1, 8, 8, shn16);
 			RedChestOpen = sprite(p + "sprRedChestOpen", 1, 8, 8);
 			
-			 // Orchid Chest:
-			OrchidChest     = sprite(p + "sprOrchidChest",     1, 12, 8, shn24);
-			OrchidChestOpen = sprite(p + "sprOrchidChestOpen", 1, 12, 8);
+			 // Rogue Backpack:
+			RogueBackpack     = sprite(p + "sprRogueBackpack",     1, 8, 8, shn16);
+			RogueBackpackOpen = sprite(p + "sprRogueBackpackOpen", 1, 8, 8, shn16);
 			
 			 // Spirit Pickup:
 			SpiritPickup = sprite(p + "sprSpiritPickup", 1, 5, 5, shn10);
-			
-			 // Hammerhead Pickup:
-			HammerHeadPickup            = sprite(p + "sprHammerHeadPickup",            1,  5, 5, shn10);
-			HammerHeadPickupEffect      = sprite(p + "sprHammerHeadPickupEffect",      3, 16, 8);
-			HammerHeadPickupEffectSpawn = sprite(p + "sprHammerHeadPickupEffectSpawn", 9, 16, 8);
 			
 			 // Sunken Chest:
 			SunkenChest     = sprite(p + "sprSunkenChest",     1, 12, 12, shn24);
 			SunkenChestOpen = sprite(p + "sprSunkenChestOpen", 1, 12, 12);
 			SunkenCoin      = sprite(p + "sprCoin",            1,  3,  3, shn8);
 			SunkenCoinBig   = sprite(p + "sprCoinBig",         1,  3,  3, shn8);
+			
+			 // Hammerhead Pickup:
+			HammerHeadPickup            = sprite(p + "sprHammerHeadPickup",            1,  5, 5, shn10);
+			HammerHeadPickupEffect      = sprite(p + "sprHammerHeadPickupEffect",      3, 16, 8);
+			HammerHeadPickupEffectSpawn = sprite(p + "sprHammerHeadPickupEffectSpawn", 9, 16, 8);
 			
 			 // Lead Ribs Upgraded Rads:
 			RadUpg    = sprite(p + "sprRadUpg",    1, 5, 5, shn10);

@@ -12,7 +12,7 @@
 	 // Object List (Used for cheats mod, basically):
 	ntte_obj_list = ds_map_create();
 	ntte_obj_list[? "tegeneral"  ] = ["AlertIndicator", "BigDecal", "BigIDPDSpawn", "BoneArrow", "BoneSlash", "BoneFX", "BuriedVault", "BuriedShrine", "CustomBullet", "CustomFlak", "CustomShell", "CustomPlasma", "GroundFlameGreen", "Igloo", "MergeFlak", "Pet", "PetRevive", "PetWeaponBecome", "PetWeaponBoss", "PortalPrevent", "ReviveNTTE", "SmallGreenExplosion", "TopDecal", "TopObject", "TopTiny", "WallDecal", "WallEnemy"];
-	ntte_obj_list[? "tepickups"  ] = ["Backpack", "Backpacker", "BackpackPickup", "BatChest", /*"BloodLustPickup",*/ "BoneBigPickup", "BonePickup", "BonusAmmoChest", "BonusAmmoMimic", "BonusAmmoPickup", "BonusHealthChest", "BonusHealthMimic", "BonusHealthPickup", "BuriedVaultChest", "BuriedVaultChestDebris", "BuriedVaultPedestal", "CatChest", "ChestShop", "CursedAmmoChest", "CursedMimic", "CustomChest", "CustomPickup", "GatorStatue", "GatorStatueFlak", "HammerHeadPickup", "HarpoonPickup", "OrchidBall", "OrchidChest", "OrchidSkill", "PalaceAltar", "ParrotFeather", "ParrotChester", "Pizza", "PizzaChest", "PizzaStack", "Prompt", "RedAmmoChest", "RedAmmoPickup", "SpiritPickup", "Strikepack", "SunkenChest", "SunkenCoin", "VaultFlower", "VaultFlowerSparkle", "WepPickupGrounded", "WepPickupStick"];
+	ntte_obj_list[? "tepickups"  ] = ["Backpack", "Backpacker", "BackpackPickup", "BatChest", /*"BloodLustPickup",*/ "BoneBigPickup", "BonePickup", "BonusAmmoChest", "BonusAmmoMimic", "BonusAmmoPickup", "BonusHealthChest", "BonusHealthMimic", "BonusHealthPickup", "BuriedVaultChest", "BuriedVaultChestDebris", "BuriedVaultPedestal", "CatChest", "ChestShop", "CursedAmmoChest", "CursedMimic", "CustomChest", "CustomPickup", "GatorStatue", "GatorStatueFlak", "HammerHeadPickup", "HarpoonPickup", "OrchidBall", "OrchidChest", "OrchidSkill", "PalaceAltar", "ParrotFeather", "ParrotChester", "Pizza", "PizzaChest", "PizzaStack", "Prompt", "RedAmmoChest", "RedAmmoPickup", "RogueBackpack", "SpiritPickup", "SunkenChest", "SunkenCoin", "VaultFlower", "VaultFlowerSparkle", "WepPickupGrounded", "WepPickupStick"];
 	ntte_obj_list[? "tedesert"   ] = ["BabyScorpion", "BabyScorpionGold", "BanditCamper", "BanditHiker", "BanditTent", "BigCactus", "BigMaggotSpawn", "Bone", "CoastBossBecome", "CoastBoss", "CowSkull", "FlySpin", "VenomBlast", "ScorpionRock", "SilverScorpion", "SilverScorpionDevastator", "SilverScorpionFlak", "VenomFlak", "VenomPellet", "VenomPelletBack", "WantBigMaggot"];
 	ntte_obj_list[? "tecoast"    ] = ["BloomingAssassin", "BloomingAssassinHide", "BloomingBush", "BloomingCactus", "BuriedCar", "ClamShield", "ClamShieldSlash", "CoastBigDecal", "CoastDecal", "CoastDecalCorpse", "Creature", "Diver", "DiverHarpoon", "Gull", "Harpoon", "HarpoonStick", "NetNade", "Palanking", "PalankingDie", "PalankingSlash", "PalankingSlashGround", "PalankingStatue", "PalankingToss", "Palm", "Pelican", "Seal", "SealAnchor", "SealDisc", "SealHeavy", "SealMine", "TrafficCrab", "Trident"];
 	ntte_obj_list[? "teoasis"    ] = ["BubbleBomb", "BubbleExplosion", "BubbleExplosionSmall", "BubbleSlash", "CrabTank", "HammerShark", "HyperBubble", "OasisPetBecome", "Puffer", "SunkenRoom", "SunkenSealSpawn", "WaterStreak"];
@@ -63,51 +63,51 @@
 	
 	 // Projectile Team Variants:
 	var _teamGrid = [
-		[[spr.EnemyBullet,             EnemyBullet4  ], [sprBullet1,            Bullet1        ], [sprIDPDBullet,        IDPDBullet    ]], // Bullet
-		[[sprEnemyBulletHit                          ], [sprBulletHit                          ], [sprIDPDBulletHit                    ]], // Bullet Hit
-		[[spr.EnemyHeavyBullet,        "CustomBullet"], [sprHeavyBullet,        HeavyBullet    ], [                                    ]], // Heavy Bullet
-		[[spr.EnemyHeavyBulletHit                    ], [sprHeavyBulletHit                     ], [                                    ]], // Heavy Bullet Hit
-		[[sprLHBouncer,                LHBouncer     ], [sprBouncerBullet,      BouncerBullet  ], [                                    ]], // Bouncer Bullet
-		[[sprLHBouncer,                LHBouncer     ], [sprBouncerShell,       BouncerBullet  ], [                                    ]], // Bouncer Bullet 2
-		[[sprEnemyBullet1,             EnemyBullet1  ], [sprAllyBullet,         AllyBullet     ], [                                    ]], // Bandit Bullet
-		[[sprEnemyBulletHit                          ], [sprAllyBulletHit                      ], [sprIDPDBulletHit                    ]], // Bandit Bullet Hit
-		[[sprEnemyBullet4,             EnemyBullet4  ], [spr.AllySniperBullet,  AllyBullet     ], [                                    ]], // Sniper Bullet
-		[[sprEBullet3,                 EnemyBullet3  ], [sprBullet2,            Bullet2        ], [                                    ]], // Shell
-		[[sprEBullet3Disappear,        EnemyBullet3  ], [sprBullet2Disappear,   Bullet2        ], [                                    ]], // Shell Disappear
-		[[spr.EnemySlug,               "CustomShell" ], [sprSlugBullet,         Slug           ], [sprPopoSlug,          PopoSlug      ]], // Slug
-		[[spr.EnemySlugDisappear,      "CustomShell" ], [sprSlugDisappear,      Slug           ], [sprPopoSlugDisappear, PopoSlug      ]], // Slug Disappear
-		[[spr.EnemySlugHit                           ], [sprSlugHit                            ], [sprIDPDBulletHit                    ]], // Slug Hit
-		[[spr.EnemySlug,               "CustomShell" ], [sprHyperSlug,          Slug           ], [sprPopoSlug,          PopoSlug      ]], // Hyper Slug
-		[[spr.EnemySlugDisappear,      "CustomShell" ], [sprHyperSlugDisappear, Slug           ], [sprPopoSlugDisappear, PopoSlug      ]], // Hyper Slug Disappear
-		[[spr.EnemyHeavySlug,          "CustomShell" ], [sprHeavySlug,          HeavySlug      ], [                                    ]], // Heavy Slug
-		[[spr.EnemyHeavySlugDisappear, "CustomShell" ], [sprHeavySlugDisappear, HeavySlug      ], [                                    ]], // Heavy Slug Disappear
-		[[spr.EnemyHeavySlugHit                      ], [sprHeavySlugHit,                      ], [                                    ]], // Heavy Slug Hit
-		[[sprEFlak,                    "CustomFlak"  ], [sprFlakBullet,         FlakBullet     ], [                                    ]], // Flak
-		[[sprEFlakHit                                ], [sprFlakHit                            ], [                                    ]], // Flak Hit
-		[[spr.EnemySuperFlak,          "CustomFlak"  ], [sprSuperFlakBullet,    SuperFlakBullet], [                                    ]], // Super Flak
-		[[spr.EnemySuperFlakHit                      ], [sprSuperFlakHit                       ], [                                    ]], // Super Flak Hit
-		[[sprEFlak,                    EFlakBullet   ], [sprFlakBullet,         "CustomFlak"   ], [                                    ]], // Gator Flak
-		[[sprTrapFire                                ], [sprWeaponFire                         ], [sprFireLilHunter                    ]], // Fire
-		[[sprSalamanderBullet                        ], [sprDragonFire                         ], [sprFireLilHunter                    ]], // Fire 2
-		[[sprTrapFire                                ], [sprCannonFire                         ], [sprFireLilHunter                    ]], // Fire 3
-	//	[[sprFireBall                                ], [sprFireBall                           ], [                                    ]], // Fire Ball
-	//	[[sprFireShell                               ], [sprFireShell                          ], [                                    ]], // Fire Shell
-		[[sprEnemyLaser,               EnemyLaser    ], [sprLaser,              Laser          ], [                                    ]], // Laser
-		[[sprEnemyLaserStart                         ], [sprLaserStart                         ], [                                    ]], // Laser Start
-		[[sprEnemyLaserEnd                           ], [sprLaserEnd                           ], [                                    ]], // Laser End
-		[[sprLaserCharge                             ], [spr.AllyLaserCharge                   ], [                                    ]], // Laser Particle
-		[[sprEnemyLightning,           EnemyLightning], [sprLightning,          Lightning      ], [                                    ]], // Lightning
-	//	[[sprLightningHit                            ], [sprLightningHit                       ], [                                    ]], // Lightning Hit
-	//	[[sprLightningSpawn                          ], [sprLightningSpawn                     ], [                                    ]], // Lightning Particle
-		[[spr.EnemyPlasmaBall,         "CustomPlasma"], [sprPlasmaBall,         PlasmaBall     ], [sprPopoPlasma,        PopoPlasmaBall]], // Plasma
-		[[spr.EnemyPlasmaBig,          "CustomPlasma"], [sprPlasmaBallBig,      PlasmaBig      ], [                                    ]], // Plasma Big
-		[[spr.EnemyPlasmaHuge,         "CustomPlasma"], [sprPlasmaBallHuge,     PlasmaHuge     ], [                                    ]], // Plasma Huge
-		[[spr.EnemyPlasmaImpact                      ], [sprPlasmaImpact                       ], [sprPopoPlasmaImpact                 ]], // Plasma Impact
-		[[spr.EnemyPlasmaImpactSmall                 ], [spr.PlasmaImpactSmall                 ], [spr.PopoPlasmaImpactSmall           ]], // Plasma Impact Small
-		[[spr.EnemyPlasmaTrail                       ], [sprPlasmaTrail                        ], [sprPopoPlasmaTrail                  ]], // Plasma Particle
-		[[spr.EnemyVlasmaBullet                      ], [spr.VlasmaBullet                      ], [spr.PopoVlasmaBullet                ]], // Vector Plasma
-		[[spr.EnemyVlasmaCannon                      ], [spr.VlasmaCannon                      ], [spr.PopoVlasmaCannon                ]], // Vector Plasma Cannon
-		[[sprEnemySlash                              ], [sprSlash                              ], [sprEnemySlash                       ]]  // Slash
+		[[spr.EnemyBullet,             EnemyBullet4  ], [sprBullet1,            Bullet1        ], [sprIDPDBullet,         IDPDBullet    ]], // Bullet
+		[[sprEnemyBulletHit                          ], [sprBulletHit                          ], [sprIDPDBulletHit                     ]], // Bullet Hit
+		[[spr.EnemyHeavyBullet,        "CustomBullet"], [sprHeavyBullet,        HeavyBullet    ], [spr.IDPDHeavyBullet,   "CustomBullet"]], // Heavy Bullet
+		[[spr.EnemyHeavyBulletHit                    ], [sprHeavyBulletHit                     ], [spr.IDPDHeavyBulletHit               ]], // Heavy Bullet Hit
+		[[sprLHBouncer,                LHBouncer     ], [sprBouncerBullet,      BouncerBullet  ], [                                     ]], // Bouncer Bullet
+		[[sprLHBouncer,                LHBouncer     ], [sprBouncerShell,       BouncerBullet  ], [                                     ]], // Bouncer Bullet 2
+		[[sprEnemyBullet1,             EnemyBullet1  ], [sprAllyBullet,         AllyBullet     ], [                                     ]], // Bandit Bullet
+		[[sprEnemyBulletHit                          ], [sprAllyBulletHit                      ], [sprIDPDBulletHit                     ]], // Bandit Bullet Hit
+		[[sprEnemyBullet4,             EnemyBullet4  ], [spr.AllySniperBullet,  AllyBullet     ], [                                     ]], // Sniper Bullet
+		[[sprEBullet3,                 EnemyBullet3  ], [sprBullet2,            Bullet2        ], [                                     ]], // Shell
+		[[sprEBullet3Disappear,        EnemyBullet3  ], [sprBullet2Disappear,   Bullet2        ], [                                     ]], // Shell Disappear
+		[[spr.EnemySlug,               "CustomShell" ], [sprSlugBullet,         Slug           ], [sprPopoSlug,           PopoSlug      ]], // Slug
+		[[spr.EnemySlugDisappear,      "CustomShell" ], [sprSlugDisappear,      Slug           ], [sprPopoSlugDisappear,  PopoSlug      ]], // Slug Disappear
+		[[spr.EnemySlugHit                           ], [sprSlugHit                            ], [sprIDPDBulletHit                     ]], // Slug Hit
+		[[spr.EnemySlug,               "CustomShell" ], [sprHyperSlug,          Slug           ], [sprPopoSlug,           PopoSlug      ]], // Hyper Slug
+		[[spr.EnemySlugDisappear,      "CustomShell" ], [sprHyperSlugDisappear, Slug           ], [sprPopoSlugDisappear,  PopoSlug      ]], // Hyper Slug Disappear
+		[[spr.EnemyHeavySlug,          "CustomShell" ], [sprHeavySlug,          HeavySlug      ], [                                     ]], // Heavy Slug
+		[[spr.EnemyHeavySlugDisappear, "CustomShell" ], [sprHeavySlugDisappear, HeavySlug      ], [                                     ]], // Heavy Slug Disappear
+		[[spr.EnemyHeavySlugHit                      ], [sprHeavySlugHit,                      ], [                                     ]], // Heavy Slug Hit
+		[[sprEFlak,                    "CustomFlak"  ], [sprFlakBullet,         FlakBullet     ], [                                     ]], // Flak
+		[[sprEFlakHit                                ], [sprFlakHit                            ], [                                     ]], // Flak Hit
+		[[spr.EnemySuperFlak,          "CustomFlak"  ], [sprSuperFlakBullet,    SuperFlakBullet], [                                     ]], // Super Flak
+		[[spr.EnemySuperFlakHit                      ], [sprSuperFlakHit                       ], [                                     ]], // Super Flak Hit
+		[[sprEFlak,                    EFlakBullet   ], [sprFlakBullet,         "CustomFlak"   ], [                                     ]], // Gator Flak
+		[[sprTrapFire                                ], [sprWeaponFire                         ], [sprFireLilHunter                     ]], // Fire
+		[[sprSalamanderBullet                        ], [sprDragonFire                         ], [sprFireLilHunter                     ]], // Fire 2
+		[[sprTrapFire                                ], [sprCannonFire                         ], [sprFireLilHunter                     ]], // Fire 3
+	//	[[sprFireBall                                ], [sprFireBall                           ], [                                     ]], // Fire Ball
+	//	[[sprFireShell                               ], [sprFireShell                          ], [                                     ]], // Fire Shell
+		[[sprEnemyLaser,               EnemyLaser    ], [sprLaser,              Laser          ], [                                     ]], // Laser
+		[[sprEnemyLaserStart                         ], [sprLaserStart                         ], [                                     ]], // Laser Start
+		[[sprEnemyLaserEnd                           ], [sprLaserEnd                           ], [                                     ]], // Laser End
+		[[sprLaserCharge                             ], [spr.AllyLaserCharge                   ], [                                     ]], // Laser Particle
+		[[sprEnemyLightning,           EnemyLightning], [sprLightning,          Lightning      ], [                                     ]], // Lightning
+	//	[[sprLightningHit                            ], [sprLightningHit                       ], [                                     ]], // Lightning Hit
+	//	[[sprLightningSpawn                          ], [sprLightningSpawn                     ], [                                     ]], // Lightning Particle
+		[[spr.EnemyPlasmaBall,         "CustomPlasma"], [sprPlasmaBall,         PlasmaBall     ], [sprPopoPlasma,         PopoPlasmaBall]], // Plasma
+		[[spr.EnemyPlasmaBig,          "CustomPlasma"], [sprPlasmaBallBig,      PlasmaBig      ], [                                     ]], // Plasma Big
+		[[spr.EnemyPlasmaHuge,         "CustomPlasma"], [sprPlasmaBallHuge,     PlasmaHuge     ], [                                     ]], // Plasma Huge
+		[[spr.EnemyPlasmaImpact                      ], [sprPlasmaImpact                       ], [sprPopoPlasmaImpact                  ]], // Plasma Impact
+		[[spr.EnemyPlasmaImpactSmall                 ], [spr.PlasmaImpactSmall                 ], [spr.PopoPlasmaImpactSmall            ]], // Plasma Impact Small
+		[[spr.EnemyPlasmaTrail                       ], [sprPlasmaTrail                        ], [sprPopoPlasmaTrail                   ]], // Plasma Particle
+		[[spr.EnemyVlasmaBullet                      ], [spr.VlasmaBullet                      ], [spr.PopoVlasmaBullet                 ]], // Vector Plasma
+		[[spr.EnemyVlasmaCannon                      ], [spr.VlasmaCannon                      ], [spr.PopoVlasmaCannon                 ]], // Vector Plasma Cannon
+		[[sprEnemySlash                              ], [sprSlash                              ], [sprEnemySlash                        ]]  // Slash
 		// Devastator
 		// Lightning Cannon
 		// Hyper Slug (kinda)
