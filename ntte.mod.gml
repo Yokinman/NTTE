@@ -312,7 +312,14 @@
 			if(distance_to_object(Player) > 80){
 				if(!place_meeting(x, y, hitme) && !place_meeting(x, y, chestprop)){
 					 // Backpack:
-					chest_create(bbox_center_x + orandom(4), bbox_center_y - 6, "Backpack", true);
+					if(!_forceSpawn or 
+					  (array_length(instances_matching(Player, "wep", wep_rogue_rifle)) = 0 and 
+					   array_length(instances_matching(Player, "bwep", wep_rogue_rifle)) = 0)) {
+						chest_create(bbox_center_x + orandom(4), bbox_center_y - 6, "Backpack", true);
+					}
+					
+					else chest_create(bbox_center_x + orandom(4), bbox_center_y - 6, "Strikepack", true);
+					
 					instance_create(bbox_center_x, bbox_center_y, PortalClear);
 					
 					 // Flavor Corpse:

@@ -173,6 +173,10 @@
 				mask = [true, 0];
 			}
 			
+			 // Heavy Popo Bullet:
+			PopoHeavyBullet    = sprite(p + "sprPopoHeavyBullet", 2, 12, 12);
+			PopoHeavyBulletHit = sprite(p + "sprPopoHeavyBulletHit", 4, 12, 12);
+			
 			 // Portal Bullet:
 			PortalBullet          = sprite(p + "sprPortalBullet",          4, 12, 12);
 			PortalBulletHit       = sprite(p + "sprPortalBulletHit",       4, 16, 16);

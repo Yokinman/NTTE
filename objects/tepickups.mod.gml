@@ -4317,6 +4317,71 @@
 	return (pull_delay <= 0);
 	
 	
+#define Strikepack_create(_x, _y)
+	with(obj_create(_x, _y, "Backpack")) {
+		curse = 0;
+		on_open = script_ref_create(Strikepack_open);
+	}
+	
+#define Strikepack_open
+	 // Strike ammo and rifle:
+	if(instance_is(other, Player)) {
+		with(Player) {
+			if(wep == wep_rogue_rifle) wep = "roguecarbine";
+			else if(bwep == wep_rogue_rifle) wep = "roguecarbine";
+			
+			with(instance_create(x, y, PopupText)) {
+				mytext = "@bUPGRADED RIFLE";
+			}
+		}
+		
+		var _rogueAmount = 0,
+			_nearRogue = instance_nearest_array(x, y, instances_matching(Player, "race", "rogue"));
+		
+		
+		with(_nearRogue) {
+			_rogueAmount = min(2 * (ultra_get("rogue", 1) + 1), (3 + ultra_get("rogue", 2) - rogueammo));
+			rogueammo += _rogueAmount;
+		}
+		
+		var _rogueText = `+${_rogueAmount} PORTAL STRIKES`;
+		
+		if(_rogueAmount < 2 * (ultra_get("rogue", 1) + 1)) {
+			if(array_length(instances_matching(Player, "race", "rogue")) = 0) _rogueText = "";
+			else _rogueText = "MAX PORTAL STRIKES";
+		}
+		
+		if(_rogueText != "") with(instance_create(x, y, PopupText)) {
+			mytext = _rogueText;
+		}
+	}
+	else {
+		repeat(2) {
+			instance_create(x, y, RoguePickup);
+		}
+		
+		with(instance_create(x, y, WepPickup)) {
+			wep = "roguecarbine";
+			ammo = true;
+		}
+	}
+	
+	with(instance_create(x, y, SmallExplosion)) {
+		damage = 0;
+		sprite_index = sprPopoExplo;
+		mask_index = mskNone;
+		image_xscale = 0.2;
+		image_yscale = 0.2;
+	}
+	
+	 // Effects:
+	sound_play_pitchvol(sndRogueCanister, 0.7, 0.7);
+	sound_play_pitch(sndWeaponChest,      0.5);
+	sound_play_pitch(sndRogueAim,         1.8);
+	sound_play_pitch(sndIDPDNadeLoad,     2.4);
+	sound_play_pitch(sndSwapMachinegun, 0.6);
+	
+	
 #define SunkenChest_create(_x, _y)
 	with(obj_create(_x, _y, "CustomChest")){
 		 // Visual:
