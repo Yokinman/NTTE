@@ -21,23 +21,23 @@
 
 #define crown_menu_button
 	sprite_index = crown_loadout();
-	image_index = !crown_menu_avail();
-	dix = -1;
-	diy = 0;
+	image_index  = !crown_menu_avail();
+	dix          = -1;
+	diy          = 0;
 	
 #define crown_button
 	sprite_index = global.sprCrownIcon;
 	
 #define crown_object
 	 // Visual:
-	spr_idle = global.sprCrownIdle;
-	spr_walk = global.sprCrownWalk;
+	spr_idle     = global.sprCrownIdle;
+	spr_walk     = global.sprCrownWalk;
 	sprite_index = spr_idle;
 	
 	 // Vars:
 	ntte_crown = mod_current;
 	enemy_time = 0;
-	enemies = 0;
+	enemies    = 0;
 	
 	 // Sound:
 	if(instance_is(other, CrownIcon)){
@@ -49,11 +49,6 @@
 	 // Bounty Hunters:
 	if(!(GameCont.area == 7 && GameCont.subarea == 3)){
 		with(instances_matching(Crown, "ntte_crown", "crime")){
-			 // Watch where you're going bro:
-			if(hspeed != 0 && sign(image_xscale) != sign(hspeed)){
-				image_xscale = abs(image_xscale) * sign(hspeed);
-			}
-			
 			 // Spawn Enemies:
 			if(enemies > 0){
 				enemy_time -= current_time_scale;

@@ -451,6 +451,41 @@
 				unlock_set(`loadout:crown:${crown_current}`, true);
 			}
 			
+			 // Spawn NT:TE Corpses:
+			with(ntte_mods.race){
+				var _race = self;
+				if(!mod_script_exists("race", _race, "race_avail") || mod_script_call("race", _race, "race_avail")){
+					var _active = false;
+					for(var i = 0; i < maxp; i++){
+						if(player_get_race(i) == _race){
+							_active = true;
+							break;
+						}
+					}
+					if(!_active){
+						with(instance_create(_spawnX, _spawnY - 16, Corpse)){
+							sprite_index = race_get_sprite(_race, sprMutant1Dead);
+							image_index  = image_number - 1;
+							
+							 // Space Out:
+							var _tries = 1000;
+							while(_tries-- > 0){
+								x = xstart;
+								y = ystart;
+								move_contact_solid(random(360), random_range(32, 64) + random(random(64)));
+								x = round(x);
+								y = round(y);
+								
+								 // Safe:
+								if(!collision_circle(x, y, 12, Corpse, true, true)){
+									break;
+								}
+							}
+						}
+					}
+				}
+			}
+			
 			 // Less Bones:
 			with(BonePileNight) if(chance(1, 3)){
 				instance_delete(self);
@@ -3044,6 +3079,26 @@
 		}
 	}
 	
+	 // Smoother Captain Desk Collision:
+	if(instance_exists(LastIntro)){
+		with(LastIntro){
+			var _lastSolid = solid;
+			solid = true;
+			with(Player){
+				motion_step(1);
+				if(place_meeting(x, y, other)){
+					x = xprevious;
+					y = yprevious;
+					event_perform(ev_collision, InvisiWall);
+					x += hspeed_raw;
+					y += vspeed_raw;
+				}
+				motion_step(-1);
+			}
+			solid = _lastSolid;
+		}
+	}
+	
 	 // Stair Climbing:
 	if(instance_exists(Player)){
 		var _inst = instances_matching_gt(Player, "ntte_stairslow", 0);
@@ -3066,6 +3121,18 @@
 			}
 			
 			ntte_stairslow -= current_time_scale;
+		}
+	}
+	
+	 // Crowns Face Direction:
+	if(instance_exists(Crown)){
+		var _inst = instances_matching_ne(Crown, "hspeed", 0);
+		if(array_length(_inst)){
+			with(_inst){
+				if(sign(image_xscale) != sign(hspeed)){
+					image_xscale = abs(image_xscale) * sign(hspeed);
+				}
+			}
 		}
 	}
 	
@@ -4307,18 +4374,22 @@
 						}
 						
 						 // Bonus Ammo:
-						if("bonus_ammo" in self && bonus_ammo > 0){
-							var	_max   = (("bonus_ammo_max"   in self) ? bonus_ammo_max   : bonus_ammo),
-								_tick  = (("bonus_ammo_tick"  in self) ? bonus_ammo_tick  : 0),
+						if(
+							"bonus_ammo"     in self &&
+							"bonus_ammo_max" in self &&
+							bonus_ammo > 0
+						){
+							var	_tick  = (("bonus_ammo_tick"  in self) ? bonus_ammo_tick  : 0),
 								_flash = (("bonus_ammo_flash" in self) ? bonus_ammo_flash : 0),
 								_spr   = ((_tick == 0) ? spr.BonusAmmoHUDFill : spr.BonusAmmoHUDFillDrain);
 								
 							 // Draw:
 							if(_hudDraw){
-								var	_img = _flash,
+								var	_num = ceil(bonus_ammo / 60) - 1,
+									_img = _flash,
 									_x   = 5 - (17 * (_players <= 1)),
 									_y   = 35,
-									_w   = sprite_get_width(_spr) * clamp(bonus_ammo / _max, 0, 1),
+									_w   = sprite_get_width(_spr) * clamp(bonus_ammo / bonus_ammo_max, 0, 1),
 									_h   = sprite_get_height(_spr);
 									
 								if(bonus_ammo > 2 * _tick){
@@ -4330,7 +4401,14 @@
 									draw_sprite_part(_spr, _img, 0, 0, _w, _h, _x, _y);
 									
 									 // Text:
-									draw_sprite(spr.BonusHUDText, 0, _x + (sprite_get_width(_spr) / 2), _y + (sprite_get_height(_spr) / 2));
+									draw_set_font(fntSmall);
+									draw_set_halign(fa_center);
+									draw_set_valign(fa_middle);
+									draw_text_nt(
+										_x + (sprite_get_width(_spr)  / 2),
+										_y + (sprite_get_height(_spr) / 2),
+										`@4(${spr.BonusHUDText})` + ((_num > 0) ? `+${_num}` : "")
+									);
 								}
 								
 								 // Flash Out:
@@ -4356,17 +4434,17 @@
 							"bonus_health_max" in self &&
 							bonus_health > 0
 						){
-							var	_max   = (("bonus_health_max"   in self) ? bonus_health_max   : bonus_health),
-								_tick  = (("bonus_health_tick"  in self) ? bonus_health_tick  : 0),
+							var	_tick  = (("bonus_health_tick"  in self) ? bonus_health_tick  : 0),
 								_flash = (("bonus_health_flash" in self) ? bonus_health_flash : 0)
 								_spr   = ((_tick == 0) ? spr.BonusHealthHUDFill : spr.BonusHealthHUDFillDrain);
 							
 							 // Draw:
 							if(_hudDraw){
-								var	_img = ((maxhealth > 0 && lsthealth < my_health && !instance_exists(GenCont) && !instance_exists(LevCont)) ? 1 : _flash),
+								var	_num = ceil(bonus_health / 30) - 1,
+									_img = ((maxhealth > 0 && lsthealth < my_health && !instance_exists(GenCont) && !instance_exists(LevCont)) ? 1 : _flash),
 									_x   = 5,
 									_y   = 7,
-									_w   = sprite_get_width(_spr) * clamp(bonus_health / _max, 0, 1),
+									_w   = sprite_get_width(_spr) * clamp(bonus_health / bonus_health_max, 0, 1),
 									_h   = sprite_get_height(_spr);
 									
 								 // Back:
@@ -4377,7 +4455,14 @@
 								draw_sprite_part(_spr, _img, 0, 0, _w, _h, _x, _y);
 								
 								 // Text:
-								draw_sprite(spr.BonusHUDText, 0, _x + (sprite_get_width(_spr) / 2) + 1, _y + (sprite_get_height(_spr) / 2));
+								draw_set_font(fntSmall);
+								draw_set_halign(fa_center);
+								draw_set_valign(fa_middle);
+								draw_text_nt(
+									_x + (sprite_get_width(_spr)  / 2) + 1,
+									_y + (sprite_get_height(_spr) / 2),
+									`@4(${spr.BonusHUDText})` + ((_num > 0) ? `+${_num}` : "")
+								);
 							}
 							
 							 // Animate:
@@ -4844,10 +4929,9 @@
 		spr_from     = race_get_sprite(_race, sprFishMenuDeselect);
 		sprite_index = spr_slct;
 		
-		 // Auto Offset:
+		 // Space Out:
 		var _tries = 1000;
 		while(_tries-- > 0){
-			 // Move Somewhere:
 			x = xstart;
 			y = ystart;
 			move_contact_solid(random(360), random_range(32, 64) + random(random(64)));

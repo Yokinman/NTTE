@@ -910,11 +910,16 @@
 			
 			//#region PROPS
 			p = m + "Props/";
-			
+				
 				 // Big Crystal Prop:
 				BigCrystalPropIdle = sprite(p + "sprBigCrystalPropIdle", 1, 16, 16);
-				BigCrystalPropHurt = sprite(p + "sprBigCrystalPropHurt", 3, 16, 16);
+				BigCrystalPropHurt = sprite(p + "sprBigCrystalPropIdle", 1, 16, 16, shnHurt);
 				BigCrystalPropDead = sprite(p + "sprBigCrystalPropDead", 4, 16, 16);
+				
+				 // Cursed Big Crystal Prop:
+				InvBigCrystalPropIdle = sprite(p + "sprInvBigCrystalPropIdle", 1, 16, 16);
+				InvBigCrystalPropHurt = sprite(p + "sprInvBigCrystalPropIdle", 1, 16, 16, shnHurt);
+				InvBigCrystalPropDead = sprite(p + "sprInvBigCrystalPropDead", 4, 16, 16);
 			
 			//#endregion
 			
@@ -1585,7 +1590,7 @@
 			BonusShell                 = sprite(p + "sprBonusShell",                  1,  1,  2);
 			BonusShellHeavy            = sprite(p + "sprBonusShellHeavy",             1,  2,  3);
 			BonusText                  = sprite(p + "sprBonusText",                  12,  0,  0);
-			BonusHUDText               = sprite(p + "sprBonusHUDText",                1,  6,  3);
+			BonusHUDText               = sprite(p + "sprBonusHUDText",                1,  7,  3);
 			BonusAmmoHUD               = sprite(p + "sprBonusAmmoHUD",                1,  2,  3);
 			BonusAmmoHUDFill           = sprite(p + "sprBonusAmmoHUDFill",            7,  0,  0);
 			BonusAmmoHUDFillDrain      = sprite(p + "sprBonusAmmoHUDFillDrain",       7,  0,  0);

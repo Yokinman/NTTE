@@ -550,10 +550,9 @@
 						with(target){
 							if("ntte_charm" in self && (ntte_charm.time >= 0 || ntte_charm.feather)){
 								ntte_charm.time -= min(ntte_charm.time, other.stick_time);
+								
+								 // Uncharmed FX:
 								if(ntte_charm.time <= 0){
-									charm_instance(self, false);
-									
-									 // Sound:
 									audio_sound_set_track_position(
 										sound_play_hit_ext(sndBigMaggotUnburrowSand, random_range(1.2, 1.4), 2.5),
 										0.7

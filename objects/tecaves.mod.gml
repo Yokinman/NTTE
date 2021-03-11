@@ -77,11 +77,19 @@
 		maxhealth = 48;
 		my_health = maxhealth;
 		size      = 2;
+		curse     = (GameCont.area == area_cursed_caves);
+		
+		 // Cursed:
+		if(curse > 0){
+			spr_idle = spr.InvBigCrystalPropIdle;
+			spr_hurt = spr.InvBigCrystalPropHurt;
+			spr_dead = spr.InvBigCrystalPropDead;
+		}
 		
 		 // Enemies:
 		instance_create(x, y, PortalClear);
 		repeat(choose(2, 3)){
-			obj_create(x, y, ((GameCont.area == area_cursed_caves) ? "InvCrystalBat" : "CrystalBat"));
+			obj_create(x, y, ((curse > 0) ? "InvCrystalBat" : "CrystalBat"));
 		}
 		
 		return self;
