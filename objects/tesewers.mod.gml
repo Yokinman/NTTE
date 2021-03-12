@@ -1886,7 +1886,8 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 #define BatDisc_wall
 	 // Bounce Back:
 	if(!returning && !has_hit && instance_exists(target)){
-		direction = target_direction;
+		//direction = target_direction;
+		move_bounce_solid(true);
 		if(!big){
 			returning = true;
 		}
@@ -4315,12 +4316,6 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 		cavein_dis  = 800;
 		cavein_pan  = 0;
 		cavein_inst = [];
-		border_obj  = [
-			[Wall,		 0, [sprWall1Bot, sprWall1Top, sprWall1Out]],
-			[TopSmall,	 0, sprWall1Trans],
-			[FloorExplo, 0, sprFloor1Explo],
-			[Debris,	 0, sprDebris1]
-		];
 		
 		return self;
 	}
@@ -4517,57 +4512,6 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 		with(Revive){
 			if(!instance_exists(view_object[p]) && !instance_exists(player_find(p))){
 				view_object[p] = self;
-			}
-		}
-	}
-	
-#define LairBorder_end_step
-	 // Sprite Overrides:
-	var _update = cavein;
-	if(!_update){
-		with(border_obj){
-			if(instance_number(self[0]) != self[1]){
-				_update = true;
-				break;
-			}
-		}
-	}
-	if(_update){
-		var _y = y;
-		with(border_obj){
-			var _obj = self[0];
-			self[@1] = instance_number(_obj);
-			if(instance_exists(_obj)){
-				var _inst = instances_matching(_obj, "cat_border_fix", null);
-				if(array_length(_inst)){
-					var _spr = self[2];
-					
-					 // Fetch Sprites:
-					if(is_array(_spr)){
-						_spr = array_clone(_spr);
-						for(var i = 0; i < array_length(_spr); i++){
-							_spr[i] = area_get_sprite(other.area, _spr[i]);
-						}
-					}
-					else _spr = area_get_sprite(other.area, _spr);
-					
-					 // Set Sprites:
-					with(_inst){
-						cat_border_fix = (y >= _y);
-						if(cat_border_fix){
-							switch(_obj){
-								case Wall:
-									sprite_index = _spr[0];
-									topspr       = _spr[1];
-									outspr       = _spr[2];
-									break;
-									
-								default:
-									sprite_index = _spr;
-							}
-						}
-					}
-				}
 			}
 		}
 	}

@@ -157,11 +157,11 @@
 			else{
 				pickup_drop(100 / pickup_chance_multiplier, 0);
 				
-				 // Rogues:
-				var _rogue = 0;
-				for(var i = 0; i < maxp; i++){
-					if(player_get_race(i) == "rogue"){
-						_rogue++;
+				 // Rogue-Opened:
+				var _rogue = false;
+				with(instance_is(other, Player) ? other : instance_nearest(x, y, Player)){
+					if(race == "rogue"){
+						_rogue = true;
 					}
 				}
 				
@@ -394,21 +394,21 @@
 	with(obj_create(_x, _y, "CustomChest")){
 		 // Visual:
 		sprite_index = spr.BatChest;
-		spr_dead = spr.BatChestOpen;
+		spr_dead     = spr.BatChestOpen;
 		
 		 // Sound:
 		snd_open = sndWeaponChest;
 		
 		 // Big:
-		big = false;
-		setup = true;
+		big     = false;
+		setup   = true;
 		nochest = 1;
 		
 		 // Cursed:
 		switch(crown_current){
-			case crwn_none:   curse = false;        break;
-			case crwn_curses: curse = chance(2, 3); break;
-			default:          curse = chance(1, 7);
+			case crwn_none   : curse = false;        break;
+			case crwn_curses : curse = chance(2, 3); break;
+			default          : curse = chance(1, 7);
 		}
 		
 		 // Events:
@@ -421,28 +421,27 @@
 #define BatChest_setup
 	setup = false;
 	
-	nochest = 1 + big;
-	
 	 // Big:
 	if(big){
-		if(curse){
+		nochest++;
+		if(curse > 0){
 			sprite_index = spr.BatChestBigCursed;
-			spr_dead = spr.BatChestBigCursedOpen;
-			snd_open = sndBigCursedChest;
+			spr_dead     = spr.BatChestBigCursedOpen;
+			snd_open     = sndBigCursedChest;
 		}
 		else{
 			sprite_index = spr.BatChestBig;
-			spr_dead = spr.BatChestBigOpen;
-			snd_open = sndBigWeaponChest;
+			spr_dead     = spr.BatChestBigOpen;
+			snd_open     = sndBigWeaponChest;
 		}
 		spr_shadow = shd32;
 	}
 	
 	 // Cursed:
-	else if(curse){
+	else if(curse > 0){
 		sprite_index = spr.BatChestCursed;
-		spr_dead = spr.BatChestCursedOpen;
-		snd_open = sndCursedChest;
+		spr_dead     = spr.BatChestCursedOpen;
+		snd_open     = sndCursedChest;
 	}
 
 #define BatChest_step
@@ -456,8 +455,10 @@
 	}
 	
 #define BatChest_open
+	 // Clear Walls:
 	instance_create(x, y, PortalClear);
 	
+	 // Big:
 	if(big){
 		 // Important:
 		if(instance_is(other, Player)){
@@ -472,9 +473,6 @@
 	var _open = instance_create(x, y, ChestOpen);
 	with(_open){
 		sprite_index = other.spr_dead;
-		if(other.curse){
-			image_blend = merge_color(image_blend, c_purple, 0.6);
-		}
 	}
 	spr_dead = -1;
 	
@@ -487,10 +485,10 @@
 			_d = _ang + 90;
 			
 		with(obj_create(x + lengthdir_x(_l * ((3 + big) / 3), _d), y + lengthdir_y(_l, _d), "ChestShop")){
-			type = ChestShop_wep;
-			drop = wep_screwdriver;
-			open += other.big;
-			curse = other.curse;
+			type    = ChestShop_wep;
+			drop    = wep_screwdriver;
+			open   += other.big;
+			curse   = other.curse;
 			creator = _open;
 			array_push(_shop, self);
 		}
@@ -499,7 +497,7 @@
 	 // Determine Weapons:
 	var	_hardMin = 0,
 		_hardMax = (2 * curse) + GameCont.hard,
-		_part = wep_merge_decide(_hardMin, _hardMax);
+		_part    = wep_merge_decide(_hardMin, _hardMax);
 		
 	for(var i = 0; i < array_length(_shop); i += 2){
 		if(array_length(_part) >= 2){
@@ -514,7 +512,7 @@
 	}
 	
 	 // Effects:
-	sound_play_pitchvol(sndEnergySword, 0.5 + orandom(0.1), 0.8);
+	sound_play_pitchvol(sndEnergySword,       0.5 + orandom(0.1), 0.8);
 	sound_play_pitchvol(sndEnergyScrewdriver, 1.5 + orandom(0.1), 0.5);
 	repeat(6) scrFX(x, y, 3, Dust);
 	
@@ -1100,12 +1098,12 @@
 	 // Loot:
 	var _ang = random(360);
 	if(num > 0){
-		for(var d = _ang; d < _ang + 360; d += (360 / num)){
+		for(var _dir = _ang; _dir < _ang + 360; _dir += (360 / num)){
 			with(obj_create(x, y, "BackpackPickup")){
 				zfriction = 0.6;
-				zspeed = random_range(3, 4);
-				speed = 1.5 + orandom(0.2);
-				direction = d;
+				zspeed    = random_range(3, 4);
+				speed     = 1.5 + orandom(0.2);
+				direction = _dir;
 				
 				 // Decide Chest:
 				target = chest_create(
@@ -1414,11 +1412,14 @@
 	}
 	
 #define CatChest_open
+	 // Clear Walls:
 	instance_create(x, y, PortalClear);
 	
 	 // Manually Create ChestOpen to Link Shops:
 	var _open = instance_create(x, y, ChestOpen);
-	_open.sprite_index = spr_dead;
+	with(_open){
+		sprite_index = other.spr_dead;
+	}
 	spr_dead = -1;
 	
 	 // Shop Pool:
@@ -1470,7 +1471,7 @@
 			_dir = _ang + 90;
 			
 		with(obj_create(x + lengthdir_x(_dis, _dir), y + lengthdir_y(_dis, _dir), "ChestShop")){
-			type = ChestShop_basic;
+			type    = ChestShop_basic;
 			creator = _open;
 			
 			 // Decide Item:
@@ -1483,14 +1484,14 @@
 	}
 	
 	 // Effects:
-	sound_play_pitchvol(sndEnergySword, 0.5 + orandom(0.1), 0.8);
-	//sound_play_pitchvol(sndEnergyScrewdriver, 1.5 + orandom(0.1), 0.5);
-	sound_play_pitchvol(sndLuckyShotProc, 0.7 + random(0.2), 0.7);
+	sound_play_pitchvol(sndEnergySword,   0.5 + orandom(0.1), 0.8);
+	sound_play_pitchvol(sndLuckyShotProc, 0.8 + orandom(0.1), 0.7);
 	repeat(6) scrFX(x, y, 3, Dust);
 	
 	
-#macro ChestShop_basic	0
-#macro ChestShop_wep	1
+#macro ChestShop_basic 0
+#macro ChestShop_wep   1
+#macro ChestShop_skill 2
 
 #define ChestShop_create(_x, _y)
 	with(instance_create(_x, _y, CustomObject)){
@@ -1519,6 +1520,11 @@
 		curse      = false;
 		setup      = true;
 		
+		 // Hide:
+		with(prompt){
+			visible = false;
+		}
+		
 		return self;
 	}
 	
@@ -1526,64 +1532,79 @@
 	setup = false;
 	
 	 // Default:
-	num  = 1;
-	text = "";
-	desc = "";
+	num          = 1;
+	text         = "";
+	desc         = "";
 	sprite_index = sprAmmo;
-	image_blend = c_white;
-	
-	 // Loop:
-	if(GameCont.loops > 0){
-		switch(drop){
-			case "ammo"   : drop = "ammo_chest";   break;
-			case "health" : drop = "health_chest"; break;
-			case "rads"   : drop = "rads_chest";   break;
-		}
-	}
-	
-	 // Crowns:
-	switch(crown_current){
-		case crwn_love:
-			switch(drop){
-				case "health"             :
-				case "rads"               :
-				case "hammerhead"         :
-				case "spirit"             :
-				case "red"                : drop = "ammo";             break;
-				case "health_chest"       :
-				case "rads_chest"         : drop = "ammo_chest";       break;
-				case "bonus_health"       : drop = "bonus_ammo";       break;
-				case "bonus_health_chest" : drop = "bonus_ammo_chest"; break;
-			}
-			break;
-			
-		case crwn_life:
-			if(drop == "health"){
-				drop = "ammo";
-			}
-			break;
-			
-		case crwn_guns:
-			if(drop == "ammo"){
-				drop = "health";
-			}
-			break;
-			
-		case "bonus":
-			switch(drop){
-				case "ammo"         : drop = "bonus_ammo";         break;
-				case "ammo_chest"   : drop = "bonus_ammo_chest";   break;
-				case "health"       : drop = "bonus_health";       break;
-				case "health_chest" : drop = "bonus_health_chest"; break;
-			}
-			break;
-	}
+	image_blend  = c_white;
 	
 	 // Shop Setup:
 	switch(type){
+		
 		case ChestShop_basic:
+			
+			 // Loop:
+			if(GameCont.loops > 0){
+				switch(drop){
+					case "ammo"   : drop = "ammo_chest";   break;
+					case "health" : drop = "health_chest"; break;
+					case "rads"   : drop = "rads_chest";   break;
+				}
+			}
+			
+			 // Crowns:
+			switch(crown_current){
+				
+				case crwn_love:
+					
+					switch(drop){
+						case "health"             :
+						case "rads"               :
+						case "hammerhead"         :
+						case "spirit"             :
+						case "red"                : drop = "ammo";             break;
+						case "health_chest"       :
+						case "rads_chest"         : drop = "ammo_chest";       break;
+						case "bonus_health"       : drop = "bonus_ammo";       break;
+						case "bonus_health_chest" : drop = "bonus_ammo_chest"; break;
+					}
+					
+					break;
+					
+				case crwn_life:
+					
+					if(drop == "health"){
+						drop = "ammo";
+					}
+					
+					break;
+					
+				case crwn_guns:
+					
+					if(drop == "ammo"){
+						drop = "health";
+					}
+					
+					break;
+					
+				case "bonus":
+					
+					switch(drop){
+						case "ammo"         : drop = "bonus_ammo";         break;
+						case "ammo_chest"   : drop = "bonus_ammo_chest";   break;
+						case "health"       : drop = "bonus_health";       break;
+						case "health_chest" : drop = "bonus_health_chest"; break;
+					}
+					
+					break;
+					
+			}
+			
+			 // Setup:
 			switch(drop){
+				
 				case "ammo":
+					
 					num *= 2;
 					text = "AMMO";
 					desc = `${num} PICKUPS`;
@@ -1591,9 +1612,11 @@
 					 // Visual:
 					sprite_index = sprAmmo;
 					image_blend  = make_color_rgb(255, 255, 0);
+					
 					break;
 					
 				case "health":
+					
 					num *= 2;
 					text = "HEALTH";
 					desc = `${num} PICKUPS`;
@@ -1601,9 +1624,11 @@
 					 // Visual:
 					sprite_index = sprHP;
 					image_blend  = make_color_rgb(255, 255, 255);
+					
 					break;
 					
 				case "rads":
+					
 					num *= 25;
 					text = "RADS";
 					desc = `${num} ${text}`;
@@ -1611,81 +1636,99 @@
 					 // Visual:
 					sprite_index = sprBigRad;
 					image_blend  = make_color_rgb(120, 230, 60);
+					
 					break;
 					
 				case "ammo_chest":
+					
 					text = "AMMO";
 					desc = ((num > 1) ? `${num} ` : "") + "CHEST";
 					
 					 // Visual:
 					sprite_index = (ultra_get("steroids", 2) ? sprAmmoChestSteroids : sprAmmoChest);
 					image_blend  = make_color_rgb(255, 255, 0);
+					
 					break;
 					
 				case "health_chest":
+					
 					text = "HEALTH";
 					desc = ((num > 1) ? `${num} ` : "") + "CHEST";
 					
 					 // Visual:
 					sprite_index = sprHealthChest;
 					image_blend  = make_color_rgb(255, 255, 255);
+					
 					break;
 					
 				case "rads_chest":
+					
 					text = "RADS";
 					desc = `${45 * num} ${text}`;
 					
 					 // Visual:
 					sprite_index = sprRadChestBig;
 					image_blend  = make_color_rgb(120, 230, 60);
+					
 					break;
 					
 				case "bonus_ammo":
+					
 					text = "OVERSTOCK";
 					desc = `@5(${spr.BonusText}:0) AMMO`;
 					
 					 // Visual:
 					sprite_index = spr.BonusAmmoPickup;
 					image_blend  = make_color_rgb(100, 255, 255);
+					
 					break;
 					
 				case "bonus_ammo_chest":
+					
 					text = "OVERSTOCK";
 					desc = ((num > 1) ? `${num} ` : "") + "CHEST";
 					
 					 // Visual:
 					sprite_index = (ultra_get("steroids", 2) ? spr.BonusAmmoChestSteroids : spr.BonusAmmoChest);
 					image_blend  = make_color_rgb(100, 255, 255);
+					
 					break;
 					
 				case "bonus_health":
+					
 					text = "OVERHEAL";
 					desc = `@5(${spr.BonusText}:0) HEALTH`;
 					
 					 // Visual:
 					sprite_index = spr.BonusHealthPickup;
 					image_blend  = make_color_rgb(200, 160, 255);
+					
 					break;
 					
 				case "bonus_health_chest":
+					
 					text = "OVERHEAL";
 					desc = ((num > 1) ? `${num} ` : "") + "CHEST";
 					
 					 // Visual:
 					sprite_index = spr.BonusHealthChest;
 					image_blend  = make_color_rgb(200, 160, 255);
+					
 					break;
 					
 				case "rogue":
+					
 					text = "PORTAL STRIKE";
 					desc = `${num} PICKUP`;
 					
 					 // Visual:
 					sprite_index = sprRogueAmmo;
 					image_blend  = make_color_rgb(140, 180, 255);
+					
 					break;
 					
 				case "parrot":
+					
 					num *= 6;
 					text = "FEATHERS";
 					desc = `${num} ${text}`;
@@ -1703,46 +1746,56 @@
 						}
 						other.sprite_index = race_get_sprite(race, sprChickenFeather);
 					}
+					
 					break;
 					
 				case "infammo":
+					
 					num *= 90;
 					text = "INFINITE AMMO";
 					desc = "FOR A MOMENT";
 					
 					 // Visual:
 					sprite_index = sprFishA;
-					shine = 1;
+					shine        = 1;
+					
 					break;
 					
 				case "hammerhead":
+					
 					text = `BONUS @(color:${c_yellow})HAMMERHEAD`;
 					desc = `+${num * 10} TILES`;
 					
 					 // Visual:
 					sprite_index = spr.HammerHeadPickup;
 					image_blend  = make_color_rgb(180, 30, 255);
+					
 					break;
 					
 				case "spirit":
+					
 					text = "BONUS SPIRIT";
 					desc = "LIVE FOREVER";
 					
 					 // Visual:
 					sprite_index = spr.SpiritPickup;
 					image_blend  = make_color_rgb(255, 200, 140);
+					
 					break;
 					
 				case "bone":
+					
 					text = "BONE";
 					desc = "BONE";
 					
 					 // Visual:
 					sprite_index = sprBone;
 					image_blend  = make_color_rgb(220, 220, 60);
+					
 					break;
 					
 				case "bones":
+					
 					num *= 30;
 					text = "BONES";
 					desc = `${num} ${text}`;
@@ -1750,18 +1803,22 @@
 					 // Visual:
 					sprite_index = spr.BonePickupBig[0];
 					image_blend  = make_color_rgb(220, 220, 60);
+					
 					break;
 					
 				case "red":
+					
 					text = `@3(${spr.RedText}:-0.8) AMMO`;
 					desc = `${num} PICKUP`;
 					
 					 // Visual:
 					sprite_index = spr.RedAmmoPickup;
 					image_blend  = make_color_rgb(255, 120, 120);
+					
 					break;
 					
 				case "soda":
+					
 					 // Decide Brand:
 					var _list = ["lightning blue lifting drink(tm)", "extra double triple coffee", "expresso", "saltshake", "munitions mist", "vinegar", "guardian juice"];
 					if(skill_get(mut_boiling_veins) > 0){
@@ -1779,9 +1836,11 @@
 					 // Visual:
 					sprite_index = weapon_get_sprt(soda);
 					image_blend  = make_color_rgb(220, 220, 220);
+					
 					break;
 					
 				case "turret":
+					
 					text = "TURRET";
 					desc = "EXTRA OFFENSE";
 					
@@ -1790,21 +1849,24 @@
 					image_blend  = make_color_rgb(200, 160, 180);
 					image_xscale = 0.9;
 					image_yscale = image_xscale;
+					
 					break;
+					
 			}
+			
 			break;
 			
 		case ChestShop_wep:
+			
 			var _merged = (wep_raw(drop) == "merge");
 			
+			 // Text:
 			text = (curse ? "CURSED " : "") + (_merged ? "MERGED " : "") + "WEAPON";
 			desc = weapon_get_name(drop);
 			
 			 // Visual:
 			sprite_index = weapon_get_sprt(drop);
-			
 			var _hue = [0, 40, 120, 0, 160, 80];
-				
 			if(
 				wep_raw(drop) == "merge"
 				&& "stock" in lq_get(drop, "base")
@@ -1841,12 +1903,31 @@
 			}
 			
 			 // Cursed:
-			if(curse){
+			if(curse > 0){
 				image_blend = merge_color(image_blend, make_color_rgb(255, 0, 255), 0.5);
 			}
+			
 			break;
+			
+		case ChestShop_skill:
+			
+			 // Text:
+			text = "TEMPORARY MUTATION";
+			desc = skill_get_name(drop);
+			
+			 // Visual:
+			var _icon = skill_get_icon(drop);
+			sprite_index = _icon[0];
+			image_index  = _icon[1];
+			image_speed  = 0;
+			image_blend  = make_color_rgb(130, 255, 100);
+			
+			break;
+			
 	}
+	image_alpha = -abs(image_alpha);
 	
+	 // Prompt Text:
 	with(prompt){
 		text = `${other.text}#@s${other.desc}`;
 	}
@@ -1878,11 +1959,16 @@
 		
 		with(instance_create(_x + lengthdir_x(_l, _d) + orandom(4), _y + lengthdir_y(_l, _d) + orandom(4), BulletHit)){
 			motion_add(_d + choose(0, 180), random(0.5));
-			sprite_index = sprLightning;
-			image_blend  = other.image_blend;
-			image_alpha  = 1.5 * (_l / point_distance(_x, _y, other.x, other.y)) * random(abs(other.image_alpha));
-			image_angle  = random(360);
-			depth        = other.depth - 1;
+			if(other.type == ChestShop_skill){
+				sprite_index = sprEatRad;
+				depth        = other.depth + choose(1, -1);
+			}
+			else{
+				sprite_index = sprLightning;
+				image_alpha  = 1.5 * (_l / point_distance(_x, _y, other.x, other.y)) * random(abs(other.image_alpha));
+				depth        = other.depth - 1;
+			}
+			image_blend = other.image_blend;
 		}
 		
 		 // Curse:
@@ -2165,10 +2251,22 @@
 						sound_play(weapon_get_swap(drop));
 						sound_play_pitchvol(sndGunGun,           0.8 + random(0.4), 0.6);
 						sound_play_pitchvol(sndPlasmaBigExplode, 0.6 + random(0.2), 0.8);
-						if(curse){
+						if(curse > 0){
 							sound_play_pitchvol(sndCursedPickup, 1 + orandom(0.2), 1.4);
 						}
 						instance_create(_x, _y, GunGun);
+						
+						break;
+						
+					case ChestShop_skill:
+						
+						_numDec = _num;
+						
+						with(obj_create(_x, _y, "OrchidSkill")){
+							skill = other.drop;
+							num   = _num;
+							type  = "area";
+						}
 						
 						break;
 						
@@ -2184,8 +2282,10 @@
 			
 			 // Remove other options:
 			with(instances_matching(instances_matching(object_index, "name", name), "creator", creator)){
-				if(--open <= 0){
-					open_state += random(1/3);
+				if(creator != noone || self == other){
+					if(--open <= 0){
+						open_state += random(1/3);
+					}
 				}
 			}
 			open_state = 3/4;
@@ -2747,12 +2847,10 @@
 	if(instance_exists(prompt) && player_is_active(prompt.pick)){
 		prompt.visible = false;
 		
-		 // Skill:
+		 // Mutation:
 		with(obj_create(x, y, "OrchidSkill")){
-			color1 = make_color_rgb(72, 253,  8); // make_color_rgb(252, 056, 000);
-			color2 = make_color_rgb( 3,  33, 18)
-			skill  = other.skill;
-			time   = 3600; // 2 minutes
+			skill = other.skill;
+			type  = "area";
 		}
 		
 		 // Effects:
@@ -3056,13 +3154,14 @@
 		The Orchid pet's mutation projectile
 		
 		Args:
+			trail_col   - The trail's color
+			flash       - How many frames to draw in flat white
 			skill       - The mutation to give, automatically decided by default
-			time        - The lifespan of the given mutation
+			num         - The value of the mutation
+			time        - The lifespan of the given mutation, use 0 for default
 			target      - The instance to fly towards
 			target_seek - True/false can fly toward the target, gets set to 'true' when not moving
 			creator     - Who created this ball, bro
-			trail_col   - The trail effect's 'image_blend'
-			flash       - How many frames to draw in flat white
 	*/
 	
 	 // Enable Orchid Chest Spawning:
@@ -3073,6 +3172,8 @@
 		 // Visual:
 		sprite_index = spr.PetOrchidBall;
 		depth        = -9;
+		trail_col    = make_color_rgb(128, 104, 34); // make_color_rgb(84, 58, 24);
+		flash        = 3;
 		
 		 // Vars:
 		mask_index   = mskSuperFlakBullet;
@@ -3082,21 +3183,22 @@
 		direction    = random(360);
 		speed        = 8;
 		skill        = OrchidSkill_decide();
-		time         = -1;
+		num          = 1;
+		time         = 0;
 		target       = instance_nearest(x, y, Player);
 		target_seek  = false;
 		creator      = noone;
-		trail_col    = make_color_rgb(128, 104, 34); // make_color_rgb(84, 58, 24);
-		flash        = 3;
 		
 		return self;
 	}
 	
-#define OrchidBall_step
+#define OrchidBall_begin_step
+	 // Unflash:
 	if(flash > 0){
 		flash -= current_time_scale;
 	}
 	
+#define OrchidBall_step
 	 // Grow / Shrink:
 	var	_scale = 1 + (0.1 * sin(current_frame / 10)),
 		_scaleAdd = (current_time_scale / 15);
@@ -3154,13 +3256,18 @@
 	}
 	else if(speed <= 3){
 		target_seek = true;
-		flash = 3;
+		flash       = max(flash, 3);
 	}
 	
 #define OrchidBall_draw
-	if(flash > 0) draw_set_fog(true, image_blend, 0, 0);
+	 // Self:
+	if(flash > 0){
+		draw_set_fog(true, image_blend, 0, 0);
+	}
 	draw_self();
-	if(flash > 0) draw_set_fog(false, 0, 0, 0);
+	if(flash > 0){
+		draw_set_fog(false, 0, 0, 0);
+	}
 	
 	 // Bloom:
 	var	_scale = 2,
@@ -3179,13 +3286,12 @@
 #define OrchidBall_destroy
 	 // Mutate:
 	with(obj_create(x, y, "OrchidSkill")){
-		creator = other.creator;
 		if(other.skill != mut_none){
 			skill = other.skill;
 		}
-		if(other.time >= 0){
-			time = other.time;
-		}
+		num     = other.num;
+		time    = other.time;
+		creator = other.creator;
 	}
 	
 	 // Alert:
@@ -3253,8 +3359,11 @@
 	
 #define OrchidChest_open
 	 // Skill:
+	var _target = other;
 	with(obj_create(x, y, "OrchidBall")){
-		if(instance_is(other, Player)) target = other;
+		if(instance_is(_target, Player)){
+			target = _target;
+		}
 		direction = 90 + orandom(45);
 	}
 	
@@ -3263,7 +3372,7 @@
 		scrFX(x + random(5), [y, 5], [90, random(1)], "VaultFlowerSparkle");
 	}
 	repeat(5){
-		scrVaultFlowerDebris(x, y, random(360), random(3));
+		VaultFlower_debris(x, y, random(360), random(3));
 	}
 	with(instance_create(x, y - 10, FXChestOpen)){
 		sprite_index = sprMutant6Dead;
@@ -3283,27 +3392,33 @@
 		Manages the pet Orchid's timed mutation
 		
 		Vars:
-			color1 - The main HUD color
-			color2 - The secondary HUD color
-			skill  - The mutation to give, automatically decided by default
-			time   - How many frames the mutation lasts
-			num    - The value of the mutation
-			flash  - Visual HUD flash, true/false
+			color1     - The main HUD color
+			color2     - The secondary HUD color
+			flash      - HUD flashes white for this many frames
+			star_scale - Scale of the star flashed behind the HUD
+			skill      - The mutation to give, automatically decided by default
+			num        - The value of the mutation
+			time       - How long the mutation lasts
+			type       - Determines its default color and how its 'time' ticks down
+			             "basic" for one tick every frame (not on loading or mutation screens)
+			             "area"  for one tick every area
 	*/
 	
 	with(instance_create(_x, _y, CustomObject)){
 		 // Visual:
-		color1 = make_color_rgb(255, 255, 80);
-		color2 = make_color_rgb(84, 58, 24);
+		color1     = c_white;
+		color2     = c_black;
+		flash      = 1;
+		star_scale = 1;
 		
 		 // Vars:
 		persistent = true;
 		skill      = OrchidSkill_decide();
 		num        = 1;
-		time       = 600;
+		type       = "basic";
+		time       = 0;
 		time_max   = 0;
 		setup      = true;
-		flash      = true;
 		chest      = [];
 		spirit     = [];
 		creator    = noone;
@@ -3356,9 +3471,43 @@
 	setup = false;
 	
 	 // Effects:
-	flash = true;
+	flash = max(flash, 1);
 	sound_play_pitch(sndMut, 1 + orandom(0.2));
 	sound_play_pitchvol(sndStatueXP, 0.8, 0.8);
+	
+	 // Type-Specific:
+	switch(type){
+		
+		case "basic":
+			
+			 // Colors:
+			if(color1 == c_white) color1 = make_color_rgb(255, 255, 80);
+			if(color2 == c_black) color2 = make_color_rgb( 84,  58, 24);
+			
+			 // Time:
+			if(time == 0){
+				time = 600; // 20 Seconds
+			}
+			
+			break;
+			
+		case "area":
+			
+			 // Colors:
+			if(color1 == c_white) color1 = make_color_rgb(72, 253,  8);
+			if(color2 == c_black) color2 = make_color_rgb(32,  33, 18);
+			
+			 // Time:
+			if(time == 0){
+				time = 3; // 3 Areas
+			}
+			
+			break;
+			
+	}
+	if(time_max == 0){
+		time_max = time;
+	}
 	
 	 // Mutation:
 	skill_set(skill, max(0, skill_get(skill)) + num);
@@ -3457,23 +3606,33 @@
 		}
 	}
 	
+#define OrchidSkill_begin_step
+	 // Unflash:
+	if(flash > 0){
+		flash -= current_time_scale;
+	}
+	if(star_scale > 0){
+		star_scale -= current_time_scale / 60;
+	}
+	
 #define OrchidSkill_step
 	if(setup) OrchidSkill_setup();
 	
-	 // Unflash:
-	else flash = false;
-	
 	 // Timer:
 	if(skill_get(skill) != 0){
-		time_max = max(time, time_max);
-		if(time >= 0 && !instance_exists(GenCont) && !instance_exists(LevCont)){
-			time -= current_time_scale;
-			
-			 // Goodbye:
-			if(time <= current_time_scale){
-				flash = true;
-				if(time <= 0) instance_destroy();
+		 // Normal Tick:
+		if(time > 0 && type == "basic"){
+			if(!instance_exists(GenCont) && !instance_exists(LevCont)){
+				time -= min(time, current_time_scale);
+				if(time <= 0){
+					flash = max(flash, 1);
+				}
 			}
+		}
+		
+		 // Goodbye:
+		else if(time == 0 && flash <= 0){
+			instance_destroy();
 		}
 	}
 	
@@ -3657,11 +3816,9 @@
 	if(instance_exists(prompt)){
 		if(player_is_active(prompt.pick)){
 			 // Grant Blessing:
-			with(obj_create(0, 0, "OrchidSkill")){
-				color1  = make_color_rgb(72, 253,  8);
-				color2  = make_color_rgb( 3,  33, 18)
+			with(obj_create(x, y, "OrchidSkill")){
 				skill   = other.skill;
-				time    = 180 * 30; // 3 minutes
+				type    = "area";
 				creator = other;
 			}
 			
@@ -4162,6 +4319,60 @@
 	}
 	
 	
+#define RatChest_create(_x, _y)
+	/*
+		Shop chest for mutations, replaces rad canisters
+	*/
+	
+	with(obj_create(_x, _y, "CustomChest")){
+		 // Visual:
+		sprite_index = spr.RatChest;
+		spr_dead     = spr.RatChestOpen;
+		
+		 // Sound:
+		snd_open = sndEXPChest;
+		
+		 // Vars:
+		setup = true;
+		
+		 // Events:
+		on_open = script_ref_create(RatChest_open);
+		
+		return self;
+	}
+	
+#define RatChest_open
+	 // Clear Walls:
+	instance_create(x, y, PortalClear);
+	
+	 // Manually Create ChestOpen to Link Shops:
+	var _open = instance_create(x, y, ChestOpen);
+	with(_open){
+		sprite_index = other.spr_dead;
+	}
+	spr_dead = -1;
+	
+	 // Create Shops:
+	var _angOff = 35;
+	for(var _ang = -_angOff; _ang <= _angOff; _ang += _angOff * 2){
+		var	_dis = 28,
+			_dir = _ang + 90;
+			
+		with(obj_create(x + lengthdir_x(_dis, _dir), y + lengthdir_y(_dis, _dir), "ChestShop")){
+			type    = ChestShop_skill;
+			creator = _open;
+			
+			 // Decide Item:
+			drop = OrchidSkill_decide();
+		}
+	}
+	
+	 // Effects:
+	sound_play_pitchvol(sndEnergySword, 0.5 + orandom(0.1), 0.8);
+	sound_play_pitchvol(sndSkillPick,   2.0 + orandom(0.1), 0.5);
+	repeat(6) scrFX(x, y, 3, Dust);
+	
+	
 #define RedAmmoChest_create(_x, _y)
 	with(obj_create(_x, _y, "CustomChest")){
 		 // Visual:
@@ -4302,6 +4513,7 @@
 			
 			 // Swapped:
 			if(_wep != wep_none){
+				 // Text:
 				pickup_text(weapon_get_name(_wep) + "!", 0);
 				
 				 // Explosion:
@@ -4404,201 +4616,6 @@
 	return (pull_delay <= 0);
 	
 	
-#define SunkenChest_create(_x, _y)
-	with(obj_create(_x, _y, "CustomChest")){
-		 // Visual:
-		sprite_index = spr.SunkenChest;
-		spr_dead     = spr.SunkenChestOpen;
-		spr_shadow_y = 0;
-		
-		 // Sounds:
-		snd_open = sndGoldChest;
-		
-		 // Vars:
-		num   = 2;
-		wep   = "merge";
-		skeal = false;
-		if(GameCont.area == "coast"){
-			wep = { wep: "trident", gold: true };
-		}
-		
-		 // Events:
-		on_step = script_ref_create(SunkenChest_step);
-		on_open = script_ref_create(SunkenChest_open);
-		
-		return self;
-	}
-	
-#define SunkenChest_step
-	 // Shiny:
-	if(chance_ct(1, 90)){
-		with(instance_create(x + orandom(16), y + orandom(8), CaveSparkle)){
-			depth = other.depth - 1;
-		}
-	}
-	
-	 // Ancient Treasure Guards:
-	var _num = 3 * skeal;
-	if(_num > 0){
-		var _spawn = false;
-		with(Player){
-			if(point_distance(x, y, other.x, other.y) < 192){
-				if(!collision_line(x, y, other.x, other.y, Wall, false, false)){
-					_spawn = true;
-					break;
-				}
-			}
-		}
-		if(_spawn){
-			skeal = 0;
-			
-			 // Skeals:
-			var _ang = random(360);
-			for(var d = _ang; d < _ang + 360; d += 360 / _num){
-				var	_dis = 32,
-					_dir = d + orandom(30);
-					
-				obj_create(x + lengthdir_x(_dis, _dir), y + lengthdir_y(_dis, _dir), "SunkenSealSpawn");
-			}
-			
-			 // Clear Area:
-			with(instance_create(x, y, PortalClear)){
-				image_xscale = 1.2;
-				image_yscale = image_xscale;
-			}
-			
-			 // Alert:
-			with(alert_create(self, spr.SkealAlert)){
-				flash = 10;
-			}
-			
-			 // Sound:
-			sound_play_pitchvol(sndMutant14Turn, 0.2 + random(0.1), 1);
-		}
-	}
-	
-#define SunkenChest_open
-	instance_create(x, y, PortalClear);
-	
-	 // Sunken Chest Count:
-	with(GameCont){
-		if("sunkenchests" not in self){
-			sunkenchests = 0;
-		}
-		sunkenchests = max(sunkenchests, GameCont.loops + 1);
-	}
-	
-	 // Important:
-	if(instance_is(other, Player)){
-		sound_play(other.snd_chst);
-	}
-	
-	 // Trident Unlock:
-	var _wepRaw = wep_raw(wep);
-	if(_wepRaw == "trident" && !weapon_get("avail", wep)){
-		unlock_set(`wep:${_wepRaw}`, true);
-	}
-	
-	 // Weapon:
-	var _num = 1 + ultra_get("steroids", 1);
-	if(_num > 0){
-		var _wep = wep;
-		
-		 // Golden Merged Weapon:
-		if(_wep == "merge"){
-			var _part = mod_script_call("weapon", _wep, "weapon_merge_decide_raw", 0, GameCont.hard, -1, -1, true);
-			if(array_length(_part) >= 2){
-				_wep = wep_merge(_part[0], _part[1]);
-			}
-		}
-		
-		 // Create:
-		repeat(_num){
-			with(instance_create(x, y, WepPickup)){
-				wep  = _wep;
-				ammo = true;
-			}
-		}
-	}
-	
-	 // Real Loot:
-	if(num > 0){
-		repeat(num * 10){
-			with(obj_create(x, y, "SunkenCoin")){
-				motion_add(random(360), 2 + random(2.5));
-			}
-		}
-		
-		 // Ammo:
-		var _ang = random(360);
-		for(var d = _ang; d < _ang + 360; d += (360 / num)){
-			with(obj_create(x, y, "BackpackPickup")){
-				target    = instance_create(x, y, AmmoPickup);
-				direction = d;
-				speed     = random_range(2, 3);
-				with(self){
-					event_perform(ev_step, ev_step_end);
-				}
-			}
-		}
-	}
-	
-	/*
-	 // Skealetons:
-	if(num + 1 > 0){
-		var _ang = random(360);
-		for(var d = _ang; d < _ang + 360; d += (360 / (num + 1))){
-			with(obj_create(x, y, "SunkenSealSpawn")){
-				var	_dis = random_range(40, 80),
-					_dir = d + orandom(30);
-					
-				while(_dis > 0 && !position_meeting(x, y, Wall)){
-					var l = min(_dis, 4);
-					x += lengthdir_x(l, _dir);
-					y += lengthdir_y(l, _dir);
-					_dis -= l;
-				}
-			}
-			
-			 // Top Bros:
-			if(area_get_underwater(GameCont.area)){
-				var	_spawnX = x,
-					_spawnY = y,
-					_spawnObj = ((GameCont.area == "trench" || (GameCont.area == area_vault && GameCont.lastarea == "trench")) ? Freak : BoneFish),
-					_spawnDir = d,
-					_spawnDis = random_range(320, 400);
-					
-				with(instance_nearest(x - 8 + lengthdir_x(32, _spawnDir), y - 8 + lengthdir_y(32, _spawnDir), TopSmall)){
-					_spawnDir = point_direction(other.x, other.y, bbox_center_x, bbox_center_y);
-				}
-				
-				repeat(3){
-					with(top_create(_spawnX, _spawnY, _spawnObj, _spawnDir, _spawnDis)){
-						jump_time = irandom_range(30, 150);
-						
-						_spawnX = x;
-						_spawnY = y;
-						_spawnDir = random(360);
-						_spawnDis = -1;
-						
-						z = 8;
-						
-						 // Poof:
-						with(target) repeat(3){
-							with(instance_create(x + orandom(8), y + orandom(8), Dust)){
-								depth = other.depth - 1;
-							}
-						}
-					}
-				}
-				
-				sound_play_pitchvol(sndMutant14Turn, 0.2 + random(0.1), 1);
-			}
-		}
-	}
-	*/
-	
-	
 #define SunkenCoin_create(_x, _y)
 	with(obj_create(_x, _y, "CustomPickup")){
 		 // Visual:
@@ -4628,7 +4645,10 @@
 	return (speed <= 0);
 	
 #define SunkenCoin_open
-	if(speed > 0) return true;
+	 // Can't Grab While Moving:
+	if(speed > 0){
+		return true;
+	}
 	
 	
 #define VaultFlower_create(_x, _y)
@@ -4762,7 +4782,7 @@
 		 // Interact:
 		else if(instance_exists(prompt) && player_is_active(prompt.pick)){
 			 // Reroll:
-			mod_variable_set("skill", "reroll", "skill", skill);
+			GameCont.ntte_reroll = skill;
 			skill_set("reroll", true);
 			
 			 // Orchid Plant Skin Unlock:
@@ -4835,7 +4855,7 @@
 		
 		 // Effects:
 		if(chance_ct(1, 150)){
-			with(scrVaultFlowerDebris(x + orandom(12), (y - 4) + orandom(8), 0, 0)){
+			with(VaultFlower_debris(x + orandom(12), (y - 4) + orandom(8), 0, 0)){
 				with(scrFX(x, y, [270 + orandom(60), 0.5], Dust)){
 					image_blend = make_color_rgb(84, 58, 24);
 					image_xscale /= 2;
@@ -4848,7 +4868,7 @@
 	 // Hurt Effects:
 	if(sprite_index == spr_hurt){
 		if(image_index >= 1 && image_index < 1 + image_speed_raw){
-			scrVaultFlowerDebris(x, y, direction + orandom(random(180)), 2 + random(3.5));
+			VaultFlower_debris(x, y, direction + orandom(random(180)), 2 + random(3.5));
 		}
 	}
 	
@@ -4856,11 +4876,11 @@
 
 #define VaultFlower_death
 	 // Effects:
-	for(var d = direction; d < direction + 360; d += (360 / 6)){
-		scrFX(x, y, [d + orandom(45), 3], Dust);
-		scrVaultFlowerDebris(x, y - 6, d + orandom(45), 4 + random(2));
+	for(var _dir = direction; _dir < direction + 360; _dir += (360 / 6)){
+		scrFX(x, y, [_dir + orandom(45), 3], Dust);
+		VaultFlower_debris(x, y - 6, _dir + orandom(45), 4 + random(2));
 		repeat(2){
-			with(scrVaultFlowerDebris(x, y - 6, d + orandom(45), random(4))){
+			with(VaultFlower_debris(x, y - 6, _dir + orandom(45), random(4))){
 				vspeed--;
 			}
 		}
@@ -4910,7 +4930,7 @@
 	}
 	instance_destroy();
 	
-#define scrVaultFlowerDebris(_x, _y, _dir, _spd)
+#define VaultFlower_debris(_x, _y, _dir, _spd)
 	with(instance_create(_x, _y, Feather)){
 		sprite_index = (variable_instance_get(other, "alive", true) ? spr.VaultFlowerDebris : spr.VaultFlowerWiltedDebris);
 		image_index = irandom(image_number - 1);
@@ -5200,7 +5220,7 @@
 	
 /// GENERAL
 #define game_start
-	 // Delete Orchid Skills:
+	 // Delete Orchid Mutations:
 	with(instances_matching(CustomObject, "name", "OrchidSkill")){
 		instance_delete(self);
 	}
@@ -5318,6 +5338,25 @@
 				);
 				if(chance(1, 5)){
 					image_blend = merge_color(image_blend, c_blue, 0.25);
+				}
+			}
+		}
+	}
+	
+	 // Tick Green Orchid Mutations:
+	if(instance_exists(GenCont) && GenCont.id > _newID){
+		if(instance_exists(CustomObject)){
+			var _instSkill = instances_matching(instances_matching(CustomObject, "name", "OrchidSkill"), "type", "area");
+			if(array_length(_instSkill)){
+				with(instances_matching_gt(GenCont, "id", _newID)){
+					var _lastSeed = random_get_seed();
+					with(instances_matching_gt(_instSkill, "time", 0)){
+						time      -= min(time,       1);
+						flash      = max(flash,      1);
+						star_scale = max(star_scale, 3/4);
+						sound_play_pitch(sndMut, 1.5 + orandom(0.1));
+					}
+					random_set_seed(_lastSeed);
 				}
 			}
 		}

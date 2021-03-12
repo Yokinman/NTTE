@@ -26,7 +26,7 @@
 	_wep = _fire.wep;
 	
 	 // Burst Fire:
-	with(projectile_create(x, y, "CustomBullet", gunangle + orandom(5 * accuracy), 16)){
+	with(projectile_create(x, y, "CustomBullet", gunangle + orandom(4 * accuracy), 16)){
 		 // Visual:
 		sprite_index = spr.IDPDHeavyBullet;
 		spr_dead     = spr.IDPDHeavyBulletHit;

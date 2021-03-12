@@ -12,7 +12,7 @@
 #define skill_tip    return "ECHOLOCATION IS UNDERRATED";
 #define skill_icon   return global.sprSkillHUD;
 #define skill_avail  return false;
-	
+
 #define ntte_draw_dark(_type)
 	if(skill_get(mod_current) > 0){
 		switch(_type){

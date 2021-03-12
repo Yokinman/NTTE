@@ -305,7 +305,7 @@
 	
 	 // Backpack Setpieces:
 	if(GameCont.hard > 4 && GameCont.area != area_hq){
-		if(GameCont.area == area_campfire || (chance(1 + (2 * skill_get(mut_last_wish)), 12) && _normalArea)){
+		if(GameCont.area == area_campfire || (chance(1, 12) && _normalArea)){
 			with(array_shuffle(FloorNormal)){
 				if(
 					distance_to_object(Player) > 80
@@ -327,25 +327,30 @@
 						}
 					}
 					
-					 // Flavor Corpse:
-					else obj_create(
-						bbox_center_x + orandom(8),
-						bbox_center_y + irandom(8),
-						"Backpacker"
-					);
-					
 					 // Backpack:
-					repeat((_rogue > 0) ? _rogue : 1){
-						chest_create(
-							bbox_center_x + orandom(4),
-							bbox_center_y - 6 + orandom(min(4, _rogue)),
-							(_rogue ? "RogueBackpack" : "Backpack"),
-							true
-						);
+					var _num = max(1, _rogue) + skill_get(mut_open_mind);
+					if(_num > 0){
+						repeat(_num){
+							chest_create(
+								bbox_center_x + orandom(4),
+								bbox_center_y - 6 + orandom(min(4, _num - 1)),
+								((_rogue > 0) ? "RogueBackpack" : "Backpack"),
+								true
+							);
+						}
+						
+						 // Flavor Corpse:
+						if(GameCont.area != area_campfire){
+							obj_create(
+								bbox_center_x + orandom(8),
+								bbox_center_y + irandom(8),
+								"Backpacker"
+							);
+						}
+						
+						 // Clear Walls:
+						instance_create(bbox_center_x, bbox_center_y, PortalClear);
 					}
-					
-					 // Clear Walls:
-					instance_create(bbox_center_x, bbox_center_y, PortalClear);
 					
 					break;
 				}
@@ -3866,7 +3871,7 @@
 				var	_skillList = [],
 					_skillType = [];
 					
-				 // Compile Orchid Skills to Draw:
+				 // Compile Orchid Mutations to Draw:
 				if(instance_exists(CustomObject)){
 					var _inst = instances_matching(CustomObject, "name", "OrchidSkill");
 					if(array_length(_inst)) with(_inst){
@@ -3979,9 +3984,10 @@
 												_timeMax = infinity,
 												_colSub  = c_dkgray,
 												_colTop  = c_white,
-												_flash   = false;
+												_flash   = false,
+												_star    = 0;
 												
-											 // Get Orchid Skill With Least Time:
+											 // Get Orchid Mutation With Least Time:
 											with(instances_matching(instances_matching(CustomObject, "name", "OrchidSkill"), "skill", _skill)){
 												if(time < _time){
 													_time    = time;
@@ -3989,16 +3995,21 @@
 													_colSub  = color2;
 													_colTop  = color1;
 												}
-												if(flash) _flash = true;
+												if(flash > 0){
+													_flash = true;
+												}
+												if(star_scale > _star){
+													_star = star_scale;
+												}
 											}
 											
-											 // Orchid Skill Drawing:
-											if(_time > current_time_scale){
+											 // Orchid Mutation Drawing:
+											if(_time != 0){
 												var	_uvs = sprite_get_uvs(_spr, _img),
-													_x1 = max(sprite_get_bbox_left  (_spr),     _uvs[4]                                      ),
-													_y1 = max(sprite_get_bbox_top   (_spr),     _uvs[5]                                      ),
-													_x2 = min(sprite_get_bbox_right (_spr) + 1, _uvs[4] + (_uvs[6] * sprite_get_width (_spr))),
-													_y2 = min(sprite_get_bbox_bottom(_spr) + 1, _uvs[5] + (_uvs[7] * sprite_get_height(_spr)));
+													_x1  = max(sprite_get_bbox_left  (_spr),     _uvs[4]                                      ),
+													_y1  = max(sprite_get_bbox_top   (_spr),     _uvs[5]                                      ),
+													_x2  = min(sprite_get_bbox_right (_spr) + 1, _uvs[4] + (_uvs[6] * sprite_get_width (_spr))),
+													_y2  = min(sprite_get_bbox_bottom(_spr) + 1, _uvs[5] + (_uvs[7] * sprite_get_height(_spr)));
 													
 												 // Outline:
 												draw_set_fog(true, _colSub, 0, 0);
@@ -4019,13 +4030,15 @@
 												}
 												
 												 // Star Flash:
-												var	_wave   = current_frame + (i * 1000),
-													_frames = 60,
-													_scale  = max(0, (1.1 + (0.1 * sin(_wave / 15))) * ((_time - (_timeMax - _frames)) / _frames)),
-													_angle  = _wave / 10;
+												if(_star > 0){
+													var	_wave   = current_frame + (i * 1000),
+														_scale  = max(0, (1.1 + (0.1 * sin(_wave / 15))) * _star),
+														_angle  = _wave / 10;
+														
+													if(_flash){
+														draw_set_fog(true, c_white, 0, 0);
+													}
 													
-												if(_scale > 0){
-													if(_flash) draw_set_fog(true, c_white, 0, 0);
 													draw_sprite_ext(spr.PetOrchidBall, _wave, _x, _y, _scale, _scale, _angle, c_white, 1);
 												}
 											}
@@ -4665,7 +4678,9 @@
 							_alertSpr = lq_defget(alert, "spr", -1),
 							_alertCan = sprite_exists(_alertSpr);
 							
-						if(flash > 0) draw_set_fog(true, image_blend, 0, 0);
+						if(flash > 0){
+							draw_set_fog(true, image_blend, 0, 0);
+						}
 						
 						 // Alert (!) Shadow:
 						if(_alertCan){
@@ -4707,7 +4722,9 @@
 							draw_sprite_ext(_alertSpr, _alertImg, _alertX, _alertY, _alertXSc, _alertYSc, _alertAng, _alertCol, _alertAlp);
 						}
 						
-						if(flash > 0) draw_set_fog(false, 0, 0, 0);
+						if(flash > 0){
+							draw_set_fog(false, 0, 0, 0);
+						}
 					}
 				}
 			}

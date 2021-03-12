@@ -1,5 +1,5 @@
 #define init
-	ntte_version = 2.046;
+	ntte_version = 2.048;
 	
 	 // Debug Lag:
 	lag = false;
@@ -1546,7 +1546,7 @@
 			BackpackCursedOpen = sprite(p + "sprBackpackCursedOpen",  1, 8, 8);
 			BackpackDebris     = sprite(p + "sprBackpackDebris",     30, 6, 6);
 			
-			 // Deceased Backpacker:
+			 // Backpacker (Deceased):
 			BackpackerIdle = [sprite(p + "sprBackpacker0", 1, 12, 12),
 			                  sprite(p + "sprBackpacker1", 1, 12, 12),
 			                  sprite(p + "sprBackpacker2", 1, 12, 12)];
@@ -1554,23 +1554,15 @@
 			                  sprite(p + "sprBackpacker1", 1, 12, 12, shnHurt),
 			                  sprite(p + "sprBackpacker2", 1, 12, 12, shnHurt)];
 			
-			 // Bat/Cat Chests:
+			 // Bat Chests:
 			BatChest              = sprite(p + "sprBatChest",              1, 10, 10, shn20);
 			BatChestCursed        = sprite(p + "sprBatChestCursed",        1, 10, 10, shn20);
 			BatChestBig           = sprite(p + "sprBatChestBig",           1, 12, 12, shn24);
 			BatChestBigCursed     = sprite(p + "sprBatChestBigCursed",     1, 12, 12, shn24);
-			CatChest              = sprite(p + "sprCatChest",              1, 10, 10, shn20);
 			BatChestOpen          = sprite(p + "sprBatChestOpen",          1, 10, 10);
 			BatChestCursedOpen    = sprite(p + "sprBatChestCursedOpen",    1, 10, 10);
 			BatChestBigOpen       = sprite(p + "sprBatChestBigOpen",       1, 12, 12);
 			BatChestBigCursedOpen = sprite(p + "sprBatChestBigCursedOpen", 1, 12, 12);
-			CatChestOpen          = sprite(p + "sprCatChestOpen",          1, 10, 10);
-			
-			 // Cat Crates:
-			WallCrateBot = sprite(p + "sprWallCrateBot", 2,  2,  2);
-			WallCrateTop = sprite(p + "sprWallCrateTop", 4,  4,  4);
-			WallCrateOut = sprite(p + "sprWallCrateTop", 4,  4, 12);
-			FloorCrate   = sprite(p + "sprFloorCrate",   1, 18, 18);
 			
 			 // Bone:
 			BonePickup    = array_create(4, -1);
@@ -1630,9 +1622,23 @@
 			ButtonPickup       = sprite(p + "sprButtonPickup",       1, 6, 6, shn12);
 			ButtonPickupDebris = sprite(p + "sprButtonPickupDebris", 2, 6, 6);
 			
+			 // Cat Chest:
+			CatChest     = sprite(p + "sprCatChest",     1, 10, 10, shn20);
+			CatChestOpen = sprite(p + "sprCatChestOpen", 1, 10, 10);
+			
+			 // Cat Crates:
+			WallCrateBot = sprite(p + "sprWallCrateBot", 2,  2,  2);
+			WallCrateTop = sprite(p + "sprWallCrateTop", 4,  4,  4);
+			WallCrateOut = sprite(p + "sprWallCrateTop", 4,  4, 12);
+			FloorCrate   = sprite(p + "sprFloorCrate",   1, 18, 18);
+			
 			 // Orchid Chest:
 			OrchidChest     = sprite(p + "sprOrchidChest",     1, 12, 8, shn24);
 			OrchidChestOpen = sprite(p + "sprOrchidChestOpen", 1, 12, 8);
+			
+			 // Rat Chest:
+			RatChest     = sprite(p + "sprRatChest",     1, 10, 10, shn20);
+			RatChestOpen = sprite(p + "sprRatChestOpen", 1, 10, 10);
 			
 			 // Red Ammo:
 			RedAmmoChest       = sprite(p + "sprRedAmmoChest",       1, 8, 8, shn16);

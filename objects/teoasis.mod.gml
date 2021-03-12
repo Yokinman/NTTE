@@ -1292,6 +1292,146 @@
 	}
 	
 	
+#define SunkenChest_create(_x, _y)
+	with(obj_create(_x, _y, "CustomChest")){
+		 // Visual:
+		sprite_index = spr.SunkenChest;
+		spr_dead     = spr.SunkenChestOpen;
+		spr_shadow_y = 0;
+		
+		 // Sounds:
+		snd_open = sndGoldChest;
+		
+		 // Vars:
+		num   = 2;
+		wep   = "merge";
+		skeal = false;
+		if(GameCont.area == "coast"){
+			wep = { wep: "trident", gold: true };
+		}
+		
+		 // Events:
+		on_step = script_ref_create(SunkenChest_step);
+		on_open = script_ref_create(SunkenChest_open);
+		
+		return self;
+	}
+	
+#define SunkenChest_step
+	 // Shiny:
+	if(chance_ct(1, 90)){
+		with(instance_create(x + orandom(16), y + orandom(8), CaveSparkle)){
+			depth = other.depth - 1;
+		}
+	}
+	
+	 // Ancient Treasure Guards:
+	var _num = 3 * skeal;
+	if(_num > 0){
+		var _spawn = false;
+		with(Player){
+			if(point_distance(x, y, other.x, other.y) < 192){
+				if(!collision_line(x, y, other.x, other.y, Wall, false, false)){
+					_spawn = true;
+					break;
+				}
+			}
+		}
+		if(_spawn){
+			skeal = 0;
+			
+			 // Skeals:
+			var _ang = random(360);
+			for(var _d = _ang; _d < _ang + 360; _d += 360 / _num){
+				var	_dis = 32,
+					_dir = _d + orandom(30);
+					
+				obj_create(x + lengthdir_x(_dis, _dir), y + lengthdir_y(_dis, _dir), "SunkenSealSpawn");
+			}
+			
+			 // Clear Area:
+			with(instance_create(x, y, PortalClear)){
+				image_xscale = 1.2;
+				image_yscale = image_xscale;
+			}
+			
+			 // Alert:
+			with(alert_create(self, spr.SkealAlert)){
+				flash = 10;
+			}
+			
+			 // Sound:
+			sound_play_pitchvol(sndMutant14Turn, 0.2 + random(0.1), 1);
+		}
+	}
+	
+#define SunkenChest_open
+	instance_create(x, y, PortalClear);
+	
+	 // Sunken Chest Count:
+	with(GameCont){
+		if("sunkenchests" not in self){
+			sunkenchests = 0;
+		}
+		sunkenchests = max(sunkenchests, GameCont.loops + 1);
+	}
+	
+	 // Important:
+	if(instance_is(other, Player)){
+		sound_play(other.snd_chst);
+	}
+	
+	 // Trident Unlock:
+	var _wepRaw = wep_raw(wep);
+	if(_wepRaw == "trident" && !weapon_get("avail", wep)){
+		unlock_set(`wep:${_wepRaw}`, true);
+	}
+	
+	 // Weapon:
+	var _num = 1 + ultra_get("steroids", 1);
+	if(_num > 0){
+		var _wep = wep;
+		
+		 // Golden Merged Weapon:
+		if(_wep == "merge"){
+			var _part = mod_script_call("weapon", _wep, "weapon_merge_decide_raw", 0, GameCont.hard, -1, -1, true);
+			if(array_length(_part) >= 2){
+				_wep = wep_merge(_part[0], _part[1]);
+			}
+		}
+		
+		 // Create:
+		repeat(_num){
+			with(instance_create(x, y, WepPickup)){
+				wep  = _wep;
+				ammo = true;
+			}
+		}
+	}
+	
+	 // Real Loot:
+	if(num > 0){
+		repeat(num * 10){
+			with(obj_create(x, y, "SunkenCoin")){
+				motion_add(random(360), 2 + random(2.5));
+			}
+		}
+		
+		 // Ammo:
+		var _ang = random(360);
+		for(var _dir = _ang; _dir < _ang + 360; _dir += (360 / num)){
+			with(obj_create(x, y, "BackpackPickup")){
+				target    = instance_create(x, y, AmmoPickup);
+				direction = _dir;
+				speed     = random_range(2, 3);
+				with(self){
+					event_perform(ev_step, ev_step_end);
+				}
+			}
+		}
+	}
+	
+	
 #define SunkenRoom_create(_x, _y)
 	with(instance_create(_x, _y, CustomObject)){
 		 // Vars:

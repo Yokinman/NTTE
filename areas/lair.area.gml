@@ -651,6 +651,66 @@
 		}
 	}
 	
+	 // Forcing Lair/Pizza Sewers Border Wall Sprites:
+	if(instance_exists(CustomObject)){
+		var _inst = instances_matching(CustomObject, "name", "LairBorder");
+		if(array_length(_inst)){
+			with(_inst){
+				 // Walls:
+				if(instance_exists(Wall) && Wall.id > _newID){
+					var _inst = instances_matching(instances_matching_ge(instances_matching_gt(Wall, "id", _newID), "y", y), "area", GameCont.area);
+					if(array_length(_inst)){
+						var	_sprBot = area_get_sprite(area, sprWall1Bot),
+							_sprTop = area_get_sprite(area, sprWall1Top),
+							_sprOut = area_get_sprite(area, sprWall1Out);
+							
+						with(_inst){
+							sprite_index = _sprBot;
+							topspr       = _sprTop;
+							outspr       = _sprOut;
+							area         = other.area;
+						}
+					}
+				}
+				
+				 // Outer Walls:
+				if(instance_exists(TopSmall) && TopSmall.id > _newID){
+					var _inst = instances_matching(instances_matching_ge(instances_matching_gt(TopSmall, "id", _newID), "y", y), "area", GameCont.area);
+					if(array_length(_inst)){
+						var _spr = area_get_sprite(area, sprWall1Trans);
+						with(_inst){
+							sprite_index = _spr;
+							area         = other.area;
+						}
+					}
+				}
+				
+				 // Destroyed Walls:
+				if(instance_exists(FloorExplo) && FloorExplo.id > _newID){
+					var _inst = instances_matching(instances_matching_ge(instances_matching_gt(FloorExplo, "id", _newID), "y", y), "area", GameCont.area);
+					if(array_length(_inst)){
+						var _spr = area_get_sprite(area, sprFloor1Explo);
+						with(_inst){
+							sprite_index = _spr;
+							area         = other.area;
+						}
+					}
+				}
+				
+				 // Wall Debris:
+				if(instance_exists(Debris) && Debris.id > _newID){
+					var _inst = instances_matching(instances_matching_ge(instances_matching_gt(Debris, "id", _newID), "y", y), "sprite_index", area_get_sprite(GameCont.area, sprDebris1));
+					if(array_length(_inst)){
+						var _spr = area_get_sprite(area, sprDebris1);
+						with(_inst){
+							sprite_index = _spr;
+						}
+					}
+				}
+			}
+		}
+	}
+	
 #define ntte_begin_step
 	 // Silver Tongue:
 	if(instance_exists(SkillIcon) && "ntte_lairmut" in GameCont && GameCont.ntte_lairmut){
