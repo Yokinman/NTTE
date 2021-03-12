@@ -305,7 +305,7 @@
 	
 	 // Backpack Setpieces:
 	if(GameCont.hard > 4 && GameCont.area != area_hq){
-		if(GameCont.area == area_campfire || (chance(1, 12) && _normalArea)){
+		if(GameCont.area == area_campfire || (chance(1 + (2 * skill_get(mut_last_wish)), 12) && _normalArea)){
 			with(array_shuffle(FloorNormal)){
 				if(
 					distance_to_object(Player) > 80
