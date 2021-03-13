@@ -2,53 +2,58 @@
 	mod_script_call("mod", "teassets", "ntte_init", script_ref_create(init));
 	
 	 // Sprites:
-	global.sprSkillHUD = sprite_add("../sprites/skills/Annihilation/sprSkillAnnihilationHUD.png", 1, 9, 9);
+	global.sprSkillHUD = sprite_add("../sprites/skills/Annihilation/sprSkillAnnihilationHUD.png", 1, 8, 8);
 	
 #define cleanup
 	mod_script_call("mod", "teassets", "ntte_cleanup", script_ref_create(cleanup));
 	
-#macro annihilation_list variable_instance_get(GameCont, "annihilation_list", [])
-
 #define skill_name   return "ANNIHILATION";
 #define skill_icon   return global.sprSkillHUD;
 #define skill_avail  return false;
 
 #define skill_text
-	var	_text = `@(color:${area_get_back_color("red")})DESTROY`,
-		_list = [];
-		
-	 // Get Annihilated Enemies:
-	with(annihilation_list){
-		array_push(_list, " @w" + string_upper(text));
-	}
+	var _text = `@(color:${area_get_back_color("red")})DESTROY`;
 	
-	 // Compile Text:
-	var _max = array_length(_list);
-	if(_max > 0){
-		_text += "S @sALL";
+	if("annihilation_list" in GameCont){
+		var _list = [];
 		
-		 // Enemy List:
-		if(_max > 1){
-			_list[_max - 1] = " @sAND" + _list[_max - 1];
-			if(_max == 2){
-				_text += "#";
-			}
-			else for(var i = 1; i < _max; i += 2){
-				_list[i] = "#" + _list[i];
-			}
+		 // Get Annihilated Enemies:
+		with(GameCont.annihilation_list){
+			array_push(_list, " @w" + string_upper(text));
 		}
-		_text += array_join(_list, ((_max > 2) ? "," : "")) + "#@s";
 		
-		 // Duration:
-		var _num = skill_get(mod_current);
-		if(_num > 2){
-			_text += `FOR THE NEXT @w${_num - 1} LEVELS`;
-		}
-		else if(_num > 1){
-			_text += "THROUGH THE @wNEXT LEVEL";
-		}
-		else{
-			_text += "UNTIL THE @wNEXT LEVEL";
+		 // Compile Text:
+		var _max = array_length(_list);
+		if(_max > 0){
+			_text += "S @sALL";
+			
+			 // Enemy List:
+			if(_max > 1){
+				_list[_max - 1] = " @sAND" + _list[_max - 1];
+				if(_max == 2){
+					_text += "#";
+				}
+				else for(var i = 1; i < _max; i += 2){
+					_list[i] = "#" + _list[i];
+				}
+			}
+			_text += array_join(_list, ((_max > 2) ? "," : ""));
+			
+			 // Duration:
+			if("annihilation_skill" in GameCont){
+				with(GameCont.annihilation_skill){
+					_text += "#@s";
+					if(time > 2){
+						_text += `FOR THE NEXT @w${time - 1} LEVELS`;
+					}
+					else if(time > 1){
+						_text += "THROUGH THE @wNEXT LEVEL";
+					}
+					else{
+						_text += "UNTIL THE @wNEXT LEVEL";
+					}
+				}
+			}
 		}
 	}
 	
@@ -57,57 +62,42 @@
 #define skill_tip
 	var _text = choose("GOODBYE", "SO LONG", "FAREWELL");
 	
-	if(array_length(annihilation_list) > 0){
-		_text += ", " + `@(color:${area_get_back_color("red")})` + annihilation_list[irandom(array_length(annihilation_list) - 1)].text;
+	if("annihilation_list" in GameCont){
+		var _list = GameCont.annihilation_list;
+		if(array_length(_list)){
+			_text += ", " + `@(color:${area_get_back_color("red")})` + _list[irandom(array_length(_list) - 1)].text;
+		}
 	}
 	
 	return _text;
 	
 #define skill_lose
-	GameCont.annihilation_list = [];
-	
-#define step
-	 // Reduce Counters Between Levels:
-	if(instance_exists(GenCont)){
-		var _inst = instances_matching(GenCont, "annihilation_check", null);
-		if(array_length(_inst)) with(_inst){
-			annihilation_check = true;
-			
-			var _num = 0;
-			
-			with(annihilation_list){
-				if(ammo > 0 && --ammo <= 0){
-					GameCont.annihilation_list = mod_script_call_nc("mod", "telib", "array_delete_value", annihilation_list, self);
-				}
-				_num = max(_num, ammo);
-			}
-			
-			if(skill_get(mod_current) > 0){
-				skill_set(mod_current, max(0, _num));
-			}
-		}
+	if("annihilation_list" in GameCont){
+		GameCont.annihilation_list = [];
 	}
 	
+#define step
 	 // Kill:
-	var _list = annihilation_list
-	if(array_length(_list)) with(_list){
-		with(instances_matching((custom ? instances_matching(object_index, "name", name) : object_index), "annihilation_check", null)){
-			annihilation_check = true;
-			
-			 // Freeze:
-			sleep_max(50);
-			
-			 // Less Rads:
-			if("raddrop" in self){
-				raddrop = round(raddrop / 2);
-			}
-			
-			 // Annihilate:
-			with(obj_create(x + orandom(1), y + orandom(1), "RedExplosion")){
-				target = other;
-				other.nexthurt = 0;
-				damage = min(damage, max(10, other.my_health));
-				event_perform(ev_collision, other.object_index);
+	if("annihilation_list" in GameCont){
+		with(GameCont.annihilation_list){
+			with(instances_matching((custom ? instances_matching(object_index, "name", name) : object_index), "annihilation_check", null)){
+				annihilation_check = true;
+				
+				 // Freeze:
+				sleep_max(50);
+				
+				 // Less Rads:
+				if("raddrop" in self){
+					raddrop -= ceil(raddrop / 2);
+				}
+				
+				 // Annihilate:
+				with(obj_create(x + orandom(1), y + orandom(1), "RedExplosion")){
+					target = other;
+					damage = min(damage, max(10, other.my_health));
+					other.nexthurt = 0;
+					event_perform(ev_collision, other.object_index);
+				}
 			}
 		}
 	}
@@ -134,7 +124,7 @@
 			var _add = true;
 				
 			 // Update Old Entries:
-			with(annihilation_list){
+			with(GameCont.annihilation_list){
 				if(object_index == other.object_index && name == other.name){
 					if(other.ammo > ammo){
 						text = other.text;
@@ -153,7 +143,7 @@
 			
 			 // Add:
 			if(_add){
-				array_push(annihilation_list, self);
+				array_push(GameCont.annihilation_list, self);
 			}
 		}
 		
@@ -172,10 +162,23 @@
 		}
 	}
 	
-	 // Activate:
-	if(skill_get(mod_current) >= 0 && skill_get(mod_current) < _num){
-		skill_set(mod_current, _num);
+	 // Activate / Refresh:
+	if("annihilation_skill" not in GameCont || !instance_exists(GameCont.annihilation_skill)){
+		GameCont.annihilation_skill = obj_create(0, 0, "OrchidSkill");
+		with(GameCont.annihilation_skill){
+			skill  = mod_current;
+			type   = "portal";
+			time   = _num;
+			color1 = area_get_back_color("red");
+			color2 = make_color_rgb(48, 40, 68);
+		}
 	}
+	else with(GameCont.annihilation_skill){
+		time       = max(time,     _num);
+		time_max   = max(time_max, _num);
+		flash      = 3;
+		star_scale = 4/5;
+	} 
 	
 #define string_plural(_string)
 	/*

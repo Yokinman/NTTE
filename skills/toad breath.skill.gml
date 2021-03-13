@@ -12,6 +12,7 @@
 #define skill_tip    return "CORROSION";
 #define skill_icon   return global.sprSkillHUD;
 #define skill_avail  return false;
+#define skill_rat    return true;
 
 #define step
 	if(instance_exists(Player)){

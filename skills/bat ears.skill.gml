@@ -12,6 +12,7 @@
 #define skill_tip    return "ECHOLOCATION IS UNDERRATED";
 #define skill_icon   return global.sprSkillHUD;
 #define skill_avail  return false;
+#define skill_rat    return true;
 
 #define ntte_draw_dark(_type)
 	if(skill_get(mod_current) > 0){
@@ -28,15 +29,12 @@
 				
 				 // Extended Vision:
 				with(Player){
-					 // Soopa Eyes:
-					if(race == "eyes" && player_is_local_nonsync(index)){
-						draw_clear(draw_get_color());
-					}
-					
-					 // Normal:
-					else{
-						draw_circle(x, y, (130 + random(4)) * skill_get(mod_current), false);
-					}
+					draw_circle(
+						x,
+						y,
+						((130 * (1 + (race == "eyes"))) + random(4)) * skill_get(mod_current),
+						false
+					);
 				}
 				
 				break;

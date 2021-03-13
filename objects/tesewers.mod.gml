@@ -4434,7 +4434,7 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 					_x = bbox_center_x;
 				}
 				
-				with(cavein_inst){
+				with(instances_matching_ne(cavein_inst, "id", null)){
 					visible = false;
 					x       = lerp_ct(x, _x, 0.1);
 					y       = _y;

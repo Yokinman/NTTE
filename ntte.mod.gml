@@ -3868,16 +3868,19 @@
 		
 		if(_players <= 1 || instance_exists(Player)){
 			with(UberCont){
-				var	_skillList = [],
-					_skillType = [];
+				var	_skillList  = [],
+					_skillType  = [],
+					_instOrchid = [];
 					
 				 // Compile Orchid Mutations to Draw:
 				if(instance_exists(CustomObject)){
-					var _inst = instances_matching(CustomObject, "name", "OrchidSkill");
-					if(array_length(_inst)) with(_inst){
-						if(skill_get(skill) != 0){
-							array_push(_skillType, "orchid");
-							array_push(_skillList, skill);
+					_instOrchid = instances_matching(CustomObject, "name", "OrchidSkill");
+					if(array_length(_instOrchid)){
+						with(_instOrchid){
+							if(skill_get(skill) != 0){
+								array_push(_skillType, "orchid");
+								array_push(_skillList, skill);
+							}
 						}
 					}
 				}
@@ -3980,20 +3983,24 @@
 										if(sprite_exists(_spr)){
 											_draw = true;
 											
-											var	_time    = infinity,
-												_timeMax = infinity,
-												_colSub  = c_dkgray,
+											var	_type    = undefined,
+												_time    = 0,
+												_timeMax = 0,
 												_colTop  = c_white,
+												_colSub  = c_dkgray,
 												_flash   = false,
-												_star    = 0;
+												_star    = 0,
+												_inst    = instances_matching(_instOrchid, "skill", _skill);
 												
 											 // Get Orchid Mutation With Least Time:
-											with(instances_matching(instances_matching(CustomObject, "name", "OrchidSkill"), "skill", _skill)){
-												if(time < _time){
+											array_sort(_inst, false);
+											with(_inst){
+												if(is_undefined(_type) || (type == _type && time > _time)){
+													_type    = type;
 													_time    = time;
 													_timeMax = time_max;
-													_colSub  = color2;
 													_colTop  = color1;
+													_colSub  = color2;
 												}
 												if(flash > 0){
 													_flash = true;
@@ -4003,23 +4010,32 @@
 												}
 											}
 											
+											 // Flash White:
+											if(_flash){
+												draw_set_fog(true, c_white, 0, 0);
+											}
+											
 											 // Orchid Mutation Drawing:
 											if(_time != 0){
 												var	_uvs = sprite_get_uvs(_spr, _img),
 													_x1  = max(sprite_get_bbox_left  (_spr),     _uvs[4]                                      ),
 													_y1  = max(sprite_get_bbox_top   (_spr),     _uvs[5]                                      ),
 													_x2  = min(sprite_get_bbox_right (_spr) + 1, _uvs[4] + (_uvs[6] * sprite_get_width (_spr))),
-													_y2  = min(sprite_get_bbox_bottom(_spr) + 1, _uvs[5] + (_uvs[7] * sprite_get_height(_spr)));
+													_y2  = min(sprite_get_bbox_bottom(_spr) + 1, _uvs[5] + (_uvs[7] * sprite_get_height(_spr))),
+													_num = 1 - (_time / _timeMax);
 													
 												 // Outline:
-												draw_set_fog(true, _colSub, 0, 0);
+												if(!_flash){
+													draw_set_fog(true, _colSub, 0, 0);
+												}
 												for(var _dir = 0; _dir < 360; _dir += 90){
 													draw_sprite(_spr, _img, _x + dcos(_dir), _y - dsin(_dir));
 												}
 												
 												 // Timer Outline:
-												draw_set_fog(true, _colTop, 0, 0);
-												var _num =  1 - (_time / _timeMax);
+												if(!_flash){
+													draw_set_fog(true, _colTop, 0, 0);
+												}
 												for(var _dir = 0; _dir < 360; _dir += 90){
 													var	_l = _x1,
 														_t = max(_y1, lerp(_y1 - 1, _y2 + 1, _num) + dsin(_dir)),
@@ -4035,18 +4051,23 @@
 														_scale  = max(0, (1.1 + (0.1 * sin(_wave / 15))) * _star),
 														_angle  = _wave / 10;
 														
-													if(_flash){
-														draw_set_fog(true, c_white, 0, 0);
-													}
-													
 													draw_sprite_ext(spr.PetOrchidBall, _wave, _x, _y, _scale, _scale, _angle, c_white, 1);
+												}
+												
+												if(!_flash){
+													draw_set_fog(false, 0, 0, 0);
 												}
 											}
 											
 											 // Skill Icon:
-											draw_set_fog(_flash, c_white, 0, 0);
 											draw_sprite(_spr, _img, _x, _y);
-											draw_set_fog(false, 0, 0, 0);
+											
+											 // Unflash:
+											if(_flash){
+												draw_set_fog(false, 0, 0, 0);
+											}
+											
+											 // Lighten Up, Bro:
 											draw_set_blend_mode(bm_add);
 											draw_sprite_ext(_spr, _img, _x, _y, 1, 1, 0, c_white, 0.1 + (0.1 * cos((_timeMax - _time) / 20)));
 											draw_set_blend_mode(bm_normal);

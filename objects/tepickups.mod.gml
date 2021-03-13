@@ -455,6 +455,18 @@
 	}
 	
 #define BatChest_open
+	 // Sound:
+	sound_play_pitchvol(sndEnergySword,       0.5 + orandom(0.1), 0.8);
+	sound_play_pitchvol(sndEnergyScrewdriver, 1.5 + orandom(0.1), 0.5);
+	
+	 // Text:
+	if(instance_is(other, Player)){
+		var _text = instance_create(x, y, PopupText);
+		_text.text   = "PICK ONE!";
+		_text.alarm1 = 18;
+		_text.target = other.index;
+	}
+	
 	 // Clear Walls:
 	instance_create(x, y, PortalClear);
 	
@@ -469,27 +481,22 @@
 		GameCont.nochest = 0;
 	}
 	
-	 // Manually Create ChestOpen to Link Shops:
-	var _open = instance_create(x, y, ChestOpen);
-	with(_open){
-		sprite_index = other.spr_dead;
-	}
-	spr_dead = -1;
-	
 	 // Create Weapon Shops:
 	var	_angOff = 50 / (1 + (0.5 * big)),
-		_shop = [];
+		_shop   = [];
 		
 	for(var _ang = -_angOff * (1 + big); _ang <= _angOff * (1 + big); _ang += _angOff){
-		var	_l = 28,
-			_d = _ang + 90;
+		var	_len = 28,
+			_dir = _ang + 90;
 			
-		with(obj_create(x + lengthdir_x(_l * ((3 + big) / 3), _d), y + lengthdir_y(_l, _d), "ChestShop")){
+		with(obj_create(x, y, "ChestShop")){
+			x      += lengthdir_x(_len, _dir) * ((3 + other.big) / 3);
+			y      += lengthdir_y(_len, _dir);
 			type    = ChestShop_wep;
 			drop    = wep_screwdriver;
 			open   += other.big;
 			curse   = other.curse;
-			creator = _open;
+			creator = other;
 			array_push(_shop, self);
 		}
 	}
@@ -510,11 +517,6 @@
 			_part = mod_script_call("weapon", "merge", "weapon_merge_decide_raw", _hardMin, _hardMax, -1, _part[0], false);
 		}
 	}
-	
-	 // Effects:
-	sound_play_pitchvol(sndEnergySword,       0.5 + orandom(0.1), 0.8);
-	sound_play_pitchvol(sndEnergyScrewdriver, 1.5 + orandom(0.1), 0.5);
-	repeat(6) scrFX(x, y, 3, Dust);
 	
 	
 //#define BloodLustPickup_create(_x, _y)
@@ -1412,15 +1414,20 @@
 	}
 	
 #define CatChest_open
+	 // Sound:
+	sound_play_pitchvol(sndEnergySword,   0.5 + orandom(0.1), 0.8);
+	sound_play_pitchvol(sndLuckyShotProc, 0.8 + orandom(0.1), 0.7);
+	
+	 // Text:
+	if(instance_is(other, Player)){
+		var _text = instance_create(x, y, PopupText);
+		_text.text   = "PICK ONE!";
+		_text.alarm1 = 18;
+		_text.target = other.index;
+	}
+	
 	 // Clear Walls:
 	instance_create(x, y, PortalClear);
-	
-	 // Manually Create ChestOpen to Link Shops:
-	var _open = instance_create(x, y, ChestOpen);
-	with(_open){
-		sprite_index = other.spr_dead;
-	}
-	spr_dead = -1;
 	
 	 // Shop Pool:
 	var	_hard = GameCont.hard,
@@ -1467,12 +1474,14 @@
 	 // Create Shops:
 	var _angOff = 50;
 	for(var _ang = -_angOff; _ang <= _angOff; _ang += _angOff){
-		var	_dis = 28,
+		var	_len = 28,
 			_dir = _ang + 90;
 			
-		with(obj_create(x + lengthdir_x(_dis, _dir), y + lengthdir_y(_dis, _dir), "ChestShop")){
+		with(obj_create(x, y, "ChestShop")){
+			x      += lengthdir_x(_len, _dir);
+			y      += lengthdir_y(_len, _dir);
 			type    = ChestShop_basic;
-			creator = _open;
+			creator = other;
 			
 			 // Decide Item:
 			var _drop = pool(_pool);
@@ -1482,11 +1491,6 @@
 			}
 		}
 	}
-	
-	 // Effects:
-	sound_play_pitchvol(sndEnergySword,   0.5 + orandom(0.1), 0.8);
-	sound_play_pitchvol(sndLuckyShotProc, 0.8 + orandom(0.1), 0.7);
-	repeat(6) scrFX(x, y, 3, Dust);
 	
 	
 #macro ChestShop_basic 0
@@ -1944,9 +1948,9 @@
 	}
 	
 	 // Particles:
-	if(instance_exists(creator) && chance_ct(1, 8 * ((open > 0) ? 1 : open_state))){
-		var	_x = creator.x,
-			_y = creator.y,
+	if(chance_ct(1, 8 * ((open > 0) ? 1 : open_state))){
+		var	_x = xstart,
+			_y = ystart,
 			_l = point_distance(_x, _y, x, y),
 			_d = point_direction(_x, _y, x, y) + orandom(8);
 			
@@ -2017,17 +2021,11 @@
 			}
 		}
 		if(instance_exists(_p)){
-			var	_x      = x,
-				_y      = y,
+			var	_x      = xstart,
+				_y      = ystart - 4,
 				_num    = num,
 				_numDec = 1;
 				
-			 // Spawn From ChestOpen:
-			if(instance_exists(creator)){
-				_x = creator.x;
-				_y = creator.y - 4;
-			}
-			
 			 // Ambidextrous:
 			if(type == ChestShop_wep){
 				_num += ultra_get("steroids", 1);
@@ -2265,7 +2263,7 @@
 						with(obj_create(_x, _y, "OrchidSkill")){
 							skill = other.drop;
 							num   = _num;
-							type  = "area";
+							type  = "portal";
 						}
 						
 						break;
@@ -2323,64 +2321,62 @@
 		_x         = x,
 		_y         = y;
 		
-	if(type == ChestShop_basic && instance_exists(creator) && x < creator.x){
+	if(type == ChestShop_basic && x < xstart){
 		_xsc *= -1;
 	}
 	
 	 // Projector Beam:
-	if(instance_exists(creator)){
-		var	_sx = creator.x,
-			_sy = creator.y,
-			_d  = point_direction(_sx, _sy, _x, _y);
-			
-		//_d = angle_lerp(_d, 90, 1 - clamp(open_state, 0, 1));
+	var	_sx = xstart,
+		_sy = ystart,
+		_d  = point_direction(_sx, _sy, _x, _y);
 		
-		var	_w  = point_distance(_sx, _sy, _x, _y) * ((open > 0) ? _openState : min(_openState * 3, 1)),
-			_h  = ((sqrt(sqr(sprite_get_width(_spr) * image_xscale * dsin(_d)) + sqr(sprite_get_height(_spr) * image_yscale * dcos(_d))) * 2/3) + random(2)) * max(0, (_openState - 0.5) * 2),
-			_x1 = _sx + lengthdir_x(0.5, _d),
-			_y1 = _sy + lengthdir_y(1,   _d),
-			_x2 = _sx + lengthdir_x(_w, _d) + lengthdir_x(_h / 2, _d - 90),
-			_y2 = _sy + lengthdir_y(_w, _d) + lengthdir_y(_h / 2, _d - 90),
-			_x3 = _sx + lengthdir_x(_w, _d) - lengthdir_x(_h / 2, _d - 90),
-			_y3 = _sy + lengthdir_y(_w, _d) - lengthdir_y(_h / 2, _d - 90);
-			
-		if(type == ChestShop_wep){
-			_y2 = max(_y + 2, _y2);
-			_y3 = max(_y + 2, _y3);
-		}
+	//_d = angle_lerp(_d, 90, 1 - clamp(open_state, 0, 1));
+	
+	var	_w  = point_distance(_sx, _sy, _x, _y) * ((open > 0) ? _openState : min(_openState * 3, 1)),
+		_h  = ((sqrt(sqr(sprite_get_width(_spr) * image_xscale * dsin(_d)) + sqr(sprite_get_height(_spr) * image_yscale * dcos(_d))) * 2/3) + random(2)) * max(0, (_openState - 0.5) * 2),
+		_x1 = _sx + lengthdir_x(0.5, _d),
+		_y1 = _sy + lengthdir_y(1,   _d),
+		_x2 = _sx + lengthdir_x(_w, _d) + lengthdir_x(_h / 2, _d - 90),
+		_y2 = _sy + lengthdir_y(_w, _d) + lengthdir_y(_h / 2, _d - 90),
+		_x3 = _sx + lengthdir_x(_w, _d) - lengthdir_x(_h / 2, _d - 90),
+		_y3 = _sy + lengthdir_y(_w, _d) - lengthdir_y(_h / 2, _d - 90);
 		
-		_x = _sx + lengthdir_x(_w, _d);
-		_y = _sy + lengthdir_y(_w, _d);
-		
-		draw_set_blend_mode(bm_add);
-		draw_set_color(merge_color(_col, c_blue, 0.4));
-		
-		 // Main:
-		draw_primitive_begin(pr_trianglestrip);
-		
-		draw_set_alpha(_alp);
-		draw_vertex(_x1, _y1);
-		draw_set_alpha(_alp / 8);
-		draw_vertex(_x2, _y2);
-		draw_vertex(_x3, _y3);
-		
-		draw_primitive_end();
-		
-		 // Side Lines:
-		draw_primitive_begin(pr_linestrip);
-		
-		draw_set_alpha(_alp / 3);
-		draw_vertex(_x2, _y2);
-		draw_set_alpha(0);
-		draw_vertex(_x1, _y1);
-		draw_set_alpha(_alp / 3);
-		draw_vertex(_x3, _y3);
-		
-		draw_primitive_end();
-		
-		draw_set_alpha(1);
-		draw_set_blend_mode(bm_normal);
+	if(type == ChestShop_wep){
+		_y2 = max(_y + 2, _y2);
+		_y3 = max(_y + 2, _y3);
 	}
+	
+	_x = _sx + lengthdir_x(_w, _d);
+	_y = _sy + lengthdir_y(_w, _d);
+	
+	draw_set_blend_mode(bm_add);
+	draw_set_color(merge_color(_col, c_blue, 0.4));
+	
+	 // Main:
+	draw_primitive_begin(pr_trianglestrip);
+	
+	draw_set_alpha(_alp);
+	draw_vertex(_x1, _y1);
+	draw_set_alpha(_alp / 8);
+	draw_vertex(_x2, _y2);
+	draw_vertex(_x3, _y3);
+	
+	draw_primitive_end();
+	
+	 // Side Lines:
+	draw_primitive_begin(pr_linestrip);
+	
+	draw_set_alpha(_alp / 3);
+	draw_vertex(_x2, _y2);
+	draw_set_alpha(0);
+	draw_vertex(_x1, _y1);
+	draw_set_alpha(_alp / 3);
+	draw_vertex(_x3, _y3);
+	
+	draw_primitive_end();
+	
+	draw_set_alpha(1);
+	draw_set_blend_mode(bm_normal);
 	
 	 // Projected Object:
 	_x -= ((sprite_get_width(_spr) / 2) - sprite_get_xoffset(_spr)) * _xsc;
@@ -2850,7 +2846,7 @@
 		 // Mutation:
 		with(obj_create(x, y, "OrchidSkill")){
 			skill = other.skill;
-			type  = "area";
+			type  = "portal";
 		}
 		
 		 // Effects:
@@ -3401,14 +3397,14 @@
 			time       - How long the mutation lasts
 			type       - Determines its default color and how its 'time' ticks down
 			             "basic" for one tick every frame (not on loading or mutation screens)
-			             "area"  for one tick every area
+			             "portal" for one tick when the portal closes
 	*/
 	
 	with(instance_create(_x, _y, CustomObject)){
 		 // Visual:
-		color1     = c_white;
-		color2     = c_black;
-		flash      = 1;
+		color1     = -1;
+		color2     = -1;
+		flash      = 0;
 		star_scale = 1;
 		
 		 // Vars:
@@ -3471,7 +3467,9 @@
 	setup = false;
 	
 	 // Effects:
-	flash = max(flash, 1);
+	if(flash == 0){
+		flash = 3;
+	}
 	sound_play_pitch(sndMut, 1 + orandom(0.2));
 	sound_play_pitchvol(sndStatueXP, 0.8, 0.8);
 	
@@ -3481,32 +3479,35 @@
 		case "basic":
 			
 			 // Colors:
-			if(color1 == c_white) color1 = make_color_rgb(255, 255, 80);
-			if(color2 == c_black) color2 = make_color_rgb( 84,  58, 24);
+			if(color1 == -1) color1 = make_color_rgb(255, 255, 80);
+			if(color2 == -1) color2 = make_color_rgb( 84,  58, 24);
 			
 			 // Time:
-			if(time == 0){
-				time = 600; // 20 Seconds
+			if(time_max == 0){
+				if(time == 0){
+					time = 600; // 20 Seconds
+				}
+				time_max = time;
 			}
 			
 			break;
 			
-		case "area":
+		case "portal":
 			
 			 // Colors:
-			if(color1 == c_white) color1 = make_color_rgb(72, 253,  8);
-			if(color2 == c_black) color2 = make_color_rgb(32,  33, 18);
+			if(color1 == -1) color1 = make_color_rgb(72, 253,  8);
+			if(color2 == -1) color2 = make_color_rgb(84,  64, 12);
 			
 			 // Time:
-			if(time == 0){
-				time = 3; // 3 Areas
+			if(time_max == 0){
+				if(time == 0){
+					time = 2; // 2 Areas
+				}
+				time_max = time;
 			}
 			
 			break;
 			
-	}
-	if(time_max == 0){
-		time_max = time;
 	}
 	
 	 // Mutation:
@@ -3625,7 +3626,7 @@
 			if(!instance_exists(GenCont) && !instance_exists(LevCont)){
 				time -= min(time, current_time_scale);
 				if(time <= 0){
-					flash = max(flash, 1);
+					flash = 2;
 				}
 			}
 		}
@@ -3664,7 +3665,7 @@
 	 // Restore Health:
 	with(_lastHP){
 		with(self[0]){
-			my_health = other[1];
+			my_health = min(other[1], maxhealth);
 		}
 	}
 	
@@ -3818,7 +3819,7 @@
 			 // Grant Blessing:
 			with(obj_create(x, y, "OrchidSkill")){
 				skill   = other.skill;
-				type    = "area";
+				type    = "portal";
 				creator = other;
 			}
 			
@@ -4332,9 +4333,6 @@
 		 // Sound:
 		snd_open = sndEXPChest;
 		
-		 // Vars:
-		setup = true;
-		
 		 // Events:
 		on_open = script_ref_create(RatChest_open);
 		
@@ -4342,35 +4340,37 @@
 	}
 	
 #define RatChest_open
+	 // Sounds:
+	sound_play_pitchvol(sndEnergySword, 0.5 + orandom(0.1), 0.8);
+	sound_play_pitchvol(sndSkillPick,   2.0 + orandom(0.1), 0.5);
+	
+	 // Text:
+	if(instance_is(other, Player)){
+		var _text = instance_create(x, y, PopupText);
+		_text.text   = "PICK ONE!";
+		_text.alarm1 = 18;
+		_text.target = other.index;
+	}
+	
 	 // Clear Walls:
 	instance_create(x, y, PortalClear);
-	
-	 // Manually Create ChestOpen to Link Shops:
-	var _open = instance_create(x, y, ChestOpen);
-	with(_open){
-		sprite_index = other.spr_dead;
-	}
-	spr_dead = -1;
 	
 	 // Create Shops:
 	var _angOff = 35;
 	for(var _ang = -_angOff; _ang <= _angOff; _ang += _angOff * 2){
-		var	_dis = 28,
+		var	_len = 28,
 			_dir = _ang + 90;
 			
-		with(obj_create(x + lengthdir_x(_dis, _dir), y + lengthdir_y(_dis, _dir), "ChestShop")){
+		with(obj_create(x, y, "ChestShop")){
+			x      += lengthdir_x(_len, _dir);
+			y      += lengthdir_y(_len, _dir);
 			type    = ChestShop_skill;
-			creator = _open;
+			creator = other;
 			
-			 // Decide Item:
+			 // Decide Mutation:
 			drop = OrchidSkill_decide();
 		}
 	}
-	
-	 // Effects:
-	sound_play_pitchvol(sndEnergySword, 0.5 + orandom(0.1), 0.8);
-	sound_play_pitchvol(sndSkillPick,   2.0 + orandom(0.1), 0.5);
-	repeat(6) scrFX(x, y, 3, Dust);
 	
 	
 #define RedAmmoChest_create(_x, _y)
@@ -5343,25 +5343,6 @@
 		}
 	}
 	
-	 // Tick Green Orchid Mutations:
-	if(instance_exists(GenCont) && GenCont.id > _newID){
-		if(instance_exists(CustomObject)){
-			var _instSkill = instances_matching(instances_matching(CustomObject, "name", "OrchidSkill"), "type", "area");
-			if(array_length(_instSkill)){
-				with(instances_matching_gt(GenCont, "id", _newID)){
-					var _lastSeed = random_get_seed();
-					with(instances_matching_gt(_instSkill, "time", 0)){
-						time      -= min(time,       1);
-						flash      = max(flash,      1);
-						star_scale = max(star_scale, 3/4);
-						sound_play_pitch(sndMut, 1.5 + orandom(0.1));
-					}
-					random_set_seed(_lastSeed);
-				}
-			}
-		}
-	}
-	
 #define ntte_begin_step
 	 // Bonus Spirits:
 	if(instance_exists(Player)){
@@ -5976,6 +5957,46 @@
 		}
 	}
 	
+	 // Portal Mutation Update:
+	if(instance_exists(GenCont)){
+		GameCont.ntte_portal_skill = true;
+	}
+	else if(
+		instance_exists(Portal)
+		&& instance_exists(Player)
+		&& array_length(instances_matching_le(Portal, "endgame", 0))
+	){
+		if("ntte_portal_skill" in GameCont && GameCont.ntte_portal_skill){
+			GameCont.ntte_portal_skill = false;
+			
+			 // Tick Orchid Portal Mutations:
+			if(instance_exists(CustomObject)){
+				var _inst = instances_matching_gt(instances_matching(instances_matching(CustomObject, "name", "OrchidSkill"), "type", "portal"), "time", 0);
+				if(array_length(_inst)){
+					with(_inst){
+						time      -= min(time, 1);
+						flash      = 2;
+						star_scale = 4/5;
+					}
+					
+					 // Sound:
+					var _lastSeed = random_get_seed();
+					sound_play_pitch(sndMut, 1.5 + orandom(0.2));
+					random_set_seed(_lastSeed);
+				}
+			}
+			
+			 // Reduce Annihilation Counters:
+			if("annihilation_list" in GameCont){
+				with(GameCont.annihilation_list){
+					if(ammo > 0 && --ammo <= 0){
+						GameCont.annihilation_list = array_delete_value(GameCont.annihilation_list, self);
+					}
+				}
+			}
+		}
+	}
+	
 #define ntte_draw_shadows
 	 // Weapons Stuck in Ground:
 	if(instance_exists(CustomObject)){
@@ -6008,15 +6029,12 @@
 				if(array_length(_inst)){
 					var _r = 32 + (48 * _gray);
 					with(_inst){
-						var	_x = x,
-							_y = y;
-							
-						if(instance_exists(creator)){
-							_x = lerp(_x, creator.x, 0.2);
-							_y = lerp(_y, creator.y, 0.2);
-						}
-						
-						draw_circle(_x - 1, _y - 1, (_r * clamp(open_state, 0, 1)) + random(1), false);
+						draw_circle(
+							lerp(x, xstart, 0.2) - 1,
+							lerp(y, ystart, 0.2) - 1,
+							(_r * clamp(open_state, 0, 1)) + random(1),
+							false
+						);
 					}
 				}
 			}
