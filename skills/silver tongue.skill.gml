@@ -15,11 +15,17 @@
 #define skill_button  sprite_index = global.sprSkillIcon;
 #define skill_avail   return (skill_get(mod_current) != 0);
 
+#define skill_sound
+	audio_sound_pitch(
+		sound_play_gun(sndFishUltraA, 0, 0.3),
+		1.2
+	);
+	return sndMut;
+	
 #define skill_take(_num)
 	 // Sound:
 	if(_num > 0 && instance_exists(LevCont)){
-		sound_play(sndMut);
-		sound_play_pitch(sndFishUltraA, 1.2);
+		sound_play_gun(skill_sound(), 0, 0.3);
 	}
 	
 	

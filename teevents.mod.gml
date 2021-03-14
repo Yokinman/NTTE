@@ -1298,7 +1298,7 @@
 										_obj = choose(choose(WeaponChest, AmmoChest), AmmoChestMystery, MoneyPile);
 										
 									if(abs(_side) < 1){
-										_obj = choose("BatChest", "CatChest");
+										_obj = choose("CatChest", "BatChest", "RatChest");
 									}
 									
 									with(chest_create(_x, _y, _obj, true)){
@@ -2145,8 +2145,9 @@
 		Compiles a list of weapon mutations based on the player's weapon loadout and mutation selection
 	*/
 	
-	var _list = [];
-	
+	var	_list = [],
+		_pool = [];
+		
 	 // Normal:
 	with(instances_matching_ne([Player, Revive], "id", null)){
 		with([wep, bwep]){
@@ -2239,26 +2240,28 @@
 	}
 	
 	 // Modded:
-	var _scrt = "skill_wepspec";
 	with(array_shuffle(mod_get_names("skill"))){
 		var	_skill = self,
-			_break = false;
+			_found = false;
 			
 		with(other){
-			if(mod_script_exists("skill", _skill, _scrt)){
-				if(mod_script_call_self("skill", _skill, _scrt)){
+			if(
+				mod_script_exists("skill", _skill, "skill_wepspec")
+				&& mod_script_call_self("skill", _skill, "skill_wepspec")
+			){
+				if(skill_get_avail(_skill)){
 					array_push(_list, _skill);
-					_break = true;
+					_found = true;
 				}
 			}
 		}
 		
-		if(_break) break;
+		if(_found){
+			break;
+		}
 	}
 	
 	 // Compile Skill Pool:
-	var _pool = [];
-	
 	with(_list){
 		var _skill = self;
 		with(other){

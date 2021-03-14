@@ -713,27 +713,49 @@
 	
 #define ntte_begin_step
 	 // Silver Tongue:
-	if(instance_exists(SkillIcon) && "ntte_lairmut" in GameCont && GameCont.ntte_lairmut){
+	if(
+		"ntte_lairmut" in GameCont
+		&& GameCont.ntte_lairmut
+		&& instance_exists(LevCont)
+		&& GameCont.skillpoints > 0
+		&& GameCont.crownpoints <= 0
+	){
 		GameCont.ntte_lairmut = false;
 		
 		var _skill = "silver tongue";
+		
 		if(mod_exists("skill", _skill) && skill_get(_skill) == 0){
 			with(LevCont){
 				 // Clear:
-				with(instances_matching(SkillIcon, "creator", self)){
-					if(skill_get_avail(skill)){
-						other.maxselect--;
-						with(instances_matching_gt(mutbutton, "num", num)){
-							num--;
+				var _inst = instances_matching(mutbutton, "creator", self);
+				if(array_length(_inst)){
+					with(_inst){
+						if(instance_is(self, SkillIcon) && skill_get_avail(skill)){
+							other.maxselect--;
+							var _num = num;
+							with(instances_matching(_inst, "num", _num)){
+								instance_destroy();
+							}
+							with(instances_matching_gt(_inst, "num", _num)){
+								num--;
+								if(alarm0 > 0){
+									alarm0--;
+									if(alarm0 <= 0){
+										with(self){
+											event_perform(ev_alarm, 0);
+										}
+									}
+								}
+							}
 						}
-						instance_destroy();
 					}
 				}
 				
 				 // Star of the Show:
+				maxselect++;
 				with(instance_create(0, 0, SkillIcon)){
 					creator = other;
-					num     = ++other.maxselect;
+					num     = other.maxselect;
 					alarm0	= num + 1;
 					skill   = _skill;
 					name    = skill_get_name(_skill);
@@ -852,9 +874,9 @@
 			instance_create(_x + _w - 96, _y + _h - 96, Wall);
 			
 			 // Spawn backup chests
-			var	_chest = [RadChest, "CatChest", "BatChest"],
-				_dis = 176,
-				_dir = pround(random(360), 90);
+			var	_chest = ["CatChest", "BatChest", ((GameCont.loops > 0) ? "RatChest" : RadChest)],
+				_dis   = 176,
+				_dir   = pround(random(360), 90);
 				
 			for(var i = 0; i < array_length(_chest); i++){
 				chest_create(

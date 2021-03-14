@@ -2,7 +2,7 @@
 	mod_script_call("mod", "teassets", "ntte_init", script_ref_create(init));
 	
 	 // Sprites:
-	global.sprSkillHUD  = sprite_add("../sprites/skills/Bat Ears/sprBatEarsHUD.png",  1,  8,  8);
+	global.sprSkillHUD  = sprite_add("../sprites/skills/Bat Ears/sprBatEarsHUD.png", 1, 8, 8);
 	
 #define cleanup
 	mod_script_call("mod", "teassets", "ntte_cleanup", script_ref_create(cleanup));
@@ -11,6 +11,7 @@
 #define skill_text   return "@wSEE BETTER @sIN THE @wDARK";
 #define skill_tip    return "ECHOLOCATION IS UNDERRATED";
 #define skill_icon   return global.sprSkillHUD;
+#define skill_sound  return sndMut;
 #define skill_avail  return false;
 #define skill_rat    return true;
 

@@ -4200,8 +4200,8 @@
 	}
 	if(_gold){
 		with(instance_create(x, y, WepPickup)){
-			wep  = { wep: "tunneller", gold: true };
 			ammo = true;
+			wep  = { wep: "tunneller", gold: true };
 		}
 	}
 	

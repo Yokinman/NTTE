@@ -14,6 +14,13 @@
 #define skill_icon    return global.sprSkillHUD;
 #define skill_button  sprite_index = global.sprSkillIcon;
 
+#define skill_sound
+	audio_sound_pitch(
+		sound_play_gun(sndMutLuckyShot, 0, 0.3),
+		1.2
+	);
+	return sndMut;
+	
 #define skill_avail
 	 // Only Appears w/ a Player at Max Pets:
 	with(Player){
@@ -43,8 +50,7 @@
 	
 	 // Sound:
 	if(_num > 0 && instance_exists(LevCont)){
-		sound_play(sndMut);
-		sound_play_pitch(sndMutLuckyShot, 1.2);
+		sound_play_gun(skill_sound(), 0, 0.3);
 	}
 	
 #define skill_lose

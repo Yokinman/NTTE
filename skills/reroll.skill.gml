@@ -73,19 +73,39 @@
 	
 #define ntte_end_step
 	 // Detect Rerolled Mutation:
-	if(skill_get(mod_current) != 0){
-		for(var i = 0; !is_undefined(skill_get_at(i)); i++){
-			if(skill_get_at(i) == mod_current){
-				var _skillNext = skill_get_at(i + 1);
-				if(!is_undefined(_skillNext)){
-					GameCont.ntte_reroll     = undefined;
-					GameCont.ntte_reroll_hud = _skillNext;
-					skill_set(_skillNext, skill_get(_skillNext) * skill_get(mod_current));
-					skill_set(mod_current, 0);
+	if("ntte_reroll_hud" not in GameCont || is_undefined(GameCont.ntte_reroll_hud)){
+		if(instance_exists(SkillText)){
+			if(skill_get(mod_current) != 0){
+				for(var i = 0; true; i++){
+					var _skill = skill_get_at(i);
+					if(is_undefined(_skill)){
+						break;
+					}
+					if(_skill == mod_current){
+						for(var j = i + 1; true; j++){
+							var _skillNext = skill_get_at(j);
+							if(is_undefined(_skillNext)){
+								break;
+							}
+							GameCont.ntte_reroll_hud = _skillNext;
+						}
+						
+						 // Found:
+						if("ntte_reroll_hud" in GameCont && !is_undefined(GameCont.ntte_reroll_hud)){
+							var _mult = skill_get(mod_current);
+							GameCont.ntte_reroll = undefined;
+							skill_set(mod_current, 0);
+							skill_set(GameCont.ntte_reroll_hud, skill_get(GameCont.ntte_reroll_hud) * _mult);
+						}
+						
+						break;
+					}
 				}
-				break;
 			}
 		}
+	}
+	else if(skill_get(GameCont.ntte_reroll_hud) == 0){
+		GameCont.ntte_reroll_hud = undefined;
 	}
 	
 	

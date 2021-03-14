@@ -1662,84 +1662,86 @@
 					_team = team,
 					_inst = instances_matching_ne(instances_matching_ne(instance_rectangle_bbox(bbox_left + hspeed_raw - _bx, bbox_top + vspeed_raw - _by, bbox_right + hspeed_raw + _bx, bbox_bottom + vspeed_raw + _by, hitme), "team", _team), "mask_index", mskNone);
 					
-				if(array_length(_inst) > 0){
+				if(array_length(_inst)){
 					with(other){
 						var _damage = 10 + ceil(10 * dash_charge);
 						with(_inst){
-							projectile_hit(self, _damage, (instance_is(self, prop) ? 0 : other.speed * 2/3), other.direction);
-							
-							if(instance_exists(self)){
-								 // Kill FX:
-								if(my_health <= 0 && size > 0 && !instance_is(self, prop)){
-									sound_play_hit_ext(sndBigBanditMeleeHit, max(0.2, 0.7 - (size / 10)) + random(0.1), 0.8);
-								}
+							if(instance_is(self, hitme)){
+								projectile_hit(self, _damage, (instance_is(self, prop) ? 0 : other.speed * 2/3), other.direction);
 								
-								 // Large Dude, Stops Charge:
-								if(my_health > 0){
-									if((1 + size > other.dash_charge && !instance_is(self, prop)) || maxhealth > _damage){
-										with(other){
-											sprite_index = spr_hurt;
-											image_index  = 0;
+								if(instance_exists(self)){
+									 // Kill FX:
+									if(my_health <= 0 && size > 0 && !instance_is(self, prop)){
+										sound_play_hit_ext(sndBigBanditMeleeHit, max(0.2, 0.7 - (size / 10)) + random(0.1), 0.8);
+									}
+									
+									 // Large Dude, Stops Charge:
+									if(my_health > 0){
+										if((1 + size > other.dash_charge && !instance_is(self, prop)) || maxhealth > _damage){
+											with(other){
+												sprite_index = spr_hurt;
+												image_index  = 0;
+												
+												 // Bounce:
+												dash_direction = point_direction(other.x, other.y, x, y);
+												dash_charge    = 0;
+												with((mount && instance_exists(leader)) ? leader : self){
+													direction = other.dash_direction;
+													speed /= 3;
+												}
+											}
 											
-											 // Bounce:
-											dash_direction = point_direction(other.x, other.y, x, y);
-											dash_charge    = 0;
-											with((mount && instance_exists(leader)) ? leader : self){
-												direction = other.dash_direction;
-												speed /= 3;
+											 // Effects:
+											repeat(5){
+												with(scrFX(x, y, [other.direction + orandom(20), 4], Smoke)){
+													friction *= 2;
+												}
+											}
+										}
+									}
+									
+									 // Punt:
+									else if(
+										instance_is(self, enemy)
+										&& (size == 1 || instance_is(self, BanditBoss))
+										&& team != 0
+										&& chance(speed * (1 + (0.5 * skill_get(mut_throne_butt))), 12)
+									){
+										with(obj_create(x, y, "PalankingToss")){
+											direction    = other.direction;
+											speed        = other.speed;
+											zspeed       = 5;
+											zfriction    = 2/3;
+											creator      = other;
+											depth        = other.depth;
+											mask_index   = other.mask_index;
+											spr_shadow_y = other.spr_shadow_y;
+											explo        = skill_get(mut_throne_butt);
+											team         = _team;
+											
+											 // Try not to go outside level:
+											with(other){
+												if(!place_meeting(x + lengthdir_x(96, direction), y + lengthdir_y(96, direction), Floor)){
+													other.speed /= 10;
+												}
 											}
 										}
 										
-										 // Effects:
-										repeat(5){
-											with(scrFX(x, y, [other.direction + orandom(20), 4], Smoke)){
-												friction *= 2;
-											}
-										}
-									}
-								}
-								
-								 // Punt:
-								else if(
-									instance_is(self, enemy)
-									&& (size == 1 || instance_is(self, BanditBoss))
-									&& team != 0
-									&& chance(speed * (1 + (0.5 * skill_get(mut_throne_butt))), 12)
-								){
-									with(obj_create(x, y, "PalankingToss")){
-										direction    = other.direction;
-										speed        = other.speed;
-										zspeed       = 5;
-										zfriction    = 2/3;
-										creator      = other;
-										depth        = other.depth;
-										mask_index   = other.mask_index;
-										spr_shadow_y = other.spr_shadow_y;
-										explo        = skill_get(mut_throne_butt);
-										team         = _team;
+										 // Don't Die:
+										my_health = max(my_health, 1);
+										if("canfly" in self) canfly = true;
 										
-										 // Try not to go outside level:
-										with(other){
-											if(!place_meeting(x + lengthdir_x(96, direction), y + lengthdir_y(96, direction), Floor)){
-												other.speed /= 10;
+										 // Disable:
+										alarm1 = -1;
+										if(instance_is(self, CustomEnemy) || instance_is(self, CustomHitme)){
+											for(var i = 0; i < 12; i++){
+												alarm_set(i, -1);
 											}
 										}
+										
+										 // Stat:
+										other.stat.tossed++;
 									}
-									
-									 // Don't Die:
-									my_health = max(my_health, 1);
-									if("canfly" in self) canfly = true;
-									
-									 // Disable:
-									alarm1 = -1;
-									if(instance_is(self, CustomEnemy) || instance_is(self, CustomHitme)){
-										for(var i = 0; i < 12; i++){
-											alarm_set(i, -1);
-										}
-									}
-									
-									 // Stat:
-									other.stat.tossed++;
 								}
 							}
 						}
@@ -2146,10 +2148,10 @@
 				if(wep != wep_none){
 					wep_inst = instance_create(x, y, WepPickup);
 					with(wep_inst){
-						wep   = other.wep;
-						ammo  = other.ammo;
 						curse = other.curse;
+						ammo  = other.ammo;
 						roll  = other.ammo;
+						wep   = other.wep;
 					}
 					wep = wep_none;
 				}
@@ -2211,9 +2213,9 @@
 				if(place_meeting(x, y, WepPickup)){
 					with(instance_nearest_array(x, y, instances_matching(WepPickup, "visible", true))){
 						if(place_meeting(x, y, other)){
-							other.wep   = wep;
-							other.ammo  = false;//ammo;
 							other.curse = curse;
+							other.ammo  = false;//ammo;
+							other.wep   = wep;
 							instance_destroy();
 						}
 					}

@@ -171,6 +171,9 @@
 			time   = _num;
 			color1 = area_get_back_color("red");
 			color2 = make_color_rgb(48, 40, 68);
+			with(self){
+				event_perform(ev_step, ev_step_normal);
+			}
 		}
 	}
 	else with(GameCont.annihilation_skill){

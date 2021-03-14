@@ -11,6 +11,7 @@
 #define skill_text   return "@bIDPD @sHAVE @wHALF HEALTH";
 #define skill_tip    return "SHORT CIRCUIT";
 #define skill_icon   return global.sprSkillHUD;
+#define skill_sound  return sndMut;
 #define skill_avail  return false;
 #define skill_rat    return true;
 

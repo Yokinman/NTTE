@@ -3019,7 +3019,7 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 						
 						with(projectile_create(x, y, "CatBossAttack", gunangle, 0)){
 							target = other.target;
-							type = other.super;
+							type   = other.super;
 							other.alarm1 += alarm0;
 						}
 						
@@ -3304,18 +3304,18 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 	
 	 // Setup Fire Lines:
 	if(array_length(fire_line) <= 0){
-		var	_num = (3 + GameCont.loops) * (type ? 2.5 : 1),
-			_off = 30 + (12 * GameCont.loops),
+		var	_num    = (3 + GameCont.loops) * (type ? 2.5 : 1),
+			_off    = 30 + (12 * GameCont.loops),
 			_offPos = (_num / 2) * type;
 			
 		if(_num > 0) repeat(_num){
 			array_push(fire_line, {
-				dir : (type ? orandom(_off) : 0),
-				dis : 0,
-				dir_goal : (type ? 0 : orandom(_off)),
-				dis_goal : 1000,
-				x :  0 + orandom(_offPos),
-				y : -4 + orandom(_offPos)
+				"dir"      : (type ? orandom(_off) : 0),
+				"dis"      : 0,
+				"dir_goal" : (type ? 0 : orandom(_off)),
+				"dis_goal" : 1000,
+				"x"        :  0 + orandom(_offPos),
+				"y"        : -4 + orandom(_offPos)
 			});
 		}
 	}
@@ -3445,22 +3445,22 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 			
 		 // Wall Break:
 		if(type){
-			var o = 24;
-			instance_create(_x + lengthdir_x(_dis - o, _dir), _y + lengthdir_y(_dis - o, _dir), PortalClear);
-			instance_create(_x + lengthdir_x(_dis,     _dir), _y + lengthdir_y(_dis,     _dir), ToxicDelay);
+			var _o = 24;
+			instance_create(_x + lengthdir_x(_dis - _o, _dir), _y + lengthdir_y(_dis - _o, _dir), PortalClear);
+			instance_create(_x + lengthdir_x(_dis,      _dir), _y + lengthdir_y(_dis,      _dir), ToxicDelay);
 		}
 		
 		 // Create Toxic Rails:
 		while(_dis > 0){
-			var	_lx = _x + lengthdir_x(_dis, _dir),
-				_ly = _y + lengthdir_y(_dis, _dir),
-				o = (12 + GameCont.loops) * type;
+			var	_lx     = _x + lengthdir_x(_dis, _dir),
+				_ly     = _y + lengthdir_y(_dis, _dir),
+				_radius = (12 + GameCont.loops) * type;
 				
 			 // Instadamage:
-			if(type && collision_circle(_lx, _ly, o / 2, hitme, false, false)){
+			if(type && collision_circle(_lx, _ly, _radius / 2, hitme, true, false)){
 				with(instances_matching_ne(hitme, "id", creator)) with(other){
 					if(projectile_canhit_melee(other)){
-						if(collision_circle(_lx, _ly, o / 2, other, false, false)){
+						if(collision_circle(_lx, _ly, _radius / 2, other, true, false)){
 							projectile_hit(other, damage, force, _dir);
 						}
 					}
@@ -3468,7 +3468,7 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 			}
 			
 			 // Gas:
-			with(projectile_create(_lx + orandom(o), _ly + orandom(o), ToxicGas, _dir, 1 + random(1))){
+			with(projectile_create(_lx + orandom(_radius), _ly + orandom(_radius), ToxicGas, _dir, 1 + random(1))){
 				friction  += random_range(0.1, 0.2);
 				growspeed *= _dis / _line.dis;
 				team       = 0;
@@ -5520,8 +5520,8 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 					with(obj_create(x - _ox, y, "WepPickupGrounded")){
 						target = instance_create(x, y, WepPickup);
 						with(target){
-							wep  = wep_grenade_launcher;
 							ammo = true;
+							wep  = wep_grenade_launcher;
 						}
 					}
 					

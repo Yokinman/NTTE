@@ -13,6 +13,7 @@
 #define skill_text   return "@sMORE @gRADS @sFROM @wENEMIES";
 #define skill_tip    return "HIGHER THRESHOLD";
 #define skill_icon   return global.sprSkillHUD;
+#define skill_sound  return sndMut;
 #define skill_avail  return false;
 #define skill_rat    return true;
 

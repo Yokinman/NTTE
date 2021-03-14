@@ -125,9 +125,9 @@
 		if(_wep != wep_none){
 			repeat(_wepNum){
 				with(instance_create(x, y, WepPickup)){
-					wep   = _wep;
 					curse = other.curse;
 					ammo  = true;
+					wep   = _wep;
 				}
 			}
 		}
@@ -280,8 +280,8 @@
 	 // BONE!!!
 	if(wep != wep_none){
 		with(instance_create(x, y, WepPickup)){
-			wep  = other.wep;
 			ammo = true;
+			wep  = other.wep;
 		}
 	}
 	
@@ -1916,8 +1916,12 @@
 		case ChestShop_skill:
 			
 			 // Text:
-			text = "TEMPORARY MUTATION";
-			desc = skill_get_name(drop);
+			text = skill_get_name(drop);
+			desc = skill_get_text(drop);
+			if(string_char_at(desc, string_length(desc)) != "#"){
+				desc += "#"; // What the hammerhead??
+			}
+			desc += "@wTEMPORARILY";
 			
 			 // Visual:
 			var _icon = skill_get_icon(drop);
@@ -1925,6 +1929,15 @@
 			image_index  = _icon[1];
 			image_speed  = 0;
 			image_blend  = make_color_rgb(130, 255, 100);
+			
+			 // Special Option:
+			/*if(
+				is_string(drop)
+				&& mod_script_exists("skill", drop, "skill_rat")
+				&& mod_script_call("skill", drop, "skill_rat")
+			){
+				image_blend = c_white;
+			}*/
 			
 			break;
 			
@@ -2240,9 +2253,9 @@
 						 // Weapon:
 						with(instance_create(_x, _y, WepPickup)){
 							motion_set(point_direction(x, y, _p.x, _p.y) + orandom(8), 5);
-							wep   = other.drop;
-							curse = other.curse;
 							ammo  = true;
+							curse = other.curse;
+							wep   = other.drop;
 						}
 						
 						 // Effects:
@@ -2260,10 +2273,28 @@
 						
 						_numDec = _num;
 						
+						 // Mutation:
 						with(obj_create(_x, _y, "OrchidSkill")){
-							skill = other.drop;
-							num   = _num;
-							type  = "portal";
+							skill   = other.drop;
+							num     = _num;
+							type    = "portal";
+							creator = other.creator;
+							with(self){
+								event_perform(ev_step, ev_step_normal);
+							}
+						}
+						
+						 // Effects:
+						with(alert_create(noone, sprite_index)){
+							x           = _x;
+							y           = _y - 12;
+							vspeed      = -2;
+							image_index = other.image_index;
+							image_speed = other.image_speed;
+							alert       = { spr:sprEatRad, img:-0.25, x:6, y:6 };
+							blink       = 15;
+							alarm0      = 60;
+							snd_flash   = sndLevelUp;
 						}
 						
 						break;
@@ -2272,8 +2303,23 @@
 				_num -= _numDec;
 			}
 			
-			with(instance_create(x, y, PopupText)) text = other.text;
-			with(instance_create(x, y, PopupText)) text = other.desc;
+			 // Text:
+			if(text != ""){
+				with(instance_create(x, y, PopupText)){
+					text = other.text;
+					if(instance_exists(other.prompt)){
+						target = other.prompt.pick;
+					}
+				}
+			}
+			if(desc != ""){
+				with(instance_create(x, y, PopupText)){
+					text = other.desc + "@w!";
+					if(instance_exists(other.prompt)){
+						target = other.prompt.pick;
+					}
+				}
+			}
 			
 			 // Sounds:
 			sound_play_pitchvol(sndGammaGutsProc, 1.4 + random(0.1), 0.6);
@@ -2845,8 +2891,12 @@
 		
 		 // Mutation:
 		with(obj_create(x, y, "OrchidSkill")){
-			skill = other.skill;
-			type  = "portal";
+			skill   = other.skill;
+			type    = "portal";
+			creator = other;
+			with(self){
+				event_perform(ev_step, ev_step_normal);
+			}
 		}
 		
 		 // Effects:
@@ -2917,8 +2967,8 @@
 		var _part = mod_script_call("weapon", "merge", "weapon_merge_decide_raw", 0, GameCont.hard, -1, _wepAvoid, false);
 		if(array_length(_part) >= 2){
 			with(instance_create(x + orandom(4), y + orandom(4), WepPickup)){
-				wep  = wep_merge(_part[0], _part[1]);
 				ammo = true;
+				wep  = wep_merge(_part[0], _part[1]);
 			}
 		}
 	}
@@ -3178,7 +3228,7 @@
 		friction     = 0.6;
 		direction    = random(360);
 		speed        = 8;
-		skill        = OrchidSkill_decide();
+		skill        = mut_none;
 		num          = 1;
 		time         = 0;
 		target       = instance_nearest(x, y, Player);
@@ -3282,12 +3332,16 @@
 #define OrchidBall_destroy
 	 // Mutate:
 	with(obj_create(x, y, "OrchidSkill")){
-		if(other.skill != mut_none){
-			skill = other.skill;
+		if(other.skill == mut_none){
+			other.skill = skill;
 		}
+		skill   = other.skill;
 		num     = other.num;
 		time    = other.time;
 		creator = other.creator;
+		with(self){
+			event_perform(ev_step, ev_step_normal);
+		}
 	}
 	
 	 // Alert:
@@ -3404,7 +3458,7 @@
 		 // Visual:
 		color1     = -1;
 		color2     = -1;
-		flash      = 0;
+		flash      = -1;
 		star_scale = 1;
 		
 		 // Vars:
@@ -3424,39 +3478,29 @@
 	
 #define OrchidSkill_decide
 	/*
-		Returns a random mutation that could currently appear on the mutation selection screen and isn't patience
+		Returns a random mutation that could currently appear on the mutation selection screen
 		If the player already has every available mutation then a random one is returned
 		Returns 'mut_none' if there were no available mutations
 	*/
 	
 	var _skillList = [],
 		_skillMods = mod_get_names("skill"),
-		_skillInst = instances_matching(CustomObject, "name", "OrchidSkill", "OrchidBall"),
 		_skillMax  = 30,
 		_skillAll  = true; // Already have every available skill
 		
-	for(var i = 1; i < _skillMax + array_length(_skillMods); i++){
+	for(var i = _skillMax + array_length(_skillMods) - 1; i >= 1; i--){
 		var _skill = ((i < _skillMax) ? i : _skillMods[i - _skillMax]);
-		
-		if(
-			skill_get_avail(_skill)
-			&& _skill != mut_patience
-			&& (_skill != mut_last_wish || skill_get(_skill) <= 0)
-		){
+		if(skill_get_avail(_skill)){
 			array_push(_skillList, _skill);
-			if(skill_get(_skill) == 0) _skillAll = false;
+			if(skill_get(_skill) == 0){
+				_skillAll = false;
+			}
 		}
 	}
 	
 	with(array_shuffle(_skillList)){
 		var _skill = self;
-		if(_skillAll || (skill_get(_skill) == 0 && !array_length(instances_matching(_skillInst, "skill", _skill)))){
-			
-			 // Attempted Manual Defpack Support:
-			if(_skill == "prismatic iris"){
-				return `irisslave${irandom_range(1, 6)}`;
-			}
-			
+		if(_skillAll || skill_get(_skill) == 0){
 			return _skill;
 		}
 	}
@@ -3466,11 +3510,13 @@
 #define OrchidSkill_setup
 	setup = false;
 	
-	 // Effects:
-	if(flash == 0){
+	 // Flash:
+	if(flash == -1){
 		flash = 3;
 	}
-	sound_play_pitch(sndMut, 1 + orandom(0.2));
+	
+	 // Sound:
+	sound_play_gun(mod_script_call("mod", "telib", "skill_get_sound", skill), 0.2, 0.3);
 	sound_play_pitchvol(sndStatueXP, 0.8, 0.8);
 	
 	 // Type-Specific:
@@ -3496,7 +3542,7 @@
 			
 			 // Colors:
 			if(color1 == -1) color1 = make_color_rgb(72, 253,  8);
-			if(color2 == -1) color2 = make_color_rgb(84,  64, 12);
+			if(color2 == -1) color2 = make_color_rgb(50,  72, 40);
 			
 			 // Time:
 			if(time_max == 0){
@@ -3511,14 +3557,22 @@
 	}
 	
 	 // Mutation:
-	skill_set(skill, max(0, skill_get(skill)) + num);
 	if(num != 0){
+		var	_lastMut = skill_get(skill),
+			_lastPat = GameCont.hud_patience;
+			
+		skill_set(skill, (
+			(num < 0)
+			? min(num, _lastMut + num)
+			: max(num, _lastMut + num)
+		));
+		
 		switch(skill){
 			
 			case mut_scarier_face:
 				
 				 // Manually Reduce Enemy HP:
-				with(enemy){
+				with(instances_matching_lt(enemy, "id", id)){
 					maxhealth = round(maxhealth * power(0.8, other.num));
 					my_health = round(my_health * power(0.8, other.num));
 					
@@ -3532,10 +3586,26 @@
 				
 				break;
 				
+			case mut_patience:
+				
+				 // Remove Patience Mutation:
+				if(!is_undefined(_lastPat)){
+					if(_lastPat == mut_none){
+						GameCont.skillpoints--;
+					}
+					else with(obj_create(x, y, "OrchidSkill")){
+						skill = _lastPat;
+						num   = skill_get(skill);
+						instance_destroy();
+					}
+				}
+				
+				break;
+				
 			case mut_hammerhead:
 				
 				 // Give Hammerhead Points:
-				with(Player){
+				with(instances_matching_lt(Player, "id", id)){
 					hammerhead += 20 * other.num;
 				}
 				
@@ -3545,29 +3615,32 @@
 				
 				with(Player){
 					var _num = other.num;
-					
-					 // Restore Strong Spirit:
-					if(canspirit == false || skill_get(mut_strong_spirit) <= other.num){
-						canspirit = true;
-						_num--;
-						
-						 // Effects:
-						with(instance_create(x, y, StrongSpirit)){
-							sprite_index = sprStrongSpiritRefill;
-							creator      = other;
+					if(_num > 0){
+						 // Restore Strong Spirit:
+						if(canspirit == false || _lastMut <= 0){
+							canspirit = true;
+							_num--;
+							
+							 // Effects:
+							with(instance_create(x, y, StrongSpirit)){
+								sprite_index = sprStrongSpiritRefill;
+								creator      = other;
+							}
+							sound_play(sndStrongSpiritGain);
 						}
-						sound_play(sndStrongSpiritGain);
-					}
-					
-					 // Bonus Spirit (Strong Spirit's built-in mutation stacking don't exist):
-					if("bonus_spirit" not in self){
-						bonus_spirit = [];
-					}
-					if(_num > 0) repeat(_num){
-						var _spirit = {};
-						array_push(other.spirit, _spirit);
-						array_push(bonus_spirit, _spirit);
-						sound_play(sndStrongSpiritGain);
+						
+						 // Bonus Spirit (Strong Spirit's built-in mutation stacking sucks):
+						if(_num > 0){
+							if("bonus_spirit" not in self){
+								bonus_spirit = [];
+							}
+							repeat(_num){
+								var _spirit = {};
+								array_push(other.spirit, _spirit);
+								array_push(bonus_spirit, _spirit);
+								sound_play(sndStrongSpiritGain);
+							}
+						}
 					}
 				}
 				
@@ -3589,15 +3662,17 @@
 					}
 					
 					 // Alert:
-					with(chest) with(other){
-						var _icon = skill_get_icon(skill);
-						with(alert_create(other, _icon[0])){
-							image_index = _icon[1];
-							image_speed = 0;
-							alert       = {};
-							alarm0      = other.time - (2 * blink);
-							flash       = 4;
-							snd_flash   = sndChest;
+					with(chest){
+						with(other){
+							var _icon = skill_get_icon(skill);
+							with(alert_create(other, _icon[0])){
+								image_index = _icon[1];
+								image_speed = 0;
+								alert       = {};
+								alarm0      = other.time - (2 * blink);
+								flash       = 4;
+								snd_flash   = sndChest;
+							}
 						}
 					}
 				}
@@ -3641,31 +3716,43 @@
 	else instance_delete(self);
 	
 #define OrchidSkill_end_step
-	 // Blink:
+	 // Blink Chests:
 	if(array_length(chest)){
 		var _inst = instances_matching_ne(chest, "id", null);
-		if(array_length(_inst)) with(_inst){
-			var _instAlert = instances_matching(instances_matching(CustomObject, "name", "AlertIndicator"), "target", self);
-			if(array_length(_instAlert)){
-				visible = _instAlert[0].visible;
+		if(array_length(_inst)){
+			with(_inst){
+				var _instAlert = instances_matching(instances_matching(CustomObject, "name", "AlertIndicator"), "target", self);
+				if(array_length(_instAlert)){
+					visible = _instAlert[0].visible;
+				}
 			}
 		}
 	}
 	
 #define OrchidSkill_destroy
-	 // Remember Health:
-	var _lastHP = [];
+	var	_lastMut = skill_get(skill),
+		_lastPat = GameCont.hud_patience,
+		_lastHP  = [];
+		
+	 // Remember HP:
 	with(Player){
 		array_push(_lastHP, [self, my_health]);
 	}
 	
 	 // Lose Mutation:
-	skill_set(skill, max(0, skill_get(skill) - num));
+	if(skill == mut_last_wish){
+		skill_set(skill, 0);
+	}
+	skill_set(skill, (
+		(_lastMut < 0)
+		? min(0, _lastMut - num)
+		: max(0, _lastMut - num)
+	));
 	
-	 // Restore Health:
+	 // Restore HP:
 	with(_lastHP){
 		with(self[0]){
-			my_health = min(other[1], maxhealth);
+			my_health = min(max(other[1], my_health), maxhealth);
 		}
 	}
 	
@@ -3682,14 +3769,22 @@
 		visible = true;
 	}
 	
+	 // Delete Open Mind Chests:
+	with(instances_matching_ne(chest, "id", null)){
+		//instance_create(x, y, FishA);
+		instance_delete(self);
+	}
+	
 	 // Skill-Specific:
 	switch(skill){
 		
 		case mut_throne_butt:
 			
 			 // Fix Sound Looping:
-			with(instances_matching_ne(Player, "roll", 0)){
-				sound_stop(sndFishTB);
+			if(skill_get(skill) <= 0){
+				if(array_length(instances_matching_ne(Player, "roll", 0))){
+					sound_stop(sndFishTB);
+				}
 			}
 			
 			break;
@@ -3697,18 +3792,36 @@
 		case mut_scarier_face:
 			
 			 // Restore Enemy HP:
-			with(instances_matching_lt(enemy, "id", self)){
-				maxhealth = round(maxhealth / power(0.8, other.num));
-				my_health = round(my_health / power(0.8, other.num));
-				
-				 // Heal FX:
-				sprite_index = spr_hurt;
-				image_index  = 0;
-				with(instance_create(x, y, BloodLust)){
-					sprite_index = sprHealFX;
-					creator      = other;
+			if(num != 0){
+				with(instances_matching_lt(enemy, "id", id)){
+					maxhealth = round(maxhealth / power(0.8, other.num));
+					my_health = round(my_health / power(0.8, other.num));
+					
+					 // Heal FX:
+					sprite_index = spr_hurt;
+					image_index  = 0;
+					with(instance_create(x, y, BloodLust)){
+						sprite_index = sprHealFX;
+						creator      = other;
+					}
+					sound_play_pitchvol(sndHPPickup, 1.5, 0.3);
 				}
-				sound_play_pitchvol(sndHPPickup, 1.5, 0.3);
+			}
+			
+			break;
+			
+		case mut_patience:
+			
+			 // Remove Patience Mutation:
+			if(!is_undefined(_lastPat)){
+				if(_lastPat == mut_none){
+					GameCont.skillpoints--;
+				}
+				else with(obj_create(x, y, "OrchidSkill")){
+					skill = _lastPat;
+					num   = skill_get(skill);
+					instance_destroy();
+				}
 			}
 			
 			break;
@@ -3716,7 +3829,7 @@
 		case mut_hammerhead:
 			
 			 // Remove Hammerhead Points:
-			with(instances_matching_gt(instances_matching_lt(Player, "id", self), "hammerhead", 0)){
+			with(instances_matching_gt(instances_matching_lt(Player, "id", id), "hammerhead", 0)){
 				hammerhead = max(0, hammerhead - (20 * other.num));
 			}
 			
@@ -3735,20 +3848,18 @@
 			 // Remove Strong Spirit:
 			if(num - array_length(spirit) > 0){
 				with(instances_matching(instances_matching_lt(Player, "id", self), "canspirit", true)){
-					if(skill_get(mut_strong_spirit) > 0) canspirit = false;
-					with(instance_create(x, y, StrongSpirit)) creator = other;
+					if(skill_get(mut_strong_spirit) > 0){
+						canspirit = false;
+					}
+					with(instance_create(x, y, StrongSpirit)){
+						creator = other;
+					}
 					sound_play(sndStrongSpiritLost);
 				}
 			}
 			
 			break;
 			
-	}
-	
-	 // Delete Duplicate Chest:
-	with(instances_matching_ne(chest, "id", null)){
-		//instance_create(x, y, FishA);
-		instance_delete(self);
 	}
 	
 	
@@ -3821,6 +3932,9 @@
 				skill   = other.skill;
 				type    = "portal";
 				creator = other;
+				with(self){
+					event_perform(ev_step, ev_step_normal);
+				}
 			}
 			
 			 // Effect:
@@ -4340,6 +4454,8 @@
 	}
 	
 #define RatChest_open
+	var _pool = [];
+	
 	 // Sounds:
 	sound_play_pitchvol(sndEnergySword, 0.5 + orandom(0.1), 0.8);
 	sound_play_pitchvol(sndSkillPick,   2.0 + orandom(0.1), 0.5);
@@ -4355,20 +4471,46 @@
 	 // Clear Walls:
 	instance_create(x, y, PortalClear);
 	
+	 // Generate Mutation Pool:
+	var _skillMods = mod_get_names("skill"),
+		_skillMax  = 30;
+		
+	for(var i = _skillMax + array_length(_skillMods) - 1; i >= 1; i--){
+		var _skill = ((i < _skillMax) ? i : _skillMods[i - _skillMax]);
+		if(skill_get(_skill) == 0){
+			if(
+				skill_get_avail(_skill)
+				|| (
+					is_string(_skill)
+					&& mod_script_exists("skill", _skill, "skill_rat")
+					&& mod_script_call("skill", _skill, "skill_rat")
+				)
+			){
+				array_push(_pool, _skill);
+			}
+		}
+	}
+	array_shuffle(_pool);
+	
 	 // Create Shops:
-	var _angOff = 35;
-	for(var _ang = -_angOff; _ang <= _angOff; _ang += _angOff * 2){
-		var	_len = 28,
-			_dir = _ang + 90;
+	if(array_length(_pool)){
+		var	_angOff  = 35,
+			_poolNum = 0;
 			
-		with(obj_create(x, y, "ChestShop")){
-			x      += lengthdir_x(_len, _dir);
-			y      += lengthdir_y(_len, _dir);
-			type    = ChestShop_skill;
-			creator = other;
-			
-			 // Decide Mutation:
-			drop = OrchidSkill_decide();
+		for(var _ang = -_angOff; _ang <= _angOff; _ang += _angOff * 2){
+			var	_len = 28,
+				_dir = _ang + 90;
+				
+			with(obj_create(x, y, "ChestShop")){
+				x      += lengthdir_x(_len, _dir);
+				y      += lengthdir_y(_len, _dir);
+				type    = ChestShop_skill;
+				creator = other;
+				
+				 // Decide Mutation:
+				drop = _pool[_poolNum % array_length(_pool)];
+				_poolNum++;
+			}
 		}
 	}
 	
@@ -4791,8 +4933,8 @@
 			}
 			
 			 // FX:
-			image_index = 0;
 			sprite_index = spr.VaultFlowerHurt;
+			image_index  = 0;
 			with(alert_create(self, skill_get_icon("reroll")[0])){
 				image_speed = 0;
 				alert       = {};
@@ -4873,7 +5015,7 @@
 	}
 	
 	with(prompt) visible = other.alive;
-
+	
 #define VaultFlower_death
 	 // Effects:
 	for(var _dir = direction; _dir < direction + 360; _dir += (360 / 6)){
@@ -4921,9 +5063,18 @@
 		var _local = player_find_local_nonsync();
 		if(player_is_active(_local) && player_get_show_prompts(index, _local)){
 			with(_inst){
+				 // Draw Mutation Icon:
 				if(nearwep == other.nearwep && "skill" in creator){
-					var _icon = skill_get_icon(creator.skill);
-					draw_sprite(_icon[0], _icon[1], x - xoff, (y - 13) + yoff);
+					var	_x    = x - xoff,
+						_y    = y + yoff - 13,
+						_icon = skill_get_icon(creator.skill);
+						
+					draw_sprite(_icon[0], _icon[1], _x, _y);
+					
+					 // Patience Icon:
+					if(GameCont.hud_patience == creator.skill){
+						draw_sprite(sprPatienceIconHUD, 0, _x, _y);
+					}
 				}
 			}
 		}
@@ -4988,233 +5139,6 @@
 		}
 		
 		return self;
-	}
-	
-	
-#define WepPickupGrounded_create(_x, _y)
-	with(instance_create(_x, _y, CustomObject)){
-		 // Visual:
-		spr_shadow   = shd24;
-		spr_shadow_x = 0;
-		spr_shadow_y = -9;
-		image_xscale = -1;
-		image_yscale = choose(-1, 1);
-		image_angle  = 90 + (random_range(10, 20) * choose(-1, 1));
-		depth        = -1;
-		
-		 // Vars:
-		mask_index = mskFlakBullet;
-		target     = noone;
-		target_x   = 0;
-		target_y   = 0;
-		top_object = noone;
-		
-		return self;
-	}
-	
-#define WepPickupGrounded_end_step
-	var _stuck = false;
-	if(instance_exists(target)){
-		_stuck = true;
-		
-		 // Portal Attraction:
-		if(instance_exists(Portal)){
-			with(Portal){
-				if(point_distance(x, y, other.x, other.y) < 96){
-					if(!collision_line(x, y, other.x, other.y, Wall, false, false)){
-						_stuck = false;
-						break;
-					}
-				}
-			}
-		}
-	}
-	if(_stuck){
-		 // Spin:
-		if(instance_exists(top_object) && top_object.zfriction != 0){
-			image_angle += 4 * target.rotspeed * current_time_scale;
-		}
-		
-		 // Wobble:
-		else if(target.x != target.xprevious || target.y != target.yprevious){
-			image_angle += sin(current_frame * 0.7) * target.rotspeed * sign(image_yscale) * current_time_scale;
-		}
-		
-		 // Determine Offset:
-		var	_uvs = sprite_get_uvs(target.sprite_index, 0),
-			_off = sprite_get_xoffset(target.sprite_index),
-			_ang = image_angle,
-			_xsc = image_xscale;
-			
-		if(_xsc < 0){
-			_off = (sprite_get_bbox_right(target.sprite_index) + 1) - _off;
-		}
-		else{
-			_off -= sprite_get_bbox_left(target.sprite_index);
-		}
-		_off *= abs(_xsc);
-		
-		target_x = lengthdir_x(_off, _ang);
-		target_y = lengthdir_y(_off, _ang) + ((_ang > 180) ? -2 : 2);
-		
-		 // Hold:
-		with(target){
-			x           = other.x;
-			y           = other.y - 8;
-			xprevious   = x;
-			yprevious   = y;
-			speed       = 0;
-			rotation    = _ang + (180 * (_xsc < 0));
-			image_alpha = 0;
-			
-			 // Less Shine:
-			var _shineSlow = random(0.02 * current_time_scale);
-			if(image_index > _shineSlow && image_index < 1){
-				image_index -= _shineSlow;
-			}
-		}
-	}
-	else instance_destroy();
-	
-#define WepPickupGrounded_draw
-	if(instance_exists(target)){
-		var	_spr = target.sprite_index,
-			_img = target.image_index,
-			_xsc = image_xscale,
-			_ysc = image_yscale,
-			_ang = image_angle,
-			_col = image_blend,
-			_alp = image_alpha,
-			_x   = x + target_x,
-			_y   = y + target_y;
-			
-		 // Draw Normal:
-		if(instance_exists(top_object) && top_object.zfriction != 0){
-			draw_sprite_ext(_spr, _img, _x, _y, _xsc, _ysc, _ang, _col, _alp);
-		}
-		
-		 // Draw w/ End Clipped Off:
-		else with(surface_setup(name, 64, 64, option_get("quality:main"))){
-			x = other.x - (w / 2);
-			y = other.y - h;
-			
-			surface_set_target(surf);
-			draw_clear_alpha(0, 0);
-			
-			with(other){
-				draw_sprite_ext(_spr, _img, (_x - other.x) * other.scale, (_y - other.y) * other.scale, _xsc * other.scale, _ysc * other.scale, _ang, _col, _alp);
-			}
-			
-			surface_reset_target();
-			draw_surface_scale(surf, x, y, 1 / scale);
-		}
-	}
-	
-#define WepPickupGrounded_destroy
-	with(target){
-		x           = other.x + other.target_x;
-		y           = other.y + other.target_y;
-		rotation    = other.image_angle + (180 * (other.image_xscale < 0));
-		image_alpha = 1;
-		
-		 // Fix:
-		if("top_object" in self){
-			with(top_object) instance_destroy();
-		}
-		
-		 // Effects:
-		repeat(3) scrFX([x, 4], [y, 4], random(1), Dust);
-		sound_play_hit_ext(sndWeaponPickup, 0.7, 0.8);
-	}
-	with(instance_create(x, y, WepSwap)){
-		depth = other.depth - 1;
-	}
-
-
-#define WepPickupStick_create(_x, _y)
-	with(instance_create(_x, _y, WepPickup)){
-		 // Vars:
-		mask_index   = mskShield;
-		stick_target = noone;
-		stick_x      = 0;
-		stick_y      = 0;
-		stick_damage = 0;
-		
-		return self;
-	}
-	
-#define WepPickupStick_step
-	if(instance_exists(stick_target)){
-		canwade = false;
-		rotspeed = 0;
-		
-		 // Stick in Target:
-		var _t = stick_target;
-		x = _t.x + _t.hspeed_raw + stick_x;
-		y = _t.y + _t.vspeed_raw + stick_y;
-		if("z" in _t){
-			y -= abs(_t.z);
-		}
-		xprevious = x;
-		yprevious = y;
-		speed = 0;
-		visible = (_t.visible || instance_is(_t, NothingIntroMask));
-		
-		 // Deal Damage w/ Taken Out:
-		if(stick_damage != 0 && fork()){
-			var	_damage  = stick_damage,
-				_creator = creator,
-				_ang     = rotation,
-				_wep     = wep,
-				_x       = x,
-				_y       = y;
-				
-			wait 0;
-			
-			if(!instance_exists(self)){
-				with(_t){
-					 // Damage:
-					if(instance_is(self, hitme)){
-						var	_prop = (instance_is(self, prop) || instance_is(self, Nothing) || instance_is(self, Nothing2)),
-							_dis  = 24;
-							
-						 // Effects:
-						repeat(3){
-							with(scrFX(
-								_x + lengthdir_x(_dis, _ang),
-								_y + lengthdir_y(_dis, _ang),
-								(_prop ? 2.5  : 0),
-								(_prop ? Dust : AllyDamage)
-							)){
-								depth = min(depth, other.depth - 1);
-							}
-						}
-						
-						 // Damage:
-						projectile_hit_raw(self, _damage, true);
-					}
-					
-					 // Kick:
-					with(instance_nearest_array(_x, _y, array_combine(instances_matching(Player, "wep", _wep), instances_matching(Player, "bwep", _wep)))){
-						if(wep == _wep){
-							wkick = 10;
-						}
-						else if(bwep == _wep){
-							bwkick = 10;
-						}
-					}
-				}
-			}
-			
-			exit;
-		}
-	}
-	else if(stick_target != noone){
-		stick_target = noone;
-		mask_index = mskWepPickup;
-		visible = true;
-		canwade = true;
-		rotspeed = random_range(1, 2) * choose(-1, 1);
 	}
 	
 	

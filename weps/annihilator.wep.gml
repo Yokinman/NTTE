@@ -78,6 +78,11 @@
 	
 	var _charge = (_wep.chrg_num / _wep.chrg_max);
 	
+	 // Reset Melee Offset:
+	if(!_wep.chrg || (_wep.chrg_num <= current_time_scale && abs(wepangle) < 30)){
+		wepangle = 120 * sign(wepangle);
+	}
+	
 	 // Charging:
 	if(_wep.chrg){
 		 // Pullback:
@@ -139,8 +144,6 @@
 	
 	 // Fire:
 	else{
-		wepangle = 120 * sign(wepangle);
-		
 		 // Red:
 		var _cost = weapon_get("red", _wep);
 		if(_charge >= 1 && "red_ammo" in _fire.creator && _fire.creator.red_ammo >= _cost){

@@ -169,7 +169,11 @@
 							
 						case "lair":
 							
-							area_chest = ["CatChest", "BatChest"]; //, "RatChest"]; one day...
+							area_chest = pool([
+								[["CatChest", "BatChest"], 2],
+								[["CatChest", "RatChest"], 1],
+								[["BatChest", "RatChest"], 1]
+							]);
 							
 							break;
 							

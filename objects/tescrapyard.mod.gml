@@ -1323,6 +1323,233 @@
 	else mask_index = mskBandit;
 	
 	
+#define WepPickupGrounded_create(_x, _y)
+	with(instance_create(_x, _y, CustomObject)){
+		 // Visual:
+		spr_shadow   = shd24;
+		spr_shadow_x = 0;
+		spr_shadow_y = -9;
+		image_xscale = -1;
+		image_yscale = choose(-1, 1);
+		image_angle  = 90 + (random_range(10, 20) * choose(-1, 1));
+		depth        = -1;
+		
+		 // Vars:
+		mask_index = mskFlakBullet;
+		target     = noone;
+		target_x   = 0;
+		target_y   = 0;
+		top_object = noone;
+		
+		return self;
+	}
+	
+#define WepPickupGrounded_end_step
+	var _stuck = false;
+	if(instance_exists(target)){
+		_stuck = true;
+		
+		 // Portal Attraction:
+		if(instance_exists(Portal)){
+			with(Portal){
+				if(point_distance(x, y, other.x, other.y) < 96){
+					if(!collision_line(x, y, other.x, other.y, Wall, false, false)){
+						_stuck = false;
+						break;
+					}
+				}
+			}
+		}
+	}
+	if(_stuck){
+		 // Spin:
+		if(instance_exists(top_object) && top_object.zfriction != 0){
+			image_angle += 4 * target.rotspeed * current_time_scale;
+		}
+		
+		 // Wobble:
+		else if(target.x != target.xprevious || target.y != target.yprevious){
+			image_angle += sin(current_frame * 0.7) * target.rotspeed * sign(image_yscale) * current_time_scale;
+		}
+		
+		 // Determine Offset:
+		var	_uvs = sprite_get_uvs(target.sprite_index, 0),
+			_off = sprite_get_xoffset(target.sprite_index),
+			_ang = image_angle,
+			_xsc = image_xscale;
+			
+		if(_xsc < 0){
+			_off = (sprite_get_bbox_right(target.sprite_index) + 1) - _off;
+		}
+		else{
+			_off -= sprite_get_bbox_left(target.sprite_index);
+		}
+		_off *= abs(_xsc);
+		
+		target_x = lengthdir_x(_off, _ang);
+		target_y = lengthdir_y(_off, _ang) + ((_ang > 180) ? -2 : 2);
+		
+		 // Hold:
+		with(target){
+			x           = other.x;
+			y           = other.y - 8;
+			xprevious   = x;
+			yprevious   = y;
+			speed       = 0;
+			rotation    = _ang + (180 * (_xsc < 0));
+			image_alpha = 0;
+			
+			 // Less Shine:
+			var _shineSlow = random(0.02 * current_time_scale);
+			if(image_index > _shineSlow && image_index < 1){
+				image_index -= _shineSlow;
+			}
+		}
+	}
+	else instance_destroy();
+	
+#define WepPickupGrounded_draw
+	if(instance_exists(target)){
+		var	_spr = target.sprite_index,
+			_img = target.image_index,
+			_xsc = image_xscale,
+			_ysc = image_yscale,
+			_ang = image_angle,
+			_col = image_blend,
+			_alp = image_alpha,
+			_x   = x + target_x,
+			_y   = y + target_y;
+			
+		 // Draw Normal:
+		if(instance_exists(top_object) && top_object.zfriction != 0){
+			draw_sprite_ext(_spr, _img, _x, _y, _xsc, _ysc, _ang, _col, _alp);
+		}
+		
+		 // Draw w/ End Clipped Off:
+		else with(surface_setup(name, 64, 64, option_get("quality:main"))){
+			x = other.x - (w / 2);
+			y = other.y - h;
+			
+			surface_set_target(surf);
+			draw_clear_alpha(0, 0);
+			
+			with(other){
+				draw_sprite_ext(_spr, _img, (_x - other.x) * other.scale, (_y - other.y) * other.scale, _xsc * other.scale, _ysc * other.scale, _ang, _col, _alp);
+			}
+			
+			surface_reset_target();
+			draw_surface_scale(surf, x, y, 1 / scale);
+		}
+	}
+	
+#define WepPickupGrounded_destroy
+	with(target){
+		x           = other.x + other.target_x;
+		y           = other.y + other.target_y;
+		rotation    = other.image_angle + (180 * (other.image_xscale < 0));
+		image_alpha = 1;
+		
+		 // Fix:
+		if("top_object" in self){
+			with(top_object) instance_destroy();
+		}
+		
+		 // Effects:
+		repeat(3) scrFX([x, 4], [y, 4], random(1), Dust);
+		sound_play_hit_ext(sndWeaponPickup, 0.7, 0.8);
+	}
+	with(instance_create(x, y, WepSwap)){
+		depth = other.depth - 1;
+	}
+
+
+#define WepPickupStick_create(_x, _y)
+	with(instance_create(_x, _y, WepPickup)){
+		 // Vars:
+		mask_index   = mskShield;
+		stick_target = noone;
+		stick_x      = 0;
+		stick_y      = 0;
+		stick_damage = 0;
+		
+		return self;
+	}
+	
+#define WepPickupStick_step
+	if(instance_exists(stick_target)){
+		canwade = false;
+		rotspeed = 0;
+		
+		 // Stick in Target:
+		var _t = stick_target;
+		x = _t.x + _t.hspeed_raw + stick_x;
+		y = _t.y + _t.vspeed_raw + stick_y;
+		if("z" in _t){
+			y -= abs(_t.z);
+		}
+		xprevious = x;
+		yprevious = y;
+		speed = 0;
+		visible = (_t.visible || instance_is(_t, NothingIntroMask));
+		
+		 // Deal Damage w/ Taken Out:
+		if(stick_damage != 0 && fork()){
+			var	_damage  = stick_damage,
+				_creator = creator,
+				_ang     = rotation,
+				_wep     = wep,
+				_x       = x,
+				_y       = y;
+				
+			wait 0;
+			
+			if(!instance_exists(self)){
+				with(_t){
+					 // Damage:
+					if(instance_is(self, hitme)){
+						var	_prop = (instance_is(self, prop) || instance_is(self, Nothing) || instance_is(self, Nothing2)),
+							_dis  = 24;
+							
+						 // Effects:
+						repeat(3){
+							with(scrFX(
+								_x + lengthdir_x(_dis, _ang),
+								_y + lengthdir_y(_dis, _ang),
+								(_prop ? 2.5  : 0),
+								(_prop ? Dust : AllyDamage)
+							)){
+								depth = min(depth, other.depth - 1);
+							}
+						}
+						
+						 // Damage:
+						projectile_hit_raw(self, _damage, true);
+					}
+					
+					 // Kick:
+					with(instance_nearest_array(_x, _y, array_combine(instances_matching(Player, "wep", _wep), instances_matching(Player, "bwep", _wep)))){
+						if(wep == _wep){
+							wkick = 10;
+						}
+						else if(bwep == _wep){
+							bwkick = 10;
+						}
+					}
+				}
+			}
+			
+			exit;
+		}
+	}
+	else if(stick_target != noone){
+		stick_target = noone;
+		mask_index = mskWepPickup;
+		visible = true;
+		canwade = true;
+		rotspeed = random_range(1, 2) * choose(-1, 1);
+	}
+	
+	
 /// GENERAL
 #define ntte_update(_newID)
 	 // Variant Car Decal:

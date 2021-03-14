@@ -412,8 +412,8 @@
 						with(obj_create(x, y, "WepPickupGrounded")){
 							target = instance_create(x, y, WepPickup);
 							with(target){
-								wep  = wep_merge(_part[0], _part[1]);
 								ammo = true;
+								wep  = wep_merge(_part[0], _part[1]);
 							}
 						}
 					}*/

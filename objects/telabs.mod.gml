@@ -1362,7 +1362,7 @@
 	 // Goodbye:
 	instance_destroy();
 	
-
+	
 #define PopoSecurity_create(_x, _y)
 	with(instance_create(_x, _y, CustomEnemy)){
 		var	_wepList  = [spr.PopoSecurityMinigun, spr.PopoSecurityCannon],

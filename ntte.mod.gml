@@ -1258,7 +1258,7 @@
 			}
 			
 			 // Loot:
-			chest_create(x, y - 4, choose("CatChest", "BatChest"/*, "RatChest"*/), true);
+			chest_create(x, y - 4, choose("CatChest", "BatChest", "RatChest"), true);
 			
 			 // Crate Walls:
 			var _img = 0;
@@ -1523,9 +1523,9 @@
 							with(obj_create(_x, _y - 16, "WepPickupGrounded")){
 								target = instance_create(x, y, WepPickup);
 								with(target){
-									wep  = weapon_decide(3, 2 + GameCont.hard, false, null);
 									ammo = true;
 									roll = true;
+									wep  = weapon_decide(3, 2 + GameCont.hard, false, null);
 								}
 								top_create(x, y, self, 0, 0);
 							}
@@ -1693,53 +1693,80 @@
 	
 	 // Crown of Crime:
 	if(crown_current == "crime"){
-		 // Cat Chests:
-		if(chance(1, 2)){
-			with(instances_matching_ne(AmmoChest, "object_index", IDPDChest, GiantAmmoChest)){
-				chest_create(x, y, "CatChest", true);
-				instance_delete(self);
-			}
-		}
-		
-		 // Bat Chests:
-		else with(instances_matching_ne(WeaponChest, "object_index", GiantWeaponChest)){
-			with(chest_create(x, y, "BatChest", true)){
-				if("name" in self && name == "BatChest"){
-					big   = (instance_is(other, BigWeaponChest) || instance_is(other, BigCursedChest));
-					curse = other.curse;
+		switch(choose(AmmoChest, WeaponChest, RadChest)){
+			
+			case AmmoChest:
+				
+				 // Cat Chests:
+				with(instances_matching_ne(AmmoChest, "object_index", IDPDChest, GiantAmmoChest)){
+					chest_create(x, y, "CatChest", true);
+					instance_delete(self);
 				}
-			}
-			instance_delete(self);
+				
+				break;
+				
+			case WeaponChest:
+				
+				 // Bat Chests:
+				with(instances_matching_ne(WeaponChest, "object_index", GiantWeaponChest)){
+					with(chest_create(x, y, "BatChest", true)){
+						if("name" in self && name == "BatChest"){
+							big   = (instance_is(other, BigWeaponChest) || instance_is(other, BigCursedChest));
+							curse = other.curse;
+						}
+					}
+					instance_delete(self);
+				}
+				
+				break;
+				
+			case RadChest:
+				
+				 // Rat Chests:
+				with(instances_matching_ne([RadChest, RogueChest], "id", null)){
+					chest_create(x, y, "RatChest", true);
+					instance_delete(self);
+				}
+				
+				break;
+				
 		}
 	}
 	
 	 // Red Ammo Canisters:
 	with(Player){
 		if(weapon_get("red", wep) > 0 || weapon_get("red", bwep) > 0){
-			 // Rad Chest Replacement:
+			 // Replace Rad Canisters:
 			with(RadChest){
 				obj_create(x, y, "RedAmmoChest");
 				instance_delete(self);
 			}
 			
-			 // Spawn With Rogue Chest:
+			 // Spawn With Rogue Canisters:
+			var _spawn = true;
 			with(RogueChest){
-				floor_set_align(32, 32, null, null);
-				
-				with(floor_room(x, y, 0, FloorNormal, 1, 1, "", 0, 0)){
-					obj_create(x, y, "RedAmmoChest");
+				if(_spawn){
+					_spawn = false;
+					floor_set_align(32, 32, null, null);
+					with(floor_room(x, y, 0, FloorNormal, 1, 1, "", 0, 0)){
+						obj_create(x, y, "RedAmmoChest");
+					}
+					floor_reset_align();
 				}
 				
-				floor_reset_align();
+				 // Replace:
+				else if(chance(1, 2)){
+					obj_create(x, y, "RedAmmoChest");
+					instance_delete(self);
+				}
 			}
-			
 			break;
 		}
 	}
 	
 	 // Orchid Chests:
 	if(save_get("orchid:seen", false)){
-		with(instances_matching_ne([RadChest, RogueChest], "id", null)){
+		with(RadChest){
 			if(chance(GameCont.rad * (GameCont.level / 10), 600 * 3)){
 				obj_create(x, y, "OrchidChest");
 				instance_delete(self);
@@ -1749,7 +1776,11 @@
 	
 	 // Bonus Chests:
 	with(instances_matching([AmmoPickup, HPPickup, AmmoChest, HealthChest, Mimic, SuperMimic], "bonus_pickup_check", null)){
-		bonus_pickup_check = (chance(1, 6) && _normalArea && GameCont.hard > 8);
+		bonus_pickup_check = (
+			chance(1, 6)
+			&& _normalArea
+			&& GameCont.hard > 8
+		);
 		if(bonus_pickup_check){
 			var _chest = "";
 			if((instance_is(self, AmmoChest) && !instance_is(self, IDPDChest)) || instance_is(self, Mimic)){
@@ -3887,22 +3918,9 @@
 				
 				 // Compile Orchid Rerolls to Draw:
 				if("ntte_reroll_hud" in GameCont && !is_undefined(GameCont.ntte_reroll_hud)){
-					 // Link to Latest Mutation:
-					if(skill_get(GameCont.ntte_reroll_hud) == 0){
-						GameCont.ntte_reroll_hud = undefined;
-						for(var _pos = 0; !is_undefined(skill_get_at(_pos)); _pos++){
-							GameCont.ntte_reroll_hud = skill_get_at(_pos);
-						}
-					}
-					
-					 // Add:
-					if(!is_undefined(GameCont.ntte_reroll_hud) && skill_get(GameCont.ntte_reroll_hud) != 0){
+					if(skill_get(GameCont.ntte_reroll_hud) != 0){
 						array_push(_skillType, "reroll");
-						array_push(_skillList, (
-							(GameCont.ntte_reroll_hud == mut_patience && skill_get(GameCont.hud_patience) != 0)
-							? GameCont.hud_patience
-							: GameCont.ntte_reroll_hud
-						));
+						array_push(_skillList, GameCont.ntte_reroll_hud);
 					}
 				}
 				
@@ -3914,6 +3932,15 @@
 						_addy = 16,
 						_minx = 110 - (17 * (_players > 1));
 						
+					 // Patience Fix:
+					var _m = array_length(_skillList);
+					for(var i = 0; i < _m; i++){
+						if(_skillList[i] == mut_patience && skill_get(GameCont.hud_patience) != 0){
+							array_push(_skillType, _skillType[i]);
+							array_push(_skillList, GameCont.hud_patience);
+						}
+					}
+					
 					 // Co-op Offset:
 					if(!_pause && instance_exists(Player)){
 						if(_players >= 2){
@@ -3949,151 +3976,154 @@
 					}
 					
 					 // Draw:
-					for(var i = 0; !is_undefined(skill_get_at(i)); i++){
-						var	_skill      = skill_get_at(i),
-							_skillIndex = array_find_index(_skillList, _skill);
-							
-						if(_skillIndex >= 0){
-							while(_skillIndex >= 0){
-								switch(_skillType[_skillIndex]){
-									
-									case "reroll": // VAULT FLOWER
+					for(var i = 0; true; i++){
+						var _skill = skill_get_at(i);
+						if(is_undefined(_skill)){
+							break;
+						}
+						if(_skill != mut_patience || real(string(GameCont.hud_patience)) == mut_none){ // yes the game does real(string())
+							var _skillIndex = array_find_index(_skillList, _skill);
+							if(_skillIndex >= 0){
+								while(_skillIndex >= 0){
+									switch(_skillType[_skillIndex]){
 										
-										_draw = true;
-										
-										draw_sprite(
-											spr.SkillRerollHUDSmall,
-											0,
-											_x + (
-												(GameCont.ntte_reroll_hud == mut_patience && skill_get(GameCont.hud_patience) != 0)
-												? -4
-												: 5
-											),
-											_y + 5
-										);
-										
-										break;
-										
-									case "orchid": // ORCHID MANTIS
-										
-										var	_icon = skill_get_icon(_skill),
-											_spr  = _icon[0],
-											_img  = _icon[1];
+										case "reroll": // VAULT FLOWER
 											
-										if(sprite_exists(_spr)){
 											_draw = true;
 											
-											var	_type    = undefined,
-												_time    = 0,
-												_timeMax = 0,
-												_colTop  = c_white,
-												_colSub  = c_dkgray,
-												_flash   = false,
-												_star    = 0,
-												_inst    = instances_matching(_instOrchid, "skill", _skill);
+											draw_sprite(
+												spr.SkillRerollHUDSmall,
+												0,
+												_x + ((_skill == GameCont.hud_patience) ? -4 : 5),
+												_y + 5
+											);
+											
+											break;
+											
+										case "orchid": // ORCHID MANTIS
+											
+											var	_icon = skill_get_icon(_skill),
+												_spr  = _icon[0],
+												_img  = _icon[1];
 												
-											 // Get Orchid Mutation With Least Time:
-											array_sort(_inst, false);
-											with(_inst){
-												if(is_undefined(_type) || (type == _type && time > _time)){
-													_type    = type;
-													_time    = time;
-													_timeMax = time_max;
-													_colTop  = color1;
-													_colSub  = color2;
-												}
-												if(flash > 0){
-													_flash = true;
-												}
-												if(star_scale > _star){
-													_star = star_scale;
-												}
-											}
-											
-											 // Flash White:
-											if(_flash){
-												draw_set_fog(true, c_white, 0, 0);
-											}
-											
-											 // Orchid Mutation Drawing:
-											if(_time != 0){
-												var	_uvs = sprite_get_uvs(_spr, _img),
-													_x1  = max(sprite_get_bbox_left  (_spr),     _uvs[4]                                      ),
-													_y1  = max(sprite_get_bbox_top   (_spr),     _uvs[5]                                      ),
-													_x2  = min(sprite_get_bbox_right (_spr) + 1, _uvs[4] + (_uvs[6] * sprite_get_width (_spr))),
-													_y2  = min(sprite_get_bbox_bottom(_spr) + 1, _uvs[5] + (_uvs[7] * sprite_get_height(_spr))),
-													_num = 1 - (_time / _timeMax);
+											if(sprite_exists(_spr)){
+												_draw = true;
+												
+												var	_type    = undefined,
+													_time    = 0,
+													_timeMax = 0,
+													_colTop  = c_white,
+													_colSub  = c_dkgray,
+													_flash   = false,
+													_star    = 0,
+													_inst    = instances_matching(_instOrchid, "skill", _skill);
 													
-												 // Outline:
-												if(!_flash){
-													draw_set_fog(true, _colSub, 0, 0);
-												}
-												for(var _dir = 0; _dir < 360; _dir += 90){
-													draw_sprite(_spr, _img, _x + dcos(_dir), _y - dsin(_dir));
+												 // Patience:
+												if(GameCont.hud_patience == _skill){
+													_inst = array_combine(_inst, instances_matching(_instOrchid, "skill", mut_patience));
 												}
 												
-												 // Timer Outline:
-												if(!_flash){
-													draw_set_fog(true, _colTop, 0, 0);
+												 // Get Orchid Mutation With Least Time:
+												array_sort(_inst, false);
+												with(_inst){
+													if(is_undefined(_type) || (type == _type && time > _time)){
+														_type    = type;
+														_time    = time;
+														_timeMax = time_max;
+														_colTop  = color1;
+														_colSub  = color2;
+													}
+													if(flash > 0){
+														_flash = true;
+													}
+													if(star_scale > _star){
+														_star = star_scale;
+													}
 												}
-												for(var _dir = 0; _dir < 360; _dir += 90){
-													var	_l = _x1,
-														_t = max(_y1, lerp(_y1 - 1, _y2 + 1, _num) + dsin(_dir)),
-														_w = _x2 - _l,
-														_h = _y2 + 1 - _t;
+												
+												 // Flash White:
+												if(_flash){
+													draw_set_fog(true, c_white, 0, 0);
+												}
+												
+												 // Orchid Mutation Drawing:
+												if(_time != 0){
+													var	_uvs = sprite_get_uvs(_spr, _img),
+														_x1  = max(sprite_get_bbox_left  (_spr),     _uvs[4]                                      ),
+														_y1  = max(sprite_get_bbox_top   (_spr),     _uvs[5]                                      ),
+														_x2  = min(sprite_get_bbox_right (_spr) + 1, _uvs[4] + (_uvs[6] * sprite_get_width (_spr))),
+														_y2  = min(sprite_get_bbox_bottom(_spr) + 1, _uvs[5] + (_uvs[7] * sprite_get_height(_spr))),
+														_num = 1 - (_time / _timeMax);
 														
-													draw_sprite_part(_spr, _img, _l, _t, _w, _h, _x + _l - sprite_get_xoffset(_spr) + dcos(_dir), _y + _t - sprite_get_yoffset(_spr) - dsin(_dir));
+													 // Outline:
+													if(!_flash){
+														draw_set_fog(true, _colSub, 0, 0);
+													}
+													for(var _dir = 0; _dir < 360; _dir += 90){
+														draw_sprite(_spr, _img, _x + dcos(_dir), _y - dsin(_dir));
+													}
+													
+													 // Timer Outline:
+													if(!_flash){
+														draw_set_fog(true, _colTop, 0, 0);
+													}
+													for(var _dir = 0; _dir < 360; _dir += 90){
+														var	_l = _x1,
+															_t = max(_y1, lerp(_y1 - 1, _y2 + 1, _num) + dsin(_dir)),
+															_w = _x2 - _l,
+															_h = _y2 + 1 - _t;
+															
+														draw_sprite_part(_spr, _img, _l, _t, _w, _h, _x + _l - sprite_get_xoffset(_spr) + dcos(_dir), _y + _t - sprite_get_yoffset(_spr) - dsin(_dir));
+													}
+													
+													 // Star Flash:
+													if(_star > 0){
+														var	_wave   = current_frame + (i * 1000),
+															_scale  = max(0, (1.1 + (0.1 * sin(_wave / 15))) * _star),
+															_angle  = _wave / 10;
+															
+														draw_sprite_ext(spr.PetOrchidBall, _wave, _x, _y, _scale, _scale, _angle, c_white, 1);
+													}
+													
+													if(!_flash){
+														draw_set_fog(false, 0, 0, 0);
+													}
 												}
 												
-												 // Star Flash:
-												if(_star > 0){
-													var	_wave   = current_frame + (i * 1000),
-														_scale  = max(0, (1.1 + (0.1 * sin(_wave / 15))) * _star),
-														_angle  = _wave / 10;
-														
-													draw_sprite_ext(spr.PetOrchidBall, _wave, _x, _y, _scale, _scale, _angle, c_white, 1);
+												 // Skill Icon:
+												draw_sprite(_spr, _img, _x, _y);
+												
+												 // Patience Fix:
+												if(GameCont.hud_patience == _skill){
+													draw_sprite(sprPatienceIconHUD, 0, _x, _y);
 												}
 												
-												if(!_flash){
+												 // Unflash:
+												if(_flash){
 													draw_set_fog(false, 0, 0, 0);
 												}
+												
+												 // Lighten Up, Bro:
+												draw_set_blend_mode(bm_add);
+												draw_sprite_ext(_spr, _img, _x, _y, 1, 1, 0, c_white, 0.1 + (0.1 * cos((_timeMax - _time) / 20)));
+												draw_set_blend_mode(bm_normal);
 											}
 											
-											 // Skill Icon:
-											draw_sprite(_spr, _img, _x, _y);
+											break;
 											
-											 // Unflash:
-											if(_flash){
-												draw_set_fog(false, 0, 0, 0);
-											}
-											
-											 // Lighten Up, Bro:
-											draw_set_blend_mode(bm_add);
-											draw_sprite_ext(_spr, _img, _x, _y, 1, 1, 0, c_white, 0.1 + (0.1 * cos((_timeMax - _time) / 20)));
-											draw_set_blend_mode(bm_normal);
-										}
-										
-										break;
-										
+									}
+									
+									_skillList = array_delete(_skillList, _skillIndex);
+									_skillType = array_delete(_skillType, _skillIndex);
+									
+									_skillIndex = array_find_index(_skillList, _skill);
 								}
-								
-								_skillList = array_delete(_skillList, _skillIndex);
-								_skillType = array_delete(_skillType, _skillIndex);
-								
-								_skillIndex = array_find_index(_skillList, _skill);
+								if(!array_length(_skillList)){
+									break;
+								}
 							}
 							
-							if(array_length(_skillList) <= 0){
-								break;
-							}
-						}
-						
-						 // Keep it movin:
-						if(
-							_skill != mut_patience
-							|| GameCont.hud_patience == 0
-							|| GameCont.hud_patience == null
-						){
+							 // Keep it movin:
 							_x += _addx;
 							if(_x < _minx){
 								_x = _sx;

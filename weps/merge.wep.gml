@@ -2350,15 +2350,21 @@
 	
 	 // Cool Prompt Subtext:
 	if(instance_is(self, WepPickup) && is_object(_wep)){
-		if("stock" in _wep.base && "front" in wep.base){
+		if("stock" in _wep.base && "front" in _wep.base){
+			 // Generate & Store Text:
 			if(ds_list_find_index(global.wep_name_popup[0], _wep) < 0){
 				var _spr = mod_script_call("mod", "teassets", "weapon_merge_subtext", _wep.base.stock, _wep.base.front);
 				if(sprite_exists(_spr)){
 					var _text = `#@(${_spr})`;
-					_name += _text;
 					ds_list_add(global.wep_name_popup[0], _wep);
 					ds_list_add(global.wep_name_popup[1], _text);
 				}
+			}
+			
+			 // Add Text:
+			var _pos = ds_list_find_index(global.wep_name_popup[0], _wep);
+			if(_pos >= 0){
+				_name += global.wep_name_popup[1][| _pos];
 			}
 		}
 	}
