@@ -2154,7 +2154,7 @@
 			var	_wep = self,
 				_raw = wep_raw(_wep);
 				
-			with(other){
+			with(other) with(self){
 				switch(_raw){
 					
 					case wep_none:
@@ -2265,12 +2265,14 @@
 	with(_list){
 		var _skill = self;
 		with(other){
-			if(
-				skill_get(_skill) == 0
-				&& skill_get_avail(_skill)
-				&& array_find_index(_pool, _skill) < 0
-			){
-				array_push(_pool, _skill);
+			if(!is_string(_skill) || mod_exists("skill", _skill)){
+				if(
+					skill_get(_skill) == 0
+					&& skill_get_active(_skill)
+					&& array_find_index(_pool, _skill) < 0
+				){
+					array_push(_pool, _skill);
+				}
 			}
 		}
 	}

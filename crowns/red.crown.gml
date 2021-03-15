@@ -19,39 +19,45 @@
 #define crown_loadout     return global.sprCrownLoadout;
 #define crown_ntte_pack   return "crown";
 
+#define crown_sound
+	var _snd = sound_play_gun(sndLaserCrystalDeath, 0, 0.3);
+	audio_sound_pitch(_snd, 0.35);
+	audio_sound_gain(_snd,  2.00, 0);
+	return sndCrownCurses;
+	
 #define crown_menu_button
 	sprite_index = crown_loadout();
-	image_index = !crown_menu_avail();
-	dix = -1;
-	diy = 2;
+	image_index  = !crown_menu_avail();
+	dix          = -1;
+	diy          = 2;
 	
 #define crown_button
 	sprite_index = global.sprCrownIcon;
 	
 #define crown_object
 	 // Visual:
-	spr_idle = global.sprCrownIdle;
-	spr_walk = global.sprCrownWalk;
+	spr_idle     = global.sprCrownIdle;
+	spr_walk     = global.sprCrownWalk;
 	sprite_index = spr_idle;
 	
 	 // Sound:
 	if(instance_is(other, CrownIcon)){
-		sound_play_pitch(sndCrownCurses, 1.1);
-		sound_play_pitchvol(sndLaserCrystalDeath, 0.35, 2);
+		sound_play_gun(crown_sound(), 0, 0.3);
 	}
 	
-#define step
+#define ntte_update(_newID)
 	 // Smaller Levels:
-	if(instance_exists(FloorMaker)){
-		with(instances_matching(FloorMaker, "crownredsmallerlevels", null)){
-			crownredsmallerlevels = true;
-			goal = round(goal * 0.4);
-			
-			 // Fix:
-			if(instance_number(Floor) > goal){
-				with(GenCont){
-					if(alarm0 < 0) alarm0 = 3;
-					if(alarm2 < 0) alarm2 = 2;
+	if(crown_current == mod_current){
+		if(instance_exists(FloorMaker) && FloorMaker.id > _newID){
+			with(instances_matching_gt(FloorMaker, "id", _newID)){
+				goal = round(goal * 0.4);
+				
+				 // Fix:
+				if(instance_number(Floor) > goal){
+					with(GenCont){
+						if(alarm0 < 0) alarm0 = 3;
+						if(alarm2 < 0) alarm2 = 2;
+					}
 				}
 			}
 		}

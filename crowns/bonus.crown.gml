@@ -18,25 +18,30 @@
 #define crown_loadout     return global.sprCrownLoadout;
 #define crown_ntte_pack   return "crown";
 
+#define crown_sound
+	var _snd = sound_play_gun(sndRogueCanister, 0, 0.3);
+	audio_sound_pitch(_snd, 0.7);
+	audio_sound_gain(_snd,  1.4, 0);
+	return sndCrownProtection;
+	
 #define crown_menu_button
 	sprite_index = crown_loadout();
-	image_index = !crown_menu_avail();
-	dix = -1;
-	diy = 1;
+	image_index  = !crown_menu_avail();
+	dix          = -1;
+	diy          = 1;
 	
 #define crown_button
 	sprite_index = global.sprCrownIcon;
 	
 #define crown_object
 	 // Visual:
-	spr_idle = global.sprCrownIdle;
-	spr_walk = global.sprCrownWalk;
+	spr_idle     = global.sprCrownIdle;
+	spr_walk     = global.sprCrownWalk;
 	sprite_index = spr_idle;
 	
 	 // Sound:
 	if(instance_is(other, CrownIcon)){
-		sound_play_pitch(sndCrownProtection, 0.9);
-		sound_play_pitchvol(sndRogueCanister, 0.7, 1.4);
+		sound_play_gun(crown_sound(), 0, 0.3);
 	}
 	
 	

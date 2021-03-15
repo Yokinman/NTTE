@@ -4009,7 +4009,8 @@
 											if(sprite_exists(_spr)){
 												_draw = true;
 												
-												var	_type    = undefined,
+												var	_wave    = current_frame + (i * 1000),
+													_type    = undefined,
 													_time    = 0,
 													_timeMax = 0,
 													_colTop  = c_white,
@@ -4078,9 +4079,8 @@
 													
 													 // Star Flash:
 													if(_star > 0){
-														var	_wave   = current_frame + (i * 1000),
-															_scale  = max(0, (1.1 + (0.1 * sin(_wave / 15))) * _star),
-															_angle  = _wave / 10;
+														var	_scale = max(0, (1.1 + (0.1 * sin(_wave / 15))) * _star),
+															_angle = _wave / 10;
 															
 														draw_sprite_ext(spr.PetOrchidBall, _wave, _x, _y, _scale, _scale, _angle, c_white, 1);
 													}
@@ -4105,7 +4105,8 @@
 												
 												 // Lighten Up, Bro:
 												draw_set_blend_mode(bm_add);
-												draw_sprite_ext(_spr, _img, _x, _y, 1, 1, 0, c_white, 0.1 + (0.1 * cos((_timeMax - _time) / 20)));
+												var _alpha = lerp(0.2, 0, ((1 + cos(_wave / 20)) / 2) * clamp(1 - _star, 0, 1));
+												draw_sprite_ext(_spr, _img, _x, _y, 1, 1, 0, c_white, _alpha);
 												draw_set_blend_mode(bm_normal);
 											}
 											

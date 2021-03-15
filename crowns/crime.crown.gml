@@ -19,6 +19,12 @@
 #define crown_loadout     return global.sprCrownLoadout;
 #define crown_ntte_pack   return "crown";
 
+#define crown_sound
+	var _snd = sound_play_gun(sndBigWeaponChest, 0, 0.3);
+	audio_sound_pitch(_snd, 0.2);
+	audio_sound_gain(_snd,  1.5, 0);
+	return sndCrownLove;
+	
 #define crown_menu_button
 	sprite_index = crown_loadout();
 	image_index  = !crown_menu_avail();
@@ -41,8 +47,7 @@
 	
 	 // Sound:
 	if(instance_is(other, CrownIcon)){
-		sound_play_pitch(sndCrownLove, 1.1);
-		sound_play_pitchvol(sndBigWeaponChest, 0.2, 1.5);
+		sound_play_gun(crown_sound(), 0, 0.3);
 	}
 	
 #define step

@@ -4252,7 +4252,7 @@
 			if(anchor_retract){
 				anchor.speed -= 0.5 * current_time_scale;
 				if(anchor.speed <= 0){
-					with(anchor) instance_destroy();
+					instance_delete(anchor);
 					anchor = noone;
 				}
 			}

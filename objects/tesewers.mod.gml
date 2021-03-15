@@ -412,13 +412,13 @@
 	}
 		
 	 // Body and Gun:
-	if(_hurt) d3d_set_fog(true, c_black, 0, 0);
+	if(_hurt) draw_set_fog(true, c_black, 0, 0);
 	if(_back) draw_self_enemy();
 	
 	draw_weapon(spr_weap, 0, x, y, gunangle, 0, wkick, right, image_blend, image_alpha);
 	
 	if(!_back) draw_self_enemy();
-	if(_hurt) d3d_set_fog(false, 0, 0, 0);
+	if(_hurt) draw_set_fog(false, 0, 0, 0);
 	
 	 // Halo:
 	draw_sprite(spr_halo, halo_index, x, (y - 3) + sin(wave * 0.1));
@@ -821,9 +821,16 @@
 	}
 	
 #define Bat_draw
-	if(gunangle >  180) draw_self_enemy();
+	var	_hurt = (sprite_index == spr_fire && nexthurt >= current_frame + 4),
+		_back = (gunangle > 180);
+		
+	if(_hurt) draw_set_fog(true, image_blend, 0, 0);
+	if(_back) draw_self_enemy();
+	
 	draw_weapon(spr_weap, 0, x, y, gunangle, 0, wkick, right, image_blend, image_alpha);
-	if(gunangle <= 180) draw_self_enemy();
+	
+	if(!_back) draw_self_enemy();
+	if(_hurt) draw_set_fog(false, 0, 0, 0);
 	
 #define Bat_alrm1
 	alarm1 = 20 + irandom(30);
@@ -942,17 +949,14 @@
 	
 	
 #define Bat_hurt(_damage, _force, _direction)
-	 // Get hurt:
-	if(!instance_is(other, ToxicGas)){
-		stress += _damage;
-		enemy_hurt(_damage, _force, _direction);
-	}
+	 // Get Hurt:
+	stress += _damage;
+	enemy_hurt(_damage, _force, _direction);
 	
-	 // Screech:
-	else{
+	 // Clear Gas:
+	if(instance_is(other, ToxicGas)){
 		stress -= 4;
 		nexthurt = current_frame + 6;
-		
 		scrBatScreech(0.5);
 	}
 	
@@ -1175,22 +1179,27 @@
 	}
 	
 #define BatBoss_draw
-	 // Cloudin:
 	var _blend = image_blend;
+	
+	 // Cloudin:
 	image_blend = merge_color(image_blend, c_black, cloud_blend);
 	
 	 // Self:
-	var _hurt = (sprite_index != spr_hurt && nexthurt >= current_frame + 4);
+	var	_hurt = (sprite_index == spr_fire && nexthurt >= current_frame + 4),
+		_back = (gunangle > 180);
+		
 	if(_hurt) draw_set_fog(true, _blend, 0, 0);
+	if(_back) draw_self_enemy();
 	
-	if(gunangle >  180) draw_self_enemy();
 	draw_weapon(spr_weap, 0, x, y, gunangle, 0, wkick, right, image_blend, image_alpha);
-	if(gunangle <= 180) draw_self_enemy();
 	
+	if(!_back) draw_self_enemy();
 	if(_hurt) draw_set_fog(false, 0, 0, 0);
 	
+	 // Uncloud:
 	image_blend = _blend;
 	
+	 // Debug:
 	//draw_text_nt(x, y - 30, string(charge) + "/" + string(max_charge) + "(" + string(charged) + ")");
 	
 #define BatBoss_alrm0
@@ -1381,37 +1390,34 @@
 	
 #define BatBoss_hurt(_damage, _force, _direction)
 	 // Get hurt:
-	if(!instance_is(other, ToxicGas)){
-		stress += _damage;
-		enemy_hurt(_damage, _force, _direction);
-		
-		 // Pitch Hurt:
-		if(snd_hurt == sndMutant10Hurt){
-			audio_sound_set_track_position(
-				sound_play_hit_ext(snd_hurt, 0.6 + random(0.2), 1),
-				0.07
-			);
-			sound_play_hit_ext(sndHitFlesh, 1 + orandom(0.3), 1.4);
+	stress += _damage;
+	enemy_hurt(_damage, _force, _direction);
+	
+	 // Pitch Hurt:
+	if(snd_hurt == sndMutant10Hurt){
+		audio_sound_set_track_position(
+			sound_play_hit_ext(snd_hurt, 0.6 + random(0.2), 1),
+			0.07
+		);
+		sound_play_hit_ext(sndHitFlesh, 1 + orandom(0.3), 1.4);
+	}
+	
+	 // Half HP:
+	var _half = maxhealth / 2;
+	if(my_health <= _half && my_health + _damage > _half){
+		if(snd_lowh == sndNothing2HalfHP){
+			sound_play_pitch(sndNothing2HalfHP, 1.3);
 		}
+		else sound_play(snd_lowh);
 		
-		 // Half HP:
-		var _half = maxhealth / 2;
-		if(my_health <= _half && my_health + _damage > _half){
-			if(snd_lowh == sndNothing2HalfHP){
-				sound_play_pitch(sndNothing2HalfHP, 1.3);
-			}
-			else sound_play(snd_lowh);
-			
-			 // Biggo Screech:
-			scrBatBossScreech(5);
-		}
+		 // Biggo Screech:
+		scrBatBossScreech(5);
 	}
 	
 	 // Screech:
-	else{
+	else if(instance_is(other, ToxicGas)){
 		stress -= 4;
 		nexthurt = current_frame + 6;
-		
 		scrBatBossScreech(1);
 	}
 	
@@ -2454,10 +2460,12 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 		
 		 // Sittin:
 		with(array_shuffle(array_combine(instances_matching(CustomProp, "name", "ChairFront", "ChairSide", "Couch"), instances_matching_ne(chestprop, "id", null)))){
-			if(!collision_line(x, y, other.x, other.y, Wall, false, false) || chance(1, 2)){
-				if(!array_length(instances_matching(instances_matching(CustomEnemy, "name", "Cat"), "sit", self))){
-					other.sit = self;
-					break;
+			if(place_meeting(x, y, Floor)){
+				if(!collision_line(x, y, other.x, other.y, Wall, false, false) || (instance_exists(GenCont) && chance(1, 2))){
+					if(!array_length(instances_matching(instances_matching(CustomEnemy, "name", "Cat"), "sit", self))){
+						other.sit = self;
+						break;
+					}
 				}
 			}
 		}

@@ -3510,15 +3510,6 @@
 #define OrchidSkill_setup
 	setup = false;
 	
-	 // Flash:
-	if(flash == -1){
-		flash = 3;
-	}
-	
-	 // Sound:
-	sound_play_gun(mod_script_call("mod", "telib", "skill_get_sound", skill), 0.2, 0.3);
-	sound_play_pitchvol(sndStatueXP, 0.8, 0.8);
-	
 	 // Type-Specific:
 	switch(type){
 		
@@ -3669,7 +3660,7 @@
 								image_index = _icon[1];
 								image_speed = 0;
 								alert       = {};
-								alarm0      = other.time - (2 * blink);
+								alarm0      = ((other.type == "basic") ? other.time : 300) - (2 * blink);
 								flash       = 4;
 								snd_flash   = sndChest;
 							}
@@ -3679,8 +3670,26 @@
 				
 				break;
 				
+			case mut_heavy_heart:
+				
+				 // Don't Appear on Mutation Screen:
+				if(GameCont.wepmuted == false || GameCont.wepmuted == true){
+					GameCont.wepmuted = (skill_get(skill) == 0);
+				}
+				
+				break;
+				
 		}
 	}
+	
+	 // Flash:
+	if(flash == -1){
+		flash = 3;
+	}
+	
+	 // Sound:
+	sound_play_gun(mod_script_call("mod", "telib", "skill_get_sound", skill), 0, 0.3);
+	sound_play_pitchvol(sndStatueXP, 0.8, 0.8);
 	
 #define OrchidSkill_begin_step
 	 // Unflash:
@@ -3717,7 +3726,7 @@
 	
 #define OrchidSkill_end_step
 	 // Blink Chests:
-	if(array_length(chest)){
+	if(type == "basic" && array_length(chest)){
 		var _inst = instances_matching_ne(chest, "id", null);
 		if(array_length(_inst)){
 			with(_inst){
@@ -3856,6 +3865,15 @@
 					}
 					sound_play(sndStrongSpiritLost);
 				}
+			}
+			
+			break;
+			
+		case mut_heavy_heart:
+			
+			 // Can Appear Mutation Screen:
+			if(GameCont.wepmuted == false || GameCont.wepmuted == true){
+				GameCont.wepmuted = (skill_get(skill) == 0);
 			}
 			
 			break;

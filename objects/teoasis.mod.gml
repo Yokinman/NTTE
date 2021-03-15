@@ -293,7 +293,21 @@
 			sndSuperSlugger
 		],
 		"sndOasisHorn" : [
-			sndVenuz
+			sndVenuz,
+			sndCrownRandom,
+			sndCrownNo,
+			sndCrownDeath,
+			sndCrownLife,
+			sndCrownHaste,
+			sndCrownGuns,
+			sndCrownHatred,
+			sndCrownBlood,
+			sndCrownDestiny,
+			sndCrownLove,
+			sndCrownLuck,
+			sndCrownCurses,
+			sndCrownRisk,
+			sndCrownProtection
 		]
 	};
 	
