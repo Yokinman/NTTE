@@ -1941,6 +1941,33 @@
 				AnglerNuke            = sprite(p + "sprAnglerNuke",            1,  8,  8);
 				AnglerRocket          = sprite(p + "sprAnglerRocket",          1,  4,  4);
 				
+				 // Cool:
+				p = m + "Cool/";
+				CoolAssaultRifle    = sprite(p + "sprCoolAssaultRifle",    1,  2,  3, shnWep);
+				CoolBazooka         = sprite(p + "sprCoolBazooka",         1, 11,  4, shnWep);
+				CoolCrossbow        = sprite(p + "sprCoolCrossbow",        1,  2,  3, shnWep);
+				CoolDiscGun         = sprite(p + "sprCoolDiscGun",         1, -4,  3, shnWep);
+				CoolFrogPistol      = sprite(p + "sprCoolFrogPistol",      1, -3,  4, shnWep);
+				CoolGrenadeLauncher = sprite(p + "sprCoolGrenadeLauncher", 1,  2,  2, shnWep);
+				CoolLaserPistol     = sprite(p + "sprCoolLaserPistol",     1, -3,  3, shnWep);
+				CoolMachinegun      = sprite(p + "sprCoolMachinegun",      1, -1,  1, shnWep);
+				CoolNukeLauncher    = sprite(p + "sprCoolNukeLauncher",    1,  8,  6, shnWep);
+				CoolPlasmaGun       = sprite(p + "sprCoolPlasmaGun",       1,  1,  4, shnWep);
+				CoolRevolver        = sprite(p + "sprCoolRevolver",        1, -3,  2, shnWep);
+				CoolScrewdriver     = sprite(p + "sprCoolScrewdriver",     1, -2,  2, shnWep);
+				CoolShotgun         = sprite(p + "sprCoolShotgun",         1,  2,  2, shnWep);
+				CoolSlugger         = sprite(p + "sprCoolSlugger",         1,  2,  2, shnWep);
+				CoolSplinterGun     = sprite(p + "sprCoolSplinterGun",     1,  2,  3, shnWep);
+				CoolTrident         = sprite(p + "sprCoolTrident",         1, 12,  8, shnWep);
+				CoolTunneller       = sprite(p + "sprCoolTunneller",       1, 12,  4, shnWep);
+				CoolTunnellerHUD    = sprite(p + "sprCoolTunneller",       1, 16,  4, shnWep);
+				CoolWrench          = sprite(p + "sprCoolWrench",          1, -1,  3, shnWep);
+				CoolBolt            = sprite(p + "sprCoolBolt",            2,  4,  8);
+				CoolDisc            = sprite(p + "sprCoolDisc",            2,  7,  7);
+				CoolGrenade         = sprite(p + "sprCoolGrenade",         1,  3,  3);
+				CoolNuke            = sprite(p + "sprCoolNuke",            1,  8,  8);
+				CoolRocket          = sprite(p + "sprCoolRocket",          1,  4,  4);
+				
 				 // Orchid:
 				p = m + "Orchid/";
 				OrchidAssaultRifle    = sprite(p + "sprOrchidAssaultRifle",    1,  5, 4, shnWep);

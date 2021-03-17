@@ -59,6 +59,43 @@
 		case sprMapIcon       : return spr.FrogCoolMapIcon;
 	}
 	
+#define skin_weapon_sprite(_spr, _wep)
+	switch(_spr){
+		case sprGoldARifle       : return spr.CoolAssaultRifle;
+		case sprGoldBazooka      : return spr.CoolBazooka;
+		case sprGoldCrossbow     : return spr.CoolCrossbow;
+		case sprGoldDiscgun      : return spr.CoolDiscGun;
+		case sprGoldFrogBlaster  : return spr.CoolFrogPistol;
+		case sprGoldNader        : return spr.CoolGrenadeLauncher;
+		case sprGoldLaserGun     : return spr.CoolLaserPistol;
+		case sprGoldMachinegun   : return spr.CoolMachinegun;
+		case sprGoldNukeLauncher : return spr.CoolNukeLauncher;
+		case sprGoldPlasmaGun    : return spr.CoolPlasmaGun;
+		case sprGoldRevolver     : return spr.CoolRevolver;
+		case sprGoldScrewdriver  : return spr.CoolScrewdriver;
+		case sprGoldShotgun      : return spr.CoolShotgun;
+		case sprGoldSlugger      : return spr.CoolSlugger;
+		case sprGoldSplinterGun  : return spr.CoolSplinterGun;
+		case sprGoldWrench       : return spr.CoolWrench;
+		
+		 // Projectiles:
+		case sprBoltGold         : return spr.CoolBolt;
+		case sprGoldDisc         : return spr.CoolDisc;
+		case sprGoldGrenade      : return spr.CoolGrenade;
+		case sprGoldNuke         : return spr.CoolNuke;
+		case sprGoldRocket       : return spr.CoolRocket;
+		
+		 // Modded:
+		default:
+			if(_spr == spr.GoldTrident  ) return spr.CoolTrident;
+			if(_spr == spr.GoldTunneller) return spr.CoolTunneller;
+	}
+	return _spr;
+	
+#define skin_weapon_sprite_hud(_spr, _wep)
+	if(_spr == spr.TunnellerHUD) return spr.CoolTunnellerHUD;
+	return _spr;
+	
 	
 /// SCRIPTS
 #macro  current_frame_active                                                                    (current_frame % 1) < current_time_scale
