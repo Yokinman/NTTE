@@ -1,16 +1,23 @@
 #define init
 	mod_script_call("mod", "teassets", "ntte_init", script_ref_create(init));
 	
-	 // Floor Related:
-	global.floor_num    = 0;
-	global.floor_min    = 0;
+	 // Overall Floor Bounding Box:
 	global.floor_left   = 0;
 	global.floor_right  = 0;
 	global.floor_top    = 0;
 	global.floor_bottom = 0;
-	
-	 // Pet History (MutantVats Event):
-	global.pet_history = ds_list_create();
+	if(instance_exists(Floor)){
+		global.floor_left   = Floor.bbox_left;
+		global.floor_right  = Floor.bbox_right;
+		global.floor_top    = Floor.bbox_top;
+		global.floor_bottom = Floor.bbox_bottom;
+		with(Floor){
+			if(bbox_left   < global.floor_left  ) global.floor_left   = bbox_left;
+			if(bbox_right  > global.floor_right ) global.floor_right  = bbox_right;
+			if(bbox_top    < global.floor_top   ) global.floor_top    = bbox_top;
+			if(bbox_bottom > global.floor_bottom) global.floor_bottom = bbox_bottom;
+		}
+	}
 	
 #define cleanup
 	mod_script_call("mod", "teassets", "ntte_cleanup", script_ref_create(cleanup));
@@ -44,6 +51,7 @@
 		sprite_index = spr.BanditAlert;
 		image_speed  = 0.4;
 		image_alpha  = -1; // CustomObject
+		depth        = (instance_exists(TopCont) ? TopCont.depth : object_get_depth(TopCont)) - 2; // Appear above HUD (and NT:TE HUD)
 		alert        = {
 			"spr" : spr.AlertIndicator,
 			"col" : make_color_rgb(252, 56, 0),
@@ -69,14 +77,20 @@
 	}
 	
 #define AlertIndicator_begin_step
+	 // Flashing In:
 	if(flash > 0){
 		flash -= current_time_scale;
 		
-		 // Sound:
+		 // Flash Over:
 		if(flash <= 0){
+			 // Sound:
 			sound_play(snd_flash);
 			sound_play_pitch(sndCrownAppear, 0.9 + random(0.2));
-			if(friction <= 0) friction = 0.5;
+			
+			 // Stop Moving:
+			if(friction <= 0){
+				friction = 0.5;
+			}
 		}
 	}
 	
@@ -94,16 +108,86 @@
 	}
 	
 	 // Stay Hidden:
-	image_alpha = -abs(image_alpha);
+	if(image_alpha > 0){
+		image_alpha *= -1;
+	}
 	
 #define AlertIndicator_alrm0
 	alarm0 = 2;
 	
 	 // Blink Out:
 	visible = !visible;
-	if(blink-- <= 0) instance_destroy();
-
-
+	if(blink-- <= 0){
+		instance_destroy();
+	}
+	
+#define AlertIndicator_draw
+	if(canview || !point_seen(x, y, player_find_local_nonsync())){
+		var	_flash    = max(1, flash),
+			_spr      = sprite_index,
+			_img      = image_index,
+			_xsc      = image_xscale,
+			_ysc      = image_yscale / _flash,
+			_ang      = image_angle,
+			_col      = image_blend,
+			_alp      = abs(image_alpha),
+			_x        = round(view_xview_nonsync + clamp(x - view_xview_nonsync, (x - bbox_left) + 1, game_width  - ((bbox_right  + 1) - x) - 2)),
+			_y        = round(view_yview_nonsync + clamp(y - view_yview_nonsync, (y - bbox_top ) + 1, game_height - ((bbox_bottom + 1) - y) - 1) + ((3 / _flash) * (_flash - 1))),
+			_alertSpr = lq_defget(alert, "spr", -1),
+			_alertCan = sprite_exists(_alertSpr);
+			
+		 // Flash:
+		if(flash > 0){
+			draw_set_fog(true, image_blend, 0, 0);
+		}
+		
+		 // Alert (!) Shadow:
+		if(_alertCan){
+			var	_alertImg = lq_defget(alert, "img", -0.4),
+				_alertX   = _x + (lq_defget(alert, "x", 0) * _xsc),
+				_alertY   = _y + (lq_defget(alert, "y", 0) * _ysc),
+				_alertXSc = lq_defget(alert, "xsc", _xsc),
+				_alertYSc = lq_defget(alert, "ysc", _ysc),
+				_alertAng = lq_defget(alert, "ang", 0),
+				_alertCol = lq_defget(alert, "col", c_white),
+				_alertAlp = lq_defget(alert, "alp", _alp);
+				
+			if(_alertImg < 0){
+				_alertImg *= -current_frame;
+			}
+			
+			for(var	_ox = -1; _ox <= 1; _ox++){
+				for(var	_oy = -1; _oy <= 2; _oy++){
+					draw_sprite_ext(
+						_alertSpr,
+						_alertImg,
+						_alertX + lengthdir_x(_ox * _alertXSc, _ang) + lengthdir_x(_oy * _alertYSc, _ang - 90),
+						_alertY + lengthdir_y(_ox * _alertXSc, _ang) + lengthdir_y(_oy * _alertYSc, _ang - 90),
+						_alertXSc,
+						_alertYSc,
+						_alertAng,
+						c_black,
+						_alertAlp
+					);
+				}
+			}
+		}
+		
+		 // Main Icon:
+		draw_sprite_ext(_spr, _img, _x, _y, _xsc, _ysc, _ang, _col, _alp);
+		
+		 // Alert (!)
+		if(_alertCan){
+			draw_sprite_ext(_alertSpr, _alertImg, _alertX, _alertY, _alertXSc, _alertYSc, _alertAng, _alertCol, _alertAlp);
+		}
+		
+		 // Unflash:
+		if(flash > 0){
+			draw_set_fog(false, 0, 0, 0);
+		}
+	}
+	
+	
 #define BigDecal_create(_x, _y)
 	/*
 		A giant version of the TopDecal/TopPot object
@@ -1963,171 +2047,6 @@
 	}
 	
 	
-#define Igloo_create(_x, _y)
-	/*
-		Buildings for the Frozen City bro, seals live here
-		
-		Vars:
-			num   - Number of seals that live here
-			type  - The main type of seal that lives here
-			alert - Alert the player before releasing seals, true/false
-			chest - Drops a chest on death, true/false
-	*/
-	
-	with(instance_create(_x, _y, CustomProp)){
-		 // Facing:
-		front = chance(1, 3);
-		with(instances_matching(CustomProp, "name", "PalankingStatue")){
-			if(other.x >= bbox_left && other.x < bbox_right + 1){
-				if(y > other.y){
-					other.front = true;
-				}
-			}
-			else if(other.y >= bbox_top && other.y < bbox_bottom + 1){
-				other.front = false;
-				if(other.x != x){
-					other.image_xscale = sign(x - other.x);
-				}
-			}
-		}
-		
-		 // Visual:
-		spr_idle     = (front ? spr.IglooFrontIdle : spr.IglooSideIdle);
-		spr_hurt     = (front ? spr.IglooFrontHurt : spr.IglooSideHurt);
-		spr_dead     = (front ? spr.IglooFrontDead : spr.IglooSideDead);
-		sprite_index = spr_idle;
-		depth        = -1;
-		
-		 // Sound:
-		snd_hurt = sndHitRock;
-		snd_dead = sndSnowmanBreak;
-		
-		 // Vars:
-		mask_index = -1;
-		maxhealth  = 30;
-		team       = 1;
-		size       = 2;
-		num        = irandom_range(5, 6);
-		type       = irandom_range(4, 6);
-		alert      = true;
-		chest      = chance(1, 5);
-		
-		 // Alarms:
-		alarm0 = irandom_range(150, 240);
-		
-		 // No Portals:
-		with(obj_create(0, 0, "PortalPrevent")){
-			creator = other;
-		}
-		
-		return self;
-	}
-	
-#define Igloo_step
-	 // Alarms:
-	if(alarm0_run) exit;
-	
-	 // Allow Portals:
-	if(num <= 0){
-		with(instances_matching(instances_matching(becomenemy, "name", "PortalPrevent"), "creator", self)){
-			instance_destroy();
-		}
-	}
-	
-#define Igloo_alrm0
-	if(num > 0){
-		alarm0 = 60 + random(60);
-		
-		if(instance_exists(Player)){
-			 // Seal Spew:
-			if(!alert || chance(num, 16)){
-				num--;
-				
-				if(alert) alarm0 += random(30);
-				else alarm0 = 2 + random(3);
-				
-				 // The Boys:
-				with(obj_create(x, y, "Seal")){
-					type = choose(other.type, 4);
-				}
-			}
-			
-			 // Alert:
-			if(alert){
-				var	_player = instance_nearest(x, y, Player),
-					_enemy  = instance_nearest(x, y, enemy);
-					
-				if(
-					my_health < maxhealth
-					|| !instance_exists(_enemy)
-					|| point_distance(x, y, _player.x, _player.y) < point_distance(x, y, _enemy.x, _enemy.y)
-				){
-					alert = false;
-					alarm0 = 30;
-					
-					with(alert_create(self, spr.SealArcticAlert)){
-						flash = other.alarm0;
-						if(other.chest){
-							alert = { spr:sprBreath, x:1, y:2 };
-						}
-					}
-				}
-			}
-		}
-	}
-	
-#define Igloo_death
-	 // Seal Spew Pt.2:
-	if(num > 0){
-		repeat(num){
-			with(obj_create(x, y, "Seal")){
-				type = choose(other.type, 4);
-			}
-		}
-		if(alert){
-			with(alert_create(self, spr.SealArcticAlert)){
-				vspeed = -3;
-				if(other.chest){
-					alert = { spr:sprBreath, x:1, y:2 };
-				}
-			}
-		}
-	}
-	
-	 // Pickups:
-	if(chest){
-		var	_num = 1 + skill_get(mut_open_mind);
-		if(_num > 0) repeat(_num){
-			var _obj = (chance(1, 5) ? "Backpack" : choose(WeaponChest, AmmoChest));
-			if(crown_current == crwn_life && chance(2, 3)){
-				_obj = HealthChest;
-			}
-			with(chest_create(x, y, _obj, false)){
-				motion_add(random(360), 1);
-			}
-		}
-	}
-	else for(var i = 0; i < 2; i++){
-		pickup_drop(50, 20, i);
-	}
-	
-	 // Effects:
-	for(var _dir = 0; _dir < 360; _dir += (360 / (12 + num))){
-		with(scrFX([x, 4], [y + 6, 4], 0, Smoke)){
-			direction = _dir + orandom(10);
-			speed = random_range(1, 3);
-			sprite_index = sprSnowFlake;
-			image_index = irandom(image_number - 1);
-			image_xscale *= 2;
-			image_yscale *= 2;
-			//friction *= 2/3;
-			vspeed -= 1.5;
-			gravity = 0.085;
-		}
-	}
-	sound_play_hit_ext(sndMaggotSpawnDie, 1.2 + random(0.2), 7);
-	
-	
 #define MergeFlak_create(_x, _y)
 	/*
 		A projectile that groups a bunch of other projectiles into a flak ball
@@ -2159,7 +2078,7 @@
 	 // Create Sprite:
 	if(!sprite_exists(sprite_index)){
 		var _instMergeFlak = instances_matching_ne(instances_matching(object_index, "name", name), "id", id);
-		if(array_length(instances_matching(instances_matching(_instMergeFlak, "sprite_width", 16), "sprite_height", 16)) <= 0){
+		if(!array_length(instances_matching(instances_matching(_instMergeFlak, "sprite_width", 16), "sprite_height", 16))){
 			var	_inst = instances_matching_ne(inst, "id", null),
 				_size = 24,
 				_num  = 2;
@@ -2877,16 +2796,16 @@
 						for(var i = _max - 1; i >= 0; i--){
 							if(!instance_exists(ntte_pet[i]) || i == 0){
 								with(ntte_pet[i]){
-									leader = noone;
+									leader   = noone;
 									can_take = true;
 									
 									 // Effects:
 									with(instance_create(x + hspeed, y + vspeed, HealFX)){
 										sprite_index = spr.PetLost;
 										image_xscale = choose(-1, 1);
-										image_speed = 0.5;
-										friction = 1/8;
-										depth = -9;
+										image_speed  = 0.5;
+										friction     = 1/8;
+										depth        = -9;
 									}
 								}
 								ntte_pet = array_delete(ntte_pet, i);
@@ -3204,14 +3123,21 @@
 	mod_script_call(mod_type, mod_name, pet + "_cleanup");
 	
 	 // Add to Pet History (MutantVats Event):
-	if(!stat_found && array_length(history) > 0){
+	if(
+		array_length(history)
+		&& !stat_found
+		&& id > GameCont.id
+	){
 		var _vars = {};
 		with(history){
 			if(self in other){
 				lq_set(_vars, self, variable_instance_get(other, self));
 			}
 		}
-		ds_list_add(global.pet_history, [pet, mod_type, mod_name, _vars]);
+		if("ntte_pet_history" not in GameCont){
+			GameCont.ntte_pet_history = [];
+		}
+		array_push(GameCont.ntte_pet_history, [pet, mod_type, mod_name, _vars]);
 	}
 	
 	
@@ -5166,10 +5092,7 @@
 		instance_destroy();
 	}
 	
-	 // Reset Pet History:
-	ds_list_clear(global.pet_history);
-	
-#define ntte_update(_newID)
+#define ntte_update(_newID, _genID)
 	 // Pet Leveling Up FX:
 	if(instance_exists(LevelUp) && LevelUp.id > _newID){
 		with(instances_matching_gt(LevelUp, "id", _newID)){
@@ -5204,6 +5127,33 @@
 				
 				 // Enemy Spriterize:
 				team_instance_sprite(1, self);
+			}
+		}
+	}
+	
+	 // Floor Update:
+	if(is_real(_genID)){
+		if(instance_exists(Floor) && Floor.id > _genID){
+			 // Find Floor Collision Area:
+			global.floor_left   = Floor.bbox_left;
+			global.floor_right  = Floor.bbox_right;
+			global.floor_top    = Floor.bbox_top;
+			global.floor_bottom = Floor.bbox_bottom;
+			with(Floor){
+				if(bbox_left   < global.floor_left  ) global.floor_left   = bbox_left;
+				if(bbox_right  > global.floor_right ) global.floor_right  = bbox_right;
+				if(bbox_top    < global.floor_top   ) global.floor_top    = bbox_top;
+				if(bbox_bottom > global.floor_bottom) global.floor_bottom = bbox_bottom;
+			}
+			
+			 // Tiny TopSmall Fix:
+			if(instance_exists(FloorExplo) && FloorExplo.id > _genID){
+				with(instances_matching_gt(FloorExplo, "id", _genID)){
+					var _instSmall = instances_matching(instances_matching(TopSmall, "x", x), "y", y);
+					if(array_length(_instSmall)) with(_instSmall){
+						instance_destroy();
+					}
+				}
 			}
 		}
 	}
@@ -5343,39 +5293,8 @@
 	}
 	
 #define ntte_step
-	 // Floor Update:
-	if(instance_exists(Floor)){
-		if(global.floor_num != instance_number(Floor) || global.floor_min < Floor.id){
-			global.floor_num = instance_number(Floor);
-			
-			 // Find Floor Collision Area:
-			global.floor_left   = Floor.bbox_left;
-			global.floor_right  = Floor.bbox_right;
-			global.floor_top    = Floor.bbox_top;
-			global.floor_bottom = Floor.bbox_bottom;
-			with(Floor){
-				global.floor_left   = min(bbox_left,   global.floor_left);
-				global.floor_right  = max(bbox_right,  global.floor_right);
-				global.floor_top    = min(bbox_top,    global.floor_top);
-				global.floor_bottom = max(bbox_bottom, global.floor_bottom);
-			}
-			
-			 // Tiny TopSmall Fix:
-			if(global.floor_min < Floor.id){
-				var _inst = instances_matching_gt(FloorExplo, "id", global.floor_min);
-				if(array_length(_inst)) with(_inst){
-					var _instSmall = instances_matching(instances_matching(TopSmall, "x", x), "y", y);
-					if(array_length(_instSmall)) with(_instSmall){
-						instance_destroy();
-					}
-				}
-				global.floor_min = instance_max;
-			}
-		}
-	}
-	
-	 // Top Objects:
 	if(instance_exists(CustomObject)){
+		 // Top Objects:
 		var _instTop = instances_matching(instances_matching(instances_matching(instances_matching(CustomObject, "name", "TopObject"), "zspeed", 0), "zfriction", 0), "speed", 0);
 		if(array_length(_instTop)){
 			 // Top Object Floor Collision:
@@ -5510,6 +5429,16 @@
 					if(type == enemy){
 						motion_add(random(360), 2);
 					}
+				}
+			}
+		}
+		
+		 // Player Dead, No Alerts Please:
+		if(!instance_exists(Player) && instance_exists(TopCont)){
+			var _inst = instances_matching_le(instances_matching(CustomObject, "name", "AlertIndicator"), "depth", TopCont.depth);
+			if(array_length(_inst)){
+				with(_inst){
+					instance_destroy();
 				}
 			}
 		}

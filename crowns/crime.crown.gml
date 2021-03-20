@@ -10,6 +10,8 @@
 #define cleanup
 	mod_script_call("mod", "teassets", "ntte_cleanup", script_ref_create(cleanup));
 	
+#macro spr global.spr
+
 #define crown_name        return "CROWN OF CRIME";
 #define crown_text        return "FIND @wSMUGGLED GOODS#@sA @rPRICE @sON YOUR HEAD";
 #define crown_tip         return choose("THE @wFAMILY@s DOESN'T FORGIVE", "THE @rBAT'S@s EXPERIMENTS", "THE @rCAT'S@s RESOURCES", "THE WASTELAND WEAPON TRADE");
@@ -148,14 +150,65 @@
 		}
 	}
 	
+#define crime_alert(_x, _y)
+	/*
+		Displays the Crown of Crime's current bounty level near the given position
+	*/
+	
+	var _target = noone;
+	
+	 // Target Nearby Crown:
+	if(instance_exists(Crown)){
+		var _disMax = 1/0;
+		with(instances_matching(Crown, "visible", true)){
+			var _dis = point_distance(x, y, _x, _y);
+			if(_dis < _disMax){
+				if(point_in_rectangle(x, y, _x - 160, _y - 128, _x + 160, _y + 128)){
+					_disMax = _dis;
+					_target = self;
+				}
+			}
+		}
+	}
+	
+	 // Target Player:
+	if(!instance_exists(_target) && instance_exists(Player)){
+		_target = instance_nearest(_x, _y, Player);
+	}
+	
+	 // Create Alert:
+	with(_target){
+		if("ntte_crime_alert" not in self || !instance_exists(ntte_crime_alert)){
+			ntte_crime_alert = alert_create(self, spr.CrimeBountyAlert);
+			with(ntte_crime_alert){
+				flash = 6;
+			}
+		}
+		with(ntte_crime_alert){
+			sprite_index = (variable_instance_get(GameCont, "ntte_crime_active", false) ? spr.CrimeBountyActiveAlert : spr.CrimeBountyAlert);
+			image_index  = clamp(variable_instance_get(GameCont, "ntte_crime_bounty", 0), 0, image_number - 1);
+			image_speed  = 0;
+			visible      = true;
+			depth        = -7;
+			alert        = {};
+			blink        = 30;
+			alarm0       = 120;
+			snd_flash    = sndAppear;
+		}
+		return ntte_crime_alert;
+	}
+	
+	return noone;
+	
 	
 /// SCRIPTS
 #macro  current_frame_active                                                                    (current_frame % 1) < current_time_scale
 #define orandom(_num)                                                                   return  random_range(-_num, _num);
 #define chance(_numer, _denom)                                                          return  random(_denom) < _numer;
 #define chance_ct(_numer, _denom)                                                       return  random(_denom) < (_numer * current_time_scale);
-#define unlock_get(_unlock)                                                             return  mod_script_call_nc('mod', 'teassets', 'unlock_get', _unlock);
+#define unlock_get(_unlock)                                                             return  mod_script_call_nc  ('mod', 'teassets', 'unlock_get', _unlock);
 #define obj_create(_x, _y, _obj)                                                        return  (is_undefined(_obj) ? [] : mod_script_call_nc('mod', 'telib', 'obj_create', _x, _y, _obj));
-#define top_create(_x, _y, _obj, _spawnDir, _spawnDis)                                  return  mod_script_call_nc('mod', 'telib', 'top_create', _x, _y, _obj, _spawnDir, _spawnDis);
-#define portal_poof()                                                                   return  mod_script_call_nc('mod', 'telib', 'portal_poof');
-#define pool(_pool)                                                                     return  mod_script_call_nc('mod', 'telib', 'pool', _pool);
+#define top_create(_x, _y, _obj, _spawnDir, _spawnDis)                                  return  mod_script_call_nc  ('mod', 'telib', 'top_create', _x, _y, _obj, _spawnDir, _spawnDis);
+#define portal_poof()                                                                   return  mod_script_call_nc  ('mod', 'telib', 'portal_poof');
+#define pool(_pool)                                                                     return  mod_script_call_nc  ('mod', 'telib', 'pool', _pool);
+#define alert_create(_inst, _sprite)                                                    return  mod_script_call_self('mod', 'telib', 'alert_create', _inst, _sprite);

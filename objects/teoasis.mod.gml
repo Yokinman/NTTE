@@ -6,7 +6,6 @@
 	
 	 // Underwater Stuff:
 	global.underwater_bind_draw    = script_bind(CustomDraw, underwater_draw, -3, false);
-	global.underwater_bubble_pop   = [];
 	global.underwater_sound_active = false;
 	global.underwater_sound        = {
 		"sndOasisShoot" : [
@@ -806,9 +805,9 @@
 		spr_walk     = spr.CrabTankWalk;
 		spr_hurt     = spr.CrabTankHurt;
 		spr_dead     = spr.CrabTankDead;
-		sprite_index = spr_idle;
 		spr_shadow   = shd32;
 		hitid        = [spr_idle, "CRAB TANK"];
+		sprite_index = spr_idle;
 		depth        = -2;
 		
 		 // Yeehaw:
@@ -1771,6 +1770,71 @@
 	
 /// GENERAL
 #define ntte_update(_newID)
+	 // Air Bubble Setup:
+	if(instance_exists(hitme) && hitme.id > _newID){
+		with(instances_matching_gt(hitme, "id", _newID)){
+			if("spr_bubble" not in self){
+				spr_bubble     = -1;
+				spr_bubble_pop = -1;
+				spr_bubble_x   = 0;
+				spr_bubble_y   = 0;
+				
+				 // Auto-Setup:
+				if(
+					team != 0
+					&& !instance_is(self, prop)
+					&& !instance_is(self, Freak)
+					&& snd_dead != sndOasisDeath
+					&& snd_hurt != sndOasisHurt
+					&& snd_hurt != sndOasisBossHurt
+					&& snd_hurt != sndMutant1Hurt
+					&& snd_hurt != sndMutant14Hurt
+					&& snd_hurt != sndSpiderHurt
+					&& snd_hurt != sndLaserCrystalHit
+					&& snd_hurt != sndLightningCrystalHit
+					&& snd_hurt != sndHyperCrystalHurt
+					&& snd_hurt != sndTechnomancerHurt
+					&& snd_hurt != sndNothingHurtHigh
+					&& snd_hurt != sndNothingHurtMid
+					&& snd_hurt != sndNothingHurtLow
+					&& snd_hurt != sndNothing2Hurt
+					&& snd_hurt != sndVanHurt
+				){
+					var	_left   = sprite_get_bbox_left(spr_hurt),
+						_top    = sprite_get_bbox_top(spr_hurt),
+						_right  = sprite_get_bbox_right(spr_hurt)  + 1,
+						_bottom = sprite_get_bbox_bottom(spr_hurt) + 1;
+						
+					 // Big:
+					if(_right - _left < 28 && _bottom - _top < 28){
+						spr_bubble     = sprPlayerBubble;
+						spr_bubble_pop = sprPlayerBubblePop;
+					}
+					
+					 // Normal:
+					else{
+						spr_bubble     = spr.BigBubble;
+						spr_bubble_pop = spr.BigBubblePop;
+					}
+					
+					 // Vertical Offset:
+					spr_bubble_y = floor(((_bottom + _top) / 2) - sprite_get_yoffset(spr_hurt));
+				}
+			}
+			
+			 // Death Pop Setup:
+			if(spr_bubble != -1){
+				if("ntte_bubble_pop" not in GameCont){
+					GameCont.ntte_bubble_pop = [];
+				}
+				array_push(
+					GameCont.ntte_bubble_pop,
+					[self, x + spr_bubble_x, y + spr_bubble_y, spr_bubble_pop, true]
+				);
+			}
+		}
+	}
+	
 	 // Underwater Code:
 	if(underwater_active){
 		 // Effects:
@@ -1840,82 +1904,6 @@
 				if(snd_hurt != -1) snd_hurt = sndOasisHurt;
 				if(snd_dead != -1) snd_dead = sndOasisDeath;
 				if(snd_mele != -1) snd_mele = sndOasisMelee;
-			}
-		}
-	}
-	
-	 // Air Bubble Setup:
-	if(instance_exists(hitme) && hitme.id > _newID){
-		with(instances_matching_gt(hitme, "id", _newID)){
-			if("spr_bubble" not in self){
-				spr_bubble     = -1;
-				spr_bubble_pop = -1;
-				spr_bubble_x   = 0;
-				spr_bubble_y   = 0;
-				
-				switch(object_index){
-					case Player:
-						switch(race){
-							case "fish":
-							case "robot":
-								spr_bubble     = -1;
-								spr_bubble_pop = -1;
-								break;
-								
-							case "bigdog":
-								spr_bubble     = spr.BigBubble;
-								spr_bubble_pop = spr.BigBubblePop;
-								spr_bubble_y   = 8;
-								break;
-								
-							default:
-								spr_bubble     = sprPlayerBubble;
-								spr_bubble_pop = sprPlayerBubblePop;
-						}
-						break;
-						
-					case Ally:
-					case Sapling:
-					case Bandit:
-					case Grunt:
-					case Inspector:
-					case Shielder:
-					case EliteGrunt:
-					case EliteInspector:
-					case EliteShielder:
-					case PopoFreak:
-					case Necromancer:
-					case FastRat:
-					case Rat:
-						spr_bubble     = sprPlayerBubble;
-						spr_bubble_pop = sprPlayerBubblePop;
-						break;
-						
-					case Salamander:
-						spr_bubble     = spr.BigBubble;
-						spr_bubble_pop = spr.BigBubblePop;
-						break;
-						
-					case Ratking:
-					case RatkingRage:
-						spr_bubble     = spr.BigBubble;
-						spr_bubble_pop = spr.BigBubblePop;
-						spr_bubble_y   = 2;
-						break;
-						
-					case FireBaller:
-					case SuperFireBaller:
-						spr_bubble     = spr.BigBubble;
-						spr_bubble_pop = spr.BigBubblePop;
-						spr_bubble_y   = -6;
-						break;
-				}
-			}
-			if(spr_bubble != -1){
-				array_push(
-					global.underwater_bubble_pop,
-					[self, x + spr_bubble_x, y + spr_bubble_y, spr_bubble_pop]
-				);
 			}
 		}
 	}
@@ -2015,23 +2003,29 @@
 	var _active = underwater_active;
 	if(_active){
 		 // Air Bubble Pop:
-		if(array_length(global.underwater_bubble_pop)){
-			with(global.underwater_bubble_pop){
+		if("ntte_bubble_pop" in GameCont && array_length(GameCont.ntte_bubble_pop)){
+			with(GameCont.ntte_bubble_pop){
 				var _inst = self[0];
 				
 				 // Follow Papa:
-				if(instance_exists(_inst)){
+				if(instance_exists(_inst) && _inst.visible){
 					self[@1] = _inst.x + _inst.spr_bubble_x;
 					self[@2] = _inst.y + _inst.spr_bubble_y;
 					self[@3] = _inst.spr_bubble_pop;
+					self[@4] = true;
 				}
 				
 				 // Pop:
 				else{
-					with(instance_create(self[1], self[2], BubblePop)){
-						sprite_index = other[3];
+					if(self[4]){
+						self[@4] = false;
+						with(instance_create(self[1], self[2], BubblePop)){
+							sprite_index = other[3];
+						}
 					}
-					global.underwater_bubble_pop = array_delete_value(global.underwater_bubble_pop, self);
+					if(!instance_exists(_inst)){
+						GameCont.ntte_bubble_pop = array_delete_value(GameCont.ntte_bubble_pop, self);
+					}
 				}
 			}
 		}

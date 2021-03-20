@@ -2,10 +2,8 @@
 	mod_script_call("mod", "teassets", "ntte_init", script_ref_create(init));
 	
 	 // Charm:
-	charm_object        = [hitme, becomenemy, ReviveArea, NecroReviveArea, RevivePopoFreak];
-	charm_instance_list = [];
-	charm_instance_vars = [];
-	charm_bind_draw     = [];
+	charm_object    = [hitme, becomenemy, ReviveArea, NecroReviveArea, RevivePopoFreak];
+	charm_bind_draw = [];
 	for(var i = -1; i < maxp; i++){
 		array_push(charm_bind_draw, script_bind(CustomDraw, script_ref_create(charm_draw, [], i), 0, false));
 	}
@@ -128,20 +126,18 @@
 #define cleanup
 	mod_script_call("mod", "teassets", "ntte_cleanup", script_ref_create(cleanup));
 	
-	 // Uncharm:
-	charm_instance_raw(charm_instance_list, false);
-	
 #macro spr global.spr
 #macro msk spr.msk
 #macro snd global.snd
 #macro mus snd.mus
 #macro lag global.debug_lag
 
-#macro charm_object        global.charm_object
-#macro charm_instance_list global.charm_instance_list
-#macro charm_instance_vars global.charm_instance_vars
-#macro charm_bind_draw     global.charm_bind_draw
-#macro charm_vars          {
+#macro charm_object          global.charm_object
+#macro charm_instance_list   GameCont.ntte_charm_instance_list
+#macro charm_instance_vars   GameCont.ntte_charm_instance_vars
+#macro charm_instance_number (("ntte_charm_instance_list" in GameCont) ? array_length(charm_instance_list) : -1)
+#macro charm_bind_draw       global.charm_bind_draw
+#macro charm_vars            {
 		"charmed" : false, // Currently charmed, true/false
 		"on_step" : [],    // Custom-type object's original step event
 		"target"  : noone, // The charmed enemy's custom target
@@ -479,7 +475,7 @@
 	ntte_charm_flock_hud_hp_lst = 0;
 	
 	 // Extra Pet Slot:
-	ntte_pet_max = mod_variable_get("mod", "ntte", "pet_max") + 1;
+	ntte_pet_max = variable_instance_get(GameCont, "ntte_pet_max", 1) + 1;
 	
 #define game_start
 	with(instances_matching(Player, "race", mod_current)){
@@ -692,7 +688,7 @@
 	if(lag) trace_time(mod_current + "_step");
 	
 #define ntte_update(_newID)
-	if(array_length(charm_instance_list)){
+	if(charm_instance_number){
 		 // Grab Charmed Objects:
 		with(charm_object){
 			if(instance_exists(self) && self.id > _newID){
@@ -812,7 +808,7 @@
 	}
 	
 	 // Charm Main Code:
-	if(array_length(charm_instance_list)){
+	if(charm_instance_number){
 		var	_instNum  = 0,
 			_instList = array_clone(charm_instance_list),
 			_varsList = array_clone(charm_instance_vars);
@@ -1230,7 +1226,7 @@
 	if(instance_exists(Player)){
 		var _instParrot = instances_matching(Player, "race", mod_current);
 		if(array_length(_instParrot)) with(_instParrot){
-			if(ultra_get(mod_current, ult_flock) > 0 && array_length(charm_instance_list)){
+			if(ultra_get(mod_current, ult_flock) > 0 && charm_instance_number){
 				var _instHP = ds_list_create();
 				
 				 // Gather Charmed Bros:
@@ -1404,6 +1400,10 @@
 				}
 				
 				 // Add:
+				if(charm_instance_number < 0){
+					charm_instance_list = [];
+					charm_instance_vars = [];
+				}
 				if(array_find_index(charm_instance_list, self) < 0){
 					array_push(charm_instance_list, self);
 					array_push(charm_instance_vars, _vars);

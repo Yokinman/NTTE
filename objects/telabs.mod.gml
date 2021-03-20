@@ -937,6 +937,171 @@
 	}
 	
 	
+#define Igloo_create(_x, _y)
+	/*
+		Buildings for the Frozen City bro, seals live here
+		
+		Vars:
+			num   - Number of seals that live here
+			type  - The main type of seal that lives here
+			alert - Alert the player before releasing seals, true/false
+			chest - Drops a chest on death, true/false
+	*/
+	
+	with(instance_create(_x, _y, CustomProp)){
+		 // Facing:
+		front = chance(1, 3);
+		with(instances_matching(CustomProp, "name", "PalankingStatue")){
+			if(other.x >= bbox_left && other.x < bbox_right + 1){
+				if(y > other.y){
+					other.front = true;
+				}
+			}
+			else if(other.y >= bbox_top && other.y < bbox_bottom + 1){
+				other.front = false;
+				if(other.x != x){
+					other.image_xscale = sign(x - other.x);
+				}
+			}
+		}
+		
+		 // Visual:
+		spr_idle     = (front ? spr.IglooFrontIdle : spr.IglooSideIdle);
+		spr_hurt     = (front ? spr.IglooFrontHurt : spr.IglooSideHurt);
+		spr_dead     = (front ? spr.IglooFrontDead : spr.IglooSideDead);
+		sprite_index = spr_idle;
+		depth        = -1;
+		
+		 // Sound:
+		snd_hurt = sndHitRock;
+		snd_dead = sndSnowmanBreak;
+		
+		 // Vars:
+		mask_index = -1;
+		maxhealth  = 30;
+		team       = 1;
+		size       = 2;
+		num        = irandom_range(5, 6);
+		type       = irandom_range(4, 6);
+		alert      = true;
+		chest      = chance(1, 5);
+		
+		 // Alarms:
+		alarm0 = irandom_range(150, 240);
+		
+		 // No Portals:
+		with(obj_create(0, 0, "PortalPrevent")){
+			creator = other;
+		}
+		
+		return self;
+	}
+	
+#define Igloo_step
+	 // Alarms:
+	if(alarm0_run) exit;
+	
+	 // Allow Portals:
+	if(num <= 0){
+		with(instances_matching(instances_matching(becomenemy, "name", "PortalPrevent"), "creator", self)){
+			instance_destroy();
+		}
+	}
+	
+#define Igloo_alrm0
+	if(num > 0){
+		alarm0 = 60 + random(60);
+		
+		if(instance_exists(Player)){
+			 // Seal Spew:
+			if(!alert || chance(num, 16)){
+				num--;
+				
+				if(alert) alarm0 += random(30);
+				else alarm0 = 2 + random(3);
+				
+				 // The Boys:
+				with(obj_create(x, y, "Seal")){
+					type = choose(other.type, 4);
+				}
+			}
+			
+			 // Alert:
+			if(alert){
+				var	_player = instance_nearest(x, y, Player),
+					_enemy  = instance_nearest(x, y, enemy);
+					
+				if(
+					my_health < maxhealth
+					|| !instance_exists(_enemy)
+					|| point_distance(x, y, _player.x, _player.y) < point_distance(x, y, _enemy.x, _enemy.y)
+				){
+					alert = false;
+					alarm0 = 30;
+					
+					with(alert_create(self, spr.SealArcticAlert)){
+						flash = other.alarm0;
+						if(other.chest){
+							alert = { spr:sprBreath, x:1, y:2 };
+						}
+					}
+				}
+			}
+		}
+	}
+	
+#define Igloo_death
+	 // Seal Spew Pt.2:
+	if(num > 0){
+		repeat(num){
+			with(obj_create(x, y, "Seal")){
+				type = choose(other.type, 4);
+			}
+		}
+		if(alert){
+			with(alert_create(self, spr.SealArcticAlert)){
+				vspeed = -3;
+				if(other.chest){
+					alert = { spr:sprBreath, x:1, y:2 };
+				}
+			}
+		}
+	}
+	
+	 // Pickups:
+	if(chest){
+		var	_num = 1 + skill_get(mut_open_mind);
+		if(_num > 0) repeat(_num){
+			var _obj = (chance(1, 5) ? "Backpack" : choose(WeaponChest, AmmoChest));
+			if(crown_current == crwn_life && chance(2, 3)){
+				_obj = HealthChest;
+			}
+			with(chest_create(x, y, _obj, false)){
+				motion_add(random(360), 1);
+			}
+		}
+	}
+	else for(var i = 0; i < 2; i++){
+		pickup_drop(50, 20, i);
+	}
+	
+	 // Effects:
+	for(var _dir = 0; _dir < 360; _dir += (360 / (12 + num))){
+		with(scrFX([x, 4], [y + 6, 4], 0, Smoke)){
+			direction = _dir + orandom(10);
+			speed = random_range(1, 3);
+			sprite_index = sprSnowFlake;
+			image_index = irandom(image_number - 1);
+			image_xscale *= 2;
+			image_yscale *= 2;
+			//friction *= 2/3;
+			vspeed -= 1.5;
+			gravity = 0.085;
+		}
+	}
+	sound_play_hit_ext(sndMaggotSpawnDie, 1.2 + random(0.2), 7);
+	
+	
 #define MutantVat_create(_x, _y)
 	/*
 		A giant version of the MutantTube, which can contain special enemies or loot

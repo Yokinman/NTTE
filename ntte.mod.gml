@@ -10,30 +10,10 @@
 	script_bind(CustomEndStep, ntte_end_step,    0,                            true);
 	script_bind(CustomDraw,    draw_shadows_top, object_get_depth(SubTopCont), true);
 	global.map_bind = ds_map_create();
+	global.map_bind[? "pause"] = noone;
 	global.map_bind[? "load" ] = script_bind(CustomDraw, script_ref_create(ntte_map,  -70, 7, null), object_get_depth(GenCont) - 1, false);
 	global.map_bind[? "dead" ] = script_bind(CustomDraw, script_ref_create(ntte_map, -120, 4, 0),    object_get_depth(TopCont) - 1, false);
-	global.map_bind[? "pause"] = noone;
 	global.hud_bind            = script_bind(CustomDraw, script_ref_create(ntte_hud, false, 0),      object_get_depth(TopCont) - 1, true);
-	
-	 // level_start():
-	global.level_start = (instance_exists(GenCont) || instance_exists(Menu));
-	global.area_update = false;
-	
-	 // Instance Updating:
-	global.update_id     = instance_max;
-	global.update_gen_id = global.update_id;
-	
-	 // Music / Ambience:
-	global.mus_area    = GameCont.area;
-	global.mus_current = -1;
-	global.amb_current = -1;
-	
-	 // Pets:
-	global.pet_max     = 1;
-	global.pet_mapicon = array_create(maxp, []);
-	
-	 // Character Kills Stat:
-	global.kills_last = GameCont.kills;
 	
 	 // Scythe Tippage:
 	global.scythe_tip = [
@@ -45,12 +25,9 @@
 		"@q@1(sprKeySmall:pick)"
 	];
 	
-	 // Current Weapon Player Skin:
-	global.wep_skin_player = ds_map_create();
-	
-	 // Spawn Guarantees:
-	heart_spawn  = {};
-	weapon_spawn = [];
+	 // Max Pets (Legacy variable, now stored in GameCont):
+	global.pet_max      = variable_instance_get(GameCont, "ntte_pet_max", 1);
+	global.pet_max_last = global.pet_max;
 	
 #define cleanup
 	mod_script_call("mod", "teassets", "ntte_cleanup", script_ref_create(cleanup));
@@ -64,23 +41,17 @@
 #macro ntte_mods      global.mods
 #macro ntte_mods_call global.mods_call
 
-#macro heart_spawn  global.heart_spawn
-#macro weapon_spawn global.weapon_spawn
-
 #define game_start
-	 // Reset:
-	global.kills_last = GameCont.kills;
-	ds_map_clear(global.wep_skin_player);
-	for(var i = 0; i < array_length(global.pet_mapicon); i++){
-		global.pet_mapicon[i] = [];
-	}
+	 // 'ntte_update' ID Setup:
+	if("ntte_update_id"     not in GameCont) GameCont.ntte_update_id     = GameCont.id;
+	if("ntte_update_gen_id" not in GameCont) GameCont.ntte_update_gen_id = GameCont.id;
 	
-	 // Reset Max Pets:
-	var _diff = (1 - global.pet_max);
-	global.pet_max += _diff;
-	with(instances_matching_ne(Player, "ntte_pet_max", null)){
-		ntte_pet_max += _diff;
+	 // Max Pets:
+	if("ntte_pet_max" not in GameCont){
+		GameCont.ntte_pet_max = 1;
 	}
+	global.pet_max      = GameCont.ntte_pet_max;
+	global.pet_max_last = global.pet_max;
 	
 	 // Race Runs Stat:
 	for(var i = 0; i < maxp; i++){
@@ -145,20 +116,25 @@
 	}
 	
 	 // Determine Crystal Heart Area:
-	var _num = save_get("heart:spawn", 0);
-	if(_num > 0){
-		save_set("heart:spawn", _num - 1);
-		
-		/*
-			- Excludes desert
-			- Excludes boss levels
-		*/
-		
-		heart_spawn.area    = irandom_range(2, 7);
-		heart_spawn.subarea = irandom_range(1, max(1, area_get_subarea(heart_spawn.area) - 1));
-		heart_spawn.loops   = 0;
+	if("ntte_heart_spawn" not in GameCont){
+		var _num = save_get("heart:spawn", 0);
+		if(_num > 0){
+			save_set("heart:spawn", _num - 1);
+			
+			/*
+				- Excludes desert
+				- Excludes boss levels
+			*/
+			
+			var _area = irandom_range(2, 7);
+			
+			GameCont.ntte_heart_spawn = {
+				"area"    : _area,
+				"subarea" : irandom_range(1, max(1, area_get_subarea(_area) - 1)),
+				"loops"   : 0
+			};
+		}
 	}
-	else heart_spawn = {};
 	
 	 // Secret Area Entry Weapons:
 	var	_mods      = mod_get_names("weapon"),
@@ -197,26 +173,29 @@
 		}
 	}
 	
-	weapon_spawn = [
-		{
-			wep     : _poolExplo,
-			area    : area_sewers,
-			subarea : 1,
-			open    : 0
-		},
-		{
-			wep     : _poolScrew,
-			area    : area_scrapyards,
-			subarea : 1,
-			open    : 1
-		}
-	];
+	if("ntte_weapon_spawn" not in GameCont){
+		GameCont.ntte_weapon_spawn = [];
+	}
+	
+	array_push(GameCont.ntte_weapon_spawn, { "wep": _poolExplo, "area": area_sewers,     "subarea": 1, "open": 0 });
+	array_push(GameCont.ntte_weapon_spawn, { "wep": _poolScrew, "area": area_scrapyards, "subarea": 1, "open": 1 });
 	
 #define level_start // game_start but every level
 	var	_spawnX     = 10016,
 		_spawnY     = 10016,
 		_normalArea = (GameCont.hard > 1 && instance_number(enemy) > instance_number(EnemyHorror));
 		
+	 // Death Bubble Pop Setup:
+	if("ntte_bubble_pop" in GameCont){
+		GameCont.ntte_bubble_pop = [];
+		with(instances_matching_ne(hitme, "spr_bubble", null, -1)){
+			array_push(
+				GameCont.ntte_bubble_pop,
+				[self, x + spr_bubble_x, y + spr_bubble_y, spr_bubble_pop, true]
+			);
+		}
+	}
+	
 	 // Activate Pets:
 	with(instances_matching(CustomHitme, "name", "Pet")){
 		if(!instance_exists(PopoScene)){
@@ -247,12 +226,28 @@
 		}
 	}
 	
+	 // Crown of Crime:
+	if(crown_current == "crime"){
+		var _alert = mod_script_call_nc("crown", "crime", "crime_alert", _spawnX, _spawnY);
+		
+		 // Spawn Bounty Hunters:
+		if("ntte_crime_active" in GameCont && GameCont.ntte_crime_active){
+			GameCont.ntte_crime_active = false;
+			with(Crown){
+				enemies = 2 * variable_instance_get(GameCont, "ntte_crime_bounty", 0);
+			}
+			with(_alert){
+				snd_flash = sndSkillPick;
+			}
+		}
+	}
+	
 	 // Subtract Big Bandit Ambush Spawns:
 	if(GameCont.area == area_desert){
-		with(instances_matching(WantBoss, "bigbandit_dummy_spawn", null)){
-			bigbandit_dummy_spawn = variable_instance_get(GameCont, "bigbandit_dummy_spawn", 0);
-			if(bigbandit_dummy_spawn != 0){
-				number -= bigbandit_dummy_spawn;
+		with(instances_matching(WantBoss, "ntte_bigbandit_spawn", null)){
+			ntte_bigbandit_spawn = variable_instance_get(GameCont, "ntte_bigbandit_spawn", 0);
+			if(ntte_bigbandit_spawn != 0){
+				number -= ntte_bigbandit_spawn;
 				if(number == 0){
 					instance_destroy();
 				}
@@ -260,7 +255,7 @@
 		}
 	}
 	else if(!area_get_secret(GameCont.area)){
-		GameCont.bigbandit_dummy_spawn = 0;
+		GameCont.ntte_bigbandit_spawn = 0;
 	}
 	
 	 // Flavor Big Cactus:
@@ -363,22 +358,19 @@
 		var	_heartNum = (chance(GameCont.hard, 400 + (5 * GameCont.hard)) && GameCont.area != area_hq),
 			_chaosNum = ((GameCont.subarea == 1) + chance(1, 5)) * (crown_current == "red");
 			
-		 // Guarantee Unnecessary:
-		if(_heartNum > 0){
-			heart_spawn = {};
-		}
-		
 		 // Guaranteed Spawn:
-		if(lq_size(heart_spawn)){
+		if("ntte_heart_spawn" in GameCont && !is_undefined(GameCont.ntte_heart_spawn)){
 			if(
-				lq_defget(heart_spawn, "area",    GameCont.area)    == GameCont.area    &&
-				lq_defget(heart_spawn, "subarea", GameCont.subarea) == GameCont.subarea &&
-				lq_defget(heart_spawn, "loops",   GameCont.loops)   == GameCont.loops
+				lq_defget(GameCont.ntte_heart_spawn, "area",    GameCont.area)    == GameCont.area    &&
+				lq_defget(GameCont.ntte_heart_spawn, "subarea", GameCont.subarea) == GameCont.subarea &&
+				lq_defget(GameCont.ntte_heart_spawn, "loops",   GameCont.loops)   == GameCont.loops
 			){
-				_heartNum++;
-				
-				 // No Repeat Visits:
-				heart_spawn = {};
+				_heartNum = max(_heartNum, 1);
+			}
+			
+			 // Only Need 1:
+			if(_heartNum > 0){
+				GameCont.ntte_heart_spawn = undefined;
 			}
 		}
 		
@@ -1723,7 +1715,7 @@
 			case RadChest:
 				
 				 // Rat Chests:
-				with(instances_matching_ne([RadChest, RogueChest], "id", null)){
+				with(instances_matching_ne([RadChest, RogueChest, HealthChest], "id", null)){
 					chest_create(x, y, "RatChest", true);
 					instance_delete(self);
 				}
@@ -1798,8 +1790,10 @@
 	
 	 // Flies:
 	with(MaggotSpawn){
-		var n = irandom_range(0, 2);
-		if(n > 0) repeat(n) obj_create(x + orandom(12), y + orandom(8), "FlySpin");
+		var _num = irandom_range(0, 2);
+		if(_num > 0) repeat(_num){
+			obj_create(x + orandom(12), y + orandom(8), "FlySpin");
+		}
 	}
 	with(BonePile) if(chance(1, 2)){
 		with(obj_create(x, y, "FlySpin")){
@@ -1905,18 +1899,24 @@
 		Use 'genID' to find new instances outside of level gen, mainly chests (Like 'newID' but freezes during level gen, 'undefined' while frozen)
 	*/
 	
+	if("ntte_update_id"     not in GameCont) GameCont.ntte_update_id     = instance_max;
+	if("ntte_update_gen_id" not in GameCont) GameCont.ntte_update_gen_id = instance_max;
+	
 	if(
-		global.update_id < variable_instance_get(GameObject, "id", global.update_id)
-		|| (global.update_gen_id < global.update_id && !instance_exists(GenCont))
+		GameCont.ntte_update_id < variable_instance_get(GameObject, "id", GameCont.ntte_update_id)
+		|| (
+			GameCont.ntte_update_gen_id < GameCont.ntte_update_id
+			&& !instance_exists(GenCont)
+		)
 	){
-		var	_newID = global.update_id,
+		var	_newID = GameCont.ntte_update_id,
 			_genID = undefined;
 			
-		global.update_id = instance_max;
+		GameCont.ntte_update_id = instance_max;
 		
 		if(!instance_exists(GenCont)){
-			_genID = global.update_gen_id;
-			global.update_gen_id = global.update_id;
+			_genID = GameCont.ntte_update_gen_id;
+			GameCont.ntte_update_gen_id = GameCont.ntte_update_id;
 		}
 		
 		 // IDPD Chest Alerts:
@@ -1998,16 +1998,82 @@
 		 // New Weapon Pickups:
 		if(instance_exists(WepPickup) && WepPickup.id > _newID){
 			with(instances_matching_gt(WepPickup, "id", _newID)){
+				 // Guaranteed Secret Area Entry Weapons:
+				if("ntte_weapon_spawn" in GameCont && array_length(GameCont.ntte_weapon_spawn)){
+					with(GameCont.ntte_weapon_spawn){
+						var _spawn = false;
+						
+						 // Natural Spawn:
+						if(array_find_index(wep, wep_raw(other.wep)) >= 0){
+							_spawn = true;
+						}
+						
+						 // Manual Spawn:
+						else if(GameCont.area == area && GameCont.subarea == subarea){
+							with(other) if(roll){
+								var _chest = instances_at(xstart, ystart, ChestOpen);
+								
+								 // Chest Counter:
+								if(other.open != 0 && array_length(_chest) > 0){
+									other.open--;
+								}
+								
+								 // Spawn Weapon from Pool:
+								else{
+									_spawn = true;
+									
+									 // Exclusion Pool:
+									var	_mods  = mod_get_names("weapon"),
+										_noWep = [];
+										
+									for(var i = 0; i < 128 + array_length(_mods); i++){
+										var _wep = ((i < 128) ? i : _mods[i - 128]);
+										if(array_find_index(other.wep, _wep) < 0){
+											array_push(_noWep, _wep);
+										}
+									}
+									
+									 // Weapon:
+									wep = weapon_decide(
+										0,
+										(array_length(_chest) > 0) + (2 * curse) + GameCont.hard,
+										(weapon_get_gold(wep) > 0),
+										_noWep
+									);
+								}
+							}
+						}
+						
+						 // Weapon Spawned:
+						if(_spawn){
+							GameCont.ntte_weapon_spawn = array_delete_value(GameCont.ntte_weapon_spawn, self);
+							break;
+						}
+					}
+				}
+				
 				 // Weapon Skins:
 				if(!roll && (ammo || instance_exists(GenCont) || instance_exists(LevCont))){
-					var	_wep       = wep_raw(wep),
-						_wepSprt   = weapon_get_sprt(wep),
-						_wepFirst  = true,
-						_wepPlayer = 0;
+					if("ntte_weapon_skin_player" not in GameCont){
+						GameCont.ntte_weapon_skin_player = [[], []];
+					}
+					
+					var	_wep        = wep_raw(wep),
+						_wepSprt    = weapon_get_sprt(wep),
+						_wepFirst   = true,
+						_wepPlayer  = 0,
+						_skinWep    = GameCont.ntte_weapon_skin_player[0],
+						_skinPlayer = GameCont.ntte_weapon_skin_player[1],
+						_skinPos    = array_find_index(_skinWep, _wep);
 						
 					 // Retrieve Player:
-					if(ds_map_exists(global.wep_skin_player, _wep)){
-						_wepPlayer = global.wep_skin_player[? _wep];
+					if(_skinPos < 0){
+						_skinPos = array_length(_skinWep);
+						array_push(_skinWep,    _wep);
+						array_push(_skinPlayer, _wepPlayer);
+					}
+					else{
+						_wepPlayer = _skinPlayer[_skinPos];
 						_wepFirst  = false;
 					}
 					
@@ -2029,58 +2095,8 @@
 							break;
 						}
 					}
-					global.wep_skin_player[? _wep] = _wepPlayer;
-				}
-
-				 // Guaranteed Secret Area Entry Weapons:
-				var _spawn = false;
-				with(weapon_spawn){
-					 // Natural Spawn:
-					if(array_find_index(wep, wep_raw(other.wep)) >= 0){
-						_spawn = true;
-					}
-					
-					 // Manual Spawn:
-					else if(GameCont.area == area && GameCont.subarea == subarea){
-						with(other) if(roll){
-							var _chest = instances_at(xstart, ystart, ChestOpen);
-							
-							 // Chest Counter:
-							if(other.open != 0 && array_length(_chest) > 0){
-								other.open--;
-							}
-							
-							 // Spawn Weapon from Pool:
-							else{
-								_spawn = true;
-								
-								 // Exclusion Pool:
-								var	_mods  = mod_get_names("weapon"),
-									_noWep = [];
-									
-								for(var i = 0; i < 128 + array_length(_mods); i++){
-									var _wep = ((i < 128) ? i : _mods[i - 128]);
-									if(array_find_index(other.wep, _wep) < 0){
-										array_push(_noWep, _wep);
-									}
-								}
-								
-								 // Weapon:
-								wep = weapon_decide(
-									0,
-									(array_length(_chest) > 0) + (2 * curse) + GameCont.hard,
-									(weapon_get_gold(wep) > 0),
-									_noWep
-								);
-							}
-						}
-					}
-					
-					 // Weapon Spawned:
-					if(_spawn){
-						weapon_spawn = array_delete_value(weapon_spawn, self);
-						break;
-					}
+					_skinWep[_skinPos]    = _wep;
+					_skinPlayer[_skinPos] = _wepPlayer;
 				}
 			}
 		}
@@ -2531,11 +2547,11 @@
 	if(lag) trace_time();
 	
 	 // New Area:
-	if(global.area_update){
-		global.area_update = false;
+	if("ntte_area_update" in GameCont && GameCont.ntte_area_update){
+		GameCont.ntte_area_update = false;
 		
 		with(GameCont){
-			 // NTTE Area B-Themes:
+			 // NT:TE Area B-Themes:
 			if(subarea == 1){
 				if(array_find_index(ntte_mods.area, area) >= 0){
 					if(chance(1, 20) || array_length(instances_matching_le(Player, "my_health", 1))){
@@ -2639,39 +2655,79 @@
 		}
 	}
 	
-	 // NTTE Player Systems:
+	 // NT:TE Player Systems:
 	if(instance_exists(Player)){
+		if("ntte_pet_max"  not in GameCont) GameCont.ntte_pet_max = 1;
+		if("ntte_pet_icon" not in GameCont) GameCont.ntte_pet_icon = array_create(maxp, undefined);
+		
+		 // "global.pet_max" Legacy Support:
+		if(global.pet_max != global.pet_max_last){
+			GameCont.ntte_pet_max += (global.pet_max - global.pet_max_last);
+		}
+		global.pet_max      = GameCont.ntte_pet_max;
+		global.pet_max_last = global.pet_max;
+		
+		 // Player Code:
 		with(Player){
+			
 			/// Pets:
+				
 				if("ntte_pet"     not in self) ntte_pet     = [];
-				if("ntte_pet_max" not in self) ntte_pet_max = global.pet_max;
+				if("ntte_pet_max" not in self) ntte_pet_max = GameCont.ntte_pet_max;
 				
 				 // Slots:
-				if(array_length(ntte_pet) != ntte_pet_max){
-					while(array_length(ntte_pet) < ntte_pet_max){
+				if(array_length(ntte_pet) != max(0, ntte_pet_max)){
+					while(array_length(ntte_pet) < max(0, ntte_pet_max)){
 						array_push(ntte_pet, noone);
 					}
-					while(array_length(ntte_pet) > ntte_pet_max){
-						var _break = true;
+					while(array_length(ntte_pet) > max(0, ntte_pet_max)){
+						var _full = true;
+						
+						 // Clear Empty Slots:
 						for(var i = 0; i < array_length(ntte_pet); i++){
 							if(!instance_exists(ntte_pet[i])){
 								ntte_pet = array_delete(ntte_pet, i);
-								_break = false;
+								_full = false;
 								break;
 							}
 						}
-						if(_break) break;
+						
+						 // Clear Other Slots:
+						if(_full){
+							var _pos = array_length(ntte_pet) - 1;
+							with(ntte_pet[_pos]){
+								leader   = noone;
+								can_take = true;
+								
+								 // Effects:
+								with(instance_create(x + hspeed, y + vspeed, HealFX)){
+									sprite_index = spr.PetLost;
+									image_xscale = choose(-1, 1);
+									image_speed  = 0.5;
+									friction     = 1/8;
+									depth        = -9;
+								}
+							}
+							ntte_pet = array_delete(ntte_pet, _pos);
+						}
 					}
 				}
 				
 				 // Map Icons:
-				var _list = [];
-				with(instances_matching_ne(ntte_pet, "id", null)){
-					array_push(_list, [pet, mod_type, mod_name, bskin]);
+				var	_list = undefined,
+					_inst = instances_matching_ne(ntte_pet, "id", null);
+					
+				if(array_length(_inst)){
+					_list = [];
+					with(_inst){
+						array_push(_list, [pet, mod_type, mod_name, bskin]);
+					}
 				}
-				global.pet_mapicon[index] = _list;
+				
+				GameCont.ntte_pet_icon[index] = _list;
 				
 			/// Red Ammo:
+				
 				if("red_ammo"        not in self) red_ammo        = 0;
 				if("red_amax"        not in self) red_amax        = 4;
 				if("red_amax_muscle" not in self) red_amax_muscle = 0;
@@ -2685,6 +2741,7 @@
 				}
 				
 			/// Footprints:
+				
 				if(player_active){
 					var _lastMask = mask_index;
 					mask_index = sprite_index;
@@ -2779,7 +2836,8 @@
 					ntte_foot_time = 0;
 				}
 				
-			// UNUSED FROG SOUNDS:
+			// UNUSED FROG SOUNDS, THEY'RE AWESOME:
+				
 				if(frogcharge > 3){
 					if(alarm3 > 0 && alarm3 <= ceil(current_time_scale)){
 						var _butt = (skill_get(mut_throne_butt) > 0);
@@ -2789,6 +2847,7 @@
 						}
 					}
 				}
+				
 		}
 	}
 	
@@ -2989,10 +3048,19 @@
 	
 	 // Level Start:
 	if(instance_exists(GenCont) || instance_exists(Menu)){
-		global.level_start = true;
+		if("ntte_level_start" not in GameCont || !GameCont.ntte_level_start){
+			GameCont.ntte_level_start = true;
+			
+			 // Reduce Crime Bounty:
+			if("ntte_crime_bounty" in GameCont){
+				if("ntte_crime_active" not in GameCont || !GameCont.ntte_crime_active){
+					GameCont.ntte_crime_bounty = max(0, GameCont.ntte_crime_bounty - 1);
+				}
+			}
+		}
 	}
-	else if(global.level_start){
-		global.level_start = false;
+	else if("ntte_level_start" in GameCont && GameCont.ntte_level_start){
+		GameCont.ntte_level_start = false;
 		level_start();
 	}
 	
@@ -3292,9 +3360,9 @@
 					}
 					
 					 // Kills:
-					if(GameCont.kills != global.kills_last){
+					if("ntte_kills_last" in GameCont && GameCont.kills != GameCont.ntte_kills_last){
 						var _stat = "race:" + self + ":kill";
-						stat_set(_stat, stat_get(_stat) + (GameCont.kills - global.kills_last));
+						stat_set(_stat, stat_get(_stat) + (GameCont.kills - GameCont.ntte_kills_last));
 						
 						 // Best Run:
 						if(GameCont.kills >= stat_get("race:" + self + ":best:kill")){
@@ -3308,7 +3376,7 @@
 			}
 		}
 	}
-	global.kills_last = GameCont.kills;
+	GameCont.ntte_kills_last = GameCont.kills;
 	
 	 // Starfield Loading Screen:
 	if(GameCont.area == "red"){
@@ -3746,6 +3814,9 @@
 	 // NT:TE Time Stat:
 	stat_set("time", stat_get("time") + (current_time_scale / 30));
 	
+	 // Reset Warp Zone Map Data:
+	mod_variable_set("area", "red", "mapdata_warp_draw", undefined);
+	
 	 // Debug Log Spacing:
 	if(_lag){
 		trace_time("draw_gui_end");
@@ -3778,51 +3849,53 @@
 			showline : true
 		};
 		
-		if("ntte_mapdata" in GameCont){
-			if(i >= 0 && i < array_length(GameCont.ntte_mapdata)){
-				var	_dataLast = _map[i],
-					_waypoint = GameCont.ntte_mapdata[i];
+		if(
+			"ntte_mapdata" in GameCont
+			&& i >= 0
+			&& i < array_length(GameCont.ntte_mapdata)
+		){
+			var	_dataLast = _map[i],
+				_waypoint = GameCont.ntte_mapdata[i];
+				
+			if(is_array(_waypoint)){
+				_data.area    = _waypoint[0];
+				_data.subarea = _waypoint[1];
+				_data.loops   = _waypoint[2];
+			}
+			
+			 // Base Game:
+			if(is_real(_data.area)){
+				if(_data.area < 100){
+					var _num = 0;
+					_num += 3 *  ceil((floor(_data.area) - 1) / 2); // Main Areas
+					_num += 1 * floor((floor(_data.area) - 1) / 2); // Transition Areas
+					_num += _data.subarea - 1;                      // Subarea
+					_num += (_data.area - floor(_data.area));       // Fractional Areas
 					
-				if(is_array(_waypoint)){
-					_data.area    = _waypoint[0];
-					_data.subarea = _waypoint[1];
-					_data.loops   = _waypoint[2];
+					_data.x = 9 * _num;
+					_data.y = 0;
 				}
 				
-				 // Base Game:
-				if(is_real(_data.area)){
-					if(_data.area < 100){
-						var _num = 0;
-						_num += 3 *  ceil((floor(_data.area) - 1) / 2); // Main Areas
-						_num += 1 * floor((floor(_data.area) - 1) / 2); // Transition Areas
-						_num += _data.subarea - 1;                      // Subarea
-						_num += (_data.area - floor(_data.area));       // Fractional Areas
+				 // Secret Areas:
+				else{
+					_data.x = _dataLast.x;
+					_data.y = 9;
+				}
+				
+				_data.showdot = (_data.subarea == 1);
+			}
+			
+			 // Modded:
+			else if(is_string(_data.area)){
+				with(UberCont){
+					var	_dataNext = mod_script_call_self("area", _data.area, "area_mapdata", _dataLast.x, _dataLast.y, _dataLast.area, _dataLast.subarea, _data.subarea, _data.loops),
+						_dataSize = array_length(_dataNext);
 						
-						_data.x = 9 * _num;
-						_data.y = 0;
-					}
-					
-					 // Secret Areas:
-					else{
-						_data.x = _dataLast.x;
-						_data.y = 9;
-					}
-					
-					_data.showdot = (_data.subarea == 1);
-				}
-				
-				 // Modded:
-				else if(is_string(_data.area)){
-					with(UberCont){
-						var	_dataNext = mod_script_call_self("area", _data.area, "area_mapdata", _dataLast.x, _dataLast.y, _dataLast.area, _dataLast.subarea, _data.subarea, _data.loops),
-							_dataSize = array_length(_dataNext);
-							
-						if(_dataSize >= 2){
-							_data.x = _dataNext[0];
-							_data.y = _dataNext[1];
-							if(_dataSize >= 3) _data.showdot  = _dataNext[2];
-							if(_dataSize >= 4) _data.showline = _dataNext[3];
-						}
+					if(_dataSize >= 2){
+						_data.x = _dataNext[0];
+						_data.y = _dataNext[1];
+						if(_dataSize >= 3) _data.showdot  = _dataNext[2];
+						if(_dataSize >= 4) _data.showline = _dataNext[3];
 					}
 				}
 			}
@@ -4584,198 +4657,127 @@
 	}
 	
 	 // Indicator HUD:
-	if(_visible){
+	if(_visible && instance_exists(Player)){
 		 // Coast Indicator:
-		if(instance_exists(Player)){
-			if(instance_exists(Portal)){
-				var _inst = instances_matching(instances_matching_ge(Portal, "endgame", 100), "coast_portal", true);
-				if(array_length(_inst)) with(_inst){
-					if(point_seen(x, y, player_find_local_nonsync())){
-						var	_size = 4,
-							_x = x,
-							_y = y;
-							
-						 // Drawn to Player:
-						with(instance_nearest(_x, _y, Player)){
-							draw_set_alpha((point_distance(x, y, _x, _y) - 12) / 80);
-							
-							var	_l = min(point_distance(_x, _y, x, y), 16 * min(1, 28 / point_distance(_x, _y, x, y))),
-								_d = point_direction(_x, _y, x, y);
-								
-							_x += lengthdir_x(_l, _d);
-							_y += lengthdir_y(_l, _d);
-						}
+		if(instance_exists(Portal)){
+			var _inst = instances_matching(instances_matching_ge(Portal, "endgame", 100), "coast_portal", true);
+			if(array_length(_inst)) with(_inst){
+				if(point_seen(x, y, player_find_local_nonsync())){
+					var	_size = 4,
+						_x = x,
+						_y = y;
 						
-						 // Draw:
-						_y += sin(current_frame / 8);
+					 // Drawn to Player:
+					with(instance_nearest(_x, _y, Player)){
+						draw_set_alpha((point_distance(x, y, _x, _y) - 12) / 80);
 						
-						var	_x1 = _x - (_size / 2),
-							_y1 = _y - (_size / 2),
-							_x2 = _x1 + _size,
-							_y2 = _y1 + _size;
+						var	_l = min(point_distance(_x, _y, x, y), 16 * min(1, 28 / point_distance(_x, _y, x, y))),
+							_d = point_direction(_x, _y, x, y);
 							
-						draw_set_color(c_black);
-						draw_rectangle(_x1, _y1 + 1, _x2, _y2 - 1, false);
-						draw_rectangle(_x1 + 1, _y1, _x2 - 1, _y2, false);
-						draw_set_color(make_color_rgb(150, 100, 200));
-						draw_rectangle(_x1 + 1, _y1 + 1, _x1 + 1 + max(0, _size - 3), _y1 + 1 + max(0, _size - 3), false);
+						_x += lengthdir_x(_l, _d);
+						_y += lengthdir_y(_l, _d);
 					}
+					
+					 // Draw:
+					_y += sin(current_frame / 8);
+					
+					var	_x1 = _x - (_size / 2),
+						_y1 = _y - (_size / 2),
+						_x2 = _x1 + _size,
+						_y2 = _y1 + _size;
+						
+					draw_set_color(c_black);
+					draw_rectangle(_x1, _y1 + 1, _x2, _y2 - 1, false);
+					draw_rectangle(_x1 + 1, _y1, _x2 - 1, _y2, false);
+					draw_set_color(make_color_rgb(150, 100, 200));
+					draw_rectangle(_x1 + 1, _y1 + 1, _x1 + 1 + max(0, _size - 3), _y1 + 1 + max(0, _size - 3), false);
 				}
-				draw_set_alpha(1);
 			}
-			
-			 // Charm Indicator:
-			if(instance_exists(enemy)){
-				var _inst = instances_matching(instances_matching_ne(enemy, "ntte_charm", null), "visible", true);
-				if(array_length(_inst)) with(_inst){
-					if(ntte_charm.charmed && ntte_charm.feather){
-						var _index = ntte_charm.index;
-						if(!point_seen(x, y, _index) && player_is_local_nonsync(_index)){
-							with(player_find(_index)){
-								var	_spr = race_get_sprite(race, sprRogueAmmoHUD),
-									_x1  = sprite_get_xoffset(_spr) - sprite_get_bbox_left(_spr),
-									_y1  = sprite_get_yoffset(_spr) - sprite_get_bbox_top(_spr),
-									_x2  = _x1 - sprite_get_bbox_right(_spr)  + _gw,
-									_y2  = _y1 - sprite_get_bbox_bottom(_spr) + _gh,
-									_x   = _vx + clamp(other.x - _vx, _x1 + 1, _x2 - 1);
-									_y   = _vy + clamp(other.y - _vy, _y1 + 1, _y2 - 2);
-								
-								draw_sprite(_spr, 0, _x, _y);
-								draw_sprite(race_get_sprite(race, sprChickenFeather), 0, _x, _y);
-							}
+			draw_set_alpha(1);
+		}
+		
+		 // Charm Indicator:
+		if(instance_exists(enemy)){
+			var _inst = instances_matching(instances_matching_ne(enemy, "ntte_charm", null), "visible", true);
+			if(array_length(_inst)) with(_inst){
+				if(ntte_charm.charmed && ntte_charm.feather){
+					var _index = ntte_charm.index;
+					if(!point_seen(x, y, _index) && player_is_local_nonsync(_index)){
+						with(player_find(_index)){
+							var	_spr = race_get_sprite(race, sprRogueAmmoHUD),
+								_x1  = sprite_get_xoffset(_spr) - sprite_get_bbox_left(_spr),
+								_y1  = sprite_get_yoffset(_spr) - sprite_get_bbox_top(_spr),
+								_x2  = _x1 - sprite_get_bbox_right(_spr)  + _gw,
+								_y2  = _y1 - sprite_get_bbox_bottom(_spr) + _gh,
+								_x   = _vx + clamp(other.x - _vx, _x1 + 1, _x2 - 1);
+								_y   = _vy + clamp(other.y - _vy, _y1 + 1, _y2 - 2);
+							
+							draw_sprite(_spr, 0, _x, _y);
+							draw_sprite(race_get_sprite(race, sprChickenFeather), 0, _x, _y);
 						}
 					}
 				}
 			}
-			
-			 // Pet Indicator:
-			if(instance_exists(CustomHitme)){
-				var _inst = instances_matching(CustomHitme, "name", "Pet");
-				if(array_length(_inst)) with(_inst){
-					var _draw = false;
-					
-					 // Death Conditions:
-					if(instance_exists(revive)){
-						if(instance_exists(leader)){
-							_draw = true;
-							with(revive) with(prompt){
-								if(instance_exists(nearwep) && array_length(instances_matching(Player, "nearwep", nearwep)) > 0){
-									_draw = false;
-								}
-							}
-						}
-					}
-					
-					 // Normal Conditions:
-					else if(visible && "index" in leader && player_is_local_nonsync(leader.index) && !point_seen(x, y, leader.index)){
+		}
+		
+		 // Pet Indicator:
+		if(instance_exists(CustomHitme)){
+			var _inst = instances_matching(CustomHitme, "name", "Pet");
+			if(array_length(_inst)) with(_inst){
+				var _draw = false;
+				
+				 // Death Conditions:
+				if(instance_exists(revive)){
+					if(instance_exists(leader)){
 						_draw = true;
-					}
-					
-					if(_draw){
-						var _spr = spr_icon;
-						if(sprite_exists(_spr)){
-							var	_x   = x,
-								_y   = y,
-								_img = 0.4 * current_frame;
-								
-							 // Death Pointer:
-							if(instance_exists(revive)){
-								_y -= 20 + sin(wave / 10);
-								draw_sprite(spr.PetArrow, _img, _x, _y + (sprite_get_height(_spr) - sprite_get_yoffset(_spr)));
-							}
-							
-							 // Icon:
-							var	_x1 = sprite_get_xoffset(_spr),
-								_y1 = sprite_get_yoffset(_spr),
-								_x2 = _x1 - sprite_get_width(_spr)  + _gw,
-								_y2 = _y1 - sprite_get_height(_spr) + _gh;
-								
-							_x = _vx + clamp(_x - _vx, _x1 + 1, _x2 - 1);
-							_y = _vy + clamp(_y - _vy, _y1 + 1, _y2 - 1);
-							
-							draw_sprite(_spr, _img, _x, _y);
-							
-							 // Death Indicating:
-							if(instance_exists(revive)){
-								var	_flashLength = 15,
-									_flashDelay  = 10,
-									_flash       = (current_frame % (_flashLength + _flashDelay));
-									
-								if(_flash < _flashLength){
-									draw_set_blend_mode(bm_add);
-									draw_sprite_ext(_spr, _img, clamp(_x, _x1, _x2), clamp(_y, _y1, _y2), 1, 1, 0, c_white, 1 - (_flash / _flashLength));
-									draw_set_blend_mode(bm_normal);
-								}
+						with(revive) with(prompt){
+							if(instance_exists(nearwep) && array_length(instances_matching(Player, "nearwep", nearwep)) > 0){
+								_draw = false;
 							}
 						}
 					}
 				}
-			}
-			
-			 // Alert Indicators:
-			if(instance_exists(CustomObject)){
-				var _inst = instances_matching(instances_matching(CustomObject, "name", "AlertIndicator"), "visible", true);
-				if(array_length(_inst)) with(_inst){
-					if(canview || !point_seen(x, y, player_find_local_nonsync())){
-						var	_flash    = max(1, flash),
-							_spr      = sprite_index,
-							_img      = image_index,
-							_xsc      = image_xscale,
-							_ysc      = image_yscale / _flash,
-							_ang      = image_angle,
-							_col      = image_blend,
-							_alp      = abs(image_alpha),
-							_x        = round(_vx + clamp(x - _vx, (x - bbox_left) + 1, _gw - ((bbox_right  + 1) - x) - 2)),
-							_y        = round(_vy + clamp(y - _vy, (y - bbox_top ) + 1, _gh - ((bbox_bottom + 1) - y) - 1) + ((3 / _flash) * (_flash - 1))),
-							_alertSpr = lq_defget(alert, "spr", -1),
-							_alertCan = sprite_exists(_alertSpr);
+				
+				 // Normal Conditions:
+				else if(visible && "index" in leader && player_is_local_nonsync(leader.index) && !point_seen(x, y, leader.index)){
+					_draw = true;
+				}
+				
+				if(_draw){
+					var _spr = spr_icon;
+					if(sprite_exists(_spr)){
+						var	_x   = x,
+							_y   = y,
+							_img = 0.4 * current_frame;
 							
-						if(flash > 0){
-							draw_set_fog(true, image_blend, 0, 0);
+						 // Death Pointer:
+						if(instance_exists(revive)){
+							_y -= 20 + sin(wave / 10);
+							draw_sprite(spr.PetArrow, _img, _x, _y + (sprite_get_height(_spr) - sprite_get_yoffset(_spr)));
 						}
 						
-						 // Alert (!) Shadow:
-						if(_alertCan){
-							var	_alertImg = lq_defget(alert, "img", -0.4),
-								_alertX   = _x + (lq_defget(alert, "x", 0) * _xsc),
-								_alertY   = _y + (lq_defget(alert, "y", 0) * _ysc),
-								_alertXSc = lq_defget(alert, "xsc", _xsc),
-								_alertYSc = lq_defget(alert, "ysc", _ysc),
-								_alertAng = lq_defget(alert, "ang", 0),
-								_alertCol = lq_defget(alert, "col", c_white),
-								_alertAlp = lq_defget(alert, "alp", _alp);
+						 // Icon:
+						var	_x1 = sprite_get_xoffset(_spr),
+							_y1 = sprite_get_yoffset(_spr),
+							_x2 = _x1 - sprite_get_width(_spr)  + _gw,
+							_y2 = _y1 - sprite_get_height(_spr) + _gh;
+							
+						_x = _vx + clamp(_x - _vx, _x1 + 1, _x2 - 1);
+						_y = _vy + clamp(_y - _vy, _y1 + 1, _y2 - 1);
+						
+						draw_sprite(_spr, _img, _x, _y);
+						
+						 // Death Indicating:
+						if(instance_exists(revive)){
+							var	_flashLength = 15,
+								_flashDelay  = 10,
+								_flash       = (current_frame % (_flashLength + _flashDelay));
 								
-							if(_alertImg < 0){
-								_alertImg *= -current_frame;
+							if(_flash < _flashLength){
+								draw_set_blend_mode(bm_add);
+								draw_sprite_ext(_spr, _img, clamp(_x, _x1, _x2), clamp(_y, _y1, _y2), 1, 1, 0, c_white, 1 - (_flash / _flashLength));
+								draw_set_blend_mode(bm_normal);
 							}
-							
-							for(var	_ox = -1; _ox <= 1; _ox++){
-								for(var	_oy = -1; _oy <= 2; _oy++){
-									draw_sprite_ext(
-										_alertSpr,
-										_alertImg,
-										_alertX + lengthdir_x(_ox * _alertXSc, _ang) + lengthdir_x(_oy * _alertYSc, _ang - 90),
-										_alertY + lengthdir_y(_ox * _alertXSc, _ang) + lengthdir_y(_oy * _alertYSc, _ang - 90),
-										_alertXSc,
-										_alertYSc,
-										_alertAng,
-										c_black,
-										_alertAlp
-									);
-								}
-							}
-						}
-						
-						 // Main Icon:
-						draw_sprite_ext(_spr, _img, _x, _y, _xsc, _ysc, _ang, _col, _alp);
-						
-						 // Alert (!)
-						if(_alertCan){
-							draw_sprite_ext(_alertSpr, _alertImg, _alertX, _alertY, _alertXSc, _alertYSc, _alertAng, _alertCol, _alertAlp);
-						}
-						
-						if(flash > 0){
-							draw_set_fog(false, 0, 0, 0);
 						}
 					}
 				}
@@ -4794,84 +4796,99 @@
 		For drawing NTTE's custom map stuff, currently only pet map icons
 	*/
 	
-	var _lag = (lag && !instance_exists(PauseButton) && !instance_exists(BackMainMenu));
+	var _canDraw = false;
 	
-	if(_lag) trace_time();
-	
-	_mapIndex = (
-		is_undefined(_mapIndex)
-		? GameCont.waypoints
-		: clamp(_mapIndex, 0, GameCont.waypoints)
-	);
-	
-	var _mapPos = mapdata_get(_mapIndex);
-	
-	if(
-		_mapIndex == 0
-		|| (is_real(_mapPos.area) && _mapPos.area >= 0)
-		|| (is_string(_mapPos.area) && mod_exists("area", _mapPos.area))
-	){
-		 // Determine Max Players:
-		var _playerMax = 0;
-		for(var i = 0; i < maxp; i++){
-			if(player_is_active(i)){
-				_playerMax = i + 1;
+	if("ntte_pet_icon" in GameCont){
+		with(GameCont.ntte_pet_icon){
+			if(!is_undefined(self)){
+				_canDraw = true;
 			}
-		}
-		
-		 // Draw:
-		for(var i = 0; i < _playerMax; i++){
-			var	_x       = view_xview_nonsync + (game_width  / 2) + _mapX + _mapPos.x,
-				_y       = view_yview_nonsync + (game_height / 2) + _mapY + _mapPos.y,
-				_iconAng = 30,
-				_iconDir = 0,
-				_iconDis = 10;
-				
-			 // Co-op Offset:
-			if(_playerMax > 1){
-				var	_l = 2 * _playerMax,
-					_d = 90 - ((360 / _playerMax) * i);
-					
-				if(_playerMax == 2){
-					_d += 45;
-				}
-				
-				_x += lengthdir_x(_l, _d);
-				_y += lengthdir_y(_l, _d);
-				
-				_iconAng = _d;
-			}
-			
-			 // Pet Icons:
-			var _iconList = global.pet_mapicon[i];
-			for(var _iconNum = 0; _iconNum < array_length(_iconList); _iconNum++){
-				var	_icon    = _iconList[_iconNum],
-					_iconSpr = pet_get_sprite(_icon[0], _icon[1], _icon[2], _icon[3], "icon");
-					
-				if(sprite_exists(_iconSpr)){
-					draw_sprite_ext(
-						_iconSpr,
-						0.4 * current_frame,
-						_x + floor(lengthdir_x(_iconDis, _iconAng + _iconDir)),
-						_y + floor(lengthdir_y(_iconDis, _iconAng + _iconDir)),
-						1,
-						1,
-						0,
-						(instance_exists(BackMainMenu) ? merge_color(c_white, c_black, 0.9) : c_white),
-						1
-					);
-				}
-				
-				 // Next:
-				_iconDir += 60 / (1 + floor(_iconDir / 360));
-				if((_iconDir % 360) == 0){
-					_iconDis += 8;
-				}
-			}
+			break;
 		}
 	}
 	
-	if(_lag) trace_time(script[2]);
+	if(_canDraw){
+		var _lag = (lag && !instance_exists(PauseButton) && !instance_exists(BackMainMenu));
+		
+		if(_lag) trace_time();
+		
+		_mapIndex = (
+			is_undefined(_mapIndex)
+			? GameCont.waypoints
+			: clamp(_mapIndex, 0, GameCont.waypoints)
+		);
+		
+		var _mapPos = mapdata_get(_mapIndex);
+		
+		if(
+			_mapIndex == 0
+			|| (is_real(_mapPos.area) && _mapPos.area >= 0)
+			|| (is_string(_mapPos.area) && mod_exists("area", _mapPos.area))
+		){
+			 // Determine Max Players:
+			var _playerMax = 0;
+			for(var i = 0; i < maxp; i++){
+				if(player_is_active(i)){
+					_playerMax = i + 1;
+				}
+			}
+			
+			 // Draw:
+			for(var i = 0; i < _playerMax; i++){
+				var	_x       = view_xview_nonsync + (game_width  / 2) + _mapX + _mapPos.x,
+					_y       = view_yview_nonsync + (game_height / 2) + _mapY + _mapPos.y,
+					_iconAng = 30,
+					_iconDir = 0,
+					_iconDis = 10;
+					
+				 // Co-op Offset:
+				if(_playerMax > 1){
+					var	_l = 2 * _playerMax,
+						_d = 90 - ((360 / _playerMax) * i);
+						
+					if(_playerMax == 2){
+						_d += 45;
+					}
+					
+					_x += lengthdir_x(_l, _d);
+					_y += lengthdir_y(_l, _d);
+					
+					_iconAng = _d;
+				}
+				
+				 // Pet Icons:
+				var _iconList = GameCont.ntte_pet_icon[i];
+				if(!is_undefined(_iconList)){
+					for(var _iconNum = 0; _iconNum < array_length(_iconList); _iconNum++){
+						var	_icon    = _iconList[_iconNum],
+							_iconSpr = pet_get_sprite(_icon[0], _icon[1], _icon[2], _icon[3], "icon");
+							
+						if(sprite_exists(_iconSpr)){
+							draw_sprite_ext(
+								_iconSpr,
+								0.4 * current_frame,
+								_x + floor(lengthdir_x(_iconDis, _iconAng + _iconDir)),
+								_y + floor(lengthdir_y(_iconDis, _iconAng + _iconDir)),
+								1,
+								1,
+								0,
+								(instance_exists(BackMainMenu) ? merge_color(c_white, c_black, 0.9) : c_white),
+								1
+							);
+						}
+						
+						 // Next:
+						_iconDir += 60 / (1 + floor(_iconDir / 360));
+						if((_iconDir % 360) == 0){
+							_iconDis += 8;
+						}
+					}
+				}
+			}
+		}
+		
+		if(_lag) trace_time(script[2]);
+	}
 	
 #define ntte_map_pause
 	if(array_length(instances_matching([PauseButton, BackMainMenu, OptionMenuButton, AudioMenuButton, VisualsMenuButton, GameMenuButton, ControlMenuButton], "", null))){
@@ -4925,7 +4942,7 @@
 					alarm_set(11, -1);
 					
 					 // Update MusCont:
-					if(_area != global.mus_area){
+					if("ntte_music_area" not in GameCont || _area != GameCont.ntte_music_area){
 						with(self){
 							event_perform(ev_alarm, 11);
 						}
@@ -4935,7 +4952,7 @@
 					_amb = mod_script_call_self("area", _area, "area_ambient");
 				}
 			}
-			global.mus_area = _area;
+			GameCont.ntte_music_area = _area;
 		}
 		
 		 // Play:
@@ -4943,14 +4960,14 @@
 			if(sound_play_music(_mus)){
 				var _snd = sound_play_pitchvol(0, 0, 0);
 				sound_stop(_snd);
-				global.mus_current = _snd - 1;
+				GameCont.ntte_music_index = _snd - 1;
 			}
 		}
 		if(is_real(_amb)){
 			if(sound_play_ambient(_amb)){
 				var _snd = sound_play_pitchvol(0, 0, 0);
 				sound_stop(_snd);
-				global.amb_current = _snd - 1;
+				GameCont.ntte_ambient_index = _snd - 1;
 			}
 		}
 	}

@@ -254,19 +254,21 @@
 			AlertIndicatorOrchid  = sprite(p + "sprAlertIndicatorOrchid",  1, 4, 4);
 			
 			 // Alert Icons:
-			AllyAlert        = sprite(p + "sprAllyAlert",        1, 7, 7);
-			BanditAlert      = sprite(p + "sprBanditAlert",      1, 7, 7);
-			FlyAlert         = sprite(p + "sprFlyAlert",         1, 7, 7);
-			GatorAlert       = sprite(p + "sprGatorAlert",       1, 7, 7);
-			GatorAlbinoAlert = sprite(p + "sprGatorAlbinoAlert", 1, 7, 7);
-			PopoAlert        = sprite(p + "sprPopoAlert",        3, 8, 8);
-			PopoEliteAlert   = sprite(p + "sprPopoEliteAlert",   3, 8, 8);
-			PopoFreakAlert   = sprite(p + "sprPopoFreakAlert",   1, 8, 8);
-			SealAlert        = sprite(p + "sprSealAlert",        1, 7, 7);
-			SealArcticAlert  = sprite(p + "sprSealArcticAlert",  1, 7, 7);
-			SkealAlert       = sprite(p + "sprSkealAlert",       1, 7, 7);
-			SludgePoolAlert  = sprite(p + "sprSludgePoolAlert",  1, 7, 7);
-			VanAlert         = sprite(p + "sprVanAlert",         1, 7, 7);
+			AllyAlert              = sprite(p + "sprAllyAlert",              1, 7,  7);
+			BanditAlert            = sprite(p + "sprBanditAlert",            1, 7,  7);
+			CrimeBountyAlert       = sprite(p + "sprCrimeBountyAlert",       4, 8, 16);
+			CrimeBountyActiveAlert = sprite(p + "sprCrimeBountyActiveAlert", 4, 8, 16);
+			FlyAlert               = sprite(p + "sprFlyAlert",               1, 7,  7);
+			GatorAlert             = sprite(p + "sprGatorAlert",             1, 7,  7);
+			GatorAlbinoAlert       = sprite(p + "sprGatorAlbinoAlert",       1, 7,  7);
+			PopoAlert              = sprite(p + "sprPopoAlert",              3, 8,  8);
+			PopoEliteAlert         = sprite(p + "sprPopoEliteAlert",         3, 8,  8);
+			PopoFreakAlert         = sprite(p + "sprPopoFreakAlert",         1, 8,  8);
+			SealAlert              = sprite(p + "sprSealAlert",              1, 7,  7);
+			SealArcticAlert        = sprite(p + "sprSealArcticAlert",        1, 7,  7);
+			SkealAlert             = sprite(p + "sprSkealAlert",             1, 7,  7);
+			SludgePoolAlert        = sprite(p + "sprSludgePoolAlert",        1, 7,  7);
+			VanAlert               = sprite(p + "sprVanAlert",               1, 7,  7);
 			
 		//#endregion
 		
@@ -2279,6 +2281,7 @@
 	
 	 // Script Binding, Surface, Shader Storage:
 	global.bind        = ds_map_create();
+	global.bind_hold   = ds_map_create();
 	global.surf        = ds_map_create();
 	global.shad        = ds_map_create();
 	global.shad_active = "";
@@ -2433,9 +2436,11 @@
 	with(ds_map_values(global.surf)) if(surf != -1) surface_destroy(surf);
 	with(ds_map_values(global.shad)) if(shad != -1) shader_destroy(shad);
 	with(ds_map_values(global.bind)) with(self) with(id) instance_destroy();
+	with(ds_map_values(global.bind_hold)) with(self) instance_destroy();
 	ds_map_destroy(global.surf);
 	ds_map_destroy(global.shad);
 	ds_map_destroy(global.bind);
+	ds_map_destroy(global.bind_hold);
 	
 	 // No Crash:
 	with(ntte_mods.race){
@@ -2670,9 +2675,11 @@
 	 // Unbind Scripts:
 	var _bindKey = _name + ":" + _type;
 	if(ds_map_exists(global.bind, _bindKey)){
+		global.bind_hold[? _bindKey] = [];
 		with(global.bind[? _bindKey]){
 			with(id){
-				instance_destroy();
+				script = [];
+				array_push(global.bind_hold[? _bindKey], self);
 			}
 		}
 		ds_map_delete(global.bind, _bindKey);
@@ -3279,18 +3286,31 @@
 			"id"      : noone
 		};
 		
-	_bind.id = instance_create(0, 0, _bind.object);
-	with(_bind.id){
-		script     = _bind.script;
-		depth      = _bind.depth;
-		visible    = _bind.visible;
-		persistent = true;
-	}
-	
-	 // Store:
+	 // Storage Setup:
 	if(!ds_map_exists(global.bind, _bindKey)){
 		global.bind[? _bindKey] = [];
 	}
+	
+	 // Controller Setup / Retrieval:
+	var	_bindHold    = (ds_map_exists(global.bind_hold, _bindKey) ? global.bind_hold[? _bindKey] : []),
+		_bindHoldPos = array_length(global.bind[? _bindKey]);
+		
+	if(_bindHoldPos >= 0 && _bindHoldPos < array_length(_bindHold)){
+		_bind.id = _bindHold[_bindHoldPos];
+	}
+	else{
+		_bind.id = instance_create(0, 0, _bind.object);
+		with(_bind.id){
+			depth      = _bind.depth;
+			visible    = _bind.visible;
+			persistent = true;
+		}
+	}
+	with(_bind.id){
+		script = _bind.script;
+	}
+	
+	 // Store:
 	array_push(global.bind[? _bindKey], _bind);
 	
 	return _bind;

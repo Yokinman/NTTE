@@ -8,13 +8,6 @@
 	global.sea_bind[? "top"        ] = script_bind(CustomDraw, draw_sea_top,                               -1,                               false);
 	global.sea_bind[? "visible_max"] = script_bind(CustomDraw, script_ref_create(sea_inst_visible, false), _seaDepth,                        false);
 	global.sea_bind[? "visible_min"] = script_bind(CustomDraw, script_ref_create(sea_inst_visible, true),  object_get_depth(SubTopCont) + 1, false);
-	global.sea_inst = [];
-	
-	 // # of times that 'area_pop_enemies' must be called before it spawns another enemy, to reduce enemy spawns:
-	global.pop_enemies_wait = 0;
-	
-	 // Ultra Bolt Fix:
-	global.ultraboltfix_floors = [];
 	
 	 // Objects w/ Draw Events:
 	var _hasEvent = [Player, CrystalShield, Sapling, Ally, RogueStrike, DogMissile, PlayerSit, UberCont, BackCont, TopCont, KeyCont, GenCont, NothingSpiral, Credits, SubTopCont, BanditBoss, Drama, ScrapBossMissile, ScrapBoss, LilHunter, LilHunterFly, Nothing, NothingInactive, BecomeNothing, Carpet, NothingBeam, Nothing2, FrogQueen, HyperCrystal, TechnoMancer, LastIntro, LastCutscene, Last, DramaCamera, BigFish, ProtoStatue, Campfire, LightBeam, TV, SentryGun, Disc, PlasmaBall, PlasmaBig, Lightning, IonBurst, Laser, PlasmaHuge, ConfettiBall, Nuke, Rocket, RadMaggot, GoldScorpion, MaggotSpawn, BigMaggot, Maggot, Scorpion, Bandit, BigMaggotBurrow, Mimic, SuperFrog, Exploder, Gator, BuffGator, Ratking, GatorSmoke, Rat, FastRat, RatkingRage, MeleeBandit, SuperMimic, Sniper, Raven, RavenFly, Salamander, Spider, LaserCrystal, EnemyLightning, LightningCrystal, EnemyLaser, SnowTank, GoldSnowTank, SnowBot, CarThrow, Wolf, SnowBotCar, RhinoFreak, Freak, Turret, ExploFreak, Necromancer, ExploGuardian, DogGuardian, GhostGuardian, Guardian, CrownGuardianOld, CrownGuardian, Molefish, FireBaller, JockRocket, SuperFireBaller, Jock, Molesarge, Turtle, Van, PopoPlasmaBall, PopoRocket, PopoFreak, Grunt, EliteGrunt, Shielder, EliteShielder, Inspector, EliteInspector, PopoShield, Crab, OasisBoss, BoneFish, InvLaserCrystal, InvSpider, JungleAssassin, FiredMaggot, JungleFly, JungleBandit, EnemyHorror, RainDrop, SnowFlake, PopupText, Confetti, WepPickup, Menu, BackFromCharSelect, CharSelect, GoButton, Loadout, LoadoutCrown, LoadoutWep, LoadoutSkin, CampChar, MainMenu, PlayMenuButton, TutorialButton, MainMenuButton, StatMenu, StatButton, DailyArrow, WeeklyArrow, DailyScores, WeeklyScores, WeeklyProgress, DailyMenuButton, menubutton, BackMainMenu, UnlockAll, IntroLogo, MenuOLDOLD, OptionSelect, MusVolSlider, SfxVolSlider, AmbVolSlider, FullScreenToggle, FitScreenToggle, GamePadToggle, MouseCPToggle, CoopToggle, QToggle, ScaleUpDown, ShakeUpDown, AutoAimUpDown, BSkinLoadout, CrownLoadout, StatsSelect, CrownSelect, DailyToggle, UpdateSelect, CreditsSelect, LoadoutSelect, MenuOLD, Vlambeer, QuitSelect, CrownIcon, SkillIcon, EGSkillIcon, CoopSkillIcon, SkillText, LevCont, mutbutton, PauseButton, GameOverButton, UnlockPopup, UnlockScreen, BUnlockScreen, UnlockButton, OptionMenuButton, VisualsMenuButton, AudioMenuButton, GameMenuButton, ControlMenuButton, CustomObject, CustomHitme, CustomProjectile, CustomSlash, CustomEnemy, CustomDraw, Dispose, asset_get_index("MultiMenu")];
@@ -93,7 +86,7 @@
 	TopCont.darkness = area_darkness();
 	
 	 // Reset 'area_pop_enemies' Counter:
-	global.pop_enemies_wait = 0;
+	GameCont.ntte_pop_enemies_wait = 0;
 	
 #define area_setup_floor
 	 // Footsteps:
@@ -228,8 +221,8 @@
 	 // Disable Area:
 	variable_instance_set(GameCont, "ntte_active_" + mod_current, false);
 	
-	 // NTTE Update:
-	mod_variable_set("mod", "ntte", "area_update", true);
+	 // NT:TE Area Update:
+	GameCont.ntte_area_update = true;
 	
 	 // There Ain't No More Water:
 	with(instances_matching_ne(instances_matching(GameObject, "persistent", true), "wading", null)){
@@ -311,8 +304,12 @@
 	var	_x = x + 16,
 		_y = y + 16;
 		
-	if(global.pop_enemies_wait-- <= 0){
-		global.pop_enemies_wait = 1;
+	if("ntte_pop_enemies_wait" not in GameCont){
+		GameCont.ntte_pop_enemies_wait = 0;
+	}
+	
+	if(GameCont.ntte_pop_enemies_wait-- <= 0){
+		GameCont.ntte_pop_enemies_wait = 1;
 		
 		 // Loop Spawns:
 		if(GameCont.loops > 0 && chance(1, 3)){
@@ -598,10 +595,10 @@
 		}
 		
 		 // Weird fix for ultra bolts destroying themselves when not touching a floor:
-		if(array_length(global.ultraboltfix_floors)){
-			global.ultraboltfix_floors = [];
-		}
 		if(instance_exists(UltraBolt)){
+			if("ntte_coast_ultrabolt_floors" not in GameCont){
+				GameCont.ntte_coast_ultrabolt_floors = [];
+			}
 			with(UltraBolt){
 				if(!place_meeting(x, y, Floor)){
 					with(instance_create(0, 0, Floor)){
@@ -613,7 +610,7 @@
 						yprevious  = y;
 						visible    = false;
 						creator    = other;
-						array_push(global.ultraboltfix_floors, self);
+						array_push(GameCont.ntte_coast_ultrabolt_floors, self);
 					}
 				}
 			}
@@ -622,10 +619,11 @@
 	
 #define ntte_step
 	 // Ultra Bolt Fix Pt.2:
-	if(array_length(global.ultraboltfix_floors)){
-		with(instances_matching_ne(global.ultraboltfix_floors, "id", null)){
+	if("ntte_coast_ultrabolt_floors" in GameCont && array_length(GameCont.ntte_coast_ultrabolt_floors)){
+		with(instances_matching_ne(GameCont.ntte_coast_ultrabolt_floors, "id", null)){
 			instance_delete(self);
 		}
+		GameCont.ntte_coast_ultrabolt_floors = [];
 	}
 	
 	if(area_active){
@@ -671,26 +669,24 @@
 		
 		 // Water Wading:
 		var	_depthMax = global.sea_bind[? "visible_max"].depth,
-			_depthMin = global.sea_bind[? "visible_min"].depth;
+			_depthMin = global.sea_bind[? "visible_min"].depth,
+			_seaInst  = [Debris, Corpse, ChestOpen, chestprop, WepPickup, Crown, Grenade, hitme];
 			
-		global.sea_inst = array_combine(
-			array_combine(
-				[Debris, Corpse, ChestOpen, chestprop, WepPickup, Crown, Grenade, hitme],
-				instances_matching(Pickup, "mask_index", mskPickup)
-			),
-			instances_matching(CustomSlash, "name", "ClamShield")
-		);
-		global.sea_inst = instances_matching_le(global.sea_inst, "depth",   _depthMax);
-		global.sea_inst = instances_matching(   global.sea_inst, "visible", true);
-		global.sea_inst = instances_matching_ne(global.sea_inst, "canwade", false);
+		_seaInst = array_combine(_seaInst, instances_matching(Pickup, "mask_index", mskPickup));
+		_seaInst = array_combine(_seaInst, instances_matching(CustomSlash, "name", "ClamShield"));
+		_seaInst = instances_matching_le(_seaInst, "depth",   _depthMax);
+		_seaInst = instances_matching(   _seaInst, "visible", true);
+		_seaInst = instances_matching_ne(_seaInst, "canwade", false);
 		
-		if(array_length(global.sea_inst)){
+		if(array_length(_seaInst)){
 			 // Instance Setup:
-			var _inst = instances_matching(global.sea_inst, "wading", null);
-			if(array_length(_inst)) with(_inst){
-				wading      = 0;
-				wading_wave = 0;
-				wading_sink = 0;
+			var _inst = instances_matching(_seaInst, "wading", null);
+			if(array_length(_inst)){
+				with(_inst){
+					wading      = 0;
+					wading_wave = 0;
+					wading_sink = 0;
+				}
 			}
 			
 			 // Find Dudes In/Out of Water:
@@ -698,7 +694,7 @@
 			var	_z    = -2,
 				_wave = current_frame;
 				
-			with(global.sea_inst){
+			with(_seaInst){
 				 // In Water:
 				var _dis = distance_to_object(Floor);
 				if(_dis > 4 && depth >= _depthMin){
@@ -797,8 +793,10 @@
 				//_inst[i++] = [self, y];
 			}
 			//array_sort_sub(_inst, 1, true);
-			global.sea_inst = instances_matching_gt(global.sea_inst, "wading", 0);
+			_seaInst = instances_matching_gt(_seaInst, "wading", 0);
 		}
+		
+		GameCont.ntte_sea_inst = _seaInst;
 		
 		 // Corpse Sinking (THE PEAK OF OPTIMIZATION):
 		if(instance_exists(Corpse)){
@@ -1110,14 +1108,14 @@
 			surface_reset_target();
 		}
 		
-		if(array_length(global.sea_inst)){
+		if("ntte_sea_inst" in GameCont && array_length(GameCont.ntte_sea_inst)){
 			 // Copy Screen:
 			draw_set_blend_mode_ext(bm_one, bm_zero);
 			surface_screenshot(_surfSwimScreen.surf);
 			draw_set_blend_mode(bm_normal);
 			
 			 // Drawing Water Wading Objects:
-			var _inst = instances_matching_gt(instances_seen(global.sea_inst, 24, 24, -1), "wading", 0);
+			var _inst = instances_matching_gt(instances_seen(GameCont.ntte_sea_inst, 24, 24, -1), "wading", 0);
 			if(array_length(_inst)){
 				var	_surfSwimBotSurf     = _surfSwimBot.surf,
 					_surfSwimTopSurf     = _surfSwimTop.surf,
@@ -1439,10 +1437,10 @@
 	if(lag) trace_time(script[2]);
 	
 #define sea_inst_visible(_visible)
-	if(array_length(global.sea_inst)){
+	if("ntte_sea_inst" in GameCont && array_length(GameCont.ntte_sea_inst)){
 		if(lag) trace_time();
 		
-		var _inst = instances_matching_ne(global.sea_inst, "visible", _visible);
+		var _inst = instances_matching_ne(GameCont.ntte_sea_inst, "visible", _visible);
 		if(array_length(_inst)) with(_inst){
 			visible = _visible;
 		}

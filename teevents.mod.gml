@@ -684,7 +684,7 @@
 							hitid = [sprTargetIdle, "BANDIT AMBUSH"];
 							
 							 // Less:
-							GameCont.bigbandit_dummy_spawn = variable_instance_get(GameCont, "bigbandit_dummy_spawn", 0) + 1;
+							GameCont.ntte_bigbandit_spawn = variable_instance_get(GameCont, "ntte_bigbandit_spawn", 0) + 1;
 						}
 					}
 				}
@@ -1915,7 +1915,7 @@
 	
 #define MutantVats_text    return `${event_tip}SPECIMENS`;
 #define MutantVats_area    return area_labs;
-#define MutantVats_chance  return (mod_exists("mod", "tegeneral") ? (ds_list_size(mod_variable_get("mod", "tegeneral", "pet_history")) / 3) : 0);
+#define MutantVats_chance  return (mod_exists("mod", "tegeneral") ? (("ntte_pet_history" in GameCont && array_length(GameCont.ntte_pet_history)) / 3) : 0);
 
 #define MutantVats_create
 	var	_spawnX     = spawn_x,
@@ -1931,9 +1931,8 @@
 	floor_set_align(null, null, 32, 32);
 	
 	with(floor_room(_spawnX, _spawnY, _spawnDis, _spawnFloor, _w, _h, _type, _dirOff, _floorDis)){
-		var	_petList = mod_variable_get("mod", "tegeneral", "pet_history"),
-			_vatList = [];
-			
+		var _vatList = [];
+		
 		/*
 		 // Corner Vats:
 		array_push(_vatList, obj_create(x - 64, y - 44, "MutantVat"));
@@ -1965,17 +1964,19 @@
 		}
 		
 		 // Petify:
-		var _numVats = array_length(_vatList);
-		for(var i = min(_numVats, ds_list_size(_petList)) - 1; i >= 0; i--){
-			if(chance(1 - (i / _numVats), 1)){
-				with(_vatList[i]){
-					type     = "Pet";
-					pet_data = _petList[| i];
-					spr_dude = pet_get_sprite(pet_data[0], pet_data[1], pet_data[2], lq_defget(pet_data[3], "bskin", 0), "idle");
+		if("ntte_pet_history" in GameCont){
+			var _numVats = array_length(_vatList);
+			for(var i = min(_numVats, array_length(GameCont.ntte_pet_history)) - 1; i >= 0; i--){
+				if(chance(1 - (i / _numVats), 1)){
+					with(_vatList[i]){
+						type     = "Pet";
+						pet_data = GameCont.ntte_pet_history[i];
+						spr_dude = pet_get_sprite(pet_data[0], pet_data[1], pet_data[2], lq_defget(pet_data[3], "bskin", 0), "idle");
+					}
+					
+					 // Remove From Pool:
+					GameCont.ntte_pet_history = array_delete(GameCont.ntte_pet_history, i);
 				}
-				
-				 // Remove From Pool:
-				ds_list_delete(_petList, i);
 			}
 		}
 		

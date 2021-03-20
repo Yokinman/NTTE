@@ -43,7 +43,7 @@
 	variable_instance_set(GameCont, `skill_last_${mod_current}`, _num);
 	
 	 // Update Max Pets:
-	mod_variable_set("mod", "ntte", "pet_max", mod_variable_get("mod", "ntte", "pet_max") + (_num - _last));
+	GameCont.ntte_pet_max = variable_instance_get(GameCont, "ntte_pet_max", 1) + (_num - _last);
 	with(instances_matching_ne(Player, "ntte_pet_max", null)){
 		ntte_pet_max += (_num - _last);
 	}

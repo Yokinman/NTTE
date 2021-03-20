@@ -5,13 +5,13 @@
 	ntte_mods = mod_variable_get("mod", "teassets", "mods");
 	
 	 // Bind Events:
-	global.portal_pickups_bind = script_bind(CustomStep,      portal_pickups_step,                        0, false);
-	global.rad_path_bind       = script_bind(CustomEndStep,   rad_path_step,                              0, false);
-	global.floor_reveal_bind   = script_bind(CustomDraw,      floor_reveal_draw,                         -8, false);
+	global.portal_pickups_bind = script_bind(CustomStep,    portal_pickups_step,  0, false);
+	global.rad_path_bind       = script_bind(CustomEndStep, rad_path_step,        0, false);
+	global.floor_reveal_bind   = script_bind(CustomDraw,    floor_reveal_draw,   -8, false);
 	
 	 // Object List (Used for cheats mod, basically):
 	ntte_obj_list = ds_map_create();
-	ntte_obj_list[? "tegeneral"  ] = ["AlertIndicator", "BigDecal", "BigIDPDSpawn", "BoneArrow", "BoneSlash", "BoneFX", "BuriedVault", "BuriedShrine", "CustomBullet", "CustomFlak", "CustomShell", "CustomPlasma", "GroundFlameGreen", "Igloo", "MergeFlak", "Pet", "PetRevive", "PetWeaponBecome", "PetWeaponBoss", "PortalPrevent", "ReviveNTTE", "SmallGreenExplosion", "TopDecal", "TopObject", "TopTiny", "WallDecal", "WallEnemy"];
+	ntte_obj_list[? "tegeneral"  ] = ["AlertIndicator", "BigDecal", "BigIDPDSpawn", "BoneArrow", "BoneSlash", "BoneFX", "BuriedVault", "BuriedShrine", "CustomBullet", "CustomFlak", "CustomShell", "CustomPlasma", "GroundFlameGreen", "MergeFlak", "Pet", "PetRevive", "PetWeaponBecome", "PetWeaponBoss", "PortalPrevent", "ReviveNTTE", "SmallGreenExplosion", "TopDecal", "TopObject", "TopTiny", "WallDecal", "WallEnemy"];
 	ntte_obj_list[? "tepickups"  ] = ["Backpack", "Backpacker", "BackpackPickup", "BatChest", /*"BloodLustPickup",*/ "BoneBigPickup", "BonePickup", "BonusAmmoChest", "BonusAmmoMimic", "BonusAmmoPickup", "BonusHealthChest", "BonusHealthMimic", "BonusHealthPickup", "BuriedVaultChest", "BuriedVaultChestDebris", "BuriedVaultPedestal", "CatChest", "ChestShop", "CursedAmmoChest", "CursedMimic", "CustomChest", "CustomPickup", "GatorStatue", "GatorStatueFlak", "HammerHeadPickup", "HarpoonPickup", "OrchidBall", "OrchidChest", "OrchidSkill", "PalaceAltar", "ParrotFeather", "ParrotChester", "Pizza", "PizzaChest", "PizzaStack", "Prompt", "RatChest", "RedAmmoChest", "RedAmmoPickup", "RogueBackpack", "SpiritPickup", "SunkenCoin", "VaultFlower", "VaultFlowerSparkle"];
 	ntte_obj_list[? "tedesert"   ] = ["BabyScorpion", "BabyScorpionGold", "BanditCamper", "BanditHiker", "BanditTent", "BigCactus", "BigMaggotSpawn", "Bone", "CoastBossBecome", "CoastBoss", "CowSkull", "FlySpin", "VenomBlast", "ScorpionRock", "SilverScorpion", "SilverScorpionDevastator", "SilverScorpionFlak", "VenomFlak", "VenomPellet", "VenomPelletBack", "WantBigMaggot"];
 	ntte_obj_list[? "tecoast"    ] = ["BloomingAssassin", "BloomingAssassinHide", "BloomingBush", "BloomingCactus", "BuriedCar", "ClamShield", "ClamShieldSlash", "CoastBigDecal", "CoastDecal", "CoastDecalCorpse", "Creature", "Diver", "DiverHarpoon", "Gull", "Harpoon", "HarpoonStick", "NetNade", "Palanking", "PalankingDie", "PalankingSlash", "PalankingSlashGround", "PalankingStatue", "PalankingToss", "Palm", "Pelican", "Seal", "SealAnchor", "SealDisc", "SealHeavy", "SealMine", "TrafficCrab", "Trident"];
@@ -20,7 +20,7 @@
 	ntte_obj_list[? "tesewers"   ] = ["AlbinoBolt", "AlbinoGator", "AlbinoGrenade", "BabyGator", "Bat", "BatBoss", "BatCloud", "BatDisc", "BatScreech", "BoneGator", /*"BossHealFX",*/ "Cabinet", "Cat", "CatBoss", "CatBossAttack", "CatDoor", "CatDoorDebris", "CatGrenade", "CatHole", "CatHoleBig", "CatLight", "ChairFront", "ChairSide", "Couch", "LairBorder", "Manhole", "ManholeOpen", "NewTable", "Paper", "PizzaDrain", "PizzaManholeCover", "PizzaRubble", "PizzaTV", "SewerDrain", "SewerRug", "TurtleCool"];
 	ntte_obj_list[? "tescrapyard"] = ["BoneRaven", "SawTrap", "SludgePool", "TopRaven", "TrapSpin", "Tunneler", "WepPickupGrounded", "WepPickupStick"];
 	ntte_obj_list[? "tecaves"    ] = ["BigCrystalProp", "ChaosHeart", "CrystalBat", "CrystalBrain", "CrystalBrainDeath", "CrystalBrainEffect", "CrystalClone", "CrystalHeart", "CrystalHeartBullet", "CrystalPropRed", "CrystalPropWhite", "EnergyBatSlash", "InvCrystalBat", "InvMortar", "MinerBandit", "Mortar", "MortarPlasma", "NewCocoon", "PlasmaImpactSmall", "RedBullet", "RedExplosion", "RedShank", "RedSlash", "RedSpider", "Spiderling", "Tesseract", "TesseractArmDeath", "TesseractDeath", "TesseractStrike", /*"TesseractWarp",*/ "TwinOrbital", "VlasmaBullet", "VlasmaCannon", "WallFake", "Warp", "WarpPortal"];
-	ntte_obj_list[? "telabs"     ] = ["Button", "ButtonChest", "ButtonOld", "ButtonPickup", "ButtonReviveArea", "FreakChamber", "MutantVat", "PickupReviveArea", "PopoSecurity", "PortalBullet", "PortalGuardian", "WallSlide"];
+	ntte_obj_list[? "telabs"     ] = ["Button", "ButtonChest", "ButtonOld", "ButtonPickup", "ButtonReviveArea", "FreakChamber", "Igloo", "MutantVat", "PickupReviveArea", "PopoSecurity", "PortalBullet", "PortalGuardian", "WallSlide"];
 	
 	 // Object Create Event Script References:
 	ntte_obj_scrt = ds_map_create();
@@ -222,11 +222,13 @@
 
 #macro infinity 1/0
 
+#macro epsilon 0.00001
+
 #macro mod_current_type script_ref_create(0)[0]
 
 #macro instance_max instance_create(0, 0, DramaCamera)
 
-#macro current_frame_active ((current_frame % 1) < current_time_scale)
+#macro current_frame_active (((current_frame + epsilon) % 1) < current_time_scale)
 
 #macro anim_end (image_index + image_speed_raw >= image_number || image_index + image_speed_raw < 0)
 
@@ -2775,11 +2777,9 @@
 		 // Call Funny Mod Scripts:
 		if(_setArea){
 			with(mod_get_names("mod")){
-				try{
+				if(fork()){
 					mod_script_call_nc("mod", self, "level_start");
-				}
-				catch(_error){
-					trace(_error);
+					exit;
 				}
 			}
 		}
@@ -4419,7 +4419,7 @@
 					
 				case 2: // Fully Charged - Blink
 					
-					if((current_frame % 12) < current_time_scale){
+					if(((current_frame + epsilon) % 12) < current_time_scale){
 						with(_fire.creator) if(instance_is(self, Player)){
 							gunshine = 2;
 						}

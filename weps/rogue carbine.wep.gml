@@ -2,8 +2,7 @@
 	mod_script_call("mod", "teassets", "ntte_init", script_ref_create(init));
 	
 	 // Sprites:
-	global.sprWep       = sprite_add_weapon("../sprites/weps/sprRogueCarbine.png", 8, 3);
-	global.sprWepLocked = mskNone;
+	global.sprWep = sprite_add_weapon("../sprites/weps/sprRogueCarbine.png", 8, 3);
 	
 #define cleanup
 	mod_script_call("mod", "teassets", "ntte_cleanup", script_ref_create(cleanup));

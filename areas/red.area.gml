@@ -1,8 +1,8 @@
 #define init
 	mod_script_call("mod", "teassets", "ntte_init", script_ref_create(init));
 	
-	 // For Manual Map Drawing:
-	global.mapdata_warp_draw = [];
+	 // For Manual Map Drawing (Reset in ntte.mod):
+	global.mapdata_warp_draw = undefined;
 	
 #define cleanup
 	mod_script_call("mod", "teassets", "ntte_cleanup", script_ref_create(cleanup));
@@ -38,7 +38,26 @@
 	);
 	
 #define area_mapdata(_lastX, _lastY, _lastArea, _lastSubarea, _subarea, _loops)
-	 // Post Exit:
+	 // Compile Warp Zone Map Data:
+	if(is_undefined(global.mapdata_warp_draw)){
+		global.mapdata_warp_draw = [];
+		
+		var _mapData = mod_script_call("mod", "ntte", "mapdata_get", -1);
+		
+		for(var i = array_length(_mapData) - 2; i >= 1; i--){
+			var _data = _mapData[i];
+			if(_data.area == mod_current){
+				array_push(global.mapdata_warp_draw, {
+					"subarea" : _data.subarea,
+					"loops"   : _data.loops,
+					"last"    : _mapData[i - 1],
+					"next"    : _mapData[i + 1]
+				});
+			}
+		}
+	}
+	
+	 // Post-Exit Warp Icons:
 	with(global.mapdata_warp_draw){
 		if(
 			subarea      == _subarea     &&
@@ -487,26 +506,6 @@
 			}
 			
 			break;
-		}
-	}
-	
-#define ntte_end_step
-	 // Compile Area Map Visits:
-	if(area_visits > 0){
-		global.mapdata_warp_draw = [];
-		
-		var _mapdata = mod_script_call("mod", "ntte", "mapdata_get", -1);
-		
-		for(var i = array_length(_mapdata) - 2; i >= 1; i--){
-			var _data = _mapdata[i];
-			if(_data.area == mod_current){
-				array_push(global.mapdata_warp_draw, {
-					"subarea" : _data.subarea,
-					"loops"   : _data.loops,
-					"last"    : _mapdata[i - 1],
-					"next"    : _mapdata[i + 1]
-				});
-			}
 		}
 	}
 	

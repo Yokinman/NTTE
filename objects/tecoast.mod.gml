@@ -4,15 +4,11 @@
 	 // Bind Events:
 	script_bind(CustomDraw, draw_diver_laser, -5, true);
 	
-	 // Palanking Camera Pan (During Pause Screen):
-	global.palanking_pan = [0, 0];
-	
 	 // Harpoon Ropes:
 	global.harpoon_rope_bind = [
 		script_bind(CustomDraw, draw_harpoon_rope,  1, false),
 		script_bind(CustomDraw, draw_harpoon_rope, -9, false)
 	];
-	global.harpoon_rope = [];
 	
 #define cleanup
 	mod_script_call("mod", "teassets", "ntte_cleanup", script_ref_create(cleanup));
@@ -208,19 +204,19 @@
 	with(instance_create(_x, _y, CustomSlash)){
 		 // Visual:
 		sprite_index = spr.ClamShield;
-		spr_shadow = shd16;
+		spr_shadow   = shd16;
 		spr_shadow_x = 0;
 		spr_shadow_y = 7;
 		
 		 // Vars:
 		mask_index = mskOldGuardianDeflect;
-		creator = noone;
-		damage = 0;
-		force = 3;
-		typ = 0;
-		wep = "clam shield";
+		creator    = noone;
+		damage     = 0;
+		force      = 3;
+		typ        = 0;
+		wep        = "clam shield";
 		
-		 // Scripts:
+		 // Disable Events:
 		on_anim = [];
 		on_wall = [];
 		
@@ -1283,7 +1279,7 @@
 		typ = 0;
 		
 		 // Deteriorate Rope if Both Harpoons Stuck:
-		if(array_length(rope) > 0){
+		if(array_length(rope)){
 			with(rope){
 				if(harpoon_stuck && array_length(instances_matching_ne([link1, link2], "object_index", CustomProjectile)) <= 0){
 					broken = -1;
@@ -1366,22 +1362,33 @@
 	}
 	
 #define Harpoon_rope(_link1, _link2)
+	/*
+		Links two instances together with a Harpoon rope, returns the rope LWO
+	*/
+	
 	var _rope = {
-		link1         : _link1,
-		link2         : _link2,
-		length        : 0,
-		harpoon_stuck : false,
-		break_force   : 0,
-		break_timer   : 45 + random(15),
-		creator       : noone,
-		broken        : false
+		"link1"         : _link1,
+		"link2"         : _link2,
+		"length"        : 0,
+		"harpoon_stuck" : false,
+		"break_force"   : 0,
+		"break_timer"   : 45 + random(15),
+		"creator"       : noone,
+		"broken"        : false
 	}
 	
-	array_push(global.harpoon_rope, _rope);
+	 // Add to List:
+	if("ntte_harpoon_rope" not in GameCont){
+		GameCont.ntte_harpoon_rope = [];
+	}
+	array_push(GameCont.ntte_harpoon_rope, _rope);
 	
+	 // Linked Harpoons:
 	with([_link1, _link2]){
-		if("rope" in self){
+		if("name" in self && name == "Harpoon" && instance_is(self, CustomProjectile)){
 			array_push(rope, _rope);
+			
+			 // ??? Old code idk if important:
 			if(!instance_exists(creator) && "creator" in self){
 				_rope.creator = creator;
 			}
@@ -1391,22 +1398,33 @@
 	return _rope;
 	
 #define Harpoon_unrope(_rope)
+	/*
+		Destroys the given Harpoon rope connection
+		Harpoon instances linked to the rope are turned into pickups
+	*/
+	
 	with(_rope){
 		broken = true;
-		global.harpoon_rope = array_delete_value(global.harpoon_rope, self);
+		
+		 // Remove From List:
+		if("ntte_harpoon_rope" in GameCont){
+			GameCont.ntte_harpoon_rope = array_delete_value(GameCont.ntte_harpoon_rope, self);
+		}
 		
 		 // Turn Harpoons Into Pickups:
-		with([link1, link2]) if("name" in self){
-			if(object_index == CustomProjectile && name == "Harpoon"){
-				pickup = true;
-			}
-			else if(object_index == BoltStick && name == "HarpoonStick"){
-				with(obj_create(x, y, "HarpoonPickup")){
-					image_yscale = other.image_yscale;
-					image_angle  = other.image_angle;
-					target       = other.target;
+		with([link1, link2]){
+			if("name" in self){
+				if(name == "Harpoon" && instance_is(self, CustomProjectile)){
+					pickup = true;
 				}
-				instance_destroy();
+				else if(name == "HarpoonStick" && instance_is(self, BoltStick)){
+					with(obj_create(x, y, "HarpoonPickup")){
+						image_yscale = other.image_yscale;
+						image_angle  = other.image_angle;
+						target       = other.target;
+					}
+					instance_destroy();
+				}
 			}
 		}
 	}
@@ -1416,11 +1434,11 @@
 	with(instance_create(_x, _y, BoltStick)){
 		 // Visual:
 		sprite_index = spr.Harpoon;
-		image_index = 0;
+		image_index  = 0;
 		
 		 // Vars:
 		pull_speed = 2;
-		rope = [];
+		rope       = [];
 		
 		return self;
 	}
@@ -1820,7 +1838,7 @@
 			view_pan_factor[i] = null;
 		}
 	}
-	global.palanking_pan = [
+	GameCont.ntte_palanking_pan = [
 		(_pan ? point_direction(x, y, intro_pan_x, intro_pan_y)        : 0),
 		(_pan ? (point_distance(x, y, intro_pan_x, intro_pan_y) / 1.5) : 0)
 	];
@@ -1916,7 +1934,9 @@
 	 // Spawn Seals:
 	with(seal_spawn){
 		if(num > 0){
-			if(delay > 0) delay -= current_time_scale;
+			if(delay > 0){
+				delay -= current_time_scale;
+			}
 			else{
 				num--;
 				delay = max(4 - (GameCont.loops * 0.5), 2) * random_range(1, 2);
@@ -1924,52 +1944,57 @@
 				sound_play_pitch(choose(sndOasisHurt, sndOasisMelee, sndOasisShoot, sndOasisChest, sndOasisCrabAttack), 0.8 + random(0.4));
 				
 				 // Seal:
-				var	_dis = 16 + random(24),
-					_dir = (num * 90) + orandom(40),
-					_x = x + lengthdir_x(_dis, _dir),
-					_y = y + lengthdir_y(_dis, _dir),
-					o = obj_create(_x, _y, (chance(1, 16) ? "SealHeavy" : "Seal"));
+				var	_dis  = 16 + random(24),
+					_dir  = (num * 90) + orandom(40),
+					_x    = x + lengthdir_x(_dis, _dir),
+					_y    = y + lengthdir_y(_dis, _dir),
+					_seal = obj_create(_x, _y, (chance(1, 16) ? "SealHeavy" : "Seal"));
 					
 				 // Seal Vars:
-				o.creator = other;
-				with(o){
-					 // Rads:
-					creator.raddrop -= raddrop;
-					raddrop = clamp(raddrop + creator.raddrop, 0, raddrop);
-					
-					 // Randomize Type:
-					if(name == "Seal"){
-						var _pick = [];
-						for(var i = 0; i < array_length(seal_chance); i++){
-							if(seal_chance[i] > 0) repeat(seal_chance[i]){
-								array_push(_pick, i);
+				if(instance_exists(_seal)){
+					_seal.creator = other;
+					with(_seal){
+						 // Rads:
+						if(creator.raddrop > 0){
+							creator.raddrop -= min(raddrop, creator.raddrop);
+						}
+						raddrop = min(raddrop, creator.raddrop);
+						
+						 // Randomize Type:
+						if(name == "Seal"){
+							var _pick = [];
+							for(var i = 0; i < array_length(seal_chance); i++){
+								if(seal_chance[i] > 0) repeat(seal_chance[i]){
+									array_push(_pick, i);
+								}
+							}
+							type = _pick[irandom(array_length(_pick) - 1)];
+							
+							 // Launchin:
+							if(GameCont.loops > 0 && chance(1, 2)){
+								with(obj_create(x, y, "PalankingToss")){
+									with(instance_nearest_bbox(x, y, Floor)){
+										other.direction = point_direction(other.x, other.y, bbox_center_x, bbox_center_y) + orandom(30);
+									}
+									speed        = 4 + random(4);
+									creator      = other;
+									depth        = other.depth;
+									mask_index   = other.mask_index;
+									spr_shadow_y = other.spr_shadow_y;
+									
+									 // FX:
+									sound_play_pitchvol(sndSlugger, 1.5, 0.6);
+									scrFX(x, y, [point_direction(x, y, x, z) + orandom(30), 2 + random(2)], "WaterStreak");
+									repeat(4) instance_create(x, y, Dust);
+								}
 							}
 						}
-						type = _pick[irandom(array_length(_pick) - 1)];
 						
-						 // Launchin:
-						if(GameCont.loops > 0 && chance(1, 2)){
-							with(obj_create(x, y, "PalankingToss")){
-								with(instance_nearest_bbox(x, y, Floor)){
-									other.direction = point_direction(other.x, other.y, bbox_center_x, bbox_center_y) + orandom(30);
-								}
-								speed        = 4 + random(4);
-								creator      = other;
-								depth        = other.depth;
-								mask_index   = other.mask_index;
-								spr_shadow_y = other.spr_shadow_y;
-								
-								 // FX:
-								sound_play_pitchvol(sndSlugger, 1.5, 0.6);
-								scrFX(x, y, [point_direction(x, y, x, z) + orandom(30), 2 + random(2)], "WaterStreak");
-								repeat(4) instance_create(x, y, Dust);
-							}
+						 // No Free Kills:
+						if(creator.active){
+							kills = 0;
 						}
 					}
-					
-					 // Important Stuff:
-					if(creator.active) kills = 0;
-					array_push(mod_variable_get("area", "coast", "sea_inst"), self);
 				}
 				
 				 // Alert:
@@ -2330,10 +2355,17 @@
 	}
 	sound_play_pitchvol(snd.PalankingSwipe, 1, 4);
 	snd_dead = -1;
-	raddrop = 0;
+	raddrop  = 0;
 	
 	 // Boss Win Music:
-	with(MusCont) alarm_set(1, 1);
+	with(MusCont){
+		alarm_set(1, 1);
+	}
+	
+#define Palanking_cleanup
+	 // Unpan:
+	GameCont.ntte_palanking_pan = undefined;
+	
 	
 #macro Seal instances_matching(CustomEnemy, "name", "Seal", "SealHeavy")
 
@@ -3190,11 +3222,16 @@
 	
 	 // Skeleton Seal:
 	if(skeal){
-		spr_idle = spr.SkealIdle;
-		spr_walk = spr.SkealWalk;
-		spr_hurt = spr.SkealHurt;
-		spr_dead = spr.SkealDead;
-		spr_spwn = spr.SkealSpwn;
+		 // Visual:
+		spr_idle       = spr.SkealIdle;
+		spr_walk       = spr.SkealWalk;
+		spr_hurt       = spr.SkealHurt;
+		spr_dead       = spr.SkealDead;
+		spr_spwn       = spr.SkealSpwn;
+		spr_bubble     = -1;
+		spr_bubble_pop = -1;
+		spr_bubble_x   = 0;
+		spr_bubble_y   = 0;
 		
 		 // Sound:
 		snd_hurt = sndMutant14Hurt;
@@ -3203,7 +3240,7 @@
 		 // Vars:
 		maxhealth = ceil(maxhealth * 2);
 		my_health = ceil(my_health * 2);
-		raddrop += 4;
+		raddrop  += 4;
 		maxspeed -= 1;
 	}
 	
@@ -3216,8 +3253,9 @@
 		spr_spwn = spr.SealSpwn[type];
 	}
 	
+	 // Visual:
 	spr_weap = spr.SealWeap[type];
-	hitid = [spr_idle, name];
+	hitid    = [spr_idle, name];
 	if(sprite_index == _lastSpwn){
 		sprite_index = spr_spwn;
 	}
@@ -5265,8 +5303,8 @@
 #define ntte_step
 	 // Harpoon Connections:
 	var _ropeDraw = [[], []];
-	if(array_length(global.harpoon_rope)){
-		with(global.harpoon_rope){
+	if("ntte_harpoon_rope" in GameCont && array_length(GameCont.ntte_harpoon_rope)){
+		with(GameCont.ntte_harpoon_rope){
 			var	_rope  = self,
 				_link1 = _rope.link1,
 				_link2 = _rope.link2;
@@ -5409,11 +5447,13 @@
 	
 #define draw_gui_end
 	 // Palanking camera pan here so that pausing doesn't jank things:
-	var	_dir = global.palanking_pan[0],
-		_dis = global.palanking_pan[1];
-		
-	if(_dis > 0){
-		view_shift(-1, _dir, _dis);
+	if("ntte_palanking_pan" in GameCont && !is_undefined(GameCont.ntte_palanking_pan)){
+		var	_dir = GameCont.ntte_palanking_pan[0],
+			_dis = GameCont.ntte_palanking_pan[1];
+			
+		if(_dis > 0){
+			view_shift(-1, _dir, _dis);
+		}
 	}
 	
 #define draw_diver_laser

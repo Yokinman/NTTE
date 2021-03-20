@@ -1949,13 +1949,16 @@
 		text = `${other.text}#@s${other.desc}`;
 	}
 	
-#define ChestShop_step
-	wave += current_time_scale;
+	 // Crown of Crime Bounty:
+	if(crown_current == "crime"){
+		mod_script_call_nc("crown", "crime", "crime_alert", xstart, ystart);
+	}
 	
-	 // Setup:
+#define ChestShop_step
 	if(setup) ChestShop_setup();
 	
-	 // Shine Delay:
+	 // Animate / Shine:
+	wave += current_time_scale;
 	if(image_index < 1 && shine != 1){
 		image_index -= image_speed_raw * (1 - random(shine * current_time_scale));
 	}
@@ -2001,8 +2004,26 @@
 	if(open > 0){
 		open_state += (1 - open_state) * 0.15 * current_time_scale;
 		
+		 // Slow Bounty Indicator:
+		if(instance_exists(Player)){
+			var _dis = 32;
+			if(instance_exists(Crown) && distance_to_object(Crown) < _dis){
+				var _inst = instances_matching_ne(Crown, "ntte_crime_alert", null, noone);
+				if(array_length(_inst)){
+					with(_inst){
+						if(instance_exists(ntte_crime_alert)){
+							if(distance_to_object(other) < _dis){
+								speed = 0;
+							}
+						}
+						else ntte_crime_alert = noone;
+					}
+				}
+			}
+		}
+		
 		 // No Customers:
-		if(!instance_exists(Player) && open_state >= 1){
+		else if(open_state >= 1){
 			open = 0;
 		}
 		
@@ -2180,8 +2201,8 @@
 								
 								with(instance_create(_x, _y, WepPickup)){
 									motion_set(point_direction(x, y, _p.x, _p.y) + orandom(8), 4);
-									wep  = "crabbone";
 									ammo = true;
+									wep  = "crabbone";
 								}
 								instance_create(_x, _y, Dust);
 								sound_play_pitchvol(sndBloodGamble, 0.8, 1);
@@ -2208,14 +2229,14 @@
 								
 								with(instance_create(_x, _y, WepPickup)){
 									motion_set(point_direction(x, y, _p.x, _p.y) + orandom(8), 5);
-									wep  = other.soda;
 									ammo = true;
+									wep  = other.soda;
 								}
 								repeat(16) with(instance_create(_x, _y, Shell)){
 									sprite_index = sprSodaCan;
-									image_index = irandom(image_number - 1);
-									image_speed = 0;
-									depth = -1;
+									image_index  = irandom(image_number - 1);
+									image_speed  = 0;
+									depth        = -1;
 									motion_add(random(360), 2 + random(3));
 								}
 								sound_play_pitch(sndSodaMachineBreak, 1 + orandom(0.3));
@@ -2225,11 +2246,11 @@
 							case "turret":
 								
 								with(instance_create(_x, _y - 4, Turret)){
-									x = xstart;
-									y = ystart;
+									x          = xstart;
+									y          = ystart;
 									maxhealth *= 2;
-									my_health = maxhealth;
-									depth = -3;
+									my_health *= 2;
+									depth      = -3;
 									
 									with(charm_instance(self, true)){
 										time = 900;
@@ -2335,12 +2356,30 @@
 			open_state = 3/4;
 			open       = 0;
 			
-			 // Crown Time:
+			 // Crown of Crime Bounty:
 			if(crown_current == "crime"){
-				with(instances_matching(Crown, "ntte_crown", crown_current)){
+				GameCont.ntte_crime_active = true;
+				
+				 // Bounty UP:
+				if("ntte_crime_bounty" not in GameCont){
+					GameCont.ntte_crime_bounty = 0;
+				}
+				if(GameCont.ntte_crime_bounty < 3){
+					GameCont.ntte_crime_bounty = min(GameCont.ntte_crime_bounty + 1, 3);
+				}
+				
+				 // Display Bounty:
+				with(mod_script_call_nc("crown", "crime", "crime_alert", xstart, ystart)){
+					blink     = 15;
+					alarm0    = 60;
+					flash     = max(flash, 2);
+					snd_flash = sndCrownRandom;
+				}
+				
+				/*with(instances_matching(Crown, "ntte_crown", crown_current)){
 					enemy_time = 30;
 					enemies += (1 + GameCont.loops) + irandom(min(3, GameCont.hard - 1));
-				}
+				}*/
 			}
 		}
 	}
@@ -5900,43 +5939,41 @@
 	}
 	
 	 // Portal Mutation Update:
-	if(instance_exists(GenCont)){
-		GameCont.ntte_portal_skill = true;
-	}
-	else if(
-		instance_exists(Portal)
-		&& instance_exists(Player)
-		&& array_length(instances_matching_le(Portal, "endgame", 0))
-	){
-		if("ntte_portal_skill" in GameCont && GameCont.ntte_portal_skill){
-			GameCont.ntte_portal_skill = false;
-			
-			 // Tick Orchid Portal Mutations:
-			if(instance_exists(CustomObject)){
-				var _inst = instances_matching_gt(instances_matching(instances_matching(CustomObject, "name", "OrchidSkill"), "type", "portal"), "time", 0);
-				if(array_length(_inst)){
-					with(_inst){
-						time      -= min(time, 1);
-						flash      = 2;
-						star_scale = 4/5;
+	if(instance_exists(Portal) && array_length(instances_matching_le(Portal, "endgame", 0))){
+		if(instance_exists(Player)){
+			if("ntte_portal_closed" not in GameCont || !GameCont.ntte_portal_closed){
+				GameCont.ntte_portal_closed = true;
+				
+				 // Tick Orchid Portal Mutations:
+				if(instance_exists(CustomObject)){
+					var _inst = instances_matching_gt(instances_matching(instances_matching(CustomObject, "name", "OrchidSkill"), "type", "portal"), "time", 0);
+					if(array_length(_inst)){
+						with(_inst){
+							time      -= min(time, 1);
+							flash      = 2;
+							star_scale = 4/5;
+						}
+						
+						 // Sound:
+						var _lastSeed = random_get_seed();
+						sound_play_pitch(sndMut, 1.5 + orandom(0.2));
+						random_set_seed(_lastSeed);
 					}
-					
-					 // Sound:
-					var _lastSeed = random_get_seed();
-					sound_play_pitch(sndMut, 1.5 + orandom(0.2));
-					random_set_seed(_lastSeed);
 				}
-			}
-			
-			 // Reduce Annihilation Counters:
-			if("annihilation_list" in GameCont){
-				with(GameCont.annihilation_list){
-					if(ammo > 0 && --ammo <= 0){
-						GameCont.annihilation_list = array_delete_value(GameCont.annihilation_list, self);
+				
+				 // Reduce Annihilation Counters:
+				if("annihilation_list" in GameCont){
+					with(GameCont.annihilation_list){
+						if(ammo > 0 && --ammo <= 0){
+							GameCont.annihilation_list = array_delete_value(GameCont.annihilation_list, self);
+						}
 					}
 				}
 			}
 		}
+	}
+	else if("ntte_portal_closed" in GameCont && GameCont.ntte_portal_closed){
+		GameCont.ntte_portal_closed = false;
 	}
 	
 #define ntte_draw_shadows

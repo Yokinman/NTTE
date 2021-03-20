@@ -445,8 +445,8 @@
 		spr_hurt     = spr.AnglerGoldHurt;
 		spr_dead     = spr.AnglerGoldDead;
 		spr_appear   = spr.AnglerGoldAppear;
-		sprite_index = spr_appear;
 		hitid        = [spr_idle, "GOLDEN ANGLER"];
+		sprite_index = spr_appear;
 		
 		// Sounds:
 		snd_hurt = sndFreakPopoHurt;
@@ -1802,9 +1802,13 @@
 		boss = true;
 		
 		 // Visual:
-		spr_bite = spr.PitSquidMawBite;
-		spr_fire = spr.PitSquidMawSpit;
-		hitid    = [spr_fire, "PIT SQUID"];
+		spr_bite       = spr.PitSquidMawBite;
+		spr_fire       = spr.PitSquidMawSpit;
+		spr_bubble     = -1;
+		spr_bubble_pop = -1;
+		spr_bubble_x   = 0;
+		spr_bubble_y   = 0;
+		hitid          = [spr_fire, "PIT SQUID"];
 		
 		 // Sounds:
 		snd_hurt = sndBigDogHit;
@@ -1918,13 +1922,14 @@
 		*/
 		
 		 // Intro Dim Music:
-		if(!intro){
-			var _mus = mod_variable_get("mod", "ntte", "mus_current");
-			if(audio_is_playing(_mus)){
-				var _vol = audio_sound_get_gain(_mus);
-				if(_vol > 0.3){
-					sound_volume(_mus, _vol - (0.01 * current_time_scale));
-				}
+		if(
+			!intro
+			&& "ntte_music_index" in GameCont
+			&& audio_is_playing(GameCont.ntte_music_index)
+		){
+			var _vol = audio_sound_get_gain(GameCont.ntte_music_index);
+			if(_vol > 0.3){
+				sound_volume(GameCont.ntte_music_index, _vol - (0.01 * current_time_scale));
 			}
 		}
 	}
@@ -2298,7 +2303,7 @@
 							if(!intro){
 								speed /= 2;
 								rise_delay = 84;
-								sound_play_pitchvol(mus.PitSquidIntro, 1, audio_sound_get_gain(mus.PitSquid));
+								sound_play_pitchvol(mus.PitSquidIntro, 1, audio_sound_get_gain(mus.Trench));
 							}
 						}
 					}
@@ -2553,10 +2558,10 @@
 		spr_dead      = spr.TentacleDead;
 		spr_appear    = spr.TentacleSpwn;
 		spr_disappear = spr.TentacleTele;
-		depth         = -2;
 		hitid         = [spr_idle, "PIT SQUID"];
-		image_speed   = 0.4 + orandom(0.1);
 		sprite_index  = spr_appear;
+		image_speed   = 0.4 + orandom(0.1);
+		depth         = -2;
 		
 		 // Sound:
 		snd_hurt = sndOasisHurt;

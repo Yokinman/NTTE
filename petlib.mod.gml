@@ -1808,8 +1808,7 @@
 		else{
 			with((mount && instance_exists(leader)) ? leader : self){
 				 // Slow:
-				var _min = friction + 0.6;
-				speed = clamp(speed, _min, _min + 1);
+				speed = clamp(speed, 1, 2);
 				other.speed = speed;
 				
 				 // Charging Direction:
@@ -1842,7 +1841,7 @@
 			
 			 // Start Dashing:
 			else if(!dash_charging){
-				dash = true;
+				dash        = true;
 				dash_charge = dash_max;
 				
 				 // Force Direction:
@@ -1890,7 +1889,7 @@
 				angle = 0;
 			}
 		}
-		dash_charge = 0;
+		dash_charge    = 0;
 		dash_direction = direction;
 	}
 	
@@ -1898,11 +1897,13 @@
 	if(mount && instance_exists(leader) && portal_angle == 0){
 		with(leader){
 			 // Sittin, Not Walkin:
-			if(sprite_index == spr_walk) sprite_index = spr_idle;
+			if(sprite_index == spr_walk){
+				sprite_index = spr_idle;
+			}
 			
 			 // Disable Active:
 			var _inst = instances_matching(instances_matching(CustomObject, "name", "SalamanderCanSpec"), "creator", self);
-			if(array_length(_inst) <= 0){
+			if(!array_length(_inst)){
 				_inst = instance_create(x, y, CustomObject);
 				with(_inst){
 					name        = "SalamanderCanSpec";
@@ -1946,17 +1947,22 @@
 			 // Push Away:
 			with(leader){
 				var _push = 1.8;
-				if(player_moving) _push /= 3;
+				if(player_moving){
+					_push /= 3;
+				}
 				vspeed -= _push * sign(_yAdd) * current_time_scale;
 			}
 		}
 		
 		 // Hold:
 		with(leader){
-			other.x = x;
-			other.y = y + other.mount_y;
+			other.x      = x;
+			other.y      = y + other.mount_y;
 			other.hspeed = hspeed * place_free(x + hspeed_raw, y);
 			other.vspeed = vspeed * place_free(x, y + vspeed_raw);
+			
+			 // Extra Feet Stolen:
+			friction = ((speed < maxspeed) ? 0.45 : 0.2);
 		}
 		
 		 // Effects:

@@ -4036,12 +4036,10 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 	}
 	
 	 // Dim Music:
-	else{
-		var	_mus = mod_variable_get("mod", "ntte", "mus_current"),
-			_vol = audio_sound_get_gain(_mus);
-			
-		if(audio_is_playing(_mus)){
-			sound_volume(_mus, _vol + min(0, (((phase < 2) ? 0.4 : 0) - _vol) * 0.05 * current_time_scale));
+	else if("ntte_music_index" in GameCont){
+		if(audio_is_playing(GameCont.ntte_music_index)){
+			var _vol = audio_sound_get_gain(GameCont.ntte_music_index);
+			sound_volume(GameCont.ntte_music_index, _vol + min(0, (((phase < 2) ? 0.4 : 0) - _vol) * 0.05 * current_time_scale));
 		}
 	}
 	
