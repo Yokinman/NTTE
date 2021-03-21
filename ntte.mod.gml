@@ -228,18 +228,35 @@
 	
 	 // Crown of Crime:
 	if(crown_current == "crime"){
-		var _alert = mod_script_call_nc("crown", "crime", "crime_alert", _spawnX, _spawnY);
+		var _ref = script_ref_create_ext("crown", "crime", "crime_alert", _spawnX, _spawnY);
 		
 		 // Spawn Bounty Hunters:
 		if("ntte_crime_active" in GameCont && GameCont.ntte_crime_active){
-			GameCont.ntte_crime_active = false;
 			with(Crown){
 				enemies = 2 * variable_instance_get(GameCont, "ntte_crime_bounty", 0);
 			}
-			with(_alert){
+			with(script_ref_call(_ref, 120, 30)){
 				snd_flash = sndSkillPick;
 			}
+			GameCont.ntte_crime_active = false;
 		}
+		
+		 // Reduce Crime Bounty:
+		else if("ntte_crime_bounty" in GameCont && GameCont.ntte_crime_bounty > 0){
+			GameCont.ntte_crime_bounty = max(0, GameCont.ntte_crime_bounty - 1);
+			
+			with(script_ref_call(_ref, 120, 30)[1]){
+				with(instance_clone()){
+					image_index = min(image_index + 1, image_number - 1);
+					depth       = other.depth + 1;
+				}
+				flash     = 30;
+				snd_flash = sndIcicleBreak;
+			}
+		}
+		
+		 // No Bounty:
+		else script_ref_call(_ref, 90, 10);
 	}
 	
 	 // Subtract Big Bandit Ambush Spawns:
@@ -1194,7 +1211,7 @@
 		
 		 // Position Controller:
 		if(x == 0 && y == 0){
-			if(array_length(floors) > 0){
+			if(array_length(floors)){
 				var	_x1 = +infinity,
 					_y1 = +infinity,
 					_x2 = -infinity,
@@ -1690,7 +1707,7 @@
 			case AmmoChest:
 				
 				 // Cat Chests:
-				with(instances_matching_ne(AmmoChest, "object_index", IDPDChest, GiantAmmoChest)){
+				with(instances_matching_ne([AmmoChest, Mimic], "object_index", IDPDChest, GiantAmmoChest)){
 					chest_create(x, y, "CatChest", true);
 					instance_delete(self);
 				}
@@ -1715,7 +1732,7 @@
 			case RadChest:
 				
 				 // Rat Chests:
-				with(instances_matching_ne([RadChest, RogueChest, HealthChest], "id", null)){
+				with(instances_matching_ne([RadChest, RogueChest, HealthChest, SuperMimic], "id", null)){
 					chest_create(x, y, "RatChest", true);
 					instance_delete(self);
 				}
@@ -3048,16 +3065,7 @@
 	
 	 // Level Start:
 	if(instance_exists(GenCont) || instance_exists(Menu)){
-		if("ntte_level_start" not in GameCont || !GameCont.ntte_level_start){
-			GameCont.ntte_level_start = true;
-			
-			 // Reduce Crime Bounty:
-			if("ntte_crime_bounty" in GameCont){
-				if("ntte_crime_active" not in GameCont || !GameCont.ntte_crime_active){
-					GameCont.ntte_crime_bounty = max(0, GameCont.ntte_crime_bounty - 1);
-				}
-			}
-		}
+		GameCont.ntte_level_start = true;
 	}
 	else if("ntte_level_start" in GameCont && GameCont.ntte_level_start){
 		GameCont.ntte_level_start = false;

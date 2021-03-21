@@ -254,21 +254,22 @@
 			AlertIndicatorOrchid  = sprite(p + "sprAlertIndicatorOrchid",  1, 4, 4);
 			
 			 // Alert Icons:
-			AllyAlert              = sprite(p + "sprAllyAlert",              1, 7,  7);
-			BanditAlert            = sprite(p + "sprBanditAlert",            1, 7,  7);
-			CrimeBountyAlert       = sprite(p + "sprCrimeBountyAlert",       4, 8, 16);
-			CrimeBountyActiveAlert = sprite(p + "sprCrimeBountyActiveAlert", 4, 8, 16);
-			FlyAlert               = sprite(p + "sprFlyAlert",               1, 7,  7);
-			GatorAlert             = sprite(p + "sprGatorAlert",             1, 7,  7);
-			GatorAlbinoAlert       = sprite(p + "sprGatorAlbinoAlert",       1, 7,  7);
-			PopoAlert              = sprite(p + "sprPopoAlert",              3, 8,  8);
-			PopoEliteAlert         = sprite(p + "sprPopoEliteAlert",         3, 8,  8);
-			PopoFreakAlert         = sprite(p + "sprPopoFreakAlert",         1, 8,  8);
-			SealAlert              = sprite(p + "sprSealAlert",              1, 7,  7);
-			SealArcticAlert        = sprite(p + "sprSealArcticAlert",        1, 7,  7);
-			SkealAlert             = sprite(p + "sprSkealAlert",             1, 7,  7);
-			SludgePoolAlert        = sprite(p + "sprSludgePoolAlert",        1, 7,  7);
-			VanAlert               = sprite(p + "sprVanAlert",               1, 7,  7);
+			AllyAlert            = sprite(p + "sprAllyAlert",            1, 7,  7);
+			BanditAlert          = sprite(p + "sprBanditAlert",          1, 7,  7);
+			CrimeBountyAlert     = sprite(p + "sprCrimeBountyAlert",     2, 8, 10);
+			CrimeBountyFillAlert = sprite(p + "sprCrimeBountyFillAlert", 4, 5,  0);
+			FlyAlert             = sprite(p + "sprFlyAlert",             1, 7,  7);
+			GatorAlert           = sprite(p + "sprGatorAlert",           1, 7,  7);
+			GatorAlbinoAlert     = sprite(p + "sprGatorAlbinoAlert",     1, 7,  7);
+			GatorPatchAlert      = sprite(p + "sprGatorPatchAlert",      1, 7,  7);
+			PopoAlert            = sprite(p + "sprPopoAlert",            3, 8,  8);
+			PopoEliteAlert       = sprite(p + "sprPopoEliteAlert",       3, 8,  8);
+			PopoFreakAlert       = sprite(p + "sprPopoFreakAlert",       1, 8,  8);
+			SealAlert            = sprite(p + "sprSealAlert",            1, 7,  7);
+			SealArcticAlert      = sprite(p + "sprSealArcticAlert",      1, 7,  7);
+			SkealAlert           = sprite(p + "sprSkealAlert",           1, 7,  7);
+			SludgePoolAlert      = sprite(p + "sprSludgePoolAlert",      1, 7,  7);
+			VanAlert             = sprite(p + "sprVanAlert",             1, 7,  7);
 			
 		//#endregion
 		
@@ -606,6 +607,13 @@
 			with(msk.Palanking){
 				mask = [false, 0];
 			}
+			
+			 // Patch Gator (Eyepatch Reskin):
+			p = m + "PatchGator/";
+			PatchGatorIdle = sprite(p + "sprPatchGatorIdle", 8, 12, 12);
+			PatchGatorWalk = sprite(p + "sprPatchGatorWalk", 6, 12, 12);
+			PatchGatorHurt = sprite(p + "sprPatchGatorHurt", 3, 12, 12);
+			PatchGatorDead = sprite(p + "sprPatchGatorDead", 6, 12, 12);
 			
 			 // Pelican:
 			p = m + "Pelican/";
@@ -1934,7 +1942,7 @@
 				AnglerSlugger         = sprite(p + "sprAnglerSlugger",         1,  1,  3, shnWep);
 				AnglerSplinterGun     = sprite(p + "sprAnglerSplinterGun",     1,  2,  3, shnWep);
 				AnglerTrident         = sprite(p + "sprAnglerTrident",         1, 12,  7, shnWep);
-				AnglerTunneller       = sprite(p + "sprAnglerTunneller",       1,  8,  6, shnWep);
+				AnglerTunneller       = sprite(p + "sprAnglerTunneller",       1, 13,  6, shnWep);
 				AnglerTunnellerHUD    = sprite(p + "sprAnglerTunneller",       1, 16,  6, shnWep);
 				AnglerWrench          = sprite(p + "sprAnglerWrench",          1,  1,  4, shnWep);
 				AnglerBolt            = sprite(p + "sprAnglerBolt",            2,  4,  8);
@@ -1945,30 +1953,30 @@
 				
 				 // Cool:
 				p = m + "Cool/";
-				CoolAssaultRifle    = sprite(p + "sprCoolAssaultRifle",    1,  2,  3, shnWep);
-				CoolBazooka         = sprite(p + "sprCoolBazooka",         1, 11,  4, shnWep);
-				CoolCrossbow        = sprite(p + "sprCoolCrossbow",        1,  2,  3, shnWep);
-				CoolDiscGun         = sprite(p + "sprCoolDiscGun",         1, -4,  3, shnWep);
-				CoolFrogPistol      = sprite(p + "sprCoolFrogPistol",      1, -3,  4, shnWep);
-				CoolGrenadeLauncher = sprite(p + "sprCoolGrenadeLauncher", 1,  2,  2, shnWep);
-				CoolLaserPistol     = sprite(p + "sprCoolLaserPistol",     1, -3,  3, shnWep);
-				CoolMachinegun      = sprite(p + "sprCoolMachinegun",      1, -1,  1, shnWep);
-				CoolNukeLauncher    = sprite(p + "sprCoolNukeLauncher",    1,  8,  6, shnWep);
-				CoolPlasmaGun       = sprite(p + "sprCoolPlasmaGun",       1,  1,  4, shnWep);
-				CoolRevolver        = sprite(p + "sprCoolRevolver",        1, -3,  2, shnWep);
-				CoolScrewdriver     = sprite(p + "sprCoolScrewdriver",     1, -2,  2, shnWep);
-				CoolShotgun         = sprite(p + "sprCoolShotgun",         1,  2,  2, shnWep);
-				CoolSlugger         = sprite(p + "sprCoolSlugger",         1,  2,  2, shnWep);
-				CoolSplinterGun     = sprite(p + "sprCoolSplinterGun",     1,  2,  3, shnWep);
-				CoolTrident         = sprite(p + "sprCoolTrident",         1, 12,  8, shnWep);
-				CoolTunneller       = sprite(p + "sprCoolTunneller",       1, 12,  4, shnWep);
-				CoolTunnellerHUD    = sprite(p + "sprCoolTunneller",       1, 16,  4, shnWep);
-				CoolWrench          = sprite(p + "sprCoolWrench",          1, -1,  3, shnWep);
-				CoolBolt            = sprite(p + "sprCoolBolt",            2,  4,  8);
-				CoolDisc            = sprite(p + "sprCoolDisc",            2,  7,  7);
-				CoolGrenade         = sprite(p + "sprCoolGrenade",         1,  3,  3);
-				CoolNuke            = sprite(p + "sprCoolNuke",            1,  8,  8);
-				CoolRocket          = sprite(p + "sprCoolRocket",          1,  4,  4);
+				CoolAssaultRifle    = sprite(p + "sprCoolAssaultRifle",    1,  2, 3, shnWep);
+				CoolBazooka         = sprite(p + "sprCoolBazooka",         1, 11, 4, shnWep);
+				CoolCrossbow        = sprite(p + "sprCoolCrossbow",        1,  2, 3, shnWep);
+				CoolDiscGun         = sprite(p + "sprCoolDiscGun",         1, -4, 3, shnWep);
+				CoolFrogPistol      = sprite(p + "sprCoolFrogPistol",      1, -3, 4, shnWep);
+				CoolGrenadeLauncher = sprite(p + "sprCoolGrenadeLauncher", 1,  2, 2, shnWep);
+				CoolLaserPistol     = sprite(p + "sprCoolLaserPistol",     1, -3, 3, shnWep);
+				CoolMachinegun      = sprite(p + "sprCoolMachinegun",      1, -1, 1, shnWep);
+				CoolNukeLauncher    = sprite(p + "sprCoolNukeLauncher",    1,  8, 6, shnWep);
+				CoolPlasmaGun       = sprite(p + "sprCoolPlasmaGun",       1,  1, 4, shnWep);
+				CoolRevolver        = sprite(p + "sprCoolRevolver",        1, -3, 2, shnWep);
+				CoolScrewdriver     = sprite(p + "sprCoolScrewdriver",     1, -2, 2, shnWep);
+				CoolShotgun         = sprite(p + "sprCoolShotgun",         1,  2, 2, shnWep);
+				CoolSlugger         = sprite(p + "sprCoolSlugger",         1,  2, 2, shnWep);
+				CoolSplinterGun     = sprite(p + "sprCoolSplinterGun",     1,  2, 3, shnWep);
+				CoolTrident         = sprite(p + "sprCoolTrident",         1, 12, 8, shnWep);
+				CoolTunneller       = sprite(p + "sprCoolTunneller",       1, 13, 4, shnWep);
+				CoolTunnellerHUD    = sprite(p + "sprCoolTunneller",       1, 16, 4, shnWep);
+				CoolWrench          = sprite(p + "sprCoolWrench",          1, -1, 3, shnWep);
+				CoolBolt            = sprite(p + "sprCoolBolt",            2,  4, 8);
+				CoolDisc            = sprite(p + "sprCoolDisc",            2,  7, 7);
+				CoolGrenade         = sprite(p + "sprCoolGrenade",         1,  3, 3);
+				CoolNuke            = sprite(p + "sprCoolNuke",            1,  8, 8);
+				CoolRocket          = sprite(p + "sprCoolRocket",          1,  4, 4);
 				
 				 // Orchid:
 				p = m + "Orchid/";
@@ -1989,7 +1997,7 @@
 				OrchidSlugger         = sprite(p + "sprOrchidSlugger",         1,  4, 4, shnWep);
 				OrchidSplinterGun     = sprite(p + "sprOrchidSplinterGun",     1,  3, 4, shnWep);
 				OrchidTrident         = sprite(p + "sprOrchidTrident",         1, 12, 7, shnWep);
-				OrchidTunneller       = sprite(p + "sprOrchidTunneller",       1, 10, 9, shnWep);
+				OrchidTunneller       = sprite(p + "sprOrchidTunneller",       1, 14, 9, shnWep);
 				OrchidTunnellerHUD    = sprite(p + "sprOrchidTunneller",       1, 20, 9, shnWep);
 				OrchidWrench          = sprite(p + "sprOrchidWrench",          1,  1, 4, shnWep);
 				OrchidBolt            = sprite(p + "sprOrchidBolt",            2,  4, 8);
@@ -2015,7 +2023,7 @@
 				RedSlugger         = sprite(p + "sprRedSlugger",         1,  2, 2, shnWep);
 				RedSplinterGun     = sprite(p + "sprRedSplinterGun",     1,  2, 4, shnWep);
 				RedTrident         = sprite(p + "sprRedTrident",         1, 12, 7, shnWep);
-				RedTunneller       = sprite(p + "sprRedTunneller",       1, 10, 7, shnWep);
+				RedTunneller       = sprite(p + "sprRedTunneller",       1, 14, 7, shnWep);
 				RedTunnellerHUD    = sprite(p + "sprRedTunneller",       1, 18, 8, shnWep);
 				RedWrench          = sprite(p + "sprRedWrench",          1,  1, 3, shnWep);
 				RedBolt            = sprite(p + "sprRedBolt",            2,  4, 8);
@@ -2436,7 +2444,7 @@
 	with(ds_map_values(global.surf)) if(surf != -1) surface_destroy(surf);
 	with(ds_map_values(global.shad)) if(shad != -1) shader_destroy(shad);
 	with(ds_map_values(global.bind)) with(self) with(id) instance_destroy();
-	with(ds_map_values(global.bind_hold)) with(self) instance_destroy();
+	with(ds_map_values(global.bind_hold)) with(self) if(instance_exists(self)) instance_destroy();
 	ds_map_destroy(global.surf);
 	ds_map_destroy(global.shad);
 	ds_map_destroy(global.bind);
@@ -2445,7 +2453,7 @@
 	 // No Crash:
 	with(ntte_mods.race){
 		with(instances_matching([CampChar, CharSelect], "race", self)){
-			repeat(8) with(instance_create(random_range(bbox_left, bbox_right), random_range(bbox_top, bbox_bottom), Dust)){
+			repeat(8) with(instance_create(random_range(bbox_left, bbox_right + 1), random_range(bbox_top, bbox_bottom + 1), Dust)){
 				motion_add(random(360), random(random(8)));
 			}
 			instance_delete(self);
@@ -3295,7 +3303,7 @@
 	var	_bindHold    = (ds_map_exists(global.bind_hold, _bindKey) ? global.bind_hold[? _bindKey] : []),
 		_bindHoldPos = array_length(global.bind[? _bindKey]);
 		
-	if(_bindHoldPos >= 0 && _bindHoldPos < array_length(_bindHold)){
+	if(_bindHoldPos >= 0 && _bindHoldPos < array_length(_bindHold) && instance_exists(_bindHold[_bindHoldPos])){
 		_bind.id = _bindHold[_bindHoldPos];
 	}
 	else{

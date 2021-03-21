@@ -4941,7 +4941,9 @@
 					
 					 // Lookin'
 					else if(_num >= 0 && _num <= 1 && !_blink){
-						if(sign(image_xscale) < 0) _num = 1 - _num;
+						if(sign(image_xscale) < 0){
+							_num = 1 - _num;
+						}
 						image_index = round(lerp(1, image_number - 1, _num));
 					}
 				}
@@ -4954,7 +4956,7 @@
 				if(special > 0 && chance_ct(special, 90)){
 					with(instance_create(x + orandom(12), y - 8 + orandom(12), CaveSparkle)){
 						sprite_index = spr.PetSparkle;
-						depth = -9;
+						depth        = -9;
 					}
 				}
 				
@@ -4976,16 +4978,23 @@
 			
 			case area_desert:
 				
-				with(instance_create(x, y, Bandit)){
-					wkick = 8;
-					
+				with(instance_create(x, y, ((crown_current == "crime") ? Gator : Bandit))){
 					 // Alert:
 					if(point_seen(x, y, -1)){
-						with(alert_create(self, spr.BanditAlert)){
-							flash = 6;
+						with(alert_create(self, (instance_is(self, Gator) ? spr.GatorPatchAlert : spr.BanditAlert))){
+							flash  = 6;
 							alarm0 = 60;
-							blink = 15;
+							blink  = 15;
 						}
+					}
+					
+					 // Single Eye Club:
+					if(instance_is(self, Gator)){
+						spr_idle = spr.PatchGatorIdle;
+						spr_walk = spr.PatchGatorWalk;
+						spr_hurt = spr.PatchGatorHurt;
+						spr_dead = spr.PatchGatorDead;
+						hitid    = [spr_idle, "GATOR"];
 					}
 					
 					 // Launch:
@@ -5015,6 +5024,7 @@
 					}
 					
 					 // Effects:
+					wkick = 8;
 					if(chance(1, 15)){
 						with(scrFX(x, y, [direction + orandom(60), 4], Shell)){
 							sprite_index = sprSodaCan;

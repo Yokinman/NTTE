@@ -225,7 +225,7 @@
 	GameCont.ntte_area_update = true;
 	
 	 // There Ain't No More Water:
-	with(instances_matching_ne(instances_matching(GameObject, "persistent", true), "wading", null)){
+	with(instances_matching_gt(instances_matching(GameObject, "persistent", true), "wading", 0)){
 		wading      = 0;
 		wading_sink = 0;
 	}
@@ -575,6 +575,20 @@
 		}
 	}
 	
+	 // Wading Setup:
+	if(is_real(_genID)){
+		with([hitme, projectile, Corpse, ChestOpen, chestprop, Pickup, Crown, Debris]){
+			if(instance_exists(self) && self.id > _genID){
+				with(instances_matching_gt(self, "id", _genID)){
+					if("wading"      not in self) wading      = 0;
+					if("wading_wave" not in self) wading_wave = 0;
+					if("wading_sink" not in self) wading_sink = 0;
+					if("canwade"     not in self) canwade     = true;
+				}
+			}
+		}
+	}
+	
 #define ntte_begin_step
 	if(area_active){
 		if(instance_exists(Player)){
@@ -674,26 +688,16 @@
 			
 		_seaInst = array_combine(_seaInst, instances_matching(Pickup, "mask_index", mskPickup));
 		_seaInst = array_combine(_seaInst, instances_matching(CustomSlash, "name", "ClamShield"));
-		_seaInst = instances_matching_le(_seaInst, "depth",   _depthMax);
-		_seaInst = instances_matching(   _seaInst, "visible", true);
-		_seaInst = instances_matching_ne(_seaInst, "canwade", false);
+		_seaInst = instances_matching_le(_seaInst, "depth", _depthMax);
+		_seaInst = instances_matching(_seaInst, "visible", true);
+		_seaInst = instances_matching(_seaInst, "canwade", true);
 		
 		if(array_length(_seaInst)){
-			 // Instance Setup:
-			var _inst = instances_matching(_seaInst, "wading", null);
-			if(array_length(_inst)){
-				with(_inst){
-					wading      = 0;
-					wading_wave = 0;
-					wading_sink = 0;
-				}
-			}
-			
-			 // Find Dudes In/Out of Water:
-			//var i = 0;
 			var	_z    = -2,
 				_wave = current_frame;
 				
+			//var i = 0;
+			
 			with(_seaInst){
 				 // In Water:
 				var _dis = distance_to_object(Floor);
@@ -765,6 +769,8 @@
 					else if(wading_wave){
 						wading_wave = 0;
 					}
+					
+					//_inst[i++] = [self, y];
 				}
 				
 				 // Out of Water:
@@ -789,9 +795,8 @@
 						mod_script_call("mod", "ntte", "footprint_give", 20, background_color, 0.5);
 					}
 				}
-				
-				//_inst[i++] = [self, y];
 			}
+			
 			//array_sort_sub(_inst, 1, true);
 			_seaInst = instances_matching_gt(_seaInst, "wading", 0);
 		}

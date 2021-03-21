@@ -2216,12 +2216,16 @@
 	
 	var _inst = instance_copy(false);
 	
-	with(variable_instance_get_names(_inst)){
-		var	_value = variable_instance_get(_inst, self),
-			_clone = data_clone(_value, 0);
-			
-		if(_value != _clone){
-			variable_instance_set(_inst, self, _clone);
+	with(_inst){
+		depth = other.depth;
+		
+		with(variable_instance_get_names(self)){
+			var	_value = variable_instance_get(other, self),
+				_clone = data_clone(_value, 0);
+				
+			if(_value != _clone){
+				variable_instance_set(other, self, _clone);
+			}
 		}
 	}
 	

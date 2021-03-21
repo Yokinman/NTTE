@@ -150,7 +150,7 @@
 		}
 	}
 	
-#define crime_alert(_x, _y)
+#define crime_alert(_x, _y, _time, _blink)
 	/*
 		Displays the Crown of Crime's current bounty level near the given position
 	*/
@@ -178,22 +178,32 @@
 	
 	 // Create Alert:
 	with(_target){
-		if("ntte_crime_alert" not in self || !instance_exists(ntte_crime_alert)){
-			ntte_crime_alert = alert_create(self, spr.CrimeBountyAlert);
+		if("ntte_crime_alert" not in self || !array_equals(ntte_crime_alert, instances_matching_ne(ntte_crime_alert, "id", null))){
+			if("ntte_crime_alert" in self){
+				with(instances_matching_ne(ntte_crime_alert, "id", null)){
+					instance_destroy();
+				}
+			}
+			ntte_crime_alert = [
+				alert_create(self, spr.CrimeBountyAlert),
+				alert_create(self, spr.CrimeBountyFillAlert)
+			];
 			with(ntte_crime_alert){
-				flash = 6;
+				flash    = 6;
+				target_y = other.ntte_crime_alert[0].target_y;
 			}
 		}
-		with(ntte_crime_alert){
-			sprite_index = (variable_instance_get(GameCont, "ntte_crime_active", false) ? spr.CrimeBountyActiveAlert : spr.CrimeBountyAlert);
-			image_index  = clamp(variable_instance_get(GameCont, "ntte_crime_bounty", 0), 0, image_number - 1);
-			image_speed  = 0;
-			visible      = true;
-			depth        = -7;
-			alert        = {};
-			blink        = 30;
-			alarm0       = 120;
-			snd_flash    = sndAppear;
+		for(var i = array_length(ntte_crime_alert) - 1; i >= 0; i--){
+			with(ntte_crime_alert[i]){
+				image_index = clamp(variable_instance_get(GameCont, `ntte_crime_${(i == 0) ? "active" : "bounty"}`, 0), 0, image_number - 1);
+				image_speed = 0;
+				visible     = true;
+				depth       = ((i == 0) ? -7 : -9);
+				alert       = {};
+				alarm0      = _time;
+				blink       = _blink;
+				snd_flash   = sndAppear;
+			}
 		}
 		return ntte_crime_alert;
 	}

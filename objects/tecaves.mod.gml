@@ -13,7 +13,7 @@
 	with(global.wall_fake_bind){
 		array_push(
 			global.wall_fake_bind_reveal,
-			script_bind(object, draw_wall_fake_reveal, depth - ((script[1] == "Bot") ? 2 : 1), visible)
+			script_bind(object, draw_wall_fake_reveal, depth - ((script[3] == "Bot") ? 2 : 1), visible)
 		);
 	}
 	global.wall_shine_bind = script_bind(CustomDraw, draw_wall_shine, object_get_depth(SubTopCont), false);
@@ -1804,10 +1804,8 @@
 				
 			for(var _x = _ox - 8; _x < _ox + 8; _x += 8){
 				for(var _y = _oy - 8; _y < _oy + 8; _y += 8){
-					if(array_length(instances_at(_x, _y, _tileNew)) <= 0){
-						if(chance(1, 1)){
-							obj_create(_x, _y, "TopTiny");
-						}
+					if(!array_length(instances_at(_x, _y, _tileNew))){
+						obj_create(_x, _y, "TopTiny");
 					}
 				}
 			}

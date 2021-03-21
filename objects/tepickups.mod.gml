@@ -1951,7 +1951,7 @@
 	
 	 // Crown of Crime Bounty:
 	if(crown_current == "crime"){
-		mod_script_call_nc("crown", "crime", "crime_alert", xstart, ystart);
+		mod_script_call_nc("crown", "crime", "crime_alert", xstart, ystart, 120, 30);
 	}
 	
 #define ChestShop_step
@@ -2008,15 +2008,14 @@
 		if(instance_exists(Player)){
 			var _dis = 32;
 			if(instance_exists(Crown) && distance_to_object(Crown) < _dis){
-				var _inst = instances_matching_ne(Crown, "ntte_crime_alert", null, noone);
+				var _inst = instances_matching_ne(Crown, "ntte_crime_alert", null);
 				if(array_length(_inst)){
 					with(_inst){
-						if(instance_exists(ntte_crime_alert)){
+						if(array_length(instances_matching_ne(ntte_crime_alert, "id", null))){
 							if(distance_to_object(other) < _dis){
 								speed = 0;
 							}
 						}
-						else ntte_crime_alert = noone;
 					}
 				}
 			}
@@ -2369,10 +2368,8 @@
 				}
 				
 				 // Display Bounty:
-				with(mod_script_call_nc("crown", "crime", "crime_alert", xstart, ystart)){
-					blink     = 15;
-					alarm0    = 60;
-					flash     = max(flash, 2);
+				with(mod_script_call_nc("crown", "crime", "crime_alert", xstart, ystart, 60, 15)[1]){
+					flash     = max(flash, 6);
 					snd_flash = sndCrownRandom;
 				}
 				
@@ -5969,6 +5966,28 @@
 						}
 					}
 				}
+				
+				 // Reduce Crown of Crime Bounty:
+				/*if("ntte_crime_active" not in GameCont || !GameCont.ntte_crime_active){
+					if("ntte_crime_bounty" in GameCont && GameCont.ntte_crime_bounty > 0){
+						GameCont.ntte_crime_bounty = max(0, GameCont.ntte_crime_bounty - 1);
+						
+						with(instances_matching_le(Portal, "endgame", 0)){
+							var _instAlert = mod_script_call_nc("crown", "crime", "crime_alert", x, y, 120, 30);
+							with(_instAlert){
+								flash = 3;
+							}
+							with(_instAlert[1]){
+								with(instance_clone()){
+									image_index = min(image_index + 1, image_number - 1);
+									depth       = other.depth + 1;
+								}
+								flash     = 15;
+								snd_flash = sndIcicleBreak;
+							}
+						}
+					}
+				}*/
 			}
 		}
 	}
