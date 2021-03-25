@@ -1,6 +1,9 @@
 #define init
 	mod_script_call("mod", "teassets", "ntte_init", script_ref_create(init));
 	
+	 // Store Script References:
+	scr.crime_alert = script_ref_create(crime_alert);
+	
 	 // Sprites:
 	global.sprCrownIcon	   = sprite_add("../sprites/crowns/Crime/sprCrownCrimeIcon.png",     1, 12, 16);
 	global.sprCrownIdle	   = sprite_add("../sprites/crowns/Crime/sprCrownCrimeIdle.png",    20,  8,  8);
@@ -16,8 +19,8 @@
 #define crown_text        return "FIND @wSMUGGLED GOODS#@sA @rPRICE @sON YOUR HEAD";
 #define crown_tip         return choose("THE @wFAMILY@s DOESN'T FORGIVE", "THE @rBAT'S@s EXPERIMENTS", "THE @rCAT'S@s RESOURCES", "THE WASTELAND WEAPON TRADE");
 #define crown_unlock      return "STOLEN FROM THIEVES";
-#define crown_avail       return (unlock_get(`crown:${mod_current}`) && GameCont.loops <= 0);
-#define crown_menu_avail  return unlock_get(`loadout:crown:${mod_current}`);
+#define crown_avail       return (call(scr.unlock_get, `crown:${mod_current}`) && GameCont.loops <= 0);
+#define crown_menu_avail  return call(scr.unlock_get, `loadout:crown:${mod_current}`);
 #define crown_loadout     return global.sprCrownLoadout;
 #define crown_ntte_pack   return "crown";
 
@@ -100,9 +103,9 @@
 					while(enemies > 0){
 						enemies--;
 						
-						portal_poof();
+						call(scr.portal_poof);
 						
-						with(top_create(_spawnX, _spawnY, pool(_pool), _spawnDir, _spawnDis)){
+						with(call(scr.top_create, _spawnX, _spawnY, call(scr.pool, _pool), _spawnDir, _spawnDis)){
 							jump_time = 1;
 							idle_time = 0;
 							
@@ -117,7 +120,7 @@
 									case "BabyGator":
 										 // Babies Stick Together:
 										var n = 1 + irandom(1 + GameCont.loops);
-										repeat(n) with(top_create(x, y, "BabyGator", random(360), -1)){
+										repeat(n) with(call(scr.top_create, x, y, "BabyGator", random(360), -1)){
 											jump_time = 1;
 										}
 										break;
@@ -125,12 +128,12 @@
 									case FastRat: // maybe?
 										 // The Horde:
 										var n = 3 + irandom(3 + GameCont.loops);
-										repeat(n) with(top_create(x, y, FastRat, random(360), -1)){
+										repeat(n) with(call(scr.top_create, x, y, FastRat, random(360), -1)){
 											jump_time = 1;
 										}
 										
 										 // Large and in Charge:
-										with(top_create(x, y, RatkingRage, random(360), -1)){
+										with(call(scr.top_create, x, y, RatkingRage, random(360), -1)){
 											jump_time = 1;
 										}
 										break;
@@ -185,8 +188,8 @@
 				}
 			}
 			ntte_crime_alert = [
-				alert_create(self, spr.CrimeBountyAlert),
-				alert_create(self, spr.CrimeBountyFillAlert)
+				call(scr.alert_create, self, spr.CrimeBountyAlert),
+				call(scr.alert_create, self, spr.CrimeBountyFillAlert)
 			];
 			with(ntte_crime_alert){
 				flash    = 6;
@@ -212,13 +215,15 @@
 	
 	
 /// SCRIPTS
-#macro  current_frame_active                                                                    (current_frame % 1) < current_time_scale
+#macro  call                                                                                    script_ref_call
+#macro  scr                                                                                     global.scr
+#macro  spr                                                                                     global.spr
+#macro  snd                                                                                     global.snd
+#macro  msk                                                                                     spr.msk
+#macro  mus                                                                                     snd.mus
+#macro  lag                                                                                     global.debug_lag
+#macro  ntte_mods                                                                               global.mods
+#macro  current_frame_active                                                                    ((current_frame + 0.00001) % 1) < current_time_scale
 #define orandom(_num)                                                                   return  random_range(-_num, _num);
 #define chance(_numer, _denom)                                                          return  random(_denom) < _numer;
 #define chance_ct(_numer, _denom)                                                       return  random(_denom) < (_numer * current_time_scale);
-#define unlock_get(_unlock)                                                             return  mod_script_call_nc  ('mod', 'teassets', 'unlock_get', _unlock);
-#define obj_create(_x, _y, _obj)                                                        return  (is_undefined(_obj) ? [] : mod_script_call_nc('mod', 'telib', 'obj_create', _x, _y, _obj));
-#define top_create(_x, _y, _obj, _spawnDir, _spawnDis)                                  return  mod_script_call_nc  ('mod', 'telib', 'top_create', _x, _y, _obj, _spawnDir, _spawnDis);
-#define portal_poof()                                                                   return  mod_script_call_nc  ('mod', 'telib', 'portal_poof');
-#define pool(_pool)                                                                     return  mod_script_call_nc  ('mod', 'telib', 'pool', _pool);
-#define alert_create(_inst, _sprite)                                                    return  mod_script_call_self('mod', 'telib', 'alert_create', _inst, _sprite);

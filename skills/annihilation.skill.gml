@@ -1,6 +1,11 @@
 #define init
 	mod_script_call("mod", "teassets", "ntte_init", script_ref_create(init));
 	
+	 // Store Script References:
+	with([enemy_annihilate, string_plural]){
+		lq_set(scr, script_get_name(self), script_ref_create(self));
+	}
+	
 	 // Sprites:
 	global.sprSkillHUD = sprite_add("../sprites/skills/Annihilation/sprSkillAnnihilationHUD.png", 1, 8, 8);
 	
@@ -12,7 +17,7 @@
 #define skill_avail  return false;
 
 #define skill_text
-	var _text = `@(color:${area_get_back_color("red")})DESTROY`;
+	var _text = `@(color:${call(scr.area_get_back_color, "red")})DESTROY`;
 	
 	if("annihilation_list" in GameCont){
 		var _list = [];
@@ -65,7 +70,7 @@
 	if("annihilation_list" in GameCont){
 		var _list = GameCont.annihilation_list;
 		if(array_length(_list)){
-			_text += ", " + `@(color:${area_get_back_color("red")})` + _list[irandom(array_length(_list) - 1)].text;
+			_text += ", " + `@(color:${call(scr.area_get_back_color, "red")})` + _list[irandom(array_length(_list) - 1)].text;
 		}
 	}
 	
@@ -84,7 +89,7 @@
 				annihilation_check = true;
 				
 				 // Freeze:
-				sleep_max(50);
+				call(scr.sleep_max, 50);
 				
 				 // Less Rads:
 				if("raddrop" in self){
@@ -92,7 +97,7 @@
 				}
 				
 				 // Annihilate:
-				with(obj_create(x + orandom(1), y + orandom(1), "RedExplosion")){
+				with(call(scr.obj_create, x + orandom(1), y + orandom(1), "RedExplosion")){
 					target = other;
 					damage = min(damage, max(10, other.my_health));
 					other.nexthurt = 0;
@@ -118,7 +123,7 @@
 			"object_index" : object_index,
 			"custom"       : (string_pos("Custom", object_get_name(object_index)) == 1),
 			"name"         : variable_instance_get(self, "name"),
-			"text"         : string_plural(string_replace_all(string_lower(instance_get_name(self)), "@q", "")),
+			"text"         : string_plural(string_replace_all(string_lower(call(scr.instance_get_name, self)), "@q", "")),
 			"ammo"         : _num
 		}){
 			var _add = true;
@@ -153,7 +158,7 @@
 			
 			 // Text:
 			with(instance_create(x, y - 8, PopupText)){
-				text = `${instance_get_name(other)}# @(color:${area_get_back_color("red")})ANNIHILATED!`;
+				text = `${call(scr.instance_get_name, other)}# @(color:${call(scr.area_get_back_color, "red")})ANNIHILATED!`;
 			}
 			
 			 // Sound:
@@ -164,12 +169,12 @@
 	
 	 // Activate / Refresh:
 	if("annihilation_skill" not in GameCont || !instance_exists(GameCont.annihilation_skill)){
-		GameCont.annihilation_skill = obj_create(0, 0, "OrchidSkill");
+		GameCont.annihilation_skill = call(scr.obj_create, 0, 0, "OrchidSkill");
 		with(GameCont.annihilation_skill){
 			skill  = mod_current;
 			type   = "portal";
 			time   = _num;
-			color1 = area_get_back_color("red");
+			color1 = call(scr.area_get_back_color, "red");
 			color2 = make_color_rgb(48, 40, 68);
 			with(self){
 				event_perform(ev_step, ev_step_normal);
@@ -245,13 +250,15 @@
 	
 	
 /// SCRIPTS
-#macro  infinity																				1/0
-#macro  current_frame_active                                                                    (current_frame % 1) < current_time_scale
-#define orandom(n)                                                                      return  random_range(-n, n);
+#macro  call                                                                                    script_ref_call
+#macro  scr                                                                                     global.scr
+#macro  spr                                                                                     global.spr
+#macro  snd                                                                                     global.snd
+#macro  msk                                                                                     spr.msk
+#macro  mus                                                                                     snd.mus
+#macro  lag                                                                                     global.debug_lag
+#macro  ntte_mods                                                                               global.mods
+#macro  current_frame_active                                                                    ((current_frame + 0.00001) % 1) < current_time_scale
+#define orandom(_num)                                                                   return  random_range(-_num, _num);
 #define chance(_numer, _denom)                                                          return  random(_denom) < _numer;
 #define chance_ct(_numer, _denom)                                                       return  random(_denom) < (_numer * current_time_scale);
-#define unlock_get(_unlock)                                                             return  mod_script_call_nc('mod', 'teassets', 'unlock_get', _unlock);
-#define obj_create(_x, _y, _obj)                                                        return  (is_undefined(_obj) ? [] : mod_script_call_nc('mod', 'telib', 'obj_create', _x, _y, _obj));
-#define area_get_back_color(_area)                                                      return  mod_script_call_nc('mod', 'telib', 'area_get_back_color', _area);
-#define sleep_max(_milliseconds)                                                                mod_script_call_nc('mod', 'telib', 'sleep_max', _milliseconds);
-#define instance_get_name(_inst)                                                        return  mod_script_call_nc('mod', 'telib', 'instance_get_name', _inst);

@@ -4,8 +4,14 @@
 	 // Debug Lag:
 	lag = false;
 	
+	 // SCRIPT REFERENCES //
+	scr = {};
+	with([save_get, save_set, option_get, option_set, stat_get, stat_set, unlock_get, unlock_set, surface_setup, shader_setup, shader_add, script_bind, loadout_wep_save, loadout_wep_reset, trace_error]){
+		lq_set(scr, script_get_name(self), script_ref_create(self));
+	}
+	
 	 // SPRITES //
-	spr = {};
+	spr      = {};
 	spr_load = [[spr, 0]];
 	with(spr){
 		var m, p;
@@ -2460,9 +2466,12 @@
 		}
 	}
 	
+#macro call script_ref_call
+
+#macro scr global.scr
 #macro spr global.spr
-#macro msk spr.msk
 #macro snd global.snd
+#macro msk spr.msk
 #macro mus snd.mus
 #macro lag global.debug_lag
 
@@ -2517,9 +2526,11 @@
 		_name = _ref[1];
 		
 	 // Set Global Variables:
+	mod_variable_set(_type, _name, "scr",       scr);
 	mod_variable_set(_type, _name, "spr",       spr);
 	mod_variable_set(_type, _name, "snd",       snd);
 	mod_variable_set(_type, _name, "debug_lag", false);
+	mod_variable_set(_type, _name, "mods",      ntte_mods);
 	
 	 // Add to Mod List:
 	if(_type in ntte_mods){
@@ -2889,11 +2900,11 @@
 		save_set("unlock:" + _name, _value);
 		
 		 // Unlock FX:
-		if(mod_exists("mod", "telib")){
-			var _unlockName = mod_script_call("mod", "telib", "unlock_get_name", _name);
+		if("unlock_get_name" in scr){
+			var _unlockName = call(scr.unlock_get_name, _name);
 			if(_unlockName != ""){
 				var	_unlocked     = (!is_real(_value) || _value),
-					_unlockText   = (_unlocked ? mod_script_call("mod", "telib", "unlock_get_text", _name) : "LOCKED"),
+					_unlockText   = (_unlocked ? call(scr.unlock_get_text, _name) : "LOCKED"),
 					_unlockSprite = -1,
 					_unlockSound  = -1,
 					_split        = string_split(_name, ":");
@@ -2961,7 +2972,7 @@
 				if(!is_real(_unlockSound )) _unlockSound  = -1;
 				
 				 // Splat:
-				with(mod_script_call("mod", "telib", "unlock_splat", _unlockName, _unlockText, _unlockSprite, _unlockSound)){
+				with(call(scr.unlock_splat, _unlockName, _unlockText, _unlockSprite, _unlockSound)){
 					 // Append "-SKIN" to GameOver Splat:
 					if(array_length(_split) >= 2 && _split[1] == "skin"){
 						with(_unlockSplat){
@@ -3338,6 +3349,10 @@ var _shine = argument_count > 4 ? argument[4] : shnNone;
 		mask  : [],
 		shine : _shine
 	};
+	
+#define trace_error(_error)
+	trace(_error);
+	trace_color(" ^ Screenshot that error and post it on NT:TE's itch.io page, thanks!", c_yellow);
 	
 #define game_start
 	 // Autosave:

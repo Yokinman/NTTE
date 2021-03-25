@@ -35,7 +35,7 @@
 #define weapon_load        return 24; // 0.8 Seconds
 #define weapon_auto(_wep)  return lq_defget(_wep, "canload", false);
 #define weapon_melee       return true;
-#define weapon_avail       return unlock_get("pack:" + weapon_ntte_pack());
+#define weapon_avail       return call(scr.unlock_get, "pack:" + weapon_ntte_pack());
 #define weapon_ntte_pack   return "lair";
 #define weapon_shrine      return [mut_long_arms, mut_bolt_marrow];
 #define weapon_chrg(_wep)  return (argument_count <= 0 || lq_defget(_wep, "canload", true));
@@ -67,7 +67,7 @@
 	return global.sprWepLocked;
 	
 #define weapon_sprt_hud(_wep)  
-	weapon_ammo_hud(_wep);
+	call(scr.weapon_ammo_hud, _wep);
 	return global.sprWepHUD;
 	
 #define weapon_reloaded(_primary)
@@ -80,7 +80,7 @@
 	}
 	
 #define weapon_fire(_wep)
-	var _fire = weapon_fire_init(_wep);
+	var _fire = call(scr.weapon_fire_init, _wep);
 	_wep = _fire.wep;
 	
 	var _charge = (_wep.chrg_num / _wep.chrg_max);
@@ -130,7 +130,7 @@
 			_dir   = gunangle + orandom(8 * accuracy);
 			
 		 // Slash:
-		with(projectile_create(
+		with(call(scr.projectile_create, self, 
 			x + lengthdir_x(_len, _dir),
 			y + lengthdir_y(_len, _dir),
 			Slash,
@@ -170,8 +170,8 @@
 		
 		 // Fully Charged - Launch Disc:
 		if(_charge >= 1){
-			if(weapon_ammo_fire(_wep)){
-				with(projectile_create(x, y, "BatDisc", gunangle + orandom(4 * accuracy), 0)){
+			if(call(scr.weapon_ammo_fire, _wep)){
+				with(call(scr.projectile_create, self, x, y, "BatDisc", gunangle + orandom(4 * accuracy))){
 					ammo = _wep.cost;
 					wep  = _wep;
 				}
@@ -201,24 +201,23 @@
 	
 	
 /// SCRIPTS
+#macro  call                                                                                    script_ref_call
+#macro  scr                                                                                     global.scr
+#macro  spr                                                                                     global.spr
+#macro  snd                                                                                     global.snd
+#macro  msk                                                                                     spr.msk
+#macro  mus                                                                                     snd.mus
+#macro  lag                                                                                     global.debug_lag
+#macro  ntte_mods                                                                               global.mods
 #macro  type_melee                                                                              0
 #macro  type_bullet                                                                             1
 #macro  type_shell                                                                              2
 #macro  type_bolt                                                                               3
 #macro  type_explosive                                                                          4
 #macro  type_energy                                                                             5
-#macro  current_frame_active                                                                    (current_frame % 1) < current_time_scale
+#macro  current_frame_active                                                                    ((current_frame + 0.00001) % 1) < current_time_scale
 #define orandom(_num)                                                                   return  random_range(-_num, _num);
 #define chance(_numer, _denom)                                                          return  random(_denom) < _numer;
 #define chance_ct(_numer, _denom)                                                       return  random(_denom) < (_numer * current_time_scale);
-#define unlock_get(_unlock)                                                             return  mod_script_call_nc('mod', 'teassets', 'unlock_get', _unlock);
-#define obj_create(_x, _y, _obj)                                                        return  (is_undefined(_obj) ? [] : mod_script_call_nc('mod', 'telib', 'obj_create', _x, _y, _obj));
-#define projectile_create(_x, _y, _obj, _dir, _spd)                                     return  mod_script_call_self('mod', 'telib', 'projectile_create', _x, _y, _obj, _dir, _spd);
-#define weapon_fire_init(_wep)                                                          return  mod_script_call     ('mod', 'telib', 'weapon_fire_init', _wep);
-#define weapon_ammo_fire(_wep)                                                          return  mod_script_call     ('mod', 'telib', 'weapon_ammo_fire', _wep);
-#define weapon_ammo_hud(_wep)                                                           return  mod_script_call     ('mod', 'telib', 'weapon_ammo_hud', _wep);
-#define weapon_get(_name, _wep)                                                         return  mod_script_call     ('mod', 'telib', 'weapon_get', _name, _wep);
-#define wep_raw(_wep)                                                                   return  mod_script_call_nc  ('mod', 'telib', 'wep_raw', _wep);
 #define wep_get(_primary, _name, _default)                                              return  variable_instance_get(self, (_primary ? '' : 'b') + _name, _default);
 #define wep_set(_primary, _name, _value)                                                        variable_instance_set(self, (_primary ? '' : 'b') + _name, _value);
-#define player_swap()                                                                   return  mod_script_call_self('mod', 'telib', 'player_swap');

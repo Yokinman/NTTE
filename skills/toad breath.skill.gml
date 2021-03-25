@@ -7,6 +7,8 @@
 #define cleanup
 	mod_script_call("mod", "teassets", "ntte_cleanup", script_ref_create(cleanup));
 	
+#macro player_active visible && !instance_exists(GenCont) && !instance_exists(LevCont) && !instance_exists(SitDown) && !instance_exists(PlayerSit)
+
 #define skill_name     return "TOAD BREATH";
 #define skill_text     return "@gTOXIC GAS @sIS @wBREATHABLE";
 #define skill_tip      return "CORROSION";
@@ -80,17 +82,17 @@
 			if(array_length(_inst)){
 				with(_inst){
 					if(place_meeting(x, y, ToxicGas)){
-						with(instances_meeting(x, y, ToxicGas)){
+						with(call(scr.instances_meeting_instance, self, ToxicGas)){
 							if(place_meeting(x, y, other)){
 								 // Suck:
 								var _lerp = min(1, abs(_num) / 50);
-								x = lerp_ct(x, other.x, _lerp);
-								y = lerp_ct(y, other.y, _lerp);
+								x = call(scr.lerp_ct, x, other.x, _lerp);
+								y = call(scr.lerp_ct, y, other.y, _lerp);
 								
 								 // Blow:
 								var _speedMax = max(other.speed * _num, speed);
 								motion_add_ct(
-									angle_lerp(
+									call(scr.angle_lerp,
 										other.direction,
 										point_direction(other.x, other.y, x, y),
 										clamp((point_distance(x, y, other.x, other.y) - 8) / 16, 0, 1)
@@ -110,14 +112,15 @@
 	
 	
 /// SCRIPTS
-#macro  current_frame_active                                                                    (current_frame % 1) < current_time_scale
-#macro  player_active                                                                           visible && !instance_exists(GenCont) && !instance_exists(LevCont) && !instance_exists(SitDown) && !instance_exists(PlayerSit)
+#macro  call                                                                                    script_ref_call
+#macro  scr                                                                                     global.scr
+#macro  spr                                                                                     global.spr
+#macro  snd                                                                                     global.snd
+#macro  msk                                                                                     spr.msk
+#macro  mus                                                                                     snd.mus
+#macro  lag                                                                                     global.debug_lag
+#macro  ntte_mods                                                                               global.mods
+#macro  current_frame_active                                                                    ((current_frame + 0.00001) % 1) < current_time_scale
 #define orandom(_num)                                                                   return  random_range(-_num, _num);
 #define chance(_numer, _denom)                                                          return  random(_denom) < _numer;
 #define chance_ct(_numer, _denom)                                                       return  random(_denom) < (_numer * current_time_scale);
-#define unlock_get(_unlock)                                                             return  mod_script_call_nc('mod', 'teassets', 'unlock_get', _unlock);
-#define obj_create(_x, _y, _obj)                                                        return  (is_undefined(_obj) ? [] : mod_script_call_nc('mod', 'telib', 'obj_create', _x, _y, _obj));
-#define lerp_ct(_val1, _val2, _amount)                                                  return  lerp(_val2, _val1, power(1 - _amount, current_time_scale));
-#define angle_lerp(_ang1, _ang2, _num)                                                  return  _ang1 + (angle_difference(_ang2, _ang1) * _num);
-#define instances_meeting(_x, _y, _obj)                                                 return  mod_script_call_self('mod', 'telib', 'instances_meeting', _x, _y, _obj);
-#define sleep_max(_milliseconds)                                                                mod_script_call_nc  ('mod', 'telib', 'sleep_max', _milliseconds);

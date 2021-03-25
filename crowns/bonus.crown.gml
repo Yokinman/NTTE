@@ -14,7 +14,7 @@
 #define crown_text        return "@bBONUS AMMO PICKUPS#@sREPLACE @wAMMO @sAND @wHP DROPS";
 #define crown_tip         return "ALL EXTRA";
 #define crown_avail       return (GameCont.loops > 0);
-#define crown_menu_avail  return unlock_get(`loadout:crown:${mod_current}`);
+#define crown_menu_avail  return call(scr.unlock_get, `loadout:crown:${mod_current}`);
 #define crown_loadout     return global.sprCrownLoadout;
 #define crown_ntte_pack   return "crown";
 
@@ -46,10 +46,15 @@
 	
 	
 /// SCRIPTS
-#macro  current_frame_active                                                                    (current_frame % 1) < current_time_scale
+#macro  call                                                                                    script_ref_call
+#macro  scr                                                                                     global.scr
+#macro  spr                                                                                     global.spr
+#macro  snd                                                                                     global.snd
+#macro  msk                                                                                     spr.msk
+#macro  mus                                                                                     snd.mus
+#macro  lag                                                                                     global.debug_lag
+#macro  ntte_mods                                                                               global.mods
+#macro  current_frame_active                                                                    ((current_frame + 0.00001) % 1) < current_time_scale
 #define orandom(_num)                                                                   return  random_range(-_num, _num);
 #define chance(_numer, _denom)                                                          return  random(_denom) < _numer;
 #define chance_ct(_numer, _denom)                                                       return  random(_denom) < (_numer * current_time_scale);
-#define unlock_get(_unlock)                                                             return  mod_script_call_nc('mod', 'teassets', 'unlock_get', _unlock);
-#define obj_create(_x, _y, _obj)                                                        return  (is_undefined(_obj) ? [] : mod_script_call_nc('mod', 'telib', 'obj_create', _x, _y, _obj));
-#define chest_create(_x, _y, _obj, _levelStart)                                         return  mod_script_call_nc('mod', 'telib', 'chest_create', _x, _y, _obj, _levelStart);

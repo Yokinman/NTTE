@@ -25,7 +25,10 @@
 #define weapon_area
 	 // Drops naturally if a player is already carrying bones:
 	with(Player){
-		if(wep_raw(wep) == mod_current || wep_raw(bwep) == mod_current){
+		if(
+			call(scr.wep_raw, wep)  == mod_current ||
+			call(scr.wep_raw, bwep) == mod_current
+		){
 			return 4; // 1-3
 		}
 	}
@@ -47,7 +50,7 @@
 #define weapon_sprt_hud(_wep)
 	 // Custom Ammo Drawing:
 	if(lq_defget(_wep, "ammo", 0) > 1){
-		return weapon_ammo_hud(_wep);
+		return call(scr.weapon_ammo_hud, _wep);
 	}
 	
 	 // Normal:
@@ -84,7 +87,7 @@
 	}
 	
 #define weapon_fire(_wep)
-	var _fire = weapon_fire_init(_wep);
+	var _fire = call(scr.weapon_fire_init, _wep);
 	_wep = _fire.wep;
 	
 	 // Cursed:
@@ -105,7 +108,7 @@
 			_dis   = lerp(10, 20, _skill),
 			_dir   = gunangle;
 			
-		with(projectile_create(
+		with(call(scr.projectile_create, self, 
 			x + hspeed + lengthdir_x(_dis, _dir),
 			y + vspeed + lengthdir_y(_dis, _dir),
 			"BoneSlash",
@@ -134,9 +137,9 @@
 	}
 	
 	 // Fire:
-	else if(weapon_ammo_fire(_wep)){
+	else if(call(scr.weapon_ammo_fire, _wep)){
 		 // Throw Bone:
-		with(projectile_create(x, y, "Bone", gunangle, lerp(16, 20, skill_get(mut_long_arms)))){
+		with(call(scr.projectile_create, self, x, y, "Bone", gunangle, lerp(16, 20, skill_get(mut_long_arms)))){
 			wep          = lq_clone(_wep);
 			wep.ammo     = 1;
 			curse        = _curse;
@@ -164,11 +167,11 @@
 	if(_wep.ammo <= 0 && _fire.wepheld){
 		with(_fire.creator){
 			if(!_fire.primary){
-				player_swap();
+				call(scr.player_swap, self);
 			}
 			step(_fire.primary);
 			if(!_fire.primary){
-				player_swap();
+				call(scr.player_swap, self);
 			}
 		}
 	}
@@ -201,10 +204,10 @@
 		
 		 // Pickup Bones:
 		if(instance_exists(WepPickup) && place_meeting(x, y, WepPickup)){
-			var _inst = instances_meeting(x, y, instances_matching_le(instances_matching(WepPickup, "visible", true), "curse", wep_get(_primary, "curse", 0)));
+			var _inst = call(scr.instances_meeting_instance, self, instances_matching_le(instances_matching(WepPickup, "visible", true), "curse", wep_get(_primary, "curse", 0)));
 			if(array_length(_inst)) with(_inst){
 				if(place_meeting(x, y, other)){
-					if(wep_raw(wep) == mod_current){
+					if(call(scr.wep_raw, wep) == mod_current){
 						var _num = lq_defget(wep, "ammo", 1);
 						_wep.ammo += _num;
 						
@@ -214,13 +217,13 @@
 								wep_set(_primary, "wkick", 0);
 							}
 							else{
-								mod_script_call("mod", "tepickups", "pickup_text", "% BONE", _num);
+								call(scr.pickup_text, "% BONE", _num);
 							}
 						}
 						
 						 // Epic Time:
-						if(_wep.ammo > stat_get("bone")){
-							stat_set("bone", _wep.ammo);
+						if(_wep.ammo > call(scr.stat_get, "bone")){
+							call(scr.stat_set, "bone", _wep.ammo);
 						}
 						
 						 // Effects:
@@ -242,13 +245,11 @@
 		 // Bro don't look here:
 		if(_wep.ammo >= 10){
 			 // E Indicator:
-			if(!instance_exists(variable_instance_get(id, "prompt_scythe", noone))){
-				prompt_scythe = obj_create(x, y, "Prompt");
+			if(!instance_exists(variable_instance_get(self, "prompt_scythe", noone))){
+				prompt_scythe = call(scr.prompt_create, self, "SCYTHE");
 				with(prompt_scythe){
-					text    = "SCYTHE";
-					creator = other;
-					index   = other.index;
 					depth   = 1000000;
+					index   = other.index;
 					on_meet = script_ref_create(scythe_prompt_meet);
 				}
 			}
@@ -264,7 +265,7 @@
 				mod_script_call("weapon", "scythe", "scythe_swap", _primary);
 				
 				 // Unlock:
-				unlock_set("wep:scythe", true);
+				call(scr.unlock_set, "wep:scythe", true);
 				
 				 // Drop Spare Bones:
 				_wep.ammo -= 10;
@@ -289,7 +290,7 @@
 		
 		 // Auto Swap to Secondary:
 		if(_primary && instance_is(self, Player)){
-			player_swap();
+			call(scr.player_swap, self);
 			swapmove  = true;
 			drawempty = 30;
 			
@@ -307,36 +308,27 @@
 	}
 	
 #define scythe_prompt_meet
-	if(other.index == index && wep_raw(other.wep) == mod_current){
-		return true;
-	}
-	return false;
+	return (other.index == index && call(scr.wep_raw, other.wep) == mod_current);
 	
 	
 /// SCRIPTS
+#macro  call                                                                                    script_ref_call
+#macro  scr                                                                                     global.scr
+#macro  spr                                                                                     global.spr
+#macro  snd                                                                                     global.snd
+#macro  msk                                                                                     spr.msk
+#macro  mus                                                                                     snd.mus
+#macro  lag                                                                                     global.debug_lag
+#macro  ntte_mods                                                                               global.mods
 #macro  type_melee                                                                              0
 #macro  type_bullet                                                                             1
 #macro  type_shell                                                                              2
 #macro  type_bolt                                                                               3
 #macro  type_explosive                                                                          4
 #macro  type_energy                                                                             5
-#macro  current_frame_active                                                                    (current_frame % 1) < current_time_scale
+#macro  current_frame_active                                                                    ((current_frame + 0.00001) % 1) < current_time_scale
 #define orandom(_num)                                                                   return  random_range(-_num, _num);
 #define chance(_numer, _denom)                                                          return  random(_denom) < _numer;
 #define chance_ct(_numer, _denom)                                                       return  random(_denom) < (_numer * current_time_scale);
-#define unlock_get(_unlock)                                                             return  mod_script_call_nc('mod', 'teassets', 'unlock_get', _unlock);
-#define obj_create(_x, _y, _obj)                                                        return  (is_undefined(_obj) ? [] : mod_script_call_nc('mod', 'telib', 'obj_create', _x, _y, _obj));
-#define projectile_create(_x, _y, _obj, _dir, _spd)                                     return  mod_script_call_self('mod', 'telib', 'projectile_create', _x, _y, _obj, _dir, _spd);
-#define weapon_fire_init(_wep)                                                          return  mod_script_call     ('mod', 'telib', 'weapon_fire_init', _wep);
-#define weapon_ammo_fire(_wep)                                                          return  mod_script_call     ('mod', 'telib', 'weapon_ammo_fire', _wep);
-#define weapon_ammo_hud(_wep)                                                           return  mod_script_call     ('mod', 'telib', 'weapon_ammo_hud', _wep);
-#define weapon_get(_name, _wep)                                                         return  mod_script_call     ('mod', 'telib', 'weapon_get', _name, _wep);
-#define wep_raw(_wep)                                                                   return  mod_script_call_nc  ('mod', 'telib', 'wep_raw', _wep);
 #define wep_get(_primary, _name, _default)                                              return  variable_instance_get(self, (_primary ? '' : 'b') + _name, _default);
 #define wep_set(_primary, _name, _value)                                                        variable_instance_set(self, (_primary ? '' : 'b') + _name, _value);
-#define unlock_set(_name, _value)                                                       return  mod_script_call_nc  ('mod', 'teassets', 'unlock_set', _name, _value);
-#define stat_get(_name)                                                                 return  mod_script_call_nc  ('mod', 'teassets', 'stat_get', _name);
-#define stat_set(_name, _value)                                                                 mod_script_call_nc  ('mod', 'teassets', 'stat_set', _name, _value);
-#define instances_meeting(_x, _y, _obj)                                                 return  mod_script_call_self('mod', 'telib', 'instances_meeting', _x, _y, _obj);
-#define scrFX(_x, _y, _motion, _obj)                                                    return  mod_script_call_nc  ('mod', 'telib', 'scrFX', _x, _y, _motion, _obj);
-#define player_swap()                                                                   return  mod_script_call_self('mod', 'telib', 'player_swap');
