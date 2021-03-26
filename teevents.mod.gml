@@ -2106,7 +2106,7 @@
 					_roomDir = _dirStart + orandom(45);
 					
 				with(floor_room_create(x, y, _roomSize, _roomSize, _type, _roomDir, _dirOff, _floorDis)){
-					with(call(scr.obj_create, x, y - 12, "PalaceAltar")){
+					with(call(scr.obj_create, x, y - 10, "PalaceAltar")){
 						skill = _skillArray[i];
 					}
 					

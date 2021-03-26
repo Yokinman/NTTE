@@ -1653,8 +1653,10 @@
 			OrchidChestOpen = sprite(p + "sprOrchidChestOpen", 1, 12, 8);
 			
 			 // Rat Chest:
-			RatChest     = sprite(p + "sprRatChest",     1, 10, 10, shn20);
-			RatChestOpen = sprite(p + "sprRatChestOpen", 1, 10, 10);
+			RatChest      = sprite(p + "sprRatChest",      1, 10, 10, shn20);
+			RatChestOpen  = sprite(p + "sprRatChestOpen",  1, 10, 10);
+			RadSkillBall  = sprite(p + "sprRadSkillBall",  6, 16, 16);
+			RadSkillTrail = sprite(p + "sprRadSkillTrail", 8, 16, 16);
 			
 			 // Red Ammo:
 			RedAmmoChest       = sprite(p + "sprRedAmmoChest",       1, 8, 8, shn16);

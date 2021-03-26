@@ -1892,18 +1892,17 @@
 	
 	var	_list   = lq_get(ntte_mods_call, _call[0]),
 		_max    = array_length(_list),
+		_ref    = call(scr.array_combine, ["", ""], _call),
 		_canLag = !(lag || instance_exists(PauseButton) || instance_exists(BackMainMenu));
 		
-	_call[@0] = "ntte_" + _call[0];
+	_ref[2] = "ntte_" + _ref[2];
 	
 	for(var i = 0; i < _max; i++){
-		var	_ref = call(scr.array_combine, _list[i], _call),
-			_lag = (_canLag && mod_variable_get(_ref[0], _ref[1], "debug_lag"));
-			
+		_ref[0] = _list[i, 0];
+		_ref[1] = _list[i, 1];
+		var _lag = (_canLag && mod_variable_get(_ref[0], _ref[1], "debug_lag"));
 		if(_lag) trace_time();
-		
 		script_ref_call(_ref);
-		
 		if(_lag) trace_time(array_join(_ref, "_"));
 	}
 	

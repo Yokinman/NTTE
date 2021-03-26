@@ -2302,28 +2302,30 @@
 						_numDec = _num;
 						
 						 // Mutation:
-						with(call(scr.obj_create, _x, _y, "OrchidSkill")){
-							skill   = other.drop;
-							num     = _num;
-							type    = "portal";
-							creator = other.creator;
-							with(self){
-								event_perform(ev_step, ev_step_normal);
+						with(call(scr.obj_create, _x, _y, "OrchidBall")){
+							skill     = other.drop;
+							num       = _num;
+							type      = "portal";
+							creator   = other.creator;
+							direction = point_direction(other.x, other.y, _x, _y) + orandom(45);
+						}
+						
+						 // Rads:
+						var _rad = 25 * _num;
+						if(_rad > 0) repeat(_rad){
+							with(instance_create(_x, _y, Rad)){
+								motion_add(random(360), random(5));
 							}
 						}
 						
 						 // Effects:
-						with(call(scr.alert_create, noone, sprite_index)){
-							x           = _x;
-							y           = _y - 12;
-							vspeed      = -2;
-							image_index = other.image_index;
-							image_speed = other.image_speed;
-							alert       = { spr:sprEatRad, img:-0.25, x:6, y:6 };
-							alarm0      = 60;
-							blink       = 15;
-							snd_flash   = sndLevelUp;
+						with(instance_create(_x, _y, BulletHit)){
+							sprite_index = sprGuardianBulletHit;
 						}
+						
+						 // Sound:
+						sound_play_pitchvol(sndNothingSmallball, 1.4 + orandom(0.1), 2/3);
+						sound_play_pitchvol(sndMut,              0.7 +  random(0.1), 1.5);
 						
 						break;
 						
@@ -2928,31 +2930,26 @@
 		prompt.visible = false;
 		
 		 // Mutation:
-		with(call(scr.obj_create, x, y, "OrchidSkill")){
+		with(call(scr.obj_create, x, y, "OrchidBall")){
 			skill   = other.skill;
 			type    = "portal";
 			creator = other;
-			with(self){
-				event_perform(ev_step, ev_step_normal);
-			}
+		}
+		
+		 // Sound:
+		sound_play_gun(sndFlakCannon,   0.2,  0.3);
+		sound_play_gun(sndGuardianFire, 0.2,  0.3);
+		sound_play_gun(sndGatorDie,     0.2, -0.5);
+		with(player_find(prompt.pick)){
+			sound_play(snd_valt);
 		}
 		
 		 // Effects:
-		var _icon = call(scr.skill_get_icon, skill);
-		with(call(scr.alert_create, self, _icon[0])){
-			image_index = _icon[1];
-			image_speed = 0;
-			alert       = { spr:sprEatRad, img:-0.25, x:6, y:6 };
-			alarm0      = 60;
-			blink       = 15;
-			snd_flash   = sndShotReload;
-		}
-		with(instance_create(x, y, PopupText)){
+		sprite_index = spr_hurt;
+		image_index  = 0;
+		with(instance_create(x + prompt.xoff, y + prompt.yoff - 16, PopupText)){
 			text   = "BLESSED!";
 			target = other.prompt.pick;
-		}
-		with(player_find(prompt.pick)){
-			sound_play(snd_valt);
 		}
 	}
 	
@@ -3238,8 +3235,10 @@
 		The Orchid pet's mutation projectile
 		
 		Args:
+			spr_sparkle - The sparkle effect's sprite
 			trail_col   - The trail's color
 			flash       - How many frames to draw in flat white
+			maxspeed    - How fast the ball can travel
 			skill       - The mutation to give, automatically decided by default
 			num         - The value of the mutation
 			time        - The lifespan of the given mutation, use 0 for default
@@ -3254,9 +3253,10 @@
 	 // Back to Business:
 	with(instance_create(_x, _y, CustomObject)){
 		 // Visual:
-		sprite_index = spr.PetOrchidBall;
+		sprite_index = -1;
 		depth        = -9;
-		trail_col    = make_color_rgb(128, 104, 34); // make_color_rgb(84, 58, 24);
+		spr_sparkle  = -1;
+		trail_col    = -1;
 		flash        = 3;
 		
 		 // Vars:
@@ -3266,14 +3266,39 @@
 		friction     = 0.6;
 		direction    = random(360);
 		speed        = 8;
+		maxspeed     = 10;
 		skill        = mut_none;
 		num          = 1;
+		type         = "basic";
 		time         = 0;
 		target       = instance_nearest(x, y, Player);
 		target_seek  = false;
 		creator      = noone;
+		setup        = true;
 		
 		return self;
+	}
+	
+#define OrchidBall_setup
+	setup = false;
+	
+	 // Sprite Setup:
+	switch(type){
+		
+		case "portal":
+			
+			if(sprite_index == -1) sprite_index = spr.RadSkillBall;
+			if(spr_sparkle  == -1) spr_sparkle  = sprEatBigRadPlut;
+			//if(trail_col    == -1) trail_col    = make_color_rgb(68, 197, 22);
+			
+			break;
+			
+		default: // Basic
+			
+			if(sprite_index == -1) sprite_index = spr.PetOrchidBall;
+			if(spr_sparkle  == -1) spr_sparkle  = spr.VaultFlowerSparkle;
+			if(trail_col    == -1) trail_col    = make_color_rgb(128, 104, 34); // make_color_rgb(84, 58, 24);
+			
 	}
 	
 #define OrchidBall_begin_step
@@ -3283,6 +3308,8 @@
 	}
 	
 #define OrchidBall_step
+	if(setup) OrchidBall_setup();
+	
 	 // Grow / Shrink:
 	var	_scale = 1 + (0.1 * sin(current_frame / 10)),
 		_scaleAdd = (current_time_scale / 15);
@@ -3294,8 +3321,13 @@
 	image_angle += hspeed_raw / 3;
 	
 	 // Effects:
-	if(visible && chance_ct(1, 4)){
-		call(scr.fx, [x, 6], [y, 6], 0, "VaultFlowerSparkle");
+	if(sprite_exists(spr_sparkle) && chance_ct(1, ((trail_col < 0) ? 8 : 4))){
+		with(call(scr.fx, [x, 6], [y, 6], random(1), "VaultFlowerSparkle")){
+			sprite_index = other.spr_sparkle;
+			if(!position_meeting(x, y, Floor)){
+				depth = other.depth + 1;
+			}
+		}
 	}
 	
 	 // Doin':
@@ -3310,10 +3342,12 @@
 				 // Movin':
 				else{
 					motion_add_ct(target_direction, 1.5);
-					speed = min(speed, 10);
+					if(speed > maxspeed){
+						speed = maxspeed;
+					}
 					
 					 // Trail:
-					if(current_frame_active){
+					if(trail_col >= 0 && current_frame_active){
 						repeat(1 + chance(1, 3)){
 							with(instance_create(x + orandom(8), y + orandom(8), DiscTrail)){
 								sprite_index = choose(sprWepSwap, sprWepSwap, sprThrowHit);
@@ -3322,7 +3356,6 @@
 								image_yscale = image_xscale;
 								image_angle  = random(360);
 								depth        = other.depth + 1;
-							//	image_speed  = 0.4;
 							}
 						}
 					}
@@ -3344,6 +3377,8 @@
 	}
 	
 #define OrchidBall_draw
+	if(setup) OrchidBall_setup();
+	
 	 // Self:
 	if(flash > 0){
 		draw_set_fog(true, image_blend, 0, 0);
@@ -3375,6 +3410,7 @@
 		}
 		skill   = other.skill;
 		num     = other.num;
+		type    = other.type;
 		time    = other.time;
 		creator = other.creator;
 		with(self){
@@ -3383,37 +3419,47 @@
 	}
 	
 	 // Alert:
-	with(target){
-		var _icon = call(scr.skill_get_icon, other.skill);
-		with(call(scr.alert_create, self, _icon[0])){
+	if(instance_exists(target)){
+		var _icon = call(scr.skill_get_icon, skill);
+		with(call(scr.alert_create, target, _icon[0])){
 			image_index = _icon[1];
 			image_speed = 0;
-			alert       = { spr:spr.AlertIndicatorOrchid, x:6, y:6 };
 			alarm0      = 60;
 			blink       = 15;
 			snd_flash   = sndLevelUp;
+			
+			 // Alert Icon:
+			switch(other.type){
+				case "basic"  : alert = { spr:spr.AlertIndicatorOrchid, x:6, y:6 }; break;
+				case "portal" : alert = { spr:sprEatRad, img:-0.25,     x:6, y:6 }; break;
+				default       : alert = {};
+			}
 			
 			 // Fix Overlap:
 			x = target.x + target_x;
 			y = target.y + target_y;
 			while(array_length(call(scr.instances_meeting_instance, self, instances_matching(instances_matching(CustomObject, "name", "AlertIndicator"), "target", target)))){
-				y        -= 8;
-				target_y -= 8;
+				y        -= 16;
+				target_y -= 16;
 			}
 		}
 	}
 	
 	 // Effects:
-	repeat(10 + irandom(10)){
-		with(call(scr.fx, [x, 16], [y, 16], [direction, 3 + random(3)], "VaultFlowerSparkle")){
-			depth    = -9;
-			friction = 0.2;
+	if(sprite_exists(spr_sparkle)){
+		repeat(10 + irandom(10)){
+			with(call(scr.fx, [x, 16], [y, 16], [direction, 3 + random(3)], "VaultFlowerSparkle")){
+				sprite_index = other.spr_sparkle;
+				depth        = -9;
+				friction     = 0.2;
+			}
 		}
 	}
-	var _len = 16;
+	var _len = 0;
 	with(instance_create(x + lengthdir_x(_len, direction), y + lengthdir_y(_len, direction), BulletHit)){
-		speed        = 1;
+		speed        = max(4, other.speed);
 		direction    = other.direction;
+		friction     = 1;
 		sprite_index = sprMutant6Dead;
 		image_index  = 11;
 		image_speed  = 0.5;
@@ -3421,6 +3467,9 @@
 		image_yscale = image_xscale;
 		image_angle  = direction - 90;
 		depth        = -4;
+		if(array_find_index([sprEatRad, sprEatBigRad, sprEatRadPlut, sprEatBigRadPlut], other.spr_sparkle) >= 0){
+			image_blend = make_color_rgb(255, 255, 0);
+		}
 	}
 	sleep(20);
 	
@@ -3428,8 +3477,8 @@
 #define OrchidChest_create(_x, _y)
 	with(call(scr.obj_create, _x, _y, "CustomChest")){
 		 // Visual:
-		spr_dead = spr.OrchidChestOpen;
 		sprite_index = spr.OrchidChest;
+		spr_dead     = spr.OrchidChestOpen;
 		//spr_shadow_y = 2;
 		
 		 // Sounds:
@@ -3455,12 +3504,13 @@
 		if(instance_is(_target, Player)){
 			target = _target;
 		}
+		creator   = other;
 		direction = 90 + orandom(45);
 	}
 	
 	 // Effects:
 	repeat(10){
-		call(scr.fx, x + random(5), [y, 5], [90, random(1)], "VaultFlowerSparkle");
+		call(scr.fx, [x, 5], y + random(5), [90, random(1)], "VaultFlowerSparkle");
 	}
 	repeat(5){
 		VaultFlower_debris(x, y, random(360), random(3));
@@ -3947,6 +3997,7 @@
 		size         = 3;
 		skill        = OrchidSkill_decide();
 		effect_color = make_color_rgb(72, 253, 8); // make_color_rgb(190, 253, 8);
+		direction    = 90 + orandom(45);
 		
 		 // Prompt:
 		prompt = call(scr.prompt_create, self, "  CHOOSE", mskReviveArea, -8, -16);
@@ -3964,10 +4015,6 @@
 	 // Alarms:
 	if(alarm0_run) exit;
 	
-	 // Stay Still:
-	x = xstart;
-	y = ystart;
-
 	 // Radiate:
 	if(chance_ct(2, 3)){
 		with(call(scr.fx, [x, 2], y - random(16), [90, random(2)], EatRad)){
@@ -3978,33 +4025,43 @@
 	}
 	
 	 // Damage Sparks:
-	if(sprite_index == spr_hurt && chance_ct(2, 5)){
-		instance_create(x + orandom(16), (y + 8) + orandom(16), PortalL);
+	if(sprite_index == spr_hurt && chance_ct(1, 3)){
+		instance_create(x + orandom(16), y + 8 + orandom(16), PortalL);
 	}
 	
 	 // Pickup:
 	if(instance_exists(prompt)){
 		if(player_is_active(prompt.pick)){
 			 // Grant Blessing:
-			with(call(scr.obj_create, x, y, "OrchidSkill")){
+			/*with(call(scr.obj_create, x, y, "OrchidSkill")){
 				skill   = other.skill;
 				type    = "portal";
 				creator = other;
 				with(self){
 					event_perform(ev_step, ev_step_normal);
 				}
-			}
+			}*/
+			
+			 // Sound:
+			sprite_index = spr_hurt;
+			image_index  = 0;
+			sound_play_hit(snd_dead, 0.2);
 			
 			 // Effect:
 			with(instance_create(x, y, ImpactWrists)){
 				image_blend = other.effect_color;
-				depth = -4;
+				depth       = -4;
 			}
 			
 			 // Disable All Altars:
 			with(instances_matching(object_index, "name", name)){
-				with(prompt) visible = false;
 				alarm0 = irandom_range(10, 20);
+				if(self != other){
+					skill = mut_none;
+				}
+				with(prompt){
+					visible = false;
+				}
 			}
 		}
 	}
@@ -4024,8 +4081,28 @@
 		}
 	}
 	
+	 // Grant Blessing:
+	if(skill != mut_none){
+		with(call(scr.obj_create, x, y, "OrchidBall")){
+			skill     = other.skill;
+			type      = "portal";
+			creator   = other;
+			direction = other.direction;
+			speed     = 10;
+		}
+	}
+	
+	 // Disable Altars:
+	with(instances_matching_lt(instances_matching_ne(instances_matching(object_index, "name", name), "id", id), "alarm0", 0)){
+		alarm0 = irandom_range(10, 20);
+		skill  = mut_none;
+		with(prompt){
+			visible = false;
+		}
+	}
+	
 	 // Alert:
-	if(array_length(instances_matching(instances_matching(CustomObject, "name", "OrchidSkill"), "creator", self))){
+	/*if(array_length(instances_matching(instances_matching(CustomObject, "name", "OrchidSkill"), "creator", self))){
 		var _icon = call(scr.skill_get_icon, skill);
 		with(call(scr.alert_create, self, _icon[0])){
 			image_index = _icon[1];
@@ -4038,7 +4115,7 @@
 			flash       = 6;
 			snd_flash   = sndLevelUp;
 		}
-	}
+	}*/
 	
 	 // Effects:
 	instance_create(x, y, PortalClear);
@@ -4074,9 +4151,9 @@
 	call(scr.sleep_max, 50);
 	
 	 // Sounds:
-	call(scr.sound_play_at, x, y, sndGunGun,          0.6 + random(0.2));
-	call(scr.sound_play_at, x, y, sndSnowTankDead,    0.6 + random(0.2));
-	call(scr.sound_play_at, x, y, sndEnergyHammerUpg, 0.5, 0.8);
+	sound_play_pitch(sndGunGun,          0.6 + random(0.2));
+	sound_play_pitch(sndSnowTankDead,    0.6 + random(0.2));
+	sound_play_pitch(sndEnergyHammerUpg, 0.5);
 	
 	
 #define ParrotChester_create(_x, _y)
@@ -5160,7 +5237,7 @@
 		image_angle  = random(360);
 		image_xscale = 0;
 		image_yscale = 0;
-		depth = -3;
+		depth        = -3;
 		
 		 // Alarms:
 		alarm0 = random_range(10, 45);
