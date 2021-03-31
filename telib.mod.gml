@@ -3366,7 +3366,7 @@
 	
 	return _free;
 	
-#define lightning_connect(_x1, _y1, _x2, _y2, _arc, _enemy, _inst)
+#define lightning_connect // x1, y1, x2, y2, arc, enemy=false, inst=self
 	/*
 		Creates a lightning arc between the two given points
 		Automatically sets team, creator, and hitid based on the calling instance
@@ -3375,14 +3375,21 @@
 			x1/y1 - The starting position
 			x2/y2 - The ending position
 			arc   - How far the lightning can offset from its main travel line
-			enemy - If it's an enemy lightning arc (true), or not (false)
-			inst  - The creator of the lightning
+			enemy - If it's an enemy lightning arc, defaults to false
+			inst  - The creator of the lightning, defaults to self
 			
 		Ex:
 			lightning_connect(x, y, mouse_x, mouse_y, 8 * sin(wave / 60), false, self)
 	*/
 	
-	var	_disMax  = point_distance(_x1, _y1, _x2, _y2),
+	var	_x1      = argument[0],
+		_y1      = argument[1],
+		_x2      = argument[2],
+		_y2      = argument[3],
+		_arc     = argument[4],
+		_enemy   = ((argument_count > 5) ? argument[5] : false),
+		_inst    = ((argument_count > 6) ? argument[6] : self),
+		_disMax  = point_distance(_x1, _y1, _x2, _y2),
 		_disAdd  = min(_disMax / 8, 10) + (_enemy ? (array_length(instances_matching_ge(instances_matching(CustomEnemy, "name", "Eel"), "arcing", 1)) - 1) : 0),
 		_dis     = _disMax,
 		_dir     = point_direction(_x1, _y1, _x2, _y2),

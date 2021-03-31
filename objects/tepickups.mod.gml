@@ -163,11 +163,21 @@
 			else{
 				pickup_drop(100 / pickup_chance_multiplier, 0);
 				
-				 // Rogue-Opened:
-				var _rogue = false;
+				var	_rogue = false,
+					_red   = false;
+					
 				with(instance_is(other, Player) ? other : instance_nearest(x, y, Player)){
+					 // Rogue-Opened:
 					if(race == "rogue"){
 						_rogue = true;
+					}
+					
+					 // Red-Opened:
+					if(
+						call(scr.weapon_get, "red", wep)  > 0 ||
+						call(scr.weapon_get, "red", bwep) > 0
+					){
+						_red = true;
 					}
 				}
 				
@@ -180,6 +190,12 @@
 							 // Portal Strikes:
 							if(chance(_rogue, 4)){
 								instance_create(x, y, RoguePickup);
+								instance_delete(self);
+							}
+							
+							 // Red Ammo:
+							else if(chance(_red, 4)){
+								call(scr.obj_create, x, y, "RedAmmoPickup");
 								instance_delete(self);
 							}
 							
@@ -3101,10 +3117,10 @@
 	with(call(scr.obj_create, _x, _y, "CustomPickup")){
 		 // Visual:
 		sprite_index = spr.HammerHeadPickup;
-		spr_open = sprHammerHead;
-		spr_fade = sprHammerHead;
-		spr_halo = spr.HammerHeadPickupEffectSpawn;
-		img_halo = 0;
+		spr_open     = sprHammerHead;
+		spr_fade     = sprHammerHead;
+		spr_halo     = spr.HammerHeadPickupEffectSpawn;
+		img_halo     = 0;
 		
 		 // Sounds:
 		snd_open = sndHammerHeadProc;
@@ -4683,8 +4699,8 @@
 			pickup_text(_text, _num);
 		}
 	}
-	else repeat(_num){
-		call(scr.obj_create, x, y, "RedAmmoPickup");
+	else with(call(scr.obj_create, x, y, "RedAmmoPickup")){
+		num = _num;
 	}
 	
 	
@@ -4698,12 +4714,12 @@
 		snd_dead = sndPickupDisappear;
 		
 		 // Vars:
-		num = 1;
+		num = 1 + (crown_current == crwn_haste);
 		
 		 // Events:
 		on_pull = script_ref_create(RedAmmoPickup_pull);
 		on_open = script_ref_create(RedAmmoPickup_open);
-		 
+		
 		return self;
 	}
 	
@@ -4813,8 +4829,8 @@
 	with(call(scr.obj_create, _x, _y, "CustomPickup")){
 		 // Visual:
 		sprite_index = spr.SpiritPickup;
-		spr_halo = sprStrongSpiritRefill;
-		img_halo = 0;
+		spr_halo     = sprStrongSpiritRefill;
+		img_halo     = 0;
 		
 		 // Sounds:
 		snd_open = sndAmmoPickup;
