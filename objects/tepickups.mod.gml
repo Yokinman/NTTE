@@ -217,6 +217,12 @@
 								instance_delete(self);
 							}
 							
+							 // Red Ammo:
+							else if(chance(_red, 4)){
+								call(scr.chest_create, x, y, "RedAmmoChest");
+								instance_delete(self);
+							}
+							
 							 // Cursed:
 							else if(other.curse > 0){
 								call(scr.chest_create, x, y, "CursedAmmoChest");

@@ -137,10 +137,10 @@
 #define BloomingCactus_create(_x, _y)
 	with(instance_create(_x, _y, Cactus)){
 		 // Visual:
-		var s = irandom(array_length(spr.BloomingCactusIdle) - 1);
-		spr_idle = spr.BloomingCactusIdle[s];
-		spr_hurt = spr.BloomingCactusHurt[s];
-		spr_dead = spr.BloomingCactusDead[s];
+		var _s = irandom(array_length(spr.BloomingCactusIdle) - 1);
+		spr_idle = spr.BloomingCactusIdle[_s];
+		spr_hurt = spr.BloomingCactusHurt[_s];
+		spr_dead = spr.BloomingCactusDead[_s];
 		
 		return self;
 	}
@@ -1628,13 +1628,10 @@
 		active       = false;
 		intro        = false;
 		intro_pan    = 0;
-		intro_pan_x  = x;
-		intro_pan_y  = y;
 		seal         = [];
 		seal_x       = [];
 		seal_y       = [];
 		seal_max     = 4 + GameCont.loops;
-		seal_spawn   = [];
 		tauntdelay   = 40;
 		phase        = -1;
 		z            = 0;
@@ -1745,24 +1742,32 @@
 		}
 		else{
 			 // Make Sure Seals on Both Sides:
-			for(var i = 0; i < 2; i++) if(_holding[i] <= 0){
-				for(var j = 0; j < array_length(seal); j++){
-					if(seal[j] != noone && ((j + !i) % 2)){
-						if(chance(1, 3)){
-							var s = seal[j];
-							seal[j] = noone;
-							
-							var o = (2 * !i) - 1;
-							if(j + o < 0) o = 1;
-							if(j + o >= array_length(seal)) o = -1;
-							seal[j + o] = s;
+			for(var i = 0; i < 2; i++){
+				if(_holding[i] <= 0){
+					for(var j = 0; j < array_length(seal); j++){
+						if(seal[j] != noone && ((j + !i) % 2)){
+							if(chance(1, 3)){
+								var _s = seal[j];
+								seal[j] = noone;
+								
+								var _o = (2 * !i) - 1;
+								if(j + _o < 0){
+									_o =  1;
+								}
+								if(j + _o >= array_length(seal)){
+									_o = -1;
+								}
+								seal[j + _o] = _s;
+							}
 						}
 					}
 				}
 			}
 			
 			 // Lifted Up:
-			if(zgoal == 0) zgoal = 12;
+			if(zgoal == 0){
+				zgoal = 12;
+			}
 		}
 		
 		 // Constant Movement:
@@ -1787,7 +1792,7 @@
 		if(alarm0 < 0){
 			if(instance_exists(Player)){
 				if(instance_number(enemy) - (instance_number(Van) + array_length(instances_matching(Seal, "type", 0))) <= 1){
-					if(array_length(seal_spawn) <= 0){
+					if(!instance_exists(becomenemy)){
 						alarm0 = 30;
 						phase++;
 					}
@@ -1828,19 +1833,19 @@
 		}
 	}
 	for(var i = 0; i < maxp; i++){
-		if(_pan){
-			view_object[i] = self;
-			view_pan_factor[i] = 10000;
-		}
-		else if(view_object[i] == self){
-			view_object[i] = noone;
-			view_pan_factor[i] = null;
+		if(player_is_active(i)){
+			if(_pan){
+				if("creator" not in view_object[i] || view_object[i].creator != self){
+					view_object[i] = self;
+				}
+				view_pan_factor[i] = 10000;
+			}
+			else if(view_object[i] == self || ("creator" in view_object[i] && view_object[i].creator == self)){
+				view_object[i]     = noone;
+				view_pan_factor[i] = null;
+			}
 		}
 	}
-	GameCont.ntte_palanking_pan = [
-		(_pan ? point_direction(x, y, intro_pan_x, intro_pan_y)        : 0),
-		(_pan ? (point_distance(x, y, intro_pan_x, intro_pan_y) / 1.5) : 0)
-	];
 	
 	 // Z-Axis:
 	z += zspeed * current_time_scale;
@@ -1930,93 +1935,6 @@
 		mask_index = mskNone;
 	}
 	
-	 // Spawn Seals:
-	with(seal_spawn){
-		if(num > 0){
-			if(delay > 0){
-				delay -= current_time_scale;
-			}
-			else{
-				num--;
-				delay = max(4 - (GameCont.loops * 0.5), 2) * random_range(1, 2);
-				
-				sound_play_pitch(choose(sndOasisHurt, sndOasisMelee, sndOasisShoot, sndOasisChest, sndOasisCrabAttack), 0.8 + random(0.4));
-				
-				 // Seal:
-				var	_dis  = 16 + random(24),
-					_dir  = (num * 90) + orandom(40),
-					_x    = x + lengthdir_x(_dis, _dir),
-					_y    = y + lengthdir_y(_dis, _dir),
-					_seal = call(scr.obj_create, _x, _y, (chance(1, 16) ? "SealHeavy" : "Seal"));
-					
-				 // Seal Vars:
-				if(instance_exists(_seal)){
-					_seal.creator = other;
-					with(_seal){
-						 // Rads:
-						if(creator.raddrop > 0){
-							creator.raddrop -= min(raddrop, creator.raddrop);
-						}
-						raddrop = min(raddrop, creator.raddrop);
-						
-						 // Randomize Type:
-						if(name == "Seal"){
-							var _pick = [];
-							for(var i = 0; i < array_length(seal_chance); i++){
-								if(seal_chance[i] > 0) repeat(seal_chance[i]){
-									array_push(_pick, i);
-								}
-							}
-							type = _pick[irandom(array_length(_pick) - 1)];
-							
-							 // Launchin:
-							if(GameCont.loops > 0 && chance(1, 2)){
-								with(call(scr.obj_create, x, y, "PalankingToss")){
-									with(call(scr.instance_nearest_bbox, x, y, Floor)){
-										other.direction = point_direction(other.x, other.y, bbox_center_x, bbox_center_y) + orandom(30);
-									}
-									speed        = 4 + random(4);
-									creator      = other;
-									depth        = other.depth;
-									mask_index   = other.mask_index;
-									spr_shadow_y = other.spr_shadow_y;
-									
-									 // FX:
-									sound_play_pitchvol(sndSlugger, 1.5, 0.6);
-									call(scr.fx, x, y, [point_direction(x, y, x, z) + orandom(30), 2 + random(2)], "WaterStreak");
-									repeat(4) instance_create(x, y, Dust);
-								}
-							}
-						}
-						
-						 // No Free Kills:
-						if(creator.active){
-							kills = 0;
-						}
-					}
-				}
-				
-				 // Alert:
-				if(alert){
-					alert = false;
-					with(other){
-						var _other = other;
-						with(call(scr.alert_create, noone, spr.SealAlert)){
-							x         = _other.x;
-							y         = _other.y - 16;
-							blink     = 15;
-							flash     = 6;
-							snd_flash = sndOasisHorn;
-						}
-					}
-				}
-			}
-		}
-		else with(other){
-			seal_spawn = call(scr.array_delete_value, seal_spawn, other);
-		}
-	}
-	
 #define Palanking_end_step
 	with(instances_matching_ne(instances_matching_ne(instances_matching(seal, "hold", true), "hold_x", null), "hold_y", null)){
 		if(mask_index != mskNone){
@@ -2056,9 +1974,7 @@
 		alarm1 = 20;
 		
 		 // Enable Cinematic:
-		intro_pan   = 10 + alarm0;
-		intro_pan_x = x;
-		intro_pan_y = y;
+		intro_pan = 10 + alarm0;
 		
 		 // "Safety":
 		with(Player){
@@ -2075,13 +1991,17 @@
 					
 				for(var _d = 0; _d < 360; _d += (360 / _groups)){
 					var	_x = 10016,
-						_y = 10016,
-						_s = seal_wave(_x, _y, point_direction(_x, _y, x, y) + _d, _delay);
+						_y = 10016;
 						
-					if(_d == 0){
-						intro_pan_x = _s.x;
-						intro_pan_y = _s.y;
-						intro_pan += _delay + (6 * _s.num);
+					with(seal_wave(_x, _y, point_direction(_x, _y, x, y) + _d, _delay)){
+						if(_d == 0){
+							other.intro_pan += seal_delay + (6 * seal_num);
+							for(var i = 0; i < maxp; i++){
+								if(player_is_active(i)){
+									view_object[i] = self;
+								}
+							}
+						}
 					}
 					
 					_delay += 15 + random(15);
@@ -2166,9 +2086,7 @@
 		 // Pan:
 		if(phase > 0){
 			if(intro_pan <= 0){
-				intro_pan_x = x;
-				intro_pan_y = y;
-				intro_pan   = 10;
+				intro_pan = 10;
 			}
 			intro_pan += alarm0;
 		}
@@ -2199,18 +2117,18 @@
 			
 			 // Call for Seals:
 			else if(
-				chance(1 + (z <= 0), 2)				&&
-				chance(1, array_length(Seal) / 2)	&&
 				array_length(Seal) <= seal_max * 4
+				&& chance(1 + (z <= 0), 2)
+				&& chance(1, array_length(Seal) / 2)
 			){
 				alarm1 = 30 + random(10);
 				
-				image_index = 0;
+				image_index  = 0;
 				sprite_index = spr_call;
 				sound_play(snd.PalankingCall);
 				
 				seal_wave(x, y, gunangle + orandom(30),       20 + random(20));
-				seal_wave(x, y, gunangle + 180 + orandom(60), 20 + random(20));
+				seal_wave(x, y, gunangle + orandom(60) + 180, 20 + random(20));
 			}
 		}
 	}
@@ -2368,41 +2286,28 @@
 		alarm_set(1, 1);
 	}
 	
-#define Palanking_cleanup
-	 // Unpan:
-	GameCont.ntte_palanking_pan = undefined;
-	
 	
 #macro Seal instances_matching(CustomEnemy, "name", "Seal", "SealHeavy")
 
 #define seal_wave(_xstart, _ystart, _dir, _delay)
-	var s = {
-		x     : _xstart,
-		y     : _ystart,
-		num   : seal_max,
-		delay : _delay,
-		alert : (intro_pan <= 0),
-	};
-	array_push(seal_spawn, s);
+	/*
+		Spawns a group of seals in the nearby ocean
+	*/
 	
-	 // Find Spawn Location:
-	var _dis = 40 + random(16);
-	if(instance_exists(Floor)){
-		with(instance_create(s.x, s.y, GameObject)){
-			while(distance_to_object(Floor) < _dis + 8 || distance_to_object(prop) < 32){
-				x += lengthdir_x(12, _dir);
-				y += lengthdir_y(12, _dir);
-			}
-			s.x = x;
-			s.y = y;
-			if(s.alert && point_seen(x, y, -1)){
-				s.alert = false;
-			}
-			instance_destroy();
+	with(call(scr.obj_create, _xstart, _ystart, "SealWave")){
+		direction  = _dir;
+		creator    = other;
+		seal_num   = other.seal_max;
+		seal_delay = _delay;
+		
+		if(other.intro_pan <= 0){
+			seal_alert = true;
 		}
+		
+		return self;
 	}
 	
-	return s;
+	return noone;
 	
 #define seal_add(_palanking, _inst)
 	with(_palanking){
@@ -2556,9 +2461,9 @@
 	if(place_meeting(x, y, Pickup)){
 		with(call(scr.instances_meeting_instance, self, instances_matching(Pickup, "mask_index", mskPickup))){
 			if(place_meeting(x, y, other)){
-				var s = other;
+				var _s = other;
 				with(call(scr.obj_create, x, y, "PalankingToss")){
-					direction  = angle_lerp(s.direction, point_direction(s.x, s.y, x, y), 1/3);
+					direction  = angle_lerp(_s.direction, point_direction(_s.x, _s.y, x, y), 1/3);
 					speed      = 4;
 					zspeed    *= 2/3;
 					creator    = other;
@@ -3218,8 +3123,6 @@
 #macro seal_mercenary   4
 #macro seal_deadeye     5
 #macro seal_dasher      6
-#macro seal_chance_loop (GameCont.loops > 0)
-#macro seal_chance      [0, 8, 3, 5, 8*seal_chance_loop, 3*seal_chance_loop, 5*seal_chance_loop]
 
 #define Seal_setup
 	setup = false;
@@ -4690,7 +4593,7 @@
 
 #define SealMine_draw
 	draw_sprite_ext(sprite_index, image_index, x, y - z, image_xscale, image_yscale, image_angle, image_blend, image_alpha);
-
+	
 #define SealMine_destroy
 	 // Explode:
 	with(call(scr.projectile_create, self, x, y, Explosion)){
@@ -4705,7 +4608,138 @@
 		}
 	}
 	sound_play_hit(sndFlakExplode, 0.2);
-
+	
+	
+#define SealWave_create(_x, _y)
+	/*
+		A wave of seals spawned by Seal King
+	*/
+	
+	with(instance_create(_x, _y, becomenemy)){
+		 // Vars:
+		mask_index = sprPortalClear;
+		direction  = random(360);
+		creator    = noone;
+		seal_num   = 4;
+		seal_delay = 30;
+		seal_alert = false;
+		floor_dis  = 16 + random(16);
+		
+		return self;
+	}
+	
+#define SealWave_end_step
+	 // Move to Ocean:
+	if(floor_dis > 0){
+		while(distance_to_object(Floor) < floor_dis || place_meeting(x, y, prop)){
+			x += lengthdir_x(12, direction);
+			y += lengthdir_y(12, direction);
+		}
+		floor_dis = 0;
+		
+		 // Disable Alert:
+		if(point_seen(x, y, -1)){
+			seal_alert--;
+		}
+	}
+	
+	 // Spawn Seals:
+	if(seal_delay > 0){
+		seal_delay -= current_time_scale;
+	}
+	else if(seal_num > 0){
+		seal_num--;
+		seal_delay = (
+			(seal_num > 0)
+			? max(4 - (GameCont.loops * 0.5), 2) * random_range(1, 2)
+			: (("intro_pan" in creator) ? creator.intro_pan : 0)
+		);
+		
+		 // Sound:
+		sound_play_pitch(choose(sndOasisHurt, sndOasisMelee, sndOasisShoot, sndOasisChest, sndOasisCrabAttack), 0.8 + random(0.4));
+		
+		 // Seal:
+		var	_len = 16 + random(24),
+			_dir = (seal_num * 90) + orandom(40);
+			
+		with(call(scr.obj_create,
+			x + lengthdir_x(_len, _dir),
+			y + lengthdir_y(_len, _dir),
+			(chance(1, 16) ? "SealHeavy" : "Seal"))
+		){
+			creator = other.creator;
+			
+			 // Rads:
+			if("raddrop" in creator){
+				if(creator.raddrop > 0){
+					creator.raddrop -= min(raddrop, creator.raddrop);
+				}
+				raddrop = min(raddrop, creator.raddrop);
+			}
+			
+			 // No Free Kills:
+			if("active" not in creator || creator.active){
+				kills = 0;
+			}
+			
+			 // -- No fat allowed beyond this point -- //
+			if(name == "Seal"){
+				 // Randomize Type:
+				type = call(scr.pool, [
+					[seal_hookpole,    8],
+					[seal_blunderbuss, 5],
+					[seal_shield,      3],
+					[seal_mercenary,   ((GameCont.loops > 0) ? 8 : 0)],
+					[seal_dasher,      ((GameCont.loops > 0) ? 5 : 0)],
+					[seal_deadeye,     ((GameCont.loops > 0) ? 3 : 0)]
+				]);
+				
+				 // Launchin:
+				if(GameCont.loops > 0 && chance(1, 2)){
+					with(call(scr.obj_create, x, y, "PalankingToss")){
+						with(call(scr.instance_nearest_bbox, x, y, Floor)){
+							other.direction = point_direction(other.x, other.y, bbox_center_x, bbox_center_y) + orandom(30);
+						}
+						speed        = 4 + random(4);
+						creator      = other;
+						depth        = other.depth;
+						mask_index   = other.mask_index;
+						spr_shadow_y = other.spr_shadow_y;
+						
+						 // FX:
+						sound_play_pitchvol(sndSlugger, 1.5, 0.6);
+						call(scr.fx, x, y, [point_direction(x, y, x, z) + orandom(30), 2 + random(2)], "WaterStreak");
+						repeat(4) instance_create(x, y, Dust);
+					}
+				}
+			}
+		}
+		
+		 // Alert:
+		if(seal_alert){
+			seal_alert = false;
+			with(call(scr.alert_create, self, spr.SealAlert)){
+				blink     = 15;
+				flash     = 6;
+				snd_flash = sndOasisHorn;
+			}
+		}
+	}
+	
+	 // Done:
+	else{
+		 // Reset Camera:
+		for(var i = 0; i < maxp; i++){
+			if(view_object[i] == self){
+				view_object[i]     = noone;
+				view_pan_factor[i] = null;
+			}
+		}
+		
+		instance_destroy();
+	}
+	
+	
 #define TrafficCrab_create(_x, _y)
 	with(instance_create(_x, _y, CustomEnemy)){
 		 // Visual:
@@ -5451,17 +5485,6 @@
 			
 			break;
 			
-	}
-	
-#define draw_gui_end
-	 // Palanking camera pan here so that pausing doesn't jank things:
-	if("ntte_palanking_pan" in GameCont && !is_undefined(GameCont.ntte_palanking_pan)){
-		var	_dir = GameCont.ntte_palanking_pan[0],
-			_dis = GameCont.ntte_palanking_pan[1];
-			
-		if(_dis > 0){
-			call(scr.view_shift, -1, _dir, _dis);
-		}
 	}
 	
 #define draw_diver_laser
