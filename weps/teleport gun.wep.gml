@@ -2,11 +2,15 @@
 	mod_script_call("mod", "teassets", "ntte_init", script_ref_create(init));
 	
 	 // Sprites:
-	global.sprWep = sprite_add_weapon("../sprites/weps/sprTeleportGun.png", 4, 4);
+	global.sprWep			 = spr.TeleportGun;
+	global.sprWepGold		 = spr.GoldTeleportGun;
+	global.sprWepLoadout	 = spr.TeleportGunLoadout;
+	global.sprWepGoldLoadout = spr.GoldTeleportGunLoadout;
 	
 	 // LWO:
 	global.lwoWep = {
 		"wep"      : mod_current,
+		"gold"	   : false,
 		"inst"     : [],
 		"gunangle" : 0
 	};
@@ -14,14 +18,16 @@
 #define cleanup
 	mod_script_call("mod", "teassets", "ntte_cleanup", script_ref_create(cleanup));
 	
-#define weapon_name   return "TELEPORT GUN";
-#define weapon_text   return "DON'T BLINK";
-#define weapon_sprt   return global.sprWep;
-#define weapon_area   return 7; // 3-2
-#define weapon_type   return type_melee;
-#define weapon_load   return 10; // 0.33 Seconds
-#define weapon_auto   return true;
-#define weapon_melee  return false;
+#define weapon_name(_wep)     return ((weapon_gold(_wep) != 0) ? "GOLDEN " : "") + "TELEPORT GUN";
+#define weapon_text(_wep)     return ((weapon_gold(_wep) != 0) ? "LUXURY TRAVEL" : "DON'T BLINK");
+#define weapon_sprt(_wep)     return ((weapon_get_gold(_wep) == 0) ? global.sprWep : global.sprWepGold);
+#define weapon_loadout(_wep)  return ((argument_count > 0 && weapon_get_gold(_wep) != 0) ? global.sprWepGoldLoadout : global.sprWepLoadout);
+#define weapon_area(_wep)     return ((argument_count > 0 && weapon_get_gold(_wep) == 0) ? 7 : -1); // 3-2
+#define weapon_gold(_wep)     return ((argument_count > 0 && lq_defget(_wep, "gold", false)) ? -1 : 0);
+#define weapon_type 		  return type_melee;
+#define weapon_load 		  return 10; // 0.33 Seconds
+#define weapon_auto 		  return true;
+#define weapon_melee		  return false;
 
 #define weapon_swap
 	sound_play(sndCrystalTB);
@@ -52,6 +58,9 @@
 		spec    = _fire.spec;
 		primary = _fire.primary;
 		
+		 // Fire Faster:
+		image_index = (_wep.gold ? 2 : 0);
+		
 		 // Remember Me:
 		array_push(_wep.inst, id);
 	}
@@ -65,6 +74,9 @@
 	var _snd = sound_play_gun(sndCrystalTB, 0, 0.5);
 	audio_sound_pitch(_snd, 0.6 + random(0.2));
 	audio_sound_gain(_snd, 1.5 * audio_sound_get_gain(_snd), 0);
+	if(_wep.gold){
+		sound_play_pitchvol(sndSwapGold, 0.8 + random(0.2), 1.7);
+	}
 	
 	 // Effects:
 	weapon_post(5, -5, 2);

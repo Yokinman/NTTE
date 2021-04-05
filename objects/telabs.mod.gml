@@ -1985,64 +1985,92 @@
 		if(instance_is(creator, Player) || (!instance_is(other, prop) && other.team != 0)){
 			projectile_hit_push(other, damage, force);
 			
-			 // Portal:
-			var _portal = (portal && instance_is(other, Player));
-			if(_portal){
-				with(creator){
-					speed     = 0;
-					my_health = 0;
+			if(instance_is(other, CustomEnemy) && "name" in other && other.name == "PortalGuardian"){
+				with(other){
+
+					 // Effects:
+					call(scr.sound_play_at, x, y, sndHorrorPortal, 1, 3);
+					view_shake_at(x, y, 30);
+					sleep(30);
+					
+					 // Implosion Imminent:
+					with(call(scr.obj_create, x, y, "PortalGuardianImplode")){
+						image_xscale = other.right;
+						direction	 = other.direction;
+						speed		 = other.speed;
+						
+						move_contact_solid(direction, speed);
+					}
+					
+					 // Goodbye:
+					instance_destroy();
 				}
+				
+				 // This is probably the dumbest way to disable teleporting I'm so sorry Yokinman:
+				creator = noone;
+				instance_destroy();
 			}
-			
-			 // Swap Positions:
-			with(other){
-				if(size < 6){
-					if(
-						(!instance_is(self, prop) && team != 0)
-						|| instance_is(self, RadChest)
-						|| instance_is(self, Car)
-						|| instance_is(self, CarVenus)
-						|| instance_is(self, CarVenusFixed)
-						|| instance_is(self, CarThrow)
-						|| instance_is(self, MeleeFake)
-						|| instance_is(self, JungleAssassinHide)
-					){
-						if(instance_exists(other.creator)){
-							x = other.creator.x;
-							y = other.creator.y;
-						}
-						else{
-							x = other.xstart;
-							y = other.ystart;
-						}
-						xprevious = x;
-						yprevious = y;
-						
-						 // Effects:
-						with(instance_create(x, y, BulletHit)){
-							sprite_index = sprPortalDisappear;
-							depth        = other.depth - 1;
-							image_angle  = 0;
-						}
-						repeat(3) call(scr.fx, x, y, 2, Smoke);
-						call(scr.sound_play_at, x, y, sndPortalAppear, 2.5, 2);
-						
-						 // Just in Case:
-						call(scr.wall_clear, self);
+			else{
+				
+				 // Portal:
+				var _portal = (portal && instance_is(other, Player));
+				if(_portal){
+					with(creator){
+						speed     = 0;
+						my_health = 0;
 					}
 				}
-			}
-			
-			 // Portal:
-			if(_portal){
-				instance_destroy();
-				if(instance_exists(other)){
-					instance_create(other.x, other.y, Portal);
+				
+				 // Swap Positions:
+				with(other){
+					if(size < 6){
+						if(
+							(!instance_is(self, prop) && team != 0)
+							|| instance_is(self, RadChest)
+							|| instance_is(self, Car)
+							|| instance_is(self, CarVenus)
+							|| instance_is(self, CarVenusFixed)
+							|| instance_is(self, CarThrow)
+							|| instance_is(self, MeleeFake)
+							|| instance_is(self, JungleAssassinHide)
+						){
+							if(instance_exists(other.creator)){
+								x = other.creator.x;
+								y = other.creator.y;
+							}
+							else{
+								x = other.xstart;
+								y = other.ystart;
+							}
+							xprevious = x;
+							yprevious = y;
+							
+							 // Effects:
+							with(instance_create(x, y, BulletHit)){
+								sprite_index = sprPortalDisappear;
+								depth        = other.depth - 1;
+								image_angle  = 0;
+							}
+							repeat(3) call(scr.fx, x, y, 2, Smoke);
+							call(scr.sound_play_at, x, y, sndPortalAppear, 2.5, 2);
+							
+							 // Just in Case:
+							call(scr.wall_clear, self);
+						}
+					}
 				}
+				
+				 // Portal:
+				if(_portal){
+					instance_destroy();
+					if(instance_exists(other)){
+						instance_create(other.x, other.y, Portal);
+					}
+				}
+				
+				 // Death:
+				else instance_destroy();
 			}
-			
-			 // Death:
-			else instance_destroy();
 		}
 	}
 	
@@ -2289,6 +2317,118 @@
 	pickup_drop(40, 10, 0);
 	
 	
+#define PortalGuardianImplode_create(_x, _y)
+	with(instance_create(_x, _y, CustomObject)){
+		 // Visual:
+		spr_shadow	 = shd24;
+		spr_shadow_x = 0;
+		spr_shadow_y = 0;
+		sprite_index = spr.PortalGuardianImplode;
+		image_speed  = 0.4;
+		depth		 = -2;
+		hitid		 = [sprite_index, "IMPLOSION"];
+		
+		 // Vars:
+		mask_index = mskBandit;
+		friction   = 0.2;
+		wave	   = random(90);
+		team	   = -1; // friendly fire is so cool
+		
+		return self;
+	}
+	
+#define PortalGuardianImplode_step
+	
+	 // Stumble:
+	wave += current_time_scale;
+	x += orandom(1) + random(sin(wave / 10));
+	y += orandom(1) + random(cos(wave / 10));
+	
+	 // Effects:
+	view_shake_max_at(x, y, 3);
+	if(chance_ct(2, 3)){
+		instance_create(x + orandom(12), y + orandom(12), Smoke);
+	}
+	if(chance_ct(2, 5)){
+		with(instance_create(x + orandom(24), y + orandom(24), PortalL)){
+			depth = other.depth - 1;
+		}
+	}
+	
+	 // Implode:
+	if(anim_end){
+		
+		with(instance_create(x, y, PortalClear)){
+			image_xscale = 2;
+			image_yscale = 2;
+		}
+		with(call(scr.projectile_create, self, x, y, "BatScreech")){
+			image_alpha = 0;
+			force       = 1.5;
+		}
+		
+		 // Effects:
+		call(scr.sound_play_at, x, y, sndGammaGutsKill, 1.3, 2);
+		call(scr.sound_play_at, x, y, sndPlasmaHugeUpg, 1.2, 1.7);
+		view_shake_at(x, y, 100);
+		sleep(100);
+		
+		 // Bullets:
+		for(var i = 0; i < 360; i += 360 / 5){
+			repeat(25){
+				var d = direction + i;
+				
+				with(call(scr.projectile_create, self, x, y, HorrorBullet, d + orandom(15), 2 + random(6))){
+					sprite_index = sprHorrorBBullet;
+					bskin = true;
+					
+					 // Decentralize // Bandage fix for stray projectiles deleting every bullet on creation:
+					move_contact_solid(direction, random(32));
+				}
+				
+				with(instance_create(x, y, Dust)){
+					motion_set(d + orandom(10), 4 + random(8));
+				}
+			}
+		}
+		
+		 // Drops golden teleport gun if a player is holding one
+		 // Feels in line with other golden weapon enemy drops
+		var _gold = false;
+		with(Player){
+			if(
+				weapon_get_gold(wep)	!= 0          			||
+				weapon_get_gold(bwep)   != 0          			||
+				call(scr.wep_raw, wep)  == "teleport gun"		||
+				call(scr.wep_raw, bwep) == "teleport gun"		||
+				call(scr.wep_raw, wep)  == "super teleport gun" ||
+				call(scr.wep_raw, bwep)	== "super teleport gun" 
+			){
+				_gold = true;
+				break;
+			}
+		}
+		if(_gold){
+			with(instance_create(x, y, WepPickup)){
+				wep = { wep: "teleport gun", gold: true };
+			}
+		}
+		
+		pickup_drop(40, 0, 0);
+		
+		 // Goodbye:
+		instance_destroy();
+	}
+	
+#define PortalGuardianImplode_end_step
+
+	 // Wall Bouncing:
+	if(place_meeting(x, y, Wall)){
+		move_bounce_solid(false);
+		x = xprevious;
+		y = yprevious;
+	}
+
 #define WallSlide_create(_x, _y)
 	/*
 		A controller that slides Walls around
@@ -2526,6 +2666,14 @@
 		}
 	}
 	
+#define ntte_draw_shadows
+	 // Portal Guardian Implosion:
+	if(instance_exists(CustomObject)){
+		var _inst = instances_matching(instances_matching(CustomObject, "name", "PortalGuardianImplode"), "visible", true);
+		if(array_length(_inst)) with(_inst){
+			draw_sprite(spr_shadow, 0, x + spr_shadow_x, y + spr_shadow_y);
+		}
+	}
 #define ntte_draw_dark(_type)
 	switch(_type){
 		

@@ -83,6 +83,12 @@
 			Bone      = sprite(p + "sprBone",      1, 6, 6, shnWep);
 			BoneShard = sprite(p + "sprBoneShard", 1, 3, 2, shnWep);
 			
+			 // Teleport Gun:
+			TeleportGun 		   = sprite(p + "sprTeleportGun",			 1, 4, 4, shnWep);
+			GoldTeleportGun 	   = sprite(p + "sprGoldTeleportGun",		 1, 4, 4, shnWep);
+			TeleportGunLoadout	   = sprite(p + "sprTeleportGunLoadout",	 1, 24, 24);
+			GoldTeleportGunLoadout = sprite(p + "sprGoldTeleportGunLoadout", 1, 24, 24);
+			
 			 // Tunneller:
 			Tunneller            = sprite(p + "sprTunneller",            1, 14,  6, shnWep);
 			GoldTunneller        = sprite(p + "sprGoldTunneller",        1, 14,  6, shnWep);
@@ -672,11 +678,12 @@
 			
 			 // Portal Guardian:
 			p = m + "PortalGuardian/";
-			PortalGuardianIdle      = sprite(p + "sprPortalGuardianIdle",      4, 16, 16);
-			PortalGuardianHurt      = sprite(p + "sprPortalGuardianHurt",      3, 16, 16);
-			PortalGuardianDead      = sprite(p + "sprPortalGuardianDead",      9, 32, 32);
-			PortalGuardianAppear    = sprite(p + "sprPortalGuardianAppear",    5, 32, 32);
-			PortalGuardianDisappear = sprite(p + "sprPortalGuardianDisappear", 4, 32, 32);
+			PortalGuardianIdle      = sprite(p + "sprPortalGuardianIdle",      4,  16, 16);
+			PortalGuardianHurt      = sprite(p + "sprPortalGuardianHurt",      3,  16, 16);
+			PortalGuardianDead      = sprite(p + "sprPortalGuardianDead",      9,  32, 32);
+			PortalGuardianAppear    = sprite(p + "sprPortalGuardianAppear",    5,  32, 32);
+			PortalGuardianDisappear = sprite(p + "sprPortalGuardianDisappear", 4,  32, 32);
+			PortalGuardianImplode	= sprite(p + "sprPortalGuardianImplode",   17, 32, 32);
 			
 			 // Puffer:
 			p = m + "Puffer/";
