@@ -1980,38 +1980,51 @@
 		}
 	}
 	
+#define PortalBullet_end_step
+	 // Mid-Air Collision:
+	if(place_meeting(x, y, object_index)){
+		with(call(scr.instances_meeting_instance, self, instances_matching_ne(instances_matching(object_index, "name", name), "team", team))){
+			if(place_meeting(x, y, other)){
+				if(instance_is(creator, CustomEnemy) && "name" in creator && creator.name == "PortalGuardian"){
+					with(creator){
+						implode   = true;
+						my_health = 0;
+					}
+					with(other){
+						if(instance_is(creator, CustomEnemy) && "name" in creator && creator.name == "PortalGuardian"){
+							with(creator){
+								implode   = true;
+								my_health = 0;
+							}
+						}
+						else creator = noone;
+						instance_destroy();
+					}
+					instance_destroy();
+				}
+			}
+		}
+	}
+	
 #define PortalBullet_hit
 	if(projectile_canhit(other) && other.my_health > 0){
 		if(instance_is(creator, Player) || (!instance_is(other, prop) && other.team != 0)){
 			projectile_hit_push(other, damage, force);
 			
-			if(instance_is(other, CustomEnemy) && "name" in other && other.name == "PortalGuardian"){
+			 // Implosion:
+			if(creator == other && instance_is(other, CustomEnemy) && "name" in other && other.name == "PortalGuardian"){
 				with(other){
-
-					 // Effects:
-					call(scr.sound_play_at, x, y, sndHorrorPortal, 1, 3);
-					view_shake_at(x, y, 30);
-					sleep(30);
-					
-					 // Implosion Imminent:
-					with(call(scr.obj_create, x, y, "PortalGuardianImplode")){
-						image_xscale = other.right;
-						direction	 = other.direction;
-						speed		 = other.speed;
-						
-						move_contact_solid(direction, speed);
-					}
-					
-					 // Goodbye:
-					instance_destroy();
+					implode   = true;
+					my_health = 0;
 				}
 				
-				 // This is probably the dumbest way to disable teleporting I'm so sorry Yokinman:
+				 // BYE:
 				creator = noone;
 				instance_destroy();
 			}
+			
+			 // Swapping Positions:
 			else{
-				
 				 // Portal:
 				var _portal = (portal && instance_is(other, Player));
 				if(_portal){
@@ -2044,6 +2057,11 @@
 							}
 							xprevious = x;
 							yprevious = y;
+							
+							 // Flip:
+							if(instance_is(self, Player) && other.creator == self){
+								angle += 180 + orandom(10);
+							}
 							
 							 // Effects:
 							with(instance_create(x, y, BulletHit)){
@@ -2203,6 +2221,7 @@
 		maxspeed    = 4;
 		gunangle    = random(360);
 		portal      = false;
+		implode     = false;
 		
 		 // Alarms:
 		alarm1 = 40 + irandom(20);
@@ -2308,25 +2327,61 @@
 	}
 	
 #define PortalGuardian_death
+	 // Clear Walls:
 	with(instance_create(x, y, PortalClear)){
 		image_xscale = 2/3;
 		image_yscale = image_xscale;
 	}
 	
 	 // Pickups:
-	pickup_drop(40, 10, 0);
+	pickup_drop(40, (implode ? 0 : 10), 0);
+	
+	 // Implosion:
+	if(implode){
+		 // Effects:
+		call(scr.sound_play_at, x, y, sndHorrorPortal, 1, 3);
+		view_shake_at(x, y, 30);
+		sleep(30);
+		
+		 // Implosion Imminent:
+		with(call(scr.obj_create, x, y, "PortalGuardianDeath")){
+			spr_shadow   = other.spr_shadow;
+			spr_shadow_x = other.spr_shadow_x;
+			spr_shadow_y = other.spr_shadow_y;
+			image_xscale = other.image_xscale * other.right;
+			image_yscale = other.image_yscale;
+			image_angle  = other.image_angle;
+			image_blend  = other.image_blend;
+			image_alpha  = other.image_alpha;
+			depth        = other.depth;
+			mask_index   = other.mask_index;
+			direction	 = other.direction;
+			speed		 = other.speed;
+			direction    = other.direction;
+			move_contact_solid(direction, speed);
+		}
+		
+		 // Hide:
+		spr_dead = asset_get_index(`sprPortalL${irandom_range(1, 5)}`);
+		snd_dead = -1;
+		raddrop  = 0;
+	}
 	
 	
-#define PortalGuardianImplode_create(_x, _y)
+#define PortalGuardianDeath_create(_x, _y)
+	/*
+		The Portal Guardian's death implosion from teleporting into itself
+	*/
+	
 	with(instance_create(_x, _y, CustomObject)){
 		 // Visual:
+		sprite_index = spr.PortalGuardianImplode;
 		spr_shadow	 = shd24;
 		spr_shadow_x = 0;
 		spr_shadow_y = 0;
-		sprite_index = spr.PortalGuardianImplode;
+		hitid		 = [sprite_index, "IMPLOSION"];
 		image_speed  = 0.4;
 		depth		 = -2;
-		hitid		 = [sprite_index, "IMPLOSION"];
 		
 		 // Vars:
 		mask_index = mskBandit;
@@ -2337,12 +2392,11 @@
 		return self;
 	}
 	
-#define PortalGuardianImplode_step
-	
+#define PortalGuardianDeath_step
 	 // Stumble:
 	wave += current_time_scale;
-	x += orandom(1) + random(sin(wave / 10));
-	y += orandom(1) + random(cos(wave / 10));
+	x += (orandom(1) + random(sin(wave / 10))) * current_time_scale;
+	y += (orandom(1) + random(cos(wave / 10))) * current_time_scale;
 	
 	 // Effects:
 	view_shake_max_at(x, y, 3);
@@ -2357,10 +2411,15 @@
 	
 	 // Implode:
 	if(anim_end){
-		
+		 // Clear Area:
 		with(instance_create(x, y, PortalClear)){
-			image_xscale = 2;
-			image_yscale = 2;
+			visible     = true;
+			sprite_index = mskPlasmaImpact;
+			image_speed  = 1/2;
+			image_xscale = 1.8;
+			image_yscale = image_xscale;
+			image_angle  = 45;
+			depth        = -1;
 		}
 		with(call(scr.projectile_create, self, x, y, "BatScreech")){
 			image_alpha = 0;
@@ -2368,67 +2427,62 @@
 		}
 		
 		 // Effects:
-		call(scr.sound_play_at, x, y, sndGammaGutsKill, 1.3, 2);
+		call(scr.sound_play_at, x, y, sndGammaGutsKill, 1.3, 2.0);
 		call(scr.sound_play_at, x, y, sndPlasmaHugeUpg, 1.2, 1.7);
 		view_shake_at(x, y, 100);
 		sleep(100);
 		
 		 // Bullets:
-		for(var i = 0; i < 360; i += 360 / 5){
-			repeat(25){
-				var d = direction + i;
-				
-				with(call(scr.projectile_create, self, x, y, HorrorBullet, d + orandom(15), 2 + random(6))){
+		for(var _dir = direction; _dir < direction + 360; _dir += (360 / 3)){
+			var _num = 16;
+			for(var i = 1; i < _num; i++){
+				with(call(scr.projectile_create,
+					self,
+					x,
+					y,
+					HorrorBullet,
+					_dir + (lerp(-45, 45, i / _num) * sign(other.image_xscale)) + orandom(10),
+					lerp(2, 5, i / _num) + random(1)
+				)){
 					sprite_index = sprHorrorBBullet;
-					bskin = true;
-					
-					 // Decentralize // Bandage fix for stray projectiles deleting every bullet on creation:
-					move_contact_solid(direction, random(32));
+					bskin        = true;
+					move_contact_solid(direction, 24 * (i / _num));
 				}
-				
 				with(instance_create(x, y, Dust)){
-					motion_set(d + orandom(10), 4 + random(8));
+					motion_set(_dir + orandom(10), 4 + random(8));
 				}
 			}
 		}
 		
-		 // Drops golden teleport gun if a player is holding one
-		 // Feels in line with other golden weapon enemy drops
-		var _gold = false;
+		 // Drops Golden Teleport Gun if a player is holding a normal one, or a separate golden weapon:
 		with(Player){
 			if(
-				weapon_get_gold(wep)	!= 0          			||
-				weapon_get_gold(bwep)   != 0          			||
-				call(scr.wep_raw, wep)  == "teleport gun"		||
-				call(scr.wep_raw, bwep) == "teleport gun"		||
-				call(scr.wep_raw, wep)  == "super teleport gun" ||
-				call(scr.wep_raw, bwep)	== "super teleport gun" 
+				((array_find_index(["teleport gun", "super teleport gun"], call(scr.wep_raw, wep))  >= 0) ^^ (weapon_get_gold(wep)  != 0)) ||
+				((array_find_index(["teleport gun", "super teleport gun"], call(scr.wep_raw, bwep)) >= 0) ^^ (weapon_get_gold(bwep) != 0))
 			){
-				_gold = true;
+				with(instance_create(other.x, other.y, WepPickup)){
+					ammo = true;
+					wep  = { wep: "teleport gun", gold: true };
+				}
 				break;
 			}
 		}
-		if(_gold){
-			with(instance_create(x, y, WepPickup)){
-				wep = { wep: "teleport gun", gold: true };
-			}
-		}
-		
-		pickup_drop(40, 0, 0);
 		
 		 // Goodbye:
 		instance_destroy();
+		exit;
 	}
 	
-#define PortalGuardianImplode_end_step
-
-	 // Wall Bouncing:
+	 // Wall Collision:
+	call(scr.motion_step, self, 1);
 	if(place_meeting(x, y, Wall)){
-		move_bounce_solid(false);
 		x = xprevious;
 		y = yprevious;
+		move_bounce_solid(true);
 	}
-
+	call(scr.motion_step, self, -1);
+	
+	
 #define WallSlide_create(_x, _y)
 	/*
 		A controller that slides Walls around
@@ -2666,14 +2720,6 @@
 		}
 	}
 	
-#define ntte_draw_shadows
-	 // Portal Guardian Implosion:
-	if(instance_exists(CustomObject)){
-		var _inst = instances_matching(instances_matching(CustomObject, "name", "PortalGuardianImplode"), "visible", true);
-		if(array_length(_inst)) with(_inst){
-			draw_sprite(spr_shadow, 0, x + spr_shadow_x, y + spr_shadow_y);
-		}
-	}
 #define ntte_draw_dark(_type)
 	switch(_type){
 		

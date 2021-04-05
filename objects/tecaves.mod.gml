@@ -5308,7 +5308,7 @@
 	
 	 // Crystal Brain Death:
 	if(instance_exists(CustomObject)){
-		var _inst = instances_matching(instances_matching(CustomObject, "name", "CrystalBrainDeath"), "visible", true);
+		var _inst = instances_matching(instances_matching(CustomObject, "name", "CrystalBrainDeath", "PortalGuardianDeath"), "visible", true);
 		if(array_length(_inst)) with(_inst){
 			draw_sprite(spr_shadow, 0, x + spr_shadow_x, y + spr_shadow_y);
 		}

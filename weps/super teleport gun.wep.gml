@@ -63,7 +63,7 @@
 			offset  = 20 - (2 * abs(_off));
 			
 			 // Remember Me:
-			array_push(_wep.inst, id);
+			array_push(_wep.inst, self);
 		}
 	}
 	_wep.gunangle = gunangle;

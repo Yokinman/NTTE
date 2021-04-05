@@ -2,15 +2,15 @@
 	mod_script_call("mod", "teassets", "ntte_init", script_ref_create(init));
 	
 	 // Sprites:
-	global.sprWep			 = spr.TeleportGun;
-	global.sprWepGold		 = spr.GoldTeleportGun;
-	global.sprWepLoadout	 = spr.TeleportGunLoadout;
-	global.sprWepGoldLoadout = spr.GoldTeleportGunLoadout;
+	global.sprWep            = sprite_add_weapon("../sprites/weps/sprTeleportGun.png",             4,  4);
+	global.sprWepGold        = sprite_add_weapon("../sprites/weps/sprGoldTeleportGun.png",         4,  4);
+	global.sprWepLoadout     = sprite_add_weapon("../sprites/weps/sprTeleportGunLoadout.png",     24, 24);
+	global.sprWepGoldLoadout = sprite_add_weapon("../sprites/weps/sprGoldTeleportGunLoadout.png", 24, 24);
 	
 	 // LWO:
 	global.lwoWep = {
 		"wep"      : mod_current,
-		"gold"	   : false,
+		"gold"     : false,
 		"inst"     : [],
 		"gunangle" : 0
 	};
@@ -24,10 +24,10 @@
 #define weapon_loadout(_wep)  return ((argument_count > 0 && weapon_get_gold(_wep) != 0) ? global.sprWepGoldLoadout : global.sprWepLoadout);
 #define weapon_area(_wep)     return ((argument_count > 0 && weapon_get_gold(_wep) == 0) ? 7 : -1); // 3-2
 #define weapon_gold(_wep)     return ((argument_count > 0 && lq_defget(_wep, "gold", false)) ? -1 : 0);
-#define weapon_type 		  return type_melee;
-#define weapon_load 		  return 10; // 0.33 Seconds
-#define weapon_auto 		  return true;
-#define weapon_melee		  return false;
+#define weapon_type           return type_melee;
+#define weapon_load           return 10; // 0.33 Seconds
+#define weapon_auto           return true;
+#define weapon_melee          return false;
 
 #define weapon_swap
 	sound_play(sndCrystalTB);
@@ -59,10 +59,12 @@
 		primary = _fire.primary;
 		
 		 // Fire Faster:
-		image_index = (_wep.gold ? 2 : 0);
+		if(_wep.gold){
+			image_index += 2;
+		}
 		
 		 // Remember Me:
-		array_push(_wep.inst, id);
+		array_push(_wep.inst, self);
 	}
 	_wep.gunangle = gunangle;
 	
