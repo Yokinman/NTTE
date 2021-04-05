@@ -4048,7 +4048,7 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 	 // Camera Pan:
 	if(alarm1 > 0){
 		for(var i = 0; i < maxp; i++){
-			view_object[i] = self;
+			view_object[i]     = self;
 			view_pan_factor[i] = 10000;
 		}
 		
@@ -4136,7 +4136,9 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 #define CatHoleBig_alrm1
 	 // Reset Camera:
 	for(var i = 0; i < maxp; i++){
-		if(view_object[i] == self) view_object[i] = noone;
+		if(view_object[i] == self){
+			view_object[i] = noone;
+		}
 		view_pan_factor[i] = null;
 	}
 	
