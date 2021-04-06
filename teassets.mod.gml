@@ -1679,8 +1679,8 @@
 			RogueBackpackOpen = sprite(p + "sprRogueBackpackOpen", 1, 8, 8, shn16);
 			
 			 // Spirit Pickup:
-			SpiritPickup	= sprite(p + "sprSpiritPickup",    1, 5, 5, shn10);
-			SpiritChest 	= sprite(p + "sprSpiritChest",	   1, 8, 8, shn16);
+			SpiritPickup    = sprite(p + "sprSpiritPickup",    1, 5, 5, shn10);
+			SpiritChest     = sprite(p + "sprSpiritChest",     1, 8, 8, shn16);
 			SpiritChestOpen = sprite(p + "sprSpiritChestOpen", 1, 8, 8);
 			
 			 // Sunken Chest:
@@ -1690,12 +1690,13 @@
 			SunkenCoinBig   = sprite(p + "sprCoinBig",         1,  3,  3, shn8);
 			
 			 // Hammerhead Pickup:
-			HammerHeadPickup            = sprite(p + "sprHammerHeadPickup",            1,  5, 5, shn10);
-			HammerHeadPickupEffect      = sprite(p + "sprHammerHeadPickupEffect",      3, 16, 8);
-			HammerHeadPickupEffectSpawn = sprite(p + "sprHammerHeadPickupEffectSpawn", 9, 16, 8);
-			HammerHeadChest				= sprite(p + "sprHammerHeadChest",			   1,  8, 8, shn16);
-			HammerHeadChestOpen			= sprite(p + "sprHammerHeadChestOpen",		   1,  8, 8);
-			HammerHeadChestEffectSpawn	= sprite(p + "sprHammerHeadChestEffectSpawn",  9, 16, 16);
+			HammerHeadPickup            = sprite(p + "sprHammerHeadPickup",            1,  5,  5, shn10);
+			HammerHeadPickupEffect      = sprite(p + "sprHammerHeadPickupEffect",      3, 16,  8);
+			HammerHeadPickupEffectSpawn = sprite(p + "sprHammerHeadPickupEffectSpawn", 9, 16,  8);
+			HammerHeadChest             = sprite(p + "sprHammerHeadChest",             1,  8,  8, shn16);
+			HammerHeadChestOpen         = sprite(p + "sprHammerHeadChestOpen",         1,  8,  8);
+			HammerHeadChestEffect       = sprite(p + "sprHammerHeadChestEffect",       3, 16,  8);
+			HammerHeadChestEffectSpawn  = sprite(p + "sprHammerHeadChestEffectSpawn",  9, 16,  8);
 			
 			 // Lead Ribs Upgraded Rads:
 			RadUpg    = sprite(p + "sprRadUpg",    1, 5, 5, shn10);

@@ -2333,9 +2333,6 @@
 		image_yscale = image_xscale;
 	}
 	
-	 // Pickups:
-	pickup_drop(40, (implode ? 0 : 10), 0);
-	
 	 // Implosion:
 	if(implode){
 		 // Effects:
@@ -2355,9 +2352,9 @@
 			image_alpha  = other.image_alpha;
 			depth        = other.depth;
 			mask_index   = other.mask_index;
+			raddrop      = other.raddrop;
 			direction	 = other.direction;
-			speed		 = other.speed;
-			direction    = other.direction;
+			speed        = min(other.speed, other.maxspeed);
 			move_contact_solid(direction, speed);
 		}
 		
@@ -2366,6 +2363,9 @@
 		snd_dead = -1;
 		raddrop  = 0;
 	}
+	
+	 // Pickups:
+	else pickup_drop(40, 10, 0);
 	
 	
 #define PortalGuardianDeath_create(_x, _y)
@@ -2388,6 +2388,7 @@
 		friction   = 0.2;
 		wave	   = random(90);
 		team	   = -1; // friendly fire is so cool
+		raddrop    = 16;
 		
 		return self;
 	}
@@ -2413,10 +2414,10 @@
 	if(anim_end){
 		 // Clear Area:
 		with(instance_create(x, y, PortalClear)){
-			visible     = true;
+			visible      = true;
 			sprite_index = mskPlasmaImpact;
 			image_speed  = 1/2;
-			image_xscale = 1.8;
+			image_xscale = 1.5;
 			image_yscale = image_xscale;
 			image_angle  = 45;
 			depth        = -1;
@@ -2427,8 +2428,8 @@
 		}
 		
 		 // Effects:
-		call(scr.sound_play_at, x, y, sndGammaGutsKill, 1.3, 2.0);
-		call(scr.sound_play_at, x, y, sndPlasmaHugeUpg, 1.2, 1.7);
+		audio_sound_pitch(sound_play_hit_big(sndGammaGutsKill, 0), 1.3);
+		audio_sound_pitch(sound_play_hit_big(sndPlasmaHugeUpg, 0), 1.2);
 		view_shake_at(x, y, 100);
 		sleep(100);
 		
@@ -2447,12 +2448,16 @@
 					sprite_index = sprHorrorBBullet;
 					bskin        = true;
 					move_contact_solid(direction, 24 * (i / _num));
-				}
-				with(instance_create(x, y, Dust)){
-					motion_set(_dir + orandom(10), 4 + random(8));
+					with(instance_create(x, y, Dust)){
+						motion_set(direction + orandom(10), 4 + random(8));
+					}
 				}
 			}
 		}
+		
+		 // Pickups:
+		pickup_drop(40, 0);
+		call(scr.rad_drop, x, y, raddrop, direction, speed);
 		
 		 // Drops Golden Teleport Gun if a player is holding a normal one, or a separate golden weapon:
 		with(Player){

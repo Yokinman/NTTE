@@ -238,7 +238,7 @@
 			_inst = noone;
 		}
 		
-		 /// Auto Assign Things:
+		 // Auto Assign Things:
 		if(is_real(_inst) && instance_exists(_inst)){
 			with(_inst){
 				name = _name;
@@ -274,8 +274,8 @@
 									
 									 // Bind Draw Event:
 									if(_event == "draw"){
-										if(!ds_map_exists(ntte_obj_bind_draw, _inst.depth)){
-											with(script_bind_draw(obj_draw, _inst.depth)){
+										if(!ds_map_exists(ntte_obj_bind_draw, _inst.depth - 1)){
+											with(script_bind_draw(obj_draw, _inst.depth - 1)){
 												persistent = true;
 												ntte_obj_bind_draw[? depth] = self;
 											}
@@ -429,11 +429,11 @@
 	if(ds_map_exists(ntte_obj_bind, "draw")){
 		var _inst = ntte_obj_bind[? "draw"].list;
 		with(ds_map_keys(ntte_obj_bind_draw)){
-			_inst = instances_matching_ne(_inst, "depth", self);
+			_inst = instances_matching_ne(_inst, "depth", self + 1);
 		}
 		if(array_length(_inst)){
 			with(_inst){
-				with(script_bind_draw(obj_draw, depth)){
+				with(script_bind_draw(obj_draw, depth - 1)){
 					persistent = true;
 					ntte_obj_bind_draw[? depth] = self;
 				}
@@ -472,7 +472,7 @@
 		
 		 // Match Depth:
 		if(_event == "draw"){
-			_inst = instances_matching(_inst, "depth", depth);
+			_inst = instances_matching(_inst, "depth", depth + 1);
 		}
 		
 		 // Call Scripts:

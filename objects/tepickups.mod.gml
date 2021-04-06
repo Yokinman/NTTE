@@ -857,6 +857,7 @@
 	}
 	
 #define BonusAmmoPickup_step
+	 // Attraction Delay:
 	if(pull_delay > 0){
 		pull_delay -= current_time_scale;
 	}
@@ -3123,58 +3124,51 @@
 	with(call(scr.obj_create, _x, _y, "CustomChest")){
 		 // Visual:
 		sprite_index = spr.HammerHeadChest;
-		spr_dead	 = spr.HammerHeadChestOpen;
-		spr_halo	 = spr.HammerHeadChestEffectSpawn;
-		spd_halo	 = 0.4;
-		img_halo	 = 0;
-		 
+		spr_open     = sprHammerHead;
+		spr_dead     = spr.HammerHeadChestOpen;
+		spr_halo     = spr.HammerHeadChestEffectSpawn;
+		img_halo     = 0;
+		
 		 // Sounds:
-		snd_open = sndAmmoChest;
+		snd_open = sndBigWeaponChest;
+		
+		 // Vars:
+		num = 20;
 		
 		 // Events:
 		on_step = script_ref_create(HammerHeadChest_step);
 		on_open = script_ref_create(HammerHeadChest_open);
-		
-		 // Sound:
-		call(scr.sound_play_at, x, y, sndWeaponPickup,  0.3 + random(0.1));
-		call(scr.sound_play_at, x, y, sndHammerHeadEnd, 0.2 + random(0.1), 1.5);
 		 
 		return self;
 	}
 	
 #define HammerHeadChest_step
-	img_halo += spd_halo;
+	img_halo += 0.4 * current_time_scale;
 	if(img_halo >= sprite_get_number(spr_halo)){
 		img_halo %= sprite_get_number(spr_halo);
-		spr_halo = sprHammerHeadNear;
+		spr_halo = spr.HammerHeadChestEffect;
 	}
+	
+#define HammerHeadChest_draw
+	draw_sprite(spr_halo, img_halo, x, y);
 	
 #define HammerHeadChest_open
-	sound_play(sndLuckyShotProc);
-	sound_play(sndHammerHeadProc);
-	
-	 // Player Open Chest:
+	 // Hammer Time:
 	if(instance_is(other, Player)){
-		var _text = `% @(color:${c_yellow})HAMMERHEAD`,
-			_num  = 20;
-			
-		with(other){
-			hammerhead += _num;
-			
-			 // Pickup Text:
-			pickup_text(_text, _num);
-		}
+		HammerHeadPickup_open();
 	}
-	else{
-		
-		 // Portal Open Chest:
-		repeat(2){
+	
+	 // Pickups:
+	else if(num > 0){
+		repeat(ceil(num / 10)){
 			call(scr.obj_create, x, y, "HammerHeadPickup");
 		}
 	}
 	
-#define HammerHeadChest_draw
-	draw_sprite(spr_halo, img_halo, x, y + 3);
+	 // Effects:
+	sound_play(sndHammerHeadProc);
+	sleep(20);
+	
 	
 #define HammerHeadPickup_create(_x, _y)
 	with(call(scr.obj_create, _x, _y, "CustomPickup")){
@@ -3186,7 +3180,7 @@
 		img_halo     = 0;
 		
 		 // Sounds:
-		snd_open = sndHammerHeadProc;
+		snd_open = sndLuckyShotProc;
 		snd_fade = sndHammerHeadEnd;
 		
 		 // Vars:
@@ -3198,10 +3192,6 @@
 		on_step = script_ref_create(HammerHeadPickup_step);
 		on_open = script_ref_create(HammerHeadPickup_open);
 		on_fade = script_ref_create(HammerHeadPickup_fade);
-		
-		 // Sound:
-		call(scr.sound_play_at, x, y, sndWeaponPickup,  0.3 + random(0.1));
-		call(scr.sound_play_at, x, y, sndHammerHeadEnd, 0.2 + random(0.1), 1.5);
 		
 		return self;
 	}
@@ -3230,7 +3220,7 @@
 	}
 	
 	 // Effects:
-	sound_play(sndLuckyShotProc);
+	sound_play(sndHammerHeadProc);
 	sleep(20); // i am karmelyth now
 	
 #define HammerHeadPickup_fade
@@ -4892,15 +4882,15 @@
 	with(call(scr.obj_create, _x, _y, "CustomChest")){
 		 // Visual:
 		sprite_index = spr.SpiritChest;
-		spr_dead	 = spr.SpiritChestOpen;
-		spr_halo	 = sprStrongSpiritRefill;
-		spd_halo	 = 0.4;
-		img_halo	 = 0;
-		 
+		spr_dead     = spr.SpiritChestOpen;
+		spr_halo     = sprStrongSpiritRefill;
+		img_halo     = 0;
+		
 		 // Sounds:
 		snd_open = sndWeaponChest;
 		
 		 // Vars:
+		num  = 2;
 		wave = random(90);
 		
 		 // Events:
@@ -4914,48 +4904,32 @@
 	}
 	
 #define SpiritChest_step
+	 // Animate Halo:
 	wave += current_time_scale;
-
-	img_halo += spd_halo;
+	img_halo += 0.4 * current_time_scale;
 	if(img_halo >= sprite_get_number(spr_halo)){
 		img_halo %= sprite_get_number(spr_halo);
 		spr_halo = sprHalo;
 	}
 	
-#define SpiritChest_open
-	 // Player Open Chest:
-	if(instance_is(other, Player)){
-		sound_play(sndStrongSpiritGain);
-		
-		var _num  = 2,
-			_text = "% @yBONUS @wSPIRIT" + ((_num > 1) ? "S" : "");
-			
-		with(other){
-			if("bonus_spirit" not in self){
-				bonus_spirit = [];
-			}
-			if(_num > 0) repeat(_num){
-				array_push(bonus_spirit, {});
-			}
-			
-			 // for all the headless chickens in the crowd:
-			my_health = max(my_health, 1);
-			
-			 // Pickup Text:
-			pickup_text(_text, _num);
-		}
+#define SpiritChest_draw
+	 // Halos:
+	for(var i = 0; i < num; i++){
+		draw_sprite(spr_halo, img_halo, x, y + 3 + sin(wave * 0.1) - (i * 7));
 	}
-	else{
-		
-		 // Portal Open Chest:
-		repeat(2){
+	
+#define SpiritChest_open
+	 // Acquire Bonus Spirit:
+	if(instance_is(other, Player)){
+		SpiritPickup_open();
+	}
+	
+	 // Pickups:
+	else if(num > 0){
+		repeat(num){
 			call(scr.obj_create, x, y, "SpiritPickup");
 		}
 	}
-	
-#define SpiritChest_draw
-	draw_sprite(spr_halo, img_halo, x, y + sin(wave / 10) + 1);
-	draw_sprite(spr_halo, img_halo, x, y + sin(wave / 10) - 7);
 	
 	
 #define SpiritPickup_create(_x, _y)
@@ -4990,10 +4964,13 @@
 	}
 	
 #define SpiritPickup_step
-	if(pull_delay > 0) pull_delay -= current_time_scale;
-	wave += current_time_scale;
+	 // Attraction Delay:
+	if(pull_delay > 0){
+		pull_delay -= current_time_scale;
+	}
 	
 	 // Animate Halo:
+	wave += current_time_scale;
 	img_halo += image_speed_raw;
 	if(img_halo >= sprite_get_number(spr_halo)){
 		img_halo %= sprite_get_number(spr_halo);
@@ -5007,28 +4984,41 @@
 	}
 
 #define SpiritPickup_open
-	var	_inst = noone,
-		_num  = num,
-		_text = "% @yBONUS @wSPIRIT" + ((_num > 1) ? "S" : "");
+	var	_num  = num,
+		_text = "% @yBONUS @wSPIRIT" + ((abs(_num) == 1) ? "" : "S");
 		
 	 // Acquire Bonus Spirit:
 	with(instance_is(other, Player) ? other : Player){
 		if("bonus_spirit" not in self){
 			bonus_spirit = [];
 		}
-		if(_num > 0) repeat(_num){
-			array_push(bonus_spirit, {});
+		
+		 // Adding Spirits:
+		if(_num > 0){
+			repeat(_num){
+				array_push(bonus_spirit, {});
+				sound_play(sndStrongSpiritGain);
+			}
+		}
+		
+		 // Negative Spirits (just cause):
+		else if(_num < 0){
+			repeat(-_num){
+				with(call(scr.array_flip, bonus_spirit)){
+					if(active){
+						active       = false;
+						sprite_index = sprStrongSpirit;
+						image_index  = 0;
+						sound_play(sndStrongSpiritLost);
+						break;
+					}
+				}
+			}
 		}
 		
 		 // Text:
 		pickup_text(_text, _num);
-		
-		 // for all the headless chickens in the crowd:
-		my_health = max(my_health, 1);
 	}
-	
-	 // Sound:
-	sound_play(sndStrongSpiritGain);
 	
 #define SpiritPickup_fade
 	 // Kill Spirits:
@@ -5556,7 +5546,7 @@
 		if(array_length(_inst)) with(_inst){
 			if(array_length(bonus_spirit)){
 				 // Grant Grace:
-				if(my_health <= 0 && lsthealth > 0 && player_active){
+				if(my_health <= 0 /*&& lsthealth > 0*/ && player_active){
 					if(skill_get(mut_strong_spirit) <= 0 || canspirit != true){
 						for(var i = array_length(bonus_spirit) - 1; i >= 0; i--){
 							var _spirit = bonus_spirit[i];
@@ -5566,9 +5556,9 @@
 								
 								 // Lost:
 								with(_spirit){
-									active = false;
+									active       = false;
 									sprite_index = sprStrongSpirit;
-									image_index = 0;
+									image_index  = 0;
 								}
 								sound_play(sndStrongSpiritLost);
 								
@@ -5662,10 +5652,9 @@
 								}
 								
 								if(position_meeting(_x, _y, Floor)){
-									var	_obj       = "",
+									var	_type      = "",
 										_health    = 0,
-										_healthMax = 0,
-										_chest	   = (ultra_get("fish", 1) && chance(1, 5));
+										_healthMax = 0;
 										
 									with(Player){
 										_health    += my_health;
@@ -5674,17 +5663,25 @@
 									
 									 // Spirit:
 									if(_health <= ceil(_healthMax / 2) && chance(1, 1 + (_health / instance_number(Player)))){
-										_obj = (_chest ? "SpiritChest" : "SpiritPickup");
+										_type = "Spirit";
 									}
 									
 									 // HammerHead:
 									else if(chance(1 + GameCont.loops, 5 + GameCont.loops)){
-										_obj = (_chest ? "HammerHeadChest" : "HammerHeadPickup");
+										_type = "HammerHead";
+										
+										 // Sound:
+										call(scr.sound_play_at, _x, _y, sndWeaponPickup,  0.3 + random(0.1));
+										call(scr.sound_play_at, _x, _y, sndHammerHeadEnd, 0.2 + random(0.1), 1.5);
 									}
 									
 									 // Create:
-									if(_obj != ""){
-										call(scr.obj_create, _x + orandom(4), _y + orandom(4), _obj);
+									if(_type != ""){
+										call(scr.obj_create,
+											_x + orandom(4),
+											_y + orandom(4),
+											_type + (chance(ultra_get("fish", 1), 5) ? "Chest" : "Pickup")
+										);
 									}
 								}
 							}
