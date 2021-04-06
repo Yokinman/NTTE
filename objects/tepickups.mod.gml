@@ -3119,6 +3119,63 @@
 	);
 	
 	
+#define HammerHeadChest_create(_x, _y)
+	with(call(scr.obj_create, _x, _y, "CustomChest")){
+		 // Visual:
+		sprite_index = spr.HammerHeadChest;
+		spr_dead	 = spr.HammerHeadChestOpen;
+		spr_halo	 = spr.HammerHeadChestEffectSpawn;
+		spd_halo	 = 0.4;
+		img_halo	 = 0;
+		 
+		 // Sounds:
+		snd_open = sndAmmoChest;
+		
+		 // Events:
+		on_step = script_ref_create(HammerHeadChest_step);
+		on_open = script_ref_create(HammerHeadChest_open);
+		
+		 // Sound:
+		call(scr.sound_play_at, x, y, sndWeaponPickup,  0.3 + random(0.1));
+		call(scr.sound_play_at, x, y, sndHammerHeadEnd, 0.2 + random(0.1), 1.5);
+		 
+		return self;
+	}
+	
+#define HammerHeadChest_step
+	img_halo += spd_halo;
+	if(img_halo >= sprite_get_number(spr_halo)){
+		img_halo %= sprite_get_number(spr_halo);
+		spr_halo = sprHammerHeadNear;
+	}
+	
+#define HammerHeadChest_open
+	sound_play(sndLuckyShotProc);
+	sound_play(sndHammerHeadProc);
+	
+	 // Player Open Chest:
+	if(instance_is(other, Player)){
+		var _text = `% @(color:${c_yellow})HAMMERHEAD`,
+			_num  = 20;
+			
+		with(other){
+			hammerhead += _num;
+			
+			 // Pickup Text:
+			pickup_text(_text, _num);
+		}
+	}
+	else{
+		
+		 // Portal Open Chest:
+		repeat(2){
+			call(scr.obj_create, x, y, "HammerHeadPickup");
+		}
+	}
+	
+#define HammerHeadChest_draw
+	draw_sprite(spr_halo, img_halo, x, y + 3);
+	
 #define HammerHeadPickup_create(_x, _y)
 	with(call(scr.obj_create, _x, _y, "CustomPickup")){
 		 // Visual:
@@ -4831,6 +4888,76 @@
 	}
 	
 	
+#define SpiritChest_create(_x, _y)
+	with(call(scr.obj_create, _x, _y, "CustomChest")){
+		 // Visual:
+		sprite_index = spr.SpiritChest;
+		spr_dead	 = spr.SpiritChestOpen;
+		spr_halo	 = sprStrongSpiritRefill;
+		spd_halo	 = 0.4;
+		img_halo	 = 0;
+		 
+		 // Sounds:
+		snd_open = sndWeaponChest;
+		
+		 // Vars:
+		wave = random(90);
+		
+		 // Events:
+		on_step = script_ref_create(SpiritChest_step);
+		on_open = script_ref_create(SpiritChest_open);
+		
+		 // Sound:
+		sound_play_pitchvol(sndStrongSpiritGain, 1.2 + random(0.2), 0.7);
+		 
+		return self;
+	}
+	
+#define SpiritChest_step
+	wave += current_time_scale;
+
+	img_halo += spd_halo;
+	if(img_halo >= sprite_get_number(spr_halo)){
+		img_halo %= sprite_get_number(spr_halo);
+		spr_halo = sprHalo;
+	}
+	
+#define SpiritChest_open
+	 // Player Open Chest:
+	if(instance_is(other, Player)){
+		sound_play(sndStrongSpiritGain);
+		
+		var _num  = 2,
+			_text = "% @yBONUS @wSPIRIT" + ((_num > 1) ? "S" : "");
+			
+		with(other){
+			if("bonus_spirit" not in self){
+				bonus_spirit = [];
+			}
+			if(_num > 0) repeat(_num){
+				array_push(bonus_spirit, {});
+			}
+			
+			 // for all the headless chickens in the crowd:
+			my_health = max(my_health, 1);
+			
+			 // Pickup Text:
+			pickup_text(_text, _num);
+		}
+	}
+	else{
+		
+		 // Portal Open Chest:
+		repeat(2){
+			call(scr.obj_create, x, y, "SpiritPickup");
+		}
+	}
+	
+#define SpiritChest_draw
+	draw_sprite(spr_halo, img_halo, x, y + sin(wave / 10) + 1);
+	draw_sprite(spr_halo, img_halo, x, y + sin(wave / 10) - 7);
+	
+	
 #define SpiritPickup_create(_x, _y)
 	with(call(scr.obj_create, _x, _y, "CustomPickup")){
 		 // Visual:
@@ -5537,7 +5664,8 @@
 								if(position_meeting(_x, _y, Floor)){
 									var	_obj       = "",
 										_health    = 0,
-										_healthMax = 0;
+										_healthMax = 0,
+										_chest	   = (ultra_get("fish", 1) && chance(1, 5));
 										
 									with(Player){
 										_health    += my_health;
@@ -5546,12 +5674,12 @@
 									
 									 // Spirit:
 									if(_health <= ceil(_healthMax / 2) && chance(1, 1 + (_health / instance_number(Player)))){
-										_obj = "SpiritPickup";
+										_obj = (_chest ? "SpiritChest" : "SpiritPickup");
 									}
 									
 									 // HammerHead:
 									else if(chance(1 + GameCont.loops, 5 + GameCont.loops)){
-										_obj = "HammerHeadPickup";
+										_obj = (_chest ? "HammerHeadChest" : "HammerHeadPickup");
 									}
 									
 									 // Create:

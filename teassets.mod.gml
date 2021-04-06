@@ -1679,7 +1679,9 @@
 			RogueBackpackOpen = sprite(p + "sprRogueBackpackOpen", 1, 8, 8, shn16);
 			
 			 // Spirit Pickup:
-			SpiritPickup = sprite(p + "sprSpiritPickup", 1, 5, 5, shn10);
+			SpiritPickup	= sprite(p + "sprSpiritPickup",    1, 5, 5, shn10);
+			SpiritChest 	= sprite(p + "sprSpiritChest",	   1, 8, 8, shn16);
+			SpiritChestOpen = sprite(p + "sprSpiritChestOpen", 1, 8, 8);
 			
 			 // Sunken Chest:
 			SunkenChest     = sprite(p + "sprSunkenChest",     1, 12, 12, shn24);
@@ -1691,6 +1693,9 @@
 			HammerHeadPickup            = sprite(p + "sprHammerHeadPickup",            1,  5, 5, shn10);
 			HammerHeadPickupEffect      = sprite(p + "sprHammerHeadPickupEffect",      3, 16, 8);
 			HammerHeadPickupEffectSpawn = sprite(p + "sprHammerHeadPickupEffectSpawn", 9, 16, 8);
+			HammerHeadChest				= sprite(p + "sprHammerHeadChest",			   1,  8, 8, shn16);
+			HammerHeadChestOpen			= sprite(p + "sprHammerHeadChestOpen",		   1,  8, 8);
+			HammerHeadChestEffectSpawn	= sprite(p + "sprHammerHeadChestEffectSpawn",  9, 16, 16);
 			
 			 // Lead Ribs Upgraded Rads:
 			RadUpg    = sprite(p + "sprRadUpg",    1, 5, 5, shn10);
