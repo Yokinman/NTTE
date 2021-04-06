@@ -2336,7 +2336,7 @@
 	 // Implosion:
 	if(implode){
 		 // Effects:
-		call(scr.sound_play_at, x, y, sndHorrorPortal, 1, 3);
+		call(scr.sound_play_at, x, y, sndHorrorPortal, 1.5 + orandom(0.1), 3);
 		view_shake_at(x, y, 30);
 		sleep(30);
 		
@@ -2428,7 +2428,7 @@
 		}
 		
 		 // Effects:
-		audio_sound_pitch(sound_play_hit_big(sndGammaGutsKill, 0), 1.3);
+		audio_sound_pitch(sound_play_hit(    sndGammaGutsKill, 0), 1.3);
 		audio_sound_pitch(sound_play_hit_big(sndPlasmaHugeUpg, 0), 1.2);
 		view_shake_at(x, y, 100);
 		sleep(100);
