@@ -3277,6 +3277,7 @@
 			ring_size      - Scale of ring, multiplier (cause I don't wanna figure out the epic math)
 			ring_lasers    - Array of QuasarBeams created from being a QuasarRing
 			wave           - Ticks up every frame, used for visual stuff
+			ultra		   - Is ultra, true/false
 			alarm0         - Creates QuasarBeams for the QuasarRing variant
 	*/
 	
@@ -3324,6 +3325,7 @@
 		ring_size      = 1;
 		ring_lasers    = [];
 		wave           = random(100);
+		ultra		   = false;
 		
 		on_end_step = QuasarBeam_quick_fix;
 		
@@ -3465,7 +3467,7 @@
 	
 	 // Line:
 	var	_lineAdd = 20,
-		_lineWid = 16,
+		_lineWid = sprite_get_height(sprite_index) / 2,
 		_lineDir = image_angle,
 		_lineChange = (instance_is(creator, Player) ? 120 : 40) * current_time_scale,
 		_dis = 0,
@@ -3628,7 +3630,7 @@
 								 // Effects:
 								with(instance_create(x + orandom(8), y + orandom(8), BulletHit)){
 									motion_add(point_direction(other.x, other.y, x, y), 1);
-									sprite_index = spr.QuasarBeamHit;
+									sprite_index = (other.ultra ? spr.UltraQuasarBeamHit : spr.QuasarBeamHit);
 									image_angle  = direction;
 									image_xscale = other.image_yscale;
 									image_yscale = other.image_yscale;
@@ -3668,7 +3670,7 @@
 			if(position_meeting(_cx, _cy, Floor)){
 				var _o = 32 * image_yscale;
 				with(instance_create(_cx + orandom(_o), _cy + orandom(_o), PlasmaTrail)){
-					sprite_index = spr.QuasarBeamTrail;
+					if(!other.ultra) sprite_index = spr.QuasarBeamTrail;
 					motion_add(_dir, 1 + random(max(other.image_yscale - 1, 0)));
 					if(other.image_yscale > 1) depth = other.depth - 1;
 				}
@@ -3715,7 +3717,7 @@
 				
 			if(!position_meeting(_x, _y, TopSmall)){
 				with(instance_create(_x, _y, BulletHit)){
-					sprite_index = spr.QuasarBeamHit;
+					sprite_index = (other.ultra ? spr.UltraQuasarBeamHit : spr.QuasarBeamHit);
 					image_xscale = other.image_yscale;
 					image_yscale = other.image_yscale;
 					depth = other.depth - 1;
@@ -4259,6 +4261,33 @@
 	}
 	
 	
+#define UltraQuasarFlame_create(_x, _y)
+	with(instance_create(_x, _y, CustomObject)){
+		 // Visual:
+		sprite_index = spr.UltraQuasarFlame;
+		image_speed  = 1.2;
+		depth		 = -2;
+		
+		 // Vars:
+		creator = noone;
+		offset  = 21;
+		wave    = random(90);
+		
+		return self;
+	}
+	
+#define UltraQuasarFlame_step
+	wave += current_time_scale;
+	image_xscale = random_range(1, (chance_ct(1, 7) ? 1.7 : 1.3));
+	image_yscale = 1 + random(sin(wave / 10) * 0.4);
+	
+	if(instance_exists(creator)){
+		var _dist   = offset + creator.wkick;
+		x = creator.x + creator.hspeed_raw - lengthdir_x(_dist, creator.gunangle);
+		y = creator.y + creator.vspeed_raw - lengthdir_y(_dist, creator.gunangle);
+		image_angle = angle_lerp(image_angle, creator.gunangle, 0.5);
+	}
+
 #define Vent_create(_x, _y)
 	/*
 		Bro it's a bubble prop, I love it
@@ -4517,7 +4546,6 @@
 	if(instance_exists(Player) && !instance_exists(PlayerSit)){
 		var _instPlayer = instances_matching(Player, "visible", true);
 		if(array_length(_instPlayer)){
-			draw_set_color_write_enable(true, false, false, true);
 			
 			for(var i = 0; i < 2; i++){
 				var _inst = instances_matching_gt(_instPlayer, ((i == 0) ? "reload" : "breload"), 0);
@@ -4541,6 +4569,8 @@
 							_dis  = ((i == 1) ? -1 : -2) * sign(_flip),
 							_dir  = gunangle + (_ang * (1 - (_kick / 20))) - 90;
 							
+						draw_set_color_write_enable(true, (weapon_get_rads(_wep) > 0), false, true);
+						
 						call(scr.draw_weapon, 
 							weapon_get_sprt(_wep),
 							gunshine,
@@ -4561,8 +4591,16 @@
 		}
 	}
 	
-	 // Pit Spark:
+	 // Objects:
 	if(instance_exists(CustomObject)){
+				
+		 // Ultra Quasar Flame:
+		var _inst = instances_matching(CustomObject, "name", "UltraQuasarFlame");
+		if(array_length(_inst)) with(_inst){
+			draw_sprite_ext(sprite_index, image_index, x, y, image_xscale * 2, image_yscale * 2, image_angle, image_blend, image_alpha * 0.2);
+		}
+		
+		 // Pit Spark:
 		var _inst = instances_matching(instances_matching(CustomObject, "name", "PitSpark"), "visible", true);
 		if(array_length(_inst)) with(_inst){
 			draw_sprite_ext(sprite_index, image_index, x, y, image_xscale * 2, image_yscale * 2, image_angle, image_blend, image_alpha * 0.2);

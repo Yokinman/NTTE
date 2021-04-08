@@ -94,7 +94,8 @@
 			"weps/electroplasma cannon.wep.gml",
 			"weps/quasar blaster.wep.gml",
 			"weps/quasar rifle.wep.gml",
-			"weps/quasar cannon.wep.gml"
+			"weps/quasar cannon.wep.gml",
+			"weps/ultra quasar rifle.wep.gml"
 		];
 	}
 	

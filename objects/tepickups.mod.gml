@@ -599,6 +599,89 @@
 //	instance_create(x, y, BloodLust);
 	
 	
+#define BiggestWeaponChest_create(_x, _y)
+	/*
+		A larger than usual weapon chest. Contains golden and ultra weapons. The only way to acquire the ultra quasar rifle.
+	*/
+	with(call(scr.obj_create, _x, _y, "CustomChest")){
+		 // Visual:
+		sprite_index = spr.BiggestWeaponChest;
+		spr_dead	 = spr.BiggestWeaponChestOpen;
+		spr_shadow	 = shd64;
+		spr_shadow_y = 4;
+		
+		 // Sounds:
+		snd_open = sndBigWeaponChest;
+		
+		 // Scripts:
+		on_open = script_ref_create(BiggestWeaponChest_open);
+		
+		if(place_meeting(x, y, Wall)) call(scr.wall_clear, self);
+		
+		return self;
+	}
+	
+#define BiggestWeaponChest_open
+
+	 // Effects:
+	with(instance_create(x, y - 12, FXChestOpen)){
+		sprite_index = sprMutant6Dead;
+		image_index  = 11;
+	}
+	with(instance_create(x, y, PortalClear)){
+		image_xscale = 2;
+		image_yscale = 2;
+	}
+	view_shake_at(x, y, 30);
+	sleep(30);
+	
+	 // Sounds:
+	if(instance_is(other, Player)){
+		sound_play(other.snd_chst);
+	}
+	
+	var _wep    = "ultra quasar rifle",
+		_unlock = call(scr.weapon_get, "avail", _wep),
+		_list   = ds_list_create();
+	
+	 // The Definitive Gun:
+	if(_unlock){
+		with(instance_create(x, y, WepPickup)){
+			wep = "ultra quasar rifle";
+		}
+	}
+	
+	weapon_get_list(_list, 0, GameCont.hard);
+	var _size = ds_list_size(_list),
+		_num  = (_unlock ? 3 : 5),
+		_egg  = !_unlock;
+	
+	 // Extras:
+	if(_size > 0){
+		ds_list_shuffle(_list);
+		
+		for(var i = 0; i < _size; i++){
+			var w = ds_list_find_value(_list, i);
+			if(weapon_get_gold(w) != 0 || weapon_get_rads(w) > 0){
+				with(instance_create(x, y, WepPickup)){
+					wep = w;
+				}
+				
+				_egg = false;
+				if(--_num <= 0) break;
+			}
+		}
+	}
+		
+	 // Consolation Prize
+	if(_egg){
+		with(instance_create(x, y, WepPickup)){
+			wep = wep_eggplant;
+		}
+	}
+	
+	ds_list_destroy(_list);
+
 #define BoneBigPickup_create(_x, _y)
 	with(call(scr.obj_create, _x, _y, "BonePickup")){
 		 // Visual:

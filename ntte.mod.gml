@@ -177,6 +177,9 @@
 	array_push(GameCont.ntte_weapon_spawn, { "wep": _poolExplo, "area": area_sewers,     "subarea": 1, "open": 0 });
 	array_push(GameCont.ntte_weapon_spawn, { "wep": _poolScrew, "area": area_scrapyards, "subarea": 1, "open": 1 });
 	
+	 // Track Biggest Weapon Chest Spawn:
+	global.biggest_weapon_chest = false;
+	
 #define level_start // game_start but every level
 	var	_spawnX     = 10016,
 		_spawnY     = 10016,
@@ -1801,6 +1804,24 @@
 			if(_chest != ""){
 				call(scr.chest_create, x, y, "Bonus" + _chest + (instance_is(self, enemy) ? "Mimic" : "Chest"), true);
 				instance_delete(self);
+			}
+		}
+	}
+	
+	 // Biggest Weapon Chest:
+	if(!global.biggest_weapon_chest && instance_exists(WeaponChest)){
+		with(Player){
+			
+			if(weapon_get_rads(wep) > 0 || weapon_get_rads(bwep) > 0){
+				if(chance(1, 10)){
+					
+					with(call(scr.instance_random, instances_matching(WeaponChest, "object_index", WeaponChest, BigWeaponChest))){
+						call(scr.obj_create, x, y, "BiggestWeaponChest");
+						
+						global.biggest_weapon_chest = true;
+						instance_delete(self);
+					}
+				}
 			}
 		}
 	}
