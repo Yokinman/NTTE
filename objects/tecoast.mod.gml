@@ -1,6 +1,15 @@
 #define init
 	mod_script_call("mod", "teassets", "ntte_init", script_ref_create(init));
 	
+	 // Gather Objects:
+	for(var i = 1; true; i++){
+		var _scrName = script_get_name(i);
+		if(is_undefined(_scrName)){
+			break;
+		}
+		call(scr.obj_add, script_ref_create(i));
+	}
+	
 	 // Store Script References:
 	scr.Harpoon_rope   = script_ref_create(Harpoon_rope);
 	scr.Harpoon_unrope = script_ref_create(Harpoon_unrope);
@@ -227,9 +236,9 @@
 		_bwep = variable_instance_get(creator, "bwep", wep_none);
 		
 	if(instance_exists(creator) && creator.visible && (wep == _wep || _bwep == wep)){
-		var	_shieldList = instances_matching(instances_matching(instances_matching(object_index, "name", name), "wep", wep), "creator", creator),
-			_boltStick = instances_matching(BoltStick, "target", self),
-			_b = ((wep == _bwep) ? "b" : "");
+		var	_shieldList = instances_matching(instances_matching(obj.ClamShield, "wep", wep), "creator", creator),
+			_boltStick  = instances_matching(BoltStick, "target", self),
+			_b          = ((wep == _bwep) ? "b" : "");
 			
 		 // Aim:
 		if("gunangle" in creator){
@@ -506,7 +515,7 @@
 #define CoastDecal_step
 	 // Space Out Decals:
 	if(place_meeting(x, y, CustomProp)){
-		with(call(scr.instances_meeting_instance, self, instances_matching_le(instances_matching(CustomProp, "name", "CoastDecal", "CoastBigDecal"), "size", size))){
+		with(call(scr.instances_meeting_instance, self, instances_matching_le(obj.CoastDecal, "size", size))){
 			if(place_meeting(x, y, other)){
 				var	_dir = point_direction(other.x, other.y, x, y),
 					_dis = 8;
@@ -1189,7 +1198,7 @@
 						if(array_find_index(corpses, _corpse) < 0){
 							if(sprite_get_width(_corpse.sprite_index) < 64 && sprite_get_height(_corpse.sprite_index) < 64){
 								var _canTake = true;
-								with(instances_matching(object_index, "name", name)){
+								with(instances_matching_ne(obj.Harpoon, "id", null)){
 									if(array_find_index(corpses, _corpse) >= 0){
 										_canTake = false;
 										break;
@@ -1384,7 +1393,7 @@
 	
 	 // Linked Harpoons:
 	with([_link1, _link2]){
-		if("name" in self && name == "Harpoon" && instance_is(self, CustomProjectile)){
+		if(array_find_index(obj.Harpoon, self) >= 0){
 			array_push(rope, _rope);
 			
 			 // ??? Old code idk if important:
@@ -1412,18 +1421,16 @@
 		
 		 // Turn Harpoons Into Pickups:
 		with([link1, link2]){
-			if("name" in self){
-				if(name == "Harpoon" && instance_is(self, CustomProjectile)){
-					pickup = true;
+			if(array_find_index(obj.Harpoon, self) >= 0){
+				pickup = true;
+			}
+			else if(array_find_index(obj.HarpoonStick, self) >= 0){
+				with(call(scr.obj_create, x, y, "HarpoonPickup")){
+					image_yscale = other.image_yscale;
+					image_angle  = other.image_angle;
+					target       = other.target;
 				}
-				else if(name == "HarpoonStick" && instance_is(self, BoltStick)){
-					with(call(scr.obj_create, x, y, "HarpoonPickup")){
-						image_yscale = other.image_yscale;
-						image_angle  = other.image_angle;
-						target       = other.target;
-					}
-					instance_destroy();
-				}
+				instance_destroy();
 			}
 		}
 	}
@@ -1649,7 +1656,7 @@
 		
 		 // For Sani's bosshudredux:
 		bossname = "PALANKING";
-		col = c_red;
+		col      = c_red;
 		
 		return self;
 	}
@@ -1725,7 +1732,7 @@
 	if(active){
 		 // Seals Run Over to Lift:
 		if(_sealNum < seal_max){
-			with(instances_matching(CustomEnemy, "name", "Seal")){
+			with(PalankingSeal){
 				if(array_find_index(other.seal, self) < 0){
 					seal_add(other, self);
 					break;
@@ -1791,7 +1798,7 @@
 		 // Begin Intro:
 		if(alarm0 < 0){
 			if(instance_exists(Player)){
-				if(instance_number(enemy) - (instance_number(Van) + array_length(instances_matching(Seal, "type", 0))) <= 1){
+				if(instance_number(enemy) <= (array_length(instances_matching(enemy, "intro", false)) + array_length(instances_matching(PalankingSeal, "type", seal_none)) + instance_number(Van))){
 					if(!instance_exists(becomenemy)){
 						alarm0 = 30;
 						phase++;
@@ -1810,7 +1817,7 @@
 		if(alarm0 > 0 && intro_pan < alarm0){
 			intro_pan = alarm0;
 		}
-		if(instance_number(enemy) <= array_length(instances_matching(object_index, "name", name)) + array_length(Seal) + instance_number(Van)){
+		if(instance_number(enemy) <= (array_length(instances_matching(enemy, "intro", false)) + array_length(PalankingSeal) + instance_number(Van))){
 			_pan = true;
 			
 			 // Delay Popo:
@@ -1828,7 +1835,7 @@
 		call(scr.portal_pickups);
 		
 		 // Hold Off Seals:
-		with(Seal){
+		with(PalankingSeal){
 			attack_delay = 15 + random(30);
 		}
 	}
@@ -2102,9 +2109,9 @@
 			
 			 // Kingly Slap:
 			if(
-				(target_distance < 80 && array_length(Seal) > 2)
+				(target_distance < 80 && array_length(PalankingSeal) > 2)
 				||
-				(variable_instance_get(target, "reload", 0) > 0 && chance(1, 3))
+				("reload" in target && target.reload > 0 && chance(1, 3))
 			){
 				alarm1 = 60 + random(20);
 				alarm3 = 6;
@@ -2117,9 +2124,9 @@
 			
 			 // Call for Seals:
 			else if(
-				array_length(Seal) <= seal_max * 4
+				array_length(PalankingSeal) <= seal_max * 4
 				&& chance(1 + (z <= 0), 2)
-				&& chance(1, array_length(Seal) / 2)
+				&& chance(1, array_length(PalankingSeal) / 2)
 			){
 				alarm1 = 30 + random(10);
 				
@@ -2286,8 +2293,7 @@
 		alarm_set(1, 1);
 	}
 	
-	
-#macro Seal instances_matching(CustomEnemy, "name", "Seal", "SealHeavy")
+#macro PalankingSeal instances_matching_ne(call(scr.array_combine, obj.Seal, obj.SealHeavy), "id", null)
 
 #define seal_wave(_xstart, _ystart, _dir, _delay)
 	/*
@@ -3379,8 +3385,8 @@
 			
 			 // Less Post-Level Running Around:
 			if(type == seal_none){
-				if(scared && array_length(instances_matching(CustomEnemy, "name", "Palanking")) <= 0){
-					if(variable_instance_get(self, "wading", 0) > 0){
+				if(scared && !array_length(instances_matching_ne(obj.Palanking, "id", null))){
+					if("wading" in self && wading > 0){
 						if(!point_seen_ext(x, y, sprite_width, sprite_height, -1)){
 							my_health = 0;
 						}
@@ -3725,7 +3731,7 @@
 					else{
 						 // "Don't kill me!"
 						if(scared){
-							if(_targetDis < 120 || chance(2, array_length(instances_matching(object_index, "name", name)))){
+							if(_targetDis < 120 || chance(2, array_length(instances_matching_ne(obj.Seal, "id", null)))){
 								enemy_walk(
 									gunangle + 180 + orandom(50),
 									random_range(20, 30)
@@ -3914,11 +3920,12 @@
 	call(scr.enemy_hurt, _damage, _force, _direction);
 	
 	switch(type){
+		
 		case seal_none:
 			
 			 // Alert:
-			with(instances_matching(object_index, "name", name)){
-				if(!scared && type == other.type){
+			with(instances_matching(obj.Seal, "type", type)){
+				if(!scared){
 					if(instance_exists(target) && target_distance < 80){
 						scared = true;
 						instance_create(x, y, AssassinNotice);
@@ -3935,8 +3942,11 @@
 			break;
 			
 		case seal_dasher:
+			
 			//sound_play_hit(sndSnowBotHurt, 0.3); i miss snowbot hunter bro
+			
 			break;
+			
 	}
 	
 #define Seal_death
@@ -4296,10 +4306,10 @@
 		else{
 			my_mine = noone;
 			if(place_meeting(x, y, CustomHitme)){
-				with(call(scr.instances_meeting_instance, self, instances_matching(CustomHitme, "name", "SealMine"))){
+				with(call(scr.instances_meeting_instance, self, obj.SealMine)){
 					if(
-						place_meeting(x, y, other) &&
-						!array_length(instances_matching(instances_matching(other.object_index, "name", other.name), "my_mine", self))
+						place_meeting(x, y, other)
+						&& !array_length(instances_matching(obj.SealHeavy, "my_mine", self))
 					){
 						with(other){
 							alarm1      = 20;
@@ -5452,9 +5462,8 @@
 	
 #define ntte_draw_shadows
 	 // Shield Shadows:
-	if(instance_exists(CustomSlash)){
-		var _inst = instances_matching(instances_matching(CustomSlash, "name", "ClamShield"), "visible", true)
-		if(array_length(_inst)) with(_inst){
+	if(array_length(obj.ClamShield)){
+		with(instances_matching(obj.ClamShield, "visible", true)){
 			var	_l = -8 - (1 * image_yscale),
 				_d = image_angle,
 				_x = x + lengthdir_x(_l, _d) + spr_shadow_x,
@@ -5473,13 +5482,10 @@
 			var _gray = (_type == "normal");
 			
 			 // Divers:
-			if(instance_exists(CustomEnemy)){
-				var _inst = instances_matching(CustomEnemy, "name", "Diver");
-				if(array_length(_inst)){
-					var _r = 16 + (24 * _gray);
-					with(_inst){
-						draw_circle(x, y, _r + orandom(1), false);
-					}
+			if(array_length(obj.Diver)){
+				var _r = 16 + (24 * _gray);
+				with(instances_matching_ne(obj.Diver, "id", null)){
+					draw_circle(x, y, _r + orandom(1), false);
 				}
 			}
 			
@@ -5488,8 +5494,10 @@
 	}
 	
 #define draw_diver_laser
-	if(instance_exists(CustomEnemy)){
-		var _inst = instances_matching_ne(instances_matching(CustomEnemy, "name", "Diver"), "laser", 0);
+	if(array_length(obj.Diver)){
+		if(lag) trace_time();
+		
+		var _inst = instances_matching_ne(obj.Diver, "laser", 0);
 		if(array_length(_inst)){
 			draw_set_color(c_white);
 			with(_inst){
@@ -5517,6 +5525,8 @@
 			}
 			draw_set_alpha(1);
 		}
+		
+		if(lag) trace_time(script[2]);
 	}
 	
 #define draw_harpoon_rope
@@ -5547,6 +5557,7 @@
 	
 /// SCRIPTS
 #macro  call                                                                                    script_ref_call
+#macro  obj                                                                                     global.obj
 #macro  scr                                                                                     global.scr
 #macro  spr                                                                                     global.spr
 #macro  snd                                                                                     global.snd

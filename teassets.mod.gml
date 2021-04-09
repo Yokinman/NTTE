@@ -4,7 +4,10 @@
 	 // Debug Lag:
 	lag = false;
 	
-	 // SCRIPT REFERENCES //
+	 // Object Instance Lists:
+	obj = {};
+	
+	 // Script References:
 	scr = {};
 	with([save_get, save_set, option_get, option_set, stat_get, stat_set, unlock_get, unlock_set, surface_setup, shader_setup, shader_add, script_bind, loadout_wep_save, loadout_wep_reset, trace_error]){
 		lq_set(scr, script_get_name(self), script_ref_create(self));
@@ -2490,6 +2493,7 @@
 	
 #macro call script_ref_call
 
+#macro obj global.obj
 #macro scr global.scr
 #macro spr global.spr
 #macro snd global.snd
@@ -2548,6 +2552,7 @@
 		_name = _ref[1];
 		
 	 // Set Global Variables:
+	mod_variable_set(_type, _name, "obj",       obj);
 	mod_variable_set(_type, _name, "scr",       scr);
 	mod_variable_set(_type, _name, "spr",       spr);
 	mod_variable_set(_type, _name, "snd",       snd);
