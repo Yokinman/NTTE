@@ -51,8 +51,6 @@
 			_wep.beam    = self;
 		}
 		
-		call(scr.projectile_create, self, x, y, "UltraQuasarFlame", gunangle);
-		
 		 // Sound:
 		var _brain = skill_get(mut_laser_brain);
 		sound_play_pitch((_brain ? sndLaserUpg  : sndLaser),  0.4 + random(0.1));

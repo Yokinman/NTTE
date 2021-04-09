@@ -3742,7 +3742,8 @@
 	}
 	
 #define QuasarBeam_draw
-	if(flash_frame > current_frame) draw_set_fog(true, c_white, 0, 0);
+	var _flash = (flash_frame > current_frame);
+	if(_flash) draw_set_fog(true, c_white, 0, 0);
 	
 	QuasarBeam_draw_laser(image_xscale, image_yscale, image_alpha);
 
@@ -3781,7 +3782,10 @@
 		*/
 	}
 	
-	if(flash_frame > current_frame) draw_set_fog(false, 0, 0, 0);
+	if(_flash) draw_set_fog(false, 0, 0, 0);
+	
+	 // Flame:
+	QuasarBeam_draw_flame(image_xscale + _flash, image_yscale + _flash, image_alpha);
 
 #define QuasarBeam_alrm0
 	alarm0 = random_range(4 + (8 * array_length(ring_lasers)), 16);
@@ -3912,11 +3916,38 @@
 	}
 	
 	draw_set_color(_lastColor);
+
+#define QuasarBeam_draw_flame(_xscale, _yscale, _alpha)
+	
+	 // Draw Ultra Flame:
+	if(ultra && instance_is(creator, Player)){
+		with(creator){
+			if(weapon_get_rads(wep) > 0 && call(scr.weapon_get, "ntte_quasar", wep)){
+				
+				var _spr = spr.UltraQuasarFlame,
+					_len = 2 + sprite_get_xoffset(weapon_get_sprite(wep)) + wkick,
+					_dir = gunangle + ((abs(wepangle) > 1) ? wepangle : 0),
+					_sin = sin(other.wave / 10);
+					
+				draw_sprite_ext(
+					_spr,
+					other.wave % sprite_get_number(_spr),
+					x - lengthdir_x(_len, _dir),
+					y - lengthdir_y(_len, _dir),
+					_xscale * (1 + random(max(_sin, 0))),
+					_yscale * (other.image_yscale + (_sin / 5)),
+					_dir,
+					image_blend,
+					_alpha
+				);
+			}
+		}
+	}
 	
 #define QuasarBeam_wepangle
 	if(instance_exists(creator) && abs(angle) > 1){
 		with(creator){
-			if(string_pos("quasar", string(call(scr.wep_raw, other.primary ? wep : bwep))) == 1){
+			if(call(scr.weapon_get, "ntte_quasar", (other.primary ? wep : bwep))){
 				if(other.primary){
 					wepangle += other.angle;
 					enemy_face(gunangle + other.angle);
@@ -4261,33 +4292,6 @@
 	}
 	
 	
-#define UltraQuasarFlame_create(_x, _y)
-	with(instance_create(_x, _y, CustomObject)){
-		 // Visual:
-		sprite_index = spr.UltraQuasarFlame;
-		image_speed  = 1.2;
-		depth		 = -2;
-		
-		 // Vars:
-		creator = noone;
-		offset  = 21;
-		wave    = random(90);
-		
-		return self;
-	}
-	
-#define UltraQuasarFlame_step
-	wave += current_time_scale;
-	image_xscale = random_range(1, (chance_ct(1, 7) ? 1.7 : 1.3));
-	image_yscale = 1 + random(sin(wave / 10) * 0.4);
-	
-	if(instance_exists(creator)){
-		var _dist   = offset + creator.wkick;
-		x = creator.x + creator.hspeed_raw - lengthdir_x(_dist, creator.gunangle);
-		y = creator.y + creator.vspeed_raw - lengthdir_y(_dist, creator.gunangle);
-		image_angle = angle_lerp(image_angle, creator.gunangle, 0.5);
-	}
-
 #define Vent_create(_x, _y)
 	/*
 		Bro it's a bubble prop, I love it
@@ -4533,6 +4537,7 @@
 			}
 			
 			QuasarBeam_draw_laser(_xsc * image_xscale, _ysc * image_yscale, _alp * image_alpha);
+			QuasarBeam_draw_flame(_xsc * image_xscale, _ysc * image_yscale, _alp * image_alpha);
 			
 			/*if(ring && array_length(ring_lasers)){
 				with(instances_matching(ring_lasers, "visible", false)){
