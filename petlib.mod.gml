@@ -897,8 +897,8 @@
 	friction      = 0.1;
 	maxspeed      = 3.4;
 	hiding        = false;
-	arcing        = 0;
-	arcing_attack = 0;
+	// arcing        = 0;
+	// arcing_attack = 0;
 	path_wall     = [Wall];
 	
 	 // Stat:
@@ -945,6 +945,7 @@
 	
 #define Octo_step
 	if(instance_exists(leader)){
+		
 		 // Unhide:
 		if(hiding){
 			hiding     = false;
@@ -952,129 +953,70 @@
 			spr_shadow = shd16;
 		}
 		
-		var	_lx        = leader.x,
-			_ly        = leader.y,
-			_leaderDir = point_direction(x, y, _lx, _ly),
-			_leaderDis = point_distance(x, y, _lx, _ly);
+		 // Arcing:
+		var _skill = skill_get(mut_laser_brain),
+			_inst  = [],
+			_amax  = 256,
+			_ammo  = _amax,
+			_cost  = 8, // Base ammo cost for each instance tethered
+			_x     = x,
+			_y     = y;
 			
-		if(
-			leader.visible
-			&& _leaderDis < 96 /*+ (45 * skill_get(mut_laser_brain))*/
-			&& !collision_line(x, y, leader.x, leader.y, Wall, false, false)
-		){
-			 // Lightning Arcing Effects:
-			if(arcing < 1){
-				arcing += 0.15 * current_time_scale;
-				
-				if(current_frame_active){
-					var	_dis = random(_leaderDis),
-						_dir = _leaderDir;
-						
-					with(instance_create(x + lengthdir_x(_dis, _dir), y + lengthdir_y(_dis, _dir), choose(PortalL, LaserCharge))){
-						if(object_index == LaserCharge){
-							sprite_index = sprLightning;
-							image_xscale = random_range(0.5, 2);
-							image_yscale = random_range(0.5, 2);
-							image_angle  = random(360);
-							alarm0       = 4 + random(4);
-						}
-						motion_add(random(360), 1);
-					}
-				}
-				
-				 // Arced:
-				if(arcing >= 1){
-					sound_play_pitch(sndLightningHit, 2);
-					
-					 // Laser Brain FX:
-					if(skill_get(mut_laser_brain)){
-						with(instance_create(x, y, LaserBrain)){
-							image_angle = _leaderDir + orandom(10);
-							creator = other;
-						}
-						with(instance_create(_lx, _ly, LaserBrain)){
-							image_angle = _leaderDir + orandom(10) + 180;
-							creator = other.leader;
-						}
-					}
-				}
-			}
+		// stat.arcing += (current_time_scale / 30);
 			
-			 // Lightning Arc:
-			else{
-				call(scr.lightning_connect, _lx, _ly, x, y, 8 * sin(wave / 60), false, self);
-				stat.arcing += (current_time_scale / 30);
-			}
-		}
+		 // Compile List (leader, leader's pets, leader's projectiles):
+		array_push(_inst, leader);
+		with(instances_matching(projectile, "creator", leader)) array_push(_inst, self);
+		with(instances_matching(instances_matching(CustomHitme, "name", name), "leader", leader)) array_push(_inst, self);
 		
-		 // Stop Arcing:
-		else{
-			if(arcing > 0){
-				arcing = 0;
-				sound_play_pitchvol(sndLightningReload, 0.7 + random(0.2), 0.5);
+		_inst = instances_matching(_inst, "visible", true);
+		 
+		 // Arcing:
+		if(array_length(_inst)){
+			while(_ammo > 0 && array_length(_inst)){
 				
-				repeat(2){
-					var	_dis = random(point_distance(x, y, _lx, _ly)),
-						_dir = point_direction(x, y, _lx, _ly);
+				with(call(scr.instance_nearest_array, _x, _y, _inst)){
+					var _nx = x + hspeed_raw,
+						_ny = y + vspeed_raw;
 						
-					with(instance_create(x + lengthdir_x(_dis, _dir), y + lengthdir_y(_dis, _dir), PortalL)){
-						motion_add(random(360), 1);
-					}
-				}
-			}
-		}
-		
-		 // Arc to Nearby Things:
-		if(arcing_attack > 0){
-			arcing_attack -= current_time_scale;
-		}
-		else{
-			if(arcing >= 1){
-				var	_nearest = noone,
-					_disMax = 96;
+					if(!collision_line(_x, _y, _nx, _ny, Wall, false, false)){
 					
-				with(instances_matching_ne(instances_matching_ne(hitme, "team", team), "mask_index", mskNone)){
-					var _dis = point_distance(x, y, other.x, other.y);
-					if(_dis < _disMax){
-						if(
-							(!instance_is(self, prop) && team != 0) ||
-							(instance_is(self, prop) && sprite_get_width(sprite_index) <= 24 && sprite_get_height(sprite_index) <= 24)
-						){
-							if(!collision_line(x, y, other.x, other.y, Wall, false, false)){
-								_disMax  = _dis;
-								_nearest = self;
+						var _dis = point_distance(_x, _y, _nx, _ny);
+						if(instance_is(self, projectile)) _ammo -= (_dis + _cost);
+						
+						 // Arc to Instance:
+						if(_ammo > 0){
+							var _arc = 24 * ((1 - _dis) / _amax) * sin(other.wave / 60);
+							with(call(scr.lightning_connect, _x, _y, _nx, _ny, _arc, false, other)){
+								can_prism_duplicate = false;
 							}
+							
+							 // Effects:
+							if(chance_ct(1, 10)){
+								instance_create(_nx, _ny, PortalL);
+							}
+							with(instance_create(_nx, _ny, BulletHit)){
+								sprite_index	= sprLightningHit;
+								image_xscale	= 2/3;
+								image_yscale	= image_xscale;
+								depth			= 0;
+								
+								image_index 	= ((current_frame + _arc) * image_speed) % image_number;
+								image_speed_raw = image_number;
+							}
+							
+							 // Update Tether Origin:
+							_x = _nx;
+							_y = _ny;
 						}
 					}
-				}
-				
-				if(instance_exists(_nearest)){
-					arcing_attack = 30 + random(30);
-					with(call(scr.projectile_create, self, x, y, "TeslaCoil", point_direction(x, y, _nearest.x, _nearest.y))){
-						dist_max = _disMax;
-						creator_offx = 9;
-						
-						 // Manually Targeting:
-						alarm0 = -1;
-						target = _nearest;
-						target_x = target.x;
-						target_y = target.y;
-						
-						 // Effects:
-						var _brain = skill_get(mut_laser_brain);
-						call(scr.sound_play_at, x, y, (_brain ? sndLightningPistolUpg : sndLightningPistol), 1.5 + orandom(0.2), 1.2);
-						if(_brain){
-							with(instance_create(x, y, LaserBrain)){
-								creator = other;
-							}
-						}
-					}
+					
+					 // Cull from List:
+					_inst = call(scr.array_delete_value, _inst, self);
 				}
 			}
-			else arcing_attack = 10 + random(20);
 		}
 	}
-	else arcing = 0;
 	
 	 // He is bouncy:
 	if(!array_length(path)){
@@ -1150,6 +1092,7 @@
 			motion_add(_leaderDir + orandom(60), 1.5 + random(1.5));
 			enemy_look(direction);
 			
+			/*
 			 // More Aggressive:
 			if(arcing >= 1 && "index" in leader){
 				var _enemy = instance_nearest(x, y, enemy);
@@ -1157,6 +1100,7 @@
 					motion_add(point_direction(x, y, mouse_x[leader.index], mouse_y[leader.index]) + orandom(10), 2);
 				}
 			}
+			*/
 			
 			return 20 + random(10);
 		}

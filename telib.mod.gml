@@ -3417,9 +3417,9 @@
 		_oy      = lengthdir_y(_disAdd, _dir),
 		_obj     = (_enemy ? EnemyLightning : Lightning),
 		_proj    = [],
-		_creator = (("creator" in self && !instance_is(self, hitme)) ? creator : self),
-		_hitid   = (("hitid" in self) ? hitid : -1),
-		_team    = (("team"  in self) ? team  : -1),
+		_creator = (("creator" in _inst && !instance_is(_inst, hitme)) ? _inst.creator : _inst),
+		_hitid   = (("hitid" in _inst) ? _inst.hitid : -1),
+		_team    = (("team"  in _inst) ? _inst.team  : -1),
 		_imgInd  = -1,
 		_wave    = 0,
 		_off     = 0;
