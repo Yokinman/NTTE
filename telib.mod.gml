@@ -16,29 +16,26 @@
 	global.floor_reveal_bind   = script_bind(CustomDraw,    floor_reveal_draw,   -8, false);
 	
 	 // Object List (Used for cheats mod, basically):
-	ntte_obj_list = ds_map_create();
-	ntte_obj_list[? "tegeneral"  ] = ["AlertIndicator", "BigDecal", "BigIDPDSpawn", "BoneArrow", "BoneSlash", "BoneFX", "BuriedVault", "BuriedShrine", "CustomBullet", "CustomFlak", "CustomShell", "CustomPlasma", "GroundFlameGreen", "MergeFlak", "Pet", "PetRevive", "PetWeaponBecome", "PetWeaponBoss", "PortalPrevent", "ReviveNTTE", "SmallGreenExplosion", "TopDecal", "TopObject", "TopTiny", "WallDecal", "WallEnemy"];
+	var ntte_obj_list = ds_map_create();
+	ntte_obj_list[? "tegeneral"  ] = ["AlertIndicator", "BigDecal", "BigIDPDSpawn", "BoneArrow", "BoneSlash", "BoneFX", "BuriedVault", "BuriedShrine", "CustomBullet", "CustomFlak", "CustomShell", "CustomPlasma", "GroundFlameGreen", "MergeFlak", "Pet", "PetRevive", "PetWeaponBecome", "PetWeaponBoss", "PortalPrevent", "ReviveNTTE", "SmallGreenExplosion", "TopDecal", "TopObject", "TopTiny", "UnlockCont", "WallDecal", "WallEnemy"];
 	ntte_obj_list[? "tepickups"  ] = ["Backpack", "Backpacker", "BackpackPickup", "BatChest", "BiggestWeaponChest", /*"BloodLustPickup",*/ "BoneBigPickup", "BonePickup", "BonusAmmoChest", "BonusAmmoMimic", "BonusAmmoPickup", "BonusHealthChest", "BonusHealthMimic", "BonusHealthPickup", "BuriedVaultChest", "BuriedVaultChestDebris", "BuriedVaultPedestal", "CatChest", "ChestShop", "CursedAmmoChest", "CursedMimic", "CustomChest", "CustomPickup", "GatorStatue", "GatorStatueFlak", "HammerHeadChest", "HammerHeadPickup", "HarpoonPickup", "OrchidBall", "OrchidChest", "OrchidSkill", "PalaceAltar", "ParrotFeather", "ParrotChester", "Pizza", "PizzaChest", "PizzaStack", "Prompt", "RatChest", "RedAmmoChest", "RedAmmoPickup", "RogueBackpack", "SpiritChest", "SpiritPickup", "SunkenCoin", "VaultFlower", "VaultFlowerSparkle"];
 	ntte_obj_list[? "tedesert"   ] = ["BabyScorpion", "BabyScorpionGold", "BanditCamper", "BanditHiker", "BanditTent", "BigCactus", "BigMaggotSpawn", "Bone", "CoastBossBecome", "CoastBoss", "CowSkull", "FlySpin", "VenomBlast", "ScorpionRock", "SilverScorpion", "SilverScorpionDevastator", "SilverScorpionFlak", "VenomFlak", "VenomPellet", "VenomPelletBack", "WantBigMaggot"];
-	ntte_obj_list[? "tecoast"    ] = ["BloomingAssassin", "BloomingAssassinHide", "BloomingBush", "BloomingCactus", "BuriedCar", "ClamShield", "ClamShieldSlash", "CoastBigDecal", "CoastDecal", "CoastDecalCorpse", "Creature", "Diver", "DiverHarpoon", "Gull", "Harpoon", "HarpoonStick", "NetNade", "Palanking", "PalankingDie", "PalankingSlash", "PalankingSlashGround", "PalankingStatue", "PalankingToss", "Palm", "Pelican", "Seal", "SealAnchor", "SealDisc", "SealHeavy", "SealMine", "SealWave", "TrafficCrab", "Trident"];
+	//ntte_obj_list[? "tecoast"    ] = ["BloomingAssassin", "BloomingAssassinHide", "BloomingBush", "BloomingCactus", "BuriedCar", "ClamShield", "ClamShieldSlash", "CoastBigDecal", "CoastDecal", "CoastDecalCorpse", "Creature", "Diver", "DiverHarpoon", "Gull", "Harpoon", "HarpoonStick", "NetNade", "Palanking", "PalankingDie", "PalankingSlash", "PalankingSlashGround", "PalankingStatue", "PalankingToss", "Palm", "Pelican", "Seal", "SealAnchor", "SealDisc", "SealHeavy", "SealMine", "SealWave", "TrafficCrab", "Trident"];
 	ntte_obj_list[? "teoasis"    ] = ["BubbleBomb", "BubbleExplosion", "BubbleExplosionSmall", "BubbleSlash", "CrabTank", "HammerShark", "HyperBubble", "OasisPetBecome", "Puffer", "SunkenChest", "SunkenRoom", "SunkenSealSpawn", "WaterStreak"];
 	ntte_obj_list[? "tetrench"   ] = ["Angler", "AnglerGold", "Eel", "EelSkull", "ElectroPlasma", "ElectroPlasmaBig", "ElectroPlasmaImpact", "Jelly", "JellyElite", "Kelp", "LightningDisc", "PitSpark", "PitSquid", "PitSquidArm", "PitSquidBomb", "PitSquidDeath", "QuasarBeam", "QuasarRing", "TeslaCoil", "TopDecalWaterMine", "TrenchFloorChunk", "Vent", "WantEel"];
 	ntte_obj_list[? "tesewers"   ] = ["AlbinoBolt", "AlbinoGator", "AlbinoGrenade", "BabyGator", "Bat", "BatBoss", "BatCloud", "BatDisc", "BatScreech", "BoneGator", /*"BossHealFX",*/ "Cabinet", "Cat", "CatBoss", "CatBossAttack", "CatDoor", "CatDoorDebris", "CatGrenade", "CatHole", "CatHoleBig", "CatLight", "ChairFront", "ChairSide", "Couch", "LairBorder", "Manhole", "ManholeOpen", "NewTable", "Paper", "PizzaDrain", "PizzaManholeCover", "PizzaRubble", "PizzaTV", "SewerDrain", "SewerRug", "TurtleCool"];
 	ntte_obj_list[? "tescrapyard"] = ["BoneRaven", "SawTrap", "SludgePool", "TopRaven", "TrapSpin", "Tunneler", "WepPickupGrounded", "WepPickupStick"];
-	ntte_obj_list[? "tecaves"    ] = ["BigCrystalProp", "ChaosHeart", "CrystalBat", "CrystalBrain", "CrystalBrainDeath", "CrystalBrainEffect", "CrystalClone", "CrystalHeart", "CrystalHeartBullet", "CrystalPropRed", "CrystalPropWhite", "EnergyBatSlash", "InvCrystalBat", "InvMortar", "MinerBandit", "Mortar", "MortarPlasma", "NewCocoon", "PlasmaImpactSmall", "RedBullet", "RedExplosion", "RedShank", "RedSlash", "RedSpider", "Spiderling", "Tesseract", "TesseractArmDeath", "TesseractDeath", "TesseractStrike", /*"TesseractWarp",*/ "TwinOrbital", "VlasmaBullet", "VlasmaCannon", "WallFake", "Warp", "WarpPortal"];
+	//ntte_obj_list[? "tecaves"    ] = ["BigCrystalProp", "ChaosHeart", "CrystalBat", "CrystalBrain", "CrystalBrainDeath", "CrystalBrainEffect", "CrystalClone", "CrystalHeart", "CrystalHeartBullet", "CrystalPropRed", "CrystalPropWhite", "EnergyBatSlash", "InvCrystalBat", "InvMortar", "MinerBandit", "Mortar", "MortarPlasma", "NewCocoon", "PlasmaImpactSmall", "RedBullet", "RedExplosion", "RedShank", "RedSlash", "RedSpider", "Spiderling", "Tesseract", "TesseractArmDeath", "TesseractDeath", "TesseractStrike", /*"TesseractWarp",*/ "TwinOrbital", "VlasmaBullet", "VlasmaCannon", "WallFake", "Warp", "WarpPortal"];
 	ntte_obj_list[? "telabs"     ] = ["Button", "ButtonChest", "ButtonOld", "ButtonPickup", "ButtonReviveArea", "FreakChamber", "Igloo", "MutantVat", "PickupReviveArea", "PopoSecurity", "PortalBullet", "PortalGuardian", "PortalGuardianDeath", "WallSlide"];
 	
 	 // Object Create Event Script References:
 	ntte_obj_scrt = ds_map_create();
 	with(ds_map_keys(ntte_obj_list)){
-		var	_modName = self,
-			_modObjs = ntte_obj_list[? _modName];
-			
-		with(_modObjs){
-			var _name = self;
-			ntte_obj_scrt[? _name] = script_ref_create_ext("mod", _modName, _name + "_create");
+		with(ntte_obj_list[? self]){
+			obj_add(script_ref_create_ext("mod", other, self + "_create"));
 		}
 	}
+	obj_search = [];
 	
 	 // Object Event References:
 	ntte_obj_event = ds_map_create();
@@ -201,36 +198,51 @@
 #macro ntte_alarm_max 10
 
 #macro ntte_obj_event     global.object_event
-#macro ntte_obj_list      global.object_list
 #macro ntte_obj_scrt      global.object_scrt
 #macro ntte_obj_bind      global.object_bind
 #macro ntte_obj_bind_draw global.object_bind_draw
+
+#macro obj_search global.object_search
 
 #macro sprite_team_start   1
 #macro sprite_team_map     global.sprite_team_map
 #macro team_sprite_map     global.team_sprite_map
 #macro team_sprite_obj_map global.team_sprite_object_map
 
+#define obj_add(_ref)
+	/*
+		Adds an object to NT:TE's stored objects
+		Accepts a script reference to the given object's create event
+	*/
+	
+	var _name = string_copy(_ref[2], 1, string_length(_ref[2]) - 7);
+	
+	if(string_delete(_ref[2], 1, string_length(_name)) == "_create"){
+		 // Store Create Event:
+		ntte_obj_scrt[? _name] = _ref;
+		
+		 // Instance List:
+		if(_name not in obj){
+			lq_set(obj, _name, []);
+		}
+		
+		return true;
+	}
+	
+	return false;
+	
 #define obj_create(_x, _y, _name)
+	/*
+		Creates an NT:TE object, or a base game object if the name is an index for convenience
+	*/
+	
 	 // Normal Object:
 	if(is_real(_name) && object_exists(_name)){
 		return instance_create(_x, _y, _name);
 	}
 	
-	 // Search for Create Event if Unstored:
-	if(!ds_map_exists(ntte_obj_scrt, _name) && is_string(_name)){
-		with(ds_map_keys(ntte_obj_list)){
-			var _modName = self;
-			if(mod_script_exists("mod", _modName, _name + "_create")){
-				ntte_obj_scrt[? _name] = script_ref_create_ext("mod", _modName, _name + "_create");
-				break;
-			}
-		}
-	}
-	
-	 // Creating Object:
+	 // NT:TE Object:
 	if(ds_map_exists(ntte_obj_scrt, _name)){
-		 // Call Create Event:
 		var	_scrt = array_combine(ntte_obj_scrt[? _name], [_x, _y]),
 			_inst = script_ref_call(_scrt);
 			
@@ -337,7 +349,6 @@
 				if(_isCustom){
 					on_create = script_ref_create(obj_create, _x, _y, _name);
 					
-					 // hitmes:
 					if(instance_is(self, hitme)){
 						 // Fill HP:
 						if(my_health == 1){
@@ -352,6 +363,25 @@
 						}
 					}
 				}
+				
+				 // Add to Instance List:
+				var _objList = instances_matching_ne(lq_get(obj, _name), "id", null);
+				lq_set(obj, _name, _objList);
+				if(array_find_index(_objList, self) < 0){
+					array_push(_objList, self);
+				}
+				if(fork()){
+					with(obj_search){
+						if(self[0] == other.object_index){
+							if(array_find_index(self[1], _name) < 0){
+								array_push(self[1], _name);
+							}
+							exit;
+						}
+					}
+					array_push(obj_search, [object_index, [_name]]);
+					exit;
+				}
 			}
 		}
 		
@@ -359,11 +389,11 @@
 	}
 	
 	 // Return List of Objects:
-	else if(is_undefined(_name)){
+	if(is_undefined(_name)){
 		var _list = [];
 		
-		with(ds_map_values(ntte_obj_list)){
-			_list = array_combine(_list, self);
+		for(var i = lq_size(obj) - 1; i >= 0; i--){
+			array_push(_list, lq_get_key(obj, i));
 		}
 		
 		return _list;
@@ -372,7 +402,52 @@
 	return noone;
 	
 #define ntte_update(_newID)
-	 // Bound Events, 'instance_copy()' Fix:
+	 // NT:TE Object Instance Lists, 'instance_copy()' Fix:
+	if(array_length(obj_search)){
+		with(obj_search){
+			var _obj = self[0];
+			if(instance_exists(_obj)){
+				if(_obj.id > _newID){
+					var	_inst     = instances_matching_gt(_obj, "id", _newID),
+						_nameList = self[1];
+						
+					with(_nameList){
+						var	_name     = self,
+							_nameInst = instances_matching(_inst, "name", _name),
+							_objList  = instances_matching_ne(lq_get(obj, _name), "id", null);
+							
+						lq_set(obj, _name, _objList);
+						
+						if(array_length(_nameInst)){
+							with(_nameInst){
+								if(array_find_index(_objList, self) < 0){
+									array_push(_objList, self);
+								}
+							}
+						}
+						
+						if(!array_length(_objList)){
+							_nameList = array_delete_value(_nameList, _name);
+						}
+					}
+					if(array_length(_nameList)){
+						self[@1] = _nameList;
+					}
+					
+					 // Done:
+					else obj_search = array_delete_value(obj_search, self);
+				}
+			}
+			else if(!instance_exists(PauseButton) && !instance_exists(BackMainMenu) && UberCont.alarm2 < 0){
+				with(self[1]){
+					lq_set(obj, self, instances_matching_ne(lq_get(obj, self), "id", null));
+				}
+				obj_search = array_delete_value(obj_search, self);
+			}
+		}
+	}
+	
+	 // Bound Event Instance Lists, 'instance_copy()' Fix:
 	if(ds_map_size(ntte_obj_bind)){
 		with(ds_map_keys(ntte_obj_bind)){
 			var	_event    = self,
@@ -1234,7 +1309,7 @@
 	
 #define unlock_splat(_name, _text, _sprite, _sound)
 	 // Make Sure UnlockCont Exists:
-	if(!array_length(instances_matching(CustomObject, "name", "UnlockCont"))){
+	if(!array_length(instances_matching_ne(obj.UnlockCont, "id", null))){
 		obj_create(0, 0, "UnlockCont");
 	}
 	
@@ -1247,7 +1322,7 @@
 		"snd" : _sound
 	};
 	
-	with(instances_matching(CustomObject, "name", "UnlockCont")){
+	with(instances_matching_ne(obj.UnlockCont, "id", null)){
 		if(splash_index >= array_length(unlock) - 1 && splash_timer <= 0){
 			splash_delay = 40;
 		}
@@ -1806,8 +1881,12 @@
 	
 	var _new = _array;
 	
-	while(array_find_index(_new, _value) >= 0){
-		_new = array_delete(_new, array_find_index(_new, _value));
+	while(true){
+		var _pos = array_find_index(_new, _value);
+		if(_pos >= 0){
+			_new = array_delete(_new, _pos);
+		}
+		else break;
 	}
 	
 	return _new;
@@ -3404,7 +3483,7 @@
 		_enemy   = ((argument_count > 5) ? argument[5] : false),
 		_inst    = ((argument_count > 6) ? argument[6] : self),
 		_disMax  = point_distance(_x1, _y1, _x2, _y2),
-		_disAdd  = min(_disMax / 8, 10) + (_enemy ? (array_length(instances_matching_ge(instances_matching(CustomEnemy, "name", "Eel"), "arcing", 1)) - 1) : 0),
+		_disAdd  = min(_disMax / 8, 10) + (_enemy ? (array_length(instances_matching_ge(obj.Eel, "arcing", 1)) - 1) : 0),
 		_dis     = _disMax,
 		_dir     = point_direction(_x1, _y1, _x2, _y2),
 		_x       = _x1,
@@ -4887,7 +4966,7 @@
 	}
 	
 	 // Top-ify:
-	if(!array_length(instances_matching(instances_matching(CustomObject, "name", "TopObject"), "target", _inst))){
+	if(!array_length(instances_matching(obj.TopObject, "target", _inst))){
 		with(obj_create(_x, _y, "TopObject")){
 			target = _inst;
 			
@@ -5930,6 +6009,7 @@
 	
 /// SCRIPTS
 #macro  call                                                                                    script_ref_call
+#macro  obj                                                                                     global.obj
 #macro  scr                                                                                     global.scr
 #macro  spr                                                                                     global.spr
 #macro  snd                                                                                     global.snd

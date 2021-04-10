@@ -1,6 +1,15 @@
 #define init
 	mod_script_call("mod", "teassets", "ntte_init", script_ref_create(init));
 	
+	 // Gather Objects:
+	for(var i = 1; true; i++){
+		var _scrName = script_get_name(i);
+		if(is_undefined(_scrName)){
+			break;
+		}
+		call(scr.obj_add, script_ref_create(i));
+	}
+	
 	 // Bind Events:
 	global.wall_fake_bind = [
 		script_bind(CustomDraw, script_ref_create(draw_wall_fake, "Bot"), 4,                                false),
@@ -20,9 +29,8 @@
 	surfWallFakeMaskTop = call(scr.surface_setup, "RedWallFakeMaskTop", null, null, null);
 	surfWallShineMask   = call(scr.surface_setup, "RedWallShineMask",   null, null, null);
 	with(surfWallFakeMaskBot){
-		wall_num  = 0;
-		wall_min  = 0;
-		wall_inst = [];
+		wall_num = 0;
+		wall_min = 0;
 	}
 	with(surfWallShineMask){
 		wall_num  = 0;
@@ -38,19 +46,12 @@
 		array_push(global.draw_event_exists, (array_find_index(_hasEvent, i) >= 0));
 	}
 	
-	 // Client-Side Darkness:
-	//clientDarknessCoeff = array_create(maxp, 0);
-	//clientDarknessFloor = [];
-	
 #define cleanup
 	mod_script_call("mod", "teassets", "ntte_cleanup", script_ref_create(cleanup));
 	
 #macro surfWallFakeMaskBot global.surfWallFakeMaskBot
 #macro surfWallFakeMaskTop global.surfWallFakeMaskTop
 #macro surfWallShineMask   global.surfWallShineMask
-
-//#macro clientDarknessCoeff global.clientDarknessCoeff
-//#macro clientDarknessFloor global.clientDarknessFloor
 
 #define BigCrystalProp_create(_x, _y)
 	with(instance_create(_x, _y, CrystalProp)){
@@ -520,7 +521,7 @@
 			if(_targetSeen || chance(1, 3)){
 				 // Attempt Cloning:
 				var _cloneNum = 0;
-				with(instances_matching(instances_matching(CustomObject, "name", "CrystalClone"), "creator", self)){
+				with(instances_matching(obj.CrystalClone, "creator", self)){
 					_cloneNum += variable_instance_get(target, "size", 1);
 				}
 				if(!chance(_cloneNum, clone_max)){
@@ -907,13 +908,20 @@
 		 // Vars:
 		creator       = noone;
 		target        = noone;
-		clone         = instances_matching_ne(instances_matching_ne(instances_matching_ne(instances_matching_lt(instances_matching_ne(enemy, "team", 2), "size", 6), "name", "CrystalBrain", "CrystalHeart", "ChaosHeart"), "mask_index", mskNone), "intro", false);
+		clone         = [];
 		time          = 450;
 		team          = -1;
 		appear        = 1;
 		appear_flip   = false;
 		appear_health = false;
 		budge         = true;
+		
+		 // Cloneables:
+		with(instances_matching_ne(instances_matching_ne(instances_matching_lt(instances_matching_ne(enemy, "team", 2), "size", 5), "mask_index", mskNone), "intro", false)){
+			if(array_find_index(obj.CrystalBrain, self) < 0){
+				array_push(other.clone, self);
+			}
+		}
 		
 		return self;
 	}
@@ -939,7 +947,7 @@
 	if(target == noone){
 		var	_disMax = 256,
 			_target = noone,
-			_clones = instances_matching(instances_matching(object_index, "name", name), "team", team);
+			_clones = instances_matching(obj.CrystalClone, "team", team);
 			
 		 // Find Nearest:
 		with(instances_matching_ne(clone, "id", null)){
@@ -1146,7 +1154,7 @@
 	var _inst = (
 		(appear > 0)
 		? [self]
-		: instances_matching_le(instances_matching(instances_matching(instances_matching(object_index, "name", name), "depth", depth), "sprite_index", sprite_index), "appear", 0)
+		: instances_matching_le(instances_matching(instances_matching(obj.CrystalClone, "depth", depth), "sprite_index", sprite_index), "appear", 0)
 	);
 	
 	if(_inst[0] == self){
@@ -1329,7 +1337,7 @@
 		maxhealth   = 50;
 		meleedamage = 4;
 		canmelee    = false;
-		size        = 3;
+		size        = 5;
 		walk        = 0;
 		walkspeed   = 0.3;
 		maxspeed    = 2;
@@ -1808,19 +1816,6 @@
 				instance_create(x + choose(-16, 0), y + choose(-16, 0), Top);
 			}
 		}
-		
-		/*
-		 // Clientside Darkness:
-		var _darkAreas = [area_sewers, area_caves, area_labs, "pizza", "lair", "trench"];
-		if(array_find_index(_darkAreas, area) >= 0 && array_find_index(_darkAreas, GameCont.area) < 0){
-			with(instances_matching_gt(Floor, "id", _genID)){
-				array_push(clientDarknessFloor, self);
-			}
-			with(TopCont){
-				darkness = true;
-			}
-		}
-		*/
 		
 		 // Reveal:
 		with(instances_matching_gt([Floor, Wall, TopSmall], "id", _genID)){
@@ -2497,37 +2492,37 @@
 		
 		 // Cursed Mortar Behavior:
 		if(curse > 0 && my_health > 0 && chance(_damage / 25, 1)){
-			var	_x       = x,
-				_y       = y,
-				_enemies = instances_matching_ne(enemy, "name", name);
-				
-			 // Swap places with another dude:
-			if(array_length(_enemies)){
-				with(call(scr.instance_random, _enemies)){
-					other.x = x;
-					other.y = y;
-					x = _x;
-					y = _y;
+			with(call(scr.instance_random, obj.Mortar)){
+				var	_x = x,
+					_y = y;
 					
-					 // Unstick from walls:
-					if(!call(scr.instance_budge, self, Wall)){
-						call(scr.wall_clear, self);
-					}
-					
-					 // Effects:
-					nexthurt = current_frame + 6;
-					sprite_index = spr_hurt;
-					image_index = 0;
+				 // Swap Places:
+				x         = other.x;
+				y         = other.y;
+				xprevious = x;
+				yprevious = y;
+				with(other){
+					x         = _x;
+					y         = _y;
+					xprevious = x;
+					yprevious = y;
 				}
+				
+				 // Effects:
+				sprite_index = spr_hurt;
+				image_index  = 0;
+				nexthurt     = current_frame + 6;
 				
 				 // Unstick from walls:
-				if(place_meeting(x, y, Floor)){
-					if(!call(scr.instance_budge, self, Wall)){
-						call(scr.wall_clear, self);
+				with([self, other]){
+					if(place_meeting(x, y, Floor)){
+						if(!call(scr.instance_budge, self, Wall)){
+							call(scr.wall_clear, self);
+						}
 					}
-				}
-				else{
-					call(scr.top_create, x, y, self, 0, 0);
+					else{
+						call(scr.top_create, x, y, self, 0, 0);
+					}
 				}
 			}
 		}
@@ -2721,7 +2716,7 @@
 		projectile_hit_push(other, min(damage + (bonus_damage * bonus), max(other.my_health, 10)), force);
 		
 		 // Annihilation Time:
-		if(instance_is(other, prop) || other.team == 0 || (instance_is(other, CustomEnemy) && "name" in other && other.name == "Tesseract")){
+		if(instance_is(other, prop) || other.team == 0 || array_find_index(obj.Tesseract, other) >= 0){
 			call(scr.obj_create, x, y, "RedExplosion");
 		}
 		else{
@@ -2823,7 +2818,7 @@
 		if(array_length(_inst)){
 			with(call(scr.instances_meeting_instance, self, _inst)){
 				if(place_meeting(x, y, other)){
-					if(!instance_exists(CustomObject) || !array_length(instances_matching(instances_matching(CustomObject, "name", "CrystalClone"), "target", self))){
+					if(!array_length(instances_matching(obj.CrystalClone, "target", self))){
 						var _clone = self;
 						
 						motion_add(random(180), 1);
@@ -4687,18 +4682,34 @@
 		 // Collision Helper:
 		if(solid){
 			solid = false;
-			with(instance_create(x, y, CustomObject)){
-				name         = "WallFakeHelper";
+			with(call(scr.obj_create, x, y, "WallFakeHelper")){
 				creator      = other;
-				solid        = true;
-				visible      = false;
 				sprite_index = other.sprite_index;
+				image_index  = other.image_index;
+				image_speed  = other.image_speed;
 				image_xscale = other.image_xscale;
 				image_yscale = other.image_yscale;
 				image_angle  = other.image_angle;
 				mask_index   = other.mask_index;
 			}
 		}
+		
+		return self;
+	}
+	
+	
+#define WallFakeHelper_create(_x, _y)
+	/*
+		Collision helper object for fake walls
+	*/
+	
+	with(instance_create(_x, _y, CustomObject)){
+		 // Vars:
+		sprite_index = object_get_sprite(Wall);
+		mask_index   = object_get_mask(Wall);
+		visible      = false;
+		solid        = true;
+		creator      = noone;
 		
 		return self;
 	}
@@ -4723,7 +4734,7 @@
 		area       = "red";
 		subarea    = 1;
 		loops      = GameCont.loops;
-		seed       = GameCont.gameseed[(max(0, GameCont.atseed) + array_length(instances_matching_lt(instances_matching(CustomObject, "name", "Warp"), "id", id))) % array_length(GameCont.gameseed)];
+		seed       = GameCont.gameseed[(max(0, GameCont.atseed) + array_length(instances_matching_lt(obj.Warp, "id", id))) % array_length(GameCont.gameseed)];
 		prompt     = call(scr.prompt_create, self, "", mskReviveArea, 0, 8);
 		
 		 // Determine Area:
@@ -4747,7 +4758,7 @@
 		}
 		if(array_length(_pick)){
 			area = _pick[irandom(array_length(_pick) - 1)];
-			var _warpInst = instances_matching_ne(instances_matching(CustomObject, "name", "Warp"), "id", id);
+			var _warpInst = instances_matching_ne(obj.Warp, "id", id);
 			with(call(scr.array_shuffle, _pick)){
 				var _area = self;
 				if(!call(scr.area_get_secret, _area) ^ _secret){
@@ -4903,7 +4914,7 @@
 #define Warp_destroy
 	if(open){
 		 // Close Warps:
-		with(instances_matching(object_index, "name", name)){
+		with(instances_matching_ne(obj.Warp, "id", null)){
 			open = false;
 			alarm0 = -1;
 		}
@@ -5131,41 +5142,44 @@
 			surfWallFakeMaskTop.reset = true;
 			
 			 // Update Vars:
-			wall_num  = instance_number(Wall);
-			wall_min  = instance_max;
-			wall_inst = instances_matching(Wall, "name", "WallFake");
+			wall_num = instance_number(Wall);
+			wall_min = instance_max;
 			
 			 // Update Fake Walls:
-			with(instances_matching(CustomObject, "name", "WallFakeHelper")){
-				if(!instance_exists(creator)){
-					instance_destroy();
+			if(array_length(obj.WallFakeHelper)){
+				with(instances_matching_ne(obj.WallFakeHelper, "id", null)){
+					if(!instance_exists(creator)){
+						instance_destroy();
+					}
 				}
 			}
 		}
 		
 		 // Walls Active:
-		if(array_length(wall_inst)){
+		if(array_length(obj.WallFake)){
 			 // Visual Fix:
-			var _inst = instances_matching(wall_inst, "visible", false);
-			if(array_length(_inst)) with(_inst){
-				visible = true;
+			var _inst = instances_matching(obj.WallFake, "visible", false);
+			if(array_length(_inst)){
+				with(_inst){
+					visible = true;
+				}
 			}
 			
 			 // Fake Wall Collision:
-			var _inst = instances_matching(CustomObject, "name", "WallFakeHelper");
-			if(array_length(_inst)){
-				var _instMeet = [];
-				
+			if(array_length(obj.WallFakeHelper)){
+				var	_instMeet = [],
+					_instWall = instances_matching_ne(obj.WallFakeHelper, "id", null);
+					
 				 // Gather Dudes in Fake Walls:
 				with(hitme){
-					if(place_meeting(x, y, CustomObject) && array_length(call(scr.instances_meeting_instance, self, _inst))){
+					if(place_meeting(x, y, CustomObject) && array_length(call(scr.instances_meeting_instance, self, _instWall))){
 						array_push(_instMeet, self);
 					}
 				}
 				
 				 // Disable Collision When Near Dude in a Fake Wall:
 				if(array_length(_instMeet)){
-					with(_inst){
+					with(_instWall){
 						var _solid = true;
 						if(distance_to_object(hitme) <= 32){
 							with(_instMeet){
@@ -5187,13 +5201,15 @@
 				
 				 // Enable Collision:
 				else{
-					_inst = instances_matching_ne(_inst, "solid", true);
-					if(array_length(_inst)) with(_inst){
-						solid = true;
-						if(instance_exists(creator)){
-							creator.mask_index = (solid ? mask_index : mskNone);
+					var _inst = instances_matching_ne(_instWall, "solid", true);
+					if(array_length(_inst)){
+						with(_inst){
+							solid = true;
+							if(instance_exists(creator)){
+								creator.mask_index = (solid ? mask_index : mskNone);
+							}
+							else instance_destroy();
 						}
-						else instance_destroy();
 					}
 				}
 			}
@@ -5260,44 +5276,14 @@
 		visible = _visible;
 	}
 	
-	/*
-	 // Client-Side Darkness:
-	clientDarknessFloor = instances_matching_ne(clientDarknessFloor, "id", null);
-	with(Player){
-		if(array_length(clientDarknessFloor) > 0){
-			var _num = clientDarknessCoeff[index],
-				_spd = current_time_scale / 5,
-				_inDark = false;
-				
-			with(call(scr.instances_meeting_instance, self, clientDarknessFloor)){
-				_inDark = true;
-				break;
-			}
-			
-			if(_inDark){
-				_num -= _spd;
-			}
-			else{
-				_num += _spd;
-			}
-			
-			clientDarknessCoeff[index] = clamp(_num, 0, 1);
-		}
-		else{
-			clientDarknessCoeff[index] = 1;
-		}
-	}
-	*/
-	
 #define ntte_draw_shadows
 	 // Mortar Plasma:
-	if(instance_exists(CustomProjectile)){
-		var _inst = instances_matching(instances_matching(CustomProjectile, "name", "MortarPlasma"), "visible", true);
-		if(array_length(_inst)) with(_inst){
+	if(array_length(obj.MortarPlasma)){
+		with(instances_matching(obj.MortarPlasma, "visible", true)){
 			if(position_meeting(x, y, Floor)){
 				var	_percent = clamp(96 / z, 0.1, 1),
 					_w = ceil(18 * _percent),
-					_h = ceil(6 * _percent),
+					_h = ceil( 6 * _percent),
 					_x = x,
 					_y = y;
 					
@@ -5307,99 +5293,91 @@
 	}
 	
 	 // Crystal Brain Death:
-	if(instance_exists(CustomObject)){
-		var _inst = instances_matching(instances_matching(CustomObject, "name", "CrystalBrainDeath", "PortalGuardianDeath"), "visible", true);
-		if(array_length(_inst)) with(_inst){
+	if(array_length(obj.CrystalBrainDeath)){
+		with(instances_matching(obj.CrystalBrainDeath, "visible", true)){
+			draw_sprite(spr_shadow, 0, x + spr_shadow_x, y + spr_shadow_y);
+		}
+	}
+	if(array_length(obj.PortalGuardianDeath)){ // until telabs has other stuff to put in its ntte_draw_shadows event or tepalace exists
+		with(instances_matching(obj.PortalGuardianDeath, "visible", true)){
 			draw_sprite(spr_shadow, 0, x + spr_shadow_x, y + spr_shadow_y);
 		}
 	}
 	
 	 // Tesseract:
-	if(instance_exists(CustomObject) || instance_exists(CustomEnemy)){
-		var _inst = call(scr.array_combine, 
-			(instance_exists(CustomEnemy)  ? instances_matching(CustomEnemy,  "name", "Tesseract")      : []),
-			(instance_exists(CustomObject) ? instances_matching(CustomObject, "name", "TesseractDeath") : [])
-		);
-		if(array_length(_inst)){
-			_inst = instances_matching(instances_matching(_inst, "visible", true), "spr_shadow", mskNone);
-			if(array_length(_inst)) with(_inst){
-				var	_scale = 0.9,
-					_offX  = spr_shadow_x,
-					_offY  = spr_shadow_y;
-					
-				image_xscale *= _scale;
-				image_yscale *= _scale;
-				x += _offX;
-				y += _offY;
+	if(array_length(obj.Tesseract) || array_length(obj.TesseractDeath)){
+		var _scale = 0.9;
+		with(instances_matching(instances_matching(call(scr.array_combine, obj.Tesseract, obj.TesseractDeath), "visible", true), "spr_shadow", mskNone)){
+			var	_offX = spr_shadow_x,
+				_offY = spr_shadow_y;
 				
-				with(self) event_perform(ev_draw, 0);
-				
-				image_xscale /= _scale;
-				image_yscale /= _scale;
-				x -= _offX;
-				y -= _offY;
-			}
+			image_xscale *= _scale;
+			image_yscale *= _scale;
+			x            += _offX;
+			y            += _offY;
+			
+			event_perform(ev_draw, 0);
+			
+			image_xscale /= _scale;
+			image_yscale /= _scale;
+			x            -= _offX;
+			y            -= _offY;
 		}
 	}
 	
 #define ntte_draw_bloom
-	if(instance_exists(CustomObject)){
-		 // Warp Portals:
-		var _inst = instances_matching(CustomObject, "name", /*"TesseractStrike", "TesseractWarp",*/ "WarpPortal");
-		if(array_length(_inst)) with(_inst){
-			var	_scale = 2,
-				_alpha = 0.1;
-				
+	 // Warp Portals:
+	if(array_length(obj.WarpPortal)){
+		var	_scale = 2,
+			_alpha = 0.1;
+			
+		with(instances_matching_ne(obj.WarpPortal, "id", null)){
 			image_xscale *= _scale;
 			image_yscale *= _scale;
 			image_alpha  *= _alpha;
+			
 			event_perform(ev_draw, 0);
+			
 			image_xscale /= _scale;
 			image_yscale /= _scale;
 			image_alpha  /= _alpha;
 		}
-		
-		 // Tesseract Death:
-		var _inst = instances_matching(CustomObject, "name", "TesseractDeath");
-		if(array_length(_inst)) with(_inst){
-			draw_sprite_ext(sprite_index, 0.4 * current_frame, x, y, image_xscale * 2, image_yscale * 2, image_angle, image_blend, (image_alpha * 0.2) / max(1, 1 + throes));
+	}
+	
+	 // Crystal Heart Orbs:
+	if(array_length(obj.CrystalHeartBullet)){
+		var	_scale = 2,
+			_alpha = 0.1;
+			
+		with(instances_matching_ne(obj.CrystalHeartBullet, "id", null)){ // Copy pasting code is truly so epic
+			image_xscale *= _scale;
+			image_yscale *= _scale;
+			image_alpha  *= _alpha;
+			
+			event_perform(ev_draw, 0);
+			
+			image_xscale /= _scale;
+			image_yscale /= _scale;
+			image_alpha  /= _alpha;
 		}
 	}
 	
-	 // Projectiles:
-	if(instance_exists(projectile)){
-		if(instance_exists(CustomProjectile)){
-			 // Crystal Heart Projectiles:
-			var _inst = instances_matching(CustomProjectile, "name", "CrystalHeartBullet");
-			if(array_length(_inst)) with(_inst){
-				var	_scale = 2,
-					_alpha = 0.1;
-					
-				 // Copy pasting code is truly so epic:
-				image_xscale *= _scale;
-				image_yscale *= _scale;
-				image_alpha  *= _alpha;
-				event_perform(ev_draw, 0);
-				image_xscale /= _scale;
-				image_yscale /= _scale;
-				image_alpha  /= _alpha;
-			}
-			
-			 // Red Slashes:
-			if(instance_exists(CustomSlash)){
-				var _inst = instances_matching(CustomSlash, "name", "RedSlash");
-				if(array_length(_inst)) with(_inst){
-					draw_sprite_ext(sprite_index, image_index, x, y, 1.2 * image_xscale, 1.2 * image_yscale, image_angle, image_blend, 0.1 * image_alpha);
-				}
-			}
+	 // Red Melee:
+	if(array_length(obj.RedSlash)){
+		with(instances_matching_ne(obj.RedSlash, "id", null)){
+			draw_sprite_ext(sprite_index, image_index, x, y, 1.2 * image_xscale, 1.2 * image_yscale, image_angle, image_blend, 0.1 * image_alpha);
 		}
-		
-		 // Red Shanks:
-		if(instance_exists(Shank)){
-			var _inst = instances_matching(Shank, "name", "RedShank");
-			if(array_length(_inst)) with(_inst){
-				draw_sprite_ext(sprite_index, image_index, x, y, 1.2 * image_xscale, 1.2 * image_yscale, image_angle, image_blend, 0.1 * image_alpha);
-			}
+	}
+	if(array_length(obj.RedShank)){
+		with(instances_matching_ne(obj.RedShank, "id", null)){
+			draw_sprite_ext(sprite_index, image_index, x, y, 1.2 * image_xscale, 1.2 * image_yscale, image_angle, image_blend, 0.1 * image_alpha);
+		}
+	}
+	
+	 // Tesseract Death:
+	if(array_length(obj.TesseractDeath)){
+		with(instances_matching_ne(obj.TesseractDeath, "id", null)){
+			draw_sprite_ext(sprite_index, 0.4 * current_frame, x, y, image_xscale * 2, image_yscale * 2, image_angle, image_blend, (image_alpha * 0.2) / max(1, 1 + throes));
 		}
 	}
 	
@@ -5411,120 +5389,92 @@
 			
 			var _gray = (_type == "normal");
 			
-			 // Enemies:
-			if(instance_exists(enemy)){
-				if(instance_exists(CustomEnemy)){
-					 // Mortar:
-					var _inst = instances_matching(CustomEnemy, "name", "Mortar", "InvMortar");
-					if(array_length(_inst)) with(_inst){
-						if(sprite_index == spr_fire){
-							draw_circle(x + (6 * right), y - 16, abs(24 - alarm1 + orandom(4)) + (24 * _gray), false);
-						}
+			 // Miner Bandit:
+			if(array_length(obj.MinerBandit)){
+				var	_lightDis  = 60 + (60 * _gray),
+					_lightAng  = 15 + (5  * _gray),
+					_circleDis = 6  + (3  * _gray),
+					_circleRad = 12 + (12 * _gray);
+					
+				with(instances_matching_ne(obj.MinerBandit, "id", null)){
+					 // Light Beam:
+					if(light_visible == true){
+						var _off = _lightAng + orandom(1),
+							_x2  = x + lengthdir_x(_lightDis, light_angle + _off),
+							_y2  = y + lengthdir_y(_lightDis, light_angle + _off),
+							_x3  = x + lengthdir_x(_lightDis, light_angle - _off),
+							_y3  = y + lengthdir_y(_lightDis, light_angle - _off);
+							
+						draw_triangle(x, y, _x2, _y2, _x3, _y3, false);
+						draw_circle(
+							x + lengthdir_x(_lightDis, light_angle), 
+							y + lengthdir_y(_lightDis, light_angle), 
+							point_distance(_x2, _y2, _x3, _y3) / 2, 
+							false
+						);
 					}
 					
-					 // Crystal Heart:
-					var _inst = instances_matching(CustomEnemy, "name", "CrystalHeart", "ChaosHeart");
-					if(array_length(_inst)){
-						var	_ver = 15 + (30 * _gray),
-							_rad = 24 + (48 * _gray),
-							_coe = 2  + (1  * _gray);
-							
-						with(_inst){
-							draw_crystal_heart_dark(_ver, _rad + random(2), _coe);
-						}
-					}
-					
-					 // Tesseract:
-					var _inst = instances_matching(CustomEnemy, "name", "Tesseract");
-					if(array_length(_inst)) with(_inst){
-						draw_circle(x, y, 64 + (128 * _gray) + random(2), false);
-					}
-					
-					/*
-					 // Crystal Bat:
-					var _inst = instances_matching(CustomEnemy, "name", "CrystalBat", "InvCrystalBat");
-					if(array_length(_inst)) with(_inst){
-						draw_circle(x, y, 16 + (20 * _gray) + random(2), false);
-					}
-					*/
-				}
-				
-				 // Miner Bandit:
-				if(instance_exists(Bandit)){
-					var _inst = instances_matching(Bandit, "name", "MinerBandit");
-					if(array_length(_inst)){
-						var	_lightDis  = 60 + (60 * _gray),
-							_lightAng  = 15 + (5  * _gray),
-							_circleDis = 6  + (3  * _gray),
-							_circleRad = 12 + (12 * _gray);
-							
-						with(_inst){
-							 // Light Beam:
-							if(light_visible == true){
-								var _off = _lightAng + orandom(1),
-									_x2  = x + lengthdir_x(_lightDis, light_angle + _off),
-									_y2  = y + lengthdir_y(_lightDis, light_angle + _off),
-									_x3  = x + lengthdir_x(_lightDis, light_angle - _off),
-									_y3  = y + lengthdir_y(_lightDis, light_angle - _off);
-									
-								draw_triangle(x, y, _x2, _y2, _x3, _y3, false);
-								draw_circle(
-									x + lengthdir_x(_lightDis, light_angle), 
-									y + lengthdir_y(_lightDis, light_angle), 
-									point_distance(_x2, _y2, _x3, _y3) / 2, 
-									false
-								);
-							}
-							
-							 // Helmet Glow:
-							draw_circle(
-								x + lengthdir_x(_circleDis, light_angle), 
-								y + lengthdir_y(_circleDis, light_angle), 
-								_circleRad + orandom(1), 
-								false
-							);
-						}
-					}
-				}
-			}
-			
-			 // Mortar Plasma:
-			if(instance_exists(CustomProjectile)){
-				var _inst = instances_matching(CustomProjectile, "name", "MortarPlasma");
-				if(array_length(_inst)){
-					var _r = 32 + (32 * _gray);
-					with(_inst){
-						draw_circle(x, y - z, _r + orandom(1), false);
-					}
+					 // Helmet Glow:
+					draw_circle(
+						x + lengthdir_x(_circleDis, light_angle), 
+						y + lengthdir_y(_circleDis, light_angle), 
+						_circleRad + orandom(1), 
+						false
+					);
 				}
 			}
 			
 			 // Big Crystal Prop:
-			if(instance_exists(CrystalProp)){
-				var _inst = instances_matching(CrystalProp, "name", "BigCrystalProp");
-				if(array_length(_inst)){
-					var _r = 30 + (60 * _gray) + (1 + sin(current_frame / 80));
-					with(_inst){
-						draw_circle(x, y, _r, false);
-					}
+			if(array_length(obj.BigCrystalProp)){
+				var _r = 30 + (60 * _gray) + (1 + sin(current_frame / 80));
+				with(instances_matching_ne(obj.BigCrystalProp, "id", null)){
+					draw_circle(x, y, _r, false);
 				}
 			}
 			
 			/*
-			 // Client-Side Darkness:
-			if(_type == "end" && array_length(clientDarknessFloor) > 0){
-				var _local = player_find_local_nonsync();
-				if(_local >= 0 && _local < array_length(clientDarknessCoeff)){
-					var	_alp = draw_get_alpha(),
-						_vx  = view_xview_nonsync,
-						_vy  = view_yview_nonsync;
-						
-					draw_set_alpha(clientDarknessCoeff[_local]);
-					draw_rectangle(_vx, _vy, _vx + game_width, _vy + game_height, false);
-					draw_set_alpha(_alp);
+			 // Crystal Bat:
+			if(array_length(obj.CrystalBat)){
+				with(instances_matching_ne(obj.CrystalBat, "id", null)){
+					draw_circle(x, y, 16 + (20 * _gray) + random(2), false);
 				}
 			}
 			*/
+			
+			 // Crystal Mortar:
+			if(array_length(obj.Mortar)){
+				with(instances_matching_ne(obj.Mortar, "id", null)){
+					if(sprite_index == spr_fire){
+						draw_circle(x + (6 * right), y - 16, abs(24 - alarm1 + orandom(4)) + (24 * _gray), false);
+					}
+				}
+			}
+			
+			 // Crystal Mortar Plasma:
+			if(array_length(obj.MortarPlasma)){
+				var _r = 32 + (32 * _gray);
+				with(instances_matching_ne(obj.MortarPlasma, "id", null)){
+					draw_circle(x, y - z, _r + orandom(1), false);
+				}
+			}
+			
+			 // Crystal Heart:
+			if(array_length(obj.CrystalHeart)){
+				var	_ver = 15 + (30 * _gray),
+					_rad = 24 + (48 * _gray),
+					_coe = 2  + (1  * _gray);
+					
+				with(instances_matching_ne(obj.CrystalHeart, "id", null)){
+					draw_crystal_heart_dark(_ver, _rad + random(2), _coe);
+				}
+			}
+			
+			 // Tesseract:
+			if(array_length(obj.Tesseract)){
+				with(instances_matching_ne(obj.Tesseract, "id", null)){
+					draw_circle(x, y, 64 + (128 * _gray) + random(2), false);
+				}
+			}
 			
 			break;
 			
@@ -5637,23 +5587,23 @@
 					);
 				}
 				/*with(other){
-					if(instance_exists(CustomEnemy)){
-						var _inst = instances_matching(instances_matching(CustomEnemy, "name", "RedSpider"), "visible", true);
-						if(array_length(_inst)) with(_inst){
-							x -= _surfX;
-							y -= _surfY;
+					if(array_length(obj.RedSpider)){
+						with(instances_matching(obj.RedSpider, "visible", true)){
+							x            -= _surfX;
+							y            -= _surfY;
 							image_xscale *= _surfScale;
 							image_yscale *= _surfScale;
+							
 							event_perform(ev_draw, 0);
-							x += _surfX;
-							y += _surfY;
+							
+							x            += _surfX;
+							y            += _surfY;
 							image_xscale /= _surfScale;
 							image_yscale /= _surfScale;
 						}
 					}
-					if(instance_exists(CrystalProp)){
-						var _inst = instances_matching(instances_matching(CrystalProp, "name", "CrystalPropRed"), "visible", true);
-						if(array_length(_inst)) with(_inst){
+					if(array_length(obj.CrystalPropRed)){
+						with(instances_matching(obj.CrystalPropRed, "visible", true)){
 							draw_sprite_ext(sprite_index, image_index, (x - _surfX) * _surfScale, (y - _surfY) * _surfScale, image_xscale * _surfScale, image_yscale * _surfScale, image_angle, image_blend, image_alpha);
 						}
 					}
@@ -5699,8 +5649,6 @@
 			x = _surfX;
 			y = _surfY;
 			
-			surfWallFakeMaskBot.wall_inst = instances_matching_ne(surfWallFakeMaskBot.wall_inst, "id", null);
-			
 			surface_set_target(surf);
 			draw_clear_alpha(c_black, 0);
 			
@@ -5709,7 +5657,7 @@
 				case "Bot":
 					
 					 // Fake Walls:
-					with(surfWallFakeMaskBot.wall_inst){
+					with(instances_matching_ne(obj.WallFake, "id", null)){
 						if(image_speed == 0){
 							draw_sprite_ext(sprite_index, image_index, (x - _surfX) * _surfScale, (y - _surfY) * _surfScale, image_xscale * _surfScale, image_yscale * _surfScale, image_angle, image_blend, image_alpha);
 						}
@@ -5723,14 +5671,14 @@
 				case "Top":
 					
 					 // Fake Walls:
-					with(surfWallFakeMaskBot.wall_inst){
+					with(instances_matching_ne(obj.WallFake, "id", null)){
 						draw_sprite_ext(topspr, topindex, (x - _surfX) * _surfScale, (y - 8 - _surfY) * _surfScale, _surfScale, _surfScale, 0, image_blend, image_alpha);
 						//draw_sprite_part_ext(outspr, outindex, l, r, w, h, (x - 4 + l - _surfX) * _surfScale, (y - 12 + r - _surfY) * _surfScale, _surfScale, _surfScale, image_blend, image_alpha);
 					}
 					
 					 // Cut Out Normal Walls:
 					draw_set_blend_mode_ext(bm_zero, bm_inv_src_alpha);
-					with(instances_matching_ne(Wall, "name", "WallFake")){
+					with(instances_matching(Wall, "solid", true)){
 						draw_sprite_ext(topspr, topindex, (x - _surfX) * _surfScale, (y - 8 - _surfY) * _surfScale, _surfScale, _surfScale, 0, image_blend, image_alpha);
 						draw_sprite_part_ext(outspr, outindex, l, r, w, h, (x - 4 + l - _surfX) * _surfScale, (y - 12 + r - _surfY) * _surfScale, _surfScale, _surfScale, image_blend, image_alpha);
 					}
@@ -5809,6 +5757,7 @@
 	
 /// SCRIPTS
 #macro  call                                                                                    script_ref_call
+#macro  obj                                                                                     global.obj
 #macro  scr                                                                                     global.scr
 #macro  spr                                                                                     global.spr
 #macro  snd                                                                                     global.snd
