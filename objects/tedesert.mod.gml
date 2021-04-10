@@ -2483,7 +2483,9 @@
 #define WantBigMaggot_create(_x, _y)
 	with(instance_create(_x, _y, BigMaggot)){
 		 // Burrow:
+		var _vars = call(scr.variable_instance_get_list, self);
 		instance_change(BigMaggotBurrow, false);
+		call(scr.variable_instance_set_list, self, _vars); // broo dont sandbox my variables i hate it
 		sprite_index = sprBigMaggotBurrow;
 		visible      = false;
 		alarm0       = -1;

@@ -1881,8 +1881,12 @@
 	
 	var _new = _array;
 	
-	while(array_find_index(_new, _value) >= 0){
-		_new = array_delete(_new, array_find_index(_new, _value));
+	while(true){
+		var _pos = array_find_index(_new, _value);
+		if(_pos >= 0){
+			_new = array_delete(_new, _pos);
+		}
+		else break;
 	}
 	
 	return _new;
