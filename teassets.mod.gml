@@ -103,7 +103,7 @@
 			
 			 // Ultra Quasar Rifle:
 			UltraQuasarRifle = sprite(p + "sprUltraQuasarRifle", 1, 20, 12, shnWep);
-			UltraQuasarFlame = sprite(p + "sprUltraQuasarFlame", 3, 16, 8);
+			UltraQuasarFlame = sprite(p + "sprUltraQuasarFlame", 3, 64, 32);
 			
 		//#endregion
 		
@@ -202,6 +202,7 @@
 			UltraQuasarBeamStart = sprite(p + "sprUltraQuasarBeamStart", 2, 64, 32);
 			UltraQuasarBeamEnd   = sprite(p + "sprUltraQuasarBeamEnd",   2,  0, 32);
 			UltraQuasarBeamHit   = sprite(p + "sprUltraQuasarBeamHit",   6, 24, 24);
+			UltraQuasarBeamTrail = sprite(p + "sprUltraQuasarBeamTrail", 3,  8,  8);
 			msk.QuasarBeam  	 = sprite(p + "mskQuasarBeam",      	 1, 32, 16);
 			msk.UltraQuasarBeam  = sprite(p + "mskUltraQuasarBeam",		 1, 64, 32);
 			

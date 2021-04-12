@@ -3668,9 +3668,18 @@
 		 // Effects:
 		if(_seen && random(160 / _lineAdd) < current_time_scale){
 			if(position_meeting(_cx, _cy, Floor)){
-				var _o = 32 * image_yscale;
+				var _o = (ultra ? 24 : 32) * image_yscale;
 				with(instance_create(_cx + orandom(_o), _cy + orandom(_o), PlasmaTrail)){
-					if(!other.ultra) sprite_index = spr.QuasarBeamTrail;
+					if(other.ultra){
+						sprite_index = spr.UltraQuasarBeamTrail;
+						image_angle  = other.image_angle;
+						
+						image_xscale = random_range(2/3, 1);
+						image_yscale = image_xscale;
+					}
+					else{
+						sprite_index = spr.QuasarBeamTrail;
+					}
 					motion_add(_dir, 1 + random(max(other.image_yscale - 1, 0)));
 					if(other.image_yscale > 1) depth = other.depth - 1;
 				}
@@ -3723,6 +3732,12 @@
 					depth = other.depth - 1;
 					instance_create(x, y, Smoke);
 				}
+				/*
+				with(instance_create(_x, _y, PortalClear)){
+					image_xscale = other.image_xscale / 3;
+					image_yscale = other.image_xscale / 3;
+				}
+				*/
 			}
 		}
 		view_shake_max_at(_cx, _cy, 4);
@@ -3742,8 +3757,7 @@
 	}
 	
 #define QuasarBeam_draw
-	var _flash = (flash_frame > current_frame);
-	if(_flash) draw_set_fog(true, c_white, 0, 0);
+	if(flash_frame > current_frame) draw_set_fog(true, c_white, 0, 0);
 	
 	QuasarBeam_draw_laser(image_xscale, image_yscale, image_alpha);
 
@@ -3782,10 +3796,10 @@
 		*/
 	}
 	
-	if(_flash) draw_set_fog(false, 0, 0, 0);
+	if(flash_frame > current_frame) draw_set_fog(false, 0, 0, 0);
 	
 	 // Flame:
-	QuasarBeam_draw_flame(image_xscale + _flash, image_yscale + _flash, image_alpha);
+	QuasarBeam_draw_flame(1, 1, 1);
 
 #define QuasarBeam_alrm0
 	alarm0 = random_range(4 + (8 * array_length(ring_lasers)), 16);
@@ -3926,7 +3940,7 @@
 				
 				var _spr = spr.UltraQuasarFlame,
 					_len = 2 + sprite_get_xoffset(weapon_get_sprite(wep)) + wkick,
-					_dir = gunangle + ((abs(wepangle) > 1) ? wepangle : 0),
+					_dir = other.image_angle,
 					_sin = sin(other.wave / 10);
 					
 				draw_sprite_ext(
@@ -3934,11 +3948,11 @@
 					other.wave % sprite_get_number(_spr),
 					x - lengthdir_x(_len, _dir),
 					y - lengthdir_y(_len, _dir),
-					_xscale * (1 + random(max(_sin, 0))),
-					_yscale * (other.image_yscale + (_sin / 5)),
+					((_xscale / 4 )+ (other.flash_frame > current_frame)) * (other.image_xscale + lerp(other.image_yscale, 1, 1/3) + random(max(_sin, 0))),
+					((_yscale / 4) + (other.flash_frame > current_frame)) * (other.image_yscale + (_sin / 5)),
 					_dir,
-					image_blend,
-					_alpha
+					other.image_blend,
+					other.image_alpha * _alpha
 				);
 			}
 		}
@@ -4537,7 +4551,7 @@
 			}
 			
 			QuasarBeam_draw_laser(_xsc * image_xscale, _ysc * image_yscale, _alp * image_alpha);
-			QuasarBeam_draw_flame(_xsc * image_xscale, _ysc * image_yscale, _alp * image_alpha);
+			QuasarBeam_draw_flame(_xsc,				   _ysc,				_alp);
 			
 			/*if(ring && array_length(ring_lasers)){
 				with(instances_matching(ring_lasers, "visible", false)){
@@ -4596,16 +4610,8 @@
 		}
 	}
 	
-	 // Objects:
+	 // Pit Spark:
 	if(instance_exists(CustomObject)){
-				
-		 // Ultra Quasar Flame:
-		var _inst = instances_matching(CustomObject, "name", "UltraQuasarFlame");
-		if(array_length(_inst)) with(_inst){
-			draw_sprite_ext(sprite_index, image_index, x, y, image_xscale * 2, image_yscale * 2, image_angle, image_blend, image_alpha * 0.2);
-		}
-		
-		 // Pit Spark:
 		var _inst = instances_matching(instances_matching(CustomObject, "name", "PitSpark"), "visible", true);
 		if(array_length(_inst)) with(_inst){
 			draw_sprite_ext(sprite_index, image_index, x, y, image_xscale * 2, image_yscale * 2, image_angle, image_blend, image_alpha * 0.2);

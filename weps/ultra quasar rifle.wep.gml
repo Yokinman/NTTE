@@ -8,26 +8,26 @@
 	 // LWO:
 	global.lwoWep = {
 		"wep"  : mod_current,
-		"beam" : noone
+		"beam" : noone,
+		"tier" : 1
 	};
 	
 #define cleanup
 	mod_script_call("mod", "teassets", "ntte_cleanup", script_ref_create(cleanup));
 	
 #define weapon_name         return (weapon_avail() ? "ULTRA QUASAR RIFLE" : "LOCKED");
-#define weapon_text         return "THE GREEN SUN";
+#define weapon_text         return choose("THE GREEN SUN", "ROCKET POWERED RECOIL DAMPENING");
 #define weapon_swap         return sndSwapEnergy;
 #define weapon_sprt         return (weapon_avail() ? global.sprWep : global.sprWepLocked);
 #define weapon_area         return -1;
 #define weapon_type         return type_energy;
-#define weapon_cost         return 10;
-#define weapon_rads			return 60;
-#define weapon_load         return 60; // 2 Seconds
+#define weapon_cost(_wep)   return 5;
+#define weapon_rads(_wep)	return 25;
+#define weapon_load(_wep) 	return 20 + power(40, 1 / lq_defget(_wep, "tier", 1));
 #define weapon_auto         return true;
 #define weapon_avail        return call(scr.unlock_get, "pack:" + weapon_ntte_pack());
 #define weapon_ntte_pack    return "trench";
 #define weapon_ntte_quasar  return true;
-
 #define weapon_fire(_wep)
 	var	_fire = call(scr.weapon_fire_init, _wep);
 	_wep = _fire.wep;
@@ -43,28 +43,34 @@
 			
 			 // Vars:
 			mask_index   = msk.UltraQuasarBeam;
-			image_yscale = 0.6;
+			image_yscale = 0.2;
+			scale_goal   = 0.4;
 			turn_factor  = 1/100;
 			offset_dis   = 24;
 			ultra		 = true;
-			damage		 = 48; // 4x
+			damage		 = 24; // 2x
 			_wep.beam    = self;
 		}
 		
 		 // Sound:
 		var _brain = skill_get(mut_laser_brain);
-		sound_play_pitch((_brain ? sndLaserUpg  : sndLaser),  0.4 + random(0.1));
-		sound_play_pitch((_brain ? sndPlasmaUpg : sndPlasma), 1.2 + random(0.2));
+		sound_play_pitch((_brain ? sndUltraLaserUpg : sndUltraLaser), 0.4 + random(0.1));
+		sound_play_pitch((_brain ? sndPlasmaUpg 	: sndPlasma),	  1.2 + random(0.2));
 		sound_play_pitchvol(sndExplosion, 1.5, 0.5);
 		
 		 // Effects:
 		weapon_post(32, -16, 32);
 		motion_add(gunangle + 180, 4);
 		move_contact_solid(direction, speed);
+		
+		_wep.tier = 1;
 	}
 	
 	 // Charge Beam:
 	else with(_wep.beam){
+		scale_goal  = scale_goal + (1 / scale_goal) / 10;
+		flash_frame = current_frame + floor(4 / _wep.tier);
+		/*
 		if(image_yscale < 1){
 			scale_goal = 1;
 		}
@@ -81,29 +87,18 @@
 		 // Knockback:
 		if(image_yscale < scale_goal){
 			with(other) motion_add(gunangle + 180, 2);
-			flash_frame = max(flash_frame, current_frame + 3);
+			// flash_frame = max(flash_frame, current_frame + 3);
 		}
+		*/
 	}
 	
 	 // Keep Setting:
 	with(_wep.beam){
 		shrink_delay = weapon_get_load(_wep) + 1;
 		primary      = _fire.primary;
-	}
-	
-#define step(_primary)
-	var _wep = wep_get(_primary, "wep", mod_current);
-	
-	 // LWO Setup:
-	if(!is_object(_wep)){
-		_wep = { "wep" : _wep };
-		wep_set(_primary, "wep", _wep);
-	}
-	for(var i = lq_size(global.lwoWep) - 1; i >= 0; i--){
-		var _key = lq_get_key(global.lwoWep, i);
-		if(_key not in _wep){
-			lq_set(_wep, _key, lq_get_value(global.lwoWep, i));
-		}
+		
+		 // Charge:
+		_wep.tier++;
 	}
 	
 	
