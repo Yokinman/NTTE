@@ -606,23 +606,30 @@
 	with(call(scr.obj_create, _x, _y, "CustomChest")){
 		 // Visual:
 		sprite_index = spr.BiggestWeaponChest;
-		spr_dead	 = spr.BiggestWeaponChestOpen;
-		spr_shadow	 = shd64;
+		spr_dead     = spr.BiggestWeaponChestOpen;
+		spr_shadow   = shd64;
 		spr_shadow_y = 4;
+		depth        = -1;
 		
 		 // Sounds:
 		snd_open = sndBigWeaponChest;
 		
+		 // Vars:
+		nochest = 4;
+		
 		 // Scripts:
 		on_open = script_ref_create(BiggestWeaponChest_open);
 		
-		if(place_meeting(x, y, Wall)) call(scr.wall_clear, self);
+		 // Clear Walls:
+		call(scr.wall_clear, self);
 		
 		return self;
 	}
 	
 #define BiggestWeaponChest_open
-
+	 // Clear Big Chest Chance:
+	GameCont.nochest = 0;
+	
 	 // Effects:
 	with(instance_create(x, y - 12, FXChestOpen)){
 		sprite_index = sprMutant6Dead;
@@ -640,10 +647,10 @@
 		sound_play(other.snd_chst);
 	}
 	
-	var _wep    = "ultra quasar rifle",
+	var	_wep    = "ultra quasar rifle",
 		_unlock = call(scr.weapon_get, "avail", _wep),
 		_list   = ds_list_create();
-	
+		
 	 // The Definitive Gun:
 	if(_unlock){
 		with(instance_create(x, y, WepPickup)){
@@ -652,10 +659,10 @@
 	}
 	
 	weapon_get_list(_list, 0, GameCont.hard);
-	var _size = ds_list_size(_list),
+	var	_size = ds_list_size(_list),
 		_num  = (_unlock ? 3 : 5),
 		_egg  = !_unlock;
-	
+		
 	 // Extras:
 	if(_size > 0){
 		ds_list_shuffle(_list);
@@ -681,7 +688,8 @@
 	}
 	
 	ds_list_destroy(_list);
-
+	
+	
 #define BoneBigPickup_create(_x, _y)
 	with(call(scr.obj_create, _x, _y, "BonePickup")){
 		 // Visual:

@@ -1587,10 +1587,10 @@
 	 // Particles:
 	if(current_frame_active){
 		if(chance(image_xscale, 30) || (charge <= 0 && speed > _maxSpd && chance(image_xscale, 3))){
-			var	d = random(360),
-				r = random(radius),
-				_x = x + lengthdir_x(r * image_xscale, d),
-				_y = y + lengthdir_y(r * image_yscale, d);
+			var	_d = random(360),
+				_r = random(radius),
+				_x = x + lengthdir_x(_r * image_xscale, _d),
+				_y = y + lengthdir_y(_r * image_yscale, _d);
 				
 			with(instance_create(_x, _y, PortalL)){
 				motion_add(random(360), 1);
@@ -1745,14 +1745,14 @@
 	var	_off = (360 / _num),
 		_ysc = _stretch * (0.5 + random(1));
 		
-	for(var d = _angle; d < _angle + 360; d += _off){
+	for(var _d = _angle; _d < _angle + 360; _d += _off){
 		var	_ro  = random(2),
 			_rx  = (_radius * _xscale) + _ro,
 			_ry  = (_radius * _yscale) + _ro,
-			_x1  = _x + lengthdir_x(_rx, d),
-			_y1  = _y + lengthdir_y(_ry, d),
-			_x2  = _x + lengthdir_x(_rx, d + _off),
-			_y2  = _y + lengthdir_y(_ry, d + _off),
+			_x1  = _x + lengthdir_x(_rx, _d),
+			_y1  = _y + lengthdir_y(_ry, _d),
+			_x2  = _x + lengthdir_x(_rx, _d + _off),
+			_y2  = _y + lengthdir_y(_ry, _d + _off),
 			_xsc = point_distance(_x1, _y1, _x2, _y2) / 2,
 			_ang = point_direction(_x1, _y1, _x2, _y2);
 			
@@ -3277,7 +3277,7 @@
 			ring_size      - Scale of ring, multiplier (cause I don't wanna figure out the epic math)
 			ring_lasers    - Array of QuasarBeams created from being a QuasarRing
 			wave           - Ticks up every frame, used for visual stuff
-			ultra		   - Is ultra, true/false
+			ultra          - Is ultra, true/false
 			alarm0         - Creates QuasarBeams for the QuasarRing variant
 	*/
 	
@@ -3286,6 +3286,9 @@
 		sprite_index = spr.QuasarBeam;
 		spr_strt     = spr.QuasarBeamStart;
 		spr_stop     = spr.QuasarBeamEnd;
+		spr_hit      = spr.QuasarBeamHit;
+		spr_trail    = spr.QuasarBeamTrail;
+		spr_flame    = -1;
 		image_speed  = 0.5;
 		depth        = -2;
 		
@@ -3325,7 +3328,7 @@
 		ring_size      = 1;
 		ring_lasers    = [];
 		wave           = random(100);
-		ultra		   = false;
+		ultra          = false;
 		
 		on_end_step = QuasarBeam_quick_fix;
 		
@@ -3335,10 +3338,12 @@
 #define QuasarBeam_quick_fix
 	on_end_step = [];
 	
-	var l = line_dis_max;
+	var _l = line_dis_max;
 	line_dis_max = 0;
 	QuasarBeam_step();
-	if(instance_exists(self)) line_dis_max = l;
+	if(instance_exists(self)){
+		line_dis_max = _l;
+	}
 	
 #define QuasarBeam_step
 	 // Alarms:
@@ -3438,13 +3443,13 @@
 	}
 
 	 // Stay:
-	var o = offset_dis + (sprite_get_width(spr_strt) * image_xscale * 0.5);
+	var _o = offset_dis + (sprite_get_width(spr_strt) * image_xscale * 0.5);
 	if(hold_x != null){
-		x = hold_x + lengthdir_x(o, image_angle);
+		x = hold_x + lengthdir_x(_o, image_angle);
 		xprevious = x;
 	}
 	if(hold_y != null){
-		y = hold_y + lengthdir_y(o, image_angle);
+		y = hold_y + lengthdir_y(_o, image_angle);
 		yprevious = y;
 	}
 	
@@ -3466,20 +3471,20 @@
 	bend -= line_dir_turn * current_time_scale;
 	
 	 // Line:
-	var	_lineAdd = 20,
-		_lineWid = sprite_get_height(sprite_index) / 2,
-		_lineDir = image_angle,
+	var	_lineAdd    = 20,
+		_lineRadius = sprite_get_height(sprite_index) / 2,
+		_lineDir    = image_angle,
 		_lineChange = (instance_is(creator, Player) ? 120 : 40) * current_time_scale,
-		_dis = 0,
-		_dir = _lineDir,
-		_dirGoal = _lineDir + bend,
-		_cx = x,
-		_cy = y,
-		_lx = _cx,
-		_ly = _cy,
-		_walled = false,
-		_enemies = instances_matching_ne(hitme, "team", team),
-		_wob = 0;
+		_dis        = 0,
+		_dir        = _lineDir,
+		_dirGoal    = _lineDir + bend,
+		_cx         = x,
+		_cy         = y,
+		_lx         = _cx,
+		_ly         = _cy,
+		_walled     = false,
+		_enemies    = instances_matching_ne(hitme, "team", team),
+		_wob        = 0;
 		
 	if(ring){
 		_lineAdd = 24 * ring_size;
@@ -3550,34 +3555,34 @@
 			
 			 // Add to Line Draw:
 			else if(_seen){
-				var	l = _lineWid,
-					d = _dir - 90,
-					_x = _cx + hspeed_raw,
-					_y = _cy + vspeed_raw,
+				var	_l    = _lineRadius,
+					_d    = _dir - 90,
+					_x    = _cx + hspeed_raw,
+					_y    = _cy + vspeed_raw,
 					_xtex = (_dis / line_dis);
 					
 				 // Ring Collapse:
 				if(ring){
-					var o = (2 + (2 * ring_size * image_yscale)) / max(shrink_delay / 20, 1);
-					_x += lengthdir_x(o, d) * dcos((_dir *  2) + (wave * 4));
-					_y += lengthdir_y(o, d) * dsin((_dir * 10) + (wave * 4));
-					d -= (_lineAdd / ring_size) * 0.5;
+					var _o = (2 + (2 * ring_size * image_yscale)) / max(shrink_delay / 20, 1);
+					_x += lengthdir_x(_o, _d) * dcos((_dir *  2) + (wave * 4));
+					_y += lengthdir_y(_o, _d) * dsin((_dir * 10) + (wave * 4));
+					_d -= (_lineAdd / ring_size) * 0.5;
 				}
 				
 				 // Pulsate:
 				else{
-					l *= 1 + (0.1 * sin((wave / 6) + (_wob / 10)) * min(1, _wob / 3));
+					_l *= 1 + (0.1 * sin((wave / 6) + (_wob / 10)) * min(1, _wob / 3));
 				}
 				
-				for(var a = -1; a <= 1; a += 2){
+				for(var _a = -1; _a <= 1; _a += 2){
 					array_push(line_seg, {
 						x    : _x,
 						y    : _y,
 						dir  : _dir,
-						xoff : lengthdir_x(l * a, d),
-						yoff : lengthdir_y(l * a, d),
+						xoff : lengthdir_x(_l * _a, _d),
+						yoff : lengthdir_y(_l * _a, _d),
 						xtex : _xtex,
-						ytex : !!a
+						ytex : !!_a
 					});
 				}
 			}
@@ -3630,7 +3635,7 @@
 								 // Effects:
 								with(instance_create(x + orandom(8), y + orandom(8), BulletHit)){
 									motion_add(point_direction(other.x, other.y, x, y), 1);
-									sprite_index = (other.ultra ? spr.UltraQuasarBeamHit : spr.QuasarBeamHit);
+									sprite_index = other.spr_hit;
 									image_angle  = direction;
 									image_xscale = other.image_yscale;
 									image_yscale = other.image_yscale;
@@ -3668,17 +3673,13 @@
 		 // Effects:
 		if(_seen && random(160 / _lineAdd) < current_time_scale){
 			if(position_meeting(_cx, _cy, Floor)){
-				var _o = (ultra ? 24 : 32) * image_yscale;
-				with(instance_create(_cx + orandom(_o), _cy + orandom(_o), PlasmaTrail)){
+				var _off = (ultra ? 24 : 32) * image_yscale;
+				with(instance_create(_cx + orandom(_off), _cy + orandom(_off), PlasmaTrail)){
+					sprite_index = other.spr_trail;
 					if(other.ultra){
-						sprite_index = spr.UltraQuasarBeamTrail;
 						image_angle  = other.image_angle;
-						
 						image_xscale = random_range(2/3, 1);
 						image_yscale = image_xscale;
-					}
-					else{
-						sprite_index = spr.QuasarBeamTrail;
 					}
 					motion_add(_dir, 1 + random(max(other.image_yscale - 1, 0)));
 					if(other.image_yscale > 1) depth = other.depth - 1;
@@ -3726,10 +3727,10 @@
 				
 			if(!position_meeting(_x, _y, TopSmall)){
 				with(instance_create(_x, _y, BulletHit)){
-					sprite_index = (other.ultra ? spr.UltraQuasarBeamHit : spr.QuasarBeamHit);
+					sprite_index = other.spr_hit;
 					image_xscale = other.image_yscale;
 					image_yscale = other.image_yscale;
-					depth = other.depth - 1;
+					depth        = other.depth - 1;
 					instance_create(x, y, Smoke);
 				}
 				/*
@@ -3757,7 +3758,9 @@
 	}
 	
 #define QuasarBeam_draw
-	if(flash_frame > current_frame) draw_set_fog(true, c_white, 0, 0);
+	if(flash_frame > current_frame){
+		draw_set_fog(true, c_white, 0, 0);
+	}
 	
 	QuasarBeam_draw_laser(image_xscale, image_yscale, image_alpha);
 
@@ -3796,7 +3799,9 @@
 		*/
 	}
 	
-	if(flash_frame > current_frame) draw_set_fog(false, 0, 0, 0);
+	if(flash_frame > current_frame){
+		draw_set_fog(false, 0, 0, 0);
+	}
 	
 	 // Flame:
 	QuasarBeam_draw_flame(1, 1, 1);
@@ -3869,9 +3874,9 @@
 	
 #define QuasarBeam_draw_laser(_xscale, _yscale, _alpha)
 	var	_lastColor = draw_get_color(),
-		_angle = image_angle,
-		_x = x,
-		_y = y;
+		_angle     = image_angle,
+		_x         = x,
+		_y         = y;
 		
 	 // Beam Start:
 	if(spr_strt != -1){
@@ -3883,15 +3888,15 @@
 		draw_set_alpha((_alpha < 1) ? (_alpha / 2) : _alpha);
 		draw_set_color(image_blend);
 		
-		var o = 0;
+		var _o = 0;
 		repeat(2){
 			draw_circle(
-				_x - 1 + (o * cos(wave / 8)),
-				_y - 1 + (o * sin(wave / 8)),
+				_x - 1 + (_o * cos(wave / 8)),
+				_y - 1 + (_o * sin(wave / 8)),
 				((18 * ring_size) + floor(image_index)) * _xscale,
 				false
 			);
-			o = (2 * _xscale * cos(wave / 13)) / max(shrink_delay / 20, 1);
+			_o = (2 * _xscale * cos(wave / 13)) / max(shrink_delay / 20, 1);
 		}
 		
 		draw_set_alpha(1);
@@ -3934,34 +3939,32 @@
 #define QuasarBeam_draw_flame(_xscale, _yscale, _alpha)
 	
 	 // Draw Ultra Flame:
-	if(ultra && instance_is(creator, Player)){
-		with(creator){
-			if(weapon_get_rads(wep) > 0 && call(scr.weapon_get, "ntte_quasar", wep)){
+	if(sprite_exists(spr_flame) && instance_is(creator, Player)){
+		var _wep = creator.wep;
+		if(weapon_get_rads(_wep) > 0 && call(scr.weapon_get, "ntte_quasar", _wep) > 0){
+			var _spr = spr_flame,
+				_len = 2 + sprite_get_xoffset(weapon_get_sprite(_wep)) + creator.wkick,
+				_dir = image_angle,
+				_sin = sin(wave / 10);
 				
-				var _spr = spr.UltraQuasarFlame,
-					_len = 2 + sprite_get_xoffset(weapon_get_sprite(wep)) + wkick,
-					_dir = other.image_angle,
-					_sin = sin(other.wave / 10);
-					
-				draw_sprite_ext(
-					_spr,
-					other.wave % sprite_get_number(_spr),
-					x - lengthdir_x(_len, _dir),
-					y - lengthdir_y(_len, _dir),
-					((_xscale / 4 )+ (other.flash_frame > current_frame)) * (other.image_xscale + lerp(other.image_yscale, 1, 1/3) + random(max(_sin, 0))),
-					((_yscale / 4) + (other.flash_frame > current_frame)) * (other.image_yscale + (_sin / 5)),
-					_dir,
-					other.image_blend,
-					other.image_alpha * _alpha
-				);
-			}
+			draw_sprite_ext(
+				_spr,
+				wave % sprite_get_number(_spr),
+				creator.x - lengthdir_x(_len, _dir),
+				creator.y - lengthdir_y(_len, _dir),
+				((_xscale / 4 )+ (flash_frame > current_frame)) * (image_xscale + lerp(image_yscale, 1, 1/3) + random(max(_sin, 0))),
+				((_yscale / 4) + (flash_frame > current_frame)) * (image_yscale + (_sin / 5)),
+				_dir,
+				image_blend,
+				image_alpha * _alpha
+			);
 		}
 	}
 	
 #define QuasarBeam_wepangle
 	if(instance_exists(creator) && abs(angle) > 1){
 		with(creator){
-			if(call(scr.weapon_get, "ntte_quasar", (other.primary ? wep : bwep))){
+			if(call(scr.weapon_get, "ntte_quasar", (other.primary ? wep : bwep)) > 0){
 				if(other.primary){
 					wepangle += other.angle;
 					enemy_face(gunangle + other.angle);
@@ -4284,9 +4287,9 @@
 	else{
 		y -= 2;
 		sound_play_pitchvol(sndWallBreak, 0.5 + random(0.3), 0.4);
-		for(var d = direction; d < direction + 360; d += 360 / (debris ? 1 : 3)){
+		for(var _d = direction; _d < direction + 360; _d += 360 / (debris ? 1 : 3)){
 			with(instance_create(x, y, Debris)){
-				motion_set(d + orandom(20), other.speed + random(1));
+				motion_set(_d + orandom(20), other.speed + random(1));
 				if(other.debris){
 					image_angle = other.image_angle;
 				}
@@ -4551,7 +4554,7 @@
 			}
 			
 			QuasarBeam_draw_laser(_xsc * image_xscale, _ysc * image_yscale, _alp * image_alpha);
-			QuasarBeam_draw_flame(_xsc,				   _ysc,				_alp);
+			QuasarBeam_draw_flame(_xsc,                _ysc,                _alp);
 			
 			/*if(ring && array_length(ring_lasers)){
 				with(instances_matching(ring_lasers, "visible", false)){
@@ -4584,7 +4587,6 @@
 						var	_ang  = ((i == 0) ? wepangle : bwepangle),
 							_kick = ((i == 0) ? wkick    : bwkick),
 							_flip = (weapon_is_melee(_wep) ? ((i == 0) ? wepflip : bwepflip) : right) * ((i == 1) ? -1 : 1),
-							_alp  = image_alpha * (((i == 0) ? reload : breload) / weapon_get_load(_wep)) * (1 + (0.2 * skill_get(mut_laser_brain))) * _quasar,
 							_dis  = ((i == 1) ? -1 : -2) * sign(_flip),
 							_dir  = gunangle + (_ang * (1 - (_kick / 20))) - 90;
 							
@@ -4600,7 +4602,7 @@
 							_kick,
 							_flip,
 							image_blend,
-							_alp
+							image_alpha * (((i == 0) ? reload : breload) / weapon_get_load(_wep)) * (1 + (0.2 * skill_get(mut_laser_brain))) * _quasar
 						);
 					}
 				}

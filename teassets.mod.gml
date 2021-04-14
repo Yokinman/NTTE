@@ -101,10 +101,6 @@
 			GoldTridentLoadout = sprite(p + "sprGoldTridentLoadout", 1, 24, 24, shnWep);
 			msk.Trident        = sprite(p + "mskTrident",            1, 11,  6);
 			
-			 // Ultra Quasar Rifle:
-			UltraQuasarRifle = sprite(p + "sprUltraQuasarRifle", 1, 20, 12, shnWep);
-			UltraQuasarFlame = sprite(p + "sprUltraQuasarFlame", 3, 64, 32);
-			
 		//#endregion
 		
 		//#region PROJECTILES
@@ -193,18 +189,19 @@
 			PortalBulletLightning = sprite(p + "sprPortalBulletLightning", 4, 0,  1);
 			
 			 // Quasar Beam:
-			QuasarBeam      	 = sprite(p + "sprQuasarBeam",      	 2,  0, 16);
-			QuasarBeamStart 	 = sprite(p + "sprQuasarBeamStart", 	 2, 32, 16);
-			QuasarBeamEnd   	 = sprite(p + "sprQuasarBeamEnd",   	 2,  0, 16);
-			QuasarBeamHit   	 = sprite(p + "sprQuasarBeamHit",   	 6, 24, 24);
-			QuasarBeamTrail 	 = sprite(p + "sprQuasarBeamTrail", 	 3,  4,  4);
+			QuasarBeam           = sprite(p + "sprQuasarBeam",           2,  0, 16);
+			QuasarBeamStart      = sprite(p + "sprQuasarBeamStart",      2, 32, 16);
+			QuasarBeamEnd        = sprite(p + "sprQuasarBeamEnd",        2,  0, 16);
+			QuasarBeamHit        = sprite(p + "sprQuasarBeamHit",        6, 24, 24);
+			QuasarBeamTrail      = sprite(p + "sprQuasarBeamTrail",      3,  4,  4);
 			UltraQuasarBeam      = sprite(p + "sprUltraQuasarBeam",      2,  0, 32);
 			UltraQuasarBeamStart = sprite(p + "sprUltraQuasarBeamStart", 2, 64, 32);
 			UltraQuasarBeamEnd   = sprite(p + "sprUltraQuasarBeamEnd",   2,  0, 32);
 			UltraQuasarBeamHit   = sprite(p + "sprUltraQuasarBeamHit",   6, 24, 24);
 			UltraQuasarBeamTrail = sprite(p + "sprUltraQuasarBeamTrail", 3,  8,  8);
-			msk.QuasarBeam  	 = sprite(p + "mskQuasarBeam",      	 1, 32, 16);
-			msk.UltraQuasarBeam  = sprite(p + "mskUltraQuasarBeam",		 1, 64, 32);
+			UltraQuasarBeamFlame = sprite(p + "sprUltraQuasarBeamFlame", 3, 64, 32);
+			msk.QuasarBeam       = sprite(p + "mskQuasarBeam",           1, 32, 16);
+			msk.UltraQuasarBeam  = sprite(p + "mskUltraQuasarBeam",      1, 64, 32);
 			
 			 // Red:
 			RedBullet          = sprite(p + "sprRedBullet",          2,  9,  9);
@@ -1595,7 +1592,7 @@
 			BatChestBigCursedOpen = sprite(p + "sprBatChestBigCursedOpen", 1, 12, 12);
 			
 			 // Biggest Weapon Chest:
-			BiggestWeaponChest	   = sprite(p + "sprBiggestWeaponChest",	 1, 32, 32, shn64);
+			BiggestWeaponChest     = sprite(p + "sprBiggestWeaponChest",     1, 32, 32, shn64);
 			BiggestWeaponChestOpen = sprite(p + "sprBiggestWeaponChestOpen", 1, 32, 32);
 			
 			 // Bone:

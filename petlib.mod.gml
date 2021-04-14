@@ -931,7 +931,7 @@
 	if(_name == "arcing"){
 		var _time = "";
 		
-		_time += string_lpad(string(floor((_value / power(60, 2))     )), "0", 1); // Hours
+		_time += string_lpad(string(floor((_value / power(60, 2)))),      "0", 1); // Hours
 		_time += ":";
 		_time += string_lpad(string(floor((_value / power(60, 1)) % 60)), "0", 2); // Minutes
 		_time += ":";
@@ -945,7 +945,6 @@
 	
 #define Octo_step
 	if(instance_exists(leader)){
-		
 		 // Unhide:
 		if(hiding){
 			hiding     = false;
@@ -954,35 +953,37 @@
 		}
 		
 		 // Arcing:
-		var _skill = skill_get(mut_laser_brain),
-			_inst  = [],
+		var	_skill = skill_get(mut_laser_brain),
+			_inst  = [leader],
 			_amax  = 256,
 			_ammo  = _amax,
 			_cost  = 8, // Base ammo cost for each instance tethered
 			_x     = x,
 			_y     = y;
 			
-		// stat.arcing += (current_time_scale / 30);
-			
-		 // Compile List (leader, leader's pets, leader's projectiles):
-		array_push(_inst, leader);
-		with(instances_matching(projectile, "creator", leader)) array_push(_inst, self);
-		with(instances_matching(instances_matching(CustomHitme, "name", name), "leader", leader)) array_push(_inst, self);
+		//stat.arcing += (current_time_scale / 30);
 		
+		 // Compile List (leader, leader's pets, leader's projectiles):
+		_inst = call(scr.array_combine,
+			_inst,
+			instances_matching(projectile, "creator", leader),
+			instances_matching(instances_matching(CustomHitme, "name", name), "leader", leader)
+		);
 		_inst = instances_matching(_inst, "visible", true);
 		 
 		 // Arcing:
 		if(array_length(_inst)){
 			while(_ammo > 0 && array_length(_inst)){
-				
 				with(call(scr.instance_nearest_array, _x, _y, _inst)){
-					var _nx = x + hspeed_raw,
+					var	_nx = x + hspeed_raw,
 						_ny = y + vspeed_raw;
 						
 					if(!collision_line(_x, _y, _nx, _ny, Wall, false, false)){
-					
 						var _dis = point_distance(_x, _y, _nx, _ny);
-						if(instance_is(self, projectile)) _ammo -= (_dis + _cost);
+						
+						if(instance_is(self, projectile)){
+							_ammo -= (_dis + _cost);
+						}
 						
 						 // Arc to Instance:
 						if(_ammo > 0){
@@ -996,12 +997,11 @@
 								instance_create(_nx, _ny, PortalL);
 							}
 							with(instance_create(_nx, _ny, BulletHit)){
-								sprite_index	= sprLightningHit;
-								image_xscale	= 2/3;
-								image_yscale	= image_xscale;
-								depth			= 0;
-								
-								image_index 	= ((current_frame + _arc) * image_speed) % image_number;
+								sprite_index    = sprLightningHit;
+								image_xscale    = 2/3;
+								image_yscale    = image_xscale;
+								depth           = 0;
+								image_index     = ((current_frame + _arc) * image_speed) % image_number;
 								image_speed_raw = image_number;
 							}
 							
@@ -3979,7 +3979,7 @@
 	if(_name == "playtime"){
 		var _time = "";
 		
-		_time += string_lpad(string(floor((_value / power(60, 2))     )), "0", 1); // Hours
+		_time += string_lpad(string(floor((_value / power(60, 2)))),      "0", 1); // Hours
 		_time += ":";
 		_time += string_lpad(string(floor((_value / power(60, 1)) % 60)), "0", 2); // Minutes
 		_time += ":";

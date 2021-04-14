@@ -1809,18 +1809,16 @@
 	}
 	
 	 // Biggest Weapon Chest:
-	if(!global.biggest_weapon_chest && instance_exists(WeaponChest)){
-		with(Player){
-			
-			if(weapon_get_rads(wep) > 0 || weapon_get_rads(bwep) > 0){
-				if(chance(1, 10)){
-					
+	if(chance(1, 10)){
+		if("ntte_huge_weapon_chest" not in GameCont || GameCont.ntte_huge_weapon_chest){
+			with(Player){
+				if(weapon_get_rads(wep) > 0 || weapon_get_rads(bwep) > 0){
 					with(call(scr.instance_random, instances_matching(WeaponChest, "object_index", WeaponChest, BigWeaponChest))){
-						call(scr.obj_create, x, y, "BiggestWeaponChest");
-						
-						global.biggest_weapon_chest = true;
+						call(scr.chest_create, x, y, "BiggestWeaponChest", true);
+						GameCont.ntte_huge_weapon_chest = false;
 						instance_delete(self);
 					}
+					break;
 				}
 			}
 		}

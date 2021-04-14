@@ -2,7 +2,7 @@
 	mod_script_call("mod", "teassets", "ntte_init", script_ref_create(init));
 	
 	 // Sprites:
-	global.sprWep       = spr.UltraQuasarRifle;
+	global.sprWep       = sprite_add_weapon("../sprites/weps/sprUltraQuasarRifle.png", 20, 12);
 	global.sprWepLocked = sprTemp;
 	
 	 // LWO:
@@ -19,17 +19,18 @@
 #define weapon_text         return choose("THE GREEN SUN", "ROCKET POWERED RECOIL DAMPENING");
 #define weapon_swap         return sndSwapEnergy;
 #define weapon_sprt         return (weapon_avail() ? global.sprWep : global.sprWepLocked);
-#define weapon_area         return -1;
+#define weapon_area         return -1; // Doesn't Spawn
 #define weapon_type         return type_energy;
 #define weapon_cost(_wep)   return 5;
-#define weapon_rads(_wep)	return 25;
-#define weapon_load(_wep) 	return 20 + power(40, 1 / lq_defget(_wep, "tier", 1));
+#define weapon_rads(_wep)   return 25;
+#define weapon_load(_wep)   return 20 + power(40, 1 / lq_defget(_wep, "tier", 1));
 #define weapon_auto         return true;
 #define weapon_avail        return call(scr.unlock_get, "pack:" + weapon_ntte_pack());
 #define weapon_ntte_pack    return "trench";
 #define weapon_ntte_quasar  return true;
+
 #define weapon_fire(_wep)
-	var	_fire = call(scr.weapon_fire_init, _wep);
+	var _fire = call(scr.weapon_fire_init, _wep);
 	_wep = _fire.wep;
 	
 	 // New Beam:
@@ -38,8 +39,11 @@
 		with(call(scr.projectile_create, self, x, y, "QuasarBeam", gunangle + orandom(6 * accuracy))){
 			 // Visual:
 			sprite_index = spr.UltraQuasarBeam;
-			spr_strt	 = spr.UltraQuasarBeamStart;
-			spr_stop	 = spr.UltraQuasarBeamEnd;
+			spr_strt     = spr.UltraQuasarBeamStart;
+			spr_stop     = spr.UltraQuasarBeamEnd;
+			spr_hit      = spr.UltraQuasarBeamHit;
+			spr_trail    = spr.UltraQuasarBeamTrail;
+			spr_flame    = spr.UltraQuasarBeamFlame;
 			
 			 // Vars:
 			mask_index   = msk.UltraQuasarBeam;
@@ -47,15 +51,15 @@
 			scale_goal   = 0.4;
 			turn_factor  = 1/100;
 			offset_dis   = 24;
-			ultra		 = true;
-			damage		 = 24; // 2x
+			ultra        = true;
+			damage       = 24; // 2x
 			_wep.beam    = self;
 		}
 		
 		 // Sound:
 		var _brain = skill_get(mut_laser_brain);
 		sound_play_pitch((_brain ? sndUltraLaserUpg : sndUltraLaser), 0.4 + random(0.1));
-		sound_play_pitch((_brain ? sndPlasmaUpg 	: sndPlasma),	  1.2 + random(0.2));
+		sound_play_pitch((_brain ? sndPlasmaUpg     : sndPlasma),     1.2 + random(0.2));
 		sound_play_pitchvol(sndExplosion, 1.5, 0.5);
 		
 		 // Effects:
