@@ -19,8 +19,6 @@
 #define cleanup
 	mod_script_call("mod", "teassets", "ntte_cleanup", script_ref_create(cleanup));
 	
-#macro Pet instances_matching(CustomHitme, "name", "Pet")
-
 #macro pet_target_inst instances_matching_ne(instances_matching_ne([enemy, Player, Sapling, Ally, SentryGun, CustomHitme], "team", team, 0), "mask_index", mskNone)
 
 #macro player_moving (canwalk && (button_check(index, "nort") || button_check(index, "sout") || button_check(index, "east") || button_check(index, "west")))
@@ -454,7 +452,7 @@
 						var _dis = point_distance(x, y, other.x, other.y);
 						if(_dis < _disMax){
 							if(!collision_line(x, y, other.x, other.y, Wall, false, false)){
-								if(!array_length(instances_matching(Pet, "pickup", self))){
+								if(!array_length(instances_matching(obj.Pet, "pickup", self))){
 									_pickup = self;
 									_disMax = _dis;
 								}
@@ -967,7 +965,7 @@
 		_inst = call(scr.array_combine,
 			_inst,
 			instances_matching(projectile, "creator", leader),
-			instances_matching(instances_matching(CustomHitme, "name", name), "leader", leader)
+			instances_matching(obj.Pet, "leader", leader)
 		);
 		_inst = instances_matching(_inst, "visible", true);
 		 
@@ -1039,7 +1037,7 @@
 			image_index -= image_speed_raw * 0.95;
 			
 			 // Goodbye:
-			if(instance_exists(CustomEnemy) && array_length(instances_matching(instances_matching(CustomEnemy, "name", "PitSquid"), "intro", true))){
+			if(array_length(instances_matching(obj.PitSquid, "intro", true))){
 				instance_destroy();
 				exit;
 			}
@@ -1860,22 +1858,20 @@
 			}
 			
 			 // Disable Active:
-			var _inst = instances_matching(instances_matching(CustomObject, "name", "SalamanderCanSpec"), "creator", self);
+			var _inst = instances_matching(obj.SalamanderCanSpec, "creator", self);
 			if(!array_length(_inst)){
-				_inst = instance_create(x, y, CustomObject);
+				_inst = call(scr.obj_create, x, y, "SalamanderCanSpec");
 				with(_inst){
-					name        = "SalamanderCanSpec";
-					alive       = true;
-					creator     = other;
-					canspec     = other.canspec;
-					on_end_step = script_ref_create(Salamander_canspec_end_step);
-					on_cleanup  = script_ref_create(Salamander_canspec_cleanup);
+					creator = other;
+					canspec = other.canspec;
 					with(self){
 						event_perform(ev_step, ev_step_end);
 					}
 				}
 			}
-			with(_inst) alive = true;
+			with(_inst){
+				alive = true;
+			}
 			
 			 // Charging Dash:
 			if(!other.dash){
@@ -1973,25 +1969,10 @@
 	return 30;
 	
 #define Salamander_prompt_meet
-	if(creator == other || variable_instance_get(creator, "leader") == other){
+	if(creator == other || ("leader" in creator && creator.leader == other)){
 		return true;
 	}
 	return false;
-	
-#define Salamander_canspec_end_step
-	if(alive && instance_exists(creator)){
-		alive = false;
-		if(creator.canspec != false){
-			canspec = creator.canspec;
-			creator.canspec = false;
-		}
-	}
-	else instance_destroy();
-	
-#define Salamander_canspec_cleanup
-	with(creator){
-		canspec = other.canspec;
-	}
 	
 	
 #define Mimic_create
@@ -2389,7 +2370,7 @@
 				}
 			}
 			
-			var t = array_length(instances_matching(instances_matching(CustomProjectile, "name", "SpiderTangle"), "creator", leader));
+			var t = array_length(instances_matching(obj.SpiderTangle, "creator", leader));
 			if(instance_exists(_target) && (t < 3 || chance(1, 3 + (4 * t)))){
 				
 				 // Snare Larget:
@@ -2569,7 +2550,7 @@
 					}
 					
 					 // Duplicate:
-					if(!_cursed || variable_instance_get(self, "name") != "Trident"){
+					if(!_cursed || array_find_index(obj.Trident, self) < 0){
 						var	_clone    = call(scr.instance_clone, self),
 							_accuracy = variable_instance_get(other.leader, "accuracy", 1);
 							
@@ -2661,7 +2642,7 @@
 				}
 			}
 		}
-		var _prism = instances_matching(instances_matching(object_index, "name", name), "pet", pet);
+		var _prism = instances_matching(obj.Pet, "pet", pet);
 		with(instances_matching(instances_matching_gt(projectile, "speed", 0), "can_prism_duplicate", false)){
 			if(!array_length(call(scr.instances_meeting_rectangle, bbox_left - 16, bbox_top - 16, bbox_right + 16, bbox_bottom + 16, _prism))){
 				can_prism_duplicate = true;
@@ -2818,7 +2799,7 @@
 	
 #define Twins_sprite(_skin, _name)
 	switch(_name){
-		case "icon"       : return (("name" in self && name == "Pet") ? ((_skin == 1) ? spr.PetTwinsWhiteIcon : spr.PetTwinsRedIcon) : spr.PetTwinsIcon);
+		case "icon"       : return ((array_find_index(obj.Pet, self) >= 0) ? ((_skin == 1) ? spr.PetTwinsWhiteIcon : spr.PetTwinsRedIcon) : spr.PetTwinsIcon);
 		case "stat"       : return spr.PetTwinsStat;
 		case "idle"       :
 		case "walk"       :
@@ -2865,7 +2846,7 @@
 	
 	 // Orbit Leader:
 	if(instance_exists(leader)){
-		var	_twinList  = instances_matching(instances_matching(instances_matching(object_index, "name", name), "pet", pet), "leader", leader),
+		var	_twinList  = instances_matching(instances_matching(obj.Pet, "pet", pet), "leader", leader),
 			_twinIndex = array_find_index(_twinList, self),
 			_twinCount = array_length(_twinList),
 			_orbitX    = leader.x,
@@ -3276,7 +3257,7 @@
 		sound_play_pitchvol(sndFlyFire,     1.5,               0.8);
 		sound_play_pitchvol(sndCrownRandom, 0.8 + random(0.3), 0.2);
 	}
-	skill_inst = instances_matching(instances_matching(CustomObject, "name", "OrchidBall", "OrchidSkill"), "creator", self);
+	skill_inst = instances_matching(call(scr.array_combine, obj.OrchidBall, obj.OrchidSkill), "creator", self);
 	
 	 // Sparkle:
 	if(chance_ct(1, 15 / (1 + (0.5 * array_length(skill_inst))))){
@@ -3462,7 +3443,7 @@
 	if(
 		sprite_index != spr_hide
 		|| (instance_is(self, enemy) && enemy_target(x, y))
-		|| (name == "Pet" && instance_exists(leader))
+		|| (array_find_index(obj.Pet, self) >= 0 && instance_exists(leader))
 	){
 		 // Appear:
 		if(sprite_index == spr_spwn || sprite_index == spr_hide){
@@ -3520,7 +3501,7 @@
 	 // Pet Shootin Rootin Tootin:
 	if(
 		sprite_index != spr_spwn
-		&& name == "Pet"
+		&& array_find_index(obj.Pet, self) >= 0
 		&& instance_is(leader, Player)
 		&& (!collision_line(x, y, leader.x, leader.y, Wall, false, false) || (instance_exists(target) && target_visible))
 	){
@@ -3653,8 +3634,8 @@
 				if(weapon_get_laser_sight(wep)){
 					if(
 						(instance_exists(target) && target_visible)
-						|| (name == "Pet" && instance_exists(leader) && !collision_line(x, y, leader.x, leader.y, Wall, false, false))
-						|| (name == "PetWeaponBoss" && point_distance(x, y, cover_x, cover_y) < 24)
+						|| (array_find_index(obj.Pet,           self) >= 0 && instance_exists(leader) && !collision_line(x, y, leader.x, leader.y, Wall, false, false))
+						|| (array_find_index(obj.PetWeaponBoss, self) >= 0 && point_distance(x, y, cover_x, cover_y) < 24)
 					){
 						_wepLaser += current_time_scale / ((instance_exists(target) && target_distance < shootdis_min) ? 60 : 5);
 					}
@@ -4341,15 +4322,13 @@
 	
 /// GENERAL
 #define ntte_update(_newID, _genID)
-	var _petInst = Pet;
-	
-	if(array_length(_petInst)){
+	if(array_length(obj.Pet)){
 		 // Mantis Rad Attraction:
 		if(
 			(instance_exists(Rad)    && Rad.id    > _newID) ||
 			(instance_exists(BigRad) && BigRad.id > _newID)
 		){
-			var _targetInst = instances_matching(instances_matching(_petInst, "pet", "Orchid"), "visible", true);
+			var _targetInst = instances_matching(instances_matching(obj.Pet, "pet", "Orchid"), "visible", true);
 			if(array_length(_targetInst)){
 				with(instances_matching_gt([Rad, BigRad], "id", _newID)){
 					var	_target = noone,
@@ -4379,7 +4358,7 @@
 		
 		 // Salamander Throne Butt Text:
 		if(instance_exists(SkillIcon) && SkillIcon.id > _newID){
-			if(array_length(instances_matching(_petInst, "pet", "Salamander"))){
+			if(array_length(instances_matching(obj.Pet, "pet", "Salamander"))){
 				with(instances_matching(instances_matching_gt(SkillIcon, "id", _newID), "skill", mut_throne_butt)){
 					 // Append Character Names:
 					for(var i = 0; i < maxp; i++){
@@ -4512,8 +4491,8 @@
 #define ntte_end_step
 	 // Spider Webbing:
 	var _webVisible = false;
-	if(instance_exists(CustomHitme)){
-		var _instSpider = instances_matching(Pet, "pet", "Spider");
+	if(array_length(obj.Pet)){
+		var _instSpider = instances_matching(obj.Pet, "pet", "Spider");
 		if(array_length(_instSpider)){
 			_webVisible = true;
 			
@@ -4731,9 +4710,9 @@
 	
 #define octobubble_draw
 	 // Octo Bubble Draw:
-	if(instance_exists(CustomHitme)){
+	if(array_length(obj.Pet)){
 		if(!call(scr.area_get_underwater, GameCont.area) && (GameCont.area != 100 || !call(scr.area_get_underwater, GameCont.lastarea))){
-			var _inst = instances_matching(instances_matching(instances_matching(Pet, "pet", "Octo"), "visible", true), "hiding", false);
+			var _inst = instances_matching(instances_matching(instances_matching(obj.Pet, "pet", "Octo"), "visible", true), "hiding", false);
 			if(array_length(_inst)) with(_inst){
 				draw_sprite(sprPlayerBubble, -1, x + spr_bubble_x, y + spr_bubble_y);
 			}
@@ -5002,6 +4981,7 @@
 	
 /// SCRIPTS
 #macro  call                                                                                    script_ref_call
+#macro  obj                                                                                     global.obj
 #macro  scr                                                                                     global.scr
 #macro  spr                                                                                     global.spr
 #macro  snd                                                                                     global.snd

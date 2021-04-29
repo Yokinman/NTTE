@@ -2,7 +2,7 @@
 	mod_script_call("mod", "teassets", "ntte_init", script_ref_create(init));
 	
 	 // Store Script References:
-	with([pit_get, pit_set, pit_reset]){
+	with([pit_get, pit_set, pit_reset, pit_sink]){
 		lq_set(scr, script_get_name(self), script_ref_create(self));
 	}
 	
@@ -430,8 +430,8 @@
 	}
 	
 	 // Got too many eels, bro? No problem:
-	with(instances_matching(CustomEnemy, "name", "Eel")){
-		if(array_length(instances_matching(CustomEnemy, "name", "Eel")) > 8 + (4 * GameCont.loops)){
+	with(instances_matching_ne(obj.Eel, "id", null)){
+		if(array_length(instances_matching_ne(obj.Eel, "id", null)) > 8 + (4 * GameCont.loops)){
 			call(scr.obj_create, x, y, "WantEel");
 			instance_delete(self);
 		}
@@ -442,9 +442,8 @@
 	alarm0 = irandom_range(30, 50);
 	
 	 // Pet Bubbles:
-	if(chance(1, 4) && instance_exists(CustomHitme)){
-		var _inst = instances_matching(CustomHitme, "name", "Pet");
-		if(array_length(_inst)) with(_inst){
+	if(chance(1, 4) && array_length(obj.Pet)){
+		with(instances_matching_ne(obj.Pet, "id", null)){
 			instance_create(x, y, Bubble);
 		}
 	}
@@ -571,8 +570,8 @@
 		
 		 // Destroy PitSink Objects, Lag Helper:
 		var _max = 80;
-		if(instance_number(CustomObject) > _max){
-			var _inst = instances_matching(CustomObject, "name", "PitSink");
+		if(array_length(obj.PitSink) > _max){
+			var _inst = instances_matching_ne(obj.PitSink, "id", null);
 			if(array_length(_inst) > _max){
 				with(array_slice(_inst, _max, array_length(_inst) - _max)){
 					instance_destroy();
@@ -680,51 +679,6 @@
 	
 	
 /// PITS
-#define pit_sink(_x, _y, _spr, _img, _xsc, _ysc, _ang, _dir, _spd, _rot)
-	with(instance_create(_x, _y, CustomObject)){
-		name = "PitSink";
-		
-		 // Visual:
-		sprite_index = _spr;
-		image_index = _img;
-		image_xscale = _xsc;
-		image_yscale = _ysc;
-		image_angle = _ang;
-		image_speed = 0;
-		visible = false;
-		
-		 // Vars:
-		direction = ((_dir == 0) ? random(360) : _dir);
-		speed     = max(_spd, 1);
-		friction  = 0.01;
-		rotspeed  = _rot;
-		
-		 // Events:
-		on_step = pit_sink_step;
-		
-		return self;
-	}
-	
-#define pit_sink_step
-	 // Blackness Consumes:
-	image_blend = merge_color(image_blend, c_black, 0.05 * current_time_scale);
-	
-	 // Shrink into Abyss:
-	var _d = random_range(0.001, 0.01) * current_time_scale
-	image_xscale -= sign(image_xscale) * _d;
-	image_yscale -= sign(image_yscale) * _d;
-	if(vspeed < 0) vspeed *= 0.9;
-	y += 1/3 * current_time_scale;
-	
-	 // Spins:
-	direction   += rotspeed * current_time_scale;
-	image_angle += rotspeed * current_time_scale;
-	
-	 // He gone:
-	if(abs(image_xscale) < 2/3){
-		instance_destroy();
-	}
-	
 #define draw_pit
 	if(lag) trace_time();
 	
@@ -819,74 +773,77 @@
 		draw_rectangle(0, 0, w * scale, h * scale, false);
 			
 			 // Pit Spark:
-			var _inst = instances_matching(instances_matching(CustomObject, "name", "PitSpark"), "tentacle_visible", true);
-			if(array_length(_inst)) with(_inst){
-				var	_sparkRadius = [[25, 20], [20, 10]],
-					_sparkBright = (floor(image_index) % 2),
-					_sparkNum    = (dark ? 1 : array_length(_surfSpark));
-					
-				for(var i = 0; i < _sparkNum; i++){
-					with(_surfSpark[i]){
-						x = other.x - (w / 2);
-						y = other.y - (h / 2);
-						
-						var	_surfSparkScale = scale,
-							_x = w * 0.5,
-							_y = h * 0.5;
+			if(array_length(obj.PitSpark)){
+				var _inst = instances_matching(obj.PitSpark, "tentacle_visible", true);
+				if(array_length(_inst)){
+					var _sparkRadius = [[25, 20], [20, 10]];
+					with(_inst){
+						var	_sparkBright = (floor(image_index) % 2),
+							_sparkNum    = (dark ? 1 : array_length(_surfSpark));
 							
-						surface_set_target(surf);
-						draw_clear_alpha(0, 0);
-						
-						with(other){
-							 // Draw mask:
-							draw_set_color_write_enable(true, true, true, true);
-							draw_circle(
-								_x * _surfSparkScale,
-								_y * _surfSparkScale,
-								(_sparkRadius[i + dark][_sparkBright] + irandom(1)) * _surfSparkScale,
-								false
-							);
-							draw_set_color_write_enable(true, true, true, false);
-							
-							 // Draw tentacle:
-							var t = tentacle;
-							draw_sprite_ext(
-								spr.TentacleWheel, 
-								i, 
-								(_x + lengthdir_x(t.distance, t.move_dir)) * _surfSparkScale, 
-								(_y + lengthdir_y(t.distance, t.move_dir)) * _surfSparkScale, 
-								image_xscale * _surfSparkScale * t.scale * t.right, 
-								image_yscale * _surfSparkScale * t.scale, 
-								t.rotation, 
-								merge_color(c_black, image_blend,
-									visible
-									? (image_index / image_number)
-									: ((alarm0 > 3) ? 1 : (((current_frame + x + y) / 2) % 2))
-								),
-								image_alpha
-							);
+						for(var i = 0; i < _sparkNum; i++){
+							with(_surfSpark[i]){
+								x = other.x - (w / 2);
+								y = other.y - (h / 2);
+								
+								var	_surfSparkScale = scale,
+									_x = w * 0.5,
+									_y = h * 0.5;
+									
+								surface_set_target(surf);
+								draw_clear_alpha(0, 0);
+								
+								with(other){
+									 // Draw mask:
+									draw_set_color_write_enable(true, true, true, true);
+									draw_circle(
+										_x * _surfSparkScale,
+										_y * _surfSparkScale,
+										(_sparkRadius[i + dark][_sparkBright] + irandom(1)) * _surfSparkScale,
+										false
+									);
+									draw_set_color_write_enable(true, true, true, false);
+									
+									 // Draw tentacle:
+									var t = tentacle;
+									draw_sprite_ext(
+										spr.TentacleWheel, 
+										i, 
+										(_x + lengthdir_x(t.distance, t.move_dir)) * _surfSparkScale, 
+										(_y + lengthdir_y(t.distance, t.move_dir)) * _surfSparkScale, 
+										image_xscale * _surfSparkScale * t.scale * t.right, 
+										image_yscale * _surfSparkScale * t.scale, 
+										t.rotation, 
+										merge_color(c_black, image_blend,
+											visible
+											? (image_index / image_number)
+											: ((alarm0 > 3) ? 1 : (((current_frame + x + y) / 2) % 2))
+										),
+										image_alpha
+									);
+								}
+							}
 						}
-					}
-				}
-				
-				surface_set_target(other.surf);
-				
-				for(var i = 0; i < _sparkNum; i++){
-					with(_surfSpark[i]){
-						call(scr.draw_surface_scale, 
-							surf,
-							(x - _surfX) * _surfScale,
-							(y - _surfY) * _surfScale,
-							_surfScale / scale
-						);
+						
+						surface_set_target(other.surf);
+						
+						for(var i = 0; i < _sparkNum; i++){
+							with(_surfSpark[i]){
+								call(scr.draw_surface_scale, 
+									surf,
+									(x - _surfX) * _surfScale,
+									(y - _surfY) * _surfScale,
+									_surfScale / scale
+								);
+							}
+						}
 					}
 				}
 			}
 			
-			 // Pit Squid:
-			if(instance_exists(CustomEnemy)){
-				 // Tentacle Outlines:
-				var _inst = call(scr.instances_seen_nonsync, instances_matching_le(instances_matching(instances_matching(CustomEnemy, "name", "PitSquidArm"), "visible", true), "nexthurt", current_frame), 32, 32);
+			 // Pit Squid Tentacle Outlines:
+			if(array_length(obj.PitSquidArm)){
+				var _inst = call(scr.instances_seen_nonsync, instances_matching_le(instances_matching(obj.PitSquidArm, "visible", true), "nexthurt", current_frame), 32, 32);
 				if(array_length(_inst)){
 					var _alpha = 0.3 + (0.25 * sin(current_frame / 10));
 					
@@ -929,9 +886,11 @@
 					
 					draw_set_fog(false, c_white, 0, 0);
 				}
-				
-				 // Pit Squid:
-				with(instances_matching(CustomEnemy, "name", "PitSquid")){
+			}
+			
+			 // Pit Squid:
+			if(array_length(obj.PitSquid)){
+				with(instances_matching_ne(obj.PitSquid, "id", null)){
 					var	_xsc  = image_xscale * max(pit_height, 0) * _surfScale,
 						_ysc  = image_yscale * max(pit_height, 0) * _surfScale,
 						_ang  = image_angle,
@@ -977,37 +936,40 @@
 			}
 			
 			 // Pit Squid Death:
-			var _inst = instances_matching(CustomObject, "name", "PitSquidDeath");
-			if(array_length(_inst)) with(_inst){
-				var	_xsc = image_xscale * max(pit_height, 0) * _surfScale,
-					_ysc = image_yscale * max(pit_height, 0) * _surfScale,
-					_ang = image_angle,
-					_col = merge_color(c_black, image_blend, clamp(pit_height, 0, 1)),
-					_alp = image_alpha;
-					
-				with(eye){
-					var	_x = (x - _surfX) * _surfScale,
-						_y = (y - _surfY) * _surfScale,
-						l = dis * max(other.pit_height, 0) * _surfScale,
-						d = dir;
+			if(array_length(obj.PitSquidDeath)){
+				with(instances_matching_ne(obj.PitSquidDeath, "id", null)){
+					var	_xsc = image_xscale * max(pit_height, 0) * _surfScale,
+						_ysc = image_yscale * max(pit_height, 0) * _surfScale,
+						_ang = image_angle,
+						_col = merge_color(c_black, image_blend, clamp(pit_height, 0, 1)),
+						_alp = image_alpha;
 						
-					with(other){
-						if(explo){
-							draw_set_fog(((current_frame % 6) < 2 || (!sink && pit_height < 1)), _col, 0, 0);
-							draw_sprite_ext(spr.PitSquidCornea, image_index, _x,                                    _y,                                    _xsc,       _ysc, _ang, _col, _alp);
-							draw_sprite_ext(spr.PitSquidPupil,  image_index, _x + lengthdir_x(l * image_xscale, d), _y + lengthdir_y(l * image_yscale, d), _xsc * 0.5, _ysc, _ang, _col, _alp);
-							draw_set_fog(false, 0, 0, 0);
+					with(eye){
+						var	_x = (x - _surfX) * _surfScale,
+							_y = (y - _surfY) * _surfScale,
+							l = dis * max(other.pit_height, 0) * _surfScale,
+							d = dir;
+							
+						with(other){
+							if(explo){
+								draw_set_fog(((current_frame % 6) < 2 || (!sink && pit_height < 1)), _col, 0, 0);
+								draw_sprite_ext(spr.PitSquidCornea, image_index, _x,                                    _y,                                    _xsc,       _ysc, _ang, _col, _alp);
+								draw_sprite_ext(spr.PitSquidPupil,  image_index, _x + lengthdir_x(l * image_xscale, d), _y + lengthdir_y(l * image_yscale, d), _xsc * 0.5, _ysc, _ang, _col, _alp);
+								draw_set_fog(false, 0, 0, 0);
+							}
+							draw_sprite_ext(spr.PitSquidEyelid, (explo ? 0 : sprite_get_number(spr.PitSquidEyelid) - 1), _x, _y, _xsc, _ysc, _ang, _col, _alp);
 						}
-						draw_sprite_ext(spr.PitSquidEyelid, (explo ? 0 : sprite_get_number(spr.PitSquidEyelid) - 1), _x, _y, _xsc, _ysc, _ang, _col, _alp);
 					}
 				}
 			}
 			
 			 // Octo pet:
-			if(instance_exists(CustomHitme)){
-				var _inst = instances_matching(instances_matching(instances_matching(CustomHitme, "name", "Pet"), "pet", "Octo"), "hiding", true);
-				if(array_length(_inst)) with(_inst){
-					draw_sprite_ext(sprite_index, image_index, (x - _surfX) * _surfScale, (y - _surfY) * _surfScale, image_xscale * _surfScale, image_yscale * _surfScale, image_angle, image_blend, visible);
+			if(array_length(obj.Pet)){
+				var _inst = instances_matching(instances_matching(obj.Pet, "pet", "Octo"), "hiding", true);
+				if(array_length(_inst)){
+					with(_inst){
+						draw_sprite_ext(sprite_index, image_index, (x - _surfX) * _surfScale, (y - _surfY) * _surfScale, image_xscale * _surfScale, image_yscale * _surfScale, image_angle, image_blend, visible);
+					}
 				}
 			}
 			
@@ -1022,19 +984,23 @@
 			}
 			
 			 // WantEel:
-			var _inst = instances_matching(instances_matching(CustomObject, "name", "WantEel"), "visible", true);
-			if(array_length(_inst)) with(_inst){
-				draw_sprite_ext(
-					sprite_index,
-					image_index,
-					(x - _surfX) * _surfScale,
-					((y - _surfY) + (12 * (1 - pit_height))) * _surfScale,
-					image_xscale * pit_height * _surfScale,
-					image_yscale * pit_height * _surfScale,
-					image_angle,
-					image_blend,
-					image_alpha
-				);
+			if(array_length(obj.WantEel)){
+				var _inst = instances_matching(obj.WantEel, "visible", true);
+				if(array_length(_inst)){
+					with(_inst){
+						draw_sprite_ext(
+							sprite_index,
+							image_index,
+							(x - _surfX) * _surfScale,
+							((y - _surfY) + (12 * (1 - pit_height))) * _surfScale,
+							image_xscale * pit_height * _surfScale,
+							image_yscale * pit_height * _surfScale,
+							image_angle,
+							image_blend,
+							image_alpha
+						);
+					}
+				}
 			}
 			
 			 // Make Proto Statues Cooler:
@@ -1051,44 +1017,46 @@
 			}
 			if(instance_exists(Corpse)){
 				var _inst = instances_matching(Corpse, "sprite_index", sprPStatDead);
-				if(array_length(_inst)) with(_inst){
-					if(pit_get(x, bbox_bottom)){
-						var	_spr = spr.PStatTrenchIdle,
-							_img = image_index,
-							_x   = (x - _surfX) * _surfScale,
-							_y   = (y - _surfY) * _surfScale,
-							_xsc = image_xscale * _surfScale,
-							_ysc = image_yscale * _surfScale,
-							_ang = image_angle,
-							_col = image_blend,
-							_alp = image_alpha;
+				if(array_length(_inst)){
+					with(_inst){
+						if(pit_get(x, bbox_bottom)){
+							var	_spr = spr.PStatTrenchIdle,
+								_img = image_index,
+								_x   = (x - _surfX) * _surfScale,
+								_y   = (y - _surfY) * _surfScale,
+								_xsc = image_xscale * _surfScale,
+								_ysc = image_yscale * _surfScale,
+								_ang = image_angle,
+								_col = image_blend,
+								_alp = image_alpha;
+								
+							draw_sprite_ext(_spr, _img, _x, _y, _xsc, _ysc, _ang, _col, _alp);
 							
-						draw_sprite_ext(_spr, _img, _x, _y, _xsc, _ysc, _ang, _col, _alp);
-						
-						if(place_meeting(x, y, Portal)){
-							_spr = spr.PStatTrenchLights;
-							_img = 0;
-							
-							var	_portal = instance_nearest(x, y, Portal);
-							
-							if(instance_exists(_portal)){
-								switch(_portal.sprite_index){
-									case sprPortalSpawn:
-									case sprProtoPortal:
-										_img = (sprite_get_number(_spr) - 1) - 2 + (2 * sin(current_frame / 16));
-										break;
-										
-									case sprProtoPortalDisappear:
-										_img = (sprite_get_number(_spr) - 1) * (1 - (_portal.image_index / _portal.image_number));
-										break;
-										
-									default:
-										_img = 0;
+							if(place_meeting(x, y, Portal)){
+								_spr = spr.PStatTrenchLights;
+								_img = 0;
+								
+								var	_portal = instance_nearest(x, y, Portal);
+								
+								if(instance_exists(_portal)){
+									switch(_portal.sprite_index){
+										case sprPortalSpawn:
+										case sprProtoPortal:
+											_img = (sprite_get_number(_spr) - 1) - 2 + (2 * sin(current_frame / 16));
+											break;
+											
+										case sprProtoPortalDisappear:
+											_img = (sprite_get_number(_spr) - 1) * (1 - (_portal.image_index / _portal.image_number));
+											break;
+											
+										default:
+											_img = 0;
+									}
 								}
-							}
-							
-							if(_img > 0){
-								draw_sprite_ext(_spr, _img, _x, _y, _xsc, _ysc, _ang, _col, _alp);
+								
+								if(_img > 0){
+									draw_sprite_ext(_spr, _img, _x, _y, _xsc, _ysc, _ang, _col, _alp);
+								}
 							}
 						}
 					}
@@ -1096,9 +1064,10 @@
 			}
 			
 			 // Stuff that fell in pit:
-			var _inst = instances_matching(CustomObject, "name", "PitSink");
-			if(array_length(_inst)) with(_inst){
-				draw_sprite_ext(sprite_index, image_index, (x - _surfX) * _surfScale, (y - _surfY) * _surfScale, image_xscale * _surfScale, image_yscale * _surfScale, image_angle, image_blend, image_alpha);
+			if(array_length(obj.PitSink)){
+				with(instances_matching_ne(obj.PitSink, "id", null)){
+					draw_sprite_ext(sprite_index, image_index, (x - _surfX) * _surfScale, (y - _surfY) * _surfScale, image_xscale * _surfScale, image_yscale * _surfScale, image_angle, image_blend, image_alpha);
+				}
 			}
 			
 			 // Pit Wall Tops:
@@ -1162,10 +1131,29 @@
 		visible = _bool;
 	}
 	
+#define pit_sink(_x, _y, _spr, _img, _xsc, _ysc, _ang, _dir, _spd, _rot)
+	with(call(scr.obj_create, _x, _y, "PitSink")){
+		 // Visual:
+		sprite_index = _spr;
+		image_index  = _img;
+		image_xscale = _xsc;
+		image_yscale = _ysc;
+		image_angle  = _ang;
+		
+		 // Vars:
+		if(_spd != 0){
+			direction = _dir;
+		}
+		speed     = max(_spd, speed);
+		rotspeed  = _rot;
+		
+		return self;
+	}
+	
 	
 /// SCRIPTS
-#define pass(_ref)                                                                              _ref = array_clone(_ref); array_push(_ref, self); array_push(_ref, other); return _ref;
 #macro  call                                                                                    script_ref_call
+#macro  obj                                                                                     global.obj
 #macro  scr                                                                                     global.scr
 #macro  spr                                                                                     global.spr
 #macro  snd                                                                                     global.snd

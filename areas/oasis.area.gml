@@ -299,9 +299,8 @@
 	alarm0 = irandom_range(30, 50);
 	
 	 // Pet Bubbles:
-	if(chance(1, 4) && instance_exists(CustomHitme)){
-		var _inst = instances_matching(CustomHitme, "name", "Pet");
-		if(array_length(_inst)) with(_inst){
+	if(chance(1, 4) && array_length(obj.Pet)){
+		with(instances_matching_ne(obj.Pet, "id", null)){
 			instance_create(x, y, Bubble);
 		}
 	}
@@ -332,6 +331,7 @@
 	
 /// SCRIPTS
 #macro  call                                                                                    script_ref_call
+#macro  obj                                                                                     global.obj
 #macro  scr                                                                                     global.scr
 #macro  spr                                                                                     global.spr
 #macro  snd                                                                                     global.snd

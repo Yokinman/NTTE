@@ -1,6 +1,15 @@
 #define init
 	mod_script_call("mod", "teassets", "ntte_init", script_ref_create(init));
 	
+	 // Gather Objects:
+	for(var i = 1; true; i++){
+		var _scrName = script_get_name(i);
+		if(is_undefined(_scrName)){
+			break;
+		}
+		call(scr.obj_add, script_ref_create(i));
+	}
+	
 	 // Underwater Stuff:
 	global.underwater_bind_draw    = script_bind(CustomDraw, underwater_draw, -3, false);
 	global.underwater_sound_active = false;
@@ -483,7 +492,7 @@
 				if(array_length(_inst)) with(_inst){
 					if(place_meeting(x, y, other)){
 						if("size" not in self || size - (object_index == DogGuardian) <= (3 * other.big)){
-							if(!instance_is(self, projectile) || (typ != 0 && ("name" not in self || name != other.name))){
+							if(!instance_is(self, projectile) || (typ != 0 && array_find_index(obj.BubbleBomb, self) < 0)){
 								bubble_bombed = true;
 								
 								array_push(other.held, self);
@@ -516,10 +525,14 @@
 		y += z;
 		
 		 // Bubble Collision:
-		var _inst = instances_matching_ge(instances_matching(_meeting, "name", name), "big", big);
-		if(array_length(_inst)) with(_inst){
-			if(place_meeting(x, y, other)){
-				with(other) motion_add_ct(point_direction(other.x, other.y, x, y) + orandom(4), 0.5);
+		var _inst = instances_matching_ge(_meeting, "big", big);
+		if(array_length(_inst)){
+			with(_inst){
+				if(array_find_index(obj.BubbleBomb, self) >= 0 && place_meeting(x, y, other)){
+					with(other){
+						motion_add_ct(point_direction(other.x, other.y, x, y) + orandom(4), 0.5);
+					}
+				}
 			}
 		}
 	}
@@ -1610,11 +1623,11 @@
 		
 		 // Vars:
 		mask_index = mskBandit;
-		type = irandom_range(1, 3);
-		skeal = true;//!_inCoast;
+		type       = irandom_range(1, 3);
+		skeal      = true; //!_inCoast;
 		
 		 // Alarms:
-		alarm0 = 30 + (10 * array_length(instances_matching(CustomObject, "name", "SunkenSealSpawn")));
+		alarm0 = 30 + (10 * array_length(instances_matching_ne(obj.SunkenSealSpawn, "id", null)));
 		
 		 // FX:
 		repeat(3){
@@ -2041,17 +2054,19 @@
 	}
 	
 #define ntte_draw_shadows
-	 // Bubble Bombs:
-	if(instance_exists(CustomProjectile)){
-		var _inst = instances_matching(instances_matching(instances_matching(CustomProjectile, "name", "BubbleBomb"), "big", true), "visible", true);
-		if(array_length(_inst)) with(_inst){
-			var	_f = min((z / 6) - 4, 6),
-				_w = max(6 + _f, 0) + sin((x + y + z) / 8),
-				_h = max(4 + _f, 0) + cos((x + y + z) / 8),
-				_x = x,
-				_y = y + 6;
-				
-			draw_ellipse(_x - _w, _y - _h, _x + _w, _y + _h, false);
+	 // Big Bubble Bombs:
+	if(array_length(obj.BubbleBomb)){
+		var _inst = instances_matching(instances_matching_gt(obj.BubbleBomb, "big", 0), "visible", true);
+		if(array_length(_inst)){
+			with(_inst){
+				var	_f = min((z / 6) - 4, 6),
+					_w = max(6 + _f, 0) + sin((x + y + z) / 8),
+					_h = max(4 + _f, 0) + cos((x + y + z) / 8),
+					_x = x,
+					_y = y + 6;
+					
+				draw_ellipse(_x - _w, _y - _h, _x + _w, _y + _h, false);
+			}
 		}
 	}
 	
@@ -2061,8 +2076,10 @@
 	 // Air Bubbles:
 	if(instance_exists(hitme)){
 		var _inst = instances_matching(call(scr.instances_seen_nonsync, instances_matching_ne(hitme, "spr_bubble", -1, null), 16, 16), "visible", true);
-		if(array_length(_inst)) with(_inst){
-			draw_sprite(spr_bubble, -1, x + spr_bubble_x, y + spr_bubble_y);
+		if(array_length(_inst)){
+			with(_inst){
+				draw_sprite(spr_bubble, -1, x + spr_bubble_x, y + spr_bubble_y);
+			}
 		}
 	}
 	
@@ -2101,6 +2118,7 @@
 	
 /// SCRIPTS
 #macro  call                                                                                    script_ref_call
+#macro  obj                                                                                     global.obj
 #macro  scr                                                                                     global.scr
 #macro  spr                                                                                     global.spr
 #macro  snd                                                                                     global.snd

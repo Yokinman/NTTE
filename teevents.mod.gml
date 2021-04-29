@@ -6,6 +6,9 @@
 		lq_set(scr, script_get_name(self), script_ref_create(self));
 	}
 	
+	 // Add Objects:
+	call(scr.obj_add, script_ref_create(NTTEEvent_create));
+	
 	 // floor_set():
 	floor_reset_style();
 	floor_reset_align();
@@ -61,7 +64,7 @@
 #macro BuriedVault_spawn variable_instance_get(GenCont, "safespawn", 1) > 0 && GameCont.area != "coast"
 #macro BuriedVault_found variable_instance_get(GameCont, "buried_vaults", 0)
 
-#macro ScorpionCity_pet instances_matching_gt(instances_matching(instances_matching(CustomHitme, "name", "Pet"), "pet", "Scorpion"), "scorpion_city", 0)
+#macro ScorpionCity_pet instances_matching_gt(instances_matching(obj.Pet, "pet", "Scorpion"), "scorpion_city", 0)
 
 #define BuriedVault_text    return ((GameCont.area == area_vault || BuriedVault_found > 0) ? "" : choose(`SECRETS IN THE ${event_tip}WALLS`, `${event_tip}ARCHAEOLOGY`, `ANCIENT ${event_tip}STRUCTURES`));
 #define BuriedVault_hard    return 5; // 3-1+
@@ -188,7 +191,7 @@
 			var	_rideList = call(scr.array_shuffle, instances_matching_ne([Scorpion, GoldScorpion], "id", null)),
 				_rideNum  = 0;
 				
-			with(instances_matching(Bandit, "name", "BanditCamper")){
+			with(instances_matching_ne(obj.BanditCamper, "id", null)){
 				if(_rideNum >= array_length(_rideList)){
 					break;
 				}
@@ -496,7 +499,7 @@
 				var _canSkull = true;
 				
 				 // Move Shark Skull:
-				with(instances_matching(CustomHitme, "name", "CoastBossBecome")){
+				with(instances_matching_ne(obj.CoastBossBecome, "id", null)){
 					if(_canSkull){
 						_canSkull = false;
 						
@@ -896,7 +899,7 @@
 	}
 	
 	 // No Scorpion Pets:
-	/*with(instances_matching(CustomProp, "name", "ScorpionRock")){
+	/*with(instances_matching_ne(obj.ScorpionRock, "id", null)){
 		friendly = -1;
 	}*/
 	
@@ -933,7 +936,7 @@
 			}
 		}
 	}
-	with(instances_matching(CustomEnemy, "name", "BigMaggotSpawn")){
+	with(instances_matching_ne(obj.BigMaggotSpawn, "id", null)){
 		scorp_drop++;
 	}
 	
@@ -1843,7 +1846,7 @@
 		}
 		
 		 // Other Igloos:
-		with(instances_matching(CustomProp, "name", "Igloo")){
+		with(instances_matching_ne(obj.Igloo, "id", null)){
 			 // Face Statue:
 			if(x != other.x){
 				image_xscale = sign(other.x - x);
@@ -3051,15 +3054,11 @@
 		
 		 // Normal:
 		else if(!teevent_get_active(_name)){
-			with(instance_create(0, 0, CustomObject)){
-				name     = "NTTEEvent";
+			with(call(scr.obj_create, 0, 0, "NTTEEvent")){
 				mod_type = script_ref_create(teevent_set_active)[0];
 				mod_name = mod_current;
 				event    = _name;
 				tip      = mod_script_call(mod_type, mod_name, event + "_text");
-				floors   = [];
-				spawn_x  = 10016;
-				spawn_y  = 10016;
 				
 				with(GenCont){
 					 // Spawn Point:
@@ -3094,20 +3093,37 @@
 		Use the 'all' keyword to return an array of every active event's controller object
 	*/
 	
-	var _inst = instances_matching(CustomObject, "name", "NTTEEvent");
-	
 	 // All:
 	if(_name == all){
+		var _inst = instances_matching_ne(obj.NTTEEvent, "id", null);
 		array_sort(_inst, true);
 		return _inst;
 	}
 	
 	 // Normal:
-	with(instances_matching(_inst, "event", _name)){
+	with(instances_matching(obj.NTTEEvent, "event", _name)){
 		return self;
 	}
 	
 	return noone;
+	
+#define NTTEEvent_create(_x, _y)
+	/*
+		The raw object used for NTTE's events
+	*/
+	
+	with(instance_create(_x, _y, CustomObject)){
+		 // Vars:
+		mod_type = "";
+		mod_name = "";
+		event    = "";
+		tip      = "";
+		floors   = [];
+		spawn_x  = 10016;
+		spawn_y  = 10016;
+		
+		return self;
+	}
 	
 	
 /// GENERAL
@@ -3139,6 +3155,7 @@
 	
 /// SCRIPTS
 #macro  call                                                                                    script_ref_call
+#macro  obj                                                                                     global.obj
 #macro  scr                                                                                     global.scr
 #macro  spr                                                                                     global.spr
 #macro  snd                                                                                     global.snd

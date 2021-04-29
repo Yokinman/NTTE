@@ -513,7 +513,7 @@
 	 /// ACTIVE : Charm
 	if(canspec && player_active){
 		var	_featherNum  = ((ultra_get(mod_current, ult_feather) > 0) ? feather_ammo_max : feather_num),
-			_featherInst = (instance_exists(CustomObject) ? instances_matching(instances_matching(instances_matching(CustomObject, "name", "ParrotFeather"), "index", index), "creator", self, noone) : []),
+			_featherInst = (array_length(obj.ParrotFeather) ? instances_matching(instances_matching(obj.ParrotFeather, "index", index), "creator", self, noone) : []),
 			_activeHeld  = (button_check(index, "spec") || usespec > 0),
 			_activePress = (_activeHeld && (button_pressed(index, "spec") || ((usespec > 0 || array_length(_featherInst)) && array_equals(_featherInst, instances_matching(_featherInst, "target", self)))));
 			
@@ -521,12 +521,14 @@
 		if(_activePress || !_activeHeld){
 			 // Activate Pickup Feathers:
 			if(_activePress && array_length(_featherInst) < _featherNum){
-				if(instance_exists(CustomObject)){
-					var _inst = instances_matching(instances_matching(instances_matching(instances_matching(CustomObject, "name", "ParrotFeather"), "index", -1), "creator", self), "target", self);
+				if(array_length(obj.ParrotFeather)){
+					var _inst = instances_matching(instances_matching(instances_matching(obj.ParrotFeather, "index", -1), "creator", self), "target", self);
 					_inst = array_slice(_inst, 0, min(_featherNum - array_length(_featherInst), array_length(_inst)));
-					if(array_length(_inst)) with(_inst){
-						index = other.index;
-						array_push(_featherInst, self);
+					if(array_length(_inst)){
+						with(_inst){
+							index = other.index;
+							array_push(_featherInst, self);
+						}
 					}
 				}
 			}
@@ -1795,6 +1797,7 @@
 	
 /// SCRIPTS
 #macro  call                                                                                    script_ref_call
+#macro  obj                                                                                     global.obj
 #macro  scr                                                                                     global.scr
 #macro  spr                                                                                     global.spr
 #macro  snd                                                                                     global.snd

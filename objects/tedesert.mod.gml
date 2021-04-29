@@ -1,8 +1,18 @@
 #define init
 	mod_script_call("mod", "teassets", "ntte_init", script_ref_create(init));
 	
+	 // Gather Objects:
+	for(var i = 1; true; i++){
+		var _scrName = script_get_name(i);
+		if(is_undefined(_scrName)){
+			break;
+		}
+		call(scr.obj_add, script_ref_create(i));
+	}
+	
 #define cleanup
 	mod_script_call("mod", "teassets", "ntte_cleanup", script_ref_create(cleanup));
+	
 	
 #define BabyScorpion_create(_x, _y)
 	with(instance_create(_x, _y, CustomEnemy)){
@@ -355,8 +365,8 @@
 	
 	 // FX:
 	var _ang = random(360);
-	for(var d = _ang; d < _ang + 360; d += (360 / 3)){
-		call(scr.fx, x, y, [d, 3], Dust);
+	for(var _dir = _ang; _dir < _ang + 360; _dir += (360 / 3)){
+		call(scr.fx, x, y, [_dir, 3], Dust);
 	}
 
 
@@ -412,8 +422,8 @@
 #define BigCactus_death
 	 // Dust-o:
 	var _ang = random(360);
-	for(var d = _ang; d < _ang + 360; d += random_range(60, 180)){
-		with(call(scr.fx, x, y, [d, random_range(4, 5)], Dust)){
+	for(var _dir = _ang; _dir < _ang + 360; _dir += random_range(60, 180)){
+		with(call(scr.fx, x, y, [_dir, random_range(4, 5)], Dust)){
 			friction *= 2;
 		}
 	}
@@ -520,19 +530,19 @@
 			
 			 // Maggot:
 			var	_loop = chance(GameCont.loops, 3),
-				l = (24 + orandom(2)) * image_xscale,
-				d = (_loop ? random(360) : random_range(200, 340));
+				_l    = (24 + orandom(2)) * image_xscale,
+				_d    = (_loop ? random(360) : random_range(200, 340));
 				
-			with(instance_create(x + lengthdir_x(l, d), y + lengthdir_y(l * 0.5, d), (_loop ? FiredMaggot : Maggot))){
-				x = xstart;
-				y = ystart;
-				kills = 1; // FiredMaggot Fix
+			with(instance_create(x + lengthdir_x(_l, _d), y + lengthdir_y(_l * 0.5, _d), (_loop ? FiredMaggot : Maggot))){
+				x       = xstart;
+				y       = ystart;
+				kills   = 1; // FiredMaggot Fix
 				creator = other;
 				
 				 // Effects:
 				for(var i = 0; i <= (4 * _loop); i += 2){
 					with(instance_create(x, y, DustOLD)){
-						motion_add(d + orandom(10), 2 + i);
+						motion_add(_d + orandom(10), 2 + i);
 						depth = other.depth - 1;
 						image_blend = make_color_rgb(170, 70, 60);
 						image_speed /= max(1, (i / 2.5));
@@ -540,9 +550,9 @@
 				}
 				
 				 // Sounds:
-				var s = audio_play_sound((_loop ? sndFlyFire : sndHitFlesh), 0, false);
-				audio_sound_gain(s, min(0.9, random_range(24, 32) / (distance_to_object(Player) + 1)), 0);
-				audio_sound_pitch(s, 1.2 + random(0.2));
+				var _snd = audio_play_sound((_loop ? sndFlyFire : sndHitFlesh), 0, false);
+				audio_sound_gain(_snd, min(0.9, random_range(24, 32) / (distance_to_object(Player) + 1)), 0);
+				audio_sound_pitch(_snd, 1.2 + random(0.2));
 			}
 		}
 		
@@ -706,7 +716,7 @@
 	
 	 // Damage:
 	else{
-		projectile_hit_push(other, damage, speed * force);
+		projectile_hit(other, damage, speed * force);
 		
 		if(instance_exists(self)){
 			 // Sound:
@@ -714,7 +724,7 @@
 			
 			 // Break:
 			var _disSkull = infinity;
-			with(instances_matching(CustomProp, "name", "CoastBossBecome")){
+			with(instances_matching_ne(obj.CoastBossBecome, "id", null)){
 				var _dis = point_distance(x, y, other.x, other.y);
 				if(_dis < _disSkull){
 					_disSkull = _dis;
@@ -859,8 +869,8 @@
 	with(other){
 		if(
 			(instance_is(self, ThrownWep) && call(scr.wep_raw, wep) == "crabbone")
-			||
-			(instance_is(self, CustomProjectile) && "name" in self && (name == "Bone" || name == "BoneArrow"))
+			|| array_find_index(obj.Bone,      self) >= 0
+			|| array_find_index(obj.BoneArrow, self) >= 0
 		){
 			var _add = lq_defget(variable_instance_get(self, "wep"), "ammo", 1) + variable_instance_get(self, "big", 0);
 			
@@ -1245,7 +1255,8 @@
 	
 	 // Fish Train:
 	if(array_length(fish_train)){
-		var	_leader    = self,
+		var	_creator   = self,
+			_leader    = _creator,
 			_broken    = false,
 			_fishSwim  = fish_swim,
 			_fishIndex = 0;
@@ -1269,7 +1280,7 @@
 						
 						with(_fish){
 							kills   = 0;
-							creator = other;
+							creator = _creator;
 							
 							 // Keep Distance:
 							var	_l = 2,
@@ -1893,9 +1904,9 @@
 		}
 	}
 	/*
-	var n = 7;
-	for(var d = 0; d < 360; d += 360 / n){
-		call(scr.projectile_create, self, x, y, "SilverScorpionDevastator", direction + d, random_range(5, 6));
+	var _num = 7;
+	for(var _ang = 0; _ang < 360; _ang += 360 / _num){
+		call(scr.projectile_create, self, x, y, "SilverScorpionDevastator", direction + _ang, random_range(5, 6));
 	}
 	*/
 	
@@ -2011,10 +2022,10 @@
 		/*
 		if(chance_ct(4, 5)){
 			for(var i = -1; i <= 1; i += 2){
-				var l = sin(wave / 2) * 16,
-					d = direction + (90 * i);
+				var _l = sin(wave / 2) * 16,
+					_d = direction + (90 * i);
 					
-				with(call(scr.projectile_create, self, x + lengthdir_x(l, d), y + lengthdir_y(l, d), "VenomPellet", direction, (speed * 1/3))){
+				with(call(scr.projectile_create, self, x + lengthdir_x(_l, _d), y + lengthdir_y(_l, _d), "VenomPellet", direction, (speed * 1/3))){
 					if(i < 1){
 						depth++;
 						spr_idle = spr.VenomPelletBack;
@@ -2033,15 +2044,15 @@
 	}
 	
 #define SilverScorpionFlak_hit
-	if(projectile_canhit_melee(other)){
-		projectile_hit_push(other, damage, force);
+	if(projectile_canhit_np(other) && (instance_is(other, Player) || current_frame_active)){
+		projectile_hit_np(other, damage, force, 40);
 	}
 	
 #define SilverScorpionFlak_destroy
 	 // Bullets:
-	var n = 7;
-	for(var d = 0; d < 360; d += 360 / n){
-		call(scr.projectile_create, self, x, y, "SilverScorpionDevastator", direction + d, random_range(5, 6));
+	var _num = 7;
+	for(var _ang = 0; _ang < 360; _ang += 360 / _num){
+		call(scr.projectile_create, self, x, y, "SilverScorpionDevastator", direction + _ang, random_range(5, 6));
 	}
 	repeat(12){
 		call(scr.projectile_create, self, x, y, "VenomPellet", random(360), random_range(4, 8));
@@ -2130,7 +2141,7 @@
 
 #define VenomBlast_hit
 	if(projectile_canhit_melee(other)){
-		projectile_hit(other, damage, force, direction);
+		projectile_hit_push(other, damage, force);
 		sleep(20);
 	}
 
@@ -2212,8 +2223,11 @@
 	
 	 // Charging Up:
 	if(charging){
-		var _angry = (array_length(instances_matching(CustomEnemy, "name", "CatBoss")) <= 0) + (0.5 * GameCont.loops);
-		speed += friction_raw + (0.3 * _angry * current_time_scale);
+		var _angry = 1 + (0.5 * GameCont.loops);
+		if(array_find_index(obj.BatBoss, creator) >= 0 && array_length(instances_matching_ne(obj.CatBoss, "id", null))){
+			_angry--;
+		}
+		speed += (friction + (0.3 * _angry)) * current_time_scale;
 		
 		 // Follow Creator:
 		if(instance_exists(creator)){
@@ -2267,14 +2281,11 @@
 	}
 	
 #define VenomFlak_hit
-	if(charging){
-		if(projectile_canhit_melee(other)){
-			projectile_hit(other, 1);
+	if(charging ? projectile_canhit_melee(other) : projectile_canhit_np(other)){
+		projectile_hit_np(other, damage, force, 40);
+		if(!charging){
+			instance_destroy();
 		}
-	}
-	else if(projectile_canhit(other)){
-		projectile_hit(other, damage, force, direction);
-		instance_destroy();
 	}
 	
 #define VenomFlak_draw
@@ -2334,7 +2345,10 @@
 	}
 	
 #define VenomFlak_destroy
+	 // Clear Walls:
 	instance_create(x, y, PortalClear);
+	
+	 // Pickup:
 	if(!instance_is(creator, Player)){
 		pickup_drop(50, 0);
 	}
@@ -2343,24 +2357,25 @@
 	for(var _ang = 0; _ang < 360; _ang += (360 / 20)){
 		call(scr.fx, x, y, [_ang, 4 + random(4)], Smoke);
 	}
-	
 	view_shake_at(x, y, 20);
+	sleep(10);
 	
-	sound_play_pitchvol(sndHeavyMachinegun, 1,					0.8);
-	sound_play_pitchvol(sndSnowTankShoot,	1.4,				0.7);
-	sound_play_pitchvol(sndFrogEggHurt,		0.4 + random(0.2),	3.5);
+	 // Sound:
+	sound_play_pitchvol(sndHeavyMachinegun, 1,                 0.8);
+	sound_play_pitchvol(sndSnowTankShoot,   1.4,               0.7);
+	sound_play_pitchvol(sndFrogEggHurt,     0.4 + random(0.2), 3.5);
 	
 	 // Projectiles:
-	for(var d = 0; d < 360; d += (360 / 12)){
+	for(var _ang = 0; _ang < 360; _ang += (360 / 12)){
 		 // Venom Lines:
-		if((d mod 90) == 0){
+		if((_ang % 90) == 0){
 			for(var i = 0; i <= 4; i++){
 				with(call(scr.projectile_create,
 					self,
 					x,
 					y,
 					"VenomPellet",
-					direction + d + orandom(2 + i),
+					direction + _ang + orandom(2 + i),
 					2 * i
 				)){
 					move_contact_solid(direction, 4 + (4 * i));
@@ -2377,7 +2392,7 @@
 			x,
 			y,
 			"VenomPellet",
-			direction + d + orandom(2),
+			direction + _ang + orandom(2),
 			5.8 + random(0.4)
 		)){
 			move_contact_solid(direction, 6);
@@ -2436,15 +2451,15 @@
 #define VenomPellet_hit
 	var _firstHit = (array_find_index(hit_list, other) < 0);
 	if(projectile_canhit_melee(other) || (_firstHit && !instance_is(other, Player))){
-		projectile_hit_push(other, damage, force);
+		projectile_hit_np(other, damage, force, 10);
 		
 		if(_firstHit){
 			array_push(hit_list, other);
 			
 			 // Catch on Enemy / Pseudo Freeze Frames:
 			if(instance_exists(other) && other.my_health > 0){
-				x -= hspeed_raw;
-				y -= vspeed_raw;
+				x     -= hspeed;
+				y     -= vspeed;
 				speed -= friction;
 			}
 		}
@@ -2554,36 +2569,42 @@
 	 // Baby Scorpion Spawn:
 	if(instance_exists(MaggotSpawn)){
 		var _inst = instances_matching_gt(instances_matching_le(MaggotSpawn, "my_health", 0), "babyscorp_drop", 0);
-		if(array_length(_inst)) with(_inst){
-			repeat(babyscorp_drop){
-				call(scr.obj_create, x, y, "BabyScorpion");
+		if(array_length(_inst)){
+			with(_inst){
+				repeat(babyscorp_drop){
+					call(scr.obj_create, x, y, "BabyScorpion");
+				}
 			}
 		}
 	}
 	
 	 // Hiker Backpack:
-	if(instance_exists(Bandit)){
-		var _inst = instances_matching_le(instances_matching(Bandit, "name", "BanditHiker"), "my_health", 0);
-		if(array_length(_inst)) with(_inst){
-			speed /= 2;
-			with(call(scr.obj_create, x, y, "BackpackPickup")){
-				target = call(scr.chest_create, x, y, "Backpack");
-				direction = other.direction + orandom(10);
-				with(self){
-					event_perform(ev_step, ev_step_end);
+	if(array_length(obj.BanditHiker)){
+		var _inst = instances_matching_le(obj.BanditHiker, "my_health", 0);
+		if(array_length(_inst)){
+			with(_inst){
+				speed /= 2;
+				with(call(scr.obj_create, x, y, "BackpackPickup")){
+					target = call(scr.chest_create, x, y, "Backpack");
+					direction = other.direction + orandom(10);
+					with(self){
+						event_perform(ev_step, ev_step_end);
+					}
 				}
+				repeat(5) call(scr.fx, x, y, 4, Dust);
+				sound_play_pitchvol(sndMenuASkin, 1.2, 0.6);
 			}
-			repeat(5) call(scr.fx, x, y, 4, Dust);
-			sound_play_pitchvol(sndMenuASkin, 1.2, 0.6);
 		}
 	}
 	
 	 // Big Fish Train Pickups:
-	if(instance_exists(BoneFish)){
+	if(instance_exists(BoneFish) && array_length(obj.CoastBoss)){
 		var _inst = instances_matching_le(BoneFish, "my_health", 0);
-		if(array_length(_inst)) with(_inst){
-			if("creator" in self && "name" in creator && creator.name == "CoastBoss"){
-				pickup_drop(10, 0);
+		if(array_length(_inst)){
+			with(_inst){
+				if("creator" in self && array_find_index(obj.CoastBoss, creator) >= 0){
+					pickup_drop(10, 0);
+				}
 			}
 		}
 	}
@@ -2592,48 +2613,50 @@
 	 // Skeletons Drop Bones:
 	if(instance_exists(BonePile) || instance_exists(BonePileNight) || instance_exists(BigSkull)){
 		var _inst = instances_matching_le([BonePile, BonePileNight, BigSkull], "my_health", 0);
-		if(array_length(_inst)) with(_inst){
-			 // Enter the bone zone:
-			with(instance_create(x, y, WepPickup)){
-				wep = "crabbone";
-				motion_add(random(360), 3);
+		if(array_length(_inst)){
+			with(_inst){
+				 // Enter the bone zone:
+				with(instance_create(x, y, WepPickup)){
+					wep = "crabbone";
+					motion_add(random(360), 3);
+				}
+				
+				 // Effects:
+				repeat(2){
+					call(scr.fx, x, y, 3, Dust);
+				}
 			}
-			
-			 // Effects:
-			repeat(2) call(scr.fx, x, y, 3, Dust);
 		}
 	}
 	
 #define ntte_draw_bloom
-	if(instance_exists(CustomProjectile)){
-		 // Silver Scorpion Pet Attack:
-		var _inst = instances_matching(CustomProjectile, "name", "VenomBlast");
-		if(array_length(_inst)) with(_inst){
+	 // Silver Scorpion Pet Attack:
+	if(array_length(obj.VenomBlast)){
+		with(instances_matching_ne(obj.VenomBlast, "id", null)){
 			draw_sprite_ext(sprite_index, image_index, x, y, image_xscale * 2, image_yscale * 2, image_angle, image_blend, image_alpha * (charge ? (image_xscale / charge_goal) : 1) * 0.2);
 		}
-		
-		 // Silver Scorpion Flak:
-		var _inst = instances_matching(CustomProjectile, "name", "VenomFlak");
-		if(array_length(_inst)) with(_inst){
-			var	_xsc = 2,
-				_ysc = 2,
-				_alp = 0.2;
-				
-			image_xscale *= _xsc;
-			image_yscale *= _ysc;
-			image_alpha  *= _alp;
+	}
+	
+	 // Silver Scorpion Flak:
+	if(array_length(obj.VenomFlak)){
+		var	_scale = 2,
+			_alpha = 0.2;
+			
+		with(instances_matching_ne(obj.VenomFlak, "id", null)){
+			image_xscale *= _scale;
+			image_yscale *= _scale;
+			image_alpha  *= _alpha;
 			event_perform(ev_draw, 0);
-			image_xscale /= _xsc;
-			image_yscale /= _ysc;
-			image_alpha  /= _alp;
+			image_xscale /= _scale;
+			image_yscale /= _scale;
+			image_alpha  /= _alpha;
 		}
 	}
 	
 #define ntte_draw_shadows
 	 // SharkBoss Loop Train:
-	if(instance_exists(CustomEnemy)){
-		var _inst = instances_matching(CustomEnemy, "name", "CoastBoss");
-		if(array_length(_inst)) with(_inst){
+	if(array_length(obj.CoastBoss)){
+		with(instances_matching_ne(obj.CoastBoss, "id", null)){
 			var _fishIndex = 0;
 			with(fish_train){
 				if(instance_exists(self) && other.fish_swim[_fishIndex]){
@@ -2647,6 +2670,7 @@
 	
 /// SCRIPTS
 #macro  call                                                                                    script_ref_call
+#macro  obj                                                                                     global.obj
 #macro  scr                                                                                     global.scr
 #macro  spr                                                                                     global.spr
 #macro  snd                                                                                     global.snd

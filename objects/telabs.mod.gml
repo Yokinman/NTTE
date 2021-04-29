@@ -1,8 +1,18 @@
 #define init
 	mod_script_call("mod", "teassets", "ntte_init", script_ref_create(init));
 	
+	 // Gather Objects:
+	for(var i = 1; true; i++){
+		var _scrName = script_get_name(i);
+		if(is_undefined(_scrName)){
+			break;
+		}
+		call(scr.obj_add, script_ref_create(i));
+	}
+	
 #define cleanup
 	mod_script_call("mod", "teassets", "ntte_cleanup", script_ref_create(cleanup));
+	
 	
 #define Button_create(_x, _y)
 	/*
@@ -190,7 +200,7 @@
 		}
 		
 		 // Open Chests:
-		with(instances_matching(chestprop, "name", "ButtonChest", "ButtonPickup")){
+		with(instances_matching_ne(call(scr.array_combine, obj.ButtonChest, obj.ButtonPickup), "id", null)){
 			with(call(scr.obj_create, x, y, "PickupReviveArea")){
 				pickup = other;
 			}
@@ -401,7 +411,7 @@
 			styleb       - The room's floor style
 			area         - The room's area style
 			type         - The type of room to create: "Freak", "Explo", "Rhino", "Vat", "Popo"
-			obj          - The enemy to create
+			object       - The enemy to create
 			num          - How many enemies to create
 			enemies      - How many enemies existed in the level on creation
 			spawnmoment  - Opens when this percentage of enemies are left
@@ -421,7 +431,7 @@
 		styleb       = true;
 		area         = GameCont.area;
 		type         = "";
-		obj          = -1;
+		object       = -1;
 		num          = 1;
 		enemies      = instance_number(enemy);
 		spawnmoment  = random_range(0.3, 0.9);
@@ -457,45 +467,56 @@
 	
 	 // Type Setup:
 	switch(type){
+		
 		case "Freak":
-			obj = Freak;
-			var _num = num;
-			num *= (1 + GameCont.loops) * 2;
+			
+			var _add = irandom_range(2, 6) * num;
+			
+			object        = Freak;
+			num          *= (1 + GameCont.loops) * 2;
 			image_xscale *= 1 + ceil(num / 8);
-			num += irandom_range(2, 6) * _num;
+			num          += _add;
+			
 			break;
 			
 		case "Explo":
-			obj = ExploFreak;
-			num *= 1 + ceil(GameCont.loops / 2);
+			
+			object        = ExploFreak;
+			num          *= 1 + ceil(GameCont.loops / 2);
 			image_xscale *= 1 + ceil((num - 4) / 12);
 			image_yscale *= 1 + ceil((num - 4) / 12);
+			
 			break;
 			
 		case "Rhino":
-			obj = RhinoFreak;
-			num *= 1 + ceil(GameCont.loops / 2);
+			
+			object        = RhinoFreak;
+			num          *= 1 + ceil(GameCont.loops / 2);
 			image_xscale *= 1 + floor(num * 2/3);
+			
 			break;
 			
 		case "Vat":
-			obj = Necromancer;
+			
+			object        = Necromancer;
 			image_xscale *= 3;
 			image_yscale *= 3;
 			hallway_size *= irandom_range(1, 3);
+			
 			break;
 			
 		case "Popo":
-			obj = choose(Grunt, Grunt, Shielder, Inspector);
-			num = ((obj == Grunt) ? irandom_range(2, 3) : 1) + GameCont.loops;
+			
+			object        = choose(Grunt, Grunt, Shielder, Inspector);
+			num           = ((object == Grunt) ? irandom_range(2, 3) : 1) + GameCont.loops;
 			image_xscale *= 2;
 			image_yscale *= 2;
 			hallway_size *= 0.5;
-			styleb = false;
+			styleb        = false;
 			
 			 // Freak:
 			if(GameCont.loops > 2){
-				obj = PopoFreak;
+				object = PopoFreak;
 			}
 			
 			 // Sliding Door:
@@ -533,7 +554,7 @@
 	
 	 // Desynchronize:
 	if(alarm0 > 0){
-		with(instances_matching_ne(instances_matching(instances_matching(object_index, "name", name), "alarm0", alarm0), "id", id)){
+		with(instances_matching_ne(instances_matching(obj.FreakChamber, "alarm0", alarm0), "id", id)){
 			alarm0 += 30;
 		}
 	}
@@ -736,10 +757,10 @@
 								}
 								
 								 // Freaks:
-								if((is_real(obj) && object_exists(obj)) || is_string(obj)){
+								if((is_real(object) && object_exists(object)) || is_string(object)){
 									for(var i = 0; i < num; i++){
 										with(_floorMain[floor(((i + random(1)) / num) * array_length(_floorMain))]){
-											var _obj = other.obj;
+											var _obj = other.object;
 											
 											 // Elite IDPD:
 											switch(_obj){
@@ -933,7 +954,7 @@
 	with(instance_create(_x, _y, CustomProp)){
 		 // Facing:
 		front = chance(1, 3);
-		with(instances_matching(CustomProp, "name", "PalankingStatue")){
+		with(instances_matching_ne(obj.PalankingStatue, "id", null)){
 			if(other.x >= bbox_left && other.x < bbox_right + 1){
 				if(y > other.y){
 					other.front = true;
@@ -985,7 +1006,7 @@
 	
 	 // Allow Portals:
 	if(num <= 0){
-		with(instances_matching(instances_matching(becomenemy, "name", "PortalPrevent"), "creator", self)){
+		with(instances_matching(obj.PortalPrevent, "creator", self)){
 			instance_destroy();
 		}
 	}
@@ -1269,7 +1290,7 @@
 #define MutantVat_alrm1
 	alarm1 = 10 + random(10);
 	
-	projectile_hit_np(self, 10, 0, 0);
+	projectile_hit(self, 10);
 	view_shake_max_at(x, y, 10);
 	with(instance_create(x + orandom(15), y + orandom(20), SmokeOLD)){
 		sprite_index = sprExploderExplo;
@@ -1422,14 +1443,12 @@
 	
 	/*
 	 // Open the Floodgates:
-	with(instances_matching(object_index, "name", name)){
-		if(self != other){
-			alarm1 += random(10);
-			
-			 // Effects:
-			repeat(8){
-				instance_create(x + orandom(20), y + orandom(25), PortalL);
-			}
+	with(instances_matching_ne(obj.MutantVat, "id", id)){
+		alarm1 += random(10);
+		
+		 // Effects:
+		repeat(8){
+			instance_create(x + orandom(20), y + orandom(25), PortalL);
 		}
 	}
 	*/
@@ -1983,15 +2002,15 @@
 #define PortalBullet_end_step
 	 // Mid-Air Collision:
 	if(place_meeting(x, y, object_index)){
-		with(call(scr.instances_meeting_instance, self, instances_matching_ne(instances_matching(object_index, "name", name), "team", team))){
+		with(call(scr.instances_meeting_instance, self, instances_matching_ne(obj.PortalBullet, "team", team))){
 			if(place_meeting(x, y, other)){
-				if(instance_is(creator, CustomEnemy) && "name" in creator && creator.name == "PortalGuardian"){
+				if(instance_exists(creator) && array_find_index(obj.PortalGuardian, creator) >= 0){
 					with(creator){
 						implode   = true;
 						my_health = 0;
 					}
 					with(other){
-						if(instance_is(creator, CustomEnemy) && "name" in creator && creator.name == "PortalGuardian"){
+						if(instance_exists(creator) && array_find_index(obj.PortalGuardian, creator) >= 0){
 							with(creator){
 								implode   = true;
 								my_health = 0;
@@ -2007,12 +2026,12 @@
 	}
 	
 #define PortalBullet_hit
-	if(projectile_canhit(other) && other.my_health > 0){
+	if(projectile_canhit_np(other) && other.my_health > 0){
 		if(instance_is(creator, Player) || (!instance_is(other, prop) && other.team != 0)){
-			projectile_hit_push(other, damage, force);
+			projectile_hit_np(other, damage, force, 80);
 			
 			 // Implosion:
-			if(creator == other && instance_is(other, CustomEnemy) && "name" in other && other.name == "PortalGuardian"){
+			if(creator == other && array_find_index(obj.PortalGuardian, creator) >= 0){
 				with(other){
 					implode   = true;
 					my_health = 0;
@@ -2112,7 +2131,7 @@
 	){
 		with(creator){
 			 // Disappear:
-			if("name" in self && name == "PortalGuardian"){
+			if(array_find_index(obj.PortalGuardian, self) >= 0){
 				with(instance_create(x, y, BulletHit)){
 					sprite_index = other.spr_disappear;
 					image_xscale = other.image_xscale * other.right;
@@ -2137,7 +2156,7 @@
 			
 			 // Appear:
 			image_index = 0;
-			if("name" in self && name == "PortalGuardian"){
+			if(array_find_index(obj.PortalGuardian, self) >= 0){
 				sprite_index = spr_appear;
 			}
 			else with(instance_create(x, y, BulletHit)){
@@ -2734,26 +2753,20 @@
 			var _gray = (_type == "normal");
 			
 			 // Button Revive:
-			if(instance_exists(CustomObject)){
-				var _inst = instances_matching(CustomObject, "name", "ButtonReviveArea");
-				if(array_length(_inst)){
-					var _r = 32 + (32 * _gray);
-					with(_inst){
-						draw_circle(x, y, _r + irandom(2), false);
-					}
+			if(array_length(obj.ButtonReviveArea)){
+				var _r = 32 + (32 * _gray);
+				with(instances_matching_ne(obj.ButtonReviveArea, "id", null)){
+					draw_circle(x, y, _r + irandom(2), false);
 				}
 			}
 			
 			 // Portal Guardians:
-			if(instance_exists(CustomEnemy)){
-				var _inst = instances_matching(CustomEnemy, "name", "PortalGuardian");
-				if(array_length(_inst)){
-					var _r = 24 + (68 * _gray),
-						_o = 4  + (2  * _gray);
-						
-					with(_inst){
-						draw_circle(x, y, _r + random(_o), false);
-					}
+			if(array_length(obj.PortalGuardian)){
+				var _r = 24 + (68 * _gray),
+					_o = 4  + (2  * _gray);
+					
+				with(instances_matching_ne(obj.PortalGuardian, "id", null)){
+					draw_circle(x, y, _r + random(_o), false);
 				}
 			}
 			
@@ -2764,6 +2777,7 @@
 	
 /// SCRIPTS
 #macro  call                                                                                    script_ref_call
+#macro  obj                                                                                     global.obj
 #macro  scr                                                                                     global.scr
 #macro  spr                                                                                     global.spr
 #macro  snd                                                                                     global.snd

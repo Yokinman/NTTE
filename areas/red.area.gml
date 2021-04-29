@@ -196,7 +196,7 @@
 	call(scr.unlock_set, "skin:red crystal", true);
 	
 	 // Warping:
-	with(instances_matching(CustomObject, "name", "WarpPortal")){
+	with(instances_matching_ne(obj.WarpPortal, "id", null)){
 		if(!instance_exists(portal)){
 			call(scr.area_set, area, subarea, loops);
 			if(!call(scr.area_get_secret, area)){
@@ -301,7 +301,7 @@
 	
 	 // Warp Rooms:
 	if(styleb == 0 && GameCont.subarea > 0 && GameCont.subarea != 3){
-		if(chance(1, 12 * array_length(instances_matching(CustomObject, "name", "Warp")))){
+		if(chance(1, 12 * array_length(instances_matching_ne(obj.Warp, "id", null)))){
 			var _w          = 2,
 				_h          = 2,
 				_type       = "",
@@ -508,6 +508,7 @@
 	
 /// SCRIPTS
 #macro  call                                                                                    script_ref_call
+#macro  obj                                                                                     global.obj
 #macro  scr                                                                                     global.scr
 #macro  spr                                                                                     global.spr
 #macro  snd                                                                                     global.snd

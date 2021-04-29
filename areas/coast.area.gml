@@ -356,13 +356,13 @@
 	
 	 // Seal Lands:
 	else if(GameCont.subarea == 3){
-		var _seals = instances_matching(CustomEnemy, "name", "Seal");
-		if(random(2 * array_length(_seals)) < 1){
+		var _sealNum = array_length(instances_matching_ne(obj.Seal, "id", null));
+		if(random(2 * _sealNum) < 1){
 			if(styleb){
 				call(scr.obj_create, _x, _y, ((random(16) < 1) ? "SealHeavy" : "Seal"));
 			}
-			else{
-				repeat(4) call(scr.obj_create, _x, _y, "Seal");
+			else repeat(4){
+				call(scr.obj_create, _x, _y, "Seal");
 			}
 		}
 	}
@@ -679,7 +679,7 @@
 			_seaInst  = call(scr.array_combine,
 				[Debris, Corpse, ChestOpen, chestprop, WepPickup, Crown, Grenade, hitme],
 				instances_matching(Pickup, "mask_index", mskPickup),
-				instances_matching(CustomSlash, "name", "ClamShield")
+				obj.ClamShield
 			);
 			
 		_seaInst = instances_matching_le(_seaInst, "depth", _depthMax);
@@ -1060,33 +1060,29 @@
 	if(lag) trace_time(script[2] + " Floors");
 	
 	 // Submerged Rock Decals:
-	if(instance_exists(CustomProp)){
-		var _inst = instances_matching(instances_matching(CustomProp, "name", "CoastDecal", "CoastBigDecal"), "visible", true);
-		if(array_length(_inst)) with(_inst){
+	if(array_length(obj.CoastDecal)){
+		with(instances_matching(obj.CoastDecal, "visible", true)){
 			var	_hurt = (sprite_index == spr_hurt && image_index < 1);
 			if(_hurt) draw_set_fog(true, image_blend, 0, 0);
 			draw_sprite_ext(spr_bott, image_index, x, y, image_xscale, image_yscale, image_angle, image_blend, image_alpha);
 			if(_hurt) draw_set_fog(false, 0, 0, 0);
 		}
 	}
-	if(instance_exists(CustomObject)){
-		var _inst = instances_matching(instances_matching(CustomObject, "name", "CoastDecalCorpse"), "visible", true);
-		if(array_length(_inst)) with(_inst){
+	if(array_length(obj.CoastDecalCorpse)){
+		with(instances_matching(obj.CoastDecalCorpse, "visible", true)){
 			draw_sprite_ext(spr_bott, image_index, x, y, image_xscale, image_yscale, image_angle, image_blend, image_alpha);
 		}
 	}
 	
 	 // Palanking's Bottom:
 	draw_set_fog(true, wading_color, 0, 0);
-	if(instance_exists(CustomEnemy)){
-		var _inst = instances_matching(instances_matching(CustomEnemy, "name", "Palanking"), "visible", true);
-		if(array_length(_inst)) with(_inst){
+	if(array_length(obj.Palanking)){
+		with(instances_matching(obj.Palanking, "visible", true)){
 			draw_sprite_ext(spr_bott, image_index, x, y - z, image_xscale * right, image_yscale, image_angle, image_blend, image_alpha);
 		}
 	}
-	if(instance_exists(CustomHitme)){
-		var _inst = instances_matching(instances_matching(CustomHitme, "name", "Creature"), "visible", true);
-		if(array_length(_inst)) with(_inst){
+	if(array_length(obj.Creature)){
+		with(instances_matching(obj.Creature, "visible", true)){
 			draw_sprite_ext(spr_bott, image_index, x, y, image_xscale * right, image_yscale, image_angle, image_blend, image_alpha);
 		}
 	}
@@ -1306,31 +1302,27 @@
 				}
 				
 				// PalanKing:
-				if(instance_exists(CustomEnemy)){
-					var _inst = instances_matching_le(instances_matching(instances_matching(CustomEnemy, "name", "Palanking"), "visible", true), "z", 4);
-					if(array_length(_inst)) with(_inst){
+				if(array_length(obj.Palanking)){
+					with(instances_matching_le(instances_matching(obj.Palanking, "visible", true), "z", 4)){
 						if(!place_meeting(x, y, Floor)){
 							draw_sprite_ext(spr_foam, image_index, (x - _surfX) * _surfScale, (y - _surfY) * _surfScale, image_xscale * right * _surfScale, image_yscale * _surfScale, 0, c_white, 1);
 						}
 					}
 				}
-				if(instance_exists(CustomHitme)){
-					var _inst = instances_matching(instances_matching(CustomHitme, "name", "Creature"), "visible", true);
-					if(array_length(_inst)) with(_inst){
+				if(array_length(obj.Creature)){
+					with(instances_matching(obj.Creature, "visible", true)){
 						draw_sprite_ext(spr_foam, image_index, (x - _surfX) * _surfScale, (y - _surfY) * _surfScale, image_xscale * right * _surfScale, image_yscale * _surfScale, image_angle, c_white, 1);
 					}
 				}
 				
 				 // Rock Decals:
-				if(instance_exists(CustomProp)){
-					var _inst = instances_matching(instances_matching(CustomProp, "name", "CoastDecal", "CoastBigDecal"), "visible", true);
-					if(array_length(_inst)) with(_inst){
+				if(array_length(obj.CoastDecal)){
+					with(instances_matching(obj.CoastDecal, "visible", true)){
 						draw_sprite_ext(spr_foam, image_index, (x - _surfX) * _surfScale, (y - _surfY) * _surfScale, image_xscale * _surfScale, image_yscale * _surfScale, image_angle, c_white, 1);
 					}
 				}
-				if(instance_exists(CustomObject)){
-					var _inst = instances_matching(instances_matching(CustomObject, "name", "CoastDecalCorpse"), "visible", true);
-					if(array_length(_inst)) with(_inst){
+				if(array_length(obj.CoastDecalCorpse)){
+					with(instances_matching(obj.CoastDecalCorpse, "visible", true)){
 						draw_sprite_ext(spr_foam, image_index, (x - _surfX) * _surfScale, (y - _surfY) * _surfScale, image_xscale * _surfScale, image_yscale * _surfScale, image_angle, c_white, 1);
 					}
 				}
@@ -1450,6 +1442,7 @@
 	
 /// SCRIPTS
 #macro  call                                                                                    script_ref_call
+#macro  obj                                                                                     global.obj
 #macro  scr                                                                                     global.scr
 #macro  spr                                                                                     global.spr
 #macro  snd                                                                                     global.snd

@@ -522,7 +522,7 @@
 					chance(1, 16)
 					|| (
 						chance(1, 2)
-						&& !array_length(call(scr.instances_in_rectangle, x - 96, y - 96, x + 96, y + 96, instances_matching(CustomObject, "name", "CatHole")))
+						&& !array_length(call(scr.instances_in_rectangle, x - 96, y - 96, x + 96, y + 96, obj.CatHole))
 					)
 				){
 					call(scr.obj_create, x + 16, y + 16, "CatHole");
@@ -547,7 +547,7 @@
 	}
 	
 	 // Important Door Stuff:
-	with(instances_matching(CustomHitme, "name", "CatDoor")){
+	with(instances_matching_ne(obj.CatDoor, "id", null)){
 		 // Remove Blocking Walls:
 		var	_ang = image_angle - (90 * image_yscale);
 		with(call(scr.instances_meeting_point,
@@ -644,59 +644,56 @@
 	}
 	
 	 // Forcing Lair/Pizza Sewers Border Wall Sprites:
-	if(instance_exists(CustomObject)){
-		var _inst = instances_matching(CustomObject, "name", "LairBorder");
-		if(array_length(_inst)){
-			with(_inst){
-				 // Walls:
-				if(instance_exists(Wall) && Wall.id > _newID){
-					var _inst = instances_matching(instances_matching_ge(instances_matching_gt(Wall, "id", _newID), "y", y), "area", GameCont.area);
-					if(array_length(_inst)){
-						var	_sprBot = call(scr.area_get_sprite, area, sprWall1Bot),
-							_sprTop = call(scr.area_get_sprite, area, sprWall1Top),
-							_sprOut = call(scr.area_get_sprite, area, sprWall1Out);
-							
-						with(_inst){
-							sprite_index = _sprBot;
-							topspr       = _sprTop;
-							outspr       = _sprOut;
-							area         = other.area;
-						}
+	if(array_length(obj.LairBorder)){
+		with(instances_matching_ne(obj.LairBorder, "id", null)){
+			 // Walls:
+			if(instance_exists(Wall) && Wall.id > _newID){
+				var _inst = instances_matching(instances_matching_ge(instances_matching_gt(Wall, "id", _newID), "y", y), "area", GameCont.area);
+				if(array_length(_inst)){
+					var	_sprBot = call(scr.area_get_sprite, area, sprWall1Bot),
+						_sprTop = call(scr.area_get_sprite, area, sprWall1Top),
+						_sprOut = call(scr.area_get_sprite, area, sprWall1Out);
+						
+					with(_inst){
+						sprite_index = _sprBot;
+						topspr       = _sprTop;
+						outspr       = _sprOut;
+						area         = other.area;
 					}
 				}
-				
-				 // Outer Walls:
-				if(instance_exists(TopSmall) && TopSmall.id > _newID){
-					var _inst = instances_matching(instances_matching_ge(instances_matching_gt(TopSmall, "id", _newID), "y", y), "area", GameCont.area);
-					if(array_length(_inst)){
-						var _spr = call(scr.area_get_sprite, area, sprWall1Trans);
-						with(_inst){
-							sprite_index = _spr;
-							area         = other.area;
-						}
+			}
+			
+			 // Outer Walls:
+			if(instance_exists(TopSmall) && TopSmall.id > _newID){
+				var _inst = instances_matching(instances_matching_ge(instances_matching_gt(TopSmall, "id", _newID), "y", y), "area", GameCont.area);
+				if(array_length(_inst)){
+					var _spr = call(scr.area_get_sprite, area, sprWall1Trans);
+					with(_inst){
+						sprite_index = _spr;
+						area         = other.area;
 					}
 				}
-				
-				 // Destroyed Walls:
-				if(instance_exists(FloorExplo) && FloorExplo.id > _newID){
-					var _inst = instances_matching(instances_matching_ge(instances_matching_gt(FloorExplo, "id", _newID), "y", y), "area", GameCont.area);
-					if(array_length(_inst)){
-						var _spr = call(scr.area_get_sprite, area, sprFloor1Explo);
-						with(_inst){
-							sprite_index = _spr;
-							area         = other.area;
-						}
+			}
+			
+			 // Destroyed Walls:
+			if(instance_exists(FloorExplo) && FloorExplo.id > _newID){
+				var _inst = instances_matching(instances_matching_ge(instances_matching_gt(FloorExplo, "id", _newID), "y", y), "area", GameCont.area);
+				if(array_length(_inst)){
+					var _spr = call(scr.area_get_sprite, area, sprFloor1Explo);
+					with(_inst){
+						sprite_index = _spr;
+						area         = other.area;
 					}
 				}
-				
-				 // Wall Debris:
-				if(instance_exists(Debris) && Debris.id > _newID){
-					var _inst = instances_matching(instances_matching_ge(instances_matching_gt(Debris, "id", _newID), "y", y), "sprite_index", call(scr.area_get_sprite, GameCont.area, sprDebris1));
-					if(array_length(_inst)){
-						var _spr = call(scr.area_get_sprite, area, sprDebris1);
-						with(_inst){
-							sprite_index = _spr;
-						}
+			}
+			
+			 // Wall Debris:
+			if(instance_exists(Debris) && Debris.id > _newID){
+				var _inst = instances_matching(instances_matching_ge(instances_matching_gt(Debris, "id", _newID), "y", y), "sprite_index", call(scr.area_get_sprite, GameCont.area, sprDebris1));
+				if(array_length(_inst)){
+					var _spr = call(scr.area_get_sprite, area, sprDebris1);
+					with(_inst){
+						sprite_index = _spr;
 					}
 				}
 			}
@@ -1407,6 +1404,7 @@
 	
 /// SCRIPTS
 #macro  call                                                                                    script_ref_call
+#macro  obj                                                                                     global.obj
 #macro  scr                                                                                     global.scr
 #macro  spr                                                                                     global.spr
 #macro  snd                                                                                     global.snd

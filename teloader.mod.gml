@@ -793,6 +793,11 @@
 			}
 			
 			if(type != load_type_menu){
+				 // Disable Character Buttons:
+				with(CharSelect){
+					noinput = max(noinput, 10);
+				}
+				
 				 // Fill:
 				for(var i = 0; i <= 1; i++){
 					var	_bloom  = ((i == 0) ? 0 : clamp(bloom, 0.4, 1)),

@@ -35,7 +35,7 @@
 			"ROCKIN' THE SHADES",
 			"FROGGING AROUND",
 			(
-				array_length(instances_matching(instances_matching(CustomHitme, "name", "Pet"), "pet", "CoolGuy"))
+				array_length(instances_matching(obj.Pet, "pet", "CoolGuy"))
 				? `@(color:${make_color_rgb(255, 110, 150)})FUNKY`
 				: ""
 			)
@@ -99,6 +99,7 @@
 	
 /// SCRIPTS
 #macro  call                                                                                    script_ref_call
+#macro  obj                                                                                     global.obj
 #macro  scr                                                                                     global.scr
 #macro  spr                                                                                     global.spr
 #macro  snd                                                                                     global.snd

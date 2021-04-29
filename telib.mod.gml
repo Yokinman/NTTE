@@ -15,30 +15,15 @@
 	global.rad_path_bind       = script_bind(CustomEndStep, rad_path_step,        0, false);
 	global.floor_reveal_bind   = script_bind(CustomDraw,    floor_reveal_draw,   -8, false);
 	
-	 // Object List (Used for cheats mod, basically):
-	var ntte_obj_list = ds_map_create();
-	ntte_obj_list[? "tegeneral"  ] = ["AlertIndicator", "BigDecal", "BigIDPDSpawn", "BoneArrow", "BoneSlash", "BoneFX", "BuriedVault", "BuriedShrine", "CustomBullet", "CustomFlak", "CustomShell", "CustomPlasma", "GroundFlameGreen", "MergeFlak", "Pet", "PetRevive", "PetWeaponBecome", "PetWeaponBoss", "PortalPrevent", "ReviveNTTE", "SmallGreenExplosion", "TopDecal", "TopObject", "TopTiny", "UnlockCont", "WallDecal", "WallEnemy"];
-	ntte_obj_list[? "tepickups"  ] = ["Backpack", "Backpacker", "BackpackPickup", "BatChest", "BiggestWeaponChest", /*"BloodLustPickup",*/ "BoneBigPickup", "BonePickup", "BonusAmmoChest", "BonusAmmoMimic", "BonusAmmoPickup", "BonusHealthChest", "BonusHealthMimic", "BonusHealthPickup", "BuriedVaultChest", "BuriedVaultChestDebris", "BuriedVaultPedestal", "CatChest", "ChestShop", "CursedAmmoChest", "CursedMimic", "CustomChest", "CustomPickup", "GatorStatue", "GatorStatueFlak", "HammerHeadChest", "HammerHeadPickup", "HarpoonPickup", "OrchidBall", "OrchidChest", "OrchidSkill", "PalaceAltar", "ParrotFeather", "ParrotChester", "Pizza", "PizzaChest", "PizzaStack", "Prompt", "RatChest", "RedAmmoChest", "RedAmmoPickup", "RogueBackpack", "SpiritChest", "SpiritPickup", "SunkenCoin", "VaultFlower", "VaultFlowerSparkle"];
-	ntte_obj_list[? "tedesert"   ] = ["BabyScorpion", "BabyScorpionGold", "BanditCamper", "BanditHiker", "BanditTent", "BigCactus", "BigMaggotSpawn", "Bone", "CoastBossBecome", "CoastBoss", "CowSkull", "FlySpin", "VenomBlast", "ScorpionRock", "SilverScorpion", "SilverScorpionDevastator", "SilverScorpionFlak", "VenomFlak", "VenomPellet", "VenomPelletBack", "WantBigMaggot"];
-	//ntte_obj_list[? "tecoast"    ] = ["BloomingAssassin", "BloomingAssassinHide", "BloomingBush", "BloomingCactus", "BuriedCar", "ClamShield", "ClamShieldSlash", "CoastBigDecal", "CoastDecal", "CoastDecalCorpse", "Creature", "Diver", "DiverHarpoon", "Gull", "Harpoon", "HarpoonStick", "NetNade", "Palanking", "PalankingDie", "PalankingSlash", "PalankingSlashGround", "PalankingStatue", "PalankingToss", "Palm", "Pelican", "Seal", "SealAnchor", "SealDisc", "SealHeavy", "SealMine", "SealWave", "TrafficCrab", "Trident"];
-	ntte_obj_list[? "teoasis"    ] = ["BubbleBomb", "BubbleExplosion", "BubbleExplosionSmall", "BubbleSlash", "CrabTank", "HammerShark", "HyperBubble", "OasisPetBecome", "Puffer", "SunkenChest", "SunkenRoom", "SunkenSealSpawn", "WaterStreak"];
-	ntte_obj_list[? "tetrench"   ] = ["Angler", "AnglerGold", "Eel", "EelSkull", "ElectroPlasma", "ElectroPlasmaBig", "ElectroPlasmaImpact", "Jelly", "JellyElite", "Kelp", "LightningDisc", "PitSpark", "PitSquid", "PitSquidArm", "PitSquidBomb", "PitSquidDeath", "QuasarBeam", "QuasarRing", "TeslaCoil", "TopDecalWaterMine", "TrenchFloorChunk", "Vent", "WantEel"];
-	ntte_obj_list[? "tesewers"   ] = ["AlbinoBolt", "AlbinoGator", "AlbinoGrenade", "BabyGator", "Bat", "BatBoss", "BatCloud", "BatDisc", "BatScreech", "BoneGator", /*"BossHealFX",*/ "Cabinet", "Cat", "CatBoss", "CatBossAttack", "CatDoor", "CatDoorDebris", "CatGrenade", "CatHole", "CatHoleBig", "CatLight", "ChairFront", "ChairSide", "Couch", "LairBorder", "Manhole", "ManholeOpen", "NewTable", "Paper", "PizzaDrain", "PizzaManholeCover", "PizzaRubble", "PizzaTV", "SewerDrain", "SewerRug", "TurtleCool"];
-	ntte_obj_list[? "tescrapyard"] = ["BoneRaven", "SawTrap", "SludgePool", "TopRaven", "TrapSpin", "Tunneler", "WepPickupGrounded", "WepPickupStick"];
-	//ntte_obj_list[? "tecaves"    ] = ["BigCrystalProp", "ChaosHeart", "CrystalBat", "CrystalBrain", "CrystalBrainDeath", "CrystalBrainEffect", "CrystalClone", "CrystalHeart", "CrystalHeartBullet", "CrystalPropRed", "CrystalPropWhite", "EnergyBatSlash", "InvCrystalBat", "InvMortar", "MinerBandit", "Mortar", "MortarPlasma", "NewCocoon", "PlasmaImpactSmall", "RedBullet", "RedExplosion", "RedShank", "RedSlash", "RedSpider", "Spiderling", "Tesseract", "TesseractArmDeath", "TesseractDeath", "TesseractStrike", /*"TesseractWarp",*/ "TwinOrbital", "VlasmaBullet", "VlasmaCannon", "WallFake", "Warp", "WarpPortal"];
-	ntte_obj_list[? "telabs"     ] = ["Button", "ButtonChest", "ButtonOld", "ButtonPickup", "ButtonReviveArea", "FreakChamber", "Igloo", "MutantVat", "PickupReviveArea", "PopoSecurity", "PortalBullet", "PortalGuardian", "PortalGuardianDeath", "WallSlide"];
+	 // NT:TE Object Related:
+	obj_create_ref = mod_variable_get("mod", "teassets", "obj_create_ref");
+	obj_parent     = mod_variable_get("mod", "teassets", "obj_parent");
+	obj_search     = mod_variable_get("mod", "teassets", "obj_search");
+	obj_bind       = mod_variable_get("mod", "teassets", "obj_bind");
+	obj_bind_draw  = mod_variable_get("mod", "teassets", "obj_bind_draw");
 	
-	 // Object Create Event Script References:
-	ntte_obj_scrt = ds_map_create();
-	with(ds_map_keys(ntte_obj_list)){
-		with(ntte_obj_list[? self]){
-			obj_add(script_ref_create_ext("mod", other, self + "_create"));
-		}
-	}
-	obj_search = [];
-	
-	 // Object Event References:
-	ntte_obj_event = ds_map_create();
+	 // Custom Object Event References:
+	obj_event = ds_map_create();
 	with([CustomObject, CustomHitme, CustomProp, CustomProjectile, CustomSlash, CustomEnemy]){
 		var _eventList = [];
 		with(instance_create(0, 0, self)){
@@ -50,16 +35,12 @@
 			instance_delete(self);
 		}
 		if(array_find_index(_eventList, "step") >= 0){
-			for(var i = ntte_alarm_min; i < ntte_alarm_max; i++){
+			for(var i = 0; i < 10; i++){
 				array_push(_eventList, `alrm${i}`);
 			}
 		}
-		ntte_obj_event[? self] = _eventList;
+		obj_event[? self] = _eventList;
 	}
-	
-	 // Object Script Binding:
-	ntte_obj_bind      = ds_map_create();
-	ntte_obj_bind_draw = ds_map_create();
 	
 	 // Lag Debugging:
 	lag_bind = ds_map_create();
@@ -194,15 +175,12 @@
 	
 #macro lag_bind global.debug_lag_bind
 
-#macro ntte_alarm_min 0
-#macro ntte_alarm_max 10
-
-#macro ntte_obj_event     global.object_event
-#macro ntte_obj_scrt      global.object_scrt
-#macro ntte_obj_bind      global.object_bind
-#macro ntte_obj_bind_draw global.object_bind_draw
-
-#macro obj_search global.object_search
+#macro obj_create_ref global.obj_create_ref
+#macro obj_parent     global.obj_parent
+#macro obj_search     global.obj_search
+#macro obj_bind       global.obj_bind
+#macro obj_bind_draw  global.obj_bind_draw
+#macro obj_event      global.obj_event
 
 #macro sprite_team_start   1
 #macro sprite_team_map     global.sprite_team_map
@@ -219,7 +197,7 @@
 	
 	if(string_delete(_ref[2], 1, string_length(_name)) == "_create"){
 		 // Store Create Event:
-		ntte_obj_scrt[? _name] = _ref;
+		obj_create_ref[? _name] = _ref;
 		
 		 // Instance List:
 		if(_name not in obj){
@@ -242,8 +220,8 @@
 	}
 	
 	 // NT:TE Object:
-	if(ds_map_exists(ntte_obj_scrt, _name)){
-		var	_scrt = array_combine(ntte_obj_scrt[? _name], [_x, _y]),
+	if(ds_map_exists(obj_create_ref, _name)){
+		var	_scrt = array_combine(obj_create_ref[? _name], [_x, _y]),
 			_inst = script_ref_call(_scrt);
 			
 		if(is_undefined(_inst) || _inst == 0){
@@ -253,16 +231,22 @@
 		 // Auto Assign Things:
 		if(is_real(_inst) && instance_exists(_inst)){
 			with(_inst){
-				name = _name;
-				
-				var	_isCustom = ds_map_exists(ntte_obj_event, object_index),
+				var	_isCustom = ds_map_exists(obj_event, object_index),
 					_modType  = _scrt[0],
 					_modName  = _scrt[1];
 					
+				 // Set Name:
+				if("name" in self && name != _name){
+					if(!ds_map_exists(obj_parent, _name)){
+						obj_parent[? _name] = name;
+					}
+				}
+				name = _name;
+				
 				 // Bind Events:
 				with(
 					_isCustom
-					? ntte_obj_event[? object_index]
+					? obj_event[? object_index]
 					: ["begin_step", "step", "end_step", "draw"]
 				){
 					var _event = self;
@@ -276,20 +260,20 @@
 								
 								 // Auto Script Binding:
 								if(!_isCustom){
-									if(!ds_map_exists(ntte_obj_bind, _event)){
-										ntte_obj_bind[? _event] = {
+									if(!ds_map_exists(obj_bind, _event)){
+										obj_bind[? _event] = {
 											"list"        : [],
 											"object_list" : []
 										};
 									}
-									var _bind = ntte_obj_bind[? _event];
+									var _bind = obj_bind[? _event];
 									
 									 // Bind Draw Event:
 									if(_event == "draw"){
-										if(!ds_map_exists(ntte_obj_bind_draw, _inst.depth - 1)){
+										if(!ds_map_exists(obj_bind_draw, _inst.depth - 1)){
 											with(script_bind_draw(obj_draw, _inst.depth - 1)){
 												persistent = true;
-												ntte_obj_bind_draw[? depth] = self;
+												obj_bind_draw[? depth] = self;
 											}
 										}
 									}
@@ -364,23 +348,19 @@
 					}
 				}
 				
-				 // Add to Instance List:
-				var _objList = instances_matching_ne(lq_get(obj, _name), "id", null);
-				lq_set(obj, _name, _objList);
+				 // Add Self to Object List:
+				var _objList = lq_get(obj, _name);
 				if(array_find_index(_objList, self) < 0){
 					array_push(_objList, self);
 				}
-				if(fork()){
-					with(obj_search){
-						if(self[0] == other.object_index){
-							if(array_find_index(self[1], _name) < 0){
-								array_push(self[1], _name);
-							}
-							exit;
-						}
-					}
-					array_push(obj_search, [object_index, [_name]]);
-					exit;
+				
+				 // Add Name to Object Search List:
+				if(!ds_map_exists(obj_search, object_index)){
+					obj_search[? object_index] = [];
+				}
+				var _objSearchList = obj_search[? object_index];
+				if(array_find_index(_objSearchList, _name) < 0){
+					array_push(_objSearchList, _name);
 				}
 			}
 		}
@@ -403,55 +383,58 @@
 	
 #define ntte_update(_newID)
 	 // NT:TE Object Instance Lists, 'instance_copy()' Fix:
-	if(array_length(obj_search)){
-		with(obj_search){
-			var _obj = self[0];
+	if(ds_map_size(obj_search)){
+		with(ds_map_keys(obj_search)){
+			var _obj = self;
 			if(instance_exists(_obj)){
 				if(_obj.id > _newID){
 					var	_inst     = instances_matching_gt(_obj, "id", _newID),
-						_nameList = self[1];
+						_nameList = obj_search[? _obj];
 						
 					with(_nameList){
 						var	_name     = self,
-							_nameInst = instances_matching(_inst, "name", _name),
-							_objList  = instances_matching_ne(lq_get(obj, _name), "id", null);
+							_nameInst = instances_matching(_inst, "name", _name);
 							
-						lq_set(obj, _name, _objList);
-						
-						if(array_length(_nameInst)){
-							with(_nameInst){
-								if(array_find_index(_objList, self) < 0){
-									array_push(_objList, self);
+						for(var _objName = _name; !is_undefined(_objName); _objName = ds_map_find_value(obj_parent, _objName)){
+							var _objList  = instances_matching_ne(lq_get(obj, _objName), "id", null);
+							
+							lq_set(obj, _objName, _objList);
+							
+							if(array_length(_nameInst)){
+								with(_nameInst){
+									if(array_find_index(_objList, self) < 0){
+										array_push(_objList, self);
+									}
 								}
 							}
-						}
-						
-						if(!array_length(_objList)){
-							_nameList = array_delete_value(_nameList, _name);
+							
+							if(!array_length(_objList)){
+								_nameList = array_delete_value(_nameList, _objName);
+							}
 						}
 					}
 					if(array_length(_nameList)){
-						self[@1] = _nameList;
+						obj_search[? _obj] = _nameList;
 					}
 					
 					 // Done:
-					else obj_search = array_delete_value(obj_search, self);
+					else ds_map_delete(obj_search, _obj);
 				}
 			}
 			else if(!instance_exists(PauseButton) && !instance_exists(BackMainMenu) && UberCont.alarm2 < 0){
-				with(self[1]){
+				with(obj_search[? _obj]){
 					lq_set(obj, self, instances_matching_ne(lq_get(obj, self), "id", null));
 				}
-				obj_search = array_delete_value(obj_search, self);
+				ds_map_delete(obj_search, _obj);
 			}
 		}
 	}
 	
 	 // Bound Event Instance Lists, 'instance_copy()' Fix:
-	if(ds_map_size(ntte_obj_bind)){
-		with(ds_map_keys(ntte_obj_bind)){
+	if(ds_map_size(obj_bind)){
+		with(ds_map_keys(obj_bind)){
 			var	_event    = self,
-				_bind     = ntte_obj_bind[? _event],
+				_bind     = obj_bind[? _event],
 				_instList = _bind.list;
 				
 			with(_bind.object_list){
@@ -479,7 +462,7 @@
 	
 	 // Bound Begin Step Events:
 	if(!obj_bind_call("begin_step")){
-		ds_map_delete(ntte_obj_bind, "begin_step");
+		ds_map_delete(obj_bind, "begin_step");
 	}
 	
 	 // Lag Debugging:
@@ -488,7 +471,7 @@
 #define ntte_step
 	 // Bound Step Events:
 	if(!obj_bind_call("step")){
-		ds_map_delete(ntte_obj_bind, "step");
+		ds_map_delete(obj_bind, "step");
 	}
 	
 	 // Lag Debugging:
@@ -497,20 +480,20 @@
 #define ntte_end_step
 	 // Bound End Step Events:
 	if(!obj_bind_call("end_step")){
-		ds_map_delete(ntte_obj_bind, "end_step");
+		ds_map_delete(obj_bind, "end_step");
 	}
 	
 	 // Bound Draw Event Depth Update:
-	if(ds_map_exists(ntte_obj_bind, "draw")){
-		var _inst = ntte_obj_bind[? "draw"].list;
-		with(ds_map_keys(ntte_obj_bind_draw)){
+	if(ds_map_exists(obj_bind, "draw")){
+		var _inst = obj_bind[? "draw"].list;
+		with(ds_map_keys(obj_bind_draw)){
 			_inst = instances_matching_ne(_inst, "depth", self + 1);
 		}
 		if(array_length(_inst)){
 			with(_inst){
 				with(script_bind_draw(obj_draw, depth - 1)){
 					persistent = true;
-					ntte_obj_bind_draw[? depth] = self;
+					obj_bind_draw[? depth] = self;
 				}
 			}
 		}
@@ -524,9 +507,9 @@
 	
 	 // Bound Draw Events:
 	if(!obj_bind_call("draw")){
-		ds_map_delete(ntte_obj_bind_draw, depth);
-		if(!ds_map_size(ntte_obj_bind_draw)){
-			ds_map_delete(ntte_obj_bind, "draw");
+		ds_map_delete(obj_bind_draw, depth);
+		if(!ds_map_size(obj_bind_draw)){
+			ds_map_delete(obj_bind, "draw");
 		}
 		instance_destroy();
 		exit;
@@ -539,8 +522,8 @@
 		Calls the given event for the instances bound to it
 	*/
 	
-	if(ds_map_exists(ntte_obj_bind, _event)){
-		var _bind = ntte_obj_bind[? _event],
+	if(ds_map_exists(obj_bind, _event)){
+		var _bind = obj_bind[? _event],
 			_inst = instances_matching_ne(_bind.list, "id", null);
 			
 		_bind.list = _inst;
@@ -1583,16 +1566,13 @@
 		Cycles the given player's weapon slots
 	*/
 	
-	with(["%wep", "%curse", "%reload", "%wkick", "%wepflip", "%wepangle", "%can_shoot", "%interfacepop", "drawempty%"]){
-		var	_name = [string_replace_all(self, "%", ""), string_replace_all(self, "%", "b")],
-			_temp = variable_instance_get(_player, _name[0]);
+	with(["%wep", "%curse", "%reload", "%wkick", "%wepflip", "%wepangle", "%can_shoot", "%clicked", "%interfacepop", "drawempty%"]){
+		var	_name = [string_replace(self, "%", ""), string_replace(self, "%", "b")],
+			_temp = variable_instance_get(_player, _name[0], 0);
 			
-		variable_instance_set(_player, _name[0], variable_instance_get(_player, _name[1]));
+		variable_instance_set(_player, _name[0], variable_instance_get(_player, _name[1], 0));
 		variable_instance_set(_player, _name[1], _temp);
 	}
-	
-	 // bclicked...
-	_player.clicked = false;
 	
 #define portal_poof()
 	/*
@@ -1632,8 +1612,7 @@
 				}
 				
 				 // Normal:
-				else with(instance_create(x, y, BulletHit)){
-					name         = "PortalPoof";
+				else with(call(scr.obj_create, x, y, "PortalPoof")){
 					sprite_index = [mskNone, sprPortalDisappear, sprProtoPortalDisappear, sprPopoPortalDisappear][other.type];
 					image_xscale = other.image_xscale;
 					image_yscale = other.image_yscale;
@@ -2067,38 +2046,68 @@
 #define instances_in_rectangle(_x1, _y1, _x2, _y2, _obj)
 	/*
 		Returns all instances of the given object whose positions overlap the given rectangle
-		Much better performance than manually checking 'point_in_rectangle()' on every instance
+		Much better performance than checking 'point_in_rectangle()' on every instance
 		
 		Args:
-			x1/y1/x2/y2 - The rectangular area to check
-			obj         - The object or array of instances to search
+			x1/y1/x2/y2 - The rectangular area to search
+			obj         - The object(s) to search
 	*/
 	
-	return instances_matching_le(instances_matching_ge(instances_matching_le(instances_matching_ge(_obj, "x", _x1), "x", _x2), "y", _y1), "y", _y2);
-	
-#define instances_meeting_point(_x, _y, _obj)
-	/*
-		Returns all instances of the given object whose bounding boxes overlap the given position
-		Much better performance than manually checking 'position_meeting()' on every instance
-		
-		Args:
-			x1/y1 - The position to check
-			obj   - The object or array of instances to search
-	*/
-	
-	return instances_matching_le(instances_matching_ge(instances_matching_le(instances_matching_ge(_obj, "bbox_right", _x), "bbox_left", _x), "bbox_bottom", _y), "bbox_top", _y);
+	return (
+		instances_matching_le(
+		instances_matching_le(
+		instances_matching_ge(
+		instances_matching_ge(
+		_obj,
+		"x", _x1),
+		"y", _y1),
+		"x", _x2),
+		"y", _y2)
+	);
 	
 #define instances_meeting_rectangle(_x1, _y1, _x2, _y2, _obj)
 	/*
 		Returns all instances of the given object whose bounding boxes overlap the given rectangle
-		Much better performance than manually checking 'collision_rectangle()' on every instance
+		Much better performance than checking 'collision_rectangle()' on every instance
 		
 		Args:
-			x1/y1/x2/y2 - The rectangular area to check
-			obj         - The object or array of instances to search
+			x1/y1/x2/y2 - The rectangular area to search
+			obj         - The object(s) to search
 	*/
 	
-	return instances_matching_le(instances_matching_ge(instances_matching_le(instances_matching_ge(_obj, "bbox_right", _x1), "bbox_left", _x2), "bbox_bottom", _y1), "bbox_top", _y2);
+	return (
+		instances_matching_le(
+		instances_matching_le(
+		instances_matching_ge(
+		instances_matching_ge(
+		_obj,
+		"bbox_right",  _x1),
+		"bbox_bottom", _y1),
+		"bbox_left",   _x2),
+		"bbox_top",    _y2)
+	);
+	
+#define instances_meeting_point(_x, _y, _obj)
+	/*
+		Returns all instances of the given object whose bounding boxes overlap the given position
+		Much better performance than checking 'position_meeting()' on every instance
+		
+		Args:
+			x/y - The position to search
+			obj - The object(s) to search
+	*/
+	
+	return (
+		instances_matching_le(
+		instances_matching_le(
+		instances_matching_ge(
+		instances_matching_ge(
+		_obj,
+		"bbox_right",  _x),
+		"bbox_bottom", _y),
+		"bbox_left",   _x),
+		"bbox_top",    _y)
+	);
 	
 #define instances_meeting_instance(_inst, _obj)
 	/*
@@ -2106,11 +2115,23 @@
 		Much better performance than manually checking 'place_meeting()' on every instance
 		
 		Args:
-			inst - The instance whose bounding box will be used, will be excluded from the returned array
-			obj  - The object or array of instances to search
+			inst - The instance whose bounding box will be searched, and will be excluded from the returned array
+			obj  - The object(s) to search
 	*/
 	
-	return instances_matching_ne(instances_matching_le(instances_matching_ge(instances_matching_le(instances_matching_ge(_obj, "bbox_right", _inst.bbox_left), "bbox_left", _inst.bbox_right), "bbox_bottom", _inst.bbox_top), "bbox_top", _inst.bbox_bottom), "id", _inst);
+	return (
+		instances_matching_ne(
+		instances_matching_le(
+		instances_matching_le(
+		instances_matching_ge(
+		instances_matching_ge(
+		_obj,
+		"bbox_right",  _inst.bbox_left),
+		"bbox_bottom", _inst.bbox_top),
+		"bbox_left",   _inst.bbox_right),
+		"bbox_top",    _inst.bbox_bottom),
+		"id",          _inst)
+	);
 	
 #define instances_seen // obj, bx=0, by=0, ?index
 	/*
@@ -2118,7 +2139,7 @@
 		Much better performance than manually checking 'point_seen()' or 'point_seen_ext()' on every instance
 		
 		Args:
-			obj   - The object or array of instances to search
+			obj   - The object(s) to search
 			bx/by - X/Y border offsets like 'point_seen_ext()', defaults to 0,0
 			index - The index of the player's screen, leave undefined to search the overall bounding area of every player's screen
 	*/
@@ -2161,28 +2182,44 @@
 		_y2 = _y1 + game_height;
 	}
 	
-	return instances_matching_le(instances_matching_ge(instances_matching_le(instances_matching_ge(_obj, "bbox_right", _x1 - _bx), "bbox_left", _x2 + _bx), "bbox_bottom", _y1 - _by), "bbox_top", _y2 + _by);
+	return (
+		instances_matching_le(
+		instances_matching_le(
+		instances_matching_ge(
+		instances_matching_ge(
+		_obj,
+		"bbox_right",  _x1 - _bx),
+		"bbox_bottom", _y1 - _by),
+		"bbox_left",   _x2 + _bx),
+		"bbox_top",    _y2 + _by)
+	);
 	
 #define instances_seen_nonsync // obj, bx=0, by=0
 	/*
-		Returns all instances of the given object whose bounding boxes overlap the local player's screen
-		Much better performance than manually checking 'point_seen()' or 'point_seen_ext()' on every instance
+		Returns all instances of the given object currently on the local player's screen
+		Much better performance than checking 'point_seen()' or 'point_seen_ext()' on every instance
 		!!! Beware of DESYNCS
 		
 		Args:
-			obj   - The object or array of instances to search
+			obj   - The object(s) to search
 			bx/by - X/Y border offsets like 'point_seen_ext()', defaults to 0,0
 	*/
 	
 	var	_obj = argument[0],
 		_bx  = ((argument_count > 1) ? argument[1] : 0),
-		_by  = ((argument_count > 2) ? argument[2] : 0),
-		_x1  = view_xview_nonsync,
-		_y1  = view_yview_nonsync,
-		_x2  = _x1 + game_width,
-		_y2  = _y1 + game_height;
+		_by  = ((argument_count > 2) ? argument[2] : 0);
 		
-	return instances_matching_le(instances_matching_ge(instances_matching_le(instances_matching_ge(_obj, "bbox_right", _x1 - _bx), "bbox_left", _x2 + _bx), "bbox_bottom", _y1 - _by), "bbox_top", _y2 + _by);
+	return (
+		instances_matching_le(
+		instances_matching_le(
+		instances_matching_ge(
+		instances_matching_ge(
+		_obj,
+		"bbox_right",  view_xview_nonsync - _bx),
+		"bbox_bottom", view_yview_nonsync - _by),
+		"bbox_left",   view_xview_nonsync + _bx + game_width),
+		"bbox_top",    view_yview_nonsync + _by + game_height)
+	);
 	
 #define instance_random(_obj)
 	/*
@@ -5540,12 +5577,12 @@
 	}
 	else{
 		if(_inst.speed_raw != 0){
-			_inst.x += _inst.hspeed_raw * _mult;
 			_inst.y += _inst.vspeed_raw * _mult;
+			_inst.x += _inst.hspeed_raw * _mult;
 		}
 		if(_inst.gravity_raw != 0){
-			_inst.hspeed_raw += lengthdir_x(_inst.gravity_raw, _inst.gravity_direction) * _mult;
 			_inst.vspeed_raw += lengthdir_y(_inst.gravity_raw, _inst.gravity_direction) * _mult;
+			_inst.hspeed_raw += lengthdir_x(_inst.gravity_raw, _inst.gravity_direction) * _mult;
 		}
 		if(_inst.friction_raw != 0 && _inst.speed_raw != 0){
 			_inst.speed_raw -= min(abs(_inst.speed_raw), _inst.friction_raw * _mult) * sign(_inst.speed_raw);

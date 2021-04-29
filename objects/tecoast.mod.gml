@@ -26,6 +26,7 @@
 #define cleanup
 	mod_script_call("mod", "teassets", "ntte_cleanup", script_ref_create(cleanup));
 	
+	
 #define BloomingAssassin_create(_x, _y)
 	with(instance_create(_x, _y, JungleAssassin)){
 		 // Visual:
@@ -294,7 +295,7 @@
 		)),
 		_surfH = _surfW;
 		
-	with(call(scr.surface_setup, name + string(self), _surfW, _surfH, _surfScale)){
+	with(call(scr.surface_setup, `ClamShield${self}`, _surfW, _surfH, _surfScale)){
 		var _dis = -6;
 		x = other.x + lengthdir_x(_dis, _ang) - (w / 2);
 		y = other.y + lengthdir_y(_dis, _ang) - (h / 2) + 5;
@@ -967,7 +968,7 @@
 #define DiverHarpoon_hit
 	var _inst = other;
 	if(speed > 0 && projectile_canhit(_inst)){
-		projectile_hit(_inst, damage, force, direction);
+		projectile_hit_np(_inst, damage, force, 40);
 		
 		 // Stick in Player:
 		if(instance_exists(self)){
@@ -1269,7 +1270,7 @@
 	
 #define Harpoon_hit
 	if(speed > 0 && projectile_canhit(other)){
-		projectile_hit_push(other, damage, force);
+		projectile_hit(other, damage, force);
 		
 		 // Stick in enemies that don't die:
 		if(instance_exists(other) && other.my_health > 0){
@@ -1289,7 +1290,7 @@
 		 // Deteriorate Rope if Both Harpoons Stuck:
 		if(array_length(rope)){
 			with(rope){
-				if(harpoon_stuck && array_length(instances_matching_ne([link1, link2], "object_index", CustomProjectile)) <= 0){
+				if(harpoon_stuck && !instance_is(link1, projectile) && !instance_is(link2, projectile)){
 					broken = -1;
 				}
 				harpoon_stuck = true;
@@ -1354,7 +1355,7 @@
 				}
 				
 				 // Deteriorate Rope if Doing Nothing:
-				if(array_length(instances_matching_gt([link1, link2], "pull_speed", 0)) <= 0){
+				if(!array_length(instances_matching_gt([link1, link2], "pull_speed", 0))){
 					broken = -1;
 					if(instance_exists(link1) && instance_exists(link2)){
 						length = point_distance(link1.x, link1.y, link2.x, link2.y);
@@ -1420,7 +1421,7 @@
 		}
 		
 		 // Turn Harpoons Into Pickups:
-		with([link1, link2]){
+		with(instances_matching_ne([link1, link2], "id", null)){
 			if(array_find_index(obj.Harpoon, self) >= 0){
 				pickup = true;
 			}
@@ -1503,7 +1504,7 @@
 #define NetNade_hit
 	if(speed > 0 && projectile_canhit(other)){
 		lasthit = other;
-		projectile_hit_push(other, damage, force);
+		projectile_hit(other, damage, force);
 		instance_destroy();
 	}
 	
@@ -1692,7 +1693,7 @@
 				_y = _holdy[i];
 				
 			with(seal[i]){
-				if(hold){
+				if("hold" in self && hold){
 					walk = 0;
 					if(sprite_index == spr_spwn || "hold_x" not in self){
 						hold_x = _x;
@@ -1943,17 +1944,20 @@
 	}
 	
 #define Palanking_end_step
-	with(instances_matching_ne(instances_matching_ne(instances_matching(seal, "hold", true), "hold_x", null), "hold_y", null)){
-		if(mask_index != mskNone){
-			x         = other.x + hold_x;
-			y         = other.y + hold_y;
-			xprevious = x;
-			yprevious = y;
-			hspeed    = other.hspeed;
-			vspeed    = other.vspeed;
-			depth     = other.depth - (hold_y > 24 && hold);
+	var _inst = instances_matching_ne(instances_matching_ne(instances_matching(seal, "hold", true), "hold_x", null), "hold_y", null);
+	if(array_length(_inst)){
+		with(_inst){
+			if(mask_index != mskNone){
+				x         = other.x + hold_x;
+				y         = other.y + hold_y;
+				xprevious = x;
+				yprevious = y;
+				hspeed    = other.hspeed;
+				vspeed    = other.vspeed;
+				depth     = other.depth - (hold_y > 24 && hold);
+			}
+			else hold = false;
 		}
-		else hold = false;
 	}
 
 #define Palanking_draw
@@ -2050,9 +2054,9 @@
 				var _seal = call(scr.obj_create, x, y, "Seal");
 				seal_add(self, _seal);
 				with(_seal){
-					hold = true;
+					hold    = true;
 					creator = other;
-					scared = true;
+					scared  = true;
 				}
 				
 				 // Continue:
@@ -2719,7 +2723,9 @@
 		with(creator){
 			 // Damage:
 			if(instance_is(self, hitme) && (place_meeting(x, y, Floor) || GameCont.area != "coast")){
-				projectile_hit(self, 1);
+				with(other){
+					projectile_hit(other, 1);
+				}
 			}
 			
 			 // On Walls:
@@ -2748,7 +2754,7 @@
 				    with(instance_create(x, y, Flame)){
 				        motion_add(random(360), (i / 6) + random_range(1.5, 2.5));
 				        hitid = other.hitid;
-				        team = other.team;
+				        team  = other.team;
 				        depth = other.depth - 1;
 				    }
 				}
@@ -3170,7 +3176,7 @@
 	
 	 // Visual:
 	spr_weap = spr.SealWeap[type];
-	hitid    = [spr_idle, name];
+	hitid    = [spr_idle, "SEAL"];
 	if(sprite_index == _lastSpwn){
 		sprite_index = spr_spwn;
 	}
@@ -3803,7 +3809,9 @@
 	
 	 // Slide FX:
 	if(slide > 0){
-		if(hold) slide = 0;
+		if(hold){
+			slide = 0;
+		}
 		else{
 			sound_play_hit(sndRoll, 0.4);
 			sound_play_pitch(sndBouncerBounce, 0.4 + random(0.1));
@@ -4057,8 +4065,8 @@
 	draw_self();
 
 #define SealAnchor_hit
-	if(projectile_canhit_melee(other)){
-		projectile_hit_push(other, damage, force);
+	if(projectile_canhit_np(other)){
+		projectile_hit_np(other, damage, force, 40);
 	}
 
 #define SealAnchor_projectile
@@ -4693,7 +4701,7 @@
 			}
 			
 			 // -- No fat allowed beyond this point -- //
-			if(name == "Seal"){
+			if(array_find_index(obj.Seal, self) >= 0){
 				 // Randomize Type:
 				type = call(scr.pool, [
 					[seal_hookpole,    8],
@@ -5153,7 +5161,7 @@
 			hit_list[? other] = hit_time + 3;
 			
 			 // Damage:
-			projectile_hit_push(other, damage, force);
+			projectile_hit(other, damage, force);
 			
 			if(instance_exists(self)){
 				 // Untarget:

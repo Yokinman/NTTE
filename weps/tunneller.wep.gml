@@ -143,7 +143,6 @@
 			
 			 // Chaos Ball:
 			with(call(scr.projectile_create, self, x, y, "CrystalHeartBullet", gunangle + orandom(4 * accuracy), 4)){
-				damage = lerp(35, 50, _skill);
 				image_xscale += 0.15 * _skill;
 				image_yscale += 0.15 * _skill;
 				

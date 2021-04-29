@@ -1,6 +1,15 @@
 #define init
 	mod_script_call("mod", "teassets", "ntte_init", script_ref_create(init));
 	
+	 // Gather Objects:
+	for(var i = 1; true; i++){
+		var _scrName = script_get_name(i);
+		if(is_undefined(_scrName)){
+			break;
+		}
+		call(scr.obj_add, script_ref_create(i));
+	}
+	
 	 // Bind Events:
 	script_bind(CustomDraw, draw_sludge,       -4,                           true);
 	script_bind(CustomDraw, draw_trapspin_top, object_get_depth(SubTopCont), true);
@@ -362,16 +371,18 @@
 	speed = 0;
 	
 	 // Start/Stop:
-	if(instance_exists(Portal)) active = false;
+	if(instance_exists(Portal)){
+		active = false;
+	}
 	var _goal = (active * maxspeed);
 	spd += (_goal - spd) * friction * current_time_scale;
 	
 	 // Stick to Wall:
-	var _x = x,
-		_y = y,
+	var _x       = x,
+		_y       = y,
 		_sideDis = 8,
 		_sideDir = dir + (90 * side),
-		_walled = collision_circle(_x + lengthdir_x(_sideDis, _sideDir), _y + lengthdir_y(_sideDis, _sideDir), 1, Wall, false, false);
+		_walled  = collision_circle(_x + lengthdir_x(_sideDis, _sideDir), _y + lengthdir_y(_sideDis, _sideDir), 1, Wall, false, false);
 		
 	if(!_walled && walled){
 		dir += 90 * side;
@@ -379,12 +390,12 @@
 	walled = _walled;
 	
 	 // Movement/Wall Collision:
-	var l = spd * current_time_scale,
-		d = dir;
+	var _l = spd * current_time_scale,
+		_d = dir;
 		
-	if(!collision_circle(_x + lengthdir_x(l, d), _y + lengthdir_y(l, d), 1, Wall, false, false)){
-		x += lengthdir_x(l, d);
-		y += lengthdir_y(l, d);
+	if(!collision_circle(_x + lengthdir_x(_l, _d), _y + lengthdir_y(_l, _d), 1, Wall, false, false)){
+		x += lengthdir_x(_l, _d);
+		y += lengthdir_y(_l, _d);
 		x = round(x);
 		y = round(y);
 	}
@@ -402,42 +413,50 @@
 	image_angle += 4 * spd * side * current_time_scale;
 	
 	 // BoltStick Depth Fix:
-	with(instances_matching_lt(instances_matching(BoltStick, "target", self), "depth", depth)){
-		depth = other.depth;
+	if(instance_exists(BoltStick)){
+		var _inst = instances_matching_lt(instances_matching(BoltStick, "target", self), "depth", depth);
+		if(array_length(_inst)){
+			with(_inst){
+				depth = other.depth;
+			}
+		}
 	}
 	
 	 // Effects:
 	if(spd > 1 && point_seen(x, y, -1)){
 		if(chance_ct(1, 2)){
-			var l = random(12),
-				d = dir,
+			var _l      = random(12),
+				_d      = dir,
 				_debris = (walled && chance(1, 30)),
-				_x = x + lengthdir_x(l, d),
-				_y = y + lengthdir_y(l, d) - 2;
+				_x      = x + lengthdir_x(_l, _d),
+				_y      = y + lengthdir_y(_l, _d) - 2;
 				
 			instance_create(_x, _y, (_debris ? Debris : Dust));
+			
 			if(_debris){
 				sound_play_pitchvol(sndWallBreak, 2, 0.2);
 				view_shake_max_at(x, y, random_range(2, 6));
 			}
 		}
 		if(walled){
-			var	l = random_range(12, 16),
-				d = dir,
-				_x = x + lengthdir_x(l, d) + orandom(2),
-				_y = y + lengthdir_y(l, d) - random(2);
+			var	_l = random_range(12, 16),
+				_d = dir,
+				_x = x + lengthdir_x(_l, _d) + orandom(2),
+				_y = y + lengthdir_y(_l, _d) - random(2);
 				
 			if(chance_ct(2, 3)){
 				with(instance_create(_x, _y, BulletHit)){
 					sprite_index = choose(sprGroundFlameDisappear, sprGroundFlameBigDisappear);
-					image_angle = d - (random_range(15, 60) * other.side);
-					image_yscale = -(random_range(1, 1.5) * other.side);
+					image_angle  = _d - (random_range(15, 60) * other.side);
+					image_yscale = -random_range(1, 1.5) * other.side;
 					
-					if(!place_meeting(x, y, Wall)) instance_destroy();
+					if(!place_meeting(x, y, Wall)){
+						instance_destroy();
+					}
 				}
 			}
 			if(chance_ct(1, 4)){
-				with(call(scr.fx, [_x, 3], [_y, 3], [d - (random_range(45, 90) * side), random(2)], Sweat)){
+				with(call(scr.fx, [_x, 3], [_y, 3], [_d - (random_range(45, 90) * side), random(2)], Sweat)){
 					image_blend = make_color_rgb(255, 222, 56);
 				}
 			}
@@ -466,7 +485,7 @@
 	else audio_stop_sound(loop_snd);
 	
 	 // Hitme Collision:
-	var _scale = 0.55,
+	var _scale      = 0.55,
 		_sawtrapHit = false;
 		
 	image_xscale *= _scale;
@@ -482,7 +501,7 @@
 					
 					 // Contact Damage:
 					with(other) if(active && canmelee && projectile_canhit_melee(other)){
-						projectile_hit_raw(other, meleedamage, true);
+						projectile_hit_np(other, meleedamage, 4, 40);
 						
 						 // Effects:
 						call(scr.sound_play_at, x, y, snd_mele, 0.7 + random(0.2), 1);
@@ -490,7 +509,7 @@
 				}
 				
 				 // Epic FX:
-				if(other.walled && instance_is(self, other.object_index) && "name" in self && name == other.name){
+				if(other.walled && array_find_index(obj.SawTrap, self) >= 0){
 					if(active && side != other.side && walled){
 						_sawtrapHit = true;
 						if(!sawtrap_hit || chance_ct(1, 30)){
@@ -650,12 +669,10 @@
 	}
 	
 	 // Move Manhole:
-	if(place_meeting(x, y, CustomObject)){
-		var _instHole = call(scr.instances_meeting_instance, self, instances_matching(CustomObject, "name", "Manhole"));
+	if(array_length(obj.Manhole)){
+		var _instHole = call(scr.instances_meeting_instance, self, obj.Manhole);
 		if(array_length(_instHole)){
-			var	_inst     = self,
-				_instPool = instances_matching(object_index, "name", name);
-				
+			var _inst = self;
 			with(_instHole){
 				if(place_meeting(x, y, other)){
 					with(call(scr.array_shuffle, FloorNormal)){
@@ -664,7 +681,7 @@
 							_move = false;
 						}
 						else if(place_meeting(x, y, _inst.object_index)){
-							var _instMeet = call(scr.instances_meeting_instance, self, _instPool);
+							var _instMeet = call(scr.instances_meeting_instance, self, obj.SludgePool);
 							if(array_length(_instMeet)) with(_instMeet){
 								if(place_meeting(x, y, other)){
 									_move = false;
@@ -695,7 +712,7 @@
 		 // Raven Time:
 		if(num > 0){
 			if(instance_exists(CustomEnemy)){
-				var _ravens = instances_matching(instances_matching(CustomEnemy, "name", "BoneRaven"), "creator", self);
+				var _ravens = instances_matching(obj.BoneRaven, "creator", self);
 				if(array_length(_ravens)){
 					 // Wait for Player:
 					if(alarm0 < 0){
@@ -877,7 +894,7 @@
 	
 #define SludgePool_alrm0
 	 // Mishin Failed:
-	with(instances_matching(instances_matching(CustomEnemy, "name", "BoneRaven"), "creator", self)){
+	with(instances_matching(obj.BoneRaven, "creator", self)){
 		failed = true;
 	}
 	
@@ -1424,7 +1441,7 @@
 		}
 		
 		 // Draw w/ End Clipped Off:
-		else with(call(scr.surface_setup, name, 64, 64, call(scr.option_get, "quality:main"))){
+		else with(call(scr.surface_setup, "WepPickupGrounded", 64, 64, call(scr.option_get, "quality:main"))){
 			x = other.x - (w / 2);
 			y = other.y - h;
 			
@@ -1487,8 +1504,8 @@
 		}
 		xprevious = x;
 		yprevious = y;
-		speed = 0;
-		visible = (_t.visible || instance_is(_t, NothingIntroMask));
+		speed     = 0;
+		visible   = (_t.visible || instance_is(_t, NothingIntroMask));
 		
 		 // Deal Damage w/ Taken Out:
 		if(stick_damage != 0 && fork()){
@@ -1521,7 +1538,7 @@
 						}
 						
 						 // Damage:
-						projectile_hit_raw(self, _damage, true);
+						projectile_hit_raw(self, _damage, 1);
 					}
 					
 					 // Kick:
@@ -1561,17 +1578,15 @@
 	
 #define ntte_draw_shadows
 	 // Saw Traps:
-	if(instance_exists(CustomHitme)){
-		var _inst = instances_matching(instances_matching(instances_matching(CustomHitme, "name", "SawTrap"), "visible", true), "spr_shadow", mskNone);
-		if(array_length(_inst)) with(_inst){
+	if(array_length(obj.SawTrap)){
+		with(instances_matching(instances_matching(obj.SawTrap, "visible", true), "spr_shadow", mskNone)){
 			draw_sprite_ext(sprite_index, image_index, x + spr_shadow_x, y + spr_shadow_y, image_xscale * 0.9, image_yscale * 0.9, image_angle, image_blend, 1);
 		}
 	}
 	
 	 // Spinny Fire Trap:
-	if(instance_exists(CustomObject)){
-		var _inst = instances_matching(instances_matching(CustomObject, "name", "TrapSpin"), "visible", true);
-		if(array_length(_inst)) with(_inst){
+	if(array_length(obj.TrapSpin)){
+		with(instances_matching(obj.TrapSpin, "visible", true)){
 			for(var i = 0; i < image_number; i++){
 				draw_sprite_ext(sprite_index, i, x, y + i, image_xscale, image_yscale, image_angle, image_blend, 1);
 			}
@@ -1579,8 +1594,8 @@
 	}
 	
 #define draw_sludge
-	if(instance_exists(CustomObject)){
-		var _instSludge = instances_matching(instances_matching(CustomObject, "name", "SludgePool"), "visible", true);
+	if(array_length(obj.SludgePool)){
+		var _instSludge = instances_matching(obj.SludgePool, "visible", true);
 		if(array_length(_instSludge)){
 			if(lag) trace_time();
 			
@@ -1662,22 +1677,20 @@
 	}
 	
 #define draw_trapspin_top
-	if(instance_exists(CustomObject)){
-		var _inst = instances_matching(instances_matching(CustomObject, "name", "TrapSpin"), "visible", true);
-		if(array_length(_inst)){
-			if(lag) trace_time();
-			
-			with(_inst){
-				draw_sprite_ext(sprite_index, image_number - 1, x, y - (image_number - 1), image_xscale, image_yscale, image_angle, image_blend, abs(image_alpha));
-			}
-			
-			if(lag) trace_time(script[2]);
+	if(array_length(obj.TrapSpin)){
+		if(lag) trace_time();
+		
+		with(instances_matching(obj.TrapSpin, "visible", true)){
+			draw_sprite_ext(sprite_index, image_number - 1, x, y - (image_number - 1), image_xscale, image_yscale, image_angle, image_blend, abs(image_alpha));
 		}
+		
+		if(lag) trace_time(script[2]);
 	}
 	
 	
 /// SCRIPTS
 #macro  call                                                                                    script_ref_call
+#macro  obj                                                                                     global.obj
 #macro  scr                                                                                     global.scr
 #macro  spr                                                                                     global.spr
 #macro  snd                                                                                     global.snd

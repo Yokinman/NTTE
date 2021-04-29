@@ -1,6 +1,15 @@
 #define init
 	mod_script_call("mod", "teassets", "ntte_init", script_ref_create(init));
 	
+	 // Gather Objects:
+	for(var i = 1; true; i++){
+		var _scrName = script_get_name(i);
+		if(is_undefined(_scrName)){
+			break;
+		}
+		call(scr.obj_add, script_ref_create(i));
+	}
+	
 	 // Bind Events:
 	script_bind(CustomDraw, draw_anglertrail, -3, true);
 	
@@ -206,7 +215,7 @@
 						);
 						
 						 // Call the bros:
-						with(instances_matching_lt(instances_matching(object_index, "name", "Angler", "AnglerGold"), "gold", gold)){
+						with(instances_matching_lt(obj.Angler, "gold", gold)){
 							if(hiding && point_distance(x, y, other.x, other.y) < 128){
 								scrAnglerAppear();
 							}
@@ -407,7 +416,7 @@
 	}
 	
 	 // Call the bros:
-	with(instances_matching_lt(instances_matching(object_index, "name", "Angler", "AnglerGold"), "gold", gold)){
+	with(instances_matching_lt(obj.Angler, "gold", gold)){
 		if(
 			hiding
 			&& chance(1 + other.gold, 2)
@@ -584,7 +593,7 @@
 						spr_hurt = spr.EelHurt[type];
 						spr_dead = spr.EelDead[type];
 						spr_tell = spr.EelTell[type];
-						hitid    = [spr_idle, string_upper(name)];
+						hitid    = [spr_idle, "EEL"];
 					}
 				}
 			}
@@ -696,7 +705,7 @@
 	if(instance_exists(target) && target_distance < 160){
 		if(arc_inst == noone){
 			var _disMax = infinity;
-			with(instances_matching(CustomEnemy, "name", "Jelly", "JellyElite")){
+			with(instances_matching_ne(obj.Jelly, "id", null)){
 				if(arc_num < arc_max){
 					var _dis = point_distance(x, y, other.x, other.y);
 					if(_dis < arc_dis && _dis < _disMax){
@@ -1016,11 +1025,7 @@
 #define ElectroPlasma_hit
 	if(setup) ElectroPlasma_setup();
 	
-	if(
-		instance_is(other, Player)
-		? projectile_canhit_melee(other)
-		: projectile_canhit(other)
-	){
+	if(projectile_canhit_np(other)){
 		projectile_hit_push(other, damage, force);
 		
 		 // Effects:
@@ -1760,6 +1765,49 @@
 	}
 	
 	
+#define PitSink_create(_x, _y)
+	/*
+		Used for the visual of objects falling into Trench's pits
+		Use the 'pit_sink' script in trench.area to make one of these
+	*/
+	
+	with(instance_create(_x, _y, CustomObject)){
+		 // Visual:
+		image_speed = 0;
+		visible     = false;
+		
+		 // Vars:
+		friction  = 0.01;
+		speed     = 1;
+		direction = random(360);
+		rotspeed  = 0;
+		
+		return self;
+	}
+	
+#define PitSink_step
+	 // Blackness Consumes:
+	image_blend = merge_color(c_black, image_blend, power(0.95, current_time_scale));
+	
+	 // Shrink into Abyss:
+	var _d = random_range(0.001, 0.01) * current_time_scale;
+	image_xscale -= sign(image_xscale) * _d;
+	image_yscale -= sign(image_yscale) * _d;
+	if(vspeed < 0){
+		vspeed *= 0.9;
+	}
+	y += 1/3 * current_time_scale;
+	
+	 // Spins:
+	direction   += rotspeed * current_time_scale;
+	image_angle += rotspeed * current_time_scale;
+	
+	 // He gone:
+	if(abs(image_xscale) < 2/3){
+		instance_destroy();
+	}
+	
+	
 #define PitSpark_create(_x, _y)
 	/*
 		Cool pit tentacle effect used by PitSquid
@@ -2146,9 +2194,10 @@
 					var _dir = point_direction(other.x, other.y, x, y);
 					if(chance_ct(10, other.eye_laser_delay)){
 						if(chance(1, 7)){
-							with(instance_create(x + orandom(12), y, PortalL)){
-								name = "PitSquidL";
-								if(chance(1, 2)) sprite_index = spr.PitSpark[irandom(4)];
+							with(call(scr.obj_create, x + orandom(12), y, "PitSquidL")){
+								if(chance(1, 2)){
+									sprite_index = asset_get_index(`sprPortalL${irandom_range(1, 5)}`);
+								}
 							}
 						}
 						else{
@@ -2218,9 +2267,7 @@
 			 // Effects:
 			/* hmhmmm for now i feel like theres too many particles to focus on i will just comment this out for now sorry
 			if(other.pit_height >= 1 && chance_ct(!blink, 150)){
-				with(instance_create(x + orandom(20), y + orandom(20), PortalL)){
-					name = "PitSquidL";
-					sprite_index = spr.PitSpark[irandom(4)];
+				with(call(scr.obj_create, x + orandom(20), y + orandom(20), "PitSquidL")){
 					motion_add(point_direction(other.x, other.y, x, y), 1);
 				}
 			}*/
@@ -2267,7 +2314,7 @@
 				with(call(scr.instances_meeting_instance, self, instances_matching_ne(hitme, "team", team))){
 					with(other) if(place_meeting(x, y, other)){
 						if(projectile_canhit_melee(other)){
-							projectile_hit_raw(other, meleedamage, true);
+							projectile_hit(other, meleedamage);
 							if("lasthit" in other){
 								other.lasthit = [spr_bite, "PIT SQUID"];
 							}
@@ -2330,7 +2377,7 @@
 	alarm1 = 20 + irandom(30);
 	
 	if(enemy_target(x, y)){
-		if(intro || pit_height < 1 || (instance_number(enemy) - instance_number(Van)) <= array_length(instances_matching(object_index, "name", name))){
+		if(intro || pit_height < 1 || (instance_number(enemy) - instance_number(Van)) <= array_length(instances_matching_ne(obj.PitSquid, "id", null))){
 			if(intro || pit_height < 1){
 				var	_targetDir = target_direction,
 					_targetDis = target_distance;
@@ -2399,7 +2446,7 @@
 							_num = irandom_range(2, 3 + floor(5 * (image_xscale - 1)));
 							
 						for(var _dir = _ang; _dir < _ang + 360; _dir += (360 / _num)){
-							var _armNum = array_length(instances_matching(instances_matching(CustomEnemy, "name", "PitSquidArm"), "creator", self));
+							var _armNum = array_length(instances_matching(obj.PitSquidArm, "creator", self));
 							if(
 								_armNum < 2 + (10 * (image_xscale - 1))
 								|| chance(1, 5 + (5 * _armNum))
@@ -2524,7 +2571,7 @@
 	
 #define PitSquid_alrm3
 	var	_floors = FloorPit,
-		_sparks = instances_matching(CustomObject, "name", "PitSpark");
+		_sparks = instances_matching_ne(obj.PitSpark, "id", null);
 		
 	alarm3 = random_range(1, 12) + (12 * array_length(_sparks)) + (30 / array_length(_floors));
 	
@@ -2977,7 +3024,7 @@
 		with(instance_exists(other) ? other : self){
 			projectile_hit(other.creator, min(_damage, max(0, _armHealth)), _force, _direction);
 		}
-		with(instances_matching(instances_matching(object_index, "name", name), "creator", creator)){
+		with(instances_matching(obj.PitSquidArm, "creator", creator)){
 			nexthurt = current_frame + 6;
 		}
 	}
@@ -3235,11 +3282,24 @@
 	instance_create(x, y, Bubble);
 	
 	 // Allow Portals:
-	with(instances_matching(instances_matching(becomenemy, "name", "PortalPrevent"), "creator", self)){
+	with(instances_matching(obj.PortalPrevent, "creator", self)){
 		instance_destroy();
 	}
 	with(instance_create(xstart, ystart, Corpse)){
 		alarm0 = 10;
+	}
+	
+	
+#define PitSquidL_create(_x, _y)
+	/*
+		Pit Squid lightning, like Portal lightning (PortalL)
+	*/
+	
+	with(instance_create(_x, _y, PortalL)){
+		 // Visual:
+		sprite_index = spr.PitSpark[irandom(array_length(spr.PitSpark) - 1)];
+		
+		return self;
 	}
 	
 	
@@ -3405,16 +3465,20 @@
 		with(creator){
 			 // Visually Force Player's Gunangle:
 			if(instance_is(self, Player)) with(other){
-				var _ang = angle_difference(image_angle, other.gunangle);
-				if(array_length(instances_matching(instances_matching(instances_matching(CustomEndStep, "name", "QuasarBeam_wepangle"), "creator", creator), "primary", primary)) <= 0){
+				var	_ang  = angle_difference(image_angle, other.gunangle),
+					_inst = instances_matching(instances_matching(instances_matching(CustomEndStep, "name", "QuasarBeam_wepangle"), "creator", creator), "primary", primary);
+					
+				if(!array_length(_inst)){
 					with(script_bind_end_step(QuasarBeam_wepangle, 0)){
 						name    = script[2];
 						creator = other.creator;
 						primary = other.primary;
 						angle   = 0;
+						_inst   = self;
 					}
 				}
-				with(instances_matching(instances_matching(instances_matching(CustomEndStep, "name", "QuasarBeam_wepangle"), "creator", creator), "primary", primary)){
+				
+				with(_inst){
 					angle = _ang;
 				}
 			}
@@ -3501,7 +3565,7 @@
 		 // Movin:
 		motion_add_ct(random(360), 0.2 / (speed + 1));
 		if(place_meeting(x, y, object_index)){
-			with(call(scr.instances_meeting_instance, self, instances_matching(object_index, "name", name))){
+			with(call(scr.instances_meeting_instance, self, obj.QuasarBeam)){
 				if(ring && place_meeting(x, y, other)){
 					var	_l = 0.5 * current_time_scale,
 						_d = point_direction(other.x, other.y, x, y);
@@ -3844,16 +3908,17 @@
 		}
 		
 		 // Damage:
-		var _dir = direction;
+		var _lastDir = direction;
 		if(place_meeting(x, y, other) || ring){
-			_dir = point_direction(x, y, other.x, other.y);
+			direction = point_direction(x, y, other.x, other.y);
 		}
-		projectile_hit(
+		projectile_hit_np(
 			other,
 			ceil((damage + (blast_hit * damage * (1 + skill_get(mut_laser_brain)))) * image_yscale),
 			(instance_is(other, prop) ? 0 : force),
-			_dir
+			40
 		);
+		direction = _lastDir;
 	}
 	
 #define QuasarBeam_wall
@@ -3991,11 +4056,11 @@
 		spr_stop = -1;
 		
 		 // Vars:
-		mask_index = mskExploder;
+		mask_index     = mskExploder;
 		follow_creator = false;
-		shrink_delay = 120;
-		ring = true;
-		force = 1;
+		shrink_delay   = 120;
+		ring           = true;
+		force          = 1;
 		
 		 // Alarms:
 		alarm0 = 10 + random(20);
@@ -4436,10 +4501,10 @@
 	
 	 // Activate:
 	if(enemy_target(x, y) && !visible){
-		var _numEels = array_length(instances_matching(CustomEnemy, "name", "Eel"));
+		var _numEels = array_length(instances_matching_ne(obj.Eel, "id", null));
 		if(
 			(chance(1, 3) || _numEels <= 1) &&
-			_numEels + array_length(instances_matching(instances_matching(object_index, "name", name), "visible", true)) <= 6 + (4 * GameCont.loops)
+			_numEels + array_length(instances_matching(obj.WantEel, "visible", true)) <= 6 + (4 * GameCont.loops)
 		){
 			var	_pitInst = noone,
 				_pitDis  = 160,
@@ -4519,7 +4584,7 @@
 	repeat(1 + irandom(2)) instance_create(x, y, PortalL);
 	
 	 // Allow Portals:
-	with(instances_matching(instances_matching(becomenemy, "name", "PortalPrevent"), "creator", self)){
+	with(instances_matching(obj.PortalPrevent, "creator", self)){
 		instance_destroy();
 	}
 	
@@ -4527,24 +4592,25 @@
 /// GENERAL
 #define ntte_draw_bloom
 	 // Canister Bloom:
-	if(instance_exists(CustomEnemy)){
-		var _inst = instances_matching(instances_matching(CustomEnemy, "name", "Angler", "AnglerGold"), "hiding", true);
-		if(array_length(_inst)) with(_inst){
-			draw_sprite_ext(sprRadChestGlow, image_index, x + (6 * right), y + 8, image_xscale * 2 * right, image_yscale * 2, image_angle, image_blend, image_alpha * 0.1);
+	if(array_length(obj.Angler)){
+		var _inst = instances_matching(obj.Angler, "hiding", true);
+		if(array_length(_inst)){
+			with(_inst){
+				draw_sprite_ext(sprRadChestGlow, image_index, x + (6 * right), y + 8, image_xscale * 2 * right, image_yscale * 2, image_angle, image_blend, image_alpha * 0.1);
+			}
 		}
 	}
 	
-	 // Projectiles:
-	if(instance_exists(CustomProjectile)){
 		 // Lightning Discs:
-		var _inst = instances_matching(CustomProjectile, "name", "LightningDisc");
-		if(array_length(_inst)) with(_inst){
+	if(array_length(obj.LightningDisc)){
+		with(instances_matching_ne(obj.LightningDisc, "id", null)){
 			scrDrawLightningDisc(sprite_index, image_index, x, y, ammo, radius, 2 * stretch, image_xscale, image_yscale, image_angle + rotation, image_blend, 0.1 * image_alpha);
 		}
-		
-		 // Quasar Beams:
-		var _inst = instances_matching(CustomProjectile, "name", "QuasarBeam", "QuasarRing");
-		if(array_length(_inst)) with(_inst){
+	}
+	
+	 // Quasar Beams:
+	if(array_length(obj.QuasarBeam)){
+		with(instances_matching_ne(obj.QuasarBeam, "id", null)){
 			var	_alp = 0.1 * (1 + (skill_get(mut_laser_brain) * 0.5)),
 				_xsc = 2,
 				_ysc = 2;
@@ -4568,7 +4634,6 @@
 	if(instance_exists(Player) && !instance_exists(PlayerSit)){
 		var _instPlayer = instances_matching(Player, "visible", true);
 		if(array_length(_instPlayer)){
-			
 			for(var i = 0; i < 2; i++){
 				var _inst = instances_matching_gt(_instPlayer, ((i == 0) ? "reload" : "breload"), 0);
 					
@@ -4579,31 +4644,33 @@
 					_inst = instances_matching(_inst, "race", "steroids");
 				}
 				
-				if(array_length(_inst)) with(_inst){
-					var	_wep    = ((i == 0) ? wep : bwep),
-						_quasar = call(scr.weapon_get, "ntte_quasar", _wep);
-						
-					if(_quasar > 0){
-						var	_ang  = ((i == 0) ? wepangle : bwepangle),
-							_kick = ((i == 0) ? wkick    : bwkick),
-							_flip = (weapon_is_melee(_wep) ? ((i == 0) ? wepflip : bwepflip) : right) * ((i == 1) ? -1 : 1),
-							_dis  = ((i == 1) ? -1 : -2) * sign(_flip),
-							_dir  = gunangle + (_ang * (1 - (_kick / 20))) - 90;
+				if(array_length(_inst)){
+					with(_inst){
+						var	_wep    = ((i == 0) ? wep : bwep),
+							_quasar = call(scr.weapon_get, "ntte_quasar", _wep);
 							
-						draw_set_color_write_enable(true, (weapon_get_rads(_wep) > 0), false, true);
-						
-						call(scr.draw_weapon, 
-							weapon_get_sprt(_wep),
-							gunshine,
-							x + lengthdir_x(_dis, _dir),
-							y + lengthdir_y(_dis, _dir) + swapmove - (4 * i),
-							gunangle,
-							_ang,
-							_kick,
-							_flip,
-							image_blend,
-							image_alpha * (((i == 0) ? reload : breload) / weapon_get_load(_wep)) * (1 + (0.2 * skill_get(mut_laser_brain))) * _quasar
-						);
+						if(_quasar > 0){
+							var	_ang  = ((i == 0) ? wepangle : bwepangle),
+								_kick = ((i == 0) ? wkick    : bwkick),
+								_flip = (weapon_is_melee(_wep) ? ((i == 0) ? wepflip : bwepflip) : right) * ((i == 1) ? -1 : 1),
+								_dis  = ((i == 1) ? -1 : -2) * sign(_flip),
+								_dir  = gunangle + (_ang * (1 - (_kick / 20))) - 90;
+								
+							draw_set_color_write_enable(true, (weapon_get_rads(_wep) > 0), false, true);
+							
+							call(scr.draw_weapon, 
+								weapon_get_sprt(_wep),
+								gunshine,
+								x + lengthdir_x(_dis, _dir),
+								y + lengthdir_y(_dis, _dir) + swapmove - (4 * i),
+								gunangle,
+								_ang,
+								_kick,
+								_flip,
+								image_blend,
+								image_alpha * (((i == 0) ? reload : breload) / weapon_get_load(_wep)) * (1 + (0.2 * skill_get(mut_laser_brain))) * _quasar
+							);
+						}
 					}
 				}
 			}
@@ -4613,24 +4680,21 @@
 	}
 	
 	 // Pit Spark:
-	if(instance_exists(CustomObject)){
-		var _inst = instances_matching(instances_matching(CustomObject, "name", "PitSpark"), "visible", true);
-		if(array_length(_inst)) with(_inst){
+	if(array_length(obj.PitSpark)){
+		with(instances_matching(obj.PitSpark, "visible", true)){
 			draw_sprite_ext(sprite_index, image_index, x, y, image_xscale * 2, image_yscale * 2, image_angle, image_blend, image_alpha * 0.2);
 		}
 	}
-	if(instance_exists(PortalL)){
-		var _inst = instances_matching(PortalL, "name", "PitSquidL");
-		if(array_length(_inst)) with(_inst){
+	if(array_length(obj.PitSquidL)){
+		with(instances_matching_ne(obj.PitSquidL, "id", null)){
 			draw_sprite_ext(sprite_index, image_index, x, y, image_xscale * 2, image_yscale * 2, image_angle, image_blend, image_alpha * 0.1);
 		}
 	}
 	
 #define ntte_draw_shadows
 	 // Squid-Launched Floor Chunks:
-	if(instance_exists(CustomObject)){
-		var _inst = instances_matching(instances_matching(CustomObject, "name", "TrenchFloorChunk"), "visible", true);
-		if(array_length(_inst)) with(_inst){
+	if(array_length(obj.TrenchFloorChunk)){
+		with(instances_matching(obj.TrenchFloorChunk, "visible", true)){
 			if(place_meeting(x, y, Floor)){
 				var _scale = clamp(1 / ((z / 200) + 1), 0.1, 0.8);
 				draw_sprite_ext(sprite_index, image_index, x, y, _scale * image_xscale, _scale * image_yscale, image_angle, image_blend, 1);
@@ -4647,145 +4711,141 @@
 			var _gray = (_type == "normal");
 			
 			 // Kelp:
-			if(_gray && instance_exists(CustomProp)){
-				var _inst = instances_matching(CustomProp, "name", "Kelp");
-				if(array_length(_inst)) with(_inst){
+			if(_gray && array_length(obj.Kelp)){
+				with(instances_matching_ne(obj.Kelp, "id", null)){
 					draw_circle(x, y, 32 + orandom(1), false);
 				}
 			}
 			
-			 // Projectiles:
-			if(instance_exists(CustomProjectile)){
-				 // Electroplasma:
-				var _inst = instances_matching(CustomProjectile, "name", "ElectroPlasma", "ElectroPlasmaBig");
-				if(array_length(_inst)){
-					var _r = 24 + (24 * _gray);
-					with(_inst){
-						draw_circle(x, y, _r, false);
-					}
-				}
-				
-				 // Lightning Discs:
-				var _inst = instances_matching(CustomProjectile, "name", "LightningDisc");
-				if(array_length(_inst)){
-					var _scale  = 1.5 + (1.5 * _gray),
-						_border = 4;
-						
-					with(_inst){
-						draw_circle(x - 1, y - 1, (((radius * image_xscale) + _border) * _scale) + orandom(1), false);
-					}
-				}
-				
-				 // Quasar Beams:
-				var _inst = instances_matching(CustomProjectile, "name", "QuasarBeam", "QuasarRing");
-				if(array_length(_inst)){
-					var _beamScale  = 2   + (3 * _gray),
-						_ringRadius = 120 + (160 * _gray);
-						
-					draw_set_fog(true, draw_get_color(), 0, 0);
-					
-					with(_inst){
-						 // Normal:
-						if(!ring){
-							var	_xscale = _beamScale * image_xscale,
-								_yscale = _beamScale * image_yscale;
-								
-							QuasarBeam_draw_laser(_xscale, _yscale, 1);
-							
-							 // Rounded Ends:
-							var	_x = x,
-								_y = y,
-								_r = (12 + (1 * ((image_number - 1) - floor(image_index)))) * _yscale;
-								
-							draw_circle(_x - lengthdir_x(16 * _xscale, image_angle), _y - lengthdir_y(16 * _xscale, image_angle), _r * 1.5, false);
-							
-							if(array_length(line_seg)){
-								with(line_seg[array_length(line_seg) - 1]){
-									_x = x - 1 + lengthdir_x(8 * _xscale, dir);
-									_y = y - 1 + lengthdir_y(8 * _xscale, dir);
-								}
-							}
-							
-							draw_circle(_x, _y, _r, false);
-						}
-						
-						 // Ring:
-						else draw_circle(x, y, (_ringRadius * ring_size) + random(4), false);
-					}
-					
-					draw_set_fog(false, 0, 0, 0);
+			 // Electroplasma:
+			if(array_length(obj.ElectroPlasma)){
+				var _r = 24 + (24 * _gray);
+				with(instances_matching_ne(obj.ElectroPlasma, "id", null)){
+					draw_circle(x, y, _r, false);
 				}
 			}
 			
-			 // Enemies:
-			if(instance_exists(CustomEnemy)){
-				 // Anglers:
-				var _inst = instances_matching(CustomEnemy, "name", "Angler", "AnglerGold");
-				if(array_length(_inst)){
-					draw_set_fog(true, draw_get_color(), 0, 0);
-					if(!_gray){
-						draw_set_blend_mode(bm_subtract);
-					}
-					with(_inst){
-						var _img = image_index;
-						if(sprite_index != spr_appear){
-							_img = sprite_get_number(spr.AnglerLight) - 1;
-						}
-						
-						 // Funny manual buzziness since it's a sprite:
-						var _off = random(2);
-						for(var _ang = 0; _ang < 360; _ang += 45){
-							draw_sprite_ext(spr.AnglerLight, _img, x + lengthdir_x(_off, _ang), y + lengthdir_y(_off, _ang), right, 1, 0, c_white, 1);
-						}
-					}
-					if(!_gray){
-						draw_set_blend_mode(bm_normal);
-					}
-					draw_set_fog(false, 0, 0, 0);
+			 // Lightning Discs:
+			if(array_length(obj.LightningDisc)){
+				var _scale  = 1.5 + (1.5 * _gray),
+					_border = 4;
+					
+				with(instances_matching_ne(obj.LightningDisc, "id", null)){
+					draw_circle(x - 1, y - 1, (((radius * image_xscale) + _border) * _scale) + orandom(1), false);
 				}
+			}
+			
+			 // Quasar Beams:
+			if(array_length(obj.QuasarBeam)){
+				var _beamScale  = 2   + (3   * _gray),
+					_ringRadius = 120 + (160 * _gray);
+					
+				draw_set_fog(true, draw_get_color(), 0, 0);
 				
-				 // Jellies:
-				var _inst = instances_matching(CustomEnemy, "name", "Jelly", "JellyElite");
-				if(array_length(_inst)){
-					var _r = 40 + (40 * _gray);
-					with(_inst){
-						var	_off = 0,
-							_img = floor(image_index);
+				with(instances_matching_ne(obj.QuasarBeam, "id", null)){
+					 // Normal:
+					if(!ring){
+						var	_xscale = _beamScale * image_xscale,
+							_yscale = _beamScale * image_yscale;
 							
-						if(
-							sprite_index == spr_fire
-							|| (sprite_index == spr_hurt && _img != 1)
-							|| (sprite_index == spr_idle && (_img == 1 || _img == 3))
-						){
-							_off = 5;
+						QuasarBeam_draw_laser(_xscale, _yscale, 1);
+						
+						 // Rounded Ends:
+						var	_x = x,
+							_y = y,
+							_r = (12 + (1 * ((image_number - 1) - floor(image_index)))) * _yscale;
+							
+						draw_circle(_x - lengthdir_x(16 * _xscale, image_angle), _y - lengthdir_y(16 * _xscale, image_angle), _r * 1.5, false);
+						
+						if(array_length(line_seg)){
+							with(line_seg[array_length(line_seg) - 1]){
+								_x = x - 1 + lengthdir_x(8 * _xscale, dir);
+								_y = y - 1 + lengthdir_y(8 * _xscale, dir);
+							}
 						}
 						
-						draw_circle(x, y, _r + _off + orandom(1), false);
+						draw_circle(_x, _y, _r, false);
+					}
+					
+					 // Ring:
+					else draw_circle(x, y, (_ringRadius * ring_size) + random(4), false);
+				}
+				
+				draw_set_fog(false, 0, 0, 0);
+			}
+			
+			 // Anglers:
+			if(array_length(obj.Angler)){
+				draw_set_fog(true, draw_get_color(), 0, 0);
+				if(!_gray){
+					draw_set_blend_mode(bm_subtract);
+				}
+				with(instances_matching_ne(obj.Angler, "id", null)){
+					var _img = image_index;
+					if(sprite_index != spr_appear){
+						_img = sprite_get_number(spr.AnglerLight) - 1;
+					}
+					
+					 // Funny manual buzziness since it's a sprite:
+					var _off = random(2);
+					for(var _ang = 0; _ang < 360; _ang += 45){
+						draw_sprite_ext(spr.AnglerLight, _img, x + lengthdir_x(_off, _ang), y + lengthdir_y(_off, _ang), right, 1, 0, c_white, 1);
 					}
 				}
-				
-				 // Elite Eels:
-				var _inst = instances_matching_gt(instances_matching(CustomEnemy, "name", "Eel"), "elite", 0);
-				if(array_length(_inst)) with(_inst){
-					var _r = (
-						_gray
-						? 48
-						: min(32, (elite / 2) + 3)
-					);
-					draw_circle(x, y, _r + orandom(2), false);
+				if(!_gray){
+					draw_set_blend_mode(bm_normal);
 				}
-				
-				 // Squid Arms:
-				var _inst = instances_matching(instances_matching(CustomEnemy, "name", "PitSquidArm"), "visible", true);
+				draw_set_fog(false, 0, 0, 0);
+			}
+			
+			 // Jellies:
+			if(array_length(obj.Jelly)){
+				var _r = 40 + (40 * _gray);
+				with(instances_matching_ne(obj.Jelly, "id", null)){
+					var	_off = 0,
+						_img = floor(image_index);
+						
+					if(
+						sprite_index == spr_fire
+						|| (sprite_index == spr_hurt && _img != 1)
+						|| (sprite_index == spr_idle && (_img == 1 || _img == 3))
+					){
+						_off = 5;
+					}
+					
+					draw_circle(x, y, _r + _off + orandom(1), false);
+				}
+			}
+			
+			 // Elite Eels:
+			if(array_length(obj.Eel)){
+				var _inst = instances_matching_gt(obj.Eel, "elite", 0);
+				if(array_length(_inst)){
+					with(_inst){
+						var _r = (
+							_gray
+							? 48
+							: min(32, (elite / 2) + 3)
+						);
+						draw_circle(x, y, _r + orandom(2), false);
+					}
+				}
+			}
+			
+			 // Squid Arms:
+			if(array_length(obj.PitSquidArm)){
+				var _inst = instances_matching(obj.PitSquidArm, "visible", true);
 				if(array_length(_inst)){
 					var _r = 24 + (48 * _gray);
 					with(_inst){
 						draw_circle(x, y - 12, _r + orandom(1), false);
 					}
 				}
-				
-				 // Pit Squid:
-				var _inst = instances_matching_ge(instances_matching(CustomEnemy, "name", "PitSquid"), "pit_height", 1);
+			}
+			
+			 // Pit Squid:
+			if(array_length(obj.PitSquid)){
+				var _inst = instances_matching_ge(obj.PitSquid, "pit_height", 1);
 				if(array_length(_inst)){
 					if(_gray){
 						with(_inst){
@@ -4809,12 +4869,12 @@
 	}
 	
 #define draw_anglertrail
-	if(instance_exists(CustomEnemy) || instance_exists(Player)){
+	if(instance_exists(Player) || array_length(obj.Angler)){
 		var _inst = [[], []];
 		
 		 // Gather Instances:
-		if(instance_exists(CustomEnemy)){
-			_inst[0] = instances_matching(instances_matching(instances_matching(CustomEnemy, "name", "Angler", "AnglerGold"), "hiding", false), "visible", true);
+		if(array_length(obj.Angler)){
+			_inst[0] = instances_matching(instances_matching(obj.Angler, "hiding", false), "visible", true);
 		}
 		if(instance_exists(Player)){
 			_inst[1] = instances_matching(instances_matching(Player, "bskin", "angler fish"), "visible", true);
@@ -4941,6 +5001,7 @@
 	
 /// SCRIPTS
 #macro  call                                                                                    script_ref_call
+#macro  obj                                                                                     global.obj
 #macro  scr                                                                                     global.scr
 #macro  spr                                                                                     global.spr
 #macro  snd                                                                                     global.snd

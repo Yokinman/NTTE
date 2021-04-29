@@ -1,6 +1,15 @@
 #define init
 	mod_script_call("mod", "teassets", "ntte_init", script_ref_create(init));
 	
+	 // Gather Objects:
+	for(var i = 1; true; i++){
+		var _scrName = script_get_name(i);
+		if(is_undefined(_scrName)){
+			break;
+		}
+		call(scr.obj_add, script_ref_create(i));
+	}
+	
 	 // Overall Floor Bounding Box:
 	global.floor_left   = 0;
 	global.floor_right  = 0;
@@ -21,6 +30,7 @@
 	
 #define cleanup
 	mod_script_call("mod", "teassets", "ntte_cleanup", script_ref_create(cleanup));
+	
 	
 #define AlertIndicator_create(_x, _y)
 	/*
@@ -1056,7 +1066,7 @@
 	
 	 // Damage:
 	if(projectile_canhit_melee(other)){
-		projectile_hit_push(other, damage + (bonus_damage * bonus), force);
+		projectile_hit(other, damage + (bonus_damage * bonus), force);
 	}
 	
 #define scrBoneDust(_x, _y)
@@ -1179,7 +1189,7 @@
 	if(setup) BoneSlash_setup();
 	
 	if(projectile_canhit_melee(other) && other.my_health > 0){
-		projectile_hit(other, damage, force, direction);
+		projectile_hit(other, damage, force);
 		
 		 // Bone Pickup Drops:
 		with(other) if(my_health <= 0){
@@ -1426,18 +1436,18 @@
 						for(var _oy = -32; _oy <= 32; _oy += 32){
 							for(var _ox = -32; _ox <= 32; _ox += 32){
 								array_push(layout, {
-									x	 : _fx + _ox,
-									y	 : _fy + _oy,
-									obj	 : Floor,
-									room : _room++
+									"x"	   : _fx + _ox,
+									"y"	   : _fy + _oy,
+									"obj"  : Floor,
+									"room" : _room++
 								});
 							}
 						}
 						
 						array_push(layout, {
-							x	: _fx + 16,
-							y	: _fy + 8,
-							obj	: obj_loot
+							"x"   : _fx + 16,
+							"y"   : _fy + 8,
+							"obj" : obj_loot
 						});
 						
 						_fx += lengthdir_x(_moveDis, _moveDir);
@@ -1447,17 +1457,17 @@
 					 // Floor:
 					else{
 						array_push(layout, {
-							x	: _fx,
-							y	: _fy,
-							obj	: Floor
+							"x"   : _fx,
+							"y"   : _fy,
+							"obj" : Floor
 						});
 						
 						 // Prop:
 						if(chance(1, 8)){
 							array_push(layout, {
-								x	: _fx + 16,
-								y	: _fy + 16,
-								obj	: obj_prop
+								"x"   : _fx + 16,
+								"y"   : _fy + 16,
+								"obj" : obj_prop
 							});
 						}
 					}
@@ -1489,7 +1499,7 @@
 				_open = true;
 				call(scr.wall_clear, self);
 			}
-			with(layout) if(!_open && obj == Floor){
+			with(layout) if(!_open && lq_defget(self, "obj", noone) == Floor){
 				var	_x = x,
 					_y = y;
 					
@@ -1506,7 +1516,7 @@
 				GameCont.area = area;
 				
 				 // Clear Obstructions:
-				with(layout) if(obj == Floor){
+				with(layout) if(lq_defget(self, "obj", noone) == Floor){
 					var	_x1 = x - 16,
 						_y1 = y - 16,
 						_x2 = x + 48 - 1,
@@ -1521,18 +1531,21 @@
 				 // Generate:
 				var	_minID = instance_max;
 				with(layout){
-					var _room = lq_defget(self, "room", -1);
-					
+					var	_x    = x,
+						_y    = y,
+						_obj  = lq_defget(self, "obj",  noone);
+						_room = lq_defget(self, "room", -1);
+						
 					 // Clear Space for Special Floors:
-					if(_room >= 0 && (obj == Floor || object_is_ancestor(obj, Floor))){
-						with(call(scr.instances_meeting_rectangle, x, y, x + 32 - 1, y + 32 - 1, [Floor, SnowFloor])){
+					if(_room >= 0 && (_obj == Floor || object_is_ancestor(_obj, Floor))){
+						with(call(scr.instances_meeting_rectangle, _x, _y, _x + 32 - 1, _y + 32 - 1, [Floor, SnowFloor])){
 							instance_destroy();
 						}
 					}
 					
 					 // Create:
 					with(other){
-						with(call(scr.obj_create, other.x, other.y, other.obj)){
+						with(call(scr.obj_create, _x, _y, _obj)){
 							if(instance_is(self, Floor)){
 								if(_room >= 0){
 									image_index = _room;
@@ -1682,7 +1695,7 @@
 		}
 		
 		 // Damage:
-		projectile_hit_push(other, damage, force);
+		projectile_hit(other, damage, force);
 		instance_destroy();
 	}
 	
@@ -1851,7 +1864,7 @@
 	
 #define CustomShell_hit
 	if(projectile_canhit(other)){
-		projectile_hit_push(other, damage + (bonus_damage * bonus), force);
+		projectile_hit(other, damage + (bonus_damage * bonus), force);
 		
 		 // Goodbye:
 		with(instance_create(x, y, BulletHit)){
@@ -2083,7 +2096,7 @@
 	
 	 // Create Sprite:
 	if(!sprite_exists(sprite_index)){
-		var _instMergeFlak = instances_matching_ne(instances_matching(object_index, "name", name), "id", id);
+		var _instMergeFlak = instances_matching_ne(obj.MergeFlak, "id", id);
 		if(!array_length(instances_matching(instances_matching(_instMergeFlak, "sprite_width", 16), "sprite_height", 16))){
 			var	_inst = instances_matching_ne(inst, "id", null),
 				_size = 24,
@@ -2093,7 +2106,7 @@
 				_size = max(_size, 2 * max(sprite_width, sprite_height));
 			}
 			
-			with(call(scr.surface_setup, name, _size * _num, _size, 1)){
+			with(call(scr.surface_setup, "MergeFlak", _size * _num, _size, 1)){
 				surface_set_target(surf);
 				draw_clear_alpha(0, 0);
 				
@@ -2259,10 +2272,13 @@
 			
 			 // Object-Specific:
 			switch(object_index){
+				
 				case Laser:
+					
 					xstart = x;
 					ystart = y;
 					image_yscale += 0.3 * current_time_scale;
+					
 					break;
 					
 				case Bolt:
@@ -2270,16 +2286,19 @@
 				case Splinter:
 				case HeavyBolt:
 				case UltraBolt:
+					
 					x += lengthdir_x(sprite_height / 4, image_angle + other.rotation);
 					y += lengthdir_y(sprite_height / 4, image_angle + other.rotation);
+					
 					break;
 					
-				case CustomProjectile:
-					if("name" in self && name == other.name){
-						rotation = other.rotation;
+				default:
+					
+					if(array_find_index(obj.MergeFlak, self) >= 0){
+						rotation    = other.rotation;
 						image_index = other.image_index;
 					}
-					break;
+					
 			}
 			
 			 // Disable:
@@ -2312,11 +2331,17 @@
 #define MergeFlak_hit
 	with(other){
 		var _hit = 4;
-		with(other.inst) if(instance_exists(self)){
-			if(other.my_health > 0 && (_hit > 0 || (object_index == CustomProjectile && "name" in self && name == "MergeFlak"))){
-				event_perform(ev_collision, hitme);
-				if(instance_exists(other)) _hit = 0;
-				else _hit--;
+		with(other.inst){
+			if(instance_exists(self) && other.my_health > 0){
+				if(_hit > 0 || array_find_index(obj.MergeFlak, self) >= 0){
+					event_perform(ev_collision, hitme);
+					if(instance_exists(other)){
+						_hit = 0;
+					}
+					else{
+						_hit--;
+					}
+				}
 			}
 		}
 	}
@@ -2344,15 +2369,19 @@
 		
 		 // Object Specific:
 		switch(object_index){
+			
 			case Laser:
+				
 				sound_play_pitch((skill_get(mut_laser_brain) ? sndLaserUpg : sndLaser), 1 + orandom(0.2));
+				
 				break;
 				
-			case CustomProjectile:
-				if("name" in self && name == other.name){
+			default:
+				
+				if(array_find_index(obj.MergeFlak, self) >= 0){
 					rotspeed += random_range(12, 16) * choose(-1, 1);
 				}
-				break;
+				
 		}
 	}
 	if(ds_map_valid(inst_vars)){
@@ -2433,7 +2462,7 @@
 		corpse_inst  = noone;
 		revive       = noone;
 		history      = ["bskin", "team", "stat_found"];
-		prompt       = call(scr.prompt_create, self, mskShield);
+		prompt       = call(scr.prompt_create, self, "", mskShield);
 		
 		 // Scripts:
 		pet      = "";
@@ -2583,7 +2612,7 @@
 			}
 		}
 		if(place_meeting(x, y, object_index)){
-			with(call(scr.instances_meeting_instance, self, instances_matching_ge(instances_matching(instances_matching(object_index, "name", name), "visible", true), "size", size))){
+			with(call(scr.instances_meeting_instance, self, instances_matching_ge(instances_matching(obj.Pet, "visible", true), "size", size))){
 				if(place_meeting(x, y, other)){
 					with(other){
 						motion_add_ct(point_direction(other.x, other.y, x, y), push);
@@ -3176,7 +3205,9 @@
 			 // Damage:
 			if(damage > 0){
 				with(player_find(prompt.pick)){
-					with(other) projectile_hit_raw(other, damage, true);
+					with(other){
+						projectile_hit(other, damage);
+					}
 					lasthit = [sprHealBigFX, "LOVE"];
 				}
 				
@@ -3230,7 +3261,7 @@
 		
 		 // Vars:
 		type   = choose(type_melee, type_bullet, type_shell, type_bolt, type_explosive, type_energy);
-		prompt = call(scr.prompt_create, self, "BATTLE", 0, -1);
+		prompt = call(scr.prompt_create, self, "BATTLE", mskWepPickup, 0, -1);
 		
 		 // Curse:
 		switch(crown_current){
@@ -3742,6 +3773,21 @@
 	return false;
 	
 	
+#define PortalPoof_create(_x, _y)
+	/*
+		Disappearing portal effect used for the 'portal_poof' script
+	*/
+	
+	with(instance_create(_x, _y, BulletHit)){
+		 // Visual:
+		sprite_index = sprPortalDisappear;
+		image_angle  = 0;
+		depth        = -3;
+		
+		return self;
+	}
+	
+	
 #define PortalPrevent_create(_x, _y)
 	/*
 		Prevent Corpses from creating Portals
@@ -3808,6 +3854,36 @@
 		}
 		
 		instance_destroy();
+	}
+	
+	
+#define SalamanderCanSpec_create(_x, _y)
+	/*
+		Used to temporarily disable the active of Players riding Salamander Pet
+	*/
+	
+	with(instance_create(_x, _y, CustomObject)){
+		 // Vars:
+		alive   = true;
+		creator = noone;
+		canspec = true;
+		
+		return self;
+	}
+	
+#define SalamanderCanSpec_end_step
+	if(alive && instance_exists(creator)){
+		alive = false;
+		if(creator.canspec != false){
+			canspec = creator.canspec;
+			creator.canspec = false;
+		}
+	}
+	else instance_destroy();
+	
+#define SalamanderCanSpec_cleanup
+	with(creator){
+		canspec = other.canspec;
 	}
 	
 	
@@ -3977,12 +4053,12 @@
 					
 					 // Push Bros:
 					/*
-					var	_inst = self,
+					var	_inst     = self,
 						_saveMask = mask_index;
 						
 					mask_index = lq_defget(other.target_save, "mask_index", mask_index);
 					
-					with(instances_matching(instances_matching_ne(call(scr.instances_in_rectangle, x - 32, y - 32, x + 32, y + 32, instances_matching(other.object_index, "name", other.name)), "id", other), "zfriction", 0)){
+					with(instances_matching(instances_matching_ne(call(scr.instances_in_rectangle, x - 32, y - 32, x + 32, y + 32, obj.TopObject), "id", other), "zfriction", 0)){
 						with(target) if(instance_is(self, hitme) && !instance_is(self, prop)){
 							var m = mask_index;
 							mask_index = lq_defget(other.target_save, "mask_index", mask_index);
@@ -4168,7 +4244,7 @@
 							canmove   = true;
 							
 							 // Cmon Bros:
-							with(instances_matching_gt(instances_matching(object_index, "name", name), "jump_time", 0)){
+							with(instances_matching_gt(obj.TopObject, "jump_time", 0)){
 								if(
 									instance_exists(target)
 									&& target.object_index == other.target.object_index
@@ -4208,7 +4284,7 @@
 						
 						 // Prepare to Fly w/ Bros:
 						if(zspeed == 0){
-							with(instances_matching(instances_matching(instances_matching_gt(instances_matching(object_index, "name", name), "jump_time", 0), "zspeed", 0), "speed", 0)){
+							with(instances_matching(instances_matching(instances_matching_gt(obj.TopObject, "jump_time", 0), "zspeed", 0), "speed", 0)){
 								if(
 									instance_exists(target)
 									&& target.object_index == other.target.object_index
@@ -4345,7 +4421,7 @@
 						
 					mask_index = lq_defget(other.target_save, "mask_index", mask_index);
 					
-					with(instances_matching_ne(call(scr.instances_in_rectangle, x - 32, y - 32, x + 32, y + 32, instances_matching(other.object_index, "name", other.name)), "id", other)){
+					with(instances_matching_ne(call(scr.instances_in_rectangle, x - 32, y - 32, x + 32, y + 32, obj.TopObject), "id", other)){
 						with(target) if(instance_is(self, hitme)){
 							var _lastMask = mask_index;
 							mask_index = lq_defget(other.target_save, "mask_index", mask_index);
@@ -4446,7 +4522,7 @@
 		}
 		
 		 // Weapon:
-		if(instance_is(self, CustomObject) && "name" in self && name == "WepPickupGrounded"){
+		if(array_find_index(obj.WepPickupGrounded, self) >= 0){
 			instance_destroy();
 		}
 	}
@@ -4477,25 +4553,27 @@
 				if(fork()){
 					wait 0;
 					if(instance_exists(self)){
-						var _inst = instances_matching_ne(call(scr.instances_meeting_rectangle, bbox_left - 1, bbox_top - 1, bbox_right, bbox_bottom, TopSmall), "name", "TopTiny");
+						var _inst = call(scr.instances_meeting_rectangle, bbox_left - 1, bbox_top - 1, bbox_right, bbox_bottom, TopSmall);
 						array_sort(_inst, true);
 						
 						 // GMS2:
 						try{
 							if(!null){
 								with(_inst){
-									with(instance_copy(false)){
-										if(fork()){
-											var _lastMask = mask_index;
-											mask_index = mskNone;
-											wait 0;
-											if(instance_exists(self)){
-												mask_index = _lastMask;
+									if(array_find_index(obj.TopTiny, self) < 0){
+										with(instance_copy(false)){
+											if(fork()){
+												var _lastMask = mask_index;
+												mask_index = mskNone;
+												wait 0;
+												if(instance_exists(self)){
+													mask_index = _lastMask;
+												}
+												exit;
 											}
-											exit;
 										}
+										instance_delete(self);
 									}
-									instance_delete(self);
 								}
 							}
 						}
@@ -4503,8 +4581,10 @@
 						 // GMS1:
 						catch(_error){
 							with(_inst){
-								instance_copy(false);
-								instance_delete(self);
+								if(array_find_index(obj.TopTiny, self) < 0){
+									instance_copy(false);
+									instance_delete(self);
+								}
 							}
 						}
 					}
@@ -5082,25 +5162,20 @@
 /// GENERAL
 #define game_start
 	 // Delete:
-	with(instances_matching_lt(
-		call(scr.array_combine, 
-			instances_matching(CustomHitme,  "name", "Pet"),
-			instances_matching(CustomObject, "name", "ReviveNTTE", "UnlockCont")
-		),
-		"id",
-		GameCont.id
-	)){
-		instance_destroy();
+	with(instances_matching_lt(call(scr.array_combine, obj.Pet, obj.ReviveNTTE, obj.UnlockCont), "id", GameCont.id)){
+		instance_delete(self);
 	}
 	
 #define ntte_update(_newID, _genID)
 	 // Pet Leveling Up FX:
-	if(instance_exists(LevelUp) && LevelUp.id > _newID){
-		with(instances_matching_gt(LevelUp, "id", _newID)){
-			if(instance_is(creator, Player)){
-				with(instances_matching(instances_matching(CustomHitme, "name", "Pet"), "leader", creator)){
-					with(other){
-						instance_copy(false).creator = other;
+	if(array_length(obj.Pet)){
+		if(instance_exists(LevelUp) && LevelUp.id > _newID){
+			with(instances_matching_gt(LevelUp, "id", _newID)){
+				if(instance_is(creator, Player)){
+					with(instances_matching(obj.Pet, "leader", creator)){
+						with(other){
+							instance_copy(false).creator = other;
+						}
 					}
 				}
 			}
@@ -5108,26 +5183,28 @@
 	}
 	
 	 // Weapon Mimic Boss, Burst Weapon Fix:
-	if(instance_exists(projectile) && projectile.id > _newID){
-		with(instances_matching_gt(projectile, "id", _newID)){
-			if(instance_is(creator, CustomEnemy) && "name" in creator && creator.name == "PetWeaponBoss"){
-				 // Laser Cannon, Brain Fix:
-				if(skill_get(mut_laser_brain) != 0 && object_index == Laser){
-					with(instance_create(x, y, object_index)){
-						if(image_yscale == other.image_yscale){
-							other.image_yscale = 1.4;
+	if(array_length(obj.PetWeaponBoss)){
+		if(instance_exists(projectile) && projectile.id > _newID){
+			with(instances_matching_gt(projectile, "id", _newID)){
+				if(array_find_index(obj.PetWeaponBoss, creator) >= 0){
+					 // Laser Cannon, Brain Fix:
+					if(skill_get(mut_laser_brain) != 0 && object_index == Laser){
+						with(instance_create(x, y, object_index)){
+							if(image_yscale == other.image_yscale){
+								other.image_yscale = 1.4;
+							}
+							instance_delete(self);
 						}
-						instance_delete(self);
 					}
+					
+					 // Cause of Death:
+					if(hitid == -1){
+						hitid = creator.hitid;
+					}
+					
+					 // Enemy Spriterize:
+					call(scr.team_instance_sprite, 1, self);
 				}
-				
-				 // Cause of Death:
-				if(hitid == -1){
-					hitid = creator.hitid;
-				}
-				
-				 // Enemy Spriterize:
-				call(scr.team_instance_sprite, 1, self);
 			}
 		}
 	}
@@ -5160,11 +5237,10 @@
 	}
 	
 	 // Auto-Topify New Objects:
-	with([hitme, projectile, becomenemy, Pickup, chestprop, Corpse, Effect, Explosion, MeatExplosion, PlasmaImpact, BigDogExplo, NothingDeath, Nothing2Death, FrogQueenDie, PopoShield, CrystalShield, SharpTeeth, ReviveArea, NecroReviveArea, RevivePopoFreak]){
-		var _object = self;
-		if(instance_exists(_object) && _object.id > _newID){
-			var _instTop = instances_matching(CustomObject, "name", "TopObject");
-			if(array_length(_instTop)){
+	if(array_length(obj.TopObject)){
+		with([hitme, projectile, becomenemy, Pickup, chestprop, Corpse, Effect, Explosion, MeatExplosion, PlasmaImpact, BigDogExplo, NothingDeath, Nothing2Death, FrogQueenDie, PopoShield, CrystalShield, SharpTeeth, ReviveArea, NecroReviveArea, RevivePopoFreak]){
+			var _object = self;
+			if(instance_exists(_object) && _object.id > _newID){
 				var _inst  = instances_matching(instances_matching_gt(_object, "id", _newID), "z", null),
 					_break = false;
 					
@@ -5238,7 +5314,7 @@
 				
 				 // Topify:
 				if(array_length(_inst)){
-					with(_instTop){
+					with(instances_matching_ne(obj.TopObject, "id", null)){
 						with(
 							instances_matching(
 							instances_matching_le(
@@ -5294,9 +5370,9 @@
 	}
 	
 #define ntte_step
-	if(instance_exists(CustomObject)){
-		 // Top Objects:
-		var _instTop = instances_matching(instances_matching(instances_matching(instances_matching(CustomObject, "name", "TopObject"), "zspeed", 0), "zfriction", 0), "speed", 0);
+	 // Top Objects:
+	if(array_length(obj.TopObject)){
+		var _instTop = instances_matching(instances_matching(instances_matching(obj.TopObject, "zspeed", 0), "zfriction", 0), "speed", 0);
 		if(array_length(_instTop)){
 			 // Top Object Floor Collision:
 			if(instance_exists(Floor)){
@@ -5433,10 +5509,12 @@
 				}
 			}
 		}
-		
-		 // Player Dead, No Alerts Please:
+	}
+	
+	 // Player Dead, No Alerts Please:
+	if(array_length(obj.AlertIndicator)){
 		if(!instance_exists(Player) && instance_exists(TopCont)){
-			var _inst = instances_matching_le(instances_matching(CustomObject, "name", "AlertIndicator"), "depth", TopCont.depth);
+			var _inst = instances_matching_le(obj.AlertIndicator, "depth", TopCont.depth);
 			if(array_length(_inst)){
 				with(_inst){
 					instance_destroy();
@@ -5454,21 +5532,32 @@
 			var _gray = (_type == "normal");
 			
 			 // Big Decals:
-			var _inst = instances_matching(instances_matching(CustomObject, "name", "BigDecal"), "area", area_caves, area_cursed_caves);
-			if(array_length(_inst)){
-				var _r = 40 + (56 * _gray);
-				with(_inst){
-					draw_circle(x, y - 8, _r, false);
+			if(array_length(obj.BigDecal)){
+				var _inst = instances_matching(obj.BigDecal, "area", area_caves, area_cursed_caves);
+				if(array_length(_inst)){
+					var _r = 40 + (56 * _gray);
+					with(_inst){
+						draw_circle(x, y - 8, _r, false);
+					}
 				}
 			}
 			
 			 // Pets:
-			if(instance_exists(CustomHitme)){
-				var _inst = instances_matching(CustomHitme, "name", "Pet");
-				if(array_length(_inst)) with(_inst){
+			if(array_length(obj.Pet)){
+				with(instances_matching_ne(obj.Pet, "id", null)){
 					if(light && light_radius[_gray] > 0){
 						draw_circle(x, y, light_radius[_gray] + orandom(1), false);
 					}
+				}
+			}
+			
+			 // Portal Disappearing Visual:
+			if(array_length(obj.PortalPoof)){
+				var	_r = 20 + (80 * _gray),
+					_o = 8  - (2  * _gray);
+					
+				with(instances_matching_ne(obj.PortalPoof, "id", null)){
+					draw_circle(x, y, _r + random(_o), false);
 				}
 			}
 			
@@ -5476,8 +5565,8 @@
 	}
 	
 #define ntte_draw_bloom
+	 // General Projectile Bloom:
 	if(instance_exists(CustomProjectile)){
-		 // General Projectile Bloom:
 		var _inst = instances_matching_gt(CustomProjectile, "ntte_bloom", 0);
 		if(array_length(_inst)){
 			with(_inst){
@@ -5492,15 +5581,19 @@
 				}
 			}
 		}
-		
-		 // Merged Flak Ball:
-		var _inst = instances_matching(CustomProjectile, "name", "MergeFlak");
-		if(array_length(_inst)) with(_inst){
+	}
+	
+	 // Merged Flak Ball:
+	if(array_length(obj.MergeFlak)){
+		with(instances_matching_ne(obj.MergeFlak, "id", null)){
 			var	_scale = 1.5,
 				_alpha = 0.1 * clamp(array_length(inst) / 12, 1, 2);
 				
-			if(array_length(instances_matching(inst, "name", name))){
-				_alpha *= 1.5;
+			with(inst){
+				if(array_find_index(obj.MergeFlak, self) >= 0){
+					_alpha *= 1.5;
+					break;
+				}
 			}
 			
 			draw_sprite_ext(sprite_index, image_index, x, y, image_xscale * _scale, image_yscale * _scale, rotation, image_blend, image_alpha * _alpha);
@@ -5509,27 +5602,32 @@
 	
 #define ntte_draw_shadows
 	 // Top Objects:
-	if(!instance_exists(NothingSpiral) && instance_exists(CustomObject)){
-		var _inst = instances_matching(instances_matching_ne(call(scr.instances_meeting_rectangle, global.floor_left, global.floor_top, global.floor_right, global.floor_bottom, instances_matching(CustomObject, "name", "TopObject")), "spr_shadow", -1), "visible", true);
-		if(array_length(_inst)) with(_inst){
-			var	_xsc = image_xscale,
-				_ysc = image_yscale;
-				
-			image_xscale = 1;
-			image_yscale = 1;
-			
-			if(place_meeting(x + spr_shadow_x, y + spr_shadow_y, Floor) && "visible" in target && target.visible){
-				draw_sprite(spr_shadow, 0, x + spr_shadow_x, y + spr_shadow_y);
+	if(array_length(obj.TopObject)){
+		if(!instance_exists(NothingSpiral) && instance_exists(CustomObject)){
+			var _inst = instances_matching(instances_matching_ne(call(scr.instances_meeting_rectangle, global.floor_left, global.floor_top, global.floor_right, global.floor_bottom, obj.TopObject), "spr_shadow", -1), "visible", true);
+			if(array_length(_inst)){
+				with(_inst){
+					var	_xsc = image_xscale,
+						_ysc = image_yscale;
+						
+					image_xscale = 1;
+					image_yscale = 1;
+					
+					if(place_meeting(x + spr_shadow_x, y + spr_shadow_y, Floor) && "visible" in target && target.visible){
+						draw_sprite(spr_shadow, 0, x + spr_shadow_x, y + spr_shadow_y);
+					}
+					
+					image_xscale = _xsc;
+					image_yscale = _ysc;
+				}
 			}
-			
-			image_xscale = _xsc;
-			image_yscale = _ysc;
 		}
 	}
 	
 	
 /// SCRIPTS
 #macro  call                                                                                    script_ref_call
+#macro  obj                                                                                     global.obj
 #macro  scr                                                                                     global.scr
 #macro  spr                                                                                     global.spr
 #macro  snd                                                                                     global.snd

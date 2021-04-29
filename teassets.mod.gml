@@ -4,8 +4,13 @@
 	 // Debug Lag:
 	lag = false;
 	
-	 // Object Instance Lists:
-	obj = {};
+	 // NT:TE Object Related:
+	obj                   = {};
+	global.obj_create_ref = ds_map_create(); // Pairs an NT:TE object's name with a script reference to its create event
+	global.obj_parent     = ds_map_create(); // Pairs an NT:TE object's name with the name of its parent NT:TE object
+	global.obj_search     = ds_map_create(); // Pairs an object index with a list of names of active NT:TE objects (for 'instance_copy' searching)
+	global.obj_bind       = ds_map_create();
+	global.obj_bind_draw  = ds_map_create();
 	
 	 // Script References:
 	scr = {};
@@ -2469,6 +2474,13 @@
 		ntte_save();
 	}
 	
+	 // NT:TE Object Related:
+	ds_map_destroy(global.obj_create_ref);
+	ds_map_destroy(global.obj_parent);
+	ds_map_destroy(global.obj_search);
+	ds_map_destroy(global.obj_bind);
+	ds_map_destroy(global.obj_bind_draw);
+	
 	 // Clear Surfaces, Shaders, Script Bindings:
 	with(ds_map_values(global.surf)) if(surf != -1) surface_destroy(surf);
 	with(ds_map_values(global.shad)) if(shad != -1) shader_destroy(shad);
@@ -2522,8 +2534,6 @@
 #macro save_auto global.save_auto
 #macro save_path "save.sav"
 
-#macro game_scale_nonsync game_screen_get_width_nonsync() / game_width
-
 #macro  area_campfire     0
 #macro  area_desert       1
 #macro  area_sewers       2
@@ -2541,9 +2551,16 @@
 #macro  area_hq           106
 #macro  area_crib         107
 
+#macro game_scale_nonsync
+	/*
+		The local screen's pixel scale
+	*/
+	
+	game_screen_get_width_nonsync() / game_width
+	
 #define ntte_init(_ref)
 	/*
-		Called by NT:TE mods from their 'init' script to execute general setup code
+		Called by NT:TE mods from their 'init' script to run general setup code
 	*/
 	
 	var	_type = _ref[0],
@@ -2565,7 +2582,7 @@
 		}
 		
 		 // Compile NT:TE Script References:
-		if(_name + "." + _type != "ntte.mod"){
+		if((_name + "." + _type) != "ntte.mod"){
 			var _modList = [];
 			for(var i = 0; i < lq_size(ntte_mods); i++){
 				var _modType = lq_get_key(ntte_mods, i);

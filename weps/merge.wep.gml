@@ -6,6 +6,9 @@
 		lq_set(scr, script_get_name(self), script_ref_create(self));
 	}
 	
+	 // Add Objects:
+	call(scr.obj_add, script_ref_create(GunCont_create));
+	
 	// weap - "Flavor" & "Stats" variables default to this weapon's values
 	
 	/// Flavor
@@ -2417,7 +2420,7 @@
 		var _fire = call(scr.weapon_fire_init, _wep);
 		_wep = _fire.wep;
 		
-		GunCont(lq_defget(_wep, "base", wepDefault), x, y, team, _fire.creator, gunangle, accuracy);
+		GunCont_fire(lq_defget(_wep, "base", wepDefault), x, y, team, _fire.creator, gunangle, accuracy);
 	}
 	
 #define step(_primary)
@@ -2441,7 +2444,7 @@
 				
 				 // Damage:
 				lasthit = [weapon_get_sprt(_wep), weapon_get_name(_wep)];
-				projectile_hit_raw(self, floor(sqrt(_add)), true);
+				projectile_hit_raw(self, floor(sqrt(_add)), 1);
 				sound_play_hit(sndBloodHurt, 0.1);
 				sleep(40);
 				
@@ -2530,25 +2533,30 @@
 		}
 	}
 	
-#define GunCont(_wep, _x, _y, _team, _creator, _gunangle, _accuracy)
+#define GunCont_create(_x, _y)
 	with(instance_create(_x, _y, CustomObject)){
-		name = "GunCont";
+		 // Vars:
+		wep      = wepDefault;
+		creator  = noone;
+		gunangle = 0;
+		accuracy = 1;
+		team     = -1;
+		shot     = 0;
+		time     = 0;
+		bloom    = true;
 		
+		return self;
+	}
+	
+#define GunCont_fire(_wep, _x, _y, _team, _creator, _gunangle, _accuracy)
+	with(call(scr.obj_create, _x, _y, "GunCont")){
 		 // Vars:
 		wep      = _wep;
 		creator  = _creator;
 		gunangle = _gunangle;
 		accuracy = _accuracy;
 		team     = _team;
-		shot     = 0;
 		time     = lq_get(_wep, "wait");
-		bloom    = true;
-		
-		 // Events:
-		on_step    = GunCont_step;
-		on_draw    = GunCont_draw;
-		on_destroy = GunCont_destroy;
-		on_cleanup = GunCont_destroy;
 		
 		 // Call Init Event:
 		var _scr = _wep.cont;
@@ -2557,14 +2565,16 @@
 		if(instance_exists(self)){
 			 // Smart Gun:
 			if(array_find_index(_wep.flag, "smart") >= 0){
-				if(array_length(instances_matching(instances_matching(CustomBeginStep, "name", "step_smartaim"), "creator", _creator)) <= 0){
+				var _inst = instances_matching(instances_matching(CustomBeginStep, "name", "step_smartaim"), "creator", _creator);
+				if(!array_length(_inst)){
 					with(script_bind_begin_step(step_smartaim, 0)){
 						name    = script[2];
 						creator = _creator;
 						time    = 0;
+						_inst   = self;
 					}
 				}
-				with(instances_matching(instances_matching(CustomBeginStep, "name", "step_smartaim"), "creator", _creator)){
+				with(_inst){
 					time = max(_wep.load, lq_get(_wep, "wait") + (_wep.shot * _wep.time));
 					step_smartaim();
 				}
@@ -2574,8 +2584,9 @@
 			GunCont_step();
 		}
 		
-		if(instance_exists(self)) return id;
+		return self;
 	}
+	
 	return noone;
 	
 #define GunCont_step
@@ -2915,11 +2926,11 @@
 	
 	image_alpha = -abs(image_alpha);
 	
-#define GunCont_destroy
+#define GunCont_cleanup
 	var _wep = wep;
 	
 	 // Stop Sound Loops:
-	if(array_length(instances_matching(instances_matching(object_index, "name", name), "wep", _wep)) <= 1){
+	if(array_length(instances_matching(obj.GunCont, "wep", _wep)) <= 1){
 		with(_wep.soun) if(loop_indx != -1){
 			if(loop) sound_play(loop_stop);
 			audio_stop_sound(loop_indx);
@@ -3771,7 +3782,7 @@
 									call(scr.motion_step, self, -1);
 									if(my_health > 1){
 										with(other){
-											projectile_hit_push(
+											projectile_hit(
 												other,
 												min(damage, other.my_health - 1),
 												((instance_is(other, prop) || other.team == 0) ? 0 : (force / 3))
@@ -4600,6 +4611,7 @@
 	
 /// SCRIPTS
 #macro  call                                                                                    script_ref_call
+#macro  obj                                                                                     global.obj
 #macro  scr                                                                                     global.scr
 #macro  spr                                                                                     global.spr
 #macro  msk                                                                                     spr.msk

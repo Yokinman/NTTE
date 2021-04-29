@@ -1208,7 +1208,9 @@
 #define draw_loadout_weapon
 	for(var i = 0; i < array_length(wepLoadout); i++){
 		with(wepLoadout[i]){
-			if(alarm0 >= 0) alarm0--;
+			if(alarm0 >= 0){
+				alarm0--;
+			}
 			if(alarm0 <= 0){
 				var	_real     = (name != ""),
 					_savePath = `loadout:wep:${player_get_race_fix(loadoutPlayer)}`,
@@ -2879,6 +2881,7 @@
 	
 /// SCRIPTS
 #macro  call                                                                                    script_ref_call
+#macro  obj                                                                                     global.obj
 #macro  scr                                                                                     global.scr
 #macro  spr                                                                                     global.spr
 #macro  snd                                                                                     global.snd

@@ -1398,27 +1398,29 @@
 	if(!is_undefined(area) && place_meeting(x, y, Player)){
 		with(call(scr.instances_meeting_instance, self, instances_matching_ne(Player, "team", team))){
 			if(place_meeting(x, y, other)){
-				with(other) if(projectile_canhit_melee(other)){
-					 // Death:
-					projectile_hit_raw(other, 0, true);
-					my_health = min(my_health, 0);
-					GameCont.killenemies = true;
-					
-					 // Sound:
-					if(sound_exists(snd_dead)){
-						var _snd = sound_play_pitch(snd_dead, 1.3 + random(0.3));
-						audio_sound_set_track_position(_snd, 0.4 + random(0.1));
-						snd_dead = -1;
-					}
-					sound_play_hit(snd_mele, 0.1);
-					
-					 // Red:
-					with(call(scr.obj_create, x, y, "WarpPortal")){
-						area    = other.area;
-						subarea = other.subarea;
-						loops   = other.loops;
-						with(self){
-							event_perform(ev_step, ev_step_normal);
+				with(other){
+					if(projectile_canhit_melee(other)){
+						 // Death:
+						projectile_hit_raw(other, 0, 1);
+						my_health = min(my_health, 0);
+						GameCont.killenemies = true;
+						
+						 // Sound:
+						if(sound_exists(snd_dead)){
+							var _snd = sound_play_pitch(snd_dead, 1.3 + random(0.3));
+							audio_sound_set_track_position(_snd, 0.4 + random(0.1));
+							snd_dead = -1;
+						}
+						sound_play_hit(snd_mele, 0.1);
+						
+						 // Red:
+						with(call(scr.obj_create, x, y, "WarpPortal")){
+							area    = other.area;
+							subarea = other.subarea;
+							loops   = other.loops;
+							with(self){
+								event_perform(ev_step, ev_step_normal);
+							}
 						}
 					}
 				}
@@ -1639,18 +1641,23 @@
 	if(typ == 0) typ = 1;
 	
 #define CrystalHeartBullet_hit
-	if(projectile_canhit_melee(other)){
-		projectile_hit_push(other, damage, force);
-		
+	if(projectile_canhit_np(other) && (instance_is(other, Player) || current_frame_active)){
 		 // Slow:
-		x -= hspeed_raw;
-		y -= vspeed_raw;
-		speed /= 2;
+		if(projectile_canhit_melee(other)){
+			x -= hspeed;
+			y -= vspeed;
+		}
+		speed = min(
+			speed,
+			maxspeed / (instance_is(creator, Player) ? power(2, 1 + skill_get(mut_laser_brain)) : 2)
+		);
+		
+		 // Damage:
+		projectile_hit_np(other, damage, force, 10);
 		
 		 // Effects:
 		call(scr.sound_play_at, x, y, sndGammaGutsProc, 0.8 + random(0.4), 1.5);
 		view_shake_at(x, y, 4);
-		sleep(10);
 	}
 	
 #define CrystalHeartBullet_wall
@@ -1982,8 +1989,7 @@
 		//}
 		
 		 // Damage:
-		projectile_hit(other, damage, force, direction);
-		
+		projectile_hit(other, damage, force);
 	}
 	
 #define EnergyBatSlash_wall
@@ -2105,76 +2111,6 @@
 				}
 			}
 		}
-	}
-	
-	
-#define EntanglerSlash_create(_x, _y)
-	with(instance_create(_x, _y, CustomSlash)){
-		 // Visual:
-		sprite_index = spr.EntanglerSlash;
-		image_speed  = 0.4;
-		
-		 // Vars:
-		mask_index = mskSlash;
-		friction   = 0.1;
-		damage     = 8;
-		force      = 12;
-		setup      = true;
-		walled     = false;
-		hit_list   = {}; // when you do true entangler, dont use LWO
-		cancharm   = false;
-		red_ammo   = 0;
-		
-		return self;
-	}
-	
-#define EntanglerSlash_setup
-	setup = false;
-	
-	var _charm = false;
-	with(call(scr.instances_meeting_instance, self, instances_matching_ne(enemy, "team", team))){
-		if(place_meeting(x, y, other)){
-			_charm = true;
-			red_ammo = 0;
-			
-			 // maybe do charm stuff here instead idk
-		}
-	}
-	
-	if(_charm){
-		 // Visual:
-		// sprite_index = spr.EntanglerSlashCharm;
-		
-		 // Vars:
-		cancharm = true;
-	}
-	
-#define EntanglerSlash_step
-	if(setup) EntanglerSlash_setup();
-	
-#define EntanglerSlash_wall
-	if(!walled){
-		walled = true;
-		
-		sound_play_hit(sndMeleeWall, 0.2);
-	}
-
-#define EntanglerSlash_hit
-	if(team != other.team && lq_defget(hit_list, string(other), 0) <= current_frame){
-		lq_set(hit_list, string(other), current_frame + 6);
-		
-		 // The Good Stuff:
-		if(cancharm){
-			 // iou charmed clones
-		}
-		
-		projectile_hit(other, damage, force, direction);
-	}
-	
-#define EntanglerSlash_cleanup
-	 // Refund Unspent Ammo:
-	with(creator) if("red_ammo" in self){
-	//	red_ammo = min(red_ammo + other.red_ammo, red_amax);
 	}
 	
 	
@@ -2713,7 +2649,7 @@
 	
 #define RedBullet_hit
 	if(projectile_canhit(other)){
-		projectile_hit_push(other, min(damage + (bonus_damage * bonus), max(other.my_health, 10)), force);
+		projectile_hit(other, min(damage + (bonus_damage * bonus), max(other.my_health, 10)), force);
 		
 		 // Annihilation Time:
 		if(instance_is(other, prop) || other.team == 0 || array_find_index(obj.Tesseract, other) >= 0){
@@ -2927,7 +2863,7 @@
 		var _lastHealth = other.my_health;
 		
 		 // Damage:
-		projectile_hit_push(other, damage, force);
+		projectile_hit(other, damage, force);
 		
 		 // Clone:
 		if(instance_exists(self) && clone && instance_is(other, enemy)){
@@ -3848,7 +3784,7 @@
 	
 #define TesseractArmDeath_hit
 	if(projectile_canhit_melee(other)){
-		projectile_hit_push(other, damage, force);
+		projectile_hit_np(other, damage, force, 40);
 	}
 	
 #define TesseractArmDeath_wall
@@ -4590,12 +4526,8 @@
 	
 #define VlasmaBullet_hit
 	if(image_speed == 0){
-		if(
-			instance_is(other, Player)
-			? projectile_canhit_melee(other)
-			: projectile_canhit(other)
-		){
-			projectile_hit(other, damage, force);
+		if(projectile_canhit_np(other) && (instance_is(other, Player) || current_frame_active)){
+			projectile_hit_np(other, damage, force, 40);
 		}
 	}
 	
