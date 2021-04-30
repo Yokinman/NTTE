@@ -84,19 +84,7 @@
 	weapon_post(5, -5, 2);
 	
 #define step(_primary)
-	var _wep = wep_get(_primary, "wep", mod_current);
-	
-	 // LWO Setup:
-	if(!is_object(_wep)){
-		_wep = { "wep" : _wep };
-		wep_set(_primary, "wep", _wep);
-	}
-	for(var i = lq_size(global.lwoWep) - 1; i >= 0; i--){
-		var _key = lq_get_key(global.lwoWep, i);
-		if(_key not in _wep){
-			lq_set(_wep, _key, lq_get_value(global.lwoWep, i));
-		}
-	}
+	var _wep = call(scr.weapon_step_init, _primary);
 	
 	 // Portal Bullet Control:
 	_wep.inst = instances_matching_ne(_wep.inst, "id", null);
@@ -121,6 +109,7 @@
 	
 /// SCRIPTS
 #macro  call                                                                                    script_ref_call
+#macro  obj                                                                                     global.obj
 #macro  scr                                                                                     global.scr
 #macro  spr                                                                                     global.spr
 #macro  snd                                                                                     global.snd

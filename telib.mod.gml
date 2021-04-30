@@ -187,6 +187,46 @@
 #macro team_sprite_map     global.team_sprite_map
 #macro team_sprite_obj_map global.team_sprite_object_map
 
+#define pass // context, ref, ...args
+	/*
+		Used to manually pass a context through 'script_ref_call' / 'call', as NTT versions before 9943 don't do it correctly
+		
+		Args:
+			context - An instance to pass as the 'self', or an array for '[self, other]'
+			ref     - The script reference to call
+			args    - Arguments to pass to the script call
+			
+		Ex:
+			call(scr.pass, [self, other], scr.weapon_get, "red", wep)
+	*/
+	
+	var	_context = argument[0],
+		_ref     = array_clone(argument[1]);
+		
+	 // Collect Arguments:
+	if(argument_count > 2){
+		for(var i = 2; i < argument_count; i++){
+			array_push(_ref, argument[i]);
+		}
+	}
+	
+	 // Fix Context:
+	if(!is_undefined(_context)){
+		var	_self  = (is_array(_context) ? _context[0] : _context),
+			_other = (is_array(_context) ? _context[1] : _context);
+			
+		if(self != _self || other != _other){
+			with([_other]){
+				with([_self]){
+					return mod_script_call(script_ref_create(pass)[0], mod_current, "pass", undefined, _ref);
+				}
+			}
+		}
+	}
+	
+	 // Call Script:
+	return script_ref_call(_ref);
+	
 #define obj_add(_ref)
 	/*
 		Adds an object to NT:TE's stored objects
@@ -3932,7 +3972,7 @@
 	
 #define weapon_fire_init(_wep)
 	/*
-		Called from a 'weapon_fire' script to do some basic weapon firing setup
+		Called from a weapon mod's 'weapon_fire' script to do some basic setup
 		Returns a LWO with some useful variables
 		
 		Vars:
@@ -4027,13 +4067,11 @@
 				
 				 // Charge Controller:
 				with(other){
-					var _inst = instances_matching(instances_matching(CustomObject, "name", "WeaponCharger"), "wep", _fire.wep);
+					var _inst = instances_matching(obj.WeaponCharge, "wep", _fire.wep);
 					if(!array_length(_inst)){
-						_inst = instance_create(x, y, CustomObject);
+						_inst = call(scr.obj_create, x, y, "WeaponCharge");
 						with(_inst){
-							name    = "WeaponCharger";
-							on_step = weapon_chrg_step;
-							wep     = _fire.wep;
+							wep = _fire.wep;
 						}
 					}
 					with(_inst){
@@ -4058,10 +4096,7 @@
 			}
 			
 			 // Burst Fire:
-			if(instance_is(_other, CustomObject) && "name" in _other && _other.name == "WeaponBurst"){
-				_fire.burst = _other.burst;
-			}
-			else{
+			if(array_find_index(obj.WeaponBurst, _other) < 0){
 				var _burst = ceil(weapon_get("burst", _fire.wep));
 				if(_burst > 1 || _burst < 0){
 					var _time = weapon_get("burst_time", _fire.wep);
@@ -4069,16 +4104,13 @@
 						_time = weapon_get_load(_fire.wep) / max(1, _burst);
 					}
 					with(other){
-						with(instance_create(x, y, CustomObject)){
-							name      = "WeaponBurst";
-							on_step   = weapon_burst_step;
+						with(call(scr.obj_create, x, y, "WeaponBurst")){
 							direction = other.gunangle;
 							accuracy  = other.accuracy;
 							team      = other.team;
 							creator   = _fire.creator;
 							primary   = _fire.primary;
 							wep       = _fire.wep;
-							burst     = 0;
 							ammo      = _burst - 1;
 							time      = _time;
 							time_max  = _time;
@@ -4103,162 +4135,39 @@
 					}
 				}
 			}
+			else _fire.burst = _other.burst;
 		}
 	}
 	
 	return _fire;
 	
-#define weapon_burst_step
-	if(time > 0 && ammo != 0){
-		time -= current_time_scale;
-		while(time <= 0 && time_max >= 0 && ammo-- != 0){
-			var _wep = wep;
-			burst++;
-			
-			 // Delay:
-			with(creator){
-				var _time = weapon_get("burst_time", _wep);
-				if(_time != 0){
-					other.time_max = _time;
-				}
-			}
-			time += time_max;
-			
-			 // Fire:
-			if(instance_exists(creator)){
-				x = creator.x;
-				y = creator.y;
-				if("gunangle" in creator){
-					direction = creator.gunangle;
-				}
-				
-				 // Charge Weapon Fix:
-				var	_lastChrg    = undefined,
-					_lastChrgNum = undefined;
-					
-				if(is_object(_wep)){
-					if("chrg"     in _wep && !is_undefined(chrg)    ){ _lastChrg    = _wep.chrg;     _wep.chrg     = chrg;     }
-					if("chrg_num" in _wep && !is_undefined(chrg_num)){ _lastChrgNum = _wep.chrg_num; _wep.chrg_num = chrg_num; }
-				}
-				
-				 // Player:
-				if(instance_is(creator, Player)){
-					with([creator]){
-						 // Steroids:
-						if(!other.primary){
-							player_swap(self);
-							specfiring = true;
-						}
-						
-						 // Fire:
-						var	_lastTeam     = team,
-							_lastAccuracy = accuracy;
-							
-						team     = other.team;
-						accuracy = other.accuracy;
-						
-						weapon_get("fire", _wep);
-						
-						team     = _lastTeam;
-						accuracy = _lastAccuracy;
-						
-						 // Steroids:
-						if(!other.primary){
-							specfiring = false;
-							player_swap(self);
-						}
-					}
-				}
-				
-				 // Non-Player:
-				else with(player_fire_ext(direction, wep_none, x, y, team, creator, accuracy)){
-					wep = _wep;
-					weapon_get("fire", wep);
-				}
-				
-				 // Charge Weapon Fix Reset:
-				if(is_object(_wep)){
-					if("chrg"     in _wep && !is_undefined(chrg)     && _wep.chrg     == chrg    ) _wep.chrg     = _lastChrg;
-					if("chrg_num" in _wep && !is_undefined(chrg_num) && _wep.chrg_num == chrg_num) _wep.chrg_num = _lastChrgNum;
-				}
-			}
-		}
-	}
-	else instance_destroy();
+#define weapon_step_init(_primary)
+	/*
+		Called from a weapon mod's 'step' script to do some basic setup
+		Returns the Player's 'wep' value
+	*/
 	
-#define weapon_chrg_step
-	if(fire){
-		if(is_object(wep) && "chrg" in wep){
-			if(wep.chrg){
-				wep.chrg = -1;
-				
-				if(instance_exists(creator)){
-					var _wepName = (primary ? "wep" : "bwep");
-					
-					with([creator]){
-						if(visible){
-							other.x = x;
-							other.y = y;
-							if(_wepName not in self || variable_instance_get(self, _wepName) == other.wep){
-								 // Player:
-								if(instance_is(self, Player)){
-									 // Steroids:
-									if(!other.primary){
-										player_swap(self);
-										specfiring = true;
-									}
-									
-									 // Fire:
-									var	_type = weapon_get_type(other.wep),
-										_cost = weapon_get_cost(other.wep),
-										_rads = weapon_get_rads(other.wep),
-										_ammo = ammo[_type];
-										
-									if(infammo != 0 || (_ammo >= _cost && GameCont.rad >= _rads)){
-										var	_lastTeam     = team,
-											_lastAccuracy = accuracy;
-											
-										team     = other.team;
-										accuracy = other.accuracy;
-										
-										player_fire(other.direction);
-										
-										team     = _lastTeam;
-										accuracy = _lastAccuracy;
-									}
-									
-									 // Low Ammo:
-									else{
-										wkick     = -2;
-										clicked   = false;
-										drawempty = 30;
-										sound_play((_ammo < _cost) ? sndEmpty : sndUltraEmpty);
-										with(instance_create(x, y, PopupText)){
-											target = other.index;
-											text   = ((_ammo < _cost) ? ((_ammo > 0) ? "NOT ENOUGH " + other.typ_name[_type] : "EMPTY") : "NOT ENOUGH RADS");
-										}
-									}
-									
-									 // Steroids:
-									if(!other.primary){
-										specfiring = false;
-										player_swap(self);
-									}
-								}
-								
-								 // Non-Player:
-								else player_fire_ext(other.direction, other.wep, other.x, other.y, other.team, other.creator, other.accuracy);
-							}
-						}
-					}
-				}
-				wep.chrg = 0;
+	var _wep = (_primary ? wep : bwep);
+	
+	 // LWO Setup:
+	var _lwo = mod_variable_get("weapon", wep_raw(_wep), "lwoWep");
+	if(is_object(_lwo)){
+		if(!is_object(_wep)){
+			_wep = { "wep" : _wep };
+			if(_primary){
+				wep = _wep;
 			}
-			wep.chrg_num = 0;
+			else{
+				bwep = _wep;
+			}
 		}
-		instance_destroy();
+		for(var i = lq_size(_lwo) - 1; i >= 0; i--){
+			var _key = lq_get_key(_lwo, i);
+			if(_key not in _wep){
+				lq_set(_wep, _key, lq_get_value(_lwo, i));
+			}
+		}
 	}
-	else fire = true;
 	
 #define weapon_ammo_fire(_wep)
 	/*
@@ -4286,10 +4195,7 @@
 		if(button_pressed(index, (specfiring ? "spec" : "fire"))){
 			wkick = -2;
 			sound_play(sndEmpty);
-			with(instance_create(x, y, PopupText)){
-				target = other.index;
-				text   = ((_wep.ammo > 0) ? "NOT ENOUGH " + _wep.anam : "EMPTY");
-			}
+			call(scr.pickup_text, _wep.anam, ((_wep.ammo > 0) ? "ins" : "out"));
 		}
 	}
 	
@@ -6043,6 +5949,37 @@
 	
 	return noone;
 	
+#define loc_format // key, default, ...values
+	/*
+		Like 'loc', but replaces "%" with a value argument if provided, or "%#" if multiple value arguments are provided
+		
+		Ex:
+			loc_format("HUD:Health", "%1/%2", my_health, maxhealth)
+			loc_format("HUD:InsAmmo:1", loc("HUD:InsAmmo", "NOT ENOUGH %", typ_ammo[1]))
+	*/
+	
+	var _text = loc(argument[0], argument[1]);
+	
+	 // Replace Values:
+	var _valuePos = 2;
+	if(argument_count > _valuePos){
+		 // Single Value:
+		if(argument_count <= _valuePos + 1){
+			_text = string_replace_all(_text, "%", argument[_valuePos]);
+		}
+		
+		 // Multiple Values:
+		else{
+			var _split = string_split(_text, "%");
+			for(var i = array_length(_split) - 1; i >= 1; i--){
+				var _num = _valuePos + real(string_char_at(_split[i], 1)) - 1;
+				_split[i] = ((_num >= _valuePos && _num < argument_count) ? string(argument[_num]) : "") + string_delete(_split[i], 1, 1);
+			}
+			_text = array_join(_split, "");
+		}
+	}
+	
+	return _text;
 	
 /// SCRIPTS
 #macro  call                                                                                    script_ref_call

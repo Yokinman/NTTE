@@ -51,7 +51,7 @@
 		_oy = _fire.creator.vspeed_raw;
 	}
 	
-	with(instances_matching(instances_matching(CustomSlash, "name", "ClamShield"), "wep", _wep)){
+	with(instances_matching(obj.ClamShield, "wep", _wep)){
 		var	_l = lerp(8, 14, skill_get(mut_long_arms)),
 			_d = image_angle,
 			_x = x + _ox + lengthdir_x(_l, _d),
@@ -82,19 +82,7 @@
 	}
 	
 #define step(_primary)
-	var _wep = wep_get(_primary, "wep", mod_current);
-	
-	 // LWO Setup:
-	if(!is_object(_wep)){
-		_wep = { "wep" : _wep };
-		wep_set(_primary, "wep", _wep);
-	}
-	for(var i = lq_size(global.lwoWep) - 1; i >= 0; i--){
-		var _key = lq_get_key(global.lwoWep, i);
-		if(_key not in _wep){
-			lq_set(_wep, _key, lq_get_value(global.lwoWep, i));
-		}
-	}
+	var _wep = call(scr.weapon_step_init, _primary);
 	
 	 // Create Shield:
 	if(_primary || race == "steroids"){
@@ -105,8 +93,8 @@
 			}
 		}
 	}
-	else if(instance_exists(CustomSlash)){
-		var _inst = instances_matching(instances_matching(CustomSlash, "name", "ClamShield"), "wep", _wep);
+	else if(array_length(obj.ClamShield)){
+		var _inst = instances_matching(obj.ClamShield, "wep", _wep);
 		if(array_length(_inst)) with(_inst){
 			instance_destroy();
 		}
@@ -115,6 +103,7 @@
 	
 /// SCRIPTS
 #macro  call                                                                                    script_ref_call
+#macro  obj                                                                                     global.obj
 #macro  scr                                                                                     global.scr
 #macro  spr                                                                                     global.spr
 #macro  snd                                                                                     global.snd

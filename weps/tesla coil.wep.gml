@@ -41,7 +41,7 @@
 	}
 	
 	 // Effects:
-	if(array_length(instances_matching(instances_matching(instances_matching(CustomObject, "name", "TeslaCoil"), "creator", _fire.creator), "primary", _fire.primary)) <= 1){
+	if(array_length(instances_matching(instances_matching(obj.TeslaCoil, "creator", _fire.creator), "primary", _fire.primary)) == 1){
 		weapon_post(8, -10, 10);
 		
 		 // Ball Appear FX:
@@ -69,6 +69,7 @@
 	
 /// SCRIPTS
 #macro  call                                                                                    script_ref_call
+#macro  obj                                                                                     global.obj
 #macro  scr                                                                                     global.scr
 #macro  spr                                                                                     global.spr
 #macro  snd                                                                                     global.snd

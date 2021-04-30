@@ -127,13 +127,10 @@
 		gunshine = 1;
 		
 		 // !
-		with(instance_create(x, y, PopupText)){
-			text   = weapon_get_name(_wep) + "!";
-			target = other.index;
-		}
+		call(scr.pickup_text, weapon_get_name(_wep), "got");
 		
 		 // Bone Piece Effects:
-		var	_num = 8 - array_length(instances_matching(instances_matching(Shell, "name", "BoneFX"), "creator", id)),
+		var	_num = 8 - array_length(instances_matching(obj.BoneFX, "creator", self)),
 			_l   = 12,
 			_d   = gunangle + wep_get(_primary, "wepangle", 0);
 			
@@ -290,27 +287,15 @@
 	}
 	
 #define step(_primary)
-	var _wep = wep_get(_primary, "wep", mod_current);
-	
-	 // LWO Setup:
-	if(!is_object(_wep)){
-		_wep = { "wep" : _wep };
-		wep_set(_primary, "wep", _wep);
-	}
-	for(var i = lq_size(global.lwoWep) - 1; i >= 0; i--){
-		var _key = lq_get_key(global.lwoWep, i);
-		if(_key not in _wep){
-			lq_set(_wep, _key, lq_get_value(global.lwoWep, i));
-		}
-	}
+	var _wep = call(scr.weapon_step_init, _primary);
 	
 	 // Back Muscle:
 	with(_wep){
 		var _muscle = skill_get(mut_back_muscle);
 		if(buff != _muscle){
 			var _amaxRaw = (amax / (1 + (0.8 * buff)));
-			buff = _muscle;
-			amax = (_amaxRaw * (1 + (0.8 * buff)));
+			buff  = _muscle;
+			amax  = (_amaxRaw * (1 + (0.8 * buff)));
 			ammo += (amax - _amaxRaw);
 		}
 	}
@@ -327,7 +312,7 @@
 					 // Pickuped:
 					with(other){
 						if(!_primary && race != "steroids"){
-							call(scr.pickup_text, "% BONE", _num);
+							call(scr.pickup_text, loc("NTTE:Bone", "BONE"), "add", _num);
 						}
 					}
 					
@@ -335,9 +320,9 @@
 					with(instance_create(x, y, DiscDisappear)){
 						image_angle = other.rotation;
 					}
-					sound_play_pitchvol(sndHPPickup, 4, 0.6);
-					sound_play_pitchvol(sndPickupDisappear, 1.2, 0.6);
-					sound_play_pitchvol(sndBloodGamble, 0.4 + random(0.2), 0.4);
+					sound_play_pitchvol(sndHPPickup,        4.0,               0.6);
+					sound_play_pitchvol(sndPickupDisappear, 1.2,               0.6);
+					sound_play_pitchvol(sndBloodGamble,     0.4 + random(0.2), 0.4);
 					
 					instance_destroy();
 				}
@@ -348,6 +333,7 @@
 	
 /// SCRIPTS
 #macro  call                                                                                    script_ref_call
+#macro  obj                                                                                     global.obj
 #macro  scr                                                                                     global.scr
 #macro  spr                                                                                     global.spr
 #macro  snd                                                                                     global.snd

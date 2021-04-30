@@ -27,6 +27,12 @@
 #macro mus snd.mus
 #macro lag global.debug_lag
 
+#macro BonusAmmo_text   loc("NTTE:Bonus:Ammo",       `@5(${spr.BonusText}:-0.3) AMMO`)
+#macro BonusHealth_text loc("NTTE:Bonus:Health",     `@5(${spr.BonusText}:-0.3) HP`)
+#macro RedAmmo_text     loc("NTTE:Red:Ammo",         `@3(${spr.RedText  }:-0.8) AMMO`)
+#macro ChestShop_text   loc("NTTE:ChestShop:Open:1", call(scr.loc_format, "NTTE:ChestShop:Open", "PICK %!", "ONE"))
+#macro ChestShop2_text  loc("NTTE:ChestShop:Open:2", call(scr.loc_format, "NTTE:ChestShop:Open", "PICK %!", "TWO"))
+
 #define Backpack_create(_x, _y)
 	/*
 		Goody bag chest
@@ -496,7 +502,7 @@
 	 // Text:
 	if(instance_is(other, Player)){
 		var _text = instance_create(x, y, PopupText);
-		_text.text   = "PICK ONE!";
+		_text.text   = (big ? ChestShop2_text : ChestShop_text);
 		_text.alarm1 = 18;
 		_text.target = other.index;
 	}
@@ -589,8 +595,7 @@
 //					creator = other;
 //				}
 //				
-//				var _text = ((my_health < maxhealth) ? "%" : "MAX") + " HP";
-//				pickup_text(_text, _num);
+//				pickup_text("HP", ((my_health < maxhealth) ? "add" : "max"), _num);
 //				
 //				if(my_health >= maxhealth) break;
 //				
@@ -818,9 +823,8 @@
 	}
 	
 #define BonusAmmoChest_open
-	var	_num  = num,
-		_text = `% @5(${spr.BonusText}:-0.3) AMMO`;
-		
+	var _num = num;
+	
 	 // Bonus Ammo:
 	if(instance_is(other, Player)){
 		with(other){
@@ -828,7 +832,7 @@
 			bonus_ammo_flash = 1;
 			
 			 // Text:
-			pickup_text(_text, _num);
+			pickup_text(BonusAmmo_text, "add", _num);
 		}
 	}
 	else repeat(2){
@@ -914,16 +918,15 @@
 	}
 	
 #define BonusAmmoPickup_open
-	var	_num  = num,
-		_text = `% @5(${spr.BonusText}:-0.3) AMMO`;
-		
+	var _num = num;
+	
 	 // Bonus Ammo:
 	with(instance_is(other, Player) ? other : Player){
 		bonus_ammo       = (("bonus_ammo" in self) ? bonus_ammo : 0) + (_num * 60);
 		bonus_ammo_flash = 1;
 		
 		 // Text:
-		pickup_text(_text, _num);
+		pickup_text(BonusAmmo_text, "add", _num);
 	}
 	
 	 // Effects:
@@ -985,9 +988,8 @@
 	}
 	
 #define BonusHealthChest_open
-	var	_num  = num,
-		_text = `% @5(${spr.BonusText}:-0.3) HP`;
-		
+	var _num = num;
+	
 	 // Bonus HP:
 	if(instance_is(other, Player)){
 		with(other){
@@ -995,7 +997,7 @@
 			bonus_health_flash = 1;
 			
 			 // Text:
-			pickup_text(_text, _num);
+			pickup_text(BonusHealth_text, "add", _num);
 			
 			 // Effects:
 			with(instance_create(x, y, HealFX)){
@@ -1095,21 +1097,20 @@
 	}
 	
 #define BonusHealthPickup_open
-	var	_num  = num,
-		_text = `% @5(${spr.BonusText}:-0.3) HP`;
-		
+	var _num = num;
+	
 	 // Bonus Health:
 	with(instance_is(other, Player) ? other : Player){
 		bonus_health       = (("bonus_health" in self) ? bonus_health : 0) + (_num * 30);
 		bonus_health_flash = 1;
 		
 		 // Text:
-		pickup_text(_text, _num);
+		pickup_text(BonusHealth_text, "add", _num);
 		
 		 // Effects:
 		with(instance_create(x, y, HealFX)){
 			sprite_index = ((skill_get(mut_second_stomach) > 0) ? spr.BonusHealBigFX : spr.BonusHealFX);
-			depth = other.depth - 1;
+			depth        = other.depth - 1;
 		}
 	}
 	
@@ -1546,7 +1547,7 @@
 	 // Text:
 	if(instance_is(other, Player)){
 		var _text = instance_create(x, y, PopupText);
-		_text.text   = "PICK ONE!";
+		_text.text   = ChestShop_text;
 		_text.alarm1 = 18;
 		_text.target = other.index;
 	}
@@ -1738,8 +1739,8 @@
 				case "ammo":
 					
 					num *= 2;
-					text = "AMMO";
-					desc = `${num} PICKUPS`;
+					text = call(scr.loc_format, "NTTE:ChestShop:Ammo:Name", "AMMO");
+					desc = call(scr.loc_format, "NTTE:ChestShop:Ammo:Text", "% PICKUPS", num);
 					
 					 // Visual:
 					sprite_index = sprAmmo;
@@ -1750,8 +1751,8 @@
 				case "health":
 					
 					num *= 2;
-					text = "HEALTH";
-					desc = `${num} PICKUPS`;
+					text = call(scr.loc_format, "NTTE:ChestShop:Health:Name", "HEALTH");
+					desc = call(scr.loc_format, "NTTE:ChestShop:Health:Text", "% PICKUPS", num);
 					
 					 // Visual:
 					sprite_index = sprHP;
@@ -1762,8 +1763,8 @@
 				case "rads":
 					
 					num *= 25;
-					text = "RADS";
-					desc = `${num} ${text}`;
+					text = call(scr.loc_format, "NTTE:ChestShop:Rads:Name", "RADS");
+					desc = call(scr.loc_format, "NTTE:ChestShop:Rads:Text", `% ${text}`, num);
 					
 					 // Visual:
 					sprite_index = sprBigRad;
@@ -1773,8 +1774,8 @@
 					
 				case "ammo_chest":
 					
-					text = "AMMO";
-					desc = ((num > 1) ? `${num} ` : "") + "CHEST";
+					text = call(scr.loc_format, "NTTE:ChestShop:AmmoChest:Name", loc("NTTE:ChestShop:Ammo:Name", "AMMO"));
+					desc = call(scr.loc_format, "NTTE:ChestShop:AmmoChest:Text", "% CHEST", num);
 					
 					 // Visual:
 					sprite_index = (ultra_get("steroids", 2) ? sprAmmoChestSteroids : sprAmmoChest);
@@ -1784,8 +1785,8 @@
 					
 				case "health_chest":
 					
-					text = "HEALTH";
-					desc = ((num > 1) ? `${num} ` : "") + "CHEST";
+					text = call(scr.loc_format, "NTTE:ChestShop:HealthChest:Name", loc("NTTE:ChestShop:Health:Name", "HEALTH"));
+					desc = call(scr.loc_format, "NTTE:ChestShop:HealthChest:Text", "% CHEST", num);
 					
 					 // Visual:
 					sprite_index = sprHealthChest;
@@ -1795,8 +1796,8 @@
 					
 				case "rads_chest":
 					
-					text = "RADS";
-					desc = `${45 * num} ${text}`;
+					text = call(scr.loc_format, "NTTE:ChestShop:RadsChest:Name", loc("NTTE:ChestShop:Rads:Name", "RADS"));
+					desc = call(scr.loc_format, "NTTE:ChestShop:RadsChest:Text", `% ${text}`, 45 * num);
 					
 					 // Visual:
 					sprite_index = sprRadChestBig;
@@ -1806,8 +1807,8 @@
 					
 				case "bonus_ammo":
 					
-					text = "OVERSTOCK";
-					desc = `@5(${spr.BonusText}:0) AMMO`;
+					text = call(scr.loc_format, "NTTE:ChestShop:BonusAmmo:Name", "OVERSTOCK");
+					desc = call(scr.loc_format, "NTTE:ChestShop:BonusAmmo:Text", `@5(${spr.BonusText}:0) AMMO`, num);
 					
 					 // Visual:
 					sprite_index = spr.BonusAmmoPickup;
@@ -1817,8 +1818,8 @@
 					
 				case "bonus_ammo_chest":
 					
-					text = "OVERSTOCK";
-					desc = ((num > 1) ? `${num} ` : "") + "CHEST";
+					text = call(scr.loc_format, "NTTE:ChestShop:BonusAmmoChest:Name", loc("NTTE:ChestShop:BonusAmmo:Name", "OVERSTOCK"));
+					desc = call(scr.loc_format, "NTTE:ChestShop:BonusAmmoChest:Text", "% CHEST", num);
 					
 					 // Visual:
 					sprite_index = (ultra_get("steroids", 2) ? spr.BonusAmmoChestSteroids : spr.BonusAmmoChest);
@@ -1828,8 +1829,8 @@
 					
 				case "bonus_health":
 					
-					text = "OVERHEAL";
-					desc = `@5(${spr.BonusText}:0) HEALTH`;
+					text = call(scr.loc_format, "NTTE:ChestShop:BonusHealth:Name", "OVERHEAL");
+					desc = call(scr.loc_format, "NTTE:ChestShop:BonusHealth:Text", `@5(${spr.BonusText}:0) HEALTH`, num);
 					
 					 // Visual:
 					sprite_index = spr.BonusHealthPickup;
@@ -1839,8 +1840,8 @@
 					
 				case "bonus_health_chest":
 					
-					text = "OVERHEAL";
-					desc = ((num > 1) ? `${num} ` : "") + "CHEST";
+					text = call(scr.loc_format, "NTTE:ChestShop:BonusHealthChest:Name", loc("NTTE:ChestShop:BonusHealth:Name", "OVERHEAL"));
+					desc = call(scr.loc_format, "NTTE:ChestShop:BonusHealthChest:Text", "% CHEST", num);
 					
 					 // Visual:
 					sprite_index = spr.BonusHealthChest;
@@ -1850,8 +1851,8 @@
 					
 				case "rogue":
 					
-					text = "PORTAL STRIKE";
-					desc = `${num} PICKUP`;
+					text = call(scr.loc_format, "NTTE:ChestShop:Rogue:Name", call(scr.string_delete_nt, loc("Races:12:Active", "PORTAL STRIKE")));
+					desc = call(scr.loc_format, "NTTE:ChestShop:Rogue:Text", `% PICKUP`, num);
 					
 					 // Visual:
 					sprite_index = sprRogueAmmo;
@@ -1862,8 +1863,8 @@
 				case "parrot":
 					
 					num *= 6;
-					text = "FEATHERS";
-					desc = `${num} ${text}`;
+					text = call(scr.loc_format, "NTTE:ChestShop:Parrot:Name", "FEATHERS");
+					desc = call(scr.loc_format, "NTTE:ChestShop:Parrot:Text", `% ${text}`, num);
 					
 					 // Visual:
 					sprite_index = spr.Race.parrot[0].Feather;
@@ -1884,8 +1885,8 @@
 				case "infammo":
 					
 					num *= 90;
-					text = "INFINITE AMMO";
-					desc = "FOR A MOMENT";
+					text = call(scr.loc_format, "NTTE:ChestShop:InfAmmo:Name", "INFINITE AMMO");
+					desc = call(scr.loc_format, "NTTE:ChestShop:InfAmmo:Text", "FOR A MOMENT", num);
 					
 					 // Visual:
 					sprite_index = sprFishA;
@@ -1895,8 +1896,8 @@
 					
 				case "hammerhead":
 					
-					text = `BONUS @(color:${c_yellow})HAMMERHEAD`;
-					desc = `+${num * 10} TILES`;
+					text = call(scr.loc_format, "NTTE:ChestShop:HammerHead:Name", `BONUS @(color:${c_yellow})` + loc(`Skills:${mut_hammerhead}:Name`, "HAMMERHEAD"));
+					desc = call(scr.loc_format, "NTTE:ChestShop:HammerHead:Text", `+% TILES`, num * 10);
 					
 					 // Visual:
 					sprite_index = spr.HammerHeadPickup;
@@ -1906,8 +1907,8 @@
 					
 				case "spirit":
 					
-					text = "BONUS SPIRIT";
-					desc = "LIVE FOREVER";
+					text = call(scr.loc_format, "NTTE:ChestShop:Spirit:Name", "BONUS SPIRIT");
+					desc = call(scr.loc_format, "NTTE:ChestShop:Spirit:Text", "LIVE FOREVER", num);
 					
 					 // Visual:
 					sprite_index = spr.SpiritPickup;
@@ -1917,8 +1918,8 @@
 					
 				case "bone":
 					
-					text = "BONE";
-					desc = "BONE";
+					text = call(scr.loc_format, "NTTE:ChestShop:Bone:Name", loc("NTTE:Bone", "BONE"));
+					desc = call(scr.loc_format, "NTTE:ChestShop:Bone:Text", text, num);
 					
 					 // Visual:
 					sprite_index = sprBone;
@@ -1929,8 +1930,8 @@
 				case "bones":
 					
 					num *= 30;
-					text = "BONES";
-					desc = `${num} ${text}`;
+					text = call(scr.loc_format, "NTTE:ChestShop:Bones:Name", "BONES");
+					desc = call(scr.loc_format, "NTTE:ChestShop:Bones:Text", `% ${text}`, num);
 					
 					 // Visual:
 					sprite_index = spr.BonePickupBig[0];
@@ -1940,8 +1941,8 @@
 					
 				case "red":
 					
-					text = `@3(${spr.RedText}:-0.8) AMMO`;
-					desc = `${num} PICKUP`;
+					text = call(scr.loc_format, "NTTE:ChestShop:Red:Name", RedAmmo_text);
+					desc = call(scr.loc_format, "NTTE:ChestShop:Red:Text", `% PICKUP`, num);
 					
 					 // Visual:
 					sprite_index = spr.RedAmmoPickup;
@@ -1962,8 +1963,8 @@
 					soda = _list[irandom(array_length(_list) - 1)];
 					
 					 // Vars:
-					text = "SODA";
-					desc = weapon_get_name(soda);
+					text = call(scr.loc_format, "NTTE:ChestShop:Soda:Name", "SODA");
+					desc = call(scr.loc_format, "NTTE:ChestShop:Soda:Text", "%2", num, weapon_get_name(soda));
 					
 					 // Visual:
 					sprite_index = weapon_get_sprt(soda);
@@ -1973,8 +1974,8 @@
 					
 				case "turret":
 					
-					text = "TURRET";
-					desc = "EXTRA OFFENSE";
+					text = call(scr.loc_format, "NTTE:ChestShop:Turret:Name", loc("CauseOfDeath:32", "TURRET"));
+					desc = call(scr.loc_format, "NTTE:ChestShop:Turret:Text", "EXTRA OFFENSE", num);
 					
 					 // Visual:
 					sprite_index = spr.LairTurretIdle;
@@ -1993,7 +1994,12 @@
 			var _merged = (call(scr.wep_raw, drop) == "merge");
 			
 			 // Text:
-			text = (curse ? "CURSED " : "") + (_merged ? "MERGED " : "") + "WEAPON";
+			text = call(scr.loc_format,
+				"NTTE:ChestShop:Weapon",
+				"%1%2WEAPON",
+				(curse   ? loc("NTTE:ChestShop:Weapon:Cursed", "CURSED ") : ""),
+				(_merged ? loc("NTTE:ChestShop:Weapon:Merged", "MERGED ") : "")
+			);
 			desc = weapon_get_name(drop);
 			
 			 // Visual:
@@ -2049,7 +2055,7 @@
 			if(string_char_at(desc, string_length(desc)) != "#"){
 				desc += "#"; // What the hammerhead??
 			}
-			desc += "@wTEMPORARILY";
+			desc += loc("NTTE:ChestShop:Temporarily", "@wTEMPORARILY");
 			
 			 // Visual:
 			var _icon = call(scr.skill_get_icon, drop);
@@ -2455,16 +2461,14 @@
 			
 			 // Text:
 			if(text != ""){
-				with(instance_create(x, y, PopupText)){
-					text = other.text;
+				with(pickup_text(text)){
 					if(instance_exists(other.prompt)){
 						target = other.prompt.pick;
 					}
 				}
 			}
 			if(desc != ""){
-				with(instance_create(x, y, PopupText)){
-					text = other.desc + "@w!";
+				with(pickup_text(desc + "@w", "got")){
 					if(instance_exists(other.prompt)){
 						target = other.prompt.pick;
 					}
@@ -3086,7 +3090,7 @@
 		size       = 3;
 		team       = 1;
 		skill      = mut_shotgun_shoulders;
-		prompt     = call(scr.prompt_create, self, "BLESSING", mskReviveArea, 0, -10);
+		prompt     = call(scr.prompt_create, self, loc("NTTE:GatorStatue:Prompt", "BLESSING"), mskReviveArea, 0, -10);
 		
 		return self;
 	}
@@ -3115,7 +3119,7 @@
 		sprite_index = spr_hurt;
 		image_index  = 0;
 		with(instance_create(x + prompt.xoff, y + prompt.yoff - 16, PopupText)){
-			text   = "BLESSED!";
+			text   = loc("NTTE:GatorStatue:Blessed", "BLESSED!");
 			target = other.prompt.pick;
 		}
 	}
@@ -3352,15 +3356,15 @@
 	draw_sprite(spr_halo, img_halo, x, y);
 	
 #define HammerHeadPickup_open
-	var	_num  = num,
-		_text = `% @(color:${c_yellow})HAMMERHEAD`;
-		
+	var _num = num;
+	
 	 // Hammer Time:
 	with(instance_is(other, Player) ? other : Player){
 		hammerhead += _num;
 		
 		 // Text:
-		pickup_text(_text, _num);
+		var _hammerText = `@(color:${c_yellow})` + loc(`Skills:${mut_hammerhead}:Name`, "HAMMERHEAD");
+		pickup_text(_hammerText, "add", _num);
 	}
 	
 	 // Effects:
@@ -3438,8 +3442,11 @@
 		ammo[_type] = min(ammo[_type] + _num, typ_amax[_type]);
 		
 		 // Text:
-		var _text = ((ammo[_type] < typ_amax[_type]) ? "%" : "MAX") + " " + typ_name[_type];
-		pickup_text(_text, _num);
+		pickup_text(
+			typ_name[_type],
+			((ammo[_type] < typ_amax[_type]) ? "add" : "max"),
+			_num
+		);
 	}
 	
 	
@@ -4215,7 +4222,7 @@
 		direction    = 90 + orandom(45);
 		
 		 // Prompt:
-		prompt = call(scr.prompt_create, self, "  CHOOSE", mskReviveArea, -8, -16);
+		prompt = call(scr.prompt_create, self, loc("NTTE:PalaceAltar:Prompt", "  CHOOSE"), mskReviveArea, -8, -16);
 		with(prompt){
 			on_meet = script_ref_create(VaultFlower_prompt_meet);
 		}
@@ -4814,7 +4821,7 @@
 	 // Text:
 	if(instance_is(other, Player)){
 		var _text = instance_create(x, y, PopupText);
-		_text.text   = "PICK ONE!";
+		_text.text   = ChestShop_text;
 		_text.alarm1 = 18;
 		_text.target = other.index;
 	}
@@ -4894,8 +4901,11 @@
 			red_ammo = min(red_ammo + _num, red_amax);
 			
 			 // Text:
-			var _text = `${((red_ammo < red_amax) ? "%" : "MAX")} @3(${spr.RedText}:-0.8) AMMO`;
-			pickup_text(_text, _num);
+			pickup_text(
+				RedAmmo_text,
+				((red_ammo < red_amax) ? "add" : "max"),
+				_num
+			);
 		}
 	}
 	else with(call(scr.obj_create, x, y, "RedAmmoPickup")){
@@ -4937,8 +4947,11 @@
 			red_ammo = min(red_ammo + _num, red_amax);
 			
 			 // Text:
-			var _text = `${((red_ammo < red_amax) ? "%" : "MAX")} @3(${spr.RedText}:-0.8) AMMO`;
-			pickup_text(_text, _num);
+			pickup_text(
+				RedAmmo_text,
+				((red_ammo < red_amax) ? "add" : "max"),
+				_num
+			);
 		}
 	}
 	
@@ -5007,7 +5020,7 @@
 			 // Swapped:
 			if(_wep != wep_none){
 				 // Text:
-				pickup_text(weapon_get_name(_wep) + "!", 0);
+				pickup_text(weapon_get_name(_wep), "got");
 				
 				 // Explosion:
 				with(call(scr.projectile_create, self, other.x, other.y, PopoExplosion)){
@@ -5130,9 +5143,8 @@
 	}
 
 #define SpiritPickup_open
-	var	_num  = num,
-		_text = "% @yBONUS @wSPIRIT" + ((abs(_num) == 1) ? "" : "S");
-		
+	var _num = num;
+	
 	 // Acquire Bonus Spirit:
 	with(instance_is(other, Player) ? other : Player){
 		if("bonus_spirit" not in self){
@@ -5163,7 +5175,12 @@
 		}
 		
 		 // Text:
-		pickup_text(_text, _num);
+		var _spiritText = call(scr.loc_format,
+			`NTTE:Bonus:Spirit:${_num}`,
+			"%" + ((abs(_num) == 1) ? "" : "S"),
+			loc("NTTE:Bonus:Spirit", "@yBONUS @wSPIRIT")
+		);
+		pickup_text(_spiritText, "add", _num);
 	}
 	
 #define SpiritPickup_fade
@@ -5264,7 +5281,7 @@
 		
 		 // Prompt:
 		if(alive){
-			prompt = call(scr.prompt_create, self, "  REROLL", mskLast, -8, -10);
+			prompt = call(scr.prompt_create, self, loc("NTTE:VaultFlower:Prompt", "  REROLL"), mskLast, -8, -10);
 			with(prompt){
 				on_meet = script_ref_create(VaultFlower_prompt_meet);
 			}
@@ -6281,12 +6298,10 @@
 							
 							 // Crown of Protection:
 							if(crown_current == crwn_protection){
-								var _num = 1;
-								my_health = min(my_health + _num, maxhealth);
-								
-								 // Text:
-								var _text = `${((my_health < maxhealth) ? "%" : "MAX")} HP`;
-								pickup_text(_text, _num);
+								var _lastWep = other.wep;
+								other.wep = wep_revolver;
+								event_perform(ev_collision, WepPickup);
+								other.wep = _lastWep;
 							}
 							
 							 // Normal:
@@ -6295,8 +6310,11 @@
 								red_ammo = min(red_ammo + _num, red_amax);
 								
 								 // Text:
-								var _text = `${((red_ammo < red_amax) ? "%" : "MAX")} @3(${spr.RedText}:-0.8) AMMO`;
-								pickup_text(_text, _num);
+								pickup_text(
+									RedAmmo_text,
+									((red_ammo < red_amax) ? "add" : "max"),
+									_num
+								);
 							}
 						}
 					}
@@ -6490,14 +6508,182 @@
 	
 	return _time;
 	
-#define pickup_text(_text, _num)
+#define pickup_text // text, ?type, ?num
 	/*
-		Creates a PopupText with the given text, with all mentions of '%' in the text replaced by the given number
-		If called from a Player it will only appear on their screen
+		Creates a PopupText with the given text modified by the given type (and number if using type "add")
+		If called from a Player, the text will only appear on that Player's screen
+		Automatically supports the current locale
+		
+		Args:
+			text - The main text
+			type - The modifier, can be "add", "max", "low", "ins", "out", or "got" (leave undefined for none)
+			num  - The number to be used with type "add"
+			
+		Ex:
+			pickup_text("BULLETS", "add", 32)                == "+32 BULLETS"
+			pickup_text("HP", "max")                         == "MAX HP"
+			pickup_text("RADS", "low")                       == "LOW RADS"
+			pickup_text("RADS", "ins")                       == "NOT ENOUGH RADS"
+			pickup_text("BOLTS", "out")                      == "EMPTY"
+			pickup_text(weapon_get_name(wep_slugger), "got") == "SLUGGER!"
 	*/
 	
+	var	_text     = argument[0],
+		_type     = ((argument_count > 1) ? argument[1] : undefined),
+		_num      = ((argument_count > 2) ? argument[2] : undefined),
+		_ammo     = ["MELEE", "BULLETS", "SHELLS", "BOLTS", "EXPLOSIVES", "ENERGY"],
+		_ammoType = -1;
+		
+	 // Determine Ammo Type (Auto-Locale Support):
+	for(var i = array_length(_ammo) - 1; i >= 0; i--){
+		if(_text == loc(`Ammo:Type:${i}`, _ammo[i])){
+			_ammoType = i;
+		}
+	}
+	
+	 // Create Popup Text:
 	with(instance_create(x, y, PopupText)){
-		text = string_replace_all(_text, "%", ((_num < 0) ? "" : "+") + string(_num));
+		switch(_type){
+			
+			case "add": // +# TEXT
+				
+				switch(_text){
+					
+					case "HP":
+						
+						text = call(scr.loc_format, "Pickups:AddHealth", "+% HP", _num);
+						
+						break;
+						
+					case "PORTAL STRIKES":
+						
+						text = loc(
+							`Pickups:AddStrikes:${_num}`,
+							call(scr.loc_format, "Pickups:AddStrikes", "+% PORTAL STRIKES", _num)
+						);
+						
+						break;
+						
+					default:
+						
+						 // Ammo Types:
+						if(_ammoType >= 0){
+							text = call(scr.loc_format,
+								`Pickups:AddAmmo:${_ammoType}`,
+								call(scr.loc_format, "Pickups:AddAmmo", "+%1 %2", "%", _text),
+								_num
+							);
+						}
+						
+						 // Normal:
+						else text = call(scr.loc_format, "Pickups:AddAmmo", "+%1 %2", _num, _text);
+						
+				}
+				
+				 // Flip Sign:
+				if(_num < 0){
+					text = string_replace_all(text, "+", "-");
+				}
+				
+				break;
+				
+			case "max": // MAX TEXT
+				
+				switch(_text){
+					
+					case "HP":
+						
+						text = loc("Pickups:MaxHealth", "MAX HP");
+						
+						break;
+						
+					case "PORTAL STRIKES":
+						
+						text = loc("Pickups:MaxStrikes", "MAX PORTAL STRIKES");
+						
+						break;
+						
+					default:
+						
+						text = call(scr.loc_format, "Pickups:MaxAmmo", "MAX %", _text);
+						
+						 // Ammo Types:
+						if(_ammoType >= 0){
+							text = loc(`Pickups:MaxAmmo:${_ammoType}`, text);
+						}
+						
+				}
+				
+				break;
+				
+			case "low": // LOW TEXT
+				
+				switch(_text){
+					
+					case "HP":
+						
+						text = loc("HUD:LowHealth", "LOW HP");
+						
+						break;
+						
+					default:
+						
+						text = call(scr.loc_format, "HUD:LowAmmo", "LOW %", _text);
+						
+						 // Ammo Types:
+						if(_ammoType >= 0){
+							text = loc(`HUD:LowAmmo:${_ammoType}`, text);
+						}
+						
+				}
+				
+				break;
+				
+			case "ins": // NOT ENOUGH TEXT
+				
+				switch(_text){
+					
+					case "RADS":
+						
+						text = loc("HUD:InsRads", "NOT ENOUGH RADS");
+						
+						break;
+						
+					default:
+						
+						text = call(scr.loc_format, "HUD:InsAmmo", "NOT ENOUGH %", _text);
+						
+						 // Ammo Types:
+						if(_ammoType >= 0){
+							text = loc(`HUD:InsAmmo:${_ammoType}`, text);
+						}
+						
+				}
+				
+				break;
+				
+			case "out": // EMPTY
+				
+				text = call(scr.loc_format, "HUD:NoAmmo", "EMPTY", _text);
+				
+				 // Ammo Types:
+				if(_ammoType >= 0){
+					text = loc(`HUD:NoAmmo:${_ammoType}`, text);
+				}
+				
+				break;
+				
+			case "got": // TEXT!
+				
+				text = call(scr.loc_format, "HUD:GotWeapon", "%!", _text);
+				
+				break;
+				
+			default: // TEXT
+				
+				text = _text;
+				
+		}
 		
 		 // Target Player's Screen:
 		if(instance_is(other, Player)){

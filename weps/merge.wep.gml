@@ -2424,7 +2424,7 @@
 	}
 	
 #define step(_primary)
-	var _wep = (_primary ? wep : bwep);
+	var _wep = call(scr.weapon_step_init, _primary);
 	
 	 // Blood for Ammo:
 	if(wep_stat(_wep, "blod") && infammo == 0){

@@ -4780,7 +4780,7 @@
 						if(instance_exists(leader)){
 							_draw = true;
 							with(revive) with(prompt){
-								if(instance_exists(nearwep) && array_length(instances_matching(Player, "nearwep", nearwep)) > 0){
+								if(instance_exists(nearwep) && array_length(instances_matching(Player, "nearwep", nearwep))){
 									_draw = false;
 								}
 							}

@@ -33,7 +33,7 @@
 		_needProj = true;
 		
 	 // Retain Projectile if youre holding fire:
-	with(instances_matching(CustomProjectile, "name", "ElectroPlasma")){
+	with(instances_matching_ne(obj.ElectroPlasma, "id", null)){
 		_needProj = false;
 		lifetime = weapon_get_load(_wep) + 1;
 	}
@@ -71,27 +71,28 @@
 	motion_add(gunangle + 180, 0.5);
 	
 #define step
-	with(instances_matching(CustomProjectile, "name", "ElectroPlasma")){
-		if("lifetime" in self){
-			if(lifetime > 0){
-				x = creator.x;
-				y = creator.y;
-				move_contact_solid(creator.gunangle, 480);
-				direction = creator.gunangle;
-				image_angle = direction;
-				wave = 0;
-				lifetime -= current_time_scale;
-				if(instance_exists(creator)){
-					with(creator) weapon_post(6, 3, 0);
-				}
+	var _wep = call(scr.weapon_step_init, _primary);
+	
+	with(instances_matching_ne(obj.ElectroPlasma, "lifetime", null)){
+		if(lifetime > 0){
+			x = creator.x;
+			y = creator.y;
+			move_contact_solid(creator.gunangle, 480);
+			direction = creator.gunangle;
+			image_angle = direction;
+			wave = 0;
+			lifetime -= current_time_scale;
+			if(instance_exists(creator)){
+				with(creator) weapon_post(6, 3, 0);
 			}
-			else instance_destroy();
 		}
+		else instance_destroy();
 	}
 	
 	
 /// SCRIPTS
 #macro  call                                                                                    script_ref_call
+#macro  obj                                                                                     global.obj
 #macro  scr                                                                                     global.scr
 #macro  spr                                                                                     global.spr
 #macro  snd                                                                                     global.snd

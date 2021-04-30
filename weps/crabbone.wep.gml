@@ -177,19 +177,7 @@
 	}
 	
 #define step(_primary)
-	var _wep = wep_get(_primary, "wep", mod_current);
-	
-	 // LWO Setup:
-	if(!is_object(_wep)){
-		_wep = { "wep" : _wep };
-		wep_set(_primary, "wep", _wep);
-	}
-	for(var i = lq_size(global.lwoWep) - 1; i >= 0; i--){
-		var _key = lq_get_key(global.lwoWep, i);
-		if(_key not in _wep){
-			lq_set(_wep, _key, lq_get_value(global.lwoWep, i));
-		}
-	}
+	var _wep = call(scr.weapon_step_init, _primary);
 	
 	 // Holdin Bone:
 	if(_wep.ammo > 0){
@@ -217,7 +205,7 @@
 								wep_set(_primary, "wkick", 0);
 							}
 							else{
-								call(scr.pickup_text, "% BONE", _num);
+								call(scr.pickup_text, loc("NTTE:Bone", "BONE"), "add", _num);
 							}
 						}
 						
@@ -246,7 +234,7 @@
 		if(_wep.ammo >= 10){
 			 // E Indicator:
 			if(!instance_exists(variable_instance_get(self, "prompt_scythe", noone))){
-				prompt_scythe = call(scr.prompt_create, self, "SCYTHE");
+				prompt_scythe = call(scr.prompt_create, self, loc("NTTE:Bone:Prompt", "SCYTHE"));
 				with(prompt_scythe){
 					depth   = 1000000;
 					index   = other.index;
@@ -313,6 +301,7 @@
 	
 /// SCRIPTS
 #macro  call                                                                                    script_ref_call
+#macro  obj                                                                                     global.obj
 #macro  scr                                                                                     global.scr
 #macro  spr                                                                                     global.spr
 #macro  snd                                                                                     global.snd

@@ -1215,24 +1215,20 @@
 			_off     = round(min(3, floor(combo / 5))),
 			_x       = x + hspeed_raw + orandom(_off),
 			_y       = y + vspeed_raw + orandom(_off) - 8 + combo_texty,
-			_text    = `x${combo}`;
+			_locKey  = "NTTE:PetCoolGuy:Combo";
 			
-		 // Big Combo:
-		if(_lvl >= array_length(_colList)){
-			_text = "COMBO#" + _text;
-		}
-		
-		 // Highscore:
-		if(combo > stat.combo){
-			_text += "!";
-		}
-		
 		 // Display Text:
 		if(!instance_exists(combo_text)){
 			combo_text = instance_create(0, 0, PopupText);
 		}
 		with(combo_text){
-			text   = _text;
+			text = call(scr.loc_format,
+				_locKey,
+				"%2x%1%3",
+				other.combo,
+				((_lvl >= array_length(_colList)) ? loc(`${_locKey}:Big`, "COMBO#") : ""),
+				((other.combo > other.stat.combo) ? loc(`${_locKey}:Record`, "!")   : "")
+			);
 			alarm1 = 15;
 			alarm2 = -1;
 			
@@ -1244,8 +1240,8 @@
 				text = `@(color:${_col})#` + text;
 			}
 			
-			x = _x;
-			y = _y - (string_height(string_replace_all(text, "#", chr(13) + chr(10))) - 8);
+			x     = _x;
+			y     = _y - (string_height(string_replace_all(text, "#", chr(13) + chr(10))) - 8);
 			speed = 0;
 		}
 		
@@ -1444,7 +1440,7 @@
 	mount             = false;
 	mount_y           = 0;
 	prompt_mount_time = -1;
-	prompt_mount_text = ["MOUNT", "DISMOUNT"];
+	prompt_mount_text = [loc("NTTE:PetSalamander:Prompt:0", "MOUNT"), loc("NTTE:PetSalamander:Prompt:1", "DISMOUNT")];
 	prompt_mount      = call(scr.prompt_create, self, prompt_mount_text[mount]);
 	with(prompt_mount){
 		depth        = 1;
@@ -1992,7 +1988,7 @@
 	open         = false;
 	hush         = 0;
 	hushtime     = 0;
-	prompt_mimic = call(scr.prompt_create, self, "DROP");
+	prompt_mimic = call(scr.prompt_create, self, loc("NTTE:PetMimic:Prompt", "DROP"));
 	
 	 // Remember:
 	with(["wep", "curse"]){
@@ -4764,14 +4760,14 @@
 	else _title = mod_script_call(_modType, _modName, _name + "_name", _skin);
 	
 	 // Return:
-	if(is_string(_title)){
-		return _title;
+	if(!is_string(_title)){
+		_title = (
+			(_skin == 0)
+			? _name
+			: pet_get_name(_name, _modType, _modName, 0)
+		);
 	}
-	return (
-		(_skin == 0)
-		? _name
-		: pet_get_name(_name, _modType, _modName, 0)
-	);
+	return loc(`NTTE:Pet:Info:${_name}.${_modName}.${_modType}:${_skin}:Name`, _title);
 	
 #define pet_get_ttip(_name, _modType, _modName, _skin)
 	/*
@@ -4793,20 +4789,23 @@
 	 // Normal:
 	else _tip = mod_script_call(_modType, _modName, _name + "_ttip", _skin);
 	
-	 // Auto-Choose:
+	 // Auto-Choose & Locale Support:
+	var _locKey = `NTTE:Pet:Info:${_name}.${_modName}.${_modType}:${_skin}:Tip`;
 	if(is_array(_tip) && array_length(_tip)){
-		_tip = _tip[irandom(array_length(_tip) - 1)];
+		var _tipNum = irandom(array_length(_tip) - 1);
+		_tip = loc(`${_locKey}:${_tipNum}`, _tip[_tipNum]);
 	}
+	else _tip = loc(_locKey, _tip);
 	
 	 // Return:
-	if(is_string(_tip)){
-		return _tip;
+	if(!is_string(_tip)){
+		_tip = (
+			(_skin == 0)
+			? ""
+			: pet_get_ttip(_name, _modType, _modName, 0)
+		);
 	}
-	return (
-		(_skin == 0)
-		? ""
-		: pet_get_ttip(_name, _modType, _modName, 0)
-	);
+	return _tip;
 	
 #define pet_get_sprite(_name, _modType, _modName, _skin, _sprName)
 	/*
@@ -4845,14 +4844,14 @@
 	}
 	
 	 // Return:
-	if(_spr != 0 && is_real(_spr)){
-		return _spr;
+	if(_spr == 0 || !is_real(_spr)){
+		_spr = (
+			(_skin == 0)
+			? 0
+			: pet_get_sprite(_name, _modType, _modName, 0, _sprName)
+		);
 	}
-	return (
-		(_skin == 0)
-		? 0
-		: pet_get_sprite(_name, _modType, _modName, 0, _sprName)
-	);
+	return _spr;
 	
 #define pet_get_sound(_name, _modType, _modName, _skin, _sndName)
 	/*
@@ -4878,14 +4877,14 @@
 	else _snd = mod_script_call(_modType, _modName, _name + "_sound", _skin, _sndName);
 	
 	 // Return:
-	if(_snd != 0 && is_real(_snd)){
-		return _snd;
+	if(_snd == 0 || !is_real(_snd)){
+		_snd = (
+			(_skin == 0)
+			? 0
+			: pet_get_sound(_name, _modType, _modName, 0, _sndName)
+		);
 	}
-	return (
-		(_skin == 0)
-		? 0
-		: pet_get_sound(_name, _modType, _modName, 0, _sndName)
-	);
+	return _snd;
 	
 #define pet_set_skin // inst=self, skin
 	/*

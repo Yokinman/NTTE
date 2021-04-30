@@ -158,7 +158,11 @@
 			
 			 // Text:
 			with(instance_create(x, y - 8, PopupText)){
-				text = `${call(scr.instance_get_name, other)}# @(color:${call(scr.area_get_back_color, "red")})ANNIHILATED!`;
+				text = call(scr.loc_format,
+					"NTTE:Annihilation:Text",
+					`%# @(color:${call(scr.area_get_back_color, "red")})ANNIHILATED!`,
+					call(scr.instance_get_name, other)
+				);
 			}
 			
 			 // Sound:
