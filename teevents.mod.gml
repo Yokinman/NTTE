@@ -135,12 +135,12 @@
 		var	_park = teevent_get_active("MaggotPark"),
 			_city = teevent_get_active("ScorpionCity");
 			
-		with(instances_matching_ne([MaggotSpawn, BigMaggot], "id", null)){
+		with(instances_matching_ne([MaggotSpawn, BigMaggot], "id")){
 			if(chance(1, point_distance(x, y, other.x, other.y) / (_park ? 64 : 160))){
 				instance_delete(self);
 			}
 		}
-		with(instances_matching_ne([Scorpion, GoldScorpion], "id", null)){
+		with(instances_matching_ne([Scorpion, GoldScorpion], "id")){
 			if(chance(1, point_distance(x, y, other.x, other.y) / (_city ? 32 : 160))){
 				instance_delete(self);
 			}
@@ -188,10 +188,10 @@
 		
 		 // Riders:
 		with(teevent_get_active("ScorpionCity")){
-			var	_rideList = call(scr.array_shuffle, instances_matching_ne([Scorpion, GoldScorpion], "id", null)),
+			var	_rideList = call(scr.array_shuffle, instances_matching_ne([Scorpion, GoldScorpion], "id")),
 				_rideNum  = 0;
 				
-			with(instances_matching_ne(obj.BanditCamper, "id", null)){
+			with(instances_matching_ne(obj.BanditCamper, "id")){
 				if(_rideNum >= array_length(_rideList)){
 					break;
 				}
@@ -499,7 +499,7 @@
 				var _canSkull = true;
 				
 				 // Move Shark Skull:
-				with(instances_matching_ne(obj.CoastBossBecome, "id", null)){
+				with(instances_matching_ne(obj.CoastBossBecome, "id")){
 					if(_canSkull){
 						_canSkull = false;
 						
@@ -899,7 +899,7 @@
 	}
 	
 	 // No Scorpion Pets:
-	/*with(instances_matching_ne(obj.ScorpionRock, "id", null)){
+	/*with(instances_matching_ne(obj.ScorpionRock, "id")){
 		friendly = -1;
 	}*/
 	
@@ -936,7 +936,7 @@
 			}
 		}
 	}
-	with(instances_matching_ne(obj.BigMaggotSpawn, "id", null)){
+	with(instances_matching_ne(obj.BigMaggotSpawn, "id")){
 		scorp_drop++;
 	}
 	
@@ -1640,14 +1640,14 @@
 		
 	 // More Traps:
 	var _num = floor(array_length(FloorNormal) / 30);
-	with(call(scr.array_shuffle, instances_matching_ne(Wall, "id", null))){
+	with(call(scr.array_shuffle, instances_matching_ne(Wall, "id"))){
 		if(_num > 0){
 			if(place_meeting(x, y, Floor) && point_distance(bbox_center_x, bbox_center_y, _spawnX, _spawnY) > 64/* && chance(3, 5)*/){
 				if(!array_length(call(scr.instances_in_rectangle, bbox_left, bbox_top, bbox_right, bbox_bottom, Trap))){
 					var _spawn = true;
 					with(teevent_get_active("RavenArena")){
 						var _wall = other;
-						with(instances_matching_ne(floors, "id", null)){
+						with(instances_matching_ne(floors, "id")){
 							if(place_meeting(x, y, _wall)){
 								_spawn = false;
 								break;
@@ -1846,7 +1846,7 @@
 		}
 		
 		 // Other Igloos:
-		with(instances_matching_ne(obj.Igloo, "id", null)){
+		with(instances_matching_ne(obj.Igloo, "id")){
 			 // Face Statue:
 			if(x != other.x){
 				image_xscale = sign(other.x - x);
@@ -2157,7 +2157,7 @@
 		_pool = [];
 		
 	 // Normal:
-	with(instances_matching_ne([Player, Revive], "id", null)){
+	with(instances_matching_ne([Player, Revive], "id")){
 		with([wep, bwep]){
 			var	_wep = self,
 				_raw = call(scr.wep_raw, _wep);
@@ -2309,7 +2309,7 @@
 	
 	/*
 	 // Fewer Guardians:
-	with(instances_matching_ne([DogGuardian, ExploGuardian], "id", null)){
+	with(instances_matching_ne([DogGuardian, ExploGuardian], "id")){
 		instance_delete(self);
 	}
 	with(Guardian){
@@ -2807,7 +2807,7 @@
 			}
 	*/
 	
-	with(call(scr.array_shuffle, instances_matching_ne(_spawnFloor, "id", null))){
+	with(call(scr.array_shuffle, instances_matching_ne(_spawnFloor, "id"))){
 		var	_x = bbox_center_x,
 			_y = bbox_center_y;
 			
@@ -3095,7 +3095,7 @@
 	
 	 // All:
 	if(_name == all){
-		var _inst = instances_matching_ne(obj.NTTEEvent, "id", null);
+		var _inst = instances_matching_ne(obj.NTTEEvent, "id");
 		array_sort(_inst, true);
 		return _inst;
 	}
@@ -3227,4 +3227,4 @@
 #define enemy_face(_dir)                                                                        _dir = ((_dir % 360) + 360) % 360; if(_dir < 90 || _dir > 270) right = 1; else if(_dir > 90 && _dir < 270) right = -1;
 #define enemy_look(_dir)                                                                        _dir = ((_dir % 360) + 360) % 360; if(_dir < 90 || _dir > 270) right = 1; else if(_dir > 90 && _dir < 270) right = -1; if('gunangle' in self) gunangle = _dir;
 #define enemy_target(_x, _y)                                                                    target = (instance_exists(Player) ? instance_nearest(_x, _y, Player) : ((instance_exists(target) && target >= 0) ? target : noone)); return (target != noone);
-#define script_bind(_scriptObj, _scriptRef, _depth, _visible)                           return  mod_script_call_nc('mod', 'teassets', 'script_bind', script_ref_create(script_bind), _scriptObj, (is_real(_scriptRef) ? script_ref_create(_scriptRef) : _scriptRef), _depth, _visible);
+#define script_bind(_scriptObj, _scriptRef, _depth, _visible)                           return  call(scr.script_bind, script_ref_create(script_bind), _scriptObj, (is_real(_scriptRef) ? script_ref_create(_scriptRef) : _scriptRef), _depth, _visible);

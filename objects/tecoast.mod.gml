@@ -1199,7 +1199,7 @@
 						if(array_find_index(corpses, _corpse) < 0){
 							if(sprite_get_width(_corpse.sprite_index) < 64 && sprite_get_height(_corpse.sprite_index) < 64){
 								var _canTake = true;
-								with(instances_matching_ne(obj.Harpoon, "id", null)){
+								with(instances_matching_ne(obj.Harpoon, "id")){
 									if(array_find_index(corpses, _corpse) >= 0){
 										_canTake = false;
 										break;
@@ -1421,7 +1421,7 @@
 		}
 		
 		 // Turn Harpoons Into Pickups:
-		with(instances_matching_ne([link1, link2], "id", null)){
+		with(instances_matching_ne([link1, link2], "id")){
 			if(array_find_index(obj.Harpoon, self) >= 0){
 				pickup = true;
 			}
@@ -1682,7 +1682,7 @@
 	}
 	
 	 // Seals:
-	var	_sealNum = array_length(instances_matching_ne(seal, "id", null)),
+	var	_sealNum = array_length(instances_matching_ne(seal, "id")),
 		_holdx   = seal_x,
 		_holdy   = seal_y,
 		_holding = [0, 0];
@@ -2297,7 +2297,7 @@
 		alarm_set(1, 1);
 	}
 	
-#macro PalankingSeal instances_matching_ne(call(scr.array_combine, obj.Seal, obj.SealHeavy), "id", null)
+#macro PalankingSeal instances_matching_ne(call(scr.array_combine, obj.Seal, obj.SealHeavy), "id")
 
 #define seal_wave(_xstart, _ystart, _dir, _delay)
 	/*
@@ -3391,7 +3391,7 @@
 			
 			 // Less Post-Level Running Around:
 			if(type == seal_none){
-				if(scared && !array_length(instances_matching_ne(obj.Palanking, "id", null))){
+				if(scared && !array_length(instances_matching_ne(obj.Palanking, "id"))){
 					if("wading" in self && wading > 0){
 						if(!point_seen_ext(x, y, sprite_width, sprite_height, -1)){
 							my_health = 0;
@@ -3737,7 +3737,7 @@
 					else{
 						 // "Don't kill me!"
 						if(scared){
-							if(_targetDis < 120 || chance(2, array_length(instances_matching_ne(obj.Seal, "id", null)))){
+							if(_targetDis < 120 || chance(2, array_length(instances_matching_ne(obj.Seal, "id")))){
 								enemy_walk(
 									gunangle + 180 + orandom(50),
 									random_range(20, 30)
@@ -5492,7 +5492,7 @@
 			 // Divers:
 			if(array_length(obj.Diver)){
 				var _r = 16 + (24 * _gray);
-				with(instances_matching_ne(obj.Diver, "id", null)){
+				with(instances_matching_ne(obj.Diver, "id")){
 					draw_circle(x, y, _r + orandom(1), false);
 				}
 			}
@@ -5637,4 +5637,4 @@
 #define enemy_face(_dir)                                                                        _dir = ((_dir % 360) + 360) % 360; if(_dir < 90 || _dir > 270) right = 1; else if(_dir > 90 && _dir < 270) right = -1;
 #define enemy_look(_dir)                                                                        _dir = ((_dir % 360) + 360) % 360; if(_dir < 90 || _dir > 270) right = 1; else if(_dir > 90 && _dir < 270) right = -1; if('gunangle' in self) gunangle = _dir;
 #define enemy_target(_x, _y)                                                                    target = (instance_exists(Player) ? instance_nearest(_x, _y, Player) : ((instance_exists(target) && target >= 0) ? target : noone)); return (target != noone);
-#define script_bind(_scriptObj, _scriptRef, _depth, _visible)                           return  mod_script_call_nc('mod', 'teassets', 'script_bind', script_ref_create(script_bind), _scriptObj, (is_real(_scriptRef) ? script_ref_create(_scriptRef) : _scriptRef), _depth, _visible);
+#define script_bind(_scriptObj, _scriptRef, _depth, _visible)                           return  call(scr.script_bind, script_ref_create(script_bind), _scriptObj, (is_real(_scriptRef) ? script_ref_create(_scriptRef) : _scriptRef), _depth, _visible);

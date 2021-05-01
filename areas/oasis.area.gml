@@ -139,7 +139,7 @@
 	}
 	
 	 // Top Props:
-	with(instances_matching_ne([TopSmall, Wall], "id", null)){
+	with(instances_matching_ne([TopSmall, Wall], "id")){
 		if(chance(1, 300)){
 			call(scr.top_create, 
 				random_range(bbox_left, bbox_right + 1),
@@ -291,7 +291,7 @@
 	call(scr.floor_bones, FloorNormal, 2, 1/9);
 	
 	 // The new bandits
-	with(instances_matching_ne([WeaponChest, AmmoChest, RadChest], "id", null)){
+	with(instances_matching_ne([WeaponChest, AmmoChest, RadChest], "id")){
 		call(scr.obj_create, x, y, "Diver");
 	}
 	
@@ -300,7 +300,7 @@
 	
 	 // Pet Bubbles:
 	if(chance(1, 4) && array_length(obj.Pet)){
-		with(instances_matching_ne(obj.Pet, "id", null)){
+		with(instances_matching_ne(obj.Pet, "id")){
 			instance_create(x, y, Bubble);
 		}
 	}
@@ -403,4 +403,4 @@
 #define enemy_face(_dir)                                                                        _dir = ((_dir % 360) + 360) % 360; if(_dir < 90 || _dir > 270) right = 1; else if(_dir > 90 && _dir < 270) right = -1;
 #define enemy_look(_dir)                                                                        _dir = ((_dir % 360) + 360) % 360; if(_dir < 90 || _dir > 270) right = 1; else if(_dir > 90 && _dir < 270) right = -1; if('gunangle' in self) gunangle = _dir;
 #define enemy_target(_x, _y)                                                                    target = (instance_exists(Player) ? instance_nearest(_x, _y, Player) : ((instance_exists(target) && target >= 0) ? target : noone)); return (target != noone);
-#define script_bind(_scriptObj, _scriptRef, _depth, _visible)                           return  mod_script_call_nc('mod', 'teassets', 'script_bind', script_ref_create(script_bind), _scriptObj, (is_real(_scriptRef) ? script_ref_create(_scriptRef) : _scriptRef), _depth, _visible);
+#define script_bind(_scriptObj, _scriptRef, _depth, _visible)                           return  call(scr.script_bind, script_ref_create(script_bind), _scriptObj, (is_real(_scriptRef) ? script_ref_create(_scriptRef) : _scriptRef), _depth, _visible);

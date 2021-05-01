@@ -208,7 +208,7 @@
 	}
 	
 	 // Activate Pets:
-	with(instances_matching_ne(obj.Pet, "id", null)){
+	with(instances_matching_ne(obj.Pet, "id")){
 		if(!instance_exists(PopoScene)){
 			visible = true;
 		}
@@ -300,7 +300,7 @@
 	
 	 // Baby Spiders:
 	if(instance_exists(Spider) || instance_exists(InvSpider)){
-		with(instances_matching_ne([CrystalProp, InvCrystal], "id", null)){
+		with(instances_matching_ne([CrystalProp, InvCrystal], "id")){
 			if(place_meeting(x, y, Floor) && !place_meeting(x, y, Wall)){
 				repeat(irandom_range(1, 3)){
 					call(scr.obj_create, x, y, "Spiderling");
@@ -337,7 +337,7 @@
 					
 					 // Find Rogue / Rogue Rifle:
 					if(GameCont.area == area_campfire){
-						with(instances_matching_ne([Player, Revive], "id", null)){
+						with(instances_matching_ne([Player, Revive], "id")){
 							if(
 								(race_get_name(race) == "rogue" && GameCont.loops <= 1)
 								|| call(scr.wep_raw, wep)  == wep_rogue_rifle
@@ -861,7 +861,7 @@
 			
 			 // Spawn Crystal Bats:
 			if(GameCont.loops > 0){
-				with(instances_matching_ne([Spider, InvSpider], "id", null)){
+				with(instances_matching_ne([Spider, InvSpider], "id")){
 					if(chance(1, 6) && !array_length(instances_matching(call(scr.instances_meeting_point, x, y, Floor), "styleb", true))){
 						var	_ang = pround(random(360), 90),
 							_dis = 32;
@@ -902,7 +902,7 @@
 			
 			 // Big Crystal Prop:
 			if(chance(1, 2)){
-				with(call(scr.array_shuffle, instances_matching_ne([CrystalProp, InvCrystal], "id", null))){
+				with(call(scr.array_shuffle, instances_matching_ne([CrystalProp, InvCrystal], "id"))){
 					if(place_meeting(x, y, Floor) && point_distance(x, y, _spawnX, _spawnY) >= 96){
 						call(scr.obj_create, x, y, "BigCrystalProp");
 						instance_delete(self);
@@ -1165,7 +1165,7 @@
 			if(GameCont.loops > 0){
 				array_push(_topify, JungleAssassinHide);
 			}
-			with(instances_matching_ne(_topify, "id", null)){
+			with(instances_matching_ne(_topify, "id")){
 				if(chance(1, 4)){
 					call(scr.top_create, x, y, self, -1, -1);
 				}
@@ -1185,14 +1185,14 @@
 					}
 				}
 			}
-			with(instances_matching_ne([EliteGrunt, EliteShielder, EliteInspector], "id", null)){
+			with(instances_matching_ne([EliteGrunt, EliteShielder, EliteInspector], "id")){
 				if(chance(1, 2)){
 					call(scr.obj_create, _x, _y, "FreakChamber");
 					instance_delete(self);
 					with(VanSpawn){
 						enemies--;
 					}
-					with(instances_matching_ne(obj.FreakChamber, "id", null)){
+					with(instances_matching_ne(obj.FreakChamber, "id")){
 						enemies--;
 					}
 				}
@@ -1747,7 +1747,7 @@
 			case RadChest:
 				
 				 // Rat Chests:
-				with(instances_matching_ne([RadChest, RogueChest, HealthChest, SuperMimic], "id", null)){
+				with(instances_matching_ne([RadChest, RogueChest, HealthChest, SuperMimic], "id")){
 					call(scr.chest_create, x, y, "RatChest", true);
 					instance_delete(self);
 				}
@@ -2381,7 +2381,7 @@
 						_tip    = "";
 						
 					with(_player){
-						with(instances_matching_ne(call(scr.array_shuffle, ntte_pet), "id", null)){
+						with(instances_matching_ne(call(scr.array_shuffle, ntte_pet), "id")){
 							_tip = call(scr.pet_get_ttip, pet, mod_type, mod_name, bskin);
 							if(_tip != ""){
 								break;
@@ -2765,7 +2765,7 @@
 					
 					 // Map Icons:
 					var	_list = undefined,
-						_inst = instances_matching_ne(ntte_pet, "id", null);
+						_inst = instances_matching_ne(ntte_pet, "id");
 						
 					if(array_length(_inst)){
 						_list = [];
@@ -4031,7 +4031,7 @@
 						
 					 // Compile Orchid Mutations to Draw:
 					if(array_length(obj.OrchidSkill)){
-						with(instances_matching_ne(obj.OrchidSkill, "id", null)){
+						with(instances_matching_ne(obj.OrchidSkill, "id")){
 							if(skill_get(skill) != 0){
 								array_push(_skillType, "orchid");
 								array_push(_skillList, skill);
@@ -4772,7 +4772,7 @@
 			
 			 // Pet Indicator:
 			if(array_length(obj.Pet)){
-				with(instances_matching_ne(obj.Pet, "id", null)){
+				with(instances_matching_ne(obj.Pet, "id")){
 					var _draw = false;
 					
 					 // Death Conditions:
@@ -4973,7 +4973,7 @@
 			catch(_error){}
 			
 			 // Play Custom Music:
-			if(array_length(instances_matching_ne(obj.Tesseract, "id", null))){
+			if(array_length(instances_matching_ne(obj.Tesseract, "id"))){
 				alarm_set(2, -1);
 				_mus = mus.Tesseract;
 			}
@@ -5194,4 +5194,4 @@
 #define enemy_face(_dir)                                                                        _dir = ((_dir % 360) + 360) % 360; if(_dir < 90 || _dir > 270) right = 1; else if(_dir > 90 && _dir < 270) right = -1;
 #define enemy_look(_dir)                                                                        _dir = ((_dir % 360) + 360) % 360; if(_dir < 90 || _dir > 270) right = 1; else if(_dir > 90 && _dir < 270) right = -1; if('gunangle' in self) gunangle = _dir;
 #define enemy_target(_x, _y)                                                                    target = (instance_exists(Player) ? instance_nearest(_x, _y, Player) : ((instance_exists(target) && target >= 0) ? target : noone)); return (target != noone);
-#define script_bind(_scriptObj, _scriptRef, _depth, _visible)                           return  mod_script_call_nc('mod', 'teassets', 'script_bind', script_ref_create(script_bind), _scriptObj, (is_real(_scriptRef) ? script_ref_create(_scriptRef) : _scriptRef), _depth, _visible);
+#define script_bind(_scriptObj, _scriptRef, _depth, _visible)                           return  call(scr.script_bind, script_ref_create(script_bind), _scriptObj, (is_real(_scriptRef) ? script_ref_create(_scriptRef) : _scriptRef), _depth, _visible);

@@ -705,7 +705,7 @@
 	if(instance_exists(target) && target_distance < 160){
 		if(arc_inst == noone){
 			var _disMax = infinity;
-			with(instances_matching_ne(obj.Jelly, "id", null)){
+			with(instances_matching_ne(obj.Jelly, "id")){
 				if(arc_num < arc_max){
 					var _dis = point_distance(x, y, other.x, other.y);
 					if(_dis < arc_dis && _dis < _disMax){
@@ -2377,7 +2377,7 @@
 	alarm1 = 20 + irandom(30);
 	
 	if(enemy_target(x, y)){
-		if(intro || pit_height < 1 || (instance_number(enemy) - instance_number(Van)) <= array_length(instances_matching_ne(obj.PitSquid, "id", null))){
+		if(intro || pit_height < 1 || (instance_number(enemy) - instance_number(Van)) <= array_length(instances_matching_ne(obj.PitSquid, "id"))){
 			if(intro || pit_height < 1){
 				var	_targetDir = target_direction,
 					_targetDis = target_distance;
@@ -2571,7 +2571,7 @@
 	
 #define PitSquid_alrm3
 	var	_floors = FloorPit,
-		_sparks = instances_matching_ne(obj.PitSpark, "id", null);
+		_sparks = instances_matching_ne(obj.PitSpark, "id");
 		
 	alarm3 = random_range(1, 12) + (12 * array_length(_sparks)) + (30 / array_length(_floors));
 	
@@ -3585,7 +3585,7 @@
 				_y = y + vspeed,
 				_n = 0;
 				
-			ring_lasers = instances_matching_ne(ring_lasers, "id", null);
+			ring_lasers = instances_matching_ne(ring_lasers, "id");
 			
 			with(ring_lasers){
 				hold_x = _x + lengthdir_x(_l, image_angle);
@@ -3831,7 +3831,7 @@
 	 // Visually Connect Laser to Quasar Ring:
 	if(ring){
 		if(array_length(ring_lasers)){
-			var _inst = instances_matching_ne(ring_lasers, "id", null);
+			var _inst = instances_matching_ne(ring_lasers, "id");
 			with(_inst){
 				draw_set_alpha(image_alpha);
 				draw_set_color(image_blend);
@@ -3932,7 +3932,7 @@
 	
 	 // Clear Ring Beams:
 	if(array_length(ring_lasers)){
-		with(instances_matching_ne(ring_lasers, "id", null)){
+		with(instances_matching_ne(ring_lasers, "id")){
 			instance_destroy();
 		}
 	}
@@ -4501,7 +4501,7 @@
 	
 	 // Activate:
 	if(enemy_target(x, y) && !visible){
-		var _numEels = array_length(instances_matching_ne(obj.Eel, "id", null));
+		var _numEels = array_length(instances_matching_ne(obj.Eel, "id"));
 		if(
 			(chance(1, 3) || _numEels <= 1) &&
 			_numEels + array_length(instances_matching(obj.WantEel, "visible", true)) <= 6 + (4 * GameCont.loops)
@@ -4603,14 +4603,14 @@
 	
 		 // Lightning Discs:
 	if(array_length(obj.LightningDisc)){
-		with(instances_matching_ne(obj.LightningDisc, "id", null)){
+		with(instances_matching_ne(obj.LightningDisc, "id")){
 			scrDrawLightningDisc(sprite_index, image_index, x, y, ammo, radius, 2 * stretch, image_xscale, image_yscale, image_angle + rotation, image_blend, 0.1 * image_alpha);
 		}
 	}
 	
 	 // Quasar Beams:
 	if(array_length(obj.QuasarBeam)){
-		with(instances_matching_ne(obj.QuasarBeam, "id", null)){
+		with(instances_matching_ne(obj.QuasarBeam, "id")){
 			var	_alp = 0.1 * (1 + (skill_get(mut_laser_brain) * 0.5)),
 				_xsc = 2,
 				_ysc = 2;
@@ -4686,7 +4686,7 @@
 		}
 	}
 	if(array_length(obj.PitSquidL)){
-		with(instances_matching_ne(obj.PitSquidL, "id", null)){
+		with(instances_matching_ne(obj.PitSquidL, "id")){
 			draw_sprite_ext(sprite_index, image_index, x, y, image_xscale * 2, image_yscale * 2, image_angle, image_blend, image_alpha * 0.1);
 		}
 	}
@@ -4712,7 +4712,7 @@
 			
 			 // Kelp:
 			if(_gray && array_length(obj.Kelp)){
-				with(instances_matching_ne(obj.Kelp, "id", null)){
+				with(instances_matching_ne(obj.Kelp, "id")){
 					draw_circle(x, y, 32 + orandom(1), false);
 				}
 			}
@@ -4720,7 +4720,7 @@
 			 // Electroplasma:
 			if(array_length(obj.ElectroPlasma)){
 				var _r = 24 + (24 * _gray);
-				with(instances_matching_ne(obj.ElectroPlasma, "id", null)){
+				with(instances_matching_ne(obj.ElectroPlasma, "id")){
 					draw_circle(x, y, _r, false);
 				}
 			}
@@ -4730,7 +4730,7 @@
 				var _scale  = 1.5 + (1.5 * _gray),
 					_border = 4;
 					
-				with(instances_matching_ne(obj.LightningDisc, "id", null)){
+				with(instances_matching_ne(obj.LightningDisc, "id")){
 					draw_circle(x - 1, y - 1, (((radius * image_xscale) + _border) * _scale) + orandom(1), false);
 				}
 			}
@@ -4742,7 +4742,7 @@
 					
 				draw_set_fog(true, draw_get_color(), 0, 0);
 				
-				with(instances_matching_ne(obj.QuasarBeam, "id", null)){
+				with(instances_matching_ne(obj.QuasarBeam, "id")){
 					 // Normal:
 					if(!ring){
 						var	_xscale = _beamScale * image_xscale,
@@ -4780,7 +4780,7 @@
 				if(!_gray){
 					draw_set_blend_mode(bm_subtract);
 				}
-				with(instances_matching_ne(obj.Angler, "id", null)){
+				with(instances_matching_ne(obj.Angler, "id")){
 					var _img = image_index;
 					if(sprite_index != spr_appear){
 						_img = sprite_get_number(spr.AnglerLight) - 1;
@@ -4801,7 +4801,7 @@
 			 // Jellies:
 			if(array_length(obj.Jelly)){
 				var _r = 40 + (40 * _gray);
-				with(instances_matching_ne(obj.Jelly, "id", null)){
+				with(instances_matching_ne(obj.Jelly, "id")){
 					var	_off = 0,
 						_img = floor(image_index);
 						
@@ -5073,4 +5073,4 @@
 #define enemy_face(_dir)                                                                        _dir = ((_dir % 360) + 360) % 360; if(_dir < 90 || _dir > 270) right = 1; else if(_dir > 90 && _dir < 270) right = -1;
 #define enemy_look(_dir)                                                                        _dir = ((_dir % 360) + 360) % 360; if(_dir < 90 || _dir > 270) right = 1; else if(_dir > 90 && _dir < 270) right = -1; if('gunangle' in self) gunangle = _dir;
 #define enemy_target(_x, _y)                                                                    target = (instance_exists(Player) ? instance_nearest(_x, _y, Player) : ((instance_exists(target) && target >= 0) ? target : noone)); return (target != noone);
-#define script_bind(_scriptObj, _scriptRef, _depth, _visible)                           return  mod_script_call_nc('mod', 'teassets', 'script_bind', script_ref_create(script_bind), _scriptObj, (is_real(_scriptRef) ? script_ref_create(_scriptRef) : _scriptRef), _depth, _visible);
+#define script_bind(_scriptObj, _scriptRef, _depth, _visible)                           return  call(scr.script_bind, script_ref_create(script_bind), _scriptObj, (is_real(_scriptRef) ? script_ref_create(_scriptRef) : _scriptRef), _depth, _visible);

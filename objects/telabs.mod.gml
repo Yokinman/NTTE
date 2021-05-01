@@ -200,7 +200,7 @@
 		}
 		
 		 // Open Chests:
-		with(instances_matching_ne(call(scr.array_combine, obj.ButtonChest, obj.ButtonPickup), "id", null)){
+		with(instances_matching_ne(call(scr.array_combine, obj.ButtonChest, obj.ButtonPickup), "id")){
 			with(call(scr.obj_create, x, y, "PickupReviveArea")){
 				pickup = other;
 			}
@@ -954,7 +954,7 @@
 	with(instance_create(_x, _y, CustomProp)){
 		 // Facing:
 		front = chance(1, 3);
-		with(instances_matching_ne(obj.PalankingStatue, "id", null)){
+		with(instances_matching_ne(obj.PalankingStatue, "id")){
 			if(other.x >= bbox_left && other.x < bbox_right + 1){
 				if(y > other.y){
 					other.front = true;
@@ -2549,7 +2549,7 @@
 	}
 	
 #define WallSlide_end_step
-	slide_inst = instances_matching_ne(slide_inst, "id", null);
+	slide_inst = instances_matching_ne(slide_inst, "id");
 	
 	if(array_length(slide_inst)){
 		 // Next:
@@ -2652,7 +2652,7 @@
 	
 #define WallSlide_destroy
 	 // Visual Fix:
-	with(instances_matching_ne(slide_inst, "id", null)){
+	with(instances_matching_ne(slide_inst, "id")){
 		depth   = max(depth, 0);
 		visible = place_meeting(x, y + 16, Floor);
 		l = (place_free(x - 16, y) ?  0 :  4);
@@ -2755,7 +2755,7 @@
 			 // Button Revive:
 			if(array_length(obj.ButtonReviveArea)){
 				var _r = 32 + (32 * _gray);
-				with(instances_matching_ne(obj.ButtonReviveArea, "id", null)){
+				with(instances_matching_ne(obj.ButtonReviveArea, "id")){
 					draw_circle(x, y, _r + irandom(2), false);
 				}
 			}
@@ -2765,7 +2765,7 @@
 				var _r = 24 + (68 * _gray),
 					_o = 4  + (2  * _gray);
 					
-				with(instances_matching_ne(obj.PortalGuardian, "id", null)){
+				with(instances_matching_ne(obj.PortalGuardian, "id")){
 					draw_circle(x, y, _r + random(_o), false);
 				}
 			}
@@ -2849,4 +2849,4 @@
 #define enemy_face(_dir)                                                                        _dir = ((_dir % 360) + 360) % 360; if(_dir < 90 || _dir > 270) right = 1; else if(_dir > 90 && _dir < 270) right = -1;
 #define enemy_look(_dir)                                                                        _dir = ((_dir % 360) + 360) % 360; if(_dir < 90 || _dir > 270) right = 1; else if(_dir > 90 && _dir < 270) right = -1; if('gunangle' in self) gunangle = _dir;
 #define enemy_target(_x, _y)                                                                    target = (instance_exists(Player) ? instance_nearest(_x, _y, Player) : ((instance_exists(target) && target >= 0) ? target : noone)); return (target != noone);
-#define script_bind(_scriptObj, _scriptRef, _depth, _visible)                           return  mod_script_call_nc('mod', 'teassets', 'script_bind', script_ref_create(script_bind), _scriptObj, (is_real(_scriptRef) ? script_ref_create(_scriptRef) : _scriptRef), _depth, _visible);
+#define script_bind(_scriptObj, _scriptRef, _depth, _visible)                           return  call(scr.script_bind, script_ref_create(script_bind), _scriptObj, (is_real(_scriptRef) ? script_ref_create(_scriptRef) : _scriptRef), _depth, _visible);

@@ -421,7 +421,7 @@
 	
 #define area_pop_extras
 	 // The new bandits
-	with(instances_matching_ne([WeaponChest, AmmoChest, RadChest], "id", null)){
+	with(instances_matching_ne([WeaponChest, AmmoChest, RadChest], "id")){
 		call(scr.obj_create, x, y, "Diver");
 	}
 	with(Bandit){
@@ -430,8 +430,8 @@
 	}
 	
 	 // Got too many eels, bro? No problem:
-	with(instances_matching_ne(obj.Eel, "id", null)){
-		if(array_length(instances_matching_ne(obj.Eel, "id", null)) > 8 + (4 * GameCont.loops)){
+	with(instances_matching_ne(obj.Eel, "id")){
+		if(array_length(instances_matching_ne(obj.Eel, "id")) > 8 + (4 * GameCont.loops)){
 			call(scr.obj_create, x, y, "WantEel");
 			instance_delete(self);
 		}
@@ -443,7 +443,7 @@
 	
 	 // Pet Bubbles:
 	if(chance(1, 4) && array_length(obj.Pet)){
-		with(instances_matching_ne(obj.Pet, "id", null)){
+		with(instances_matching_ne(obj.Pet, "id")){
 			instance_create(x, y, Bubble);
 		}
 	}
@@ -571,7 +571,7 @@
 		 // Destroy PitSink Objects, Lag Helper:
 		var _max = 80;
 		if(array_length(obj.PitSink) > _max){
-			var _inst = instances_matching_ne(obj.PitSink, "id", null);
+			var _inst = instances_matching_ne(obj.PitSink, "id");
 			if(array_length(_inst) > _max){
 				with(array_slice(_inst, _max, array_length(_inst) - _max)){
 					instance_destroy();
@@ -890,7 +890,7 @@
 			
 			 // Pit Squid:
 			if(array_length(obj.PitSquid)){
-				with(instances_matching_ne(obj.PitSquid, "id", null)){
+				with(instances_matching_ne(obj.PitSquid, "id")){
 					var	_xsc  = image_xscale * max(pit_height, 0) * _surfScale,
 						_ysc  = image_yscale * max(pit_height, 0) * _surfScale,
 						_ang  = image_angle,
@@ -937,7 +937,7 @@
 			
 			 // Pit Squid Death:
 			if(array_length(obj.PitSquidDeath)){
-				with(instances_matching_ne(obj.PitSquidDeath, "id", null)){
+				with(instances_matching_ne(obj.PitSquidDeath, "id")){
 					var	_xsc = image_xscale * max(pit_height, 0) * _surfScale,
 						_ysc = image_yscale * max(pit_height, 0) * _surfScale,
 						_ang = image_angle,
@@ -1065,7 +1065,7 @@
 			
 			 // Stuff that fell in pit:
 			if(array_length(obj.PitSink)){
-				with(instances_matching_ne(obj.PitSink, "id", null)){
+				with(instances_matching_ne(obj.PitSink, "id")){
 					draw_sprite_ext(sprite_index, image_index, (x - _surfX) * _surfScale, (y - _surfY) * _surfScale, image_xscale * _surfScale, image_yscale * _surfScale, image_angle, image_blend, image_alpha);
 				}
 			}
@@ -1225,4 +1225,4 @@
 #define enemy_face(_dir)                                                                        _dir = ((_dir % 360) + 360) % 360; if(_dir < 90 || _dir > 270) right = 1; else if(_dir > 90 && _dir < 270) right = -1;
 #define enemy_look(_dir)                                                                        _dir = ((_dir % 360) + 360) % 360; if(_dir < 90 || _dir > 270) right = 1; else if(_dir > 90 && _dir < 270) right = -1; if('gunangle' in self) gunangle = _dir;
 #define enemy_target(_x, _y)                                                                    target = (instance_exists(Player) ? instance_nearest(_x, _y, Player) : ((instance_exists(target) && target >= 0) ? target : noone)); return (target != noone);
-#define script_bind(_scriptObj, _scriptRef, _depth, _visible)                           return  mod_script_call_nc('mod', 'teassets', 'script_bind', script_ref_create(script_bind), _scriptObj, (is_real(_scriptRef) ? script_ref_create(_scriptRef) : _scriptRef), _depth, _visible);
+#define script_bind(_scriptObj, _scriptRef, _depth, _visible)                           return  call(scr.script_bind, script_ref_create(script_bind), _scriptObj, (is_real(_scriptRef) ? script_ref_create(_scriptRef) : _scriptRef), _depth, _visible);

@@ -397,7 +397,7 @@
 			_y   = y - z,
 			_num = 0;
 			
-		held = instances_matching_ne(held, "id", null);
+		held = instances_matching_ne(held, "id");
 		
 		with(held){
 			 // Push Bubble:
@@ -1559,7 +1559,7 @@
 			var _tunnel = false;
 			
 			 // Player/Enemy Check:
-			with(instances_matching_ne(floors, "id", null)){
+			with(instances_matching_ne(floors, "id")){
 				if(
 					place_meeting(x, y, Player) ||
 					place_meeting(x, y, Portal) ||
@@ -1627,7 +1627,7 @@
 		skeal      = true; //!_inCoast;
 		
 		 // Alarms:
-		alarm0 = 30 + (10 * array_length(instances_matching_ne(obj.SunkenSealSpawn, "id", null)));
+		alarm0 = 30 + (10 * array_length(instances_matching_ne(obj.SunkenSealSpawn, "id")));
 		
 		 // FX:
 		repeat(3){
@@ -1961,7 +1961,7 @@
 		
 		 // Flames Boil Water:
 		if(instance_exists(Flame) || instance_exists(TrapFire)){
-			with(instances_matching_ne([Flame, TrapFire], "id", null)){
+			with(instances_matching_ne([Flame, TrapFire], "id")){
 				if(sprite_index != sprFishBoost){
 					if(image_index > 2){
 						sprite_index = sprFishBoost;
@@ -2190,4 +2190,4 @@
 #define enemy_face(_dir)                                                                        _dir = ((_dir % 360) + 360) % 360; if(_dir < 90 || _dir > 270) right = 1; else if(_dir > 90 && _dir < 270) right = -1;
 #define enemy_look(_dir)                                                                        _dir = ((_dir % 360) + 360) % 360; if(_dir < 90 || _dir > 270) right = 1; else if(_dir > 90 && _dir < 270) right = -1; if('gunangle' in self) gunangle = _dir;
 #define enemy_target(_x, _y)                                                                    target = (instance_exists(Player) ? instance_nearest(_x, _y, Player) : ((instance_exists(target) && target >= 0) ? target : noone)); return (target != noone);
-#define script_bind(_scriptObj, _scriptRef, _depth, _visible)                           return  mod_script_call_nc('mod', 'teassets', 'script_bind', script_ref_create(script_bind), _scriptObj, (is_real(_scriptRef) ? script_ref_create(_scriptRef) : _scriptRef), _depth, _visible);
+#define script_bind(_scriptObj, _scriptRef, _depth, _visible)                           return  call(scr.script_bind, script_ref_create(script_bind), _scriptObj, (is_real(_scriptRef) ? script_ref_create(_scriptRef) : _scriptRef), _depth, _visible);

@@ -916,7 +916,7 @@
 					scrBatScreech();
 					
 					 // Fewer mass screeches:
-					with(instances_matching_ne(obj.Bat, "id", null)){
+					with(instances_matching_ne(obj.Bat, "id")){
 						stress = max(stress - 4, 10);
 					}
 				}
@@ -1074,7 +1074,7 @@
 			alarm2 < 0
 			&& array_length(_bat) <= 1
 			&& !array_length(cloud)
-			&& !array_length(instances_matching_ne(obj.BatCloud, "id", null))
+			&& !array_length(instances_matching_ne(obj.BatCloud, "id"))
 		){
 			alarm2 = 20;
 			for(var i = 0; i < 3; i++){
@@ -1447,7 +1447,7 @@
 	}
 	
 	 // Buff Partner:
-	var _partner = instances_matching_ne(obj.CatBoss, "id", null);
+	var _partner = instances_matching_ne(obj.CatBoss, "id");
 	if(array_length(_partner)){
 		with(_partner){
 			var _heal = ceil(maxhealth / 4);
@@ -2461,8 +2461,8 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 		
 		 // Sittin:
 		var _instSit = call(scr.array_combine,
-			instances_matching_ne(call(scr.array_combine, obj.ChairFront, obj.ChairSide, obj.Couch), "id", null),
-			instances_matching_ne(chestprop, "id", null)
+			instances_matching_ne(call(scr.array_combine, obj.ChairFront, obj.ChairSide, obj.Couch), "id"),
+			instances_matching_ne(chestprop, "id")
 		);
 		with(call(scr.array_shuffle, _instSit)){
 			if(place_meeting(x, y, Floor)){
@@ -3005,7 +3005,7 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 		}
 	}
 	else{
-		with(instances_matching_ne(obj.BatBoss, "id", null)){
+		with(instances_matching_ne(obj.BatBoss, "id")){
 			alarm1 = 20 + random(20);
 			other.alarm1 += alarm1;
 		}
@@ -3175,7 +3175,7 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 	alarm3 = 150;
 	
 	 // Underground Cats:
-	if(chance(1, 1 + array_length(instances_matching_ne(obj.Cat, "id", null)))){
+	if(chance(1, 1 + array_length(instances_matching_ne(obj.Cat, "id")))){
 		with(call(scr.obj_create, 0, 0, "Cat")){
 			active    = false;
 			cantravel = true;
@@ -3262,7 +3262,7 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 	}
 	
 	 // Buff Partner:
-	var _partner = instances_matching_ne(obj.BatBoss, "id", null);
+	var _partner = instances_matching_ne(obj.BatBoss, "id");
 	if(array_length(_partner)){
 		with(_partner){
 			var _heal = ceil(maxhealth / 4);
@@ -4225,7 +4225,7 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 	}
 	
 	 // Remove Light:
-	with(instances_matching_ne(obj.CatLight, "id", null)){
+	with(instances_matching_ne(obj.CatLight, "id")){
 		if(point_distance(x, y, other.x, other.y) < 64){
 			instance_destroy();
 		}
@@ -4364,7 +4364,7 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 #define LairBorder_step
 	 // Cave-In:
 	if(cavein){
-		cavein_inst = instances_matching_ne(cavein_inst, "id", null);
+		cavein_inst = instances_matching_ne(cavein_inst, "id");
 		
 		if(cavein_dis > 0){
 			var _spd = max(4, random(
@@ -4475,7 +4475,7 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 					_x = bbox_center_x;
 				}
 				
-				with(instances_matching_ne(cavein_inst, "id", null)){
+				with(instances_matching_ne(cavein_inst, "id")){
 					visible = false;
 					x       = lerp_ct(x, _x, 0.1);
 					y       = _y;
@@ -5789,7 +5789,7 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 			}
 			if(!_angered){
 				if(instance_exists(Turtle) || instance_exists(Rat)){
-					with(instances_matching_ne([Turtle, Rat], "id", null)){
+					with(instances_matching_ne([Turtle, Rat], "id")){
 						if(my_health < maxhealth && !collision_line(x, y, other.x, other.y, Wall, false, false)){
 							_angered = true;
 							break;
@@ -5901,13 +5901,13 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 			if(array_length(obj.PizzaManholeCover)){
 				 // Circle:
 				if(_gray){
-					with(instances_matching_ne(obj.PizzaManholeCover, "id", null)){
+					with(instances_matching_ne(obj.PizzaManholeCover, "id")){
 						draw_circle(xstart, ystart - 16, 40 + random(2), false);
 					}
 				}
 				
 				 // Hole in Ceiling:
-				else with(instances_matching_ne(obj.PizzaManholeCover, "id", null)){
+				else with(instances_matching_ne(obj.PizzaManholeCover, "id")){
 					draw_sprite_ext(spr.CatLightThin, 0, xstart, ystart - 32, 1/3.5, 1/4.25, orandom(1), c_white, 1);
 				}
 			}
@@ -5915,7 +5915,7 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 			 // Boss Manhole:
 			if(_gray){
 				if(array_length(obj.CatHoleBig)){
-					with(instances_matching_ne(obj.CatHoleBig, "id", null)){
+					with(instances_matching_ne(obj.CatHoleBig, "id")){
 						draw_circle(x, y, 192 + random(2), false);
 					}
 				}
@@ -5925,13 +5925,13 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 			if(array_length(obj.PizzaTV)){
 				 // Circle:
 				if(_gray){
-					with(instances_matching_ne(obj.PizzaTV, "id", null)){
+					with(instances_matching_ne(obj.PizzaTV, "id")){
 						draw_circle(x, y, 64 + random(2), false);
 					}
 				}
 				
 				 // TV Beam:
-				else with(instances_matching_ne(obj.PizzaTV, "id", null)){
+				else with(instances_matching_ne(obj.PizzaTV, "id")){
 					var _scale = 1 + orandom(0.025);
 					draw_sprite_ext(spr.CatLight, 0, x, y - 5, _scale / 3.5, _scale / 2.5, 0, c_white, 1);
 				}
@@ -5952,7 +5952,7 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 #define ntte_draw_bloom
 	 // Flame Spark:
 	if(array_length(obj.FlameSpark)){
-		with(instances_matching_ne(obj.FlameSpark, "id", null)){
+		with(instances_matching_ne(obj.FlameSpark, "id")){
 			draw_sprite_ext(sprite_index, image_index, x, y, image_xscale * 3, image_yscale * 3, image_angle, image_blend, image_alpha * 0.1);
 		}
 	}
@@ -6032,4 +6032,4 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 #define enemy_face(_dir)                                                                        _dir = ((_dir % 360) + 360) % 360; if(_dir < 90 || _dir > 270) right = 1; else if(_dir > 90 && _dir < 270) right = -1;
 #define enemy_look(_dir)                                                                        _dir = ((_dir % 360) + 360) % 360; if(_dir < 90 || _dir > 270) right = 1; else if(_dir > 90 && _dir < 270) right = -1; if('gunangle' in self) gunangle = _dir;
 #define enemy_target(_x, _y)                                                                    target = (instance_exists(Player) ? instance_nearest(_x, _y, Player) : ((instance_exists(target) && target >= 0) ? target : noone)); return (target != noone);
-#define script_bind(_scriptObj, _scriptRef, _depth, _visible)                           return  mod_script_call_nc('mod', 'teassets', 'script_bind', script_ref_create(script_bind), _scriptObj, (is_real(_scriptRef) ? script_ref_create(_scriptRef) : _scriptRef), _depth, _visible);
+#define script_bind(_scriptObj, _scriptRef, _depth, _visible)                           return  call(scr.script_bind, script_ref_create(script_bind), _scriptObj, (is_real(_scriptRef) ? script_ref_create(_scriptRef) : _scriptRef), _depth, _visible);

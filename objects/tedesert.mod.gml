@@ -724,7 +724,7 @@
 			
 			 // Break:
 			var _disSkull = infinity;
-			with(instances_matching_ne(obj.CoastBossBecome, "id", null)){
+			with(instances_matching_ne(obj.CoastBossBecome, "id")){
 				var _dis = point_distance(x, y, other.x, other.y);
 				if(_dis < _disSkull){
 					_disSkull = _dis;
@@ -2224,7 +2224,7 @@
 	 // Charging Up:
 	if(charging){
 		var _angry = 1 + (0.5 * GameCont.loops);
-		if(array_find_index(obj.BatBoss, creator) >= 0 && array_length(instances_matching_ne(obj.CatBoss, "id", null))){
+		if(array_find_index(obj.BatBoss, creator) >= 0 && array_length(instances_matching_ne(obj.CatBoss, "id"))){
 			_angry--;
 		}
 		speed += (friction + (0.3 * _angry)) * current_time_scale;
@@ -2632,7 +2632,7 @@
 #define ntte_draw_bloom
 	 // Silver Scorpion Pet Attack:
 	if(array_length(obj.VenomBlast)){
-		with(instances_matching_ne(obj.VenomBlast, "id", null)){
+		with(instances_matching_ne(obj.VenomBlast, "id")){
 			draw_sprite_ext(sprite_index, image_index, x, y, image_xscale * 2, image_yscale * 2, image_angle, image_blend, image_alpha * (charge ? (image_xscale / charge_goal) : 1) * 0.2);
 		}
 	}
@@ -2642,7 +2642,7 @@
 		var	_scale = 2,
 			_alpha = 0.2;
 			
-		with(instances_matching_ne(obj.VenomFlak, "id", null)){
+		with(instances_matching_ne(obj.VenomFlak, "id")){
 			image_xscale *= _scale;
 			image_yscale *= _scale;
 			image_alpha  *= _alpha;
@@ -2656,7 +2656,7 @@
 #define ntte_draw_shadows
 	 // SharkBoss Loop Train:
 	if(array_length(obj.CoastBoss)){
-		with(instances_matching_ne(obj.CoastBoss, "id", null)){
+		with(instances_matching_ne(obj.CoastBoss, "id")){
 			var _fishIndex = 0;
 			with(fish_train){
 				if(instance_exists(self) && other.fish_swim[_fishIndex]){
@@ -2742,4 +2742,4 @@
 #define enemy_face(_dir)                                                                        _dir = ((_dir % 360) + 360) % 360; if(_dir < 90 || _dir > 270) right = 1; else if(_dir > 90 && _dir < 270) right = -1;
 #define enemy_look(_dir)                                                                        _dir = ((_dir % 360) + 360) % 360; if(_dir < 90 || _dir > 270) right = 1; else if(_dir > 90 && _dir < 270) right = -1; if('gunangle' in self) gunangle = _dir;
 #define enemy_target(_x, _y)                                                                    target = (instance_exists(Player) ? instance_nearest(_x, _y, Player) : ((instance_exists(target) && target >= 0) ? target : noone)); return (target != noone);
-#define script_bind(_scriptObj, _scriptRef, _depth, _visible)                           return  mod_script_call_nc('mod', 'teassets', 'script_bind', script_ref_create(script_bind), _scriptObj, (is_real(_scriptRef) ? script_ref_create(_scriptRef) : _scriptRef), _depth, _visible);
+#define script_bind(_scriptObj, _scriptRef, _depth, _visible)                           return  call(scr.script_bind, script_ref_create(script_bind), _scriptObj, (is_real(_scriptRef) ? script_ref_create(_scriptRef) : _scriptRef), _depth, _visible);

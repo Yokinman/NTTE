@@ -1581,7 +1581,7 @@
 						instance_destroy();
 					}
 				}
-				with(instances_matching_ne(_tiles, "id", null)){
+				with(instances_matching_ne(_tiles, "id")){
 					 // TopTinys:
 					for(var _x = bbox_left - 8; _x < bbox_right + 1 + 8; _x += 8){
 						for(var _y = bbox_top - 8; _y < bbox_bottom + 1 + 8; _y += 8){
@@ -1595,7 +1595,7 @@
 				}
 				
 				 // Even Less Softlock: i dislike walls as objects
-				with(instances_matching_ne(_floor, "id", null)){
+				with(instances_matching_ne(_floor, "id")){
 					if(
 						position_meeting(x - 16, y,      Wall) &&
 						position_meeting(x,      y - 16, Wall) &&
@@ -2098,7 +2098,7 @@
 	if(!sprite_exists(sprite_index)){
 		var _instMergeFlak = instances_matching_ne(obj.MergeFlak, "id", id);
 		if(!array_length(instances_matching(instances_matching(_instMergeFlak, "sprite_width", 16), "sprite_height", 16))){
-			var	_inst = instances_matching_ne(inst, "id", null),
+			var	_inst = instances_matching_ne(inst, "id"),
 				_size = 24,
 				_num  = 2;
 				
@@ -5510,7 +5510,7 @@
 				
 				 // Topify:
 				if(array_length(_inst)){
-					with(instances_matching_ne(obj.TopObject, "id", null)){
+					with(instances_matching_ne(obj.TopObject, "id")){
 						with(
 							instances_matching(
 							instances_matching_le(
@@ -5740,7 +5740,7 @@
 			
 			 // Pets:
 			if(array_length(obj.Pet)){
-				with(instances_matching_ne(obj.Pet, "id", null)){
+				with(instances_matching_ne(obj.Pet, "id")){
 					if(light && light_radius[_gray] > 0){
 						draw_circle(x, y, light_radius[_gray] + orandom(1), false);
 					}
@@ -5752,7 +5752,7 @@
 				var	_r = 20 + (80 * _gray),
 					_o = 8  - (2  * _gray);
 					
-				with(instances_matching_ne(obj.PortalPoof, "id", null)){
+				with(instances_matching_ne(obj.PortalPoof, "id")){
 					draw_circle(x, y, _r + random(_o), false);
 				}
 			}
@@ -5781,7 +5781,7 @@
 	
 	 // Merged Flak Ball:
 	if(array_length(obj.MergeFlak)){
-		with(instances_matching_ne(obj.MergeFlak, "id", null)){
+		with(instances_matching_ne(obj.MergeFlak, "id")){
 			var	_scale = 1.5,
 				_alpha = 0.1 * clamp(array_length(inst) / 12, 1, 2);
 				
@@ -5895,4 +5895,4 @@
 #define enemy_face(_dir)                                                                        _dir = ((_dir % 360) + 360) % 360; if(_dir < 90 || _dir > 270) right = 1; else if(_dir > 90 && _dir < 270) right = -1;
 #define enemy_look(_dir)                                                                        _dir = ((_dir % 360) + 360) % 360; if(_dir < 90 || _dir > 270) right = 1; else if(_dir > 90 && _dir < 270) right = -1; if('gunangle' in self) gunangle = _dir;
 #define enemy_target(_x, _y)                                                                    target = (instance_exists(Player) ? instance_nearest(_x, _y, Player) : ((instance_exists(target) && target >= 0) ? target : noone)); return (target != noone);
-#define script_bind(_scriptObj, _scriptRef, _depth, _visible)                           return  mod_script_call_nc('mod', 'teassets', 'script_bind', script_ref_create(script_bind), _scriptObj, (is_real(_scriptRef) ? script_ref_create(_scriptRef) : _scriptRef), _depth, _visible);
+#define script_bind(_scriptObj, _scriptRef, _depth, _visible)                           return  call(scr.script_bind, script_ref_create(script_bind), _scriptObj, (is_real(_scriptRef) ? script_ref_create(_scriptRef) : _scriptRef), _depth, _visible);

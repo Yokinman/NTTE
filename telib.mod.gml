@@ -1,3 +1,9 @@
+/*
+	Don't call scripts from this file directly, instead use the global LWO "scr", like so:
+		scr = mod_variable_get("mod", "teassets", "scr")
+		script_ref_call(scr.name, ...args)
+*/
+
 #define init
 	mod_script_call("mod", "teassets", "ntte_init", script_ref_create(init));
 	
@@ -7,7 +13,9 @@
 		if(is_undefined(_scrName)){
 			break;
 		}
-		lq_set(scr, _scrName, script_ref_create(i));
+		if(_scrName not in scr){
+			lq_set(scr, _scrName, script_ref_create(i));
+		}
 	}
 	
 	 // Bind Events:
@@ -436,7 +444,7 @@
 							_nameInst = instances_matching(_inst, "name", _name);
 							
 						for(var _objName = _name; !is_undefined(_objName); _objName = ds_map_find_value(obj_parent, _objName)){
-							var _objList  = instances_matching_ne(lq_get(obj, _objName), "id", null);
+							var _objList  = instances_matching_ne(lq_get(obj, _objName), "id");
 							
 							lq_set(obj, _objName, _objList);
 							
@@ -463,7 +471,7 @@
 			}
 			else if(!instance_exists(PauseButton) && !instance_exists(BackMainMenu) && UberCont.alarm2 < 0){
 				with(obj_search[? _obj]){
-					lq_set(obj, self, instances_matching_ne(lq_get(obj, self), "id", null));
+					lq_set(obj, self, instances_matching_ne(lq_get(obj, self), "id"));
 				}
 				ds_map_delete(obj_search, _obj);
 			}
@@ -564,7 +572,7 @@
 	
 	if(ds_map_exists(obj_bind, _event)){
 		var _bind = obj_bind[? _event],
-			_inst = instances_matching_ne(_bind.list, "id", null);
+			_inst = instances_matching_ne(_bind.list, "id");
 			
 		_bind.list = _inst;
 		
@@ -637,7 +645,7 @@
 				trace_time(`on_${_event} (${array_length(_inst)})`);
 				
 				 // Disable Events:
-				with(instances_matching_ne(_inst, "id", null)){
+				with(instances_matching_ne(_inst, "id")){
 					variable_instance_set(self, "ntte_lag_" + _event, variable_instance_get(self, "on_" + _event));
 					variable_instance_set(self, "on_"       + _event, []);
 				}
@@ -1332,7 +1340,7 @@
 	
 #define unlock_splat(_name, _text, _sprite, _sound)
 	 // Make Sure UnlockCont Exists:
-	if(!array_length(instances_matching_ne(obj.UnlockCont, "id", null))){
+	if(!array_length(instances_matching_ne(obj.UnlockCont, "id"))){
 		obj_create(0, 0, "UnlockCont");
 	}
 	
@@ -1345,7 +1353,7 @@
 		"snd" : _sound
 	};
 	
-	with(instances_matching_ne(obj.UnlockCont, "id", null)){
+	with(instances_matching_ne(obj.UnlockCont, "id")){
 		if(splash_index >= array_length(unlock) - 1 && splash_timer <= 0){
 			splash_delay = 40;
 		}
@@ -1712,7 +1720,7 @@
 			 // Normal Pickups:
 			if(instance_exists(AmmoPickup) || instance_exists(HPPickup) || instance_exists(RoguePickup)){
 				var _attractDis = 30 + (40 * _pluto);
-				with(instances_matching_ne([AmmoPickup, HPPickup, RoguePickup], "id", null)){
+				with(instances_matching_ne([AmmoPickup, HPPickup, RoguePickup], "id")){
 					var _p = instance_nearest(x, y, Player);
 					if(instance_exists(_p) && point_distance(x, y, _p.x, _p.y) >= _attractDis){
 						var	_dis = 6 * current_time_scale,
@@ -1991,7 +1999,7 @@
 	var	_disMax  = infinity,
 		_nearest = noone;
 		
-	with(instances_matching_ne(_obj, "id", null)){
+	with(instances_matching_ne(_obj, "id")){
 		var _dis = point_distance(_x, _y, x, y);
 		if(_dis < _disMax){
 			_disMax  = _dis;
@@ -2013,7 +2021,7 @@
 	var	_disMax  = infinity,
 		_nearest = noone;
 		
-	with(instances_matching_ne(_obj, "id", null)){
+	with(instances_matching_ne(_obj, "id")){
 		var _dis = distance_to_point(_x, _y);
 		if(_dis < _disMax){
 			_disMax  = _dis;
@@ -2039,7 +2047,7 @@
 		_disBMax = infinity,
 		_nearest = noone;
 		
-	with(instances_matching_ne(_obj, "id", null)){
+	with(instances_matching_ne(_obj, "id")){
 		var	_disA = point_distance(x, y, clamp(x, _x1, _x2), clamp(y, _y1, _y2)),
 			_disB = point_distance(x, y, _cx, _cy);
 			
@@ -2068,7 +2076,7 @@
 		_disBMax = infinity,
 		_nearest = noone;
 		
-	with(instances_matching_ne(_obj, "id", null)){
+	with(instances_matching_ne(_obj, "id")){
 		var	_x    = clamp(_cx, bbox_left, bbox_right + 1),
 			_y    = clamp(_cy, bbox_top, bbox_bottom + 1),
 			_disA = point_distance(_x, _y, clamp(_x, _x1, _x2), clamp(_y, _y1, _y2)),
@@ -2266,7 +2274,7 @@
 		Returns a random instance of the given object or array of instances
 	*/
 	
-	var	_inst = instances_matching_ne(_obj, "id", null),
+	var	_inst = instances_matching_ne(_obj, "id"),
 		_size = array_length(_inst);
 		
 	return (
@@ -5937,7 +5945,7 @@
 		}
 	}
 	
-	_newInst = instances_matching_ne(_newInst, "id", null);
+	_newInst = instances_matching_ne(_newInst, "id");
 	
 	if(array_length(_newInst)){
 		return (
@@ -5981,6 +5989,17 @@
 	
 	return _text;
 	
+	
+/// LEGACY
+#define pet_spawn      return call(scr.pet_create,     argument0, argument1, argument2);
+#define pet_get_name   return call(scr.pet_get_name,   argument0, argument1, argument2, argument3);
+#define pet_get_ttip   return call(scr.pet_get_ttip,   argument0, argument1, argument2, argument3);
+#define pet_get_sprite return call(scr.pet_get_sprite, argument0, argument1, argument2, argument3, argument4);
+#define pet_get_sound  return call(scr.pet_get_sound,  argument0, argument1, argument2, argument3, argument4);
+#define pet_set_skin   return call(scr.pet_set_skin,   argument0);
+#define pet_get_icon   return { "spr":call(scr.pet_get_sprite, argument2, argument0, argument1, 0, "icon"), "img":0.4*current_frame, "x":0, "y":0, "xsc":1, "ysc":1, "ang":0, "col":c_white, "alp":1 };
+
+
 /// SCRIPTS
 #macro  call                                                                                    script_ref_call
 #macro  obj                                                                                     global.obj
@@ -6055,4 +6074,4 @@
 #define enemy_face(_dir)                                                                        _dir = ((_dir % 360) + 360) % 360; if(_dir < 90 || _dir > 270) right = 1; else if(_dir > 90 && _dir < 270) right = -1;
 #define enemy_look(_dir)                                                                        _dir = ((_dir % 360) + 360) % 360; if(_dir < 90 || _dir > 270) right = 1; else if(_dir > 90 && _dir < 270) right = -1; if('gunangle' in self) gunangle = _dir;
 #define enemy_target(_x, _y)                                                                    target = (instance_exists(Player) ? instance_nearest(_x, _y, Player) : ((instance_exists(target) && target >= 0) ? target : noone)); return (target != noone);
-#define script_bind(_scriptObj, _scriptRef, _depth, _visible)                           return  mod_script_call_nc('mod', 'teassets', 'script_bind', script_ref_create(script_bind), _scriptObj, (is_real(_scriptRef) ? script_ref_create(_scriptRef) : _scriptRef), _depth, _visible);
+#define script_bind(_scriptObj, _scriptRef, _depth, _visible)                           return  call(scr.script_bind, script_ref_create(script_bind), _scriptObj, (is_real(_scriptRef) ? script_ref_create(_scriptRef) : _scriptRef), _depth, _visible);

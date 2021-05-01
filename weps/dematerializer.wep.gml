@@ -33,7 +33,7 @@
 		_needProj = true;
 		
 	 // Retain Projectile if youre holding fire:
-	with(instances_matching_ne(obj.ElectroPlasma, "id", null)){
+	with(instances_matching_ne(obj.ElectroPlasma, "id")){
 		_needProj = false;
 		lifetime = weapon_get_load(_wep) + 1;
 	}

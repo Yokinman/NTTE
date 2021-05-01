@@ -196,7 +196,7 @@
 	call(scr.unlock_set, "skin:red crystal", true);
 	
 	 // Warping:
-	with(instances_matching_ne(obj.WarpPortal, "id", null)){
+	with(instances_matching_ne(obj.WarpPortal, "id")){
 		if(!instance_exists(portal)){
 			call(scr.area_set, area, subarea, loops);
 			if(!call(scr.area_get_secret, area)){
@@ -301,7 +301,7 @@
 	
 	 // Warp Rooms:
 	if(styleb == 0 && GameCont.subarea > 0 && GameCont.subarea != 3){
-		if(chance(1, 12 * array_length(instances_matching_ne(obj.Warp, "id", null)))){
+		if(chance(1, 12 * array_length(instances_matching_ne(obj.Warp, "id")))){
 			var _w          = 2,
 				_h          = 2,
 				_type       = "",
@@ -580,4 +580,4 @@
 #define enemy_face(_dir)                                                                        _dir = ((_dir % 360) + 360) % 360; if(_dir < 90 || _dir > 270) right = 1; else if(_dir > 90 && _dir < 270) right = -1;
 #define enemy_look(_dir)                                                                        _dir = ((_dir % 360) + 360) % 360; if(_dir < 90 || _dir > 270) right = 1; else if(_dir > 90 && _dir < 270) right = -1; if('gunangle' in self) gunangle = _dir;
 #define enemy_target(_x, _y)                                                                    target = (instance_exists(Player) ? instance_nearest(_x, _y, Player) : ((instance_exists(target) && target >= 0) ? target : noone)); return (target != noone);
-#define script_bind(_scriptObj, _scriptRef, _depth, _visible)                           return  mod_script_call_nc('mod', 'teassets', 'script_bind', script_ref_create(script_bind), _scriptObj, (is_real(_scriptRef) ? script_ref_create(_scriptRef) : _scriptRef), _depth, _visible);
+#define script_bind(_scriptObj, _scriptRef, _depth, _visible)                           return  call(scr.script_bind, script_ref_create(script_bind), _scriptObj, (is_real(_scriptRef) ? script_ref_create(_scriptRef) : _scriptRef), _depth, _visible);

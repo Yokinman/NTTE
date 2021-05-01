@@ -181,9 +181,9 @@
 	
 	 // Create Alert:
 	with(_target){
-		if("ntte_crime_alert" not in self || !array_equals(ntte_crime_alert, instances_matching_ne(ntte_crime_alert, "id", null))){
+		if("ntte_crime_alert" not in self || !array_equals(ntte_crime_alert, instances_matching_ne(ntte_crime_alert, "id"))){
 			if("ntte_crime_alert" in self){
-				with(instances_matching_ne(ntte_crime_alert, "id", null)){
+				with(instances_matching_ne(ntte_crime_alert, "id")){
 					instance_destroy();
 				}
 			}

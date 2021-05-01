@@ -85,7 +85,7 @@
 	var _wep = call(scr.weapon_step_init, _primary);
 	
 	 // Portal Bullet Control:
-	_wep.inst = instances_matching_ne(_wep.inst, "id", null);
+	_wep.inst = instances_matching_ne(_wep.inst, "id");
 	if(array_length(_wep.inst)){
 		 // Dynamic Reload:
 		wep_set(_primary, "reload",    max(wep_get(_primary, "reload", 0), weapon_get_load(_wep)));

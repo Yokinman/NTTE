@@ -1056,7 +1056,7 @@
 	call(scr.obj_create, other.x, other.y, "BonusHealthPickup");
 	
 	 // No Fun Allowed:
-	with(instances_matching_ne(obj.BonusHealthMimic, "id", null)){
+	with(instances_matching_ne(obj.BonusHealthMimic, "id")){
 		if(canmelee == true){
 			canmelee = false;
 			alarm11  = other.alarm11;
@@ -2145,7 +2145,7 @@
 				var _inst = instances_matching_ne(Crown, "ntte_crime_alert", null);
 				if(array_length(_inst)){
 					with(_inst){
-						if(array_length(instances_matching_ne(ntte_crime_alert, "id", null))){
+						if(array_length(instances_matching_ne(ntte_crime_alert, "id"))){
 							if(distance_to_object(other) < _dis){
 								speed = 0;
 							}
@@ -3215,7 +3215,7 @@
 		
 		 // Find Player:
 		if(instance_exists(Player)){
-			with(call(scr.array_shuffle, instances_matching_ne(Floor, "id", null))){
+			with(call(scr.array_shuffle, instances_matching_ne(Floor, "id"))){
 				if(!place_meeting(x, y, Wall)){
 					if(distance_to_object(Player) < 96 && !place_meeting(x, y, Player)){
 						other.x = bbox_center_x;
@@ -4041,7 +4041,7 @@
 	 // Blink Chests:
 	if(type == "basic" && array_length(chest)){
 		if(array_length(obj.AlertIndicator)){
-			var _inst = instances_matching_ne(chest, "id", null);
+			var _inst = instances_matching_ne(chest, "id");
 			if(array_length(_inst)){
 				with(_inst){
 					var _instAlert = instances_matching(obj.AlertIndicator, "target", self);
@@ -4094,7 +4094,7 @@
 	}
 	
 	 // Delete Open Mind Chests:
-	with(instances_matching_ne(chest, "id", null)){
+	with(instances_matching_ne(chest, "id")){
 		//instance_create(x, y, FishA);
 		instance_delete(self);
 	}
@@ -4276,7 +4276,7 @@
 			}
 			
 			 // Disable All Altars:
-			with(instances_matching_ne(obj.PalaceAltar, "id", null)){
+			with(instances_matching_ne(obj.PalaceAltar, "id")){
 				alarm0 = irandom_range(10, 20);
 				if(self != other){
 					skill = mut_none;
@@ -6005,7 +6005,7 @@
 	 // Grabbing Custom Pickups:
 	if(array_length(obj.CustomPickup)){
 		if(instance_exists(Player) || instance_exists(Portal)){
-			var _inst = instances_matching_ne([Player, Portal], "id", null);
+			var _inst = instances_matching_ne([Player, Portal], "id");
 			if(array_length(_inst)){
 				with(_inst){
 					if(place_meeting(x, y, Pickup)){
@@ -6386,7 +6386,7 @@
 #define ntte_draw_shadows
 	 // Weapons Stuck in Ground:
 	if(array_length(obj.WepPickupGrounded)){
-		with(instances_matching_ne(obj.WepPickupGrounded, "id", null)){
+		with(instances_matching_ne(obj.WepPickupGrounded, "id")){
 			draw_sprite(spr_shadow, 0, x + spr_shadow_x, y + spr_shadow_y);
 		}
 	}
@@ -6394,7 +6394,7 @@
 #define ntte_draw_bloom
 	 // Bonus Ammo FX:
 	if(array_length(obj.BonusAmmoFire)){
-		with(instances_matching_ne(obj.BonusAmmoFire, "id", null)){
+		with(instances_matching_ne(obj.BonusAmmoFire, "id")){
 			draw_sprite_ext(sprite_index, image_index, x, y, image_xscale * 2, image_yscale * 2, image_angle, image_blend, image_alpha * ((image_xscale + image_yscale) / 12));
 		}
 	}
@@ -6410,7 +6410,7 @@
 			 // Shops:
 			if(array_length(obj.ChestShop)){
 				var _r = 32 + (48 * _gray);
-				with(instances_matching_ne(obj.ChestShop, "id", null)){
+				with(instances_matching_ne(obj.ChestShop, "id")){
 					draw_circle(
 						lerp(x, xstart, 0.2) - 1,
 						lerp(y, ystart, 0.2) - 1,
@@ -6423,7 +6423,7 @@
 			 // Bonus Pickups:
 			if(array_length(obj.BonusPickup)){
 				var _r = 16 + (32 * _gray);
-				with(instances_matching_ne(obj.BonusPickup, "id", null)){
+				with(instances_matching_ne(obj.BonusPickup, "id")){
 					draw_circle(x - 1, y - 1, _r + random(2), false);
 				}
 			}
@@ -6431,7 +6431,7 @@
 			 // Bonus Chests:
 			if(array_length(obj.BonusChest) || array_length(obj.BonusMimic)){
 				var _r = 16 + (48 * _gray);
-				with(instances_matching_ne(call(scr.array_combine, obj.BonusChest, obj.BonusMimic), "id", null)){
+				with(instances_matching_ne(call(scr.array_combine, obj.BonusChest, obj.BonusMimic), "id")){
 					draw_circle(x - 1, y - 1, _r + random(2), false);
 				}
 			}
@@ -6770,4 +6770,4 @@
 #define enemy_face(_dir)                                                                        _dir = ((_dir % 360) + 360) % 360; if(_dir < 90 || _dir > 270) right = 1; else if(_dir > 90 && _dir < 270) right = -1;
 #define enemy_look(_dir)                                                                        _dir = ((_dir % 360) + 360) % 360; if(_dir < 90 || _dir > 270) right = 1; else if(_dir > 90 && _dir < 270) right = -1; if('gunangle' in self) gunangle = _dir;
 #define enemy_target(_x, _y)                                                                    target = (instance_exists(Player) ? instance_nearest(_x, _y, Player) : ((instance_exists(target) && target >= 0) ? target : noone)); return (target != noone);
-#define script_bind(_scriptObj, _scriptRef, _depth, _visible)                           return  mod_script_call_nc('mod', 'teassets', 'script_bind', script_ref_create(script_bind), _scriptObj, (is_real(_scriptRef) ? script_ref_create(_scriptRef) : _scriptRef), _depth, _visible);
+#define script_bind(_scriptObj, _scriptRef, _depth, _visible)                           return  call(scr.script_bind, script_ref_create(script_bind), _scriptObj, (is_real(_scriptRef) ? script_ref_create(_scriptRef) : _scriptRef), _depth, _visible);
