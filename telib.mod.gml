@@ -5973,7 +5973,7 @@
 	if(argument_count > _valuePos){
 		 // Single Value:
 		if(argument_count <= _valuePos + 1){
-			_text = string_replace_all(_text, "%", argument[_valuePos]);
+			_text = string_replace_all(_text, "%", string(argument[_valuePos]));
 		}
 		
 		 // Multiple Values:
