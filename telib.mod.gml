@@ -4177,6 +4177,8 @@
 		}
 	}
 	
+	return _wep;
+	
 #define weapon_ammo_fire(_wep)
 	/*
 		Called from a 'weapon_fire' script to process LWO weapons with internal ammo
