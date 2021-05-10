@@ -539,7 +539,7 @@
 		arc_inst    = noone;
 		arcing      = 0;
 		elite       = 0;
-		wave        = random(100);
+		wave        = random(180);
 		
 		 // Alarms:
 		alarm1 = 15 + random(45);
@@ -605,15 +605,7 @@
 					elite = 30;
 				}
 				with(arc_inst){
-					call(scr.lightning_connect,
-						other.x,
-						other.y,
-						x,
-						y,
-						((other.elite > 0) ? 16 : 12) * sin(other.wave / 30),
-						true,
-						self
-					);
+					call(scr.lightning_connect, other.x, other.y, x, y, 16 * sin((other.wave / 180) * 2 * pi), true, self);
 				}
 			}
 		}
@@ -849,7 +841,7 @@
 		damage       = 3;
 		force        = 3;
 		typ          = 2;
-		wave         = irandom(90);
+		wave         = current_frame + choose(0, 150) + random(30);
 		tether       = 0;
 		tether_x     = x;
 		tether_y     = y;
@@ -964,7 +956,7 @@
 					_y1,
 					_x2,
 					_y2,
-					(point_distance(_x1, _y1, _x2, _y2) / 4) * sin(wave / 90),
+					(point_distance(_x1, _y1, _x2, _y2) / 4) * sin((wave / 300) * 2 * pi),
 					false,
 					self
 				)){
@@ -1133,30 +1125,27 @@
 			_y1,
 			_x2,
 			_y2,
-			(point_distance(_x1, _y1, _x2, _y2) / 4) * sin(wave / 90),
+			(point_distance(_x1, _y1, _x2, _y2) / 4) * sin((wave / 300) * 2 * pi),
 			false,
 			self
 		)){
+			with(instance_create(x, y, Lightning)){
+				other.image_speed = image_speed;
+				instance_delete(self);
+			}
 			with(instance_create(x, y, BoltTrail)){
 				sprite_index = spr.ElectroPlasmaTether;
 				image_index  = other.image_index;
+				image_speed  = other.image_speed;
 				image_xscale = other.image_xscale;
-				image_yscale = other.image_yscale;
+				image_yscale = other.image_yscale * power(0.4 / other.image_speed, 4/3) - random(0.4);
 				image_angle  = other.image_angle;
 				image_blend  = other.image_blend;
 				image_alpha  = other.image_alpha;
-				hspeed       = other.hspeed;
-				vspeed       = other.vspeed;
-				
-				with(other) if(!place_meeting(_x1, _y1, Wall) && !place_meeting(_x2, _y2, Wall)){
-					other.direction = direction;
-					other.speed = max(0, speed - 1);
-				}
-				
-				image_yscale -= random(0.4);
-				depth = -3;
+				depth        = -3;
 			}
-			instance_delete(self);
+			image_index = 0;
+			image_alpha = 0;
 		}
 	}
 	
@@ -4089,7 +4078,7 @@
 		creator_offx = 17;
 		creator_offy = 2;
 		num          = 3;
-		wave         = random(1000);
+		wave         = random(960);
 		time         = random_range(8, 16) * (1 + (0.5 * skill_get(mut_laser_brain)));
 		target       = noone;
 		target_x     = x;
@@ -4186,7 +4175,7 @@
 					other.y,
 					_tx,
 					_ty,
-					(point_distance(other.x, other.y, _tx, _ty) / 4) * sin(other.wave / 90),
+					(power(point_distance(other.x, other.y, _tx, _ty), 0.6) * sin((other.wave / 240) * 2 * pi)) + (4 * cos((other.wave / 960) * 2 * pi)),
 					false,
 					self
 				);

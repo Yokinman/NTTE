@@ -897,6 +897,8 @@
 	hiding        = false;
 	// arcing        = 0;
 	// arcing_attack = 0;
+	arc_list      = [];
+	arc_wait      = 0;
 	path_wall     = [Wall];
 	
 	 // Stat:
@@ -929,7 +931,7 @@
 	if(_name == "arcing"){
 		var _time = "";
 		
-		_time += string_lpad(string(floor((_value / power(60, 2)))),      "0", 1); // Hours
+		_time += string_lpad(string(floor((_value / power(60, 2))     )), "0", 1); // Hours
 		_time += ":";
 		_time += string_lpad(string(floor((_value / power(60, 1)) % 60)), "0", 2); // Minutes
 		_time += ":";
@@ -950,70 +952,77 @@
 			spr_shadow = shd16;
 		}
 		
-		 // Arcing:
-		var	_skill = skill_get(mut_laser_brain),
-			_inst  = [leader],
-			_amax  = 256,
-			_ammo  = _amax,
-			_cost  = 8, // Base ammo cost for each instance tethered
-			_x     = x,
-			_y     = y;
-			
-		//stat.arcing += (current_time_scale / 30);
-		
-		 // Compile List (leader, leader's pets, leader's projectiles):
-		_inst = call(scr.array_combine,
-			_inst,
-			instances_matching(projectile, "creator", leader),
-			instances_matching(obj.Pet, "leader", leader)
-		);
-		_inst = instances_matching(_inst, "visible", true);
-		 
-		 // Arcing:
-		if(array_length(_inst)){
-			while(_ammo > 0 && array_length(_inst)){
-				with(call(scr.instance_nearest_array, _x, _y, _inst)){
-					var	_nx = x + hspeed_raw,
-						_ny = y + vspeed_raw;
-						
-					if(!collision_line(_x, _y, _nx, _ny, Wall, false, false)){
-						var _dis = point_distance(_x, _y, _nx, _ny);
-						
-						if(instance_is(self, projectile)){
-							_ammo -= (_dis + _cost);
-						}
-						
-						 // Arc to Instance:
-						if(_ammo > 0){
-							var _arc = 24 * ((1 - _dis) / _amax) * sin(other.wave / 60);
-							with(call(scr.lightning_connect, _x, _y, _nx, _ny, _arc, false, other)){
-								can_prism_duplicate = false;
-							}
-							
-							 // Effects:
-							if(chance_ct(1, 10)){
-								instance_create(_nx, _ny, PortalL);
-							}
-							with(instance_create(_nx, _ny, BulletHit)){
-								sprite_index    = sprLightningHit;
-								image_xscale    = 2/3;
-								image_yscale    = image_xscale;
-								depth           = 0;
-								image_index     = ((current_frame + _arc) * image_speed) % image_number;
-								image_speed_raw = image_number;
-							}
-							
-							 // Update Tether Origin:
-							_x = _nx;
-							_y = _ny;
-						}
-					}
-					
-					 // Cull from List:
-					_inst = call(scr.array_delete_value, _inst, self);
-				}
-			}
-		}
+		//var	_skill = skill_get(mut_laser_brain),
+		//	_inst  = [leader],
+		//	_amax  = 256,
+		//	_ammo  = _amax,
+		//	_cost  = 8, // Base ammo cost for each instance tethered
+		//	_x     = x,
+		//	_y     = y;
+		//	
+		//if(array_length(_inst)){
+		//	var	_ax = x,
+		//		_ay = y,
+		//		_instSort = [];
+		//		
+		//	with(_inst){
+		//		if(array_find_index(other.arc_list, self) < 0){
+		//			var _dis = point_distance(_ax, _ay, _x, _y);
+		//			if(collision_line(_ax, _ay, _x, _y, Wall, false, false) ||  > _disMax){
+		//				array_push(_instSort, [self, point_distance(x, y, other.x, other.y)]);
+		//			}
+		//		}
+		//	}
+		//	array_sort_sub(_instSort, 1, true);
+		//	
+		//	
+		//	
+		//	while(_ammo > 0 && array_length(_inst)){
+		//		with(call(scr.instance_nearest_array, _x, _y, _inst)){
+		//			call(scr.motion_step, self, 1);
+		//			
+		//			var	_nx = bbox_center_x,
+		//				_ny = bbox_center_y;
+		//				
+		//			if(!collision_line(_x, _y, _nx, _ny, Wall, false, false)){
+		//				var _dis = point_distance(_x, _y, _nx, _ny);
+		//				
+		//				if(instance_is(self, projectile)){
+		//					_ammo -= (_dis + _cost);
+		//				}
+		//				
+		//				 // Arc to Instance:
+		//				if(_ammo > 0){
+		//					var _arc = lerp(24, 4, clamp((_dis - 32) / 256, 0, 1)) * sin(other.wave / 60);
+		//					//_arc = 16;
+		//					call(scr.lightning_connect, _x, _y, _nx, _ny, _arc, false, other);
+		//					
+		//					 // Effects:
+		//					/*if(chance_ct(1, 30)){
+		//						instance_create(_nx, _ny, PortalL);
+		//					}*/
+		//					if(instance_is(self, projectile) && frame_active(10)){
+		//						with(instance_create(_nx, _ny, BloodLust)){
+		//							sprite_index = sprLightningHit;
+		//							image_xscale = 2/3;
+		//							image_yscale = image_xscale;
+		//							depth        = 0;
+		//							creator      = other;
+		//						}
+		//					}
+		//					
+		//					 // Update Tether Origin:
+		//					_x = _nx;
+		//					_y = _ny;
+		//				}
+		//			}
+		//			call(scr.motion_step, self, -1);
+		//			
+		//			 // Cull from List:
+		//			_inst = call(scr.array_delete_value, _inst, self);
+		//		}
+		//	}
+		//}
 	}
 	
 	 // He is bouncy:
@@ -1090,15 +1099,13 @@
 			motion_add(_leaderDir + orandom(60), 1.5 + random(1.5));
 			enemy_look(direction);
 			
-			/*
 			 // More Aggressive:
-			if(arcing >= 1 && "index" in leader){
+			if(array_length(arc_list) && "index" in leader){
 				var _enemy = instance_nearest(x, y, enemy);
 				if(instance_exists(_enemy) && point_distance(x, y, _enemy.x, _enemy.y) < 160){
 					motion_add(point_direction(x, y, mouse_x[leader.index], mouse_y[leader.index]) + orandom(10), 2);
 				}
 			}
-			*/
 			
 			return 20 + random(10);
 		}
@@ -2486,162 +2493,189 @@
 		 // Aimlessly Float:
 		enemy_walk(direction, 1);
 		
-		 // Duplicate Friendly Bullets:
-		with(
-			instances_matching(
-				call(scr.instances_meeting_rectangle, bbox_left - 8, bbox_top - 8, bbox_right + 8, bbox_bottom + 8, call(scr.array_combine,
-					instances_matching(projectile, "team", leader.team),
-					instances_matching(instances_matching_ne(projectile, "team", leader.team), "creator", leader)
-				)),
-				"can_prism_duplicate", true, null
-			)
-		){
-			if(distance_to_object(other) < 8){
-				if("prism_duplicate" not in self){
-					prism_duplicate = false;
-				}
-				can_prism_duplicate = false;
-				
-				if(!prism_duplicate){
-					with(other){
-						speed *= 0.5;
-						stat.splits++;
-					}
-					
-					 // Slice FX:
-					var	_dir = random(360),
-						_disMax = 6;
-						
-					for(var _dis = _disMax; _dis >= -_disMax; _dis -= 2){
-						with(instance_create(other.x + lengthdir_x(_dis, _dir), other.y + lengthdir_y(_dis, _dir), BoltTrail)){
-							motion_add(_dir, 1);
-							image_angle  = _dir;
-							image_xscale = 2;
-							image_yscale = 1 + (1 * (1 - ((_dis + _disMax) / (2 * _disMax))));
-							if(skill_get(mut_bolt_marrow) > 0){
-								image_yscale *= 0.7;
-							}
-							depth = -4;
-						}
-					}
-					instance_create(x + orandom(16), y + orandom(16), CaveSparkle);
-					call(scr.sound_play_at, x, y, sndCrystalShield, 1.4 + orandom(0.1), 2.4);
-					other.flash_frame = max(other.flash_frame, current_frame + max(1, sprite_height / 16));
-					
-					 // Curse:
-					var _cursed = ("curse" in self && curse <= 0);
-					if(_cursed){
-						curse = true;
-						
-						 // FX:
-						for(var i = 0; i < 3; i++){
-							with(call(scr.fx, x, y, [direction + orandom(5), 2 + (3 * i)], AcidStreak)){
-								sprite_index = spr.WaterStreak;
-								image_speed = random_range(0.2, 0.4);
-								image_blend = make_color_rgb(103, 27, 131);
-								depth = -4;
-							}
-						}
-						sound_play_pitch(sndCursedChest, 0.8);
-					}
-					
-					 // Duplicate:
-					if(!_cursed || array_find_index(obj.Trident, self) < 0){
-						var	_clone    = call(scr.instance_clone, self),
-							_accuracy = variable_instance_get(other.leader, "accuracy", 1);
-							
-						 // Object-Specific:
-						switch(_clone.object_index){
-							
-							case Laser:
+		 // Duplicate Friendly Projectiles:
+		if(instance_exists(projectile)){
+			var _searchDis = 8;
+			if(distance_to_object(projectile) <= _searchDis){
+				var _inst = instances_matching(
+					call(scr.instances_meeting_rectangle,
+						bbox_left   - _searchDis,
+						bbox_top    - _searchDis,
+						bbox_right  + _searchDis,
+						bbox_bottom + _searchDis,
+						call(scr.array_combine,
+							instances_matching(projectile, "team", leader.team),
+							instances_matching(instances_matching_ne(projectile, "team", leader.team), "creator", leader)
+						)
+					),
+					"can_prism_duplicate", true, null
+				);
+				if(array_length(_inst)){
+					with(_inst){
+						if(distance_to_object(other) <= _searchDis){
+							if(speed != 0 || x != xstart || y != ystart || !position_meeting(xstart, ystart, other)){
+								can_prism_duplicate = false;
 								
-								 // Manually Offset Lasers:
-								var	_l = point_distance(xstart, ystart, other.x, other.y) + 12,
-									_d = image_angle;
+								if("prism_duplicate" not in self || !prism_duplicate){
+									prism_duplicate = false;
 									
-								with(_clone){
-									x = other.xstart + lengthdir_x(_l, _d);
-									y = other.ystart + lengthdir_y(_l, _d);
-									xstart = x;
-									ystart = y;
-									image_angle += orandom(20 * _accuracy);
-									with(self){
-										event_perform(ev_alarm, 0);
-									}
-								}
-								
-								break;
-								
-							case Lightning:
-								
-								 // No Cloning Other Lightning Within the Chain:
-								for(
-									var i = id + ceil(ammo);
-									(i > id || instance_is(i, Lightning) || (i > id - 100 && !instance_exists(i)));
-									i--
-								){
-									if(instance_is(i, Lightning)) with(i){
-										prism_duplicate = true;
-									}
-								}
-								
-								 // Make Lightning Epic:
-								with(_clone){
-									 // Offset Direction:
-									image_angle = other.image_angle + (random_range(20, 40) * choose(-1, 1) * _accuracy);
+									 // Stat:
+									other.stat.splits++;
 									
-									 // Grow:
-									var	_varCopy = variable_instance_get_names(self),
-										_varNo = [
-											"id", "object_index", "bbox_bottom", "bbox_top", "bbox_right", "bbox_left", "image_number", "sprite_yoffset", "sprite_xoffset", "sprite_height", "sprite_width",
-											"ammo", "x", "y", "xstart", "ystart", "xprevious", "yprevious", "image_xscale", "image_yscale", "image_angle", "direction"
-										];
+									 // Slow Down:
+									other.speed *= 0.5;
+									
+									 // Slice FX:
+									var	_dir = random(360),
+										_disMax = 6;
 										
-									ammo = min(30, ammo);
-									with(self){
-										event_perform(ev_alarm, 0);
-									}
-									with(instances_matching_gt(Lightning, "id", id)){
-										prism_duplicate = true;
-										with(_varCopy){
-											if(array_find_index(_varNo, self) < 0){
-												variable_instance_set(other, self, variable_instance_get(_clone, self));
+									for(var _dis = _disMax; _dis >= -_disMax; _dis -= 2){
+										with(instance_create(other.x + lengthdir_x(_dis, _dir), other.y + lengthdir_y(_dis, _dir), BoltTrail)){
+											motion_add(_dir, 1);
+											image_angle  = _dir;
+											image_xscale = 2;
+											image_yscale = 1 + (1 * (1 - ((_dis + _disMax) / (2 * _disMax))));
+											if(skill_get(mut_bolt_marrow) > 0){
+												image_yscale *= 0.7;
 											}
+											depth = -4;
 										}
 									}
+									instance_create(x + orandom(16), y + orandom(16), CaveSparkle);
+									call(scr.sound_play_at, x, y, sndCrystalShield, 1.4 + orandom(0.1), 2.4);
+									other.flash_frame = max(other.flash_frame, current_frame + max(1, sprite_height / 16));
+									
+									 // Curse:
+									var _cursed = ("curse" in self && curse <= 0);
+									if(_cursed){
+										curse = true;
+										
+										 // FX:
+										for(var i = 0; i < 3; i++){
+											with(call(scr.fx, x, y, [direction + orandom(5), 2 + (3 * i)], AcidStreak)){
+												sprite_index = spr.WaterStreak;
+												image_speed = random_range(0.2, 0.4);
+												image_blend = make_color_rgb(103, 27, 131);
+												depth = -4;
+											}
+										}
+										sound_play_pitch(sndCursedChest, 0.8);
+									}
+									
+									 // Duplicate:
+									if(!_cursed || array_find_index(obj.Trident, self) < 0){
+										var	_clone    = call(scr.instance_clone, self),
+											_accuracy = variable_instance_get(other.leader, "accuracy", 1);
+											
+										 // Object-Specific:
+										switch(_clone.object_index){
+											
+											case Laser:
+												
+												 // Manually Offset Lasers:
+												var	_l = point_distance(xstart, ystart, other.x, other.y) + 12,
+													_d = image_angle;
+													
+												with(_clone){
+													x = other.xstart + lengthdir_x(_l, _d);
+													y = other.ystart + lengthdir_y(_l, _d);
+													xstart = x;
+													ystart = y;
+													image_angle += orandom(20 * _accuracy);
+													with(self){
+														event_perform(ev_alarm, 0);
+													}
+												}
+												
+												break;
+												
+											case Lightning:
+												
+												 // No Cloning Other Lightning Within the Chain:
+												for(
+													var i = id + ceil(ammo);
+													(i > id || instance_is(i, Lightning) || (i > id - 100 && !instance_exists(i)));
+													i--
+												){
+													if(instance_is(i, Lightning)) with(i){
+														prism_duplicate = true;
+													}
+												}
+												
+												 // Make Lightning Epic:
+												with(_clone){
+													 // Offset Direction:
+													image_angle = other.image_angle + (random_range(20, 40) * choose(-1, 1) * _accuracy);
+													
+													 // Grow:
+													var	_varCopy = variable_instance_get_names(self),
+														_varNo   = [
+															"id", "object_index", "bbox_bottom", "bbox_top", "bbox_right", "bbox_left", "image_number", "sprite_yoffset", "sprite_xoffset", "sprite_height", "sprite_width",
+															"ammo", "x", "y", "xstart", "ystart", "xprevious", "yprevious", "image_xscale", "image_yscale", "image_angle", "direction"
+														];
+														
+													ammo = min(30, ammo);
+													with(self){
+														event_perform(ev_alarm, 0);
+													}
+													with(instances_matching_gt(Lightning, "id", id)){
+														prism_duplicate = true;
+														with(_varCopy){
+															if(array_find_index(_varNo, self) < 0){
+																variable_instance_set(other, self, variable_instance_get(_clone, self));
+															}
+														}
+													}
+												}
+												
+												break;
+												
+											default:
+												
+												 // Offset Direction:
+												var _off = random_range(4, 16) * _accuracy;
+												with([self, _clone]){
+													direction   += _off;
+													image_angle += _off;
+													_off *= -1;
+												}
+												
+												 // Weapon Fix:
+												if(instance_is(self, CustomProjectile) && "wep" in self){
+													_clone.wep = wep;
+												}
+												
+										}
+									}
+									
+									prism_duplicate = true;
 								}
 								
-								break;
-								
-							default:
-								
-								 // Offset Direction:
-								var _off = random_range(4, 16) * _accuracy;
-								with([self, _clone]){
-									direction   += _off;
-									image_angle += _off;
-									_off *= -1;
+								 // Can't Split:
+								else if(speed > 1){
+									sound_play_pitch(sndCursedReminder, 1.5);
 								}
-								
-								 // Weapon Fix:
-								if(instance_is(self, CustomProjectile) && "wep" in self){
-									_clone.wep = wep;
-								}
-								
+							}
 						}
 					}
-					
-					prism_duplicate = true;
-				}
-				else if(speed > 1){
-					sound_play_pitch(sndCursedReminder, 1.5);
 				}
 			}
-		}
-		var _prism = instances_matching(obj.Pet, "pet", pet);
-		with(instances_matching(instances_matching_gt(projectile, "speed", 0), "can_prism_duplicate", false)){
-			if(!array_length(call(scr.instances_meeting_rectangle, bbox_left - 16, bbox_top - 16, bbox_right + 16, bbox_bottom + 16, _prism))){
-				can_prism_duplicate = true;
+			
+			 // Reactivate Duplication on Distant Projectiles:
+			var _inst = instances_matching(instances_matching_gt(projectile, "speed", 0), "can_prism_duplicate", false);
+			if(array_length(_inst)){
+				var _prism = instances_matching(obj.Pet, "pet", pet);
+				with(_inst){
+					if(!array_length(call(scr.instances_meeting_rectangle,
+						bbox_left   - (_searchDis + 8),
+						bbox_top    - (_searchDis + 8),
+						bbox_right  + (_searchDis + 8),
+						bbox_bottom + (_searchDis + 8),
+						_prism
+					))){
+						can_prism_duplicate = true;
+					}
+				}
 			}
 		}
 		
@@ -4391,6 +4425,221 @@
 	}
 	
 #define ntte_step
+	 // Octo Lightning:
+	if(array_length(obj.Pet)){
+		var _instOcto = instances_matching(obj.Pet, "pet", "Octo");
+		if(array_length(_instOcto)){
+			with(_instOcto){
+				var	_arcX   = x,
+					_arcY   = y,
+					_arcID  = self,
+					_arcDis = 160;
+					
+				 // Arc Lightning:
+				if(array_length(arc_list)){
+					var	_arcPos      = 0,
+						_arcBreakPos = (visible ? -1 : 0);
+						
+					with(arc_list){
+						 // Check if Broken:
+						if(_arcBreakPos < 0){
+							if(instance_exists(id)){
+								with(id){
+									call(scr.motion_step, self, 1);
+									
+									var	_x = bbox_center_x,
+										_y = bbox_center_y;
+										
+									 // Update Position:
+									if(distance_to_object(_arcID) <= _arcDis && !collision_line(_x, _y, _arcX, _arcY, Wall, false, false)){
+										other.x = _x;
+										other.y = _y;
+									}
+									
+									 // Connection Broken:
+									else _arcBreakPos = _arcPos;
+									
+									call(scr.motion_step, self, -1);
+								}
+							}
+							
+							 // Connection Broken:
+							else _arcBreakPos = _arcPos;
+						}
+						
+						 // Connecting...
+						if(other.arc_wait > 0 && _arcPos == array_length(other.arc_list) - 1){
+							if(current_frame_active){
+								var	_dis = random(point_distance(_arcX, _arcY, x, y)),
+									_dir = point_direction(_arcX, _arcY, x, y);
+									
+								with(instance_create(
+									_arcX + lengthdir_x(_dis, _dir),
+									_arcY + lengthdir_y(_dis, _dir),
+									choose(PortalL, LaserCharge)
+								)){
+									if(object_index == LaserCharge){
+										sprite_index = sprLightning;
+										image_xscale = random_range(0.5, 2);
+										image_yscale = random_range(0.5, 2);
+										image_angle  = random(360);
+										alarm0       = 4 + random(4);
+									}
+									motion_add(random(360), 1);
+								}
+							}
+						}
+						
+						 // Lightning:
+						else{
+							var	_num  = clamp((point_distance(_arcX, _arcY, x, y) - 32) / (_arcDis - 32), 0, 1),
+								_arc  = lerp(24, 8, _num) * sin(((other.wave / 300) + (_arcPos / 3)) * 2 * pi),
+								_inst = call(scr.lightning_connect, _arcX, _arcY, x, y, _arc, false, other);
+								
+							 // Broken, Die:
+							if(other.arc_wait <= 0 && _arcBreakPos >= 0 && _arcPos >= _arcBreakPos){
+								with(_inst){
+									with(instance_create(x, y, Lightning)){
+										other.image_speed = image_speed;
+										instance_delete(self);
+									}
+									with(instance_create(x, y, BoltTrail)){
+										sprite_index = other.sprite_index;
+										image_index  = other.image_index;
+										image_speed  = other.image_speed;
+										image_xscale = other.image_xscale;
+										image_yscale = other.image_yscale * power(0.4 / other.image_speed, 4/3);
+										image_angle  = other.image_angle;
+										image_blend  = other.image_blend;
+										image_alpha  = other.image_alpha;
+										depth        = other.depth;
+									}
+									image_index = 0;
+									image_alpha = 0;
+								}
+							}
+						}
+						
+						_arcX  = x;
+						_arcY  = y;
+						_arcID = id;
+						_arcPos++;
+					}
+					
+					 // Connection Broken:
+					if(arc_wait <= 0 && _arcBreakPos >= 0){
+						instance_create(_arcX, _arcY, LightningHit);
+						arc_list = array_slice(arc_list, 0, _arcBreakPos);
+					}
+					
+					 // Stat:
+					if(array_length(arc_list) > ((arc_wait > 0) ? 1 : 0)){
+						stat.arcing += (current_time_scale / 30);
+					}
+				}
+				
+				 // Connection Delay:
+				if(arc_wait > 0){
+					arc_wait -= current_time_scale;
+					
+					 // Connection Established:
+					if(arc_wait <= 0 && array_length(arc_list)){
+						 // Sound:
+						call(scr.sound_play_at, _arcX, _arcY, sndLightningHit, 2);
+						
+						 // Laser Brain FX:
+						if(skill_get(mut_laser_brain) > 0){
+							var _dir = point_direction(x, y, _arcX, _arcY);
+							with(instance_create(x, y, LaserBrain)){
+								image_angle = _dir + orandom(10);
+								creator     = other;
+							}
+							with(instance_create(_arcX, _arcY, LaserBrain)){
+								image_angle = _dir + orandom(10) + 180;
+								creator     = _arcID;
+							}
+						}
+					}
+				}
+				
+				 // Fetch Connections (leader, leader's pets, leader's projectiles):
+				else if(visible && instance_exists(leader)){
+					var _inst = call(scr.array_combine,
+						instances_matching(leader, "visible", true),
+						instances_matching(instances_matching_ne(instances_matching(obj.Pet, "leader", leader), "id", id), "visible", true)
+					);
+					
+					 // Only Target Projectiles if Player/Pet is Connected:
+					if(array_length(arc_list)){
+						_inst = call(scr.array_combine,
+							_inst,
+							instances_matching(projectile, "creator", leader),
+							instances_matching(instances_matching_ne(projectile, "creator", leader, self), "team", leader.team)
+						);
+					}
+					
+					 // Search Targets:
+					if(array_length(_inst)){
+						with(arc_list){
+							_inst = call(scr.array_delete_value, _inst, id);
+						}
+						if(array_length(_inst)){
+							var	_tx       = leader.x,
+								_ty       = leader.y,
+								_disMax   = infinity,
+								_nearest  = noone,
+								_nearestX = 0,
+								_nearestY = 0;
+								
+							if("gunangle" in leader){
+								_tx += lengthdir_x(_arcDis / 2, leader.gunangle);
+								_ty += lengthdir_y(_arcDis / 2, leader.gunangle);
+							}
+							
+							 // Find Nearest Potential Target:
+							with(_inst){
+								call(scr.motion_step, self, 1);
+								
+								var	_x   = bbox_center_x,
+									_y   = bbox_center_y,
+									_dis = point_distance(_x, _y, _tx, _ty);
+									
+								if(_dis < _disMax){
+									if(distance_to_object(_arcID) <= _arcDis){
+										if(!collision_line(_x, _y, _arcX, _arcY, Wall, false, false)){
+											if("creator" not in self || array_find_index(_instOcto, creator) < 0){
+												_disMax   = _dis;
+												_nearest  = self;
+												_nearestX = _x;
+												_nearestY = _y;
+											}
+										}
+									}
+								}
+								
+								call(scr.motion_step, self, -1);
+							}
+							
+							 // Add:
+							if(instance_exists(_nearest)){
+								array_push(arc_list, {
+									"id" : _nearest,
+									"x"  : _nearestX,
+									"y"  : _nearestY
+								});
+								arc_wait = (
+									instance_is(_nearest, projectile)
+									? min(30, 2 * array_length(arc_list))
+									: 6
+								);
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+	
 	 // Playing Cuz:
 	if(instance_exists(Player)){
 		var _inst = instances_matching(Player, "race", "cuz");

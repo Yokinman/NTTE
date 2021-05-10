@@ -1932,29 +1932,32 @@
 	if(underwater_active){
 		 // Lightning:
 		if(instance_exists(Lightning)){
-			with(Lightning){
-				image_index -= image_speed_raw * 0.75;
-				
-				 // Zap:
-				if(anim_end){
-					with(instance_create(x, y, EnemyLightning)){
-						image_speed  = 0.3;
-						image_xscale = other.image_xscale;
-						image_angle  = other.image_angle;
-						hitid        = 88;
-						
-						 // FX:
-						if(chance(1, 8)){
-							sound_play_hit(sndLightningHit,0.2);
-							with(instance_create(x, y, GunWarrantEmpty)){
-								image_angle = other.direction;
+			var _inst = instances_matching_gt(Lightning, "image_alpha", 0);
+			if(array_length(_inst)){
+				with(_inst){
+					image_index -= image_speed_raw * 0.75;
+					
+					 // Zap:
+					if(anim_end){
+						with(instance_create(x, y, EnemyLightning)){
+							image_speed  = 0.3;
+							image_xscale = other.image_xscale;
+							image_angle  = other.image_angle;
+							hitid        = 88;
+							
+							 // FX:
+							if(chance(1, 8)){
+								sound_play_hit(sndLightningHit,0.2);
+								with(instance_create(x, y, GunWarrantEmpty)){
+									image_angle = other.direction;
+								}
+							}
+							else if(chance(1, 3)){
+								instance_create(x + orandom(18), y + orandom(18), PortalL);
 							}
 						}
-						else if(chance(1, 3)){
-							instance_create(x + orandom(18), y + orandom(18), PortalL);
-						}
+						instance_destroy();
 					}
-					instance_destroy();
 				}
 			}
 		}

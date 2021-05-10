@@ -1884,19 +1884,28 @@
 	
 	return null;
 	
-#define array_delete(_array, _index)
+#define array_delete // array, index, count=1
 	/*
-		Returns a new array with the value at the given index removed
+		Returns a new array with the value(s) at the given index removed
 		
+		Args:
+			array - The array to copy and delete from
+			index - The position of the first value to remove 
+			count - The number of values to remove after the index, defaults to 1
+			
 		Ex:
-			array_delete([1, 2, 3], 1) == [1, 3]
+			array_delete([1, 2, 3], 1)    == [1, 3]
+			array_delete([1, 2, 3], 0, 2) == [3]
 	*/
 	
-	var _new = array_slice(_array, 0, _index);
+	var	_array = argument[0],
+		_index = argument[1],
+		_count = ((argument_count > 2) ? argument[2] : 1),
+		_clone = array_slice(_array, 0, _index);
+		
+	array_copy(_clone, array_length(_clone), _array, _index + _count, array_length(_array) - (_index + _count));
 	
-	array_copy(_new, array_length(_new), _array, _index + 1, array_length(_array) - (_index + 1));
-	
-	return _new;
+	return _clone;
 	
 #define array_delete_value(_array, _value)
 	/*
@@ -3597,7 +3606,7 @@
 		 // Wavy Offset:
 		if(_dis > _disAdd){
 			_wave = (_dis / _disMax) * pi;
-			_off  = 4 * sin((_dis / 8) + (current_frame / 6));
+			_off  = (_arc / 6) * sin((_dis / 8) + (current_frame / 6));
 			_wx   = _x + lengthdir_x(_off, _dir - 90) + (_arc * sin(_wave));
 			_wy   = _y + lengthdir_y(_off, _dir - 90) + (_arc * sin(_wave / 2));
 		}
@@ -3620,7 +3629,7 @@
 			
 			 // Exists 1 Frame:
 			if(_imgInd < 0){
-				_imgInd = ((current_frame + _arc) * image_speed) % image_number;
+				_imgInd = ((current_frame * image_speed) + (instance_exists(creator) ? (creator.xstart + creator.ystart) : 0)) % image_number;
 			}
 			image_index     = _imgInd;
 			image_speed_raw = image_number;
