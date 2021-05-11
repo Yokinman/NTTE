@@ -854,6 +854,27 @@
 	}
 	
 	
+#define FakeDust_create(_x, _y)
+	/*
+		Fake Dust, useful in underwater areas
+	*/
+	
+	with(instance_create(_x, _y, Smoke)){
+		 // Visual:
+		sprite_index = sprDust;
+		image_index  = random(image_number);
+		
+		 // Vars:
+		motion_set(random(360), random(2));
+		friction     = 0.3;
+		image_xscale = 0.8;
+		image_yscale = image_xscale;
+		growspeed    = random(0.005) - 0.025;
+		
+		return self;
+	}
+	
+	
 #define HammerShark_create(_x, _y)
 	with(instance_create(_x, _y, CustomEnemy)){
 		 // Visual:
@@ -973,9 +994,7 @@
 		
 		 // Effects:
 		if(current_frame_active){
-			with(instance_create(x + orandom(8), y + 8, Dust)){
-				motion_add(random(360), 1)
-			}
+			call(scr.fx, [x, 8], y + 8, 1, Dust);
 		}
 		if((charge % 5) < current_time_scale){
 			view_shake_at(x, y, 10);

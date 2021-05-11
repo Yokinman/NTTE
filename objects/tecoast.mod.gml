@@ -2611,7 +2611,7 @@
 			y + lengthdir_y(_dis, _dir) + orandom(32),
 			"BubbleExplosion"
 		);
-		call(scr.projectile_create, x, y, "HyperBubble", _dir, 4);
+		call(scr.projectile_create, self, x, y, "HyperBubble", _dir, 4);
 	}
 	
 	 // Pickups:

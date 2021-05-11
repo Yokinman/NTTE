@@ -2,10 +2,10 @@
 	mod_script_call("mod", "teassets", "ntte_init", script_ref_create(init));
 	
 	 // Sprites:
-	global.sprWep            = sprite_add_weapon("../sprites/weps/sprTeleportGun.png",             4,  4);
-	global.sprWepGold        = sprite_add_weapon("../sprites/weps/sprGoldTeleportGun.png",         4,  4);
-	global.sprWepLoadout     = sprite_add_weapon("../sprites/weps/sprTeleportGunLoadout.png",     24, 24);
-	global.sprWepGoldLoadout = sprite_add_weapon("../sprites/weps/sprGoldTeleportGunLoadout.png", 24, 24);
+	global.sprWep            = spr.TeleportGun;
+	global.sprWepGold        = spr.GoldTeleportGun
+	global.sprWepLoadout     = spr.TeleportGunLoadout;
+	global.sprWepGoldLoadout = spr.GoldTeleportGunLoadout;
 	
 	 // LWO:
 	global.lwoWep = {

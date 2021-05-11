@@ -410,9 +410,7 @@
 	sound_play_pitch(sndBigBanditMeleeStart, 0.8 + random(0.2));
 	view_shake_at(x, y, 10);
 	repeat(5){
-		with(instance_create(x + orandom(24), y + orandom(24), Dust)){
-			waterbubble = true;
-		}
+		call(scr.obj_create, x + orandom(24), y + orandom(24), "FakeDust");
 	}
 	
 	 // Call the bros:
@@ -461,10 +459,7 @@
 	sound_play_pitchvol(sndJockFire, 1.6 + random(0.5), 0.2);
 	view_shake_at(x, y, 10);
 	repeat(5){
-		with(instance_create(x + orandom(24), y + orandom(24), Dust)){
-			waterbubble = true;
-			motion_add(random(360), 2)
-		}
+		call(scr.fx, [x, 24], [y, 24], 2, "FakeDust");
 	}
 	
 	
@@ -3157,9 +3152,7 @@
 	 // PlasmaImpact Setup:
 	with(_explo){
 		image_angle = 0;
-		with(instance_create(x, y, Smoke)){
-			waterbubble = false;
-		}
+		call(scr.obj_create, x, y, "FakeDust");
 	}
 	
 	 // Sounds:
@@ -4353,10 +4346,8 @@
 				}
 				
 				 // Dusty:
-				with(instance_create(x + orandom(4), y + orandom(4), Dust)){
-					waterbubble = false;
+				with(call(scr.fx, [x, 4], [y, 4], [direction, speed], "FakeDust")){
 					depth = other.depth;
-					motion_add(other.direction, other.speed);
 				}
 			}
 		}

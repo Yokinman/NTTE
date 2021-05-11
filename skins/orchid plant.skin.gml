@@ -66,8 +66,9 @@
 		
 		 // Modded:
 		default:
-			if(_spr == spr.GoldTrident  ) return spr.OrchidTrident;
-			if(_spr == spr.GoldTunneller) return spr.OrchidTunneller;
+			if(_spr == spr.GoldTeleportGun) return spr.OrchidTeleportGun;
+			if(_spr == spr.GoldTrident    ) return spr.OrchidTrident;
+			if(_spr == spr.GoldTunneller  ) return spr.OrchidTunneller;
 	}
 	return _spr;
 	

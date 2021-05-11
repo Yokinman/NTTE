@@ -91,13 +91,11 @@
 			Bone      = sprite(p + "sprBone",      1, 6, 6, shnWep);
 			BoneShard = sprite(p + "sprBoneShard", 1, 3, 2, shnWep);
 			
-			 // Tunneller:
-			Tunneller            = sprite(p + "sprTunneller",            1, 14,  6, shnWep);
-			GoldTunneller        = sprite(p + "sprGoldTunneller",        1, 14,  6, shnWep);
-			TunnellerLoadout     = sprite(p + "sprTunnellerLoadout",     1, 24, 24, shnWep);
-			GoldTunnellerLoadout = sprite(p + "sprGoldTunnellerLoadout", 1, 24, 24, shnWep);
-			TunnellerHUD         = sprite(p + "sprTunnellerHUD",         1,  0,  3, shnWep);
-			TunnellerHUDRed      = sprite(p + "sprTunnellerHUD",         1,  0,  3);
+			 // Teleport Gun:
+			TeleportGun            = sprite(p + "sprTeleportGun",            1,  4,  4, shnWep);
+			GoldTeleportGun        = sprite(p + "sprGoldTeleportGun",        1,  4,  4, shnWep);
+			TeleportGunLoadout     = sprite(p + "sprTeleportGunLoadout",     1, 24, 24, shnWep);
+			GoldTeleportGunLoadout = sprite(p + "sprGoldTeleportGunLoadout", 1, 24, 24, shnWep);
 			
 			 // Trident:
 			Trident            = sprite(p + "sprTrident",            1, 11,  6, shnWep);
@@ -105,6 +103,14 @@
 			TridentLoadout     = sprite(p + "sprTridentLoadout",     1, 24, 24, shnWep);
 			GoldTridentLoadout = sprite(p + "sprGoldTridentLoadout", 1, 24, 24, shnWep);
 			msk.Trident        = sprite(p + "mskTrident",            1, 11,  6);
+			
+			 // Tunneller:
+			Tunneller            = sprite(p + "sprTunneller",            1, 14,  6, shnWep);
+			GoldTunneller        = sprite(p + "sprGoldTunneller",        1, 14,  6, shnWep);
+			TunnellerLoadout     = sprite(p + "sprTunnellerLoadout",     1, 24, 24, shnWep);
+			GoldTunnellerLoadout = sprite(p + "sprGoldTunnellerLoadout", 1, 24, 24, shnWep);
+			TunnellerHUD         = sprite(p + "sprTunnellerHUD",         1,  0,  3, shnWep);
+			TunnellerHUDRed      = sprite(p + "sprTunnellerHUD",         1,  0,  3);
 			
 		//#endregion
 		
@@ -1975,6 +1981,7 @@
 				AnglerShotgun         = sprite(p + "sprAnglerShotgun",         1,  3,  3, shnWep);
 				AnglerSlugger         = sprite(p + "sprAnglerSlugger",         1,  1,  3, shnWep);
 				AnglerSplinterGun     = sprite(p + "sprAnglerSplinterGun",     1,  2,  3, shnWep);
+				AnglerTeleportGun     = sprite(p + "sprAnglerTeleportGun",     1,  6,  6, shnWep);
 				AnglerTrident         = sprite(p + "sprAnglerTrident",         1, 12,  7, shnWep);
 				AnglerTunneller       = sprite(p + "sprAnglerTunneller",       1, 13,  6, shnWep);
 				AnglerTunnellerHUD    = sprite(p + "sprAnglerTunneller",       1, 16,  6, shnWep);
@@ -2002,6 +2009,7 @@
 				CoolShotgun         = sprite(p + "sprCoolShotgun",         1,  2, 2, shnWep);
 				CoolSlugger         = sprite(p + "sprCoolSlugger",         1,  2, 2, shnWep);
 				CoolSplinterGun     = sprite(p + "sprCoolSplinterGun",     1,  2, 3, shnWep);
+				CoolTeleportGun     = sprite(p + "sprCoolTeleportGun",     1,  6, 6, shnWep);
 				CoolTrident         = sprite(p + "sprCoolTrident",         1, 12, 8, shnWep);
 				CoolTunneller       = sprite(p + "sprCoolTunneller",       1, 13, 4, shnWep);
 				CoolTunnellerHUD    = sprite(p + "sprCoolTunneller",       1, 16, 4, shnWep);
@@ -2030,6 +2038,7 @@
 				OrchidShotgun         = sprite(p + "sprOrchidShotgun",         1,  5, 3, shnWep);
 				OrchidSlugger         = sprite(p + "sprOrchidSlugger",         1,  4, 4, shnWep);
 				OrchidSplinterGun     = sprite(p + "sprOrchidSplinterGun",     1,  3, 4, shnWep);
+				OrchidTeleportGun     = sprite(p + "sprOrchidTeleportGun",     1,  5, 6, shnWep);
 				OrchidTrident         = sprite(p + "sprOrchidTrident",         1, 12, 7, shnWep);
 				OrchidTunneller       = sprite(p + "sprOrchidTunneller",       1, 14, 9, shnWep);
 				OrchidTunnellerHUD    = sprite(p + "sprOrchidTunneller",       1, 20, 9, shnWep);
@@ -2056,6 +2065,7 @@
 				RedShotgun         = sprite(p + "sprRedShotgun",         1,  4, 2, shnWep);
 				RedSlugger         = sprite(p + "sprRedSlugger",         1,  2, 2, shnWep);
 				RedSplinterGun     = sprite(p + "sprRedSplinterGun",     1,  2, 4, shnWep);
+				RedTeleportGun     = sprite(p + "sprRedTeleportGun",     1,  6, 5, shnWep);
 				RedTrident         = sprite(p + "sprRedTrident",         1, 12, 7, shnWep);
 				RedTunneller       = sprite(p + "sprRedTunneller",       1, 14, 7, shnWep);
 				RedTunnellerHUD    = sprite(p + "sprRedTunneller",       1, 18, 8, shnWep);

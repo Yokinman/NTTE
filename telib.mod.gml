@@ -284,12 +284,20 @@
 					_modName  = _scrt[1];
 					
 				 // Set Name:
-				if("name" in self && name != _name){
-					if(!ds_map_exists(obj_parent, _name)){
-						obj_parent[? _name] = name;
+				if(
+					!instance_is(self, WepPickup)     &&
+					!instance_is(self, CarVenusFixed) &&
+					!instance_is(self, IceFlower)     &&
+					!instance_is(self, Van)           &&
+					!instance_is(self, mutbutton)
+				){
+					if("name" in self && name != _name){
+						if(!ds_map_exists(obj_parent, _name)){
+							obj_parent[? _name] = name;
+						}
 					}
+					name = _name;
 				}
-				name = _name;
 				
 				 // Bind Events:
 				with(
@@ -444,7 +452,7 @@
 							_nameInst = instances_matching(_inst, "name", _name);
 							
 						for(var _objName = _name; !is_undefined(_objName); _objName = ds_map_find_value(obj_parent, _objName)){
-							var _objList  = instances_matching_ne(lq_get(obj, _objName), "id");
+							var _objList = instances_matching_ne(lq_get(obj, _objName), "id");
 							
 							lq_set(obj, _objName, _objList);
 							
