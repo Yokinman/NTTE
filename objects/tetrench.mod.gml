@@ -755,29 +755,43 @@
 	
 	 // Type-Pickups:
 	else switch(type){
+		
 		case 0: // Blue
+			
 			if(chance(2 * pickup_chance_multiplier, 3)){
-				instance_create(x + orandom(2), y + orandom(2), AmmoPickup);
+				if(chance(ultra_get("fish", 1), 5)){
+					instance_create(x, y, FishA);
+					instance_create(x + orandom(2), y + orandom(2), AmmoChest);
+				}
+				else instance_create(x + orandom(2), y + orandom(2), AmmoPickup);
 				
 				 // FX:
 				with(instance_create(x, y, FXChestOpen)){
 					motion_add(other.direction, random(1));
 				}
 			}
+			
 			break;
 			
 		case 1: // Purple
+			
 			if(chance(2 * pickup_chance_multiplier, 3)){
-				instance_create(x + orandom(2), y + orandom(2), HPPickup);
+				if(chance(ultra_get("fish", 1), 5)){
+					instance_create(x, y, FishA);
+					instance_create(x + orandom(2), y + orandom(2), HealthChest);
+				}
+				else instance_create(x + orandom(2), y + orandom(2), HPPickup);
 				
 				 // FX:
 				repeat(2) with(instance_create(x + orandom(4), y + orandom(4), AllyDamage)){
 					motion_add(other.direction + orandom(30), random(1));
 				}
 			}
+			
 			break;
 			
 		case 2: // Green
+			
 			with(instance_create(x, y, BigRad)){
 				motion_add(other.direction, other.speed);
 				motion_add(random(360), 3);
@@ -789,7 +803,9 @@
 				sprite_index = sprEatBigRadPlut;
 				motion_add(other.direction + orandom(30), 1);
 			}
+			
 			break;
+			
 	}
 	
 	
@@ -1121,10 +1137,10 @@
 			_x2,
 			_y2,
 			(point_distance(_x1, _y1, _x2, _y2) / 4) * sin((wave / 300) * 2 * pi),
-			false,
+			(team != 2 && !instance_is(creator, Player)),
 			self
 		)){
-			with(instance_create(x, y, Lightning)){
+			with(instance_create(x, y, object_index)){
 				other.image_speed = image_speed;
 				instance_delete(self);
 			}
@@ -1139,8 +1155,13 @@
 				image_alpha  = other.image_alpha;
 				depth        = -3;
 			}
-			image_index = 0;
-			image_alpha = 0;
+			if(instance_is(self, EnemyLightning)){
+				instance_delete(self);
+			}
+			else{
+				image_index = 0;
+				image_alpha = 0;
+			}
 		}
 	}
 	
@@ -2145,7 +2166,7 @@
 	}
 	
 	eye_dir       += eye_dir_speed * right * current_time_scale;
-	eye_dir_speed *= power(0.1, current_time_scale);
+	eye_dir_speed *= power(0.9, current_time_scale);
 	
 	for(var i = 0; i < array_length(eye); i++){
 		var	_dis = (24 + eye_dis) * max(pit_height, 0),

@@ -5341,7 +5341,15 @@
 								}
 								
 								 // Non-Player:
-								else player_fire_ext(other.direction, other.wep, other.x, other.y, other.team, other.creator, other.accuracy);
+								else player_fire_ext(
+									other.direction,
+									other.wep,
+									other.x,
+									other.y,
+									other.team,
+									other.creator,
+									other.accuracy
+								);
 							}
 						}
 					}

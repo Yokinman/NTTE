@@ -4499,7 +4499,7 @@
 							 // Broken, Die:
 							if(other.arc_wait <= 0 && _arcBreakPos >= 0 && _arcPos >= _arcBreakPos){
 								with(_inst){
-									with(instance_create(x, y, Lightning)){
+									with(instance_create(x, y, object_index)){
 										other.image_speed = image_speed;
 										instance_delete(self);
 									}

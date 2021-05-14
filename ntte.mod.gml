@@ -3495,7 +3495,7 @@
 				with(instances_matching(TopCont, "visible", true)){
 					if(!other.script[3] || depth - 1 <= other.depth){
 						other.script[3] = true;
-						other.script[4] = fade * (fadeout == true || (instance_exists(PopoScene) && (!instance_exists(LastCutscene) || instance_exists(Spiral)) && !instance_exists(Credits) && !instance_exists(GameOverButton)));
+						other.script[4] = ((fadeout == true) ? fade : 0);
 						other.depth     = depth - 1;
 					}
 				}
@@ -3814,20 +3814,28 @@
 			}
 			
 			 // Skill HUD:
-			if(player_get_show_skills(_local) && UberCont.alarm2 < 0){
-				with(call(scr.surface_setup, "HUDSkill", null, null, null)){
-					x = view_xview_nonsync + (game_width - w);
-					y = view_yview_nonsync;
-					draw_surface_ext(surf, x, y, 1 / scale, 1 / scale, 0, _col, 1);
+			if(UberCont.alarm2 < 0){
+				for(var i = 0; player_is_active(player_find_local_nonsync(i)); i++){
+					if(player_get_show_skills(player_find_local_nonsync(i))){
+						with(call(scr.surface_setup, "HUDSkill", null, null, null)){
+							x = view_xview_nonsync + (game_width - w);
+							y = view_yview_nonsync;
+							draw_surface_ext(surf, x, y, 1 / scale, 1 / scale, 0, _col, 1);
+						}
+						break;
+					}
 				}
 			}
 			
 			 // Main HUD:
-			if(player_get_show_hud(_local, _local)){
-				with(call(scr.surface_setup, "HUDMain", null, null, null)){
-					x = view_xview_nonsync;
-					y = view_yview_nonsync;
-					draw_surface_ext(surf, x, y, 1 / scale, 1 / scale, 0, _col, 1);
+			for(var i = 0; player_is_active(player_find_local_nonsync(i)); i++){
+				if(player_get_show_hud(_local, player_find_local_nonsync(i))){
+					with(call(scr.surface_setup, "HUDMain", null, null, null)){
+						x = view_xview_nonsync;
+						y = view_yview_nonsync;
+						draw_surface_ext(surf, x, y, 1 / scale, 1 / scale, 0, _col, 1);
+					}
+					break;
 				}
 			}
 		}
@@ -3842,12 +3850,14 @@
 		if(!instance_exists(Player) && !instance_exists(GenCont) || instance_exists(PopoScene) || instance_exists(LastFire)){
 			if(!instance_exists(UnlockScreen)){
 				with(instances_matching(UberCont, "visible", true)){
-					var _local = player_find_local_nonsync();
-					if(player_is_active(_local) && player_get_show_skills(_local)){
-						with(call(scr.surface_setup, "HUDSkill", null, null, null)){
-							x = view_xview_nonsync + (game_width - w);
-							y = view_yview_nonsync;
-							call(scr.draw_surface_scale, surf, x - view_xview_nonsync, y - view_yview_nonsync, 1 / scale);
+					for(var i = 0; player_is_active(player_find_local_nonsync(i)); i++){
+						if(player_get_show_skills(player_find_local_nonsync(i))){
+							with(call(scr.surface_setup, "HUDSkill", null, null, null)){
+								x = view_xview_nonsync + (game_width - w);
+								y = view_yview_nonsync;
+								call(scr.draw_surface_scale, surf, x - view_xview_nonsync, y - view_yview_nonsync, 1 / scale);
+							}
+							break;
 						}
 					}
 				}
@@ -3978,19 +3988,28 @@
 		var	_hudList = [],
 			_players = 0,
 			_pause   = false,
-			_local   = player_find_local_nonsync(),
 			_vx      = view_xview_nonsync,
 			_vy      = view_yview_nonsync,
 			_gw      = game_width,
 			_gh      = game_height;
 			
-		 // Local HUD Order:
-		while(true){
-			var _index = player_find_local_nonsync(array_length(_hudList));
-			if(player_is_active(_index)){
-				array_push(_hudList, _index);
+		 // Determine HUD Order:
+		for(var _isOnline = 0; _isOnline <= 1; _isOnline++){
+			for(var _index = 0; _index < maxp; _index++){
+				if(player_is_active(_index)){
+					if(player_is_local_nonsync(_index) ^ _isOnline){
+						if(_isOnline == 0){
+							array_push(_hudList, _index);
+						}
+						else for(var i = 0; player_is_active(player_find_local_nonsync(i)); i++){
+							if(player_get_show_hud(_index, player_find_local_nonsync(i))){
+								array_push(_hudList, _index);
+								break;
+							}
+						}
+					}
+				}
 			}
-			else break;
 		}
 		
 		 // Players:
@@ -4003,11 +4022,6 @@
 					if(button_pressed(i, "paus")){
 						_pause = true;
 					}
-				}
-				
-				 // HUD Order:
-				if(array_find_index(_hudList, i) < 0){
-					array_push(_hudList, i);
 				}
 			}
 		}
@@ -4264,11 +4278,16 @@
 			surface_reset_target();
 			
 			 // Draw to Screen:
-			if(_draw && _visible && instance_exists(Player) && player_is_active(_local) && player_get_show_skills(_local)){
-				if(_fade > 0){
-					draw_surface_ext(surf, x, y, 1 / scale, 1 / scale, 0, merge_color(c_white, c_black, min(1, _fade)), 1);
+			if(_draw && _visible && instance_exists(Player)){
+				for(var i = 0; player_is_active(player_find_local_nonsync(i)); i++){
+					if(player_get_show_skills(player_find_local_nonsync(i))){
+						if(_fade > 0){
+							draw_surface_ext(surf, x, y, 1 / scale, 1 / scale, 0, merge_color(c_white, c_black, min(1, _fade)), 1);
+						}
+						else call(scr.draw_surface_scale, surf, x, y, 1 / scale);
+						break;
+					}
 				}
-				else call(scr.draw_surface_scale, surf, x, y, 1 / scale);
 			}
 		}
 		
@@ -4291,9 +4310,20 @@
 							_hudY       = 0,
 							_hudSide    = (_hudIndex % 2),
 							_hudMain    = (_hudIndex == 0),
-							_hudVisible = (_visible && player_is_active(_local) && player_get_show_hud(_index, _local) && !instance_exists(PopoScene) && (_index < 2 || !instance_exists(LevCont))),
-							_hudDraw    = (_hudMain || _hudVisible);
+							_hudVisible = false,
+							_hudDraw    = _hudMain;
 							
+						 // HUD Visibility:
+						if(_visible && !instance_exists(PopoScene) && (_hudIndex < 2 || !instance_exists(LevCont))){
+							for(var i = 0; player_is_active(player_find_local_nonsync(i)); i++){
+								if(player_get_show_hud(_index, player_find_local_nonsync(i))){
+									_hudVisible = true;
+									_hudDraw    = true;
+									break;
+								}
+							}
+						}
+						
 						 // draw_set_projection(2) doesn't work on surfaces?
 						switch(_hudIndex){
 							case 1 : _hudX += 227;               break;
