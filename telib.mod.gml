@@ -3459,7 +3459,7 @@
 	
 #define instance_budge // inst, objAvoid, ?disMax
 	/*
-		Moves the current instance to the nearest space within the given distance that isn't touching the given object
+		Moves the given instance to the nearest space within the given distance that isn't touching the given object
 		Also avoids moving an instance outside of the level if they were touching a Floor
 		Returns 'true' if the instance was moved to an open space, 'false' otherwise
 		
@@ -3481,6 +3481,11 @@
 			_disMultX = 1,
 			_disMultY = 1;
 			
+		 // Prune Instances:
+		if(_objArray){
+			_objAvoid = instances_matching_ne(_objAvoid, "id");
+		}
+		
 		 // Starting Direction:
 		if(x != xprevious || y != yprevious){
 			_dirStart = point_direction(x, y, xprevious, yprevious);
@@ -4092,9 +4097,9 @@
 				
 				 // Charge Controller:
 				with(other){
-					var _inst = instances_matching(obj.WeaponCharge, "wep", _fire.wep);
+					var _inst = instances_matching(obj.FireCharge, "wep", _fire.wep);
 					if(!array_length(_inst)){
-						_inst = call(scr.obj_create, x, y, "WeaponCharge");
+						_inst = call(scr.obj_create, x, y, "FireCharge");
 						with(_inst){
 							wep = _fire.wep;
 						}
@@ -4121,7 +4126,7 @@
 			}
 			
 			 // Burst Fire:
-			if(array_find_index(obj.WeaponBurst, _other) < 0){
+			if(array_find_index(obj.FireBurst, _other) < 0){
 				var _burst = ceil(weapon_get("burst", _fire.wep));
 				if(_burst > 1 || _burst < 0){
 					var _time = weapon_get("burst_time", _fire.wep);
@@ -4129,7 +4134,7 @@
 						_time = weapon_get_load(_fire.wep) / max(1, _burst);
 					}
 					with(other){
-						with(call(scr.obj_create, x, y, "WeaponBurst")){
+						with(call(scr.obj_create, x, y, "FireBurst")){
 							direction = other.gunangle;
 							accuracy  = other.accuracy;
 							team      = other.team;

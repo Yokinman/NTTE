@@ -1566,16 +1566,9 @@
 		m = "chests/";
 		p = m;
 			
-			 // Cursed Ammo Chests:
-			CursedAmmoChest             = sprite(p + "sprCursedAmmoChest",              1,  8,  8, shn16);
-			CursedAmmoChestOpen         = sprite(p + "sprCursedAmmoChestOpen",          1,  8,  8);
-			CursedAmmoChestSteroids     = sprite(p + "sprCursedAmmoChestSteroids",      1, 12, 12, shn20);
-			CursedAmmoChestSteroidsOpen = sprite(p + "sprCursedAmmoChestSteroidsOpen",  1, 12, 12);
-			CursedMimicIdle             = sprite(p + "sprCursedMimicIdle",              1, 16, 16);
-			CursedMimicFire             = sprite(p + "sprCursedMimicFire",              4, 16, 16);
-			CursedMimicHurt             = sprite(p + "sprCursedMimicHurt",              3, 16, 16);
-			CursedMimicDead             = sprite(p + "sprCursedMimicDead",              6, 16, 16);
-			CursedMimicTell             = sprite(p + "sprCursedMimicTell",             12, 16, 16);
+			 // Ally Backpack:
+			AllyBackpack     = sprite(p + "sprAllyBackpack",     1, 8, 8, shn16);
+			AllyBackpackOpen = sprite(p + "sprAllyBackpackOpen", 1, 8, 8);
 			
 			 // Backpack:
 			Backpack           = sprite(p + "sprBackpack",            1, 8, 8, shn16);
@@ -1674,6 +1667,17 @@
 			WallCrateOut = sprite(p + "sprWallCrateTop", 4,  4, 12);
 			FloorCrate   = sprite(p + "sprFloorCrate",   1, 18, 18);
 			
+			 // Cursed Ammo Chests:
+			CursedAmmoChest             = sprite(p + "sprCursedAmmoChest",              1,  8,  8, shn16);
+			CursedAmmoChestOpen         = sprite(p + "sprCursedAmmoChestOpen",          1,  8,  8);
+			CursedAmmoChestSteroids     = sprite(p + "sprCursedAmmoChestSteroids",      1, 12, 12, shn20);
+			CursedAmmoChestSteroidsOpen = sprite(p + "sprCursedAmmoChestSteroidsOpen",  1, 12, 12);
+			CursedMimicIdle             = sprite(p + "sprCursedMimicIdle",              1, 16, 16);
+			CursedMimicFire             = sprite(p + "sprCursedMimicFire",              4, 16, 16);
+			CursedMimicHurt             = sprite(p + "sprCursedMimicHurt",              3, 16, 16);
+			CursedMimicDead             = sprite(p + "sprCursedMimicDead",              6, 16, 16);
+			CursedMimicTell             = sprite(p + "sprCursedMimicTell",             12, 16, 16);
+			
 			 // Orchid Chest:
 			OrchidChest     = sprite(p + "sprOrchidChest",     1, 12, 8, shn24);
 			OrchidChestOpen = sprite(p + "sprOrchidChestOpen", 1, 12, 8);
@@ -1701,7 +1705,7 @@
 			
 			 // Rogue Backpack:
 			RogueBackpack     = sprite(p + "sprRogueBackpack",     1, 8, 8, shn16);
-			RogueBackpackOpen = sprite(p + "sprRogueBackpackOpen", 1, 8, 8, shn16);
+			RogueBackpackOpen = sprite(p + "sprRogueBackpackOpen", 1, 8, 8);
 			
 			 // Spirit Pickup:
 			SpiritPickup    = sprite(p + "sprSpiritPickup",    1, 5, 5, shn10);

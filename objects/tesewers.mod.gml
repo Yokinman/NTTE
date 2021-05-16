@@ -4341,6 +4341,211 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 	}
 	
 	
+#define GatorStatue_create(_x, _y)
+	/*
+		Homage to Blaac's Hardmode. You should play it.
+	*/
+
+	with(instance_create(_x, _y, CustomProp)){
+		 // Visual:
+		spr_idle     = spr.GatorStatueIdle;
+		spr_hurt     = spr.GatorStatueHurt;
+		spr_dead     = spr.GatorStatueDead;
+		spr_shadow   = shd32;
+		spr_shadow_y = 7;
+		sprite_index = spr_idle;
+		hitid        = [spr.GatorStatueIdle, "GATOR STATUE"];
+		depth        = -1;
+		
+		 // Sounds:
+		snd_hurt = sndHitRock;
+		snd_dead = sndWallBreak;
+		
+		 // Vars:
+		mask_index = mskScorpion;
+		maxhealth  = 56;
+		raddrop    = 8;
+		size       = 3;
+		team       = 1;
+		skill      = mut_shotgun_shoulders;
+		prompt     = call(scr.prompt_create, self, loc("NTTE:GatorStatue:Prompt", "BLESSING"), mskReviveArea, 0, -10);
+		
+		return self;
+	}
+	
+#define GatorStatue_step
+	 // Accept Blessing:
+	if(instance_exists(prompt) && player_is_active(prompt.pick)){
+		prompt.visible = false;
+		
+		 // Mutation:
+		with(call(scr.obj_create, x, y, "OrchidBall")){
+			skill   = other.skill;
+			type    = "portal";
+			creator = other;
+		}
+		
+		 // Sound:
+		sound_play_gun(sndFlakCannon,   0.2,  0.3);
+		sound_play_gun(sndGuardianFire, 0.2,  0.3);
+		sound_play_gun(sndGatorDie,     0.2, -0.5);
+		with(player_find(prompt.pick)){
+			sound_play(snd_valt);
+		}
+		
+		 // Effects:
+		sprite_index = spr_hurt;
+		image_index  = 0;
+		with(instance_create(x + prompt.xoff, y + prompt.yoff - 16, PopupText)){
+			text   = loc("NTTE:GatorStatue:Blessed", "BLESSED!");
+			target = other.prompt.pick;
+		}
+	}
+	
+#define GatorStatue_death
+	var _wepNum = 2;
+	
+	 // Revenge:
+	repeat(4){
+		call(scr.projectile_create, self, x, y, "GatorStatueFlak");
+	}
+	if(instance_exists(prompt) && prompt.visible){
+		with(call(scr.projectile_create, self, x, y, "CustomFlak", 90, 0.1)){
+			sprite_index = spr.EnemySuperFlak;
+			spr_dead     = spr.EnemySuperFlakHit;
+			depth        = -1;
+			snd_dead     = sndSuperFlakExplode;
+			mask_index   = mskSuperFlakBullet;
+			friction     = speed / 60;
+			damage       = 10;
+			bonus_damage = 0;
+			force        = 8;
+			typ          = 2;
+			flak         = array_create(5, EFlakBullet);
+			super        = true;
+			with(instance_create(x, y, BulletHit)){
+				sprite_index = other.spr_dead;
+				friction     = other.friction;
+				hspeed       = other.hspeed;
+				vspeed       = other.vspeed;
+			}
+		}
+		_wepNum *= 2;
+	}
+	
+	 // Merged Shell Weapons:
+	if(_wepNum > 0) repeat(_wepNum){
+		var	_wepNum   = 128,
+			_wepMod   = mod_get_names("weapon"),
+			_wepAvoid = [];
+			
+		 // Compile Non-Shell Weapons:
+		for(var i = _wepNum + array_length(_wepMod) - 1; i >= 0; i--){
+			var _wep = ((i < _wepNum) ? i : _wepMod[i - _wepNum]);
+			if(weapon_get_type(_wep) != type_shell){
+				array_push(_wepAvoid, _wep);
+			}
+		}
+		
+		 // Weapon:
+		var _part = call(scr.weapon_merge_decide_raw, 0, GameCont.hard, -1, _wepAvoid, false);
+		if(array_length(_part) >= 2){
+			with(instance_create(x + orandom(4), y + orandom(4), WepPickup)){
+				ammo = true;
+				wep  = call(scr.weapon_merge, _part[0], _part[1]);
+			}
+		}
+	}
+	
+	 // Effects:
+	call(scr.sound_play_at, x, y, sndCrownNo,      0.8, 0.4);
+	call(scr.sound_play_at, x, y, sndStatueCharge, 0.8, 0.4);
+	repeat(10){
+		call(scr.fx,     [x, 16], [y, 16], [90, 1 + random(4)], Dust);
+		call(scr.fx,      x,       y,      2 + random(3),       Debris);
+		with(call(scr.fx, x,       y,      1 + random(4),       Shell)){
+			sprite_index = sprShotShell;
+		}
+	}
+	sleep(100);
+	
+	
+#define GatorStatueFlak_create(_x, _y)
+	with(instance_create(_x, _y, CustomProjectile)){
+		 // Visual:
+		sprite_index = sprEFlak;
+		image_speed  = 0.4;
+		depth        = -1;
+		ntte_bloom   = 0.1;
+		
+		 // Vars:
+		mask_index   = mskFlakBullet;
+		image_xscale = 0;
+		image_yscale = 0;
+		visible      = false;
+		damage       = 4;
+		typ          = 2;
+		grow         = 1/45;
+		effect_color = make_color_rgb(252, 56, 0);
+		
+		 // Alarms:
+		alarm0 = irandom_range(1, 10);
+		
+		 // Find Player:
+		if(instance_exists(Player)){
+			with(call(scr.array_shuffle, instances_matching_ne(Floor, "id"))){
+				if(!place_meeting(x, y, Wall)){
+					if(distance_to_object(Player) < 96 && !place_meeting(x, y, Player)){
+						other.x = bbox_center_x;
+						other.y = bbox_center_y;
+					}
+				}
+			}
+		}
+		
+		return self;
+	}
+	
+#define GatorStatueFlak_step
+	 // Alarms:
+	if(alarm0_run) exit;
+	
+	 // Active:
+	if(visible){
+		 // Grow:
+		image_xscale += grow * current_time_scale;
+		image_yscale += grow * current_time_scale;
+		var _scale = max(image_xscale, image_yscale);
+		
+		 // Particles:
+		if(chance_ct(1, 2)){
+			with(call(scr.fx, x, y, random_range(2, 5) * _scale, PlasmaTrail)){
+				sprite_index = spr.QuasarBeamTrail;
+			}
+		}
+		
+		 // Explode:
+		if(_scale > 1){
+			instance_destroy();
+		}
+	}
+	
+#define GatorStatueFlak_alrm0
+	 // Activate:
+	visible = true;
+	with(instance_create(x, y, ThrowHit)){
+		image_blend = other.effect_color;
+	}
+	call(scr.sound_play_at, x, y, sndServerBreak, 2 + orandom(0.2), 1.2);
+	
+#define GatorStatueFlak_destroy
+	 // Blammo:
+	call(scr.team_instance_sprite, 
+		call(scr.sprite_get_team, sprite_index),
+		call(scr.projectile_create, self, x, y, EFlakBullet)
+	);
+	
+	
 #define LairBorder_create(_x, _y)
 	/*
 		Handles the border and cave-in between Pizza Sewers and Lair

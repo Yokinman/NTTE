@@ -241,9 +241,12 @@
 	if(crown_current == "crime"){
 		 // Spawn Bounty Hunters:
 		if("ntte_crime_active" in GameCont && GameCont.ntte_crime_active){
-			with(Crown){
+			/*with(Crown){
 				enemies = 2 * variable_instance_get(GameCont, "ntte_crime_bounty", 0);
-			}
+			}*/
+			
+			
+			
 			with(call(scr.crime_alert, _spawnX, _spawnY, 120, 30)){
 				snd_flash = sndSkillPick;
 			}
@@ -254,13 +257,16 @@
 		else if("ntte_crime_bounty" in GameCont && GameCont.ntte_crime_bounty > 0){
 			GameCont.ntte_crime_bounty = max(0, GameCont.ntte_crime_bounty - 1);
 			
-			with(call(scr.crime_alert, _spawnX, _spawnY, 120, 30)[1]){
-				with(call(scr.instance_clone, self)){
-					image_index = min(image_index + 1, image_number - 1);
-					depth       = other.depth + 1;
+			var _alert = call(scr.crime_alert, _spawnX, _spawnY, 120, 30);
+			if(is_array(_alert)){
+				with(_alert[1]){
+					with(call(scr.instance_clone, self)){
+						image_index = min(image_index + 1, image_number - 1);
+						depth       = other.depth + 1;
+					}
+					flash    += 30;
+					snd_flash = sndIcicleBreak;
 				}
-				flash     = 30;
-				snd_flash = sndIcicleBreak;
 			}
 		}
 		
@@ -333,11 +339,18 @@
 					&& !place_meeting(x, y, hitme)
 					&& !place_meeting(x, y, chestprop)
 				){
-					var _rogue = 0;
-					
-					 // Find Rogue / Rogue Rifle:
-					if(GameCont.area == area_campfire){
-						with(instances_matching_ne([Player, Revive], "id")){
+					var	_rebel = 0,
+						_rogue = 0;
+						
+					 // Find Characters:
+					with(instances_matching_ne([Player, Revive], "id")){
+						 // Rebel:
+						if(race_get_name(race) == "rebel"){
+							_rebel++;
+						}
+						
+						 // Rogue / Rogue Rifle:
+						if(GameCont.area == area_campfire){
 							if(
 								(race_get_name(race) == "rogue" && GameCont.loops <= 1)
 								|| call(scr.wep_raw, wep)  == wep_rogue_rifle
@@ -355,7 +368,15 @@
 							call(scr.chest_create, 
 								bbox_center_x + orandom(4),
 								bbox_center_y - 6 + orandom(min(4, _num - 1)),
-								((_rogue > 0) ? "RogueBackpack" : "Backpack"),
+								(
+									(_rogue > 0)
+									? "RogueBackpack"
+									: (
+										chance(_rebel + variable_instance_get(GameCont, "ntte_backpack_opened", false), 4)
+										? "AllyBackpack"
+										: "Backpack"
+									)
+								),
 								true
 							);
 						}

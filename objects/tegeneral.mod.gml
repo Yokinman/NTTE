@@ -2040,6 +2040,210 @@
 	}
 	
 	
+#define FireBurst_create(_x, _y)
+	/*
+		Controller object used for NT:TE's burst weapons
+	*/
+	
+	with(instance_create(_x, _y, CustomObject)){
+		 // Vars:
+		accuracy = 1;
+		team     = -1;
+		creator  = noone;
+		primary  = true;
+		wep      = wep_none;
+		burst    = 0;
+		ammo     = 0;
+		time     = 0;
+		time_max = 0;
+		chrg     = 0;
+		chrg_num = 0;
+		
+		return self;
+	}
+	
+#define FireBurst_step
+	if(time > 0 && ammo != 0){
+		time -= current_time_scale;
+		while(time <= 0 && time_max >= 0 && ammo-- != 0){
+			var _wep = wep;
+			burst++;
+			
+			 // Delay:
+			with(creator){
+				var _time = call(scr.pass, [self, other], scr.weapon_get, "burst_time", _wep);
+				if(_time != 0){
+					other.time_max = _time;
+				}
+			}
+			time += time_max;
+			
+			 // Fire:
+			if(instance_exists(creator)){
+				x = creator.x;
+				y = creator.y;
+				if("gunangle" in creator){
+					direction = creator.gunangle;
+				}
+				
+				 // Charge Weapon Fix:
+				var	_lastChrg    = undefined,
+					_lastChrgNum = undefined;
+					
+				if(is_object(_wep)){
+					if("chrg"     in _wep && !is_undefined(chrg)    ){ _lastChrg    = _wep.chrg;     _wep.chrg     = chrg;     }
+					if("chrg_num" in _wep && !is_undefined(chrg_num)){ _lastChrgNum = _wep.chrg_num; _wep.chrg_num = chrg_num; }
+				}
+				
+				 // Player:
+				if(instance_is(creator, Player)){
+					with([creator]){
+						 // Steroids:
+						if(!other.primary){
+							call(scr.player_swap, self);
+							specfiring = true;
+						}
+						
+						 // Fire:
+						var	_lastTeam     = team,
+							_lastAccuracy = accuracy;
+							
+						team     = other.team;
+						accuracy = other.accuracy;
+						
+						call(scr.pass, [self, other], scr.weapon_get, "fire", _wep);
+						
+						team     = _lastTeam;
+						accuracy = _lastAccuracy;
+						
+						 // Steroids:
+						if(!other.primary){
+							specfiring = false;
+							call(scr.player_swap, self);
+						}
+					}
+				}
+				
+				 // Non-Player:
+				else with(player_fire_ext(direction, wep_none, x, y, team, creator, accuracy)){
+					wep = _wep;
+					call(scr.pass, [self, other], scr.weapon_get, "fire", wep);
+				}
+				
+				 // Charge Weapon Fix Reset:
+				if(is_object(_wep)){
+					if("chrg"     in _wep && !is_undefined(chrg)     && _wep.chrg     == chrg    ) _wep.chrg     = _lastChrg;
+					if("chrg_num" in _wep && !is_undefined(chrg_num) && _wep.chrg_num == chrg_num) _wep.chrg_num = _lastChrgNum;
+				}
+			}
+		}
+	}
+	else instance_destroy();
+	
+	
+#define FireCharge_create(_x, _y)
+	/*
+		Controller object used for NT:TE's burst weapons
+	*/
+	
+	with(instance_create(_x, _y, CustomObject)){
+		 // Vars:
+		accuracy  = 1;
+		team      = -1;
+		creator   = noone;
+		primary   = true;
+		wep       = wep_none;
+		fire      = false;
+		
+		return self;
+	}
+	
+#define FireCharge_step
+	if(fire){
+		if(is_object(wep) && "chrg" in wep){
+			if(wep.chrg){
+				wep.chrg = -1;
+				
+				if(instance_exists(creator)){
+					var _wepName = (primary ? "wep" : "bwep");
+					
+					with([creator]){
+						if(visible){
+							other.x = x;
+							other.y = y;
+							if(_wepName not in self || variable_instance_get(self, _wepName) == other.wep){
+								 // Player:
+								if(instance_is(self, Player)){
+									 // Steroids:
+									if(!other.primary){
+										call(scr.player_swap, self);
+										specfiring = true;
+									}
+									
+									 // Fire:
+									var	_type = weapon_get_type(other.wep),
+										_cost = weapon_get_cost(other.wep),
+										_rads = weapon_get_rads(other.wep),
+										_ammo = ammo[_type];
+										
+									if(infammo != 0 || (_ammo >= _cost && GameCont.rad >= _rads)){
+										var	_lastTeam     = team,
+											_lastAccuracy = accuracy;
+											
+										team     = other.team;
+										accuracy = other.accuracy;
+										
+										player_fire(other.direction);
+										
+										team     = _lastTeam;
+										accuracy = _lastAccuracy;
+									}
+									
+									 // Low Ammo:
+									else{
+										wkick     = -2;
+										clicked   = false;
+										drawempty = 30;
+										if(_ammo < _cost){
+											sound_play(sndEmpty);
+											call(scr.pickup_text, typ_name[_type], ((_ammo > 0) ? "ins" : "out"));
+										}
+										else{
+											sound_play(sndUltraEmpty);
+											call(scr.pickup_text, "RADS", "ins");
+										}
+									}
+									
+									 // Steroids:
+									if(!other.primary){
+										specfiring = false;
+										call(scr.player_swap, self);
+									}
+								}
+								
+								 // Non-Player:
+								else player_fire_ext(
+									other.direction,
+									other.wep,
+									other.x,
+									other.y,
+									other.team,
+									other.creator,
+									other.accuracy
+								);
+							}
+						}
+					}
+				}
+				wep.chrg = 0;
+			}
+			wep.chrg_num = 0;
+		}
+		instance_destroy();
+	}
+	else fire = true;
+	
+	
 #define GroundFlameGreen_create(_x, _y)
 	/*
 		Green variant of the GroundFlame effect
@@ -5049,7 +5253,13 @@
 			
 			case area_desert:
 				
-				with(instance_create(x, y, ((crown_current == "crime") ? Gator : Bandit))){
+				var _obj = Bandit;
+				
+				if(crown_current == "crime" && "ntte_crime_active" in GameCont && GameCont.ntte_crime_active){
+					_obj = Gator;
+				}
+				
+				with(instance_create(x, y, _obj)){
 					 // Alert:
 					if(point_seen(x, y, -1)){
 						with(call(scr.alert_create, self, (instance_is(self, Gator) ? spr.GatorPatchAlert : spr.BanditAlert))){
@@ -5157,210 +5367,6 @@
 				
 		}
 	}
-	
-	
-#define WeaponBurst_create(_x, _y)
-	/*
-		Controller object used for NT:TE's burst weapons
-	*/
-	
-	with(instance_create(_x, _y, CustomObject)){
-		 // Vars:
-		accuracy = 1;
-		team     = -1;
-		creator  = noone;
-		primary  = true;
-		wep      = wep_none;
-		burst    = 0;
-		ammo     = 0;
-		time     = 0;
-		time_max = 0;
-		chrg     = 0;
-		chrg_num = 0;
-		
-		return self;
-	}
-	
-#define WeaponBurst_step
-	if(time > 0 && ammo != 0){
-		time -= current_time_scale;
-		while(time <= 0 && time_max >= 0 && ammo-- != 0){
-			var _wep = wep;
-			burst++;
-			
-			 // Delay:
-			with(creator){
-				var _time = call(scr.pass, [self, other], scr.weapon_get, "burst_time", _wep);
-				if(_time != 0){
-					other.time_max = _time;
-				}
-			}
-			time += time_max;
-			
-			 // Fire:
-			if(instance_exists(creator)){
-				x = creator.x;
-				y = creator.y;
-				if("gunangle" in creator){
-					direction = creator.gunangle;
-				}
-				
-				 // Charge Weapon Fix:
-				var	_lastChrg    = undefined,
-					_lastChrgNum = undefined;
-					
-				if(is_object(_wep)){
-					if("chrg"     in _wep && !is_undefined(chrg)    ){ _lastChrg    = _wep.chrg;     _wep.chrg     = chrg;     }
-					if("chrg_num" in _wep && !is_undefined(chrg_num)){ _lastChrgNum = _wep.chrg_num; _wep.chrg_num = chrg_num; }
-				}
-				
-				 // Player:
-				if(instance_is(creator, Player)){
-					with([creator]){
-						 // Steroids:
-						if(!other.primary){
-							call(scr.player_swap, self);
-							specfiring = true;
-						}
-						
-						 // Fire:
-						var	_lastTeam     = team,
-							_lastAccuracy = accuracy;
-							
-						team     = other.team;
-						accuracy = other.accuracy;
-						
-						call(scr.pass, [self, other], scr.weapon_get, "fire", _wep);
-						
-						team     = _lastTeam;
-						accuracy = _lastAccuracy;
-						
-						 // Steroids:
-						if(!other.primary){
-							specfiring = false;
-							call(scr.player_swap, self);
-						}
-					}
-				}
-				
-				 // Non-Player:
-				else with(player_fire_ext(direction, wep_none, x, y, team, creator, accuracy)){
-					wep = _wep;
-					call(scr.pass, [self, other], scr.weapon_get, "fire", wep);
-				}
-				
-				 // Charge Weapon Fix Reset:
-				if(is_object(_wep)){
-					if("chrg"     in _wep && !is_undefined(chrg)     && _wep.chrg     == chrg    ) _wep.chrg     = _lastChrg;
-					if("chrg_num" in _wep && !is_undefined(chrg_num) && _wep.chrg_num == chrg_num) _wep.chrg_num = _lastChrgNum;
-				}
-			}
-		}
-	}
-	else instance_destroy();
-	
-	
-#define WeaponCharge_create(_x, _y)
-	/*
-		Controller object used for NT:TE's burst weapons
-	*/
-	
-	with(instance_create(_x, _y, CustomObject)){
-		 // Vars:
-		accuracy  = 1;
-		team      = -1;
-		creator   = noone;
-		primary   = true;
-		wep       = wep_none;
-		fire      = false;
-		
-		return self;
-	}
-	
-#define WeaponCharge_step
-	if(fire){
-		if(is_object(wep) && "chrg" in wep){
-			if(wep.chrg){
-				wep.chrg = -1;
-				
-				if(instance_exists(creator)){
-					var _wepName = (primary ? "wep" : "bwep");
-					
-					with([creator]){
-						if(visible){
-							other.x = x;
-							other.y = y;
-							if(_wepName not in self || variable_instance_get(self, _wepName) == other.wep){
-								 // Player:
-								if(instance_is(self, Player)){
-									 // Steroids:
-									if(!other.primary){
-										call(scr.player_swap, self);
-										specfiring = true;
-									}
-									
-									 // Fire:
-									var	_type = weapon_get_type(other.wep),
-										_cost = weapon_get_cost(other.wep),
-										_rads = weapon_get_rads(other.wep),
-										_ammo = ammo[_type];
-										
-									if(infammo != 0 || (_ammo >= _cost && GameCont.rad >= _rads)){
-										var	_lastTeam     = team,
-											_lastAccuracy = accuracy;
-											
-										team     = other.team;
-										accuracy = other.accuracy;
-										
-										player_fire(other.direction);
-										
-										team     = _lastTeam;
-										accuracy = _lastAccuracy;
-									}
-									
-									 // Low Ammo:
-									else{
-										wkick     = -2;
-										clicked   = false;
-										drawempty = 30;
-										if(_ammo < _cost){
-											sound_play(sndEmpty);
-											call(scr.pickup_text, typ_name[_type], ((_ammo > 0) ? "ins" : "out"));
-										}
-										else{
-											sound_play(sndUltraEmpty);
-											call(scr.pickup_text, "RADS", "ins");
-										}
-									}
-									
-									 // Steroids:
-									if(!other.primary){
-										specfiring = false;
-										call(scr.player_swap, self);
-									}
-								}
-								
-								 // Non-Player:
-								else player_fire_ext(
-									other.direction,
-									other.wep,
-									other.x,
-									other.y,
-									other.team,
-									other.creator,
-									other.accuracy
-								);
-							}
-						}
-					}
-				}
-				wep.chrg = 0;
-			}
-			wep.chrg_num = 0;
-		}
-		instance_destroy();
-	}
-	else fire = true;
 	
 	
 /// GENERAL

@@ -1437,6 +1437,77 @@
 	}
 	
 	
+#define HarpoonPickup_create(_x, _y)
+	with(call(scr.obj_create, _x, _y, "CustomPickup")){
+		 // Visual:
+		sprite_index = spr.Harpoon;
+		image_index  = 1;
+		spr_open     = spr.HarpoonOpen;
+		spr_fade     = spr.HarpoonFade;
+		
+		 // Vars:
+		mask_index = mskBigRad;
+		friction   = 0.4;
+		alarm0     = call(scr.pickup_alarm, 90 + random(30), 1/5);
+		pull_spd   = 8;
+		target     = noone;
+		
+		 // Events:
+		on_step = script_ref_create(HarpoonPickup_step);
+		on_pull = script_ref_create(HarpoonPickup_pull);
+		on_open = script_ref_create(HarpoonPickup_open);
+		
+		return self;
+	}
+	
+#define HarpoonPickup_step
+	 // Stuck in Target:
+	if(instance_exists(target)){
+		var	_odis = 16,
+			_odir = image_angle;
+			
+		x = target.x + target.hspeed_raw - lengthdir_x(_odis, _odir);
+		y = target.y + target.vspeed_raw - lengthdir_y(_odis, _odir);
+		if("z" in target){
+			y -= abs(target.z);
+		}
+		xprevious = x;
+		yprevious = y;
+		
+		if(!target.visible){
+			target = noone;
+		}
+	}
+	
+#define HarpoonPickup_pull
+	if(instance_exists(target)){ // Stop Sticking
+		if(place_meeting(x, y, Wall)){
+			x         = target.x;
+			y         = target.y;
+			xprevious = x;
+			yprevious = y;
+		}
+		target = noone;
+	}
+	return (speed <= 0);
+	
+#define HarpoonPickup_open
+	var	_type = type_bolt,
+		_num  = num;
+		
+	 // +1 Bolt Ammo:
+	with(instance_is(other, Player) ? other : Player){
+		ammo[_type] = min(ammo[_type] + _num, typ_amax[_type]);
+		
+		 // Text:
+		call(scr.pickup_text,
+			typ_name[_type],
+			((ammo[_type] < typ_amax[_type]) ? "add" : "max"),
+			_num
+		);
+	}
+	
+	
 #define HarpoonStick_create(_x, _y)
 	with(instance_create(_x, _y, BoltStick)){
 		 // Visual:

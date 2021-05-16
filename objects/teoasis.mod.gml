@@ -1556,6 +1556,41 @@
 	}
 	
 	
+#define SunkenCoin_create(_x, _y)
+	with(call(scr.obj_create, _x, _y, "CustomPickup")){
+		 // Visual:
+		sprite_index = (chance(1, 3) ? spr.SunkenCoinBig : spr.SunkenCoin);
+		image_angle  = random(360);
+		spr_open     = sprCaveSparkle;
+		spr_fade     = sprCaveSparkle;
+		shine        = 0.075;
+		
+		 // Sound:
+		snd_open = sndRadPickup;
+		snd_fade = -1;
+		
+		 // Vars:
+		mask_index = mskRad;
+		alarm0     = call(scr.pickup_alarm, 200 + random(30), 1/4);
+		pull_dis   = 18 + (12 * skill_get(mut_plutonium_hunger));
+		
+		 // Events:
+		on_pull = script_ref_create(SunkenCoin_pull);
+		on_open = script_ref_create(SunkenCoin_open);
+		
+		return self;
+	}
+	
+#define SunkenCoin_pull
+	return (speed <= 0);
+	
+#define SunkenCoin_open
+	 // Can't Grab While Moving:
+	if(speed > 0){
+		return true;
+	}
+	
+	
 #define SunkenRoom_create(_x, _y)
 	with(instance_create(_x, _y, CustomObject)){
 		 // Vars:

@@ -18,6 +18,9 @@
 	 // Bind Events:
 	script_bind(CustomDraw, draw_bonus_spirit, -8, true);
 	
+	 // 1-Frame Weapon Sprites:
+	global.gunspr_fix = ds_map_create();
+	
 #define cleanup
 	mod_script_call("mod", "teassets", "ntte_cleanup", script_ref_create(cleanup));
 	
@@ -33,6 +36,24 @@
 #macro ChestShop_text   loc("NTTE:ChestShop:Open:1", call(scr.loc_format, "NTTE:ChestShop:Open", "PICK %!", "ONE"))
 #macro ChestShop2_text  loc("NTTE:ChestShop:Open:2", call(scr.loc_format, "NTTE:ChestShop:Open", "PICK %!", "TWO"))
 
+#define AllyBackpack_create(_x, _y)
+	/*
+		Like a Backpack, but spawns an Ally to wield the the merged weapon, and only drops HP instead of ammo
+	*/
+	
+	with(call(scr.obj_create, _x, _y, "Backpack")){
+		 // Visual:
+		sprite_index = spr.AllyBackpack;
+		spr_dead     = spr.AllyBackpackOpen;
+		
+		 // Vars:
+		curse = 0;
+		ally  = 1 + ultra_get("rebel", 2);
+		
+		return self;
+	}
+	
+	
 #define Backpack_create(_x, _y)
 	/*
 		Goody bag chest
@@ -52,6 +73,7 @@
 		 // Vars:
 		num     = 2;
 		raddrop = 8;
+		ally    = 0;
 		
 		 // Cursed:
 		switch(crown_current){
@@ -60,8 +82,8 @@
 			default          : curse = chance(1, 7);
 		}
 		if(curse > 0){
-			spr_dead = spr.BackpackCursedOpen;
 			sprite_index = spr.BackpackCursed;
+			spr_dead     = spr.BackpackCursedOpen;
 		}
 		
 		 // Events:
@@ -80,6 +102,9 @@
 	}
 	
 #define Backpack_open
+	 // Remember:
+	GameCont.ntte_backpack_opened = true;
+	
 	 // Sound:
 	sound_play_pitchvol(sndPickupDisappear, 1 + orandom(0.4), 2);
 	if(curse > 0){
@@ -87,64 +112,92 @@
 	}
 	
 	 // Weapon:
-	var _wepNum = 1 + ultra_get("steroids", 1);
-	if(_wepNum > 0){
-		var _wep = wep_none;
-		
-		 // DefPack Integration:
-		if(mod_exists("mod", "defpack tools") && chance(1, 5)){
-			var _jsGrub = [
-				"lightning blue lifting drink(tm)",
-				"extra double triple coffee",
-				"expresso",
-				"saltshake",
-				"munitions mist",
-				"vinegar",
-				"guardian juice",
-				"stopwatch" // a beautiful mistake
-			];
+	var _wepAng = random(360);
+	for(var _wepDir = _wepAng; _wepDir < _wepAng + 360; _wepDir += (360 / max(1, ally))){
+		var _wepNum = 1 + ultra_get("steroids", 1);
+		if(_wepNum > 0){
+			var _wep = wep_none;
 			
-			if(skill_get(mut_boiling_veins) > 0){
-				array_push(_jsGrub, "sunset mayo");
-			}
-			if(array_length(instances_matching(Player, "notoxic", false))){
-				array_push(_jsGrub, "frog milk");
-			}
-			
-			_wep = _jsGrub[irandom(array_length(_jsGrub) - 1)];
-		}
-		
-		 // Merged Weapon:
-		else{
-			var _part = call(scr.weapon_merge_decide, 0, (2 * curse) + GameCont.hard);
-			if(array_length(_part) >= 2){
-				_wep = call(scr.weapon_merge, _part[0], _part[1]);
+			 // DefPack Integration:
+			if(ally <= 0 && mod_exists("mod", "defpack tools") && chance(1, 5)){
+				var _jsGrub = [
+					"lightning blue lifting drink(tm)",
+					"extra double triple coffee",
+					"expresso",
+					"saltshake",
+					"munitions mist",
+					"vinegar",
+					"guardian juice",
+					"stopwatch" // a beautiful mistake
+				];
+				
+				if(skill_get(mut_boiling_veins) > 0){
+					array_push(_jsGrub, "sunset mayo");
+				}
+				if(array_length(instances_matching(Player, "notoxic", false))){
+					array_push(_jsGrub, "frog milk");
+				}
+				
+				_wep = _jsGrub[irandom(array_length(_jsGrub) - 1)];
 			}
 			
-			 // Parts:
-			repeat(_wepNum){
-				var	_ang = random(360),
-					_num = irandom_range(2, 3);
-					
-				for(var _dir = _ang; _dir < _ang + 360; _dir += (360 / _num)){
-					with(call(scr.fx, x, y, [_dir + orandom(70), 3], Shell)){
-						sprite_index = spr.BackpackDebris;
-						image_index  = irandom(image_number - 1);
-						image_speed  = 0;
-						image_xscale = choose(-1, 1);
-						image_angle  = orandom(10);
+			 // Merged Weapon:
+			else{
+				var _part = call(scr.weapon_merge_decide, 0, (2 * curse) + GameCont.hard);
+				if(array_length(_part) >= 2){
+					_wep = call(scr.weapon_merge, _part[0], _part[1]);
+				}
+				
+				 // Parts:
+				repeat(_wepNum){
+					var	_ang = random(360),
+						_num = irandom_range(2, 3);
+						
+					for(var _dir = _ang; _dir < _ang + 360; _dir += (360 / _num)){
+						with(call(scr.fx, x, y, [_dir + orandom(70), 3], Shell)){
+							sprite_index = spr.BackpackDebris;
+							image_index  = irandom(image_number - 1);
+							image_speed  = 0;
+							image_xscale = choose(-1, 1);
+							image_angle  = orandom(10);
+						}
 					}
 				}
 			}
-		}
-		
-		 // Create:
-		if(_wep != wep_none){
-			repeat(_wepNum){
-				with(instance_create(x, y, WepPickup)){
-					curse = other.curse;
-					ammo  = true;
-					wep   = _wep;
+			
+			 // Create Weapon Ally:
+			if(ally > 0){
+				var _creator = (instance_is(other, Player) ? other : instance_nearest(x, y, Player));
+				with(instance_create(x, y, Ally)){
+					motion_add(_wepDir, 3);
+					creator = _creator;
+					
+					 // Alert:
+					sprite_index = sprAllyIdle;
+					with(call(scr.alert_create, self, spr.AllyAlert)){
+						flash = 6 + random(3);
+					}
+					sprite_index = spr_idle;
+					
+					 // Give Weapon:
+					if(_wep != wep_none){
+						with(call(scr.obj_create, x, y, "FireWeapon")){
+							creator = other;
+							wep     = _wep;
+						}
+					}
+				}
+				_wepNum--;
+			}
+			
+			 // Create Weapon Pickup:
+			if(_wep != wep_none && _wepNum > 0){
+				repeat(_wepNum){
+					with(instance_create(x, y, WepPickup)){
+						curse = other.curse;
+						ammo  = true;
+						wep   = _wep;
+					}
 				}
 			}
 		}
@@ -164,10 +217,10 @@
 			}
 			
 			 // Determine Drop:
-			if(chance(1, 40)){ // wtf this isnt a pickup
-				with(instance_create(x, y, choose(Bandit, Ally))){
+			if(ally <= 0 && chance(1, 40)){ // wtf this isnt a pickup
+				with(instance_create(x, y, Bandit)){
 					sprite_index = spr_hurt;
-					with(call(scr.alert_create, self, (instance_is(self, Ally) ? spr.AllyAlert : spr.BanditAlert))){
+					with(call(scr.alert_create, self, spr.BanditAlert)){
 						flash = 6 + random(3);
 					}
 				}
@@ -175,7 +228,8 @@
 			else{
 				pickup_drop(100 / pickup_chance_multiplier, 0);
 				
-				var	_rogue = false,
+				var	_ally  = (ally > 0),
+					_rogue = false,
 					_red   = false;
 					
 				with(instance_is(other, Player) ? other : instance_nearest(x, y, Player)){
@@ -199,8 +253,14 @@
 						
 						case AmmoPickup:
 							
+							 // Health:
+							if(_ally){
+								instance_create(x, y, HPPickup);
+								instance_delete(self);
+							}
+							
 							 // Portal Strikes:
-							if(chance(_rogue, 4)){
+							else if(chance(_rogue, 4)){
 								instance_create(x, y, RoguePickup);
 								instance_delete(self);
 							}
@@ -223,8 +283,14 @@
 							
 						case AmmoChest:
 							
+							 // Health:
+							if(_ally){
+								instance_create(x, y, HealthChest);
+								instance_delete(self);
+							}
+							
 							 // Portal Strikes:
-							if(chance(_rogue, 4)){
+							else if(chance(_rogue, 4)){
 								call(scr.chest_create, x, y, RogueChest);
 								instance_delete(self);
 							}
@@ -2429,11 +2495,12 @@
 						
 						 // Mutation:
 						with(call(scr.obj_create, _x, _y, "OrchidBall")){
-							skill     = other.drop;
-							num       = _num;
-							type      = "portal";
-							creator   = other.creator;
-							direction = point_direction(other.x, other.y, _x, _y) + orandom(45);
+							skill      = other.drop;
+							num        = _num;
+							type       = "portal";
+							creator    = other.creator;
+							direction  = point_direction(other.x, other.y, _x, _y);
+							direction += (90 * sign(angle_difference(90, direction))) + orandom(30);
 						}
 						
 						 // Rads:
@@ -3063,209 +3130,159 @@
 	}
 	
 	
-#define GatorStatue_create(_x, _y)
+#define FireWeapon_create(_x, _y)
 	/*
-		Homage to Blaac's Hardmode. You should play it.
+		Used to replace an instance's projectiles with shots from a weapon
+		
+		Vars:
+			creator       - The instance whose projectiles will be replaced
+			wep           - The weapon to fire from the projectiles
+			wepangle      - Used to add a melee offset for instances without a built-in 'wepangle'
+			search_object - The projectile object to search for and replace
+			search_id     - Used to search for new instances of the projectile object
 	*/
-
-	with(instance_create(_x, _y, CustomProp)){
-		 // Visual:
-		spr_idle     = spr.GatorStatueIdle;
-		spr_hurt     = spr.GatorStatueHurt;
-		spr_dead     = spr.GatorStatueDead;
-		spr_shadow   = shd32;
-		spr_shadow_y = 7;
-		sprite_index = spr_idle;
-		hitid        = [spr.GatorStatueIdle, "GATOR STATUE"];
-		depth        = -1;
-		
-		 // Sounds:
-		snd_hurt = sndHitRock;
-		snd_dead = sndWallBreak;
-		
+	
+	with(instance_create(_x, _y, CustomObject)){
 		 // Vars:
-		mask_index = mskScorpion;
-		maxhealth  = 56;
-		raddrop    = 8;
-		size       = 3;
-		team       = 1;
-		skill      = mut_shotgun_shoulders;
-		prompt     = call(scr.prompt_create, self, loc("NTTE:GatorStatue:Prompt", "BLESSING"), mskReviveArea, 0, -10);
+		creator       = noone;
+		wep           = wep_none;
+		wepangle      = 0;
+		search_object = AllyBullet;
+		search_id     = instance_max;
 		
-		return self;
+		return id;
 	}
 	
-#define GatorStatue_step
-	 // Accept Blessing:
-	if(instance_exists(prompt) && player_is_active(prompt.pick)){
-		prompt.visible = false;
-		
-		 // Mutation:
-		with(call(scr.obj_create, x, y, "OrchidBall")){
-			skill   = other.skill;
-			type    = "portal";
-			creator = other;
+#define FireWeapon_step
+	if(instance_exists(creator)){
+		 // Replace Projectiles w/ Weapon Firing:
+		if("wep" not in creator){
+			creator.wep = wep;
 		}
-		
-		 // Sound:
-		sound_play_gun(sndFlakCannon,   0.2,  0.3);
-		sound_play_gun(sndGuardianFire, 0.2,  0.3);
-		sound_play_gun(sndGatorDie,     0.2, -0.5);
-		with(player_find(prompt.pick)){
-			sound_play(snd_valt);
-		}
-		
-		 // Effects:
-		sprite_index = spr_hurt;
-		image_index  = 0;
-		with(instance_create(x + prompt.xoff, y + prompt.yoff - 16, PopupText)){
-			text   = loc("NTTE:GatorStatue:Blessed", "BLESSED!");
-			target = other.prompt.pick;
-		}
-	}
-	
-#define GatorStatue_death
-	var _wepNum = 2;
-	
-	 // Revenge:
-	repeat(4){
-		call(scr.projectile_create, self, x, y, "GatorStatueFlak");
-	}
-	if(instance_exists(prompt) && prompt.visible){
-		with(call(scr.projectile_create, self, x, y, "CustomFlak", 90, 0.1)){
-			sprite_index = spr.EnemySuperFlak;
-			spr_dead     = spr.EnemySuperFlakHit;
-			depth        = -1;
-			snd_dead     = sndSuperFlakExplode;
-			mask_index   = mskSuperFlakBullet;
-			friction     = speed / 60;
-			damage       = 10;
-			bonus_damage = 0;
-			force        = 8;
-			typ          = 2;
-			flak         = array_create(5, EFlakBullet);
-			super        = true;
-			with(instance_create(x, y, BulletHit)){
-				sprite_index = other.spr_dead;
-				friction     = other.friction;
-				hspeed       = other.hspeed;
-				vspeed       = other.vspeed;
-			}
-		}
-		_wepNum *= 2;
-	}
-	
-	 // Merged Shell Weapons:
-	if(_wepNum > 0) repeat(_wepNum){
-		var	_wepNum   = 128,
-			_wepMod   = mod_get_names("weapon"),
-			_wepAvoid = [];
-			
-		 // Compile Non-Shell Weapons:
-		for(var i = _wepNum + array_length(_wepMod) - 1; i >= 0; i--){
-			var _wep = ((i < _wepNum) ? i : _wepMod[i - _wepNum]);
-			if(weapon_get_type(_wep) != type_shell){
-				array_push(_wepAvoid, _wep);
-			}
-		}
-		
-		 // Weapon:
-		var _part = call(scr.weapon_merge_decide_raw, 0, GameCont.hard, -1, _wepAvoid, false);
-		if(array_length(_part) >= 2){
-			with(instance_create(x + orandom(4), y + orandom(4), WepPickup)){
-				ammo = true;
-				wep  = call(scr.weapon_merge, _part[0], _part[1]);
-			}
-		}
-	}
-	
-	 // Effects:
-	call(scr.sound_play_at, x, y, sndCrownNo,      0.8, 0.4);
-	call(scr.sound_play_at, x, y, sndStatueCharge, 0.8, 0.4);
-	repeat(10){
-		call(scr.fx,     [x, 16], [y, 16], [90, 1 + random(4)], Dust);
-		call(scr.fx,      x,       y,      2 + random(3),       Debris);
-		with(call(scr.fx, x,       y,      1 + random(4),       Shell)){
-			sprite_index = sprShotShell;
-		}
-	}
-	sleep(100);
-	
-	
-#define GatorStatueFlak_create(_x, _y)
-	with(instance_create(_x, _y, CustomProjectile)){
-		 // Visual:
-		sprite_index = sprEFlak;
-		image_speed  = 0.4;
-		depth        = -1;
-		ntte_bloom   = 0.1;
-		
-		 // Vars:
-		mask_index   = mskFlakBullet;
-		image_xscale = 0;
-		image_yscale = 0;
-		visible      = false;
-		damage       = 4;
-		typ          = 2;
-		grow         = 1/45;
-		effect_color = make_color_rgb(252, 56, 0);
-		
-		 // Alarms:
-		alarm0 = irandom_range(1, 10);
-		
-		 // Find Player:
-		if(instance_exists(Player)){
-			with(call(scr.array_shuffle, instances_matching_ne(Floor, "id"))){
-				if(!place_meeting(x, y, Wall)){
-					if(distance_to_object(Player) < 96 && !place_meeting(x, y, Player)){
-						other.x = bbox_center_x;
-						other.y = bbox_center_y;
+		if(instance_exists(search_object) && search_object.id > search_id){
+			var _inst = instances_matching(instances_matching_gt(search_object, "id", search_id), "creator", creator);
+			if(array_length(_inst)){
+				 // Stop Firing Sound:
+				var _snd = audio_play_sound(0, 0, false);
+				sound_stop(_snd);
+				for(var i = _snd - 1; i >= _snd - 10; i--){
+					if(audio_get_name(i) == "sndEnemyFire"){
+						sound_stop(i);
+						break;
 					}
+				}
+				
+				 // Setup Melee Offset:
+				if(weapon_is_melee(wep) ^^ (wepangle != 0)){
+					wepangle = (weapon_is_melee(wep) ? choose(-120, 120) : 0);
+				}
+				var _wepangle = wepangle;
+				
+				 // Replace Projectiles:
+				with(_inst){
+					var _dir = direction;
+					with(creator){
+						 // Undo Inaccuracy:
+						if(place_meeting(x, y, other) && abs(angle_difference(_dir, gunangle)) < 10){
+							_dir = gunangle;
+						}
+						
+						 // Fire:
+						with(player_fire_ext(_dir, wep, other.x, other.y, other.team, self)){
+							other.hspeed += hspeed;
+							other.vspeed += vspeed;
+							if("wkick" in other){
+								other.wkick = wkick;
+							}
+							if("wepangle" in other){
+								other.wepangle *= wepangle;
+							}
+							_wepangle *= wepangle;
+							
+							 // Reload:
+							if(other.alarm1 > 0){
+								var _load = reload;
+								if(instance_is(other, Ally)){
+									_load *= power(2/3, skill_get(mut_throne_butt));
+								}
+								other.alarm1 = max(1, _load);
+							}
+						}
+					}
+					instance_delete(self);
+				}
+				search_id = instance_max;
+				
+				 // Destroyed:
+				if(!instance_exists(creator)){
+					FireWeapon_step();
+					exit;
+				}
+				
+				 // Melee Offset:
+				wepangle = _wepangle;
+				if("wepangle" not in creator){
+					creator.gunangle += wepangle;
 				}
 			}
 		}
 		
-		return self;
+		 // Remember Position + Weapon:
+		x   = creator.x;
+		y   = creator.y;
+		wep = creator.wep;
+		
+		 // Weapon Sprite:
+		if("gunspr" in creator){
+			with(creator){
+				var _spr = weapon_get_sprt(wep);
+				if(gunspr != global.gunspr_fix[? _spr]){
+					if(
+						sprite_get_width(_spr)       != 16 ||
+						sprite_get_height(_spr)      != 16 ||
+						sprite_get_bbox_left(_spr)   !=  0 ||
+						sprite_get_bbox_top(_spr)    !=  0 ||
+						sprite_get_bbox_right(_spr)  != 15 ||
+						sprite_get_bbox_bottom(_spr) != 15
+					){
+						if(!ds_map_exists(global.gunspr_fix, _spr)){
+							global.gunspr_fix[? _spr] = (
+								(sprite_get_number(_spr) > 1)
+								? sprite_duplicate_ext(_spr, 0, 1)
+								: _spr
+							);
+						}
+						gunspr = global.gunspr_fix[? _spr];
+					}
+				}
+			}
+		}
 	}
 	
-#define GatorStatueFlak_step
-	 // Alarms:
-	if(alarm0_run) exit;
-	
-	 // Active:
-	if(visible){
-		 // Grow:
-		image_xscale += grow * current_time_scale;
-		image_yscale += grow * current_time_scale;
-		var _scale = max(image_xscale, image_yscale);
-		
-		 // Particles:
-		if(chance_ct(1, 2)){
-			with(call(scr.fx, x, y, random_range(2, 5) * _scale, PlasmaTrail)){
-				sprite_index = spr.QuasarBeamTrail;
+	 // Dead:
+	else{
+		 // Drop Weapon:
+		if(wep != wep_none){
+			with(instance_create(x, y, WepPickup)){
+				wep  = other.wep;
+				ammo = true;
 			}
 		}
 		
-		 // Explode:
-		if(_scale > 1){
-			instance_destroy();
+		 // Leftovers:
+		if(instance_exists(search_object) && search_object.id > search_id){
+			/*
+			death explosion is too dumb
+			instances_matching(instances_matching(instances_matching(instances_matching_gt(search_object, "id", search_id), "xstart", x), "ystart", y), "creator", creator, noone)
+			*/
+			with(instances_matching(instances_matching_gt(search_object, "id", search_id), "creator", creator)){
+				player_fire_ext(direction, other.wep, x, y, team, creator);
+				instance_delete(self);
+			}
 		}
+		
+		instance_destroy();
 	}
-	
-#define GatorStatueFlak_alrm0
-	 // Activate:
-	visible = true;
-	with(instance_create(x, y, ThrowHit)){
-		image_blend = other.effect_color;
-	}
-	call(scr.sound_play_at, x, y, sndServerBreak, 2 + orandom(0.2), 1.2);
-	
-#define GatorStatueFlak_destroy
-	 // Blammo:
-	call(scr.team_instance_sprite, 
-		call(scr.sprite_get_team, sprite_index),
-		call(scr.projectile_create, self, x, y, EFlakBullet)
-	);
 	
 	
 #define HammerHeadChest_create(_x, _y)
@@ -3377,77 +3394,6 @@
 		call(scr.fx, x, y, random(2), Smoke);
 	}
 	sound_play_hit(sndBurn, 0.4);
-
-
-#define HarpoonPickup_create(_x, _y)
-	with(call(scr.obj_create, _x, _y, "CustomPickup")){
-		 // Visual:
-		sprite_index = spr.Harpoon;
-		image_index  = 1;
-		spr_open     = spr.HarpoonOpen;
-		spr_fade     = spr.HarpoonFade;
-		
-		 // Vars:
-		mask_index = mskBigRad;
-		friction   = 0.4;
-		alarm0     = pickup_alarm(90 + random(30), 1/5);
-		pull_spd   = 8;
-		target     = noone;
-		
-		 // Events:
-		on_step = script_ref_create(HarpoonPickup_step);
-		on_pull = script_ref_create(HarpoonPickup_pull);
-		on_open = script_ref_create(HarpoonPickup_open);
-		
-		return self;
-	}
-	
-#define HarpoonPickup_step
-	 // Stuck in Target:
-	if(instance_exists(target)){
-		var	_odis = 16,
-			_odir = image_angle;
-			
-		x = target.x + target.hspeed_raw - lengthdir_x(_odis, _odir);
-		y = target.y + target.vspeed_raw - lengthdir_y(_odis, _odir);
-		if("z" in target){
-			y -= abs(target.z);
-		}
-		xprevious = x;
-		yprevious = y;
-		
-		if(!target.visible){
-			target = noone;
-		}
-	}
-	
-#define HarpoonPickup_pull
-	if(instance_exists(target)){ // Stop Sticking
-		if(place_meeting(x, y, Wall)){
-			x         = target.x;
-			y         = target.y;
-			xprevious = x;
-			yprevious = y;
-		}
-		target = noone;
-	}
-	return (speed <= 0);
-	
-#define HarpoonPickup_open
-	var	_type = type_bolt,
-		_num  = num;
-		
-	 // +1 Bolt Ammo:
-	with(instance_is(other, Player) ? other : Player){
-		ammo[_type] = min(ammo[_type] + _num, typ_amax[_type]);
-		
-		 // Text:
-		pickup_text(
-			typ_name[_type],
-			((ammo[_type] < typ_amax[_type]) ? "add" : "max"),
-			_num
-		);
-	}
 	
 	
 #define OrchidBall_create(_x, _y)
@@ -5196,41 +5142,6 @@
 	return (pull_delay <= 0);
 	
 	
-#define SunkenCoin_create(_x, _y)
-	with(call(scr.obj_create, _x, _y, "CustomPickup")){
-		 // Visual:
-		sprite_index = (chance(1, 3) ? spr.SunkenCoinBig : spr.SunkenCoin);
-		image_angle  = random(360);
-		spr_open     = sprCaveSparkle;
-		spr_fade     = sprCaveSparkle;
-		shine        = 0.075;
-		
-		 // Sound:
-		snd_open = sndRadPickup;
-		snd_fade = -1;
-		
-		 // Vars:
-		mask_index = mskRad;
-		alarm0     = pickup_alarm(200 + random(30), 1/4);
-		pull_dis   = 18 + (12 * skill_get(mut_plutonium_hunger));
-		
-		 // Events:
-		on_pull = script_ref_create(SunkenCoin_pull);
-		on_open = script_ref_create(SunkenCoin_open);
-		
-		return self;
-	}
-	
-#define SunkenCoin_pull
-	return (speed <= 0);
-	
-#define SunkenCoin_open
-	 // Can't Grab While Moving:
-	if(speed > 0){
-		return true;
-	}
-	
-	
 #define VaultFlower_create(_x, _y)
 	with(instance_create(_x, _y, CustomProp)){
 		 // Visual:
@@ -5551,10 +5462,10 @@
 			wait 0;
 			
 			if(instance_exists(self)){
-				var	_rot = orandom(4),
-					_alarmMax = alarm0,
+				var	_rot        = orandom(4),
+					_alarmMax   = alarm0,
 					_scaleAlarm = 5 + (alarm0 / 3),
-					_scaleMax = random_range(1, 1.25);
+					_scaleMax   = random_range(1, 1.25);
 					
 				while(instance_exists(self)){
 					image_angle += _rot * current_time_scale;

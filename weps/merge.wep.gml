@@ -2507,7 +2507,6 @@
 				var	_scrType = scrt[0],
 					_scrMod  = scrt[1],
 					_scrName = scrt[2],
-					_varList = vars,
 					_instNum = 0;
 					
 				with(inst){
@@ -2515,9 +2514,9 @@
 					
 					 // Call Events:
 					if(instance_exists(self)){
-						_end = mod_script_call_self(_scrType, _scrMod, _scrName, proj_step, _varList[_instNum]);
+						_end = mod_script_call_self(_scrType, _scrMod, _scrName, proj_step, other.vars[_instNum]);
 					}
-					else mod_script_call_nc(_scrType, _scrMod, _scrName, proj_destroy, _varList[_instNum]);
+					else mod_script_call_nc(_scrType, _scrMod, _scrName, proj_destroy, other.vars[_instNum]);
 					
 					 // Done:
 					if(_end){
