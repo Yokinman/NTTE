@@ -590,52 +590,50 @@
 			
 			var _instFloor = call(scr.instances_meeting_instance, self, FloorPitless);
 			if(array_length(_instFloor)) with(_instFloor){
-				if(place_meeting(x, y, other)){
-					if(instance_exists(self)){
-						 // Sound:
-						sound_play_pitchvol(sndWallBreak, 0.6 + random(0.4), 1.5);
-						
-						 // Debris:
-						if("pit_smash" in other && other.pit_smash){
-							for(var _x = bbox_left; _x < bbox_right + 1; _x += 16){
-								for(var _y = bbox_top; _y < bbox_bottom + 1; _y += 16){
-									var	_dir = point_direction(other.x, other.y, _x + 8, _y + 8),
-										_spd = 8 - (point_distance(other.x, other.y - 16, _x + 8, _y + 8) / 16);
+				if(instance_exists(self) && place_meeting(x, y, other)){
+					 // Sound:
+					sound_play_pitchvol(sndWallBreak, 0.6 + random(0.4), 1.5);
+					
+					 // Debris:
+					if("pit_smash" in other && other.pit_smash){
+						for(var _x = bbox_left; _x < bbox_right + 1; _x += 16){
+							for(var _y = bbox_top; _y < bbox_bottom + 1; _y += 16){
+								var	_dir = point_direction(other.x, other.y, _x + 8, _y + 8),
+									_spd = 8 - (point_distance(other.x, other.y - 16, _x + 8, _y + 8) / 16);
+									
+								if(chance(2, 3)){
+									with(call(scr.obj_create, _x + random_range(4, 12), _y + random_range(4, 12), "TrenchFloorChunk")){
+										zspeed    = _spd;
+										direction = _dir;
 										
-									if(chance(2, 3)){
-										with(call(scr.obj_create, _x + random_range(4, 12), _y + random_range(4, 12), "TrenchFloorChunk")){
-											zspeed    = _spd;
-											direction = _dir;
-											
-											 // Normal Debris:
-											if(other.sprite_index != spr.FloorTrench || chance(1, 2)){
-												sprite_index = call(scr.area_get_sprite, GameCont.area, sprDebris1);
-												zspeed      /= 2;
-												zfriction   /= 2;
-												debris       = true;
-											}
+										 // Normal Debris:
+										if(other.sprite_index != spr.FloorTrench || chance(1, 2)){
+											sprite_index = call(scr.area_get_sprite, GameCont.area, sprDebris1);
+											zspeed      /= 2;
+											zfriction   /= 2;
+											debris       = true;
 										}
 									}
 								}
 							}
 						}
-						else repeat(ceil((bbox_width + bbox_height) / 32)){
-							instance_create(random_range(bbox_left, bbox_right + 1), random_range(bbox_top, bbox_bottom + 1), Debris);
-						}
-						
-						 // Pity:
-						call(scr.floor_set_align, null, null, x, y);
-						call(scr.floor_set_style, 1, mod_current);
-						if(instance_is(self, FloorExplo)){
-							with(call(scr.floor_set, x, y, 2)){
-								styleb       = true;
-								sprite_index = area_sprite(sprFloor1B);
-							}
-						}
-						else call(scr.floor_set, x, y, true);
-						call(scr.floor_reset_align);
-						call(scr.floor_reset_style);
 					}
+					else repeat(ceil((bbox_width + bbox_height) / 32)){
+						instance_create(random_range(bbox_left, bbox_right + 1), random_range(bbox_top, bbox_bottom + 1), Debris);
+					}
+					
+					 // Pity:
+					call(scr.floor_set_align, null, null, x, y);
+					call(scr.floor_set_style, 1, mod_current);
+					if(instance_is(self, FloorExplo)){
+						with(call(scr.floor_set, x, y, 2)){
+							styleb       = true;
+							sprite_index = area_sprite(sprFloor1B);
+						}
+					}
+					else call(scr.floor_set, x, y, true);
+					call(scr.floor_reset_align);
+					call(scr.floor_reset_style);
 				}
 			}
 			
