@@ -1285,12 +1285,16 @@
 		instance_create(x, y, Dust);
 		sound_play(sndBoltHitWall);
 		speed = 0;
-		typ = 0;
+		typ   = 0;
 		
 		 // Deteriorate Rope if Both Harpoons Stuck:
 		if(array_length(rope)){
 			with(rope){
-				if(harpoon_stuck && !instance_is(link1, projectile) && !instance_is(link2, projectile)){
+				if(
+					harpoon_stuck
+					&& array_find_index(obj.Harpoon, link1) >= 0
+					&& array_find_index(obj.Harpoon, link2) >= 0
+				){
 					broken = -1;
 				}
 				harpoon_stuck = true;

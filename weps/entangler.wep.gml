@@ -115,7 +115,9 @@
 			 // Full:
 			if(_charge >= 1){
 				 // Looks goood:
-				wepflip = sign(wepangle) * (_fire.primary ? 1 : -1);
+				if("wepflip" in _fire.creator){
+					_fire.creator.wepflip = sign(wepangle) * (_fire.primary ? 1 : -1);
+				}
 				
 				 // Sound:
 				sound_play_pitch(sndCrystalRicochet,   3);

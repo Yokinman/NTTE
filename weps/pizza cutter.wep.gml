@@ -106,12 +106,13 @@
 				sound_play_pitchvol(sndDiscBounce,    1.4 + random(0.2), 0.8);
 				
 				 // Flash:
-				var	_l = 18 - wkick,
-					_d = gunangle + (wepangle * (1 - (wkick / 20)));
+				var	_lx = 18 - wkick,
+					_ly = 2 * variable_instance_get(_fire.creator, "wepflip", 1),
+					_d  = gunangle + (wepangle * (1 - (wkick / 20)));
 					
 				with(instance_create(
-					x + hspeed_raw + lengthdir_x(_l, _d) + lengthdir_x(wepflip * 2, _d - 90),
-					y + vspeed_raw + lengthdir_y(_l, _d) + lengthdir_y(wepflip * 2, _d - 90),
+					x + hspeed_raw + lengthdir_x(_lx, _d) + lengthdir_x(_ly, _d - 90),
+					y + vspeed_raw + lengthdir_y(_lx, _d) + lengthdir_y(_ly, _d - 90),
 					DiscTrail
 				)){
 					sprite_index = spr.BigDiscTrail;

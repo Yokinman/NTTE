@@ -5919,18 +5919,18 @@
 											switch(_sprAlly){
 												case sprSlugBullet:
 												case sprSlugDisappear:
-													spr_dead = sprSlugDisappear;
+													spr_fade = sprSlugDisappear;
 													break;
 													
 												case sprHeavySlug:
 												case sprHeavySlugDisappear:
-													spr_dead = sprHeavySlugDisappear;
+													spr_fade = sprHeavySlugDisappear;
 													break;
 													
 												default:
-													spr_dead = sprBullet2Disappear;
+													spr_fade = sprBullet2Disappear;
 											}
-											spr_fade = team_get_sprite(_team, spr_dead);
+											spr_fade = team_get_sprite(_team, spr_fade);
 											
 											 // Specifics:
 											switch(_obj){
