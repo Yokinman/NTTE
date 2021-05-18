@@ -22,7 +22,7 @@
 		"list" : {
 			"options" : {
 				"x"    : 0,
-				"y"    : -64,
+				"y"    : -76,
 				"slct" : array_create(maxp, -1),
 				"list" : [
 					
@@ -37,6 +37,12 @@
 						type : opt_toggle,
 						text : "@sRemind you to enable#@wboss intros @s& @wmusic",
 						save : "option:reminders"
+						},
+						
+					{	name : "Footprints",
+						type : opt_toggle,
+						text : "@wPlayers @sleave behind @wfootprints",
+						save : "option:footprints"
 						},
 						
 					{	name : "NTTE Intros",

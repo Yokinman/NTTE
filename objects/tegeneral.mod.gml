@@ -2128,6 +2128,17 @@
 				else with(player_fire_ext(direction, wep_none, x, y, team, creator, accuracy)){
 					wep = _wep;
 					call(scr.pass, [self, other], scr.weapon_get, "fire", wep);
+					
+					 // Transfer Variables:
+					with(creator){
+						if(friction != 0){
+							hspeed += other.hspeed;
+							vspeed += other.vspeed;
+						}
+						if("wkick"    in self) wkick    = other.wkick;
+						if("wepangle" in self) wepangle = other.wepangle * ((abs(other.wepangle) > 1) ? sign(wepangle) : wepangle);
+						if("reload"   in self) reload  += other.reload;
+					}
 				}
 				
 				 // Charge Weapon Fix Reset:
@@ -2222,15 +2233,17 @@
 								}
 								
 								 // Non-Player:
-								else player_fire_ext(
-									other.direction,
-									other.wep,
-									other.x,
-									other.y,
-									other.team,
-									other.creator,
-									other.accuracy
-								);
+								else with(player_fire_ext(other.direction, other.wep, other.x, other.y, other.team, other.creator, other.accuracy)){
+									with(creator){
+										if(friction != 0){
+											hspeed += other.hspeed;
+											vspeed += other.vspeed;
+										}
+										if("wkick"    in self) wkick    = other.wkick;
+										if("wepangle" in self) wepangle = other.wepangle * ((abs(other.wepangle) > 1) ? sign(wepangle) : wepangle);
+										if("reload"   in self) reload  += other.reload;
+									}
+								}
 							}
 						}
 					}

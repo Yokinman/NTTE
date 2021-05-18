@@ -2802,12 +2802,12 @@
 					
 				with(instances_meeting_rectangle(_x1, _y1, _x2, _y2, Floor)){
 					array_push(_overlapFloorFill, [bbox_left + _ox, bbox_top + _oy, bbox_right + _ox, bbox_bottom + _oy]);
-					instance_destroy();
-				}
-				with(instances_meeting_rectangle(_x1, _y1, _x2, _y2, SnowFloor)){
-					if(point_in_rectangle(bbox_center_x, bbox_center_y, _x1, _y1, _x2 + 1, _y2 + 1)){
-						instance_destroy();
+					with(instances_meeting_instance(self, SnowFloor)){
+						if(point_in_rectangle(bbox_center_x, bbox_center_y, other.bbox_left, other.bbox_top, other.bbox_right + 1, other.bbox_bottom + 1)){
+							instance_destroy();
+						}
 					}
+					instance_destroy();
 				}
 				with(instances_meeting_rectangle(_x1, _y1, _x2, _y2, [chestprop, RadChest])){
 					instance_delete(self);
@@ -4061,7 +4061,7 @@
 		 // Charge Weapon:
 		if(weapon_get("chrg", _fire.wep) && _fire.wep.chrg >= 0){
 			var	_load = variable_instance_get(self, "reloadspeed", 1) * current_time_scale,
-				_auto = ((other.race == "steroids") ? (weapon_get_auto(_fire.wep) >= 0) : weapon_get_auto(_fire.wep));
+				_auto = ((other.race == "steroids") ? (weapon_get("auto", _fire.wep) >= 0) : weapon_get("auto", _fire.wep));
 				
 			 // Charging (chrg: -1==Released, 0==None, 1==Charging, 2==Charged):
 			_fire.wep.chrg = ((_fire.wep.chrg_num < _fire.wep.chrg_max) ? 1 : 2);

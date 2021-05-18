@@ -2852,7 +2852,11 @@
 						
 						 // Make Footprints:
 						if("ntte_foot_time" in self && ntte_foot_time > 0){
-							if(sprite_index == spr_walk && speed_raw > max(0, friction_raw)){
+							if(
+								sprite_index == spr_walk
+								&& speed_raw > max(0, friction_raw)
+								&& call(scr.option_get, "footprints")
+							){
 								if(footextra == true){
 									footextra = 2;
 								}
