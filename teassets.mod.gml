@@ -2295,6 +2295,7 @@
 		with([
 			["option:shaders",       true],
 			["option:reminders",     true],
+			["option:footprints",    true],
 			["option:intros",        2],
 			["option:outline:pets",  2],
 			["option:outline:charm", 2],

@@ -707,7 +707,7 @@
 		 // Vars:
 		nochest = 4;
 		
-		 // Scripts:
+		 // Events:
 		on_open = script_ref_create(BiggestWeaponChest_open);
 		
 		 // Clear Walls:
@@ -3227,7 +3227,7 @@
 								if("wkick" in other){
 									other.wkick = wkick;
 								}
-								_wepangle *= wepangle;
+								_wepangle = wepangle * ((abs(wepangle) > 1) ? sign(_wepangle) : _wepangle);
 								
 								 // Reload:
 								if(other.alarm1 > 0){
@@ -3697,7 +3697,7 @@
 		 // Sounds:
 		snd_open = sndChest;
 		
-		 // Scripts:
+		 // Events:
 		on_step = script_ref_create(OrchidChest_step);
 		on_open = script_ref_create(OrchidChest_open);
 		
@@ -4879,7 +4879,7 @@
 		 // Vars:
 		num = 1;
 		
-		 // Scripts:
+		 // Events:
 		on_open = script_ref_create(RedAmmoChest_open);
 		
 		return self;
@@ -4947,6 +4947,34 @@
 			);
 		}
 	}
+	
+	
+#define RedChest_create(_x, _y)
+	/*
+		...
+	*/
+	
+	with(call(scr.obj_create, _x, _y, "CustomChest")){
+		 // Visual:
+		sprite_index = spr.RedChest;
+		spr_dead     = spr.RedChestOpen;
+		spr_shadow   = shd16;
+		spr_shadow_y = 4;
+		
+		 // Sounds:
+		//snd_open = ;
+		
+		 // Vars:
+		num = 1;
+		
+		 // Events:
+		on_open = script_ref_create(RedChest_open);
+		
+		return self;
+	}
+	
+#define RedChest_open
+	
 	
 	
 #define RogueBackpack_create(_x, _y)
@@ -5040,6 +5068,7 @@
 		
 		 // Sounds:
 		snd_open = sndWeaponChest;
+		sound_play_pitchvol(sndStrongSpiritGain, 1.2 + random(0.2), 0.7);
 		
 		 // Vars:
 		num  = 2;
@@ -5049,9 +5078,6 @@
 		on_step = script_ref_create(SpiritChest_step);
 		on_open = script_ref_create(SpiritChest_open);
 		
-		 // Sound:
-		sound_play_pitchvol(sndStrongSpiritGain, 1.2 + random(0.2), 0.7);
-		 
 		return self;
 	}
 	
@@ -5094,6 +5120,7 @@
 		 // Sounds:
 		snd_open = sndAmmoPickup;
 		snd_fade = sndStrongSpiritLost;
+		sound_play_pitchvol(sndStrongSpiritGain, 1.4 + random(0.3), 0.7);
 		
 		 // Vars:
 		num        = 1 + (crown_current == crwn_haste); // haste confirmed epic
@@ -5108,9 +5135,6 @@
 		on_pull = script_ref_create(SpiritPickup_pull);
 		on_open = script_ref_create(SpiritPickup_open);
 		on_fade = script_ref_create(SpiritPickup_fade);
-		
-		 // Sound:
-		sound_play_pitchvol(sndStrongSpiritGain, 1.4 + random(0.3), 0.7);
 		
 		return self;
 	}
