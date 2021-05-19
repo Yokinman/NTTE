@@ -2803,7 +2803,7 @@
 	path_wall   = [];
 	partner     = noone;
 	orbit_pull  = 0;
-	orbit_dis   = 24;
+	orbit_dis   = 26;
 	orbit_speed = 3;
 	flash       = 0;
 	walled      = false;
@@ -4351,6 +4351,143 @@
 	
 	
 /// GENERAL
+#define Guardian_create
+	 // Visual:
+	spr_dash_start = Guardian_sprite(0, "dash_start");
+	spr_dash	   = Guardian_sprite(0, "dash");
+	spr_dash_end   = Guardian_sprite(0, "dash_end");
+	spr_appear	   = Guardian_sprite(0, "appear");
+	spr_disappear  = Guardian_sprite(0, "disappear");
+	hitid[1]	   = "POPO GUARDIAN";
+	spr_shadow_y   = 3;
+	
+	 // Vars:
+	maxhealth	  = 300; // i dunno
+	can_escape	  = (GameCont.area == area_hq);
+	prompt_escape = noone;
+	corpse		  = false;	
+	
+#define Guardian_ttip(_skin)
+	return [
+		"MEMENTO",
+		"BLACK BOX",
+		"DEFECTIVE"
+	];
+	
+#define Guardian_sprite(_skin, _name)
+	switch(_name){
+		case "icon" 	  : return spr.PetGuardianIcon;
+		case "idle" 	  : return spr.PetGuardianIdle;
+		case "walk" 	  :
+		case "hurt" 	  : return spr.PetGuardianHurt;
+		case "dead" 	  :
+		case "dash_start" : return spr.PetGuardianDashStart;
+		case "dash" 	  : return spr.PetGuardianDash;
+		case "dash_end"   : return spr.PetGuardianDashEnd;
+		case "appear"	  : return spr.PetGuardianAppear;
+		case "disappear"  : return spr.PetGuardianDisappear;
+	}
+	
+#define Guardian_sound(_skin, _name)
+	switch(_name){
+		case "hurt" : return sndCrownGuardianHurt;
+		case "dead" : return sndCrownGuardianDead;
+	}
+	
+#define Guardian_anim
+	if(anim_end){
+		sprite_index = spr_idle;
+	}
+	
+#define Guardian_stat(_name, _value)
+	
+#define Guardian_step
+	if(instance_exists(leader)){
+		 // behavior goes here:
+	}
+	else{
+		
+		 // Escape:
+		if(can_escape){
+			
+			 // Prompt Setup:
+			if(!instance_exists(prompt_escape)){
+				can_take = false;
+				
+				var _text = variable_instance_get(prompt, "text", "");
+				prompt_escape = call(scr.prompt_create, self, loc("NTTE:PetGuardian:Prompt", `${_text}#@(color:${make_color_rgb(0, 255, 255)})ESCAPE`));
+			}
+			
+			with(prompt_escape) if(player_is_active(pick)){
+				with(other){
+					can_escape = false;
+					can_take   = true;
+					
+					 // Portal Out:
+					sound_play(sndPortalOpen);
+					instance_create(x, y, Portal);
+					
+					 // Return:
+					with(GameCont){
+						area    = lastarea;
+						subarea = lastsubarea;
+					}
+					
+					 // Just in Case:
+					with(LastChair){
+						alarm_set(0, -1);
+					}
+					with(SitDown){
+						instance_destroy();
+					}
+					with(PlayerSit){
+						instance_destroy();
+					}
+					with(TopCont){
+						fadeout = 0;
+						fade	= -0.45;
+					}
+				}
+				
+				 // Goodbye, Prompt:
+				instance_destroy();
+			}
+		}
+	}
+	
+#define Guardian_draw(_spr, _img, _x, _y, _xsc, _ysc, _ang, _col, _alp)
+	var h = (nexthurt >= current_frame + 4);
+	if(h) draw_set_fog(true, image_blend, 0, 0);
+	
+	draw_sprite_ext(_spr, _img, _x, _y, _xsc, _ysc, _ang, _col, _alp);
+	
+	if(h) draw_set_fog(false, c_white, 0, 0);
+
+#define Guardian_hurt(_damage, _force, _direction)
+	my_health -= _damage;
+	nexthurt = current_frame + 6;
+	motion_add(_direction, _force);
+	
+	 // Sounds:
+	if(snd_hurt == sndCrownGuardianHurt){
+		call(scr.sound_play_at, x, y, sndCrownGuardianHurt, random_range(1.1, 1.3), 1.0);
+		call(scr.sound_play_at, x, y, sndHitFlesh,			random_range(0.8, 1.0), 1.2);
+	}
+	else sound_play_hit(snd_hurt, 0.2);
+	
+#define Guardian_death
+	with(call(scr.projectile_create, self, x, y, PopoExplosion, 0, 0)){
+		image_xscale /= 3;
+		image_yscale /= 3;
+	}
+	
+	 // Sounds:	
+	if(snd_dead == sndCrownGuardianDead){
+		call(scr.sound_play_at, x, y, sndCrownGuardianDead, random_range(1.1, 1.3), 1.2);
+		audio_sound_set_track_position(call(scr.sound_play_at, x, y, sndLastNotifyDeath, random_range(1.3, 1.5), 0.75), 0.75);
+	}
+	else sound_play_hit(snd_dead, 0.2);
+	
 #define ntte_update(_newID, _genID)
 	if(array_length(obj.Pet)){
 		 // Mantis Rad Attraction:
@@ -4404,6 +4541,18 @@
 					 // Add Salamander:
 					text += "@s#SALAMANDER - @wPUNTED @sENEMIES @rEXPLODE@s";
 				}
+			}
+		}
+	}
+	
+	 // Spawn Guardian Pet:
+	if(instance_exists(LastDie)){
+		
+		var _inst = instances_matching_gt(LastDie, "id", _newID);
+		if(array_length(_inst))	with(_inst){
+			
+			with(call(scr.pet_create, x, y, "Guardian")){
+				sprite_index = spr_appear;
 			}
 		}
 	}

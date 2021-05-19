@@ -110,7 +110,8 @@
 							"Orchid"     + ".petlib.mod",
 							"Weapon"     + ".petlib.mod",
 							"Twins"      + ".petlib.mod",
-							"Cuz"        + ".petlib.mod"
+							"Cuz"        + ".petlib.mod",
+							"Guardian"	 + ".petlib.mod"
 						]
 					},
 					

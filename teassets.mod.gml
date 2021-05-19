@@ -2227,6 +2227,19 @@
 			p = m + "Crib/";
 			PetCuzIcon = sprite(p + "sprPetCuzIcon", 1, 6, 6);
 			
+			 // Guardian:
+			p = m + "HQ/";
+			PetGuardianIcon 		   = sprite(p + "sprPetGuardianIcon", 			 1,  6,  7);
+			PetGuardianIdle 		   = sprite(p + "sprPetGuardianIdle", 			 4,  16, 16);
+			PetGuardianHurt			   = sprite(p + "sprPetGuardianHurt",			 3,	 16, 16);
+			PetGuardianDashStart	   = sprite(p + "sprPetGuardianDashStart",		 2,  16, 16);
+			PetGuardianDash			   = sprite(p + "sprPetGuardianDash",			 2,  16, 16);
+			PetGuardianDashEnd		   = sprite(p + "sprPetGuardianDashEnd",		 3,  16, 16);
+			PetGuardianAppear		   = sprite(p + "sprPetGuardianAppear",			 6,  16, 16);
+			PetGuardianDisappear	   = sprite(p + "sprPetGuardianDisappear",		 6,  16, 16);
+			PetGuardianShield		   = sprite(p + "sprPetGuardianShield",			 6,  16, 16);
+			PetGuardianShieldDisappear = sprite(p + "sprPetGuardianShieldDisappear", 6,  16, 16);
+			
 		//#endregion
 	}
 	
