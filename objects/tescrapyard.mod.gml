@@ -528,6 +528,78 @@
 		right = other.image_xscale;
 	}
 	
+	
+#define QuestChest_create(_x, _y)
+	with(call(scr.obj_create, _x, _y, "CustomChest")){
+		 // Visual:
+		sprite_index = spr.QuestChest;
+		spr_dead	 = spr.QuestChestOpen;
+		spr_shadow   = shd32;
+		
+		 // Sounds:
+		snd_open = sndWeaponChest;
+		
+		 // Events:
+		on_step = script_ref_create(QuestChest_step);
+		
+		return self;
+	}
+	
+#define QuestChest_step
+	if(chance_ct(1, 60)){
+		with(call(scr.obj_create, random_range(bbox_left, bbox_right), random_range(bbox_top, bbox_bottom), "VaultFlowerSparkle")){
+			sprite_index = spr.QuestSparkle;
+			depth		 = other.depth - 1;
+		}
+	}
+	
+#define QuestChestBig_create(_x, _y)
+	with(call(scr.obj_create, _x, _y, "CustomChest")){
+		 // Visual:
+		sprite_index = spr.QuestChestBig;
+		spr_dead	 = spr.QuestChestBigOpen;
+		spr_shadow   = shd32;
+		spr_shadow_y = 8;
+		
+		 // Sounds:
+		snd_open = sndBigWeaponChest;
+		
+		 // Events:
+		on_step = script_ref_create(QuestChestBig_step);
+		
+		return self;
+	}
+	
+#define QuestChestBig_step
+	if(chance_ct(1, 30)){
+		with(call(scr.obj_create, random_range(bbox_left, bbox_right), random_range(bbox_top, bbox_bottom), "VaultFlowerSparkle")){
+			sprite_index = spr.QuestSparkle;
+			depth		 = other.depth - 1;
+		}
+	}
+	
+	
+#define QuestProp_create(_x, _y)
+	with(instance_create(_x, _y, CustomProp)){
+		 // Visual:
+		var _num	 = irandom_range(1, 3);
+		spr_idle	 = lq_get(spr, `QuestProp${_num}Idle`);
+		spr_hurt	 = lq_get(spr, `QuestProp${_num}Hurt`);
+		spr_dead	 = lq_get(spr, `QuestProp${_num}Dead`);
+		spr_shadow   = mskNone;
+		sprite_index = spr_idle;
+		
+		 // Sounds:
+		snd_hurt = sndNothingHurtHigh;
+		snd_dead = sndNothingHurtLow;
+		
+		 // Vars:
+		maxhealth = 90;
+		
+		return self;
+	}
+	
+
 #define SawTrap_create(_x, _y)
 	with(instance_create(_x, _y, CustomHitme)){
 		 // Visual:

@@ -1116,7 +1116,11 @@
 			];
 			
 			 // Vault Flower Room:
-			VaultFlowerFloor = sprite(p + "sprFloorVaultFlower", 9, 0, 0);
+			VaultFlowerFloor	  = sprite(p + "sprFloorVaultFlower",	   9, 0, 0);
+			VaultFlowerFloorSmall = sprite(p + "sprFloorVaultFlowerSmall", 4, 0, 0);
+			
+			 // Quest Hint Lore Tiles:
+			FloorQuest = sprite(p + "sprFloorQuest", 4, 0, 0);
 			
 			//#region PROPS
 			p = m + "Props/";
@@ -1131,6 +1135,17 @@
 				VaultFlowerDebris       = sprite(p + "sprVaultFlowerDebris",       10,  4,  4);
 				VaultFlowerWiltedDebris = sprite(p + "sprVaultFlowerWiltedDebris", 10,  4,  4);
 				VaultFlowerSparkle      = sprite(p + "sprVaultFlowerSparkle",       4,  3,  3);
+				
+				 // Quest Props:
+				QuestProp1Idle = sprite(p + "sprQuestProp1Idle", 1, 16, 16);
+				QuestProp1Hurt = sprite(p + "sprQuestProp1Hurt", 3, 16, 16);
+				QuestProp1Dead = sprite(p + "sprQuestProp1Dead", 3, 16, 16);
+				QuestProp2Idle = sprite(p + "sprQuestProp2Idle", 1, 16, 16);
+				QuestProp2Hurt = sprite(p + "sprQuestProp2Hurt", 3, 16, 16);
+				QuestProp2Dead = sprite(p + "sprQuestProp2Dead", 3, 16, 16);
+				QuestProp3Idle = sprite(p + "sprQuestProp3Idle", 1, 16, 16);
+				QuestProp3Hurt = sprite(p + "sprQuestProp3Hurt", 3, 16, 16);
+				QuestProp3Dead = sprite(p + "sprQuestProp3Dead", 3, 16, 16);
 				
 				 // Ghost Statue:
 				GhostStatueIdle   = sprite_add_base64("iVBORw0KGgoAAAANSUhEUgAAADAAAAAwCAMAAABg3Am1AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAASUExURQAAAH9kQ1RCLDInGq+PagAAAHxMDEMAAAAGdFJOU///////ALO/pL8AAAAJcEhZcwAADsMAAA7DAcdvqGQAAAEnSURBVEhL7ZPREoUgCEQF7f9/+e4STSlkNnMf22nSkCMgWbaX+oAVpUCBfBqUAyJ6R+T2UuUuRh6hKJQjmbFIU2ktTysHDiWrmUm1IYRYWm47lViYkOBp6VllAPe+zSlacKbV3VcBbo8gteoqQOcXEYww96wRGYBOVyptdbDxT+XmigrwQ8V1Hw+Vim5ZOqyiaA0OPrrgYX4iBEHWsY7xky0GwIwsUjjZEIGZw58AifA79Z+4OEgJpfopISUZqrh+4d4YgIIpawYM/U3q5qzRW3zIDBNALYJrj8Ci3IHq5opVFnzVFOChYN38znf/S40AU0K555vIHLAWnM9jSiPAvKYRgh5qwI7WtuMNwzQCryY9r8M/AWSwH/0wzACfXjQBlvQBz9q2H25QJL3vdkDHAAAAAElFTkSuQmCC",
@@ -1757,6 +1772,13 @@
 			 // Lead Ribs Upgraded Rads:
 			RadUpg    = sprite(p + "sprRadUpg",    1, 5, 5, shn10);
 			BigRadUpg = sprite(p + "sprBigRadUpg", 1, 8, 8, shn16);
+			
+			 // Quest Chest:
+			QuestChest		  = sprite(p + "sprQuestChest", 	   1,  12, 12, shn24);
+			QuestChestOpen    = sprite(p + "sprQuestChestOpen",    1,  12, 12);
+			QuestChestBig	  = sprite(p + "sprQuestChestBig",	   1,  32, 32, shn64);
+			QuestChestBigOpen = sprite(p + "sprQuestChestBigOpen", 1,  32, 32);
+			QuestSparkle	  = sprite(p + "sprQuestSparkle",	   4,  6,  6);
 			
 		//#endregion
 		

@@ -1061,8 +1061,9 @@
 			
 		case area_palace: /// PALACE
 			
-			 // Stairs:
 			if(GameCont.subarea == 3){
+				
+				 // Stairs:
 				with(instances_matching(Carpet, "sprite_index", sprCarpet)){
 					var	_x1     = x - 128,
 						_y1     = bbox_top + 128,
@@ -1101,6 +1102,66 @@
 					}
 					depth = 9;
 				}
+				
+				/*
+				 // Quest Room:
+				var _w		  = 4,
+					_h		  = 4,
+					_type	  = "",
+					_dirStart = 90,
+					_dirOff   = 0,
+					_floorDis = 256,
+					_minID	  = instance_max;
+					
+				call(scr.floor_set_align, 32, 32);
+					
+				with(call(scr.floor_room_create, _spawnX, _spawnY, _w, _h, _type, _dirStart, _dirOff, _floorDis)){
+					
+					 // Hallway:
+					with(call(scr.instance_random, floors)){
+						var	_x       = bbox_center_x,
+							_y       = bbox_center_y,
+							_moveDis = 32;
+							
+						while(
+							point_distance(_x, _y, other.xstart, other.ystart) > _moveDis / 2
+							&& (
+								!position_meeting(_x, _y, Floor)
+								|| !array_length(call(scr.instances_meeting_point, _x, _y, _spawnFloor))
+							)
+						){
+							 // Floor & Fake Walls:
+							if(!position_meeting(_x, _y, Floor) || !array_length(call(scr.instances_meeting_point, _x, _y, FloorNormal))){
+								call(scr.floor_set, _x - 16, _y - 16, true);
+							}
+							
+							 // Move:
+							var _moveDir = pround(point_direction(_x, _y, other.xstart, other.ystart) + orandom(60), 90);
+							_x += lengthdir_x(_moveDis, _moveDir);
+							_y += lengthdir_y(_moveDis, _moveDir);
+							
+							_x = clamp(_x, _spawnX - 96, _spawnX + 64);
+						}
+					}
+					
+					 // Floor Sprites:
+					with(instances_matching_gt(FloorNormal, "id", _minID)){
+						sprite_index = spr.FloorPalaceShrine;
+					}
+					
+					 // Center Floor:
+					var _img = 0;
+					with(call(scr.floor_fill, x - 16, y - 16, 2, 2)){
+						sprite_index = spr.FloorPalaceShrineRoomSmall;
+						image_index  = _img++;
+					}
+					
+					 // Chest:
+					call(scr.obj_create, x, y, "QuestChest");
+				}
+				*/
+				
+				call(scr.floor_reset_align);
 			}
 			
 			 // Cool Dudes:
@@ -1163,6 +1224,97 @@
 					
 					call(scr.floor_reset_align);
 				}
+			}
+			
+			 // Quest Room:
+			with(CrownPed){
+				call(scr.floor_set_align, 32, 32);
+				
+				if(GameCont.proto){
+					var _w		  = 2,
+						_h		  = 2,
+						_type	  = "",
+						_dirStart = random(360),
+						_dirOff   = 90,
+						_floorDis = 0;
+						
+					with(call(scr.floor_room_create, x, y, _w, _h, _type, _dirStart, _dirOff, _floorDis)){
+						call(scr.obj_create, x, y, "QuestChest");
+						
+						var _img = 0;
+						with(floors){
+							sprite_index = spr.VaultFlowerFloorSmall;
+							image_index  = _img++;
+							depth		 = 7;
+						}
+					}
+				}
+				else{
+					var _w			= 5,
+						_h			= 5,
+						_type		= "",
+						_dirStart	= 90,
+						_dirOff 	= 0,
+						_floorDis	= 64,
+						_spawnDis	= 256,
+						_spawnFloor = FloorNormal,
+						_minID		= instance_max;
+						
+				
+					with(call(scr.floor_room_start, _spawnX, _spawnY, _spawnDis, _spawnFloor)){
+						with(call(scr.floor_room_create, x, y, _w, _h, _type, _dirStart, _dirOff, _floorDis)){
+							
+							 // Hallway:
+							with(call(scr.instance_random, floors)){
+								var	_x       = bbox_center_x,
+									_y       = bbox_center_y,
+									_moveDis = 32;
+									
+								while(
+									point_distance(_x, _y, other.xstart, other.ystart) > _moveDis / 2
+									&& (
+										!position_meeting(_x, _y, Floor)
+										|| !array_length(call(scr.instances_meeting_point, _x, _y, _spawnFloor))
+									)
+								){
+									 // Floor & Fake Walls:
+									if(!position_meeting(_x, _y, Floor) || !array_length(call(scr.instances_meeting_point, _x, _y, FloorNormal))){
+										call(scr.floor_set, _x - 16, _y - 16, true);
+									}
+									
+									 // Move:
+									var _moveDir = pround(point_direction(_x, _y, other.xstart, other.ystart) + orandom(60), 90);
+									_x += lengthdir_x(_moveDis, _moveDir);
+									_y += lengthdir_y(_moveDis, _moveDir);
+								}
+							}
+							
+							 // Room Shape:
+							call(scr.floor_fill, x - 16, y - 16, 9, 3);
+							
+							 // Floor Pattern:
+							var _img = 0;
+							with(call(scr.floor_fill, x - 16, y - 112, 3, 3)){
+								sprite_index = spr.VaultFlowerFloor;
+								image_index  = _img++;
+								depth		 = 7;
+							}
+							
+							 // Hint Lore Tiles:
+							var _img = 0;
+							for(var i = -3; i <= 3; i += 2){
+								with(call(scr.floor_set, x - 16 + (32 * i), y - 16, true)){
+									sprite_index = spr.FloorQuest;
+									image_index  = _img++;
+								}
+							}
+							
+							call(scr.obj_create, x, y - 96, "QuestChestBig");
+						}
+					}
+					
+				}
+				call(scr.floor_reset_align);
 			}
 			
 			break;
