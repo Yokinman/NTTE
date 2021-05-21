@@ -3697,6 +3697,9 @@
 		 // Sounds:
 		snd_open = sndChest;
 		
+		 // Vars:
+		alive = true;
+		
 		 // Events:
 		on_step = script_ref_create(OrchidChest_step);
 		on_open = script_ref_create(OrchidChest_open);
@@ -3706,39 +3709,53 @@
 	
 #define OrchidChest_step
 	 // Sparkle:
-	if(chance_ct(1, 5)){
+	if(alive && chance_ct(1, 5)){
 		call(scr.fx, [x, 7], [y, 6], 0, "VaultFlowerSparkle");
 	}
 	
 #define OrchidChest_open
-	 // Skill:
-	var _target = other;
-	with(call(scr.obj_create, x, y, "OrchidBall")){
-		if(instance_is(_target, Player)){
-			target = _target;
-		}
-		creator   = other;
-		direction = 90 + orandom(45);
-	}
-	
 	 // Effects:
-	repeat(10){
-		call(scr.fx, [x, 5], y + random(5), [90, random(1)], "VaultFlowerSparkle");
-	}
 	repeat(5){
 		VaultFlower_debris(x, y, random(360), random(3));
 	}
-	with(instance_create(x, y - 10, FXChestOpen)){
-		sprite_index = sprMutant6Dead;
-		image_index  = 12;
-		image_xscale = 0.75;
-		image_yscale = image_xscale;
-	}
 	
-	 // Sound:
-	sound_play_pitchvol(sndUncurse,            0.9 + random(0.2), 1.0);
-	sound_play_pitchvol(sndJungleAssassinWake, 0.9 + random(0.2), 0.8);
-	sound_play_pitchvol(sndWallBreakBrick,     1,                 0.6);
+	if(alive){
+		
+		 // Skill:
+		var _target = other;
+		with(call(scr.obj_create, x, y, "OrchidBall")){
+			if(instance_is(_target, Player)){
+				target = _target;
+			}
+			creator   = other;
+			direction = 90 + orandom(45);
+		}
+		
+		 // Effects:
+		repeat(10){
+			call(scr.fx, [x, 5], y + random(5), [90, random(1)], "VaultFlowerSparkle");
+		}
+		with(instance_create(x, y - 10, FXChestOpen)){
+			sprite_index = sprMutant6Dead;
+			image_index  = 12;
+			image_xscale = 0.75;
+			image_yscale = image_xscale;
+		}
+		
+		 // Sound:
+		sound_play_pitchvol(sndUncurse,            0.9 + random(0.2), 1.0);
+		sound_play_pitchvol(sndJungleAssassinWake, 0.9 + random(0.2), 0.8);
+		sound_play_pitchvol(sndWallBreakBrick,     1,                 0.6);
+	}
+	else{
+		
+		 // Dead:
+		repeat(5){
+			with(call(scr.obj_create, x, y, "BonePickup")){
+				motion_add(random(360), random(4));
+			}
+		}
+	}
 	
 	
 #define OrchidSkill_create(_x, _y)

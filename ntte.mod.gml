@@ -2176,6 +2176,7 @@
 		
 		 // New Hittable:
 		if(instance_exists(hitme) && hitme.id > _newID){
+			
 			 // Fix Throne 2 Not Deleting All Lone Walls:
 			if(instance_exists(Nothing2) && Nothing2.id > _newID){
 				with(Wall){
@@ -2196,12 +2197,16 @@
 			}
 			
 			 // Shadow Fixes:
-			var	_obj  = [Pillar, LastIntro, LastCutscene, BigTV, VenuzTV, VenuzCouch, Generator, GeneratorInactive],
+			var	_obj  = [TV, Pillar, LastIntro, LastCutscene, BigTV, VenuzTV, VenuzCouch, Generator, GeneratorInactive],
 				_inst = instances_matching(instances_matching(instances_matching(instances_matching_gt(_obj, "id", _newID), "spr_shadow", shd24), "spr_shadow_x", 0), "spr_shadow_y", 0);
 				
 			if(array_length(_inst)){
 				with(_inst){
 					switch(object_index){
+						case TV:
+							spr_shadow_x = 1;
+							break;
+							
 						case Pillar:
 							spr_shadow_y = -3;
 							break;

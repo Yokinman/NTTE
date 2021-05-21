@@ -317,6 +317,217 @@
 	return false;
 	
 	
+#define Ghost_create(_x, _y)
+	with(instance_create(_x, _y, CustomObject)){
+		 // Visual:
+		spr_idle	 = spr.GhostIdle;
+		spr_spwn	 = spr.GhostAppear;
+		spr_dead	 = spr.GhostDisappear;
+		spr_shadow   = shd24;
+		spr_shadow_x = 0;
+		spr_shadow_y = 8;
+		halo_sprite  = spr.GhostHaloAppear;
+		halo_index   = 0;
+		sprite_index = spr_spwn;
+		image_speed  = 0.4;
+		depth		 = -2;
+		
+		 // Vars:
+		dark_vertices  = 12;
+		dark_scale     = 1/3;
+		wave	       = random(90);
+		prompt		   = call(scr.prompt_create, self, loc("NTTE:GatorStatue:Prompt", "BLESSING"), mskShield, 0, -10);
+		prompt.visible = false;
+		
+		 // Sounds:
+		sound_play_pitchvol(sndGuardianAppear, 0.8, 0.6);
+		audio_sound_set_track_position(sound_play_pitchvol(sndStatueCharge, 0.8, 0.8), 0.5);
+		
+		 // Effects:
+		repeat(10){
+			with(call(scr.obj_create, x, y, "VaultFlowerSparkle")){
+				motion_set(random(360), 1 + random(3));
+				depth	 = other.depth - 1;
+				gravity  = -0.1;
+				friction = 0.1;
+			}
+		}
+		
+		return self;
+	}
+	
+#define Ghost_step
+	wave += current_time_scale;
+	
+	x = xstart + sin(wave / 10) * 2;
+	y = ystart + cos(wave / 10) * 2 + sin(wave / 30) * 3;
+	
+	 // Particles:
+	if(chance_ct(1, 5)){
+		with(call(scr.obj_create, random_range(bbox_left, bbox_right), random_range(bbox_top, bbox_bottom), "VaultFlowerSparkle")){
+			motion_add(90, random(1));
+			depth = other.depth - 1;
+		}
+	}
+	
+	 // Face Player:
+	if(chance_ct(1, 30) && instance_exists(Player)){
+		var _near = instance_nearest(x, y, Player);
+		image_xscale = (_near.x < x ? -1 : 1);
+	}
+	
+	 // Prompt Interaction:
+	if(instance_exists(prompt)){
+		
+		if(player_is_active(prompt.pick)){
+			sprite_index  = spr_dead;
+			image_index   = 0;
+			
+			dark_scale	  = 5/3;
+			
+			 // The Blessing (underwhelming, like hivemind):
+			with(call(scr.obj_create, x, y, "OrchidBall")){
+				skill = mut_last_wish;
+			}
+			
+			 // Restore Strong Spirit Potential (just kidding about the hivemind comment):
+			if(skill_get(mut_strong_spirit) > 0){
+				with(player_find(prompt.pick)){
+					if(canspirit == false){
+						GameCont.canspirit[index] = true;
+					}
+				}
+			}
+			
+			 // Effects (please don't be mad bro):
+			sleep(20);
+			
+			repeat(10){
+				var l = random_range(16, 24),
+					d = random(360);
+					
+				with(call(scr.obj_create, x + lengthdir_x(l, d), y + lengthdir_y(l, d), "VaultFlowerSparkle")){
+					motion_set(d, 1 + random(4));
+					
+					 // gravity_direction is so lit bro
+					 // why didn't i realize this was a thing sooner
+					 
+					gravity_direction = direction;
+					gravity 		  = -0.1;
+					friction		  = 0.1;
+				}
+			}
+			
+			 // Sounds:
+			sound_play_pitchvol(sndCrownRandom, 	  1,   0.2);
+			sound_play_pitchvol(sndGuardianDisappear, 0.8, 0.6);
+			
+			 // Goodbye:
+			instance_delete(prompt);
+		}
+	}
+	
+	 // Spawn Animation:
+	if(sprite_index == spr_spwn){
+		
+		dark_vertices = max(dark_vertices - current_time_scale, 6);
+		dark_scale	  = lerp_ct(dark_scale, 1, 1/5);
+		
+		if(anim_end){
+			sprite_index = spr_idle;
+			image_index  = 0;
+		}
+	}
+	else{
+		
+		 // Animate Halo:
+		if(halo_index < sprite_get_number(halo_sprite) - 1){
+			halo_index += image_speed_raw;
+			
+			if(halo_index >= sprite_get_number(halo_sprite) - 1){
+				halo_index = sprite_get_number(halo_sprite) - 1;
+				
+				with(prompt) visible = true;
+			}
+		}
+	}
+	
+	 // Death Animation
+	if(sprite_index == spr_dead){
+		
+		dark_vertices = min(dark_vertices + current_time_scale, 12);
+		dark_scale	  = lerp_ct(dark_scale, 0, 1/10);
+		
+		if(anim_end){
+			with(instance_create(x, y, RecycleGland)){
+				sprite_index = spr.GhostHaloDisappear;
+			}
+			
+			 // Goodbye:
+			instance_destroy();
+		}
+	}
+	
+#define Ghost_draw
+	draw_sprite_ext(halo_sprite, halo_index, x, y + sin(wave / 10), image_xscale, image_yscale, image_angle, image_blend, image_alpha);
+
+
+#define GhostStatue_create(_x, _y)
+	/*
+	 // Chests:
+	var _num = 3,
+		_ang = random(360);
+		
+	for(var i = 0; i < 360; i += (360 / _num)){
+		var l = random_range(24, 32);
+			d = _ang + i;
+			
+		with(call(scr.obj_create, _x + lengthdir_x(l, d), _y + lengthdir_y(l, d), "OrchidChest")){
+			sprite_index = spr.OrchidChestWilted;
+			alive = false;
+		}
+	}
+	
+	 // Details:
+	var _area = GameCont.area;
+	GameCont.area = area_desert;
+	
+	repeat(15){
+		with(instance_create(_x + orandom(48), _y + orandom(48), Detail)){
+			sprite_index = spr.VaultFlowerWiltedDebris;
+		}
+	}
+	
+	GameCont.area = _area;
+	*/
+	with(instance_create(_x, _y, CustomProp)){
+		 // Visual:
+		spr_idle	 = spr.GhostStatueIdle;
+		spr_hurt	 = spr.GhostStatueHurt;
+		spr_dead	 = spr.GhostStatueDead;
+		sprite_index = spr_idle;
+		depth		 = -1;
+		
+		 // Sounds:
+		snd_hurt = sndHitRock;
+		snd_dead = sndPillarBreak;
+		
+		 // Vars:
+		maxhealth = 30;
+		size	  = 3;
+		
+		return self;
+	}
+	
+#define GhostStatue_death
+	with(instance_create(x, y, Debris)){
+		sprite_index = spr.GhostStatueDebris;
+		motion_set(random(360), 4);
+	}
+	with(call(scr.obj_create, x, y - 16, "Ghost")){
+		right = other.image_xscale;
+	}
+	
 #define SawTrap_create(_x, _y)
 	with(instance_create(_x, _y, CustomHitme)){
 		 // Visual:
@@ -1592,6 +1803,43 @@
 			}
 		}
 	}
+	
+	 // Ghost:
+	if(array_length(obj.Ghost)){
+		with(instances_matching(obj.Ghost, "visible", true)){
+			draw_sprite(spr_shadow, 0, x + spr_shadow_x, y + spr_shadow_y);
+		}
+	}
+	
+#define ntte_draw_dark(_type)
+	switch(_type){
+		
+		case "normal":
+		case "end":
+			
+			var _gray = (_type == "normal");
+			
+			if(array_length(obj.Ghost)){
+				with(instances_matching_ne(obj.Ghost, "id")){
+					
+					draw_primitive_begin(pr_trianglefan);
+					draw_vertex(x, y);
+					
+					var n = dark_vertices,
+						l = (48 + (64 * _gray)) * dark_scale + random(2);
+					for(var i = 0; i <= 360; i += (360 / n)){
+						var d = i + 90;
+						draw_vertex(x + lengthdir_x(l, d), y + lengthdir_y(l, d));
+					}
+					
+					draw_primitive_end();
+				}
+			}
+			
+			break;
+			
+	}
+	
 	
 #define draw_sludge
 	if(array_length(obj.SludgePool)){
