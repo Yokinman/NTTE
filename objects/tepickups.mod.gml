@@ -736,18 +736,13 @@
 	if(instance_is(other, Player)){
 		sound_play(other.snd_chst);
 	}
-	
-	var	_wep    = "ultra quasar rifle",
-		_unlock = call(scr.weapon_get, "avail", _wep),
-		_list   = ds_list_create();
 		
 	 // The Definitive Gun:
-	if(_unlock){
-		with(instance_create(x, y, WepPickup)){
-			wep = "ultra quasar rifle";
-		}
+	with(instance_create(x, y, WepPickup)){
+		wep = "ultra quasar rifle";
 	}
 	
+	/*
 	weapon_get_list(_list, 0, GameCont.hard);
 	var	_size = ds_list_size(_list),
 		_num  = (_unlock ? 3 : 5),
@@ -778,6 +773,7 @@
 	}
 	
 	ds_list_destroy(_list);
+	*/
 	
 	
 #define BoneBigPickup_create(_x, _y)

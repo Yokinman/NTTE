@@ -2,108 +2,89 @@
 	mod_script_call("mod", "teassets", "ntte_init", script_ref_create(init));
 	
 	 // Sprites:
-	global.sprWep       = sprite_add_weapon("../sprites/weps/sprUltraQuasarRifle.png", 20, 12);
+	global.sprWep       = spr.UltraQuasarBlaster; // sprite_add_weapon("../sprites/weps/sprUltraQuasarBlaster.png", 20, 12);
 	global.sprWepLocked = sprTemp;
 	
 	 // LWO:
 	global.lwoWep = {
-		"wep"  : mod_current,
-		"beam" : noone,
-		"tier" : 1
+		"wep" : mod_current
 	};
 	
 #define cleanup
 	mod_script_call("mod", "teassets", "ntte_cleanup", script_ref_create(cleanup));
 	
-#define weapon_name         return (weapon_avail() ? "ULTRA QUASAR RIFLE" : "LOCKED");
+#define weapon_name         return (weapon_avail() ? "ULTRA QUASAR BLASTER" : "LOCKED");
 #define weapon_text         return choose("THE GREEN SUN", "ROCKET POWERED RECOIL DAMPENING");
 #define weapon_swap         return sndSwapEnergy;
 #define weapon_sprt         return (weapon_avail() ? global.sprWep : global.sprWepLocked);
-#define weapon_area         return -1; // Doesn't Spawn
+#define weapon_area         return -1; // Doesn't spawn naturally
 #define weapon_type         return type_energy;
-#define weapon_cost(_wep)   return 5;
-#define weapon_rads(_wep)   return 25;
-#define weapon_load(_wep)   return 20 + power(40, 1 / lq_defget(_wep, "tier", 1));
-#define weapon_auto         return true;
+#define weapon_cost(_wep)   return 12;
+#define weapon_rads(_wep)   return 42;
+#define weapon_load(_wep)   return 50;
+#define weapon_auto         return false;
 #define weapon_avail        return call(scr.unlock_get, "pack:" + weapon_ntte_pack());
 #define weapon_ntte_pack    return "trench";
 #define weapon_ntte_quasar  return true;
+
+#define weapon_ntte_eat
+	if(!instance_is(self, Portal)){
+		
+		 // I guess robots really can eat anything, wow:
+		with(call(scr.projectile_create, self, x, y, "QuasarRing", gunangle)){
+			image_yscale   = 0;
+			sprite_index   = spr.UltraQuasarBeam;
+			spr_trail	   = spr.UltraQuasarBeamTrail;
+			follow_creator = true;
+			ultra		   = true;
+			scale_goal     = 1;
+			ring_size      = 1.2 * power(1.2, skill_get(mut_laser_brain));
+			shrink_delay   = 300;
+		}
+		
+		 // Debris:
+		var _spr = spr.UltraQuasarBlasterEat;
+		for(var _img = 0; _img < sprite_get_number(_spr); _img++){
+			with(instance_create(x, y, ScrapBossCorpse)){
+				motion_set(random(360), 4 + random(4));
+				sprite_index = _spr;
+				image_index  = _img;
+				image_angle  = random(360);
+			}
+		}
+		
+		 // Sounds:
+		sound_play_pitch(sndUltraLaserUpg, 0.4 + random(0.1));
+		sound_play_pitch(sndPlasmaHugeUpg, 1.2 + random(0.2));
+		sound_play(sndMutant8Thrn);
+	}
 
 #define weapon_fire(_wep)
 	var _fire = call(scr.weapon_fire_init, _wep);
 	_wep = _fire.wep;
 	
-	 // New Beam:
-	if(!instance_exists(_wep.beam) || (_fire.spec && _fire.primary)){
-		 // Quasar Beam:
-		with(call(scr.projectile_create, self, x, y, "QuasarBeam", gunangle + orandom(6 * accuracy))){
-			 // Visual:
-			sprite_index = spr.UltraQuasarBeam;
-			spr_strt     = spr.UltraQuasarBeamStart;
-			spr_stop     = spr.UltraQuasarBeamEnd;
-			spr_hit      = spr.UltraQuasarBeamHit;
-			spr_trail    = spr.UltraQuasarBeamTrail;
-			spr_flame    = spr.UltraQuasarBeamFlame;
-			
-			 // Vars:
-			mask_index   = msk.UltraQuasarBeam;
-			image_yscale = 0.2;
-			scale_goal   = 0.4;
-			turn_factor  = 1/100;
-			offset_dis   = 24;
-			ultra        = true;
-			damage       = 24; // 2x
-			_wep.beam    = self;
+	var o = 30;
+	for(var i = -2; i <= 2; i++){
+		var d = gunangle + (o * i) * accuracy;
+		with(call(scr.projectile_create, self, x, y, "UltraQuasarBeam", d)){
+			image_yscale = 0;
+			scale_goal   = 0.8;
+			offset_dis   = 16;
+			offset_ang   = angle_difference(other.gunangle, d);
+			shrink_delay = 30;
 		}
-		
-		 // Sound:
-		var _brain = skill_get(mut_laser_brain);
-		sound_play_pitch((_brain ? sndUltraLaserUpg : sndUltraLaser), 0.4 + random(0.1));
-		sound_play_pitch((_brain ? sndPlasmaUpg     : sndPlasma),     1.2 + random(0.2));
-		sound_play_pitchvol(sndExplosion, 1.5, 0.5);
-		
-		 // Effects:
-		weapon_post(32, -16, 32);
-		motion_add(gunangle + 180, 4);
-		move_contact_solid(direction, speed);
-		
-		_wep.tier = 1;
 	}
 	
-	 // Charge Beam:
-	else with(_wep.beam){
-		scale_goal  = scale_goal + (1 / scale_goal) / 10;
-		flash_frame = current_frame + floor(4 / _wep.tier);
-		/*
-		if(image_yscale < 1){
-			scale_goal = 1;
-		}
-		else{
-			var	_a = 0.25,
-				_m = 1 + (_a * (1 + (0.4 * skill_get(mut_laser_brain))));
-				
-			if(scale_goal < _m){
-				scale_goal = min((floor(image_yscale / _a) * _a) + _a, _m);
-				flash_frame = max(flash_frame, current_frame + 2);
-			}
-		}
-		
-		 // Knockback:
-		if(image_yscale < scale_goal){
-			with(other) motion_add(gunangle + 180, 2);
-			// flash_frame = max(flash_frame, current_frame + 3);
-		}
-		*/
-	}
+	 // Sound:
+	var _brain = skill_get(mut_laser_brain);
+	sound_play_pitch((_brain ? sndUltraLaserUpg : sndUltraLaser), 0.4 + random(0.1));
+	sound_play_pitch((_brain ? sndPlasmaUpg     : sndPlasma),     1.2 + random(0.2));
+	sound_play_pitchvol(sndExplosion, 1.5, 0.5);
 	
-	 // Keep Setting:
-	with(_wep.beam){
-		shrink_delay = weapon_get_load(_wep) + 1;
-		primary      = _fire.primary;
-		
-		 // Charge:
-		_wep.tier++;
-	}
+	 // Effects:
+	weapon_post(32, -16, 32);
+	motion_add(gunangle + 180, 4);
+	move_contact_solid(direction, speed);
 	
 	
 /// SCRIPTS

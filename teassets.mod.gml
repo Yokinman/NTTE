@@ -112,6 +112,10 @@
 			TunnellerHUD         = sprite(p + "sprTunnellerHUD",         1,  0,  3, shnWep);
 			TunnellerHUDRed      = sprite(p + "sprTunnellerHUD",         1,  0,  3);
 			
+			 // Ultra Quasar Blaster:
+			UltraQuasarBlaster    = sprite(p + "sprUltraQuasarBlaster",    1,  20, 12, shnWep);
+			UltraQuasarBlasterEat = sprite(p + "sprUltraQuasarBlasterEat", 12, 24, 24);
+			
 		//#endregion
 		
 		//#region PROJECTILES

@@ -1997,7 +1997,7 @@
 	}
 	
 	 // Biggest Weapon Chest:
-	if(chance(1, 10)){
+	if(chance(1, 10) && call(scr.weapon_get, "avail", "ultra quasar rifle")){
 		if("ntte_huge_weapon_chest" not in GameCont || GameCont.ntte_huge_weapon_chest){
 			with(Player){
 				if(weapon_get_rads(wep) > 0 || weapon_get_rads(bwep) > 0){
