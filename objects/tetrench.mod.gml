@@ -3594,6 +3594,7 @@
 		scale_goal     = 1;
 		follow_creator = true;
 		offset_dis     = 0;
+		offset_ang	   = 0;
 		hold_x         = null;
 		hold_y         = null;
 		ring           = false;
@@ -3674,10 +3675,11 @@
 	
 	 // Player Stuff:
 	if(follow_creator){
+		var _gunAngle = image_angle + offset_ang;
 		with(creator){
 			 // Visually Force Player's Gunangle:
 			if(instance_is(self, Player)) with(other){
-				var	_ang  = angle_difference(image_angle, other.gunangle),
+				var	_ang  = angle_difference(_gunAngle, other.gunangle),
 					_inst = instances_matching(instances_matching(instances_matching(CustomEndStep, "name", "QuasarBeam_wepangle"), "creator", creator), "primary", primary);
 					
 				if(!array_length(_inst)){
@@ -3706,7 +3708,7 @@
 			
 			 // Knockback:
 			if(friction > 0){
-				motion_add(other.image_angle + 180, other.image_yscale / 2.5);
+				motion_add(_gunAngle + 180, other.image_yscale / 2.5);
 			}
 			
 			 // Follow Player:
@@ -3719,20 +3721,22 @@
 	}
 
 	 // Stay:
-	var _o = offset_dis + (sprite_get_width(spr_strt) * image_xscale * 0.5);
+	var l = offset_dis + (sprite_get_width(spr_strt) * image_xscale * 0.5),
+		d = image_angle;
+		
 	if(hold_x != null){
-		x = hold_x + lengthdir_x(_o, image_angle);
+		x = hold_x + lengthdir_x(l, d);
 		xprevious = x;
 	}
 	if(hold_y != null){
-		y = hold_y + lengthdir_y(_o, image_angle);
+		y = hold_y + lengthdir_y(l, d);
 		yprevious = y;
 	}
 	
 	 // Rotation:
 	line_dir_turn -= line_dir_turn * line_dir_fric * current_time_scale;
 	if(line_dir_goal != null){
-		var _turn = angle_difference(line_dir_goal, image_angle);
+		var _turn = angle_difference(line_dir_goal, image_angle + offset_ang); // <<
 		if(abs(_turn) > 90 && abs(line_dir_turn) > 1){
 			_turn = abs(_turn) * sign(line_dir_turn);
 		}
@@ -3791,7 +3795,7 @@
 		
 		 // Position Beams:
 		if(array_length(ring_lasers)){
-			var	_l = _yoff + (6 * image_yscale),
+			var	_l = _yoff + ((ultra ? 10 : 6) * image_yscale),
 				_t = 4 * current_time_scale,
 				_x = x + hspeed,
 				_y = y + vspeed,
@@ -3951,12 +3955,14 @@
 			if(position_meeting(_cx, _cy, Floor)){
 				var _off = (ultra ? 24 : 32) * image_yscale;
 				with(instance_create(_cx + orandom(_off), _cy + orandom(_off), PlasmaTrail)){
+					
 					sprite_index = other.spr_trail;
 					if(other.ultra){
-						image_angle  = other.image_angle;
+						image_angle  = _dir;
 						image_xscale = random_range(2/3, 1);
 						image_yscale = image_xscale;
 					}
+					
 					motion_add(_dir, 1 + random(max(other.image_yscale - 1, 0)));
 					if(other.image_yscale > 1) depth = other.depth - 1;
 				}
@@ -4079,14 +4085,16 @@
 		draw_set_fog(false, 0, 0, 0);
 	}
 	
+	/*
 	 // Flame:
 	QuasarBeam_draw_flame(1, 1, 1);
+	*/
 
 #define QuasarBeam_alrm0
 	alarm0 = random_range(4 + (8 * array_length(ring_lasers)), 16);
 	
 	 // Laser:
-	with(call(scr.projectile_create, self, x, y, "QuasarBeam", random(360))){
+	with(call(scr.projectile_create, self, x, y, (ultra ? "UltraQuasarBeam" : "QuasarBeam"), random(360))){
 		spr_strt       = -1;
 		follow_creator = false;
 		line_dir_goal  = image_angle + random(orandom(180));
@@ -4131,6 +4139,20 @@
 			40
 		);
 		direction = _lastDir;
+		
+		 // Death Effect:
+		if(ultra && other.my_health <= 0) {
+			with(other){
+				if(size >= 2){
+					instance_create(x, y, GreenExplosion);
+					repeat(3) instance_create(x, y, SmallExplosion);
+				}
+				else{
+					instance_create(x, y, SmallExplosion); // kinda looks better orange i think
+					// call(scr.obj_create, x, y, "SmallGreenExplosion");
+				}
+			}
+		}
 	}
 	
 #define QuasarBeam_wall
@@ -4584,6 +4606,30 @@
 	}
 	
 	
+#define UltraQuasarBeam_create(_x, _y)
+	/*
+		The ultra variant of quasar beams.
+	*/
+	with(call(scr.obj_create, _x, _y, "QuasarBeam")){
+		 // Visual:
+		sprite_index = spr.UltraQuasarBeam;
+		spr_strt     = spr.UltraQuasarBeamStart;
+		spr_stop     = spr.UltraQuasarBeamEnd;
+		spr_hit      = spr.UltraQuasarBeamHit;
+		spr_trail    = spr.UltraQuasarBeamTrail;
+		spr_flame    = spr.UltraQuasarBeamFlame;
+		
+		 // Vars:
+		mask_index   = msk.UltraQuasarBeam;
+		turn_factor  = 1/30;
+		bend_fric	 = 0.3;
+		ultra        = true;
+		damage		 = 24; // 2x
+		
+		return self;
+	}
+	
+	
 #define Vent_create(_x, _y)
 	/*
 		Bro it's a bubble prop, I love it
@@ -4830,8 +4876,9 @@
 			}
 			
 			QuasarBeam_draw_laser(_xsc * image_xscale, _ysc * image_yscale, _alp * image_alpha);
+			/*
 			QuasarBeam_draw_flame(_xsc,                _ysc,                _alp);
-			
+			*/
 			/*if(ring && array_length(ring_lasers)){
 				with(instances_matching(ring_lasers, "visible", false)){
 					QuasarBeam_draw_laser(_xsc * image_xscale, _ysc * image_yscale, _alp * image_alpha);

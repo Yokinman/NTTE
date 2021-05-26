@@ -433,7 +433,7 @@
 					
 					 // Secrets Upon Secrets Upon Secres:
 					with(call(scr.instance_random, floors)){
-						with(call(scr.floor_room_create, bbox_center_x, bbox_center_y, 1, 2, "", 90, 0, 0)){
+						with(call(scr.floor_room_create, bbox_center_x, bbox_center_y, 1, 3, "", 90, 0, 0)){
 							 // Fake Walls:
 							for(var _wx = x1; _wx < x2; _wx += 16){
 								for(var _wy = y1; _wy < y2; _wy += 16){
@@ -442,7 +442,7 @@
 							}
 							
 							 // Chest:
-							call(scr.chest_create, x, y1 + 16, "Backpack", true);
+							call(scr.chest_create, x, y1 + 16, "QuestChest", true);
 						}
 					}
 					

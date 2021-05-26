@@ -1306,7 +1306,7 @@
 		layout          = [];
 		layout_delay    = 6;
 		obj_prop        = Torch;
-		obj_loot        = "BuriedVaultPedestal";
+		obj_loot        = (GameCont.area == area_vault ? "GhostStatue" : "BuriedVaultPedestal");
 		area            = area_vault;
 		x               = pfloor(bbox_left, 16);
 		y               = pfloor(bbox_top,  16);

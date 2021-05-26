@@ -722,17 +722,12 @@
 		sound_play(other.snd_chst);
 	}
 	
-	var	_wep    = "ultra quasar rifle",
-		_unlock = call(scr.weapon_get, "avail", _wep),
-		_list   = ds_list_create();
-		
 	 // The Definitive Gun:
-	if(_unlock){
 		with(instance_create(x, y, WepPickup)){
 			wep = "ultra quasar rifle";
 		}
-	}
 	
+	/*
 	weapon_get_list(_list, 0, GameCont.hard);
 	var	_size = ds_list_size(_list),
 		_num  = (_unlock ? 3 : 5),
@@ -763,6 +758,7 @@
 	}
 	
 	ds_list_destroy(_list);
+	*/
 	
 	
 #define BoneBigPickup_create(_x, _y)
@@ -3581,7 +3577,8 @@
 		snd_open = sndChest;
 		
 		 // Vars:
-		num = 1;
+		num   = 1;
+		alive = true;
 		
 		 // Events:
 		on_step = script_ref_create(OrchidChest_step);
@@ -3592,39 +3589,53 @@
 	
 #define OrchidChest_step
 	 // Sparkle:
-	if(chance_ct(1, 5)){
+	if(alive && chance_ct(1, 5)){
 		call(scr.fx, [x, 7], [y, 6], 0, "VaultFlowerSparkle");
 	}
 	
 #define OrchidChest_open
 	var _target = (instance_is(other, Player) ? other : instance_nearest(x, y, Player));
 	
-	 // Skill:
-	with(call(scr.obj_create, x, y, "OrchidBall")){
-		target    = _target;
-		num       = other.num;
-		creator   = other;
-		direction = 90 + orandom(45);
-	}
-	
 	 // Effects:
-	repeat(10){
-		call(scr.fx, [x, 5], y + random(5), [90, random(1)], "VaultFlowerSparkle");
-	}
 	repeat(5){
 		VaultFlower_debris(x, y, random(360), random(3));
 	}
-	with(instance_create(x, y - 10, FXChestOpen)){
-		sprite_index = sprMutant6Dead;
-		image_index  = 12;
-		image_xscale = 0.75;
-		image_yscale = image_xscale;
+	
+	 // Normal:
+	if(alive){
+		 // Skill:
+		with(call(scr.obj_create, x, y, "OrchidBall")){
+			if(instance_is(_target, Player)){
+				target    = _target;
+			}
+			num       = other.num;
+			creator   = other;
+			direction = 90 + orandom(45);
+		}
+		
+		 // Effects:
+		repeat(10){
+			call(scr.fx, [x, 5], y + random(5), [90, random(1)], "VaultFlowerSparkle");
+		}
+		with(instance_create(x, y - 10, FXChestOpen)){
+			sprite_index = sprMutant6Dead;
+			image_index  = 12;
+			image_xscale = 0.75;
+			image_yscale = image_xscale;
+		}
+		
+		 // Sound:
+		sound_play_pitchvol(sndUncurse,            0.9 + random(0.2), 1.0);
+		sound_play_pitchvol(sndJungleAssassinWake, 0.9 + random(0.2), 0.8);
+		sound_play_pitchvol(sndWallBreakBrick,     1,                 0.6);
 	}
 	
-	 // Sound:
-	sound_play_pitchvol(sndUncurse,            0.9 + random(0.2), 1.0);
-	sound_play_pitchvol(sndJungleAssassinWake, 0.9 + random(0.2), 0.8);
-	sound_play_pitchvol(sndWallBreakBrick,     1,                 0.6);
+	 // Dead:
+	else repeat(5){
+		with(call(scr.obj_create, x, y, "BonePickup")){
+			motion_add(random(360), random(4));
+		}
+	}
 	
 	
 #define OrchidSkill_create(_x, _y)
