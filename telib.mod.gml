@@ -3590,7 +3590,7 @@
 		_enemy   = ((argument_count > 5) ? argument[5] : false),
 		_inst    = ((argument_count > 6) ? argument[6] : self),
 		_disMax  = point_distance(_x1, _y1, _x2, _y2),
-		_disAdd  = min(_disMax / 8, 10) + (_enemy ? (array_length(instances_matching_ge(obj.Eel, "arcing", 1)) - 1) : 0),
+		_disAdd  = min(_disMax / 8, 10) + ((_enemy && array_find_index(obj.Eel, _inst) >= 0) ? max(0, array_length(instances_matching_ge(obj.Eel, "arcing", 1)) - 1) : 0),
 		_dis     = _disMax,
 		_dir     = point_direction(_x1, _y1, _x2, _y2),
 		_x       = _x1,
@@ -3670,6 +3670,54 @@
 	}
 	
 	return _proj;
+	
+#define lightning_disappear(_inst)
+	/*
+		Hides or destroys the given lightning instance(s), and replaces them with a BoltTrail disappearing visual
+		Returns the BoltTrail instance(s)
+	*/
+	
+	var _instTrail = [];
+	
+	with(_inst){
+		with(instance_create(x, y, object_index)){
+			other.image_speed = image_speed;
+			instance_delete(self);
+		}
+		with(instance_create(x, y, BoltTrail)){
+			sprite_index = other.sprite_index;
+			image_index  = other.image_index;
+			image_speed  = other.image_speed;
+			image_xscale = other.image_xscale;
+			image_yscale = other.image_yscale * power(0.4 / other.image_speed, 4/3);
+			image_angle  = other.image_angle;
+			image_blend  = other.image_blend;
+			image_alpha  = other.image_alpha;
+			depth        = other.depth;
+			
+			 // Dissipate Enemy Lightning Faster:
+			if(instance_is(other, EnemyLightning)){
+				image_yscale -= random(0.4);
+			}
+			
+			array_push(_instTrail, self);
+		}
+		
+		 // Hide / Destroy Lightning:
+		if(instance_is(self, EnemyLightning)){
+			instance_delete(self);
+		}
+		else{
+			image_index = 0;
+			image_alpha = 0;
+		}
+	}
+	
+	return (
+		array_length(_instTrail)
+		? ((array_length(_instTrail) > 1) ? _instTrail : _instTrail[0])
+		: noone
+	);
 	
 #define wep_raw(_wep)
 	/*
@@ -4025,7 +4073,7 @@
 	
 	 // Creator:
 	_fire.creator = self;
-	if(instance_is(self, FireCont) && "creator" in self){
+	if(instance_is(self, FireCont) && "creator" in self && instance_exists(creator)){
 		_fire.creator = creator;
 	}
 	

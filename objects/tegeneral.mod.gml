@@ -28,8 +28,21 @@
 		}
 	}
 	
+	 // 1-Frame Weapon Sprites:
+	global.gunspr_fix = ds_map_create();
+	
 #define cleanup
 	mod_script_call("mod", "teassets", "ntte_cleanup", script_ref_create(cleanup));
+	
+	 // Remove 'gunspr' Shine Fix Sprites:
+	with(ds_map_keys(global.gunspr_fix)){
+		var _sprFix = global.gunspr_fix[? self];
+		with(instances_matching(hitme, "gunspr", _sprFix)){
+			gunspr = other;
+		}
+		sprite_delete(_sprFix);
+	}
+	ds_map_destroy(global.gunspr_fix);
 	
 	
 #define AlertIndicator_create(_x, _y)
@@ -2130,7 +2143,7 @@
 					call(scr.pass, [self, other], scr.weapon_get, "fire", wep);
 					
 					 // Transfer Variables:
-					with(creator){
+					with(other.creator){
 						if(friction != 0){
 							hspeed += other.hspeed;
 							vspeed += other.vspeed;
@@ -2174,76 +2187,71 @@
 		if(is_object(wep) && "chrg" in wep){
 			if(wep.chrg){
 				wep.chrg = -1;
-				
-				if(instance_exists(creator)){
-					var _wepName = (primary ? "wep" : "bwep");
-					
-					with([creator]){
-						if(visible){
-							other.x = x;
-							other.y = y;
-							if(_wepName not in self || variable_instance_get(self, _wepName) == other.wep){
-								 // Player:
-								if(instance_is(self, Player)){
-									 // Steroids:
-									if(!other.primary){
-										call(scr.player_swap, self);
-										specfiring = true;
-									}
+				if(instance_exists(creator) && creator.visible){
+					x = creator.x;
+					y = creator.y;
+					if(variable_instance_get(creator, (primary ? "wep" : "bwep"), wep) == wep){
+						 // Player:
+						if(instance_is(creator, Player)){
+							with([creator]){
+								 // Steroids:
+								if(!other.primary){
+									call(scr.player_swap, self);
+									specfiring = true;
+								}
+								
+								 // Fire:
+								var	_type = weapon_get_type(other.wep),
+									_cost = weapon_get_cost(other.wep),
+									_rads = weapon_get_rads(other.wep),
+									_ammo = ammo[_type];
 									
-									 // Fire:
-									var	_type = weapon_get_type(other.wep),
-										_cost = weapon_get_cost(other.wep),
-										_rads = weapon_get_rads(other.wep),
-										_ammo = ammo[_type];
+								if(infammo != 0 || (_ammo >= _cost && GameCont.rad >= _rads)){
+									var	_lastTeam     = team,
+										_lastAccuracy = accuracy;
 										
-									if(infammo != 0 || (_ammo >= _cost && GameCont.rad >= _rads)){
-										var	_lastTeam     = team,
-											_lastAccuracy = accuracy;
-											
-										team     = other.team;
-										accuracy = other.accuracy;
-										
-										player_fire(other.direction);
-										
-										team     = _lastTeam;
-										accuracy = _lastAccuracy;
-									}
+									team     = other.team;
+									accuracy = other.accuracy;
 									
-									 // Low Ammo:
+									player_fire(other.direction);
+									
+									team     = _lastTeam;
+									accuracy = _lastAccuracy;
+								}
+								
+								 // Low Ammo:
+								else{
+									wkick     = -2;
+									clicked   = false;
+									drawempty = 30;
+									if(_ammo < _cost){
+										sound_play(sndEmpty);
+										call(scr.pickup_text, typ_name[_type], ((_ammo > 0) ? "ins" : "out"));
+									}
 									else{
-										wkick     = -2;
-										clicked   = false;
-										drawempty = 30;
-										if(_ammo < _cost){
-											sound_play(sndEmpty);
-											call(scr.pickup_text, typ_name[_type], ((_ammo > 0) ? "ins" : "out"));
-										}
-										else{
-											sound_play(sndUltraEmpty);
-											call(scr.pickup_text, "RADS", "ins");
-										}
-									}
-									
-									 // Steroids:
-									if(!other.primary){
-										specfiring = false;
-										call(scr.player_swap, self);
+										sound_play(sndUltraEmpty);
+										call(scr.pickup_text, "RADS", "ins");
 									}
 								}
 								
-								 // Non-Player:
-								else with(player_fire_ext(other.direction, other.wep, other.x, other.y, other.team, other.creator, other.accuracy)){
-									with(creator){
-										if(friction != 0){
-											hspeed += other.hspeed;
-											vspeed += other.vspeed;
-										}
-										if("wkick"    in self) wkick    = other.wkick;
-										if("wepangle" in self) wepangle = other.wepangle * ((abs(other.wepangle) > 1) ? sign(wepangle) : wepangle);
-										if("reload"   in self) reload  += other.reload;
-									}
+								 // Steroids:
+								if(!other.primary){
+									specfiring = false;
+									call(scr.player_swap, self);
 								}
+							}
+						}
+						
+						 // Non-Player:
+						else with(player_fire_ext(direction, wep, x, y, team, creator, accuracy)){
+							with(other.creator){
+								if(friction != 0){
+									hspeed += other.hspeed;
+									vspeed += other.vspeed;
+								}
+								if("wkick"    in self) wkick    = other.wkick;
+								if("wepangle" in self) wepangle = other.wepangle * ((abs(other.wepangle) > 1) ? sign(wepangle) : wepangle);
+								if("reload"   in self) reload  += other.reload;
 							}
 						}
 					}
@@ -2255,6 +2263,195 @@
 		instance_destroy();
 	}
 	else fire = true;
+	
+	
+#define FireWeapon_create(_x, _y)
+	/*
+		Used to replace an instance's projectiles with shots from a weapon
+		Also replaces their 'gunspr' sprite with the weapon's sprite, if they have one
+		
+		Vars:
+			creator       - The instance whose projectiles will be replaced
+			wep           - The weapon to fire from the projectiles
+			wep_setup     - Whether the 'wep' variable needs to be set on the instance (true) or not (false)
+			wepangle      - Used to add a melee offset for instances without a built-in 'wepangle'
+			gunspr        - The instance's original 'gunspr' value, if it had one
+			search_id     - Used to search for new instances of the projectile object
+			search_object - The projectile object to search for and replace
+			search_sound  - The sound to search for and stop when the instance's projectiles are replaced
+	*/
+	
+	with(instance_create(_x, _y, CustomObject)){
+		 // Vars:
+		creator       = noone;
+		wep           = wep_none;
+		wep_setup     = true;
+		wepangle      = 0;
+		gunspr        = undefined;
+		search_id     = instance_max;
+		search_object = projectile;
+		search_sound  = sndEnemyFire;
+		
+		return id;
+	}
+	
+#define FireWeapon_step
+	if(instance_exists(creator)){
+		if(
+			wep_setup
+			? ("wep" not in creator || is_undefined(creator.wep))
+			: ("wep" in creator && wep == creator.wep)
+		){
+			 // Variable Setup:
+			if(wep_setup){
+				wep_setup   = false;
+				creator.wep = wep;
+			}
+			
+			 // Replace Projectiles w/ Weapon Firing:
+			if(instance_exists(search_object) && search_object.id > search_id){
+				var _inst = instances_matching(instances_matching_gt(search_object, "id", search_id), "creator", creator);
+				if(instance_is(creator, enemy)){
+					_inst = instances_matching(_inst, "hitid", creator.hitid);
+				}
+				if(array_length(_inst)){
+					 // Stop Firing Sound:
+					if(sound_exists(search_sound)){
+						var _snd = audio_play_sound(0, 0, false);
+						sound_stop(_snd);
+						for(var i = _snd - 1; i >= _snd - 10; i--){
+							if(audio_get_name(i) == sound_get_name(search_sound)){
+								sound_stop(i);
+								break;
+							}
+						}
+					}
+					
+					 // Setup Melee Offset:
+					var _wepangle = (("wepangle" in creator) ? creator.wepangle : wepangle);
+					if(weapon_is_melee(wep) ^^ (_wepangle != 0)){
+						_wepangle = (weapon_is_melee(wep) ? choose(-120, 120) : 0);
+					}
+					
+					 // Replace Projectiles:
+					with(_inst){
+						var _dir = direction;
+						with(creator){
+							 // Undo Inaccuracy:
+							if("gunangle" in self && place_meeting(x, y, other) && abs(angle_difference(_dir, gunangle)) < 10){
+								_dir = gunangle;
+							}
+							
+							 // Fire:
+							with(player_fire_ext(_dir, wep, other.x, other.y, other.team, self)){
+								other.hspeed += hspeed;
+								other.vspeed += vspeed;
+								if("wkick" in other){
+									other.wkick = wkick;
+								}
+								_wepangle = wepangle * ((abs(wepangle) > 1) ? sign(_wepangle) : _wepangle);
+								
+								 // Reload:
+								if(other.alarm1 > 0){
+									var _load = reload;
+									if(instance_is(other, Ally)){
+										_load *= power(2/3, skill_get(mut_throne_butt));
+									}
+									other.alarm1 = max(1, _load);
+								}
+							}
+						}
+						instance_delete(self);
+					}
+					search_id = instance_max;
+					
+					 // Destroyed:
+					if(!instance_exists(creator)){
+						FireWeapon_step();
+						exit;
+					}
+					
+					 // Melee Offset:
+					wepangle = _wepangle;
+					if("wepangle" in creator){
+						wepangle *= -1;
+						creator.wepangle = wepangle;
+					}
+					else if("gunangle" in creator && "gunspr" in creator){
+						creator.gunangle += wepangle;
+					}
+				}
+			}
+			
+			 // Remember Position + Weapon:
+			x   = creator.x;
+			y   = creator.y;
+			wep = creator.wep;
+			
+			 // Weapon Sprite:
+			if("gunspr" in creator){
+				with(creator){
+					var _spr = weapon_get_sprt(wep);
+					if(gunspr != global.gunspr_fix[? _spr]){
+						if(
+							sprite_get_width(_spr)       != 16 ||
+							sprite_get_height(_spr)      != 16 ||
+							sprite_get_bbox_left(_spr)   !=  0 ||
+							sprite_get_bbox_top(_spr)    !=  0 ||
+							sprite_get_bbox_right(_spr)  != 15 ||
+							sprite_get_bbox_bottom(_spr) != 15 ||
+							sprite_get_number(_spr)      <=  1
+						){
+							if(!ds_map_exists(global.gunspr_fix, _spr)){
+								global.gunspr_fix[? _spr] = (
+									(sprite_get_number(_spr) > 1)
+									? sprite_duplicate_ext(_spr, 0, 1)
+									: _spr
+								);
+							}
+							if(is_undefined(other.gunspr)){
+								other.gunspr = gunspr;
+							}
+							gunspr = global.gunspr_fix[? _spr];
+						}
+					}
+				}
+			}
+		}
+		
+		 // Changed Weapon:
+		else{
+			if(!is_undefined(gunspr)){
+				creator.gunspr = gunspr;
+			}
+			instance_destroy();
+		}
+	}
+	
+	 // Dead:
+	else{
+		 // Drop Weapon:
+		if(wep != wep_none){
+			with(instance_create(x, y, WepPickup)){
+				wep  = other.wep;
+				ammo = true;
+			}
+		}
+		
+		 // Leftovers:
+		if(instance_exists(search_object) && search_object.id > search_id){
+			/*
+			death explosion is too dumb
+			instances_matching(instances_matching(instances_matching(instances_matching_gt(search_object, "id", search_id), "xstart", x), "ystart", y), "creator", creator, noone)
+			*/
+			with(instances_matching(instances_matching_gt(search_object, "id", search_id), "creator", creator)){
+				player_fire_ext(direction, other.wep, x, y, team, creator);
+				instance_delete(self);
+			}
+		}
+		
+		instance_destroy();
+	}
 	
 	
 #define GroundFlameGreen_create(_x, _y)

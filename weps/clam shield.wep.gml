@@ -8,8 +8,10 @@
 	
 	 // LWO:
 	global.lwoWep = {
-		"wep"  : mod_current,
-		"inst" : noone
+		"wep"        : mod_current,
+		"inst"       : noone,
+		"frame"      : 0,
+		"frame_shot" : 0
 	};
 	
 #define cleanup
@@ -20,22 +22,25 @@
 #define weapon_name        return (weapon_avail() ? "CLAM SHIELD" : "LOCKED");
 #define weapon_text        return "ROYAL GUARD";
 #define weapon_swap        return sndSwapHammer;
-#define weapon_sprt(_wep)  return (weapon_avail() ? ((instance_is(self, hitme) && instance_exists(lq_defget(_wep, "inst", noone))) ? mskNone : global.sprWep) : global.sprWepLocked);
+#define weapon_sprt(_wep)  return (weapon_avail() ? ((instance_exists(lq_defget(_wep, "inst", noone)) && !instance_is(self, WepPickup) && !instance_is(self, ThrownWep)) ? mskNone : global.sprWep) : global.sprWepLocked);
 #define weapon_sprt_hud    return global.sprWepHUD;
 #define weapon_area        return (weapon_avail() ? 6 : -1); // 3-1
 #define weapon_type        return type_melee;
 #define weapon_load        return 30; // 1 Second
 #define weapon_auto        return false;
-#define weapon_melee       return true;
+#define weapon_melee       return false;
 #define weapon_avail       return call(scr.unlock_get, "pack:" + weapon_ntte_pack());
 #define weapon_ntte_pack   return "coast";
 
+#define weapon_reloaded
+	sound_play(sndMeleeFlip);
+	
 #define weapon_fire(_wep)
 	var _fire = call(scr.weapon_fire_init, _wep);
 	_wep = _fire.wep;
 	
 	 // Create Shield:
-	if(!instance_exists(_wep.inst)){
+	if(!instance_exists(_wep.inst) || _wep.inst.creator != _fire.creator){
 		_wep.inst = call(scr.projectile_create, self, x, y, "ClamShield", gunangle);
 		with(_wep.inst){
 			wep = _wep;
@@ -43,23 +48,41 @@
 	}
 	
 	 // Shield Bash:
-	var	_ox = 0,
-		_oy = 0;
-		
-	if(instance_exists(_fire.creator)){
-		_ox = _fire.creator.hspeed_raw;
-		_oy = _fire.creator.vspeed_raw;
+	if(_wep.frame != current_frame){
+		_wep.frame      = current_frame;
+		_wep.frame_shot = 0;
 	}
-	
 	with(instances_matching(obj.ClamShield, "wep", _wep)){
-		var	_l = lerp(8, 14, skill_get(mut_long_arms)),
-			_d = image_angle,
-			_x = x + _ox + lengthdir_x(_l, _d),
-			_y = y + _oy + lengthdir_y(_l, _d);
+		var	_dir = image_angle,
+			_len = lerp(8, 14, skill_get(mut_long_arms)) + (8 * _wep.frame_shot);
 			
 		with(other){
 			 // Slash:
-			call(scr.projectile_create, self, _x, _y, "ClamShieldSlash", _d, lerp(2, 4.5, skill_get(mut_long_arms)));
+			with(call(scr.projectile_create, self, x, y, "ClamShieldSlash", _dir, lerp(2, 4.5, skill_get(mut_long_arms)))){
+				var	_tx = x + lengthdir_x(_len, _dir) + _fire.creator.hspeed_raw,
+					_ty = y + lengthdir_y(_len, _dir) + _fire.creator.vspeed_raw,
+					_tl = point_distance(x, y, _tx, _ty),
+					_td = point_direction(x, y, _tx, _ty),
+					_ox =  dcos(_td),
+					_oy = -dsin(_td);
+					
+				 // Offset:
+				for(var i = 0; i < _tl && !position_meeting(x + _ox, y + _oy, Wall); i++){
+					x += _ox;
+					y += _oy;
+				}
+				x += lengthdir_x(16, _dir);
+				y += lengthdir_y(16, _dir);
+				xprevious = x;
+				yprevious = y;
+				
+				 // Effects:
+				repeat(2){
+					with(instance_create(x + orandom(2), y + orandom(2), Dust)){
+						speed += 2;
+					}
+				}
+			}
 			
 			 // Sounds:
 			var _pitch = 1 + orandom(0.2);
@@ -70,23 +93,21 @@
 			sound_play_pitch(sndHammer,					_pitch);
 			
 			 // Effects:
-			repeat(2){
-				with(instance_create(_x + orandom(2), _y + orandom(2), Dust)){
-					speed += 2;
-				}
-			}
-			weapon_post(-(4 + _l), 12, 0);
-			motion_add(_d, 2);
+			weapon_post(-(4 + _len), 12, 0);
+			motion_add(_dir, 2);
 			sleep(40);
 		}
 	}
+	
+	 // Yung Veeny:
+	_wep.frame_shot++;
 	
 #define step(_primary)
 	var _wep = call(scr.weapon_step_init, _primary);
 	
 	 // Create Shield:
 	if(_primary || race == "steroids"){
-		if(!instance_exists(_wep.inst)){
+		if(!instance_exists(_wep.inst) || _wep.inst.creator != self){
 			_wep.inst = call(scr.projectile_create, self, x, y, "ClamShield", gunangle);
 			with(_wep.inst){
 				wep = _wep;

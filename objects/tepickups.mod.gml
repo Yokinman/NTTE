@@ -18,23 +18,8 @@
 	 // Bind Events:
 	script_bind(CustomDraw, draw_bonus_spirit, -8, true);
 	
-	 // 1-Frame Weapon Sprites:
-	global.gunspr_fix = ds_map_create();
-	
 #define cleanup
 	mod_script_call("mod", "teassets", "ntte_cleanup", script_ref_create(cleanup));
-	
-	 // Remove 'gunspr' Shine Fix Sprites:
-	with(ds_map_keys(global.gunspr_fix)){
-		var	_sprGun = self,
-			_sprFix = global.gunspr_fix[? _sprGun];
-			
-		with(instances_matching(hitme, "gunspr", _sprFix)){
-			gunspr = _sprGun;
-		}
-		sprite_delete(_sprFix);
-	}
-	ds_map_destroy(global.gunspr_fix);
 	
 #macro spr global.spr
 #macro msk spr.msk
@@ -3143,195 +3128,6 @@
 	}
 	
 	
-#define FireWeapon_create(_x, _y)
-	/*
-		Used to replace an instance's projectiles with shots from a weapon
-		Also replaces their 'gunspr' sprite with the weapon's sprite, if they have one
-		
-		Vars:
-			creator       - The instance whose projectiles will be replaced
-			wep           - The weapon to fire from the projectiles
-			wep_setup     - Whether the 'wep' variable needs to be set on the instance (true) or not (false)
-			wepangle      - Used to add a melee offset for instances without a built-in 'wepangle'
-			gunspr        - The instance's original 'gunspr' value, if it had one
-			search_id     - Used to search for new instances of the projectile object
-			search_object - The projectile object to search for and replace
-			search_sound  - The sound to search for and stop when the instance's projectiles are replaced
-	*/
-	
-	with(instance_create(_x, _y, CustomObject)){
-		 // Vars:
-		creator       = noone;
-		wep           = wep_none;
-		wep_setup     = true;
-		wepangle      = 0;
-		gunspr        = undefined;
-		search_id     = instance_max;
-		search_object = projectile;
-		search_sound  = sndEnemyFire;
-		
-		return id;
-	}
-	
-#define FireWeapon_step
-	if(instance_exists(creator)){
-		if(
-			wep_setup
-			? ("wep" not in creator || is_undefined(creator.wep))
-			: ("wep" in creator && wep == creator.wep)
-		){
-			 // Variable Setup:
-			if(wep_setup){
-				wep_setup   = false;
-				creator.wep = wep;
-			}
-			
-			 // Replace Projectiles w/ Weapon Firing:
-			if(instance_exists(search_object) && search_object.id > search_id){
-				var _inst = instances_matching(instances_matching_gt(search_object, "id", search_id), "creator", creator);
-				if(instance_is(creator, enemy)){
-					_inst = instances_matching(_inst, "hitid", creator.hitid);
-				}
-				if(array_length(_inst)){
-					 // Stop Firing Sound:
-					if(sound_exists(search_sound)){
-						var _snd = audio_play_sound(0, 0, false);
-						sound_stop(_snd);
-						for(var i = _snd - 1; i >= _snd - 10; i--){
-							if(audio_get_name(i) == sound_get_name(search_sound)){
-								sound_stop(i);
-								break;
-							}
-						}
-					}
-					
-					 // Setup Melee Offset:
-					var _wepangle = (("wepangle" in creator) ? creator.wepangle : wepangle);
-					if(weapon_is_melee(wep) ^^ (_wepangle != 0)){
-						_wepangle = (weapon_is_melee(wep) ? choose(-120, 120) : 0);
-					}
-					
-					 // Replace Projectiles:
-					with(_inst){
-						var _dir = direction;
-						with(creator){
-							 // Undo Inaccuracy:
-							if("gunangle" in self && place_meeting(x, y, other) && abs(angle_difference(_dir, gunangle)) < 10){
-								_dir = gunangle;
-							}
-							
-							 // Fire:
-							with(player_fire_ext(_dir, wep, other.x, other.y, other.team, self)){
-								other.hspeed += hspeed;
-								other.vspeed += vspeed;
-								if("wkick" in other){
-									other.wkick = wkick;
-								}
-								_wepangle = wepangle * ((abs(wepangle) > 1) ? sign(_wepangle) : _wepangle);
-								
-								 // Reload:
-								if(other.alarm1 > 0){
-									var _load = reload;
-									if(instance_is(other, Ally)){
-										_load *= power(2/3, skill_get(mut_throne_butt));
-									}
-									other.alarm1 = max(1, _load);
-								}
-							}
-						}
-						instance_delete(self);
-					}
-					search_id = instance_max;
-					
-					 // Destroyed:
-					if(!instance_exists(creator)){
-						FireWeapon_step();
-						exit;
-					}
-					
-					 // Melee Offset:
-					wepangle = _wepangle;
-					if("wepangle" in creator){
-						wepangle *= -1;
-						creator.wepangle = wepangle;
-					}
-					else if("gunangle" in creator && "gunspr" in creator){
-						creator.gunangle += wepangle;
-					}
-				}
-			}
-			
-			 // Remember Position + Weapon:
-			x   = creator.x;
-			y   = creator.y;
-			wep = creator.wep;
-			
-			 // Weapon Sprite:
-			if("gunspr" in creator){
-				with(creator){
-					var _spr = weapon_get_sprt(wep);
-					if(gunspr != global.gunspr_fix[? _spr]){
-						if(
-							sprite_get_width(_spr)       != 16 ||
-							sprite_get_height(_spr)      != 16 ||
-							sprite_get_bbox_left(_spr)   !=  0 ||
-							sprite_get_bbox_top(_spr)    !=  0 ||
-							sprite_get_bbox_right(_spr)  != 15 ||
-							sprite_get_bbox_bottom(_spr) != 15 ||
-							sprite_get_number(_spr)      <=  1
-						){
-							if(!ds_map_exists(global.gunspr_fix, _spr)){
-								global.gunspr_fix[? _spr] = (
-									(sprite_get_number(_spr) > 1)
-									? sprite_duplicate_ext(_spr, 0, 1)
-									: _spr
-								);
-							}
-							if(is_undefined(other.gunspr)){
-								other.gunspr = gunspr;
-							}
-							gunspr = global.gunspr_fix[? _spr];
-						}
-					}
-				}
-			}
-		}
-		
-		 // Changed Weapon:
-		else{
-			if(!is_undefined(gunspr)){
-				creator.gunspr = gunspr;
-			}
-			instance_destroy();
-		}
-	}
-	
-	 // Dead:
-	else{
-		 // Drop Weapon:
-		if(wep != wep_none){
-			with(instance_create(x, y, WepPickup)){
-				wep  = other.wep;
-				ammo = true;
-			}
-		}
-		
-		 // Leftovers:
-		if(instance_exists(search_object) && search_object.id > search_id){
-			/*
-			death explosion is too dumb
-			instances_matching(instances_matching(instances_matching(instances_matching_gt(search_object, "id", search_id), "xstart", x), "ystart", y), "creator", creator, noone)
-			*/
-			with(instances_matching(instances_matching_gt(search_object, "id", search_id), "creator", creator)){
-				player_fire_ext(direction, other.wep, x, y, team, creator);
-				instance_delete(self);
-			}
-		}
-		
-		instance_destroy();
-	}
-	
-	
 #define HammerHeadChest_create(_x, _y)
 	with(call(scr.obj_create, _x, _y, "CustomChest")){
 		 // Visual:
@@ -3460,13 +3256,10 @@
 			creator     - Who created this ball, bro
 	*/
 	
-	 // Enable Orchid Chest Spawning:
-	call(scr.save_set, "orchid:seen", true);
-	
-	 // Back to Business:
 	with(instance_create(_x, _y, CustomObject)){
 		 // Visual:
 		sprite_index = -1;
+		image_speed  = 0.5;
 		depth        = -9;
 		spr_sparkle  = -1;
 		trail_col    = -1;
@@ -3495,14 +3288,22 @@
 #define OrchidBall_setup
 	setup = false;
 	
-	 // Sprite Setup:
+	 // Type-Specific Setup:
 	switch(type){
 		
 		case "portal":
 			
 			if(sprite_index == -1) sprite_index = spr.RadSkillBall;
 			if(spr_sparkle  == -1) spr_sparkle  = sprEatBigRadPlut;
-			//if(trail_col    == -1) trail_col    = make_color_rgb(68, 197, 22);
+		//	if(trail_col    == -1) trail_col    = make_color_rgb(68, 197, 22);
+			
+			break;
+			
+		case "red":
+			
+			if(sprite_index ==  -1) sprite_index = spr.RedSkillBall;
+			if(spr_sparkle  ==  -1) spr_sparkle  = sprLaserCharge;
+			if(friction     == 0.6) friction     = 0.4;
 			
 			break;
 			
@@ -3511,6 +3312,9 @@
 			if(sprite_index == -1) sprite_index = spr.PetOrchidBall;
 			if(spr_sparkle  == -1) spr_sparkle  = spr.VaultFlowerSparkle;
 			if(trail_col    == -1) trail_col    = make_color_rgb(128, 104, 34); // make_color_rgb(84, 58, 24);
+			
+			 // Enable Orchid Chest Spawning:
+			call(scr.save_set, "orchid:seen", true);
 			
 	}
 	
@@ -3524,7 +3328,7 @@
 	if(setup) OrchidBall_setup();
 	
 	 // Grow / Shrink:
-	var	_scale = 1 + (0.1 * sin(current_frame / 10)),
+	var	_scale    = 1 + (0.1 * sin(current_frame / 10)),
 		_scaleAdd = (current_time_scale / 15);
 		
 	image_xscale += clamp(_scale - image_xscale, -_scaleAdd, _scaleAdd);
@@ -3546,10 +3350,33 @@
 	 // Doin':
 	if(target_seek){
 		if(target != noone){
+			var _lastTarget = target;
+			
 			if(instance_exists(target)){
+				 // Annihilation Targeting:
+				if(type == "red"){
+					var _disMax = distance_to_object(target);
+					if(distance_to_object(enemy) < _disMax){
+						with(call(scr.instances_meeting_rectangle,
+							x - _disMax,
+							y - _disMax,
+							x + _disMax,
+							y + _disMax,
+							instances_matching_ne(enemy, "team", 0, 2)
+						)){
+							var _dis = distance_to_object(other);
+							if(_dis < _disMax){
+								_disMax      = _dis;
+								other.target = self;
+							}
+						}
+					}
+				}
+				
 				 // Epic Success:
-				if(place_meeting(x, y, target) || place_meeting(x, y, Portal)){
+				if(place_meeting(x, y, target) || (type != "red" && instance_is(target, Player) && place_meeting(x, y, Portal))){
 					instance_destroy();
+					exit;
 				}
 				
 				 // Movin':
@@ -3581,7 +3408,56 @@
 			}
 				
 			 // Disappear:
-			else instance_destroy();
+			else{
+				instance_destroy();
+				exit;
+			}
+			
+			 // :
+			if(type == "red"){
+				call(scr.motion_step, self, 1);
+				
+				 // :
+				if(instance_exists(target)){
+					var	_arc  = lerp(20, 4, clamp(point_distance(x, y, target.x, target.y) / 96, 0, 1)) * sin(current_frame / 5),
+						_inst = call(scr.lightning_connect, x, y, target.x, target.y, _arc, true, target);
+						
+					with(_inst){
+						var _lastMask = mask_index;
+						mask_index = -1;
+						if(place_meeting(x, y + 8, Wall) || !place_meeting(x, y + 8, Floor)){
+							depth = -8;
+						}
+						else{
+							depth = -1;
+						}
+						mask_index = _lastMask;
+					}
+					
+					 // :
+					if(flash > 0 || target != _lastTarget){
+						with(call(scr.instance_random, _inst)){
+							instance_create(x, y, PortalL);
+						}
+						call(scr.sound_play_at, x, y, sndLightningHit, 2);
+					}
+				}
+				
+				 // :
+				if(target != _lastTarget && instance_exists(_lastTarget) && flash <= 0){
+					var _arc = lerp(20, 4, clamp(point_distance(x, y, _lastTarget.x, _lastTarget.y) / 96, 0, 1)) * sin(current_frame / 5);
+					with(call(scr.lightning_disappear, call(scr.lightning_connect, x, y, _lastTarget.x, _lastTarget.y, _arc, true, _lastTarget))){
+						if(place_meeting(x, y + 8, Wall) || !place_meeting(x, y + 8, Floor)){
+							depth = -8;
+						}
+						else{
+							depth = -1;
+						}
+					}
+				}
+				
+				call(scr.motion_step, self, -1);
+			}
 		}
 	}
 	else if(speed <= 3){
@@ -3616,8 +3492,15 @@
 	draw_set_blend_mode(bm_normal);
 	
 #define OrchidBall_destroy
+	 // Annihilate:
+	if(type == "red" && skill == mut_none){
+		if(instance_exists(target)){
+			call(scr.enemy_annihilate, target, time);
+		}
+	}
+	
 	 // Mutate:
-	with(call(scr.obj_create, x, y, "OrchidSkill")){
+	else with(call(scr.obj_create, x, y, "OrchidSkill")){
 		if(other.skill == mut_none){
 			other.skill = skill;
 		}
@@ -3697,6 +3580,9 @@
 		 // Sounds:
 		snd_open = sndChest;
 		
+		 // Vars:
+		num = 1;
+		
 		 // Events:
 		on_step = script_ref_create(OrchidChest_step);
 		on_open = script_ref_create(OrchidChest_open);
@@ -3711,12 +3597,12 @@
 	}
 	
 #define OrchidChest_open
+	var _target = (instance_is(other, Player) ? other : instance_nearest(x, y, Player));
+	
 	 // Skill:
-	var _target = other;
 	with(call(scr.obj_create, x, y, "OrchidBall")){
-		if(instance_is(_target, Player)){
-			target = _target;
-		}
+		target    = _target;
+		num       = other.num;
 		creator   = other;
 		direction = 90 + orandom(45);
 	}
@@ -4974,7 +4860,24 @@
 	}
 	
 #define RedChest_open
+	var _target = (instance_is(other, Player) ? other : instance_nearest(x, y, Player));
 	
+	 // Annihilation Orb:
+	with(call(scr.obj_create, x, y, "OrchidBall")){
+		target  = _target;
+		num     = other.num;
+		type    = "red";
+		time    = 2;
+		creator = other;
+		with(instance_nearest(x, y, enemy)){
+			other.direction = point_direction(other.x, other.y, x, y);
+		}
+	}
+	
+	 // Text:
+	with(instance_create(x, y, PopupText)){
+		text = "WATCH OUT BRO!";
+	}
 	
 	
 #define RogueBackpack_create(_x, _y)

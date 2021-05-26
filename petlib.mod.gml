@@ -944,100 +944,17 @@
 	sprite_index = (hiding ? spr_hide : enemy_sprite);
 	
 #define Octo_step
+	 // Unhide:
 	if(instance_exists(leader)){
-		 // Unhide:
 		if(hiding){
 			hiding     = false;
 			light      = true;
 			spr_shadow = shd16;
 		}
-		
-		//var	_skill = skill_get(mut_laser_brain),
-		//	_inst  = [leader],
-		//	_amax  = 256,
-		//	_ammo  = _amax,
-		//	_cost  = 8, // Base ammo cost for each instance tethered
-		//	_x     = x,
-		//	_y     = y;
-		//	
-		//if(array_length(_inst)){
-		//	var	_ax = x,
-		//		_ay = y,
-		//		_instSort = [];
-		//		
-		//	with(_inst){
-		//		if(array_find_index(other.arc_list, self) < 0){
-		//			var _dis = point_distance(_ax, _ay, _x, _y);
-		//			if(collision_line(_ax, _ay, _x, _y, Wall, false, false) ||  > _disMax){
-		//				array_push(_instSort, [self, point_distance(x, y, other.x, other.y)]);
-		//			}
-		//		}
-		//	}
-		//	array_sort_sub(_instSort, 1, true);
-		//	
-		//	
-		//	
-		//	while(_ammo > 0 && array_length(_inst)){
-		//		with(call(scr.instance_nearest_array, _x, _y, _inst)){
-		//			call(scr.motion_step, self, 1);
-		//			
-		//			var	_nx = bbox_center_x,
-		//				_ny = bbox_center_y;
-		//				
-		//			if(!collision_line(_x, _y, _nx, _ny, Wall, false, false)){
-		//				var _dis = point_distance(_x, _y, _nx, _ny);
-		//				
-		//				if(instance_is(self, projectile)){
-		//					_ammo -= (_dis + _cost);
-		//				}
-		//				
-		//				 // Arc to Instance:
-		//				if(_ammo > 0){
-		//					var _arc = lerp(24, 4, clamp((_dis - 32) / 256, 0, 1)) * sin(other.wave / 60);
-		//					//_arc = 16;
-		//					call(scr.lightning_connect, _x, _y, _nx, _ny, _arc, false, other);
-		//					
-		//					 // Effects:
-		//					/*if(chance_ct(1, 30)){
-		//						instance_create(_nx, _ny, PortalL);
-		//					}*/
-		//					if(instance_is(self, projectile) && frame_active(10)){
-		//						with(instance_create(_nx, _ny, BloodLust)){
-		//							sprite_index = sprLightningHit;
-		//							image_xscale = 2/3;
-		//							image_yscale = image_xscale;
-		//							depth        = 0;
-		//							creator      = other;
-		//						}
-		//					}
-		//					
-		//					 // Update Tether Origin:
-		//					_x = _nx;
-		//					_y = _ny;
-		//				}
-		//			}
-		//			call(scr.motion_step, self, -1);
-		//			
-		//			 // Cull from List:
-		//			_inst = call(scr.array_delete_value, _inst, self);
-		//		}
-		//	}
-		//}
-	}
-	
-	 // He is bouncy:
-	if(!array_length(path)){
-		with(path_wall) with(other){
-			if(place_meeting(x + hspeed_raw, y + vspeed_raw, other)){
-				if(place_meeting(x + hspeed_raw, y, other)) hspeed_raw *= -0.5;
-				if(place_meeting(x, y + vspeed_raw, other)) vspeed_raw *= -0.5;
-				enemy_look(direction);
-			}
-		}
 	}
 	
 	 // Hiding:
-	if(hiding){
+	else if(hiding){
 		light      = false;
 		spr_shadow = -1;
 		
@@ -1055,8 +972,8 @@
 		 // Hop to New Pit:
 		else if(anim_end){
 			with(call(scr.instance_random, instances_matching(Floor, "sprite_index", spr.FloorTrenchB))){
-				other.x = bbox_center_x;
-				other.y = bbox_center_y;
+				other.x         = bbox_center_x;
+				other.y         = bbox_center_y;
 				other.xprevious = other.x;
 				other.yprevious = other.y;
 			}
@@ -1067,6 +984,17 @@
 		
 		 // Can't be Grabbed Under Floors:
 		can_take = (array_length(instances_matching(call(scr.instances_meeting_point, x, y - 4, Floor), "sprite_index", spr.FloorTrenchB)) > 0);
+	}
+	
+	 // He is bouncy:
+	if(!array_length(path)){
+		with(path_wall) with(other){
+			if(place_meeting(x + hspeed_raw, y + vspeed_raw, other)){
+				if(place_meeting(x + hspeed_raw, y, other)) hspeed_raw *= -0.5;
+				if(place_meeting(x, y + vspeed_raw, other)) vspeed_raw *= -0.5;
+				enemy_look(direction);
+			}
+		}
 	}
 
 #define Octo_draw(_spr, _img, _x, _y, _xsc, _ysc, _ang, _col, _alp)
@@ -4647,25 +4575,7 @@
 								
 							 // Broken, Die:
 							if(other.arc_wait <= 0 && _arcBreakPos >= 0 && _arcPos >= _arcBreakPos){
-								with(_inst){
-									with(instance_create(x, y, object_index)){
-										other.image_speed = image_speed;
-										instance_delete(self);
-									}
-									with(instance_create(x, y, BoltTrail)){
-										sprite_index = other.sprite_index;
-										image_index  = other.image_index;
-										image_speed  = other.image_speed;
-										image_xscale = other.image_xscale;
-										image_yscale = other.image_yscale * power(0.4 / other.image_speed, 4/3);
-										image_angle  = other.image_angle;
-										image_blend  = other.image_blend;
-										image_alpha  = other.image_alpha;
-										depth        = other.depth;
-									}
-									image_index = 0;
-									image_alpha = 0;
-								}
+								call(scr.lightning_disappear, _inst);
 							}
 						}
 						

@@ -233,7 +233,7 @@
 	}
 	
 #define ClamShield_step
-	var	_wep  = variable_instance_get(creator, "wep", wep),
+	var	_wep  = variable_instance_get(creator, "wep",  wep),
 		_bwep = variable_instance_get(creator, "bwep", wep_none);
 		
 	if(instance_exists(creator) && creator.visible && (wep == _wep || _bwep == wep)){
@@ -244,15 +244,21 @@
 		 // Aim:
 		if("gunangle" in creator){
 			var	_shieldNum = array_length(_shieldList),
-				_goalDir = creator.gunangle + (180 * ((array_find_index(_shieldList, self) - ((_shieldNum - 1) / 2)) / _shieldNum)),
-				_lastDir = image_angle;
+				_goalDir   = creator.gunangle + (180 * ((array_find_index(_shieldList, self) - ((_shieldNum - 1) / 2)) / _shieldNum)),
+				_lastDir   = image_angle;
 				
 			if(wep == _bwep && call(scr.wep_raw, _wep) == call(scr.wep_raw, _bwep)){
 				_goalDir += 180;
+				if("bwepangle" in creator){
+					_goalDir += creator.bwepangle;
+				}
+			}
+			else if("wepangle" in creator){
+				_goalDir += creator.wepangle;
 			}
 			
 			image_angle = angle_lerp_ct(image_angle, _goalDir, (instance_is(creator, Player) ? 1/2 : 1/16));
-			direction = image_angle;
+			direction   = image_angle;
 			
 			 // Manually Rotate BoltSticks:
 			with(_boltStick){
@@ -264,11 +270,11 @@
 		var	_l = 16 - min(4, variable_instance_get(creator, _b + "wkick", 0)),
 			_d = image_angle;
 			
-		x = creator.x + lengthdir_x(_l, _d);
-		y = creator.y + lengthdir_y(_l, _d);
+		x         = creator.x + lengthdir_x(_l, _d);
+		y         = creator.y + lengthdir_y(_l, _d);
 		xprevious = x;
 		yprevious = y;
-		depth = creator.depth - (y > creator.y);
+		depth     = creator.depth - (y > creator.y);
 		
 		 // Bolts:
 		with(_boltStick){
@@ -282,18 +288,15 @@
 	else instance_destroy();
 	
 #define ClamShield_draw
-	var	_xsc = image_xscale,
-		_ysc = image_yscale,
-		_ang = image_angle,
-		_num = image_number,
-		_shn = variable_instance_get(creator, "gunshine", 0),
-		_off = (_num / 7) * _xsc,
+	var	_xsc       = image_xscale,
+		_ysc       = image_yscale,
+		_ang       = image_angle,
+		_num       = image_number,
+		_shn       = variable_instance_get(creator, "gunshine", 0),
+		_off       = (_num / 7) * _xsc,
 		_surfScale = call(scr.option_get, "quality:main"),
-		_surfW = 2 * (_off + max(
-			abs(sprite_height),
-			abs(sprite_width) + ceil((_num - 1) * 2/3 * _xsc)
-		)),
-		_surfH = _surfW;
+		_surfW     = 2 * (_off + max(abs(sprite_height), abs(sprite_width) + ceil((_num - 1) * 2/3 * _xsc))),
+		_surfH     = _surfW;
 		
 	with(call(scr.surface_setup, `ClamShield${self}`, _surfW, _surfH, _surfScale)){
 		var _dis = -6;

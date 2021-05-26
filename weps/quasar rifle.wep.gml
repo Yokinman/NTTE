@@ -32,7 +32,7 @@
 	_wep = _fire.wep;
 	
 	 // New Beam:
-	if(!instance_exists(_wep.beam) || (_fire.spec && _fire.primary)){
+	if(!instance_exists(_wep.beam) || _wep.beam.creator != _fire.creator || (_fire.spec && _fire.primary)){
 		 // Quasar Beam:
 		with(call(scr.projectile_create, self, x, y, "QuasarBeam", gunangle + orandom(6 * accuracy))){
 			image_yscale = 0.6;

@@ -979,7 +979,7 @@
 						spr_shadow   = other.spr_shadow;
 						spr_shadow_x = other.spr_shadow_x;
 						spr_shadow_y = other.spr_shadow_y;
-						gunspr       = ((skill_get(mut_throne_butt) > 0) ? spr.CrystalCloneGunTB : spr.CrystalCloneGun);
+					//	gunspr       = ((skill_get(mut_throne_butt) > 0) ? spr.CrystalCloneGunTB : spr.CrystalCloneGun);
 						sprite_index = spr_idle;
 						image_xscale = other.image_xscale;
 						image_yscale = other.image_yscale;
@@ -997,9 +997,18 @@
 						mask_index = other.mask_index;
 						maxhealth  = other.maxhealth;
 						my_health  = maxhealth;
+						creator    = other;
 						
 						 // No Bleed:
 						alarm2 = -1;
+						
+						 // Give Weapon:
+						var _wep = (is_object(other.wep) ? lq_clone(other.wep) : other.wep);
+						with(call(scr.obj_create, x, y, "FireWeapon")){
+							creator       = other;
+							wep           = _wep;
+							search_object = AllyBullet;
+						}
 					}
 				}
 			}
@@ -2677,6 +2686,7 @@
 		 // Visual:
 		sprite_index = spr.RedExplosion;
 		image_angle  = random(360);
+		hitid        = [sprite_index, "ANNIHILATION"];
 		
 		 // Vars:
 		mask_index = mskPlasma;

@@ -100,6 +100,11 @@
 				with(call(scr.obj_create, x + orandom(1), y + orandom(1), "RedExplosion")){
 					target = other;
 					damage = min(damage, max(10, other.my_health));
+					if(team == other.team){
+						team = -1;
+					}
+					
+					 // Insta-Hit:
 					other.nexthurt = 0;
 					event_perform(ev_collision, other.object_index);
 				}
@@ -107,7 +112,7 @@
 		}
 	}
 	
-#define enemy_annihilate(_inst, _num)
+#define enemy_annihilate(_inst, _time)
 	/*
 		Kills a given enemy for a given numbers of levels, only takes an instance argument right now
 	*/
@@ -124,7 +129,7 @@
 			"custom"       : (string_pos("Custom", object_get_name(object_index)) == 1),
 			"name"         : variable_instance_get(self, "name"),
 			"text"         : string_plural(string_replace_all(string_lower(call(scr.instance_get_name, self)), "@q", "")),
-			"ammo"         : _num
+			"ammo"         : _time
 		}){
 			var _add = true;
 				
@@ -161,7 +166,7 @@
 				text = call(scr.loc_format,
 					"NTTE:Annihilation:Text",
 					`%# @(color:${call(scr.area_get_back_color, "red")})ANNIHILATED!`,
-					call(scr.instance_get_name, other)
+					(("race" in other) ? call(scr.race_get_title, other.race) : call(scr.instance_get_name, other))
 				);
 			}
 			
@@ -177,7 +182,7 @@
 		with(GameCont.annihilation_skill){
 			skill  = mod_current;
 			type   = "portal";
-			time   = _num;
+			time   = _time;
 			color1 = call(scr.area_get_back_color, "red");
 			color2 = make_color_rgb(48, 40, 68);
 			with(self){
@@ -186,11 +191,11 @@
 		}
 	}
 	else with(GameCont.annihilation_skill){
-		time       = max(time,     _num);
-		time_max   = max(time_max, _num);
+		time       = max(time,     _time);
+		time_max   = max(time_max, _time);
 		flash      = 3;
 		star_scale = 4/5;
-	} 
+	}
 	
 #define string_plural(_string)
 	/*

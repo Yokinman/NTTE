@@ -506,8 +506,8 @@
 			CrystalCloneOverlayAlly   = sprite(p + "sprCrystalCloneOverlayAlly",    8,  0,  0);
 			CrystalCloneOverlayPopo   = sprite(p + "sprCrystalCloneOverlayPopo",    8,  0,  0);
 			CrystalCloneOverlayCorpse = sprite(p + "sprCrystalCloneOverlayCorpse",  8,  0,  0);
-			CrystalCloneGun           = sprite_duplicate_ext(sprRevolver,   0, 1);
-			CrystalCloneGunTB         = sprite_duplicate_ext(sprMachinegun, 0, 1);
+		//	CrystalCloneGun           = sprite_duplicate_ext(sprRevolver,   0, 1);
+		//	CrystalCloneGunTB         = sprite_duplicate_ext(sprMachinegun, 0, 1);
 			
 			 // Crystal Heart:
 			p = m + "CrystalHeart/";
@@ -1700,8 +1700,9 @@
 			RedAmmoHUDCostGold = sprite(p + "sprRedAmmoHUDCostGold", 2, 2, 2);
 			
 			 // Red Crystal Chest:
-			RedChest     = sprite(p + "sprRedChest",     1, 8, 8, shn16);
-			RedChestOpen = sprite(p + "sprRedChestOpen", 1, 8, 8);
+			RedChest     = sprite(p + "sprRedChest",     1,  8,  8, shn16);
+			RedChestOpen = sprite(p + "sprRedChestOpen", 1,  8,  8);
+			RedSkillBall = sprite(p + "sprRedSkillBall", 6, 16, 16);
 			
 			 // Rogue Backpack:
 			RogueBackpack     = sprite(p + "sprRogueBackpack",     1, 8, 8, shn16);

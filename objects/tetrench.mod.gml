@@ -896,10 +896,7 @@
 	
 	 // Setup:
 	if(setup) ElectroPlasma_setup();
-
-	 // Increment Wave:
-	wave += current_time_scale;
-
+	
 	 // Tether:
 	if(tether >= 0){
 		if(instance_exists(tether_inst)){
@@ -1002,6 +999,9 @@
 			sprite_index = spr.ElectroPlasmaTrail;
 		}
 	}
+	
+	 // Increment Wave:
+	wave += current_time_scale;
 	
 	 // Goodbye:
 	if(image_xscale <= 0.8 || image_yscale <= 0.8 || speed <= friction){
@@ -1131,37 +1131,19 @@
 			_x2 = tether_x,
 			_y2 = tether_y;
 			
-		with(call(scr.lightning_connect,
-			_x1,
-			_y1,
-			_x2,
-			_y2,
-			(point_distance(_x1, _y1, _x2, _y2) / 4) * sin((wave / 300) * 2 * pi),
-			(team != 2 && !instance_is(creator, Player)),
-			self
+		with(call(scr.lightning_disappear,
+			call(scr.lightning_connect,
+				_x1,
+				_y1,
+				_x2,
+				_y2,
+				(point_distance(_x1, _y1, _x2, _y2) / 4) * sin((wave / 300) * 2 * pi),
+				(team != 2 && !instance_is(creator, Player)),
+				self
+			)
 		)){
-			with(instance_create(x, y, object_index)){
-				other.image_speed = image_speed;
-				instance_delete(self);
-			}
-			with(instance_create(x, y, BoltTrail)){
-				sprite_index = spr.ElectroPlasmaTether;
-				image_index  = other.image_index;
-				image_speed  = other.image_speed;
-				image_xscale = other.image_xscale;
-				image_yscale = other.image_yscale * power(0.4 / other.image_speed, 4/3) - random(0.4);
-				image_angle  = other.image_angle;
-				image_blend  = other.image_blend;
-				image_alpha  = other.image_alpha;
-				depth        = -3;
-			}
-			if(instance_is(self, EnemyLightning)){
-				instance_delete(self);
-			}
-			else{
-				image_index = 0;
-				image_alpha = 0;
-			}
+			sprite_index = spr.ElectroPlasmaTether;
+			depth        = -3;
 		}
 	}
 	
@@ -1768,6 +1750,233 @@
 			
 		draw_sprite_ext(_spr, _img, _x1, _y1, _xsc, _ysc, _ang, _blend, _alpha);
 	}
+	
+	
+//#define LightningTether_create(_x, _y)
+//	/*
+//		...
+//	*/
+//	
+//	with(instance_create(_x, _y, CustomObject)){
+//		 // Visual:
+//		spr_lightning = -1;
+//		
+//		 // Vars:
+//		link         = array_create(2, noone);
+//		active       = false;
+//		broken       = false;
+//		distance_max = 96;
+//		delay_max    = 6;
+//		delay        = delay_max;
+//		arc_min      = 4;
+//		arc_max      = 16;
+//		arc_speed    = 1/150;
+//		is_enemy     = false;
+//		creator      = noone;
+//		wave         = 0;
+//		
+//		 // :
+//		for(var i = 0; i < array_length(link); i++){
+//			link[i] = {
+//				"x"        : x,
+//				"y"        : y,
+//				"distance" : 0,
+//				"target"   : noone
+//			};
+//		}
+//		
+//		return self;
+//	}
+//	
+//#define LightningTether_step
+//	var	_linkMax  = array_length(link),
+//		_overWall = false,
+//		_active   = true;
+//		
+//	 // Connection Management:
+//	if(!broken){
+//		with(link){
+//			if(target != noone){
+//				 // Follow Target:
+//				if(instance_exists(target)){
+//					var	_spd     = target.speed_raw,
+//						_dir     = target.direction,
+//						_gravSpd = target.gravity_raw,
+//						_gravDir = target.gravity_direction;
+//						
+//					_spd -= min(abs(_spd), target.friction_raw) * sign(_spd);
+//					
+//					x = target.x + lengthdir_x(_spd, _dir) + lengthdir_x(_gravSpd, _gravDir);
+//					y = target.y + lengthdir_y(_spd, _dir) + lengthdir_y(_gravSpd, _gravDir);
+//					
+//					 // Appears Over Walls:
+//					if(target.depth < -6){
+//						_overWall = true;
+//					}
+//				}
+//				
+//				 // Target Destroyed:
+//				else{
+//					other.broken = true;
+//					other.delay  = other.delay_max;
+//					break;
+//				}
+//			}
+//		}
+//		
+//		 // Check Connection Validity:
+//		if(!broken){
+//			for(var i = 0; i < _linkMax - 1; i++){
+//				var	_link = link[i],
+//					_next = link[i + 1];
+//					
+//				 // Determine Tether Distance:
+//				if(instance_exists(_link.target)){
+//					with(_link.target){
+//						_link.distance = (
+//							instance_exists(_next.target)
+//							? distance_to_object(_next.target)
+//							: distance_to_point(_next.x, _next.y)
+//						);
+//					}
+//				}
+//				else _link.distance = point_distance(_link.x, _link.y, _next.x, _next.y);
+//				
+//				 // Stop Tethering if Too Far or Interrupted by Walls:
+//				if(_link.distance > distance_max || (!_overWall && collision_line(_link.x, _link.y, _next.x, _next.y, Wall, false, false))){
+//					_active = false;
+//					break;
+//				}
+//			}
+//		}
+//	}
+//	
+//	 // Activate Lightning Tether:
+//	if(delay > 0){
+//		delay -= current_time_scale;
+//		
+//		if(_active && !active){
+//			 // Tethering...
+//			if(current_frame_active){
+//				for(var i = 0; i < _linkMax - 1; i++){
+//					var	_link = link[i],
+//						_next = link[i + 1],
+//						_num  = random(1);
+//						
+//					with(instance_create(
+//						lerp(_link.x, _next.x, _num),
+//						lerp(_link.y, _next.y, _num),
+//						choose(PortalL, LaserCharge)
+//					)){
+//						if(object_index == LaserCharge){
+//							sprite_index = (sprite_exists(other.spr_lightning) ? other.spr_lightning : (other.is_enemy ? sprEnemyLightning : sprLightning));
+//							image_xscale = random_range(0.5, 2);
+//							image_yscale = random_range(0.5, 2);
+//							image_angle  = random(360);
+//							alarm0       = 4 + random(4);
+//						}
+//						motion_add(random(360), 1);
+//					}
+//				}
+//			}
+//			
+//			 // Tethered:
+//			if(delay <= 0){
+//				active = true;
+//				
+//				 // Sound:
+//				with(link[array_length(link) - 1]){
+//					call(scr.sound_play_at, x, y, sndLightningHit, 2);
+//				}
+//				
+//				 // Laser Brain FX:
+//				if(!is_enemy && skill_get(mut_laser_brain) > 0){
+//					for(var i = 0; i < _linkMax; i++){
+//						var _next = link[(i + 1) % array_length(link)];
+//						with(link[i]){
+//							with(instance_create(x, y, LaserBrain)){
+//								image_angle = point_direction(x, y, _next.x, _next.y) + orandom(10);
+//								creator     = other.target;
+//							}
+//						}
+//					}
+//				}
+//			}
+//		}
+//	}
+//	
+//	 // Lightning Tethering:
+//	if(active){
+//		for(var i = 0; i < _linkMax - 1; i++){
+//			var	_link = link[i],
+//				_next = link[i + 1],
+//				_arc  = lerp(arc_max, arc_min, _link.distance / distance_max) * sin(wave * arc_speed * 2 * pi),
+//				_inst = call(scr.lightning_connect, _link.x, _link.y, _next.x, _next.y, _arc, is_enemy, creator);
+//				
+//			 // Appear Over Walls:
+//			if(_overWall){
+//				with(_inst){
+//					var _lastMask = mask_index;
+//					mask_index = -1;
+//					depth = (
+//						(place_meeting(x, y + 8, Wall) || !place_meeting(x, y + 8, Floor))
+//						? -8
+//						: -1
+//					);
+//					mask_index = _lastMask;
+//				}
+//			}
+//			
+//			 // Untether:
+//			if(!_active || (broken && delay <= 0)){
+//				active = false;
+//				
+//				 // Sound:
+//				sound_play_pitchvol(sndLightningReload, 0.7 + random(0.2), 0.5);
+//				
+//				 // Disappearing Visual:
+//				with(_inst){
+//					with(instance_create(x, y, object_index)){
+//						other.image_speed = image_speed;
+//						instance_delete(self);
+//					}
+//					with(instance_create(x, y, BoltTrail)){
+//						sprite_index = other.sprite_index;
+//						image_index  = other.image_index;
+//						image_speed  = other.image_speed;
+//						image_xscale = other.image_xscale;
+//						image_yscale = other.image_yscale * power(0.4 / other.image_speed, 4/3);
+//						image_angle  = other.image_angle;
+//						image_blend  = other.image_blend;
+//						image_alpha  = other.image_alpha;
+//						depth        = other.depth;
+//						
+//						 // Dissipate Enemy Lightning Faster:
+//						if(instance_is(other, EnemyLightning)){
+//							image_yscale -= random(0.4);
+//						}
+//					}
+//					
+//					 // Hide / Destroy Lightning:
+//					if(instance_is(self, EnemyLightning)){
+//						instance_delete(self);
+//					}
+//					else{
+//						image_index = 0;
+//						image_alpha = 0;
+//					}
+//				}
+//			}
+//		}
+//	}
+//	
+//	 // Animation:
+//	wave += current_time_scale;
+//	
+//	 // Connection Permanently Broken:
+//	if(broken && delay <= 0){
+//		instance_destroy();
+//	}
 	
 	
 #define PitSink_create(_x, _y)
