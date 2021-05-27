@@ -2902,9 +2902,9 @@
 			portal_inst = instance_create(SpiralCont.x, SpiralCont.y, SpiralDebris);
 			with(portal_inst){
 				sprite_index = other.spr_hurt;
-				image_index = 2;
-				turnspeed *= 1.5;
-				dist /= 2;
+				image_index  = 2;
+				turnspeed   *= 1.5;
+				dist        /= 2;
 				
 				if(abs(turnspeed) > 3){
 					turnspeed /= 2;
@@ -2917,7 +2917,7 @@
 		with(portal_inst){
 			image_xscale = 0.85 + (0.15 * sin((-image_angle / 2) / 200));
 			image_yscale = image_xscale;
-			grow = 0;
+			grow         = 0;
 		}
 	}
 	

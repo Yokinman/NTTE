@@ -3275,6 +3275,7 @@
 		time         = 0;
 		target       = instance_nearest(x, y, Player);
 		target_seek  = false;
+		portal_inst  = noone;
 		creator      = noone;
 		setup        = true;
 		
@@ -3299,7 +3300,7 @@
 			
 			if(sprite_index ==  -1) sprite_index = spr.RedSkillBall;
 			if(spr_sparkle  ==  -1) spr_sparkle  = sprLaserCharge;
-			if(friction     == 0.6) friction     = 0.4;
+			if(friction     == 0.6) friction     = 0.3;
 			
 			break;
 			
@@ -3320,145 +3321,242 @@
 		flash -= current_time_scale;
 	}
 	
-#define OrchidBall_step
-	if(setup) OrchidBall_setup();
-	
-	 // Grow / Shrink:
-	var	_scale    = 1 + (0.1 * sin(current_frame / 10)),
-		_scaleAdd = (current_time_scale / 15);
-		
-	image_xscale += clamp(_scale - image_xscale, -_scaleAdd, _scaleAdd);
-	image_yscale += clamp(_scale - image_yscale, -_scaleAdd, _scaleAdd);
-	
-	 // Spin:
-	image_angle += hspeed_raw / 3;
-	
-	 // Effects:
-	if(sprite_exists(spr_sparkle) && chance_ct(1, ((trail_col < 0) ? 8 : 4))){
-		with(call(scr.fx, [x, 6], [y, 6], random(1), "VaultFlowerSparkle")){
-			sprite_index = other.spr_sparkle;
-			if(!position_meeting(x, y, Floor)){
-				depth = other.depth + 1;
+	 // Loading Screen Visual:
+	if(instance_exists(SpiralCont) && (instance_exists(GenCont) || instance_exists(LevCont))){
+		if(!instance_exists(portal_inst)){
+			var _lastSeed = random_get_seed();
+			portal_inst = instance_create(SpiralCont.x, SpiralCont.y, SpiralDebris);
+			with(portal_inst){
+				sprite_index = other.sprite_index;
+				image_index  = other.image_index;
+				image_speed  = other.image_speed;
+				turnspeed    = orandom(4);
+				rotspeed     = random_range(5, 10) * choose(-1, 1);
+				dist         = random_range(40, 60);
 			}
+			random_set_seed(_lastSeed);
+		}
+		with(portal_inst){
+			image_xscale = 1 + (0.1 * sin((-image_angle / 2) / 200));
+			image_yscale = image_xscale;
+			grow         = 0;
 		}
 	}
 	
-	 // Doin':
-	if(target_seek){
-		if(target != noone){
-			var _lastTarget = target;
+#define OrchidBall_step
+	if(setup) OrchidBall_setup();
+	
+	if(visible){
+		 // Grow / Shrink:
+		var	_scale    = 1 + (0.1 * sin(current_frame / 10)),
+			_scaleAdd = (current_time_scale / 15);
 			
-			if(instance_exists(target)){
-				 // Annihilation Targeting:
-				if(type == "red"){
-					var _disMax = distance_to_object(target);
-					if(distance_to_object(enemy) < _disMax){
-						with(call(scr.instances_meeting_rectangle,
-							x - _disMax,
-							y - _disMax,
-							x + _disMax,
-							y + _disMax,
-							instances_matching_ne(enemy, "team", 0, 2)
-						)){
-							var _dis = distance_to_object(other);
-							if(_dis < _disMax){
-								_disMax      = _dis;
-								other.target = self;
+		image_xscale += clamp(_scale - image_xscale, -_scaleAdd, _scaleAdd);
+		image_yscale += clamp(_scale - image_yscale, -_scaleAdd, _scaleAdd);
+		
+		 // Spin:
+		image_angle += hspeed_raw / 3;
+		
+		 // Effects:
+		if(sprite_exists(spr_sparkle) && chance_ct(1, ((trail_col < 0) ? 8 : 4))){
+			with(call(scr.fx, [x, 6], [y, 6], random(1), "VaultFlowerSparkle")){
+				sprite_index = other.spr_sparkle;
+				if(!position_meeting(x, y, Floor)){
+					depth = other.depth + 1;
+				}
+			}
+		}
+		
+		 // Doin':
+		if(target_seek){
+			if(target != noone){
+				var _lastTarget = target;
+				
+				if(instance_exists(target)){
+					 // Red Orb Targeting:
+					if(type == "red"){
+						var _disMax = distance_to_object(target);
+						if(distance_to_object(enemy) < _disMax){
+							with(call(scr.instances_meeting_rectangle,
+								x - _disMax,
+								y - _disMax,
+								x + _disMax,
+								y + _disMax,
+								instances_matching_ne(enemy, "team", 0, 2)
+							)){
+								var _dis = distance_to_object(other);
+								if(_dis < _disMax){
+									_disMax      = _dis;
+									other.target = self;
+								}
+							}
+						}
+					}
+					
+					 // Enter Portal:
+					if(instance_is(target, Player) && place_meeting(x, y, Portal)){
+						persistent  = true;
+						visible     = false;
+						target_seek = false;
+						
+						 // Effects:
+						call(scr.sound_play_at, x, y, sndMutHover, 0.8, 2);
+						with(instance_create(x, y, BulletHit)){
+							sprite_index = sprThrowHit;
+							image_speed  = 0.4;
+							image_xscale = other.image_xscale;
+							image_yscale = other.image_yscale;
+							image_angle  = other.image_angle;
+							depth        = -5;
+						}
+						if(sprite_exists(spr_sparkle)){
+							var _len = random_range(8, 12);
+							for(var _dir = 0; _dir < 360; _dir += (360 / 16)){
+								with(call(scr.fx,
+									x + lengthdir_x(_len, _dir),
+									y + lengthdir_y(_len, _dir),
+									[_dir + orandom(30), random(2)],
+									Smoke
+								)){
+									sprite_index = other.spr_sparkle;
+									image_index  = random(image_number);
+									image_xscale *= 1.2;
+									image_yscale *= 1.2;
+									depth        = -5;
+								}
+							}
+						}
+					}
+					
+					 // Epic Success:
+					else if(place_meeting(x, y, target)){
+						instance_destroy();
+						exit;
+					}
+					
+					 // Movin':
+					else{
+						motion_add_ct(target_direction, 1.5);
+						if(speed > maxspeed){
+							speed = maxspeed;
+						}
+						
+						 // Trail:
+						if(trail_col >= 0 && current_frame_active){
+							repeat(1 + chance(1, 3)){
+								with(instance_create(x + orandom(8), y + orandom(8), DiscTrail)){
+									sprite_index = choose(sprWepSwap, sprWepSwap, sprThrowHit);
+									image_blend  = other.trail_col;
+									image_xscale = 0.8;
+									image_yscale = image_xscale;
+									image_angle  = random(360);
+									depth        = other.depth + 1;
+								}
 							}
 						}
 					}
 				}
 				
-				 // Epic Success:
-				if(place_meeting(x, y, target) || (type != "red" && instance_is(target, Player) && place_meeting(x, y, Portal))){
+				 // Fresh Meat:
+				else if(instance_exists(Player)){
+					target = instance_nearest(x, y, Player);
+				}
+					
+				 // Disappear:
+				else{
 					instance_destroy();
 					exit;
 				}
 				
-				 // Movin':
-				else{
-					motion_add_ct(target_direction, 1.5);
-					if(speed > maxspeed){
-						speed = maxspeed;
+				 // Red Orb Tether:
+				if(type == "red"){
+					call(scr.motion_step, self, 1);
+					
+					 // Tethering:
+					if(instance_exists(target)){
+						var	_arc  = lerp(20, 4, clamp(point_distance(x, y, target.x, target.y) / 96, 0, 1)) * sin(current_frame / 5),
+							_inst = call(scr.lightning_connect, x, y, target.x, target.y, _arc, true, target);
+							
+						with(_inst){
+							sprite_index = spr.RedSkillBallTether;
+							
+							 // Appear Over Walls:
+							var _lastMask = mask_index;
+							mask_index = -1;
+							if(place_meeting(x, y + 8, Wall) || !place_meeting(x, y + 8, Floor)){
+								depth = -8;
+							}
+							else{
+								depth = -1;
+							}
+							mask_index = _lastMask;
+						}
+						
+						 // Newly Tethered:
+						if(flash > 0 || target != _lastTarget){
+							with(call(scr.instance_random, _inst)){
+								instance_create(x, y, PortalL);
+							}
+							call(scr.sound_play_at, x, y, sndLightningHit, 2);
+						}
 					}
 					
-					 // Trail:
-					if(trail_col >= 0 && current_frame_active){
-						repeat(1 + chance(1, 3)){
-							with(instance_create(x + orandom(8), y + orandom(8), DiscTrail)){
-								sprite_index = choose(sprWepSwap, sprWepSwap, sprThrowHit);
-								image_blend  = other.trail_col;
-								image_xscale = 0.8;
-								image_yscale = image_xscale;
-								image_angle  = random(360);
-								depth        = other.depth + 1;
+					 // Untether:
+					if(target != _lastTarget && instance_exists(_lastTarget) && flash <= 0){
+						var	_arc  = lerp(20, 4, clamp(point_distance(x, y, _lastTarget.x, _lastTarget.y) / 96, 0, 1)) * sin(current_frame / 5),
+							_inst = call(scr.lightning_connect, x, y, _lastTarget.x, _lastTarget.y, _arc, true, _lastTarget);
+							
+						with(call(scr.lightning_disappear, _inst)){
+							sprite_index = spr.RedSkillBallTether;
+							
+							 // Appear Over Walls:
+							if(place_meeting(x, y + 8, Wall) || !place_meeting(x, y + 8, Floor)){
+								depth = -8;
+							}
+							else{
+								depth = -1;
 							}
 						}
 					}
-				}
-			}
-			
-			 // Fresh Meat:
-			else if(instance_exists(Player)){
-				target = instance_nearest(x, y, Player);
-			}
-				
-			 // Disappear:
-			else{
-				instance_destroy();
-				exit;
-			}
-			
-			 // :
-			if(type == "red"){
-				call(scr.motion_step, self, 1);
-				
-				 // :
-				if(instance_exists(target)){
-					var	_arc  = lerp(20, 4, clamp(point_distance(x, y, target.x, target.y) / 96, 0, 1)) * sin(current_frame / 5),
-						_inst = call(scr.lightning_connect, x, y, target.x, target.y, _arc, true, target);
-						
-					with(_inst){
-						var _lastMask = mask_index;
-						mask_index = -1;
-						if(place_meeting(x, y + 8, Wall) || !place_meeting(x, y + 8, Floor)){
-							depth = -8;
-						}
-						else{
-							depth = -1;
-						}
-						mask_index = _lastMask;
-					}
 					
-					 // :
-					if(flash > 0 || target != _lastTarget){
-						with(call(scr.instance_random, _inst)){
-							instance_create(x, y, PortalL);
-						}
-						call(scr.sound_play_at, x, y, sndLightningHit, 2);
-					}
+					call(scr.motion_step, self, -1);
 				}
-				
-				 // :
-				if(target != _lastTarget && instance_exists(_lastTarget) && flash <= 0){
-					var _arc = lerp(20, 4, clamp(point_distance(x, y, _lastTarget.x, _lastTarget.y) / 96, 0, 1)) * sin(current_frame / 5);
-					with(call(scr.lightning_disappear, call(scr.lightning_connect, x, y, _lastTarget.x, _lastTarget.y, _arc, true, _lastTarget))){
-						if(place_meeting(x, y + 8, Wall) || !place_meeting(x, y + 8, Floor)){
-							depth = -8;
-						}
-						else{
-							depth = -1;
-						}
-					}
-				}
-				
-				call(scr.motion_step, self, -1);
 			}
 		}
-	}
-	else if(speed <= 3){
-		target_seek = true;
-		flash       = max(flash, 3);
+		else{
+			 // Red Orb Zippy Zappy:
+			if(type == "red"){
+				if(frame_active(8) || chance_ct(1, 16)){
+					var _minID = instance_max;
+					with(call(scr.projectile_create, self, x, y, EnemyLightning, random(360))){
+						ammo = irandom_range(3, irandom_range(3, 5));
+						event_perform(ev_alarm, 0);
+					}
+					with(call(scr.lightning_disappear, instances_matching_gt(EnemyLightning, "id", _minID))){
+						sprite_index = spr.RedSkillBallTether;
+						image_yscale = random_range(1, 1.5);
+						depth        = other.depth + 1;
+						speed        = other.speed;
+						friction     = other.friction;
+						direction    = other.direction;
+					}
+					with(instances_matching_gt(LightningHit, "id", _minID)){
+						sprite_index = asset_get_index(`sprPortalL${irandom_range(1, 5)}`);
+						image_angle  = 0;
+						depth        = other.depth + 1;
+						speed        = other.speed;
+						friction     = other.friction;
+						direction    = other.direction;
+					}
+				}
+			}
+			
+			 // Start Seeking Target:
+			if(speed <= ((type == "red") ? 1 : 3)){
+				target_seek = true;
+				flash       = max(flash, 3);
+			}
+		}
 	}
 	
 #define OrchidBall_draw
@@ -3489,6 +3587,9 @@
 	
 #define OrchidBall_destroy
 	 // Annihilate:
+	if(type == "red"){
+		instance_create(x, y, PortalClear);
+	}
 	if(type == "red" && skill == mut_none){
 		if(instance_exists(target)){
 			call(scr.enemy_annihilate, target, time);
@@ -4848,7 +4949,7 @@
 	
 #define RedChest_create(_x, _y)
 	/*
-		...
+		Releases an orb that targets and annihilates the nearest Player/enemy
 	*/
 	
 	with(call(scr.obj_create, _x, _y, "CustomChest")){
@@ -4862,7 +4963,7 @@
 		//snd_open = ;
 		
 		 // Vars:
-		num = 1;
+		num = 2;
 		
 		 // Events:
 		on_open = script_ref_create(RedChest_open);
@@ -4873,22 +4974,23 @@
 #define RedChest_open
 	var _target = (instance_is(other, Player) ? other : instance_nearest(x, y, Player));
 	
+	 // Clear Walls:
+	instance_create(x, y, PortalClear);
+	
 	 // Annihilation Orb:
 	with(call(scr.obj_create, x, y, "OrchidBall")){
 		target  = _target;
-		num     = other.num;
 		type    = "red";
-		time    = 2;
+		time    = other.num;
 		creator = other;
 		with(instance_nearest(x, y, enemy)){
-			other.direction = point_direction(other.x, other.y, x, y);
+			other.direction = point_direction(other.x, other.y, x, y) + orandom(15);
 		}
 	}
 	
-	 // Text:
-	with(instance_create(x, y, PopupText)){
-		text = "WATCH OUT BRO!";
-	}
+	/*with(instance_create(x, y, PopupText)){
+		text = "AVOID";
+	}*/
 	
 	
 #define RogueBackpack_create(_x, _y)
@@ -5478,7 +5580,7 @@
 /// GENERAL
 #define game_start
 	 // Delete Orchid Mutations:
-	with(instances_matching_lt(obj.OrchidSkill, "id", GameCont.id)){
+	with(instances_matching_lt(call(scr.array_combine, obj.OrchidSkill, obj.OrchidBall), "id", GameCont.id)){
 		instance_delete(self);
 	}
 	
@@ -6340,6 +6442,14 @@
 					with(_inst){
 						draw_circle(x - 1, y - 1, _r, false);
 					}
+				}
+			}
+			
+			 // Mutation Orbs:
+			if(array_length(obj.OrchidBall)){
+				var _r = 32 + (64 * _gray) + random(8);
+				with(instances_matching(obj.OrchidBall, "visible", true)){
+					draw_circle(x - 1, y - 1, _r, false);
 				}
 			}
 			

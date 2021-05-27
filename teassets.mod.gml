@@ -1746,9 +1746,10 @@
 			RedAmmoHUDCostGold = sprite(p + "sprRedAmmoHUDCostGold", 2, 2, 2);
 			
 			 // Red Crystal Chest:
-			RedChest     = sprite(p + "sprRedChest",     1,  8,  8, shn16);
-			RedChestOpen = sprite(p + "sprRedChestOpen", 1,  8,  8);
-			RedSkillBall = sprite(p + "sprRedSkillBall", 6, 16, 16);
+			RedChest           = sprite(p + "sprRedChest",           1,  8,  8, shn16);
+			RedChestOpen       = sprite(p + "sprRedChestOpen",       1,  8,  8);
+			RedSkillBall       = sprite(p + "sprRedSkillBall",       6, 16, 16);
+			RedSkillBallTether = sprite(p + "sprRedSkillBallTether", 4,  0,  1);
 			
 			 // Rogue Backpack:
 			RogueBackpack     = sprite(p + "sprRogueBackpack",     1, 8, 8, shn16);

@@ -107,6 +107,11 @@
 					 // Insta-Hit:
 					other.nexthurt = 0;
 					event_perform(ev_collision, other.object_index);
+					
+					 // Player Safety:
+					if(instance_is(other, Player)){
+						other.nexthurt = current_frame + 30;
+					}
 				}
 			}
 		}
@@ -132,7 +137,7 @@
 			"ammo"         : _time
 		}){
 			var _add = true;
-				
+			
 			 // Update Old Entries:
 			with(GameCont.annihilation_list){
 				if(object_index == other.object_index && name == other.name){

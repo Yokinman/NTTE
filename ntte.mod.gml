@@ -221,6 +221,25 @@
 		}
 	}
 	
+	 // Activate Mutation Orbs:
+	with(instances_matching(instances_matching(obj.OrchidBall, "visible", false), "persistent", true)){
+		persistent   = false;
+		visible      = true;
+		speed        = 8;
+		direction    = random(360);
+		image_xscale = 1.5;
+		image_yscale = image_xscale;
+		flash        = 3;
+		if(instance_exists(target)){
+			x = target.x;
+			y = target.y;
+		}
+		else{
+			x = _spawnX;
+			y = _spawnY;
+		}
+	}
+	
 	 // Grounded Guitar/Sword:
 	with(instances_matching(instances_matching(WepPickup, "wep", wep_guitar, wep_black_sword), "roll", false)){
 		with(call(scr.obj_create, xstart, ystart, "WepPickupGrounded")){
