@@ -5055,291 +5055,27 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 	
 	
 #define PizzaDrain_create(_x, _y)
-	with(instance_create(_x, _y, CustomHitme)){
+	/*
+		The shiny drain found in the Turtle's den, contains a secret tunnel
+	*/
+	
+	with(call(scr.obj_create, _x, _y, "SewerDrain")){
 		 // Visual:
-		spr_idle     = spr.PizzaDrainIdle;
-		spr_walk     = spr_idle;
-		spr_hurt     = spr.PizzaDrainHurt;
-		spr_dead     = spr.PizzaDrainDead;
-		spr_floor    = -1;
-		spr_shadow   = -1;
-		image_xscale = choose(-1, 1);
-		image_speed  = 0.4;
-		depth        = -1;
-		
-		 // Sound:
-		snd_hurt = sndHitMetal;
-		snd_dead = sndStatueDead;
+		spr_idle  = spr.PizzaDrainIdle;
+		spr_walk  = spr_idle;
+		spr_hurt  = spr.PizzaDrainHurt;
+		spr_dead  = spr.PizzaDrainDead;
+		spr_floor = -1;
 		
 		 // Vars:
-		mask_index   = msk.PizzaDrain;
-		maxhealth    = 40;
-		team         = 0;
-		size         = 3;
+		type         = "area";
 		area         = "lair";
-		subarea      = 1;
-		loops        = GameCont.loops;
 		styleb       = 1;
 		hallway_size = 320;
-		my_floor     = noone;
-		
-		 // Cool Floor:
-		with(call(scr.instance_nearest_bbox, _x - 16, _y, Floor)){
-			image_index = 3;
-		}
 		
 		return self;
 	}
 	
-#define PizzaDrain_step
-	 // Manual Collision for Projectiles Hitting Wall:
-	if(place_meeting(x, y, projectile)){
-		with(call(scr.instances_meeting_instance, self, projectile)){
-			if(place_meeting(x, y, other) && place_meeting(x + hspeed_raw, y + vspeed_raw, Wall)){
-				event_perform(ev_collision, hitme);
-			}
-		}
-	}
-	
-	 // Stay Still:
-	x = pround(xstart, 16) - 16;
-	y = pround(ystart, 16);
-	speed = 0;
-	
-	if(!instance_exists(GenCont)){
-		 // Floorerize:
-		if(!instance_exists(my_floor)){
-			var	_w = 32,
-				_h = 32;
-				
-			call(scr.floor_set_align, 16, 16, x);
-			
-			 // Clear:
-			with(call(scr.instances_meeting_rectangle, x - _w, y - _h, x + _w - 1, y - 1, [Floor, TopPot, Bones])){
-				instance_delete(self);
-			}
-			
-			 // Side Tiles:
-			for(var _x = x - _w; _x < x + _w; _x += 16){
-				call(scr.floor_set, _x, y - 16, 2);
-			}
-			
-			 // Main Floor:
-			call(scr.floor_set_style, styleb, area);
-			my_floor = call(scr.floor_set, x - 16, y - 32, true);
-			with(my_floor){
-				if(sprite_exists(other.spr_floor)){
-					sprite_index = other.spr_floor;
-				}
-			}
-			call(scr.floor_reset_align);
-			call(scr.floor_reset_style);
-			
-			 // Walls:
-			for(var	_x = x - _w; _x < x + _w; _x += 16){
-				for(var	_y = y - _h; _y < y; _y += 16){
-					instance_create(_x, _y, Wall);
-				}
-			}
-		}
-		
-		 // Takeover Walls:
-		if(place_meeting(x, y, Wall)){
-			with(call(scr.instance_nearest_bbox, bbox_left  - 8, y - 8, Wall)) outindex = 0;
-			with(call(scr.instance_nearest_bbox, bbox_right + 8, y - 8, Wall)) outindex = 0;
-			while(place_meeting(x, y, Wall)){
-				with(call(scr.instances_meeting_instance, self, Wall)){
-					instance_create(x, y, InvisiWall);
-					sprite_index = call(scr.area_get_sprite, GameCont.area, sprWall1Trans);
-					visible      = true;
-					topspr       = -1;
-					outspr       = -1;
-					y           -= 16;
-				}
-			}
-		}
-	}
-	
-	 // Push:
-	if(place_meeting(x, y, hitme)){
-		var	_x = x,
-			_y = y - 8;
-			
-		with(call(scr.instances_meeting_instance, self, hitme)){
-			if(place_meeting(x, y, other) && !instance_is(self, prop)){
-				motion_add_ct(((y <= _y) ? 270 : point_direction(_x, _y, x, y)), 0.6);
-			}
-		}
-	}
-	
-	 // Animate:
-	if(sprite_index == spr_idle){
-		if(image_index < 1){
-			image_index -= image_speed_raw * random_range(0.98, 1);
-		}
-	}
-	else if(anim_end){
-		sprite_index = spr_idle;
-		image_index = 0;
-	}
-	
-	 // Break:
-	if(place_meeting(x, y, Explosion)){
-		my_health = 0;
-	}
-	if(name == "PizzaDrain"){
-		with(instances_matching_le(FloorExplo, "y", y - hallway_size)){
-			instance_create(clamp(other.x, bbox_left, bbox_right + 1), y, PortalClear);
-			other.my_health = 0;
-		}
-	}
-	with(call(scr.instances_in_rectangle, bbox_left - 16, y - hallway_size, bbox_right + 16, bbox_top - 16, FloorExplo)){
-		instance_create(clamp(other.x, bbox_left, bbox_right + 1), y, PortalClear);
-		other.my_health = 0;
-	}
-	
-	 // Death:
-	if(my_health <= 0) instance_destroy();
-
-#define PizzaDrain_end_step
-	x = pround(xstart, 16) - 16;
-	y = pround(ystart, 16);
-	speed = 0;
-
-#define PizzaDrain_destroy
-	call(scr.portal_poof);
-	
-	 // Sound:
-	sound_play_pitch(snd_dead, 1 - random(0.3));
-	with(instance_nearest(x, y, Player)){
-		sound_play_pitchvol(snd_chst, 1, 0.9);
-	}
-	
-	 // Turt:
-	with(instances_matching_lt(obj.TurtleCool, "notice_delay", 1)){
-		notice_delay = 1;
-	}
-	
-	 // Deleet Stuff:
-	var	_x1 = bbox_left,
-		_y1 = bbox_top - 16,
-		_x2 = bbox_right,
-		_y2 = bbox_bottom;
-		
-	if(fork()){
-		repeat(2){
-			call(scr.wall_delete, _x1, _y1, _x2, _y2);
-			wait 0;
-		}
-		exit;
-	}
-	
-	 // Corpse:
-	call(scr.corpse_drop, self, 0, 0);
-	repeat(6){
-		with(instance_create(x + orandom(8), y + orandom(8), Debris)){
-			direction = angle_lerp(direction, 90, 1/4);
-		}
-	}
-	
-	/// Entrance:
-		var	_sx = pfloor(x, 32),
-			_sy = pfloor(y, 32) - 16;
-			
-		 // Borderize Area:
-		var _borderY = _sy - hallway_size + 72;
-		call(scr.obj_create, x, _borderY, "LairBorder");
-		
-		 // Path Gen:
-		var	_dir = 90,
-			_path = [];
-			
-		instance_create(_sx + 16, _sy + 16, PortalClear);
-		
-		while(_sy >= _borderY - 224){
-			with(instance_create(_sx, _sy, Floor)){
-				array_push(_path, self);
-				call(scr.wall_delete, bbox_left, bbox_top, bbox_right, bbox_bottom);
-			}
-			
-			 // Turn:
-			if(_sy >= _borderY - 160 && _sy <= _borderY - 32){
-				_dir += choose(0, 0, 0, 0, -90, 90);
-				if(abs(angle_difference(_dir, 90)) > 90){
-					_dir = 90;
-				}
-			}
-			else _dir = 90;
-			
-			 // Move:
-			_sx += lengthdir_x(32, _dir);
-			_sy += lengthdir_y(32, _dir);
-		}
-		
-		 // Generate the Realm:
-		var	_lastArea = GameCont.area,
-			_scrSetup = null,
-			_bgColor  = background_color;
-			
-		if(crown_current == "red"){
-			_scrSetup = script_ref_create_ext("crown", "red", "step");
-		}
-		
-		call(scr.area_generate, area, subarea, loops, _sx + 16, _sy - 16, true, 0, _scrSetup);
-		
-		 // Finish Path:
-		var _minID = instance_max;
-		with(_path){
-			area         = GameCont.area;
-			styleb       = true;
-			sprite_index = call(scr.area_get_sprite, area, sprFloor1B);
-			call(scr.floor_walls, self);
-			
-			 // Pipe Decals:
-			if(_borderY < bbox_top || _borderY > bbox_bottom + 1){
-				GameCont.area = ((y > _borderY) ? _lastArea : area);
-				call(scr.floor_bones, self, 1, 1/12, true);
-				GameCont.area = area;
-			}
-		}
-		call(scr.wall_tops, instances_matching_gt(Wall, "id", _minID));
-		with(instances_matching_gt(TopSmall, "id", _minID)){
-			with(self){
-				event_perform(ev_alarm, 0);
-			}
-		}
-		
-		 // Reveal Path:
-		var	_y    = y - 48,
-			_time = 7,
-			_wait = 0;
-			
-		with(call(scr.floor_reveal, bbox_left, _y, bbox_right, y - 16 - 1, 10)){
-			color = _bgColor;
-			_wait += time - _time;
-		}
-		with(instances_matching_lt(_path, "bbox_top", _y)){
-			if(bbox_bottom > _borderY){
-				with(call(scr.floor_reveal, bbox_left, bbox_top, bbox_right, min(_y - 1, bbox_bottom), _time)){
-					y1 = max(y1, _borderY - oy);
-					time += _wait;
-					color = _bgColor;
-				}
-			}
-			if(bbox_top < _borderY){
-				with(call(scr.floor_reveal, bbox_left, bbox_top, bbox_right, bbox_bottom, _time)){
-					y2 = min(y2, _borderY - oy - 1);
-					time += _wait;
-				}
-			}
-			_wait += 3;
-		}
-		
-		 // Crown Time:
-		if(GameCont.area == "lair"){
-			call(scr.unlock_set, "crown:crime", true);
-		}
-		
 	
 #define PizzaManholeCover_create(_x, _y)
 	repeat(2 + irandom(2)){
@@ -5539,8 +5275,8 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 	}
 	
 #define PizzaTV_end_step
-	x = xstart;
-	y = ystart;
+	x     = xstart;
+	y     = ystart;
 	depth = 0; // why must i force depth every frame mmmm
 	
 	 // Death without needing a corpse sprite haha:
@@ -5557,19 +5293,38 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 	
 	
 #define SewerDrain_create(_x, _y)
-	with(call(scr.obj_create, _x, _y, "PizzaDrain")){
+	/*
+		A drain found in the Sewers, generates a little room behind it when destroyed
+	*/
+	
+	with(instance_create(_x, _y, CustomHitme)){
 		 // Visual:
 		spr_idle     = spr.SewerDrainIdle;
 		spr_walk     = spr_idle;
 		spr_hurt     = spr.SewerDrainHurt;
 		spr_dead     = spr.SewerDrainDead;
 		spr_floor    = spr.FloorSewerDrain;
+		spr_shadow   = -1;
 		sprite_index = spr_idle;
+		image_speed  = 0.4;
+		image_xscale = choose(-1, 1);
+		depth        = -1;
+		
+		 // Sound:
+		snd_hurt = sndHitMetal;
+		snd_dead = sndStatueDead;
 		
 		 // Vars:
+		mask_index   = msk.SewerDrain;
+		maxhealth    = 40;
+		team         = 0;
+		size         = 3;
 		area         = area_sewers;
+		subarea      = 1;
+		loops        = GameCont.loops;
 		styleb       = 0;
 		hallway_size = 160;
+		my_floor     = noone;
 		
 		 // Room Type:
 		type = call(scr.pool, [
@@ -5584,11 +5339,131 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 			[FrogQueen,     1]
 		]);
 		
-		 // Events:
-		on_destroy = script_ref_create(SewerDrain_destroy);
+		 // Cool Floor:
+		with(call(scr.instance_nearest_bbox, _x - 16, _y, Floor)){
+			image_index = 3;
+		}
 		
 		return self;
 	}
+	
+#define SewerDrain_step
+	 // Manual Collision for Projectiles Hitting Wall:
+	if(place_meeting(x, y, projectile)){
+		with(call(scr.instances_meeting_instance, self, projectile)){
+			if(place_meeting(x, y, other) && place_meeting(x + hspeed_raw, y + vspeed_raw, Wall)){
+				event_perform(ev_collision, hitme);
+			}
+		}
+	}
+	
+	 // Stay Still:
+	x = pround(xstart, 16) - 16;
+	y = pround(ystart, 16);
+	speed = 0;
+	
+	if(!instance_exists(GenCont)){
+		 // Floorerize:
+		if(!instance_exists(my_floor)){
+			var	_w = 32,
+				_h = 32;
+				
+			call(scr.floor_set_align, 16, 16, x);
+			
+			 // Clear:
+			with(call(scr.instances_meeting_rectangle, x - _w, y - _h, x + _w - 1, y - 1, [Floor, TopPot, Bones])){
+				instance_delete(self);
+			}
+			
+			 // Side Tiles:
+			for(var _x = x - _w; _x < x + _w; _x += 16){
+				call(scr.floor_set, _x, y - 16, 2);
+			}
+			
+			 // Main Floor:
+			call(scr.floor_set_style, styleb, area);
+			my_floor = call(scr.floor_set, x - 16, y - 32, true);
+			with(my_floor){
+				if(sprite_exists(other.spr_floor)){
+					sprite_index = other.spr_floor;
+				}
+			}
+			call(scr.floor_reset_align);
+			call(scr.floor_reset_style);
+			
+			 // Walls:
+			for(var	_x = x - _w; _x < x + _w; _x += 16){
+				for(var	_y = y - _h; _y < y; _y += 16){
+					instance_create(_x, _y, Wall);
+				}
+			}
+		}
+		
+		 // Takeover Walls:
+		if(place_meeting(x, y, Wall)){
+			with(call(scr.instance_nearest_bbox, bbox_left  - 8, y - 8, Wall)) outindex = 0;
+			with(call(scr.instance_nearest_bbox, bbox_right + 8, y - 8, Wall)) outindex = 0;
+			while(place_meeting(x, y, Wall)){
+				with(call(scr.instances_meeting_instance, self, Wall)){
+					instance_create(x, y, InvisiWall);
+					sprite_index = call(scr.area_get_sprite, GameCont.area, sprWall1Trans);
+					visible      = true;
+					topspr       = -1;
+					outspr       = -1;
+					y           -= 16;
+				}
+			}
+		}
+	}
+	
+	 // Push:
+	if(place_meeting(x, y, hitme)){
+		var	_x = x,
+			_y = y - 8;
+			
+		with(call(scr.instances_meeting_instance, self, hitme)){
+			if(place_meeting(x, y, other) && !instance_is(self, prop)){
+				motion_add_ct(((y <= _y) ? 270 : point_direction(_x, _y, x, y)), 0.6);
+			}
+		}
+	}
+	
+	 // Animate:
+	if(sprite_index == spr_idle){
+		if(image_index < 1){
+			image_index -= image_speed_raw * random_range(0.98, 1);
+		}
+	}
+	else if(anim_end){
+		sprite_index = spr_idle;
+		image_index = 0;
+	}
+	
+	 // Break:
+	if(place_meeting(x, y, Explosion)){
+		my_health = 0;
+	}
+	if(type == "area"){
+		with(instances_matching_le(FloorExplo, "y", y - hallway_size)){
+			instance_create(clamp(other.x, bbox_left, bbox_right + 1), y, PortalClear);
+			other.my_health = 0;
+		}
+	}
+	with(call(scr.instances_in_rectangle, bbox_left - 16, y - hallway_size, bbox_right + 16, bbox_top - 16, FloorExplo)){
+		instance_create(clamp(other.x, bbox_left, bbox_right + 1), y, PortalClear);
+		other.my_health = 0;
+	}
+	
+	 // Death:
+	if(my_health <= 0){
+		instance_destroy();
+	}
+	
+#define SewerDrain_end_step
+	 // Stay Still:
+	x     = pround(xstart, 16) - 16;
+	y     = pround(ystart, 16);
+	speed = 0;
 	
 #define SewerDrain_destroy
 	var _roomType = type;
@@ -5599,9 +5474,14 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 		sound_play_pitchvol(snd_chst, 1, 0.9);
 	}
 	
+	 // Turt:
+	with(instances_matching_lt(obj.TurtleCool, "notice_delay", 1)){
+		notice_delay = 1;
+	}
+	
 	 // Deleet Stuff:
 	var	_x1 = bbox_left,
-		_y1 = bbox_top,
+		_y1 = bbox_top - (16 * (type == "area")),
 		_x2 = bbox_right,
 		_y2 = bbox_bottom;
 		
@@ -5621,8 +5501,108 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 		}
 	}
 	
+	 // Area Entrance:
+	if(_roomType == "area"){
+		var	_sx = pfloor(x, 32),
+			_sy = pfloor(y, 32) - 16;
+			
+		 // Borderize Area:
+		var _borderY = _sy - hallway_size + 72;
+		call(scr.obj_create, x, _borderY, "LairBorder");
+		
+		 // Path Gen:
+		var	_dir  = 90,
+			_path = [];
+			
+		instance_create(_sx + 16, _sy + 16, PortalClear);
+		
+		while(_sy >= _borderY - 224){
+			with(instance_create(_sx, _sy, Floor)){
+				array_push(_path, self);
+				call(scr.wall_delete, bbox_left, bbox_top, bbox_right, bbox_bottom);
+			}
+			
+			 // Turn:
+			if(_sy >= _borderY - 160 && _sy <= _borderY - 32){
+				_dir += choose(0, 0, 0, 0, -90, 90);
+				if(abs(angle_difference(_dir, 90)) > 90){
+					_dir = 90;
+				}
+			}
+			else _dir = 90;
+			
+			 // Move:
+			_sx += lengthdir_x(32, _dir);
+			_sy += lengthdir_y(32, _dir);
+		}
+		
+		 // Generate the Realm:
+		var	_lastArea = GameCont.area,
+			_scrSetup = null,
+			_bgColor  = background_color;
+			
+		if(crown_current == "red"){
+			_scrSetup = script_ref_create_ext("crown", "red", "step");
+		}
+		
+		call(scr.area_generate, area, subarea, loops, _sx + 16, _sy - 16, true, 0, _scrSetup);
+		
+		 // Finish Path:
+		var _minID = instance_max;
+		with(_path){
+			area         = GameCont.area;
+			styleb       = true;
+			sprite_index = call(scr.area_get_sprite, area, sprFloor1B);
+			call(scr.floor_walls, self);
+			
+			 // Pipe Decals:
+			if(_borderY < bbox_top || _borderY > bbox_bottom + 1){
+				GameCont.area = ((y > _borderY) ? _lastArea : area);
+				call(scr.floor_bones, self, 1, 1/12, true);
+				GameCont.area = area;
+			}
+		}
+		call(scr.wall_tops, instances_matching_gt(Wall, "id", _minID));
+		with(instances_matching_gt(TopSmall, "id", _minID)){
+			with(self){
+				event_perform(ev_alarm, 0);
+			}
+		}
+		
+		 // Reveal Path:
+		var	_y    = y - 48,
+			_time = 7,
+			_wait = 0;
+			
+		with(call(scr.floor_reveal, bbox_left, _y, bbox_right, y - 16 - 1, 10)){
+			color = _bgColor;
+			_wait += time - _time;
+		}
+		with(instances_matching_lt(_path, "bbox_top", _y)){
+			if(bbox_bottom > _borderY){
+				with(call(scr.floor_reveal, bbox_left, bbox_top, bbox_right, min(_y - 1, bbox_bottom), _time)){
+					y1 = max(y1, _borderY - oy);
+					time += _wait;
+					color = _bgColor;
+				}
+			}
+			if(bbox_top < _borderY){
+				with(call(scr.floor_reveal, bbox_left, bbox_top, bbox_right, bbox_bottom, _time)){
+					y2 = min(y2, _borderY - oy - 1);
+					time += _wait;
+				}
+			}
+			_wait += 3;
+		}
+		
+		 // Crown Time:
+		if(GameCont.area == "lair"){
+			call(scr.unlock_set, "crown:crime", true);
+		}
+	}
+	
 	 // Secret Room:
-	with(my_floor){
+	else with(my_floor){
 		var	_x        = bbox_center_x,
 			_y        = bbox_center_y,
 			_w        = 4,
@@ -5837,12 +5817,12 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 			}
 		}
 		
-		 // Reveal Room:
+		 // Room Revealing Visual:
 		with(instances_matching_gt(Floor, "id", _minID)){
 			call(scr.floor_reveal, bbox_left, bbox_top, bbox_right, bbox_bottom, 10);
 		}
+		sleep(100);
 	}
-	sleep(100);
 	
 	 // No Leaving:
 	if(instance_exists(enemy)){
@@ -6052,9 +6032,9 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 		}
 	}
 	
-	 // Fix Pizza Drain Shadows:
-	if(array_length(obj.PizzaDrain)){
-		with(instances_matching(obj.PizzaDrain, "visible", true)){
+	 // Fix Sewer Drain Shadows:
+	if(array_length(obj.SewerDrain)){
+		with(instances_matching(obj.SewerDrain, "visible", true)){
 			draw_sprite_ext(sprite_index, image_index, x, y - 14, image_xscale, -image_yscale, image_angle, c_white, 1);
 		}
 	}

@@ -349,7 +349,7 @@
 		if(!place_meeting(x, y, Floor)){
 			target = instance_create(x, y, Bones);
 			with(target){
-				name         = "BigDecal";
+				name         = "NTTEBigDecal";
 				mask_index   = other.mask_index;
 				sprite_index = other.sprite_index;
 				image_index  = other.image_index;
@@ -2050,6 +2050,55 @@
 			}
 		}
 		sleep(3);
+	}
+	
+	
+#define CustomRevive_create(_x, _y)
+	/*
+		Used to transfer custom NTTE vars through a Player's Revive object
+	*/
+	
+	with(instance_create(_x, _y, CustomObject)){
+		 // Vars:
+		persistent = true;
+		creator    = noone;
+		vars       = {};
+		p          = -1;
+		
+		return self;
+	}
+	
+#define CustomRevive_step
+	if(instance_exists(creator)){
+		x = creator.x;
+		y = creator.y;
+		p = creator.p;
+	}
+	else{
+		 // Set Vars on Newly Revived Player:
+		if(player_is_active(p)){
+			var _vars = vars;
+			with(call(scr.instance_nearest_array, x, y, instances_matching_gt(instances_matching(Player, "p", p), "id", id))){
+				for(var i = 0; i < lq_size(_vars); i++){
+					variable_instance_set(self, lq_get_key(_vars, i), lq_get_value(_vars, i));
+				}
+				
+				 // Grab Back Pet:
+				if("ntte_pet" in self){
+					with(ntte_pet) if(instance_exists(self) && !instance_exists(leader)){
+						leader = other;
+						
+						 // FX:
+						with(instance_create(x, y, HealFX)){
+							depth = other.depth - 1;
+						}
+						sound_play_pitch(sndHealthChestBig, 1.2 + random(0.1));
+					}
+				}
+			}
+		}
+		
+		instance_destroy();
 	}
 	
 	
@@ -4222,55 +4271,6 @@
 	}
 	
 	
-#define ReviveNTTE_create(_x, _y)
-	/*
-		Used to transfer custom NTTE vars through a Player's Revive object
-	*/
-	
-	with(instance_create(_x, _y, CustomObject)){
-		 // Vars:
-		persistent = true;
-		creator    = noone;
-		vars       = {};
-		p          = -1;
-		
-		return self;
-	}
-	
-#define ReviveNTTE_step
-	if(instance_exists(creator)){
-		x = creator.x;
-		y = creator.y;
-		p = creator.p;
-	}
-	else{
-		 // Set Vars on Newly Revived Player:
-		if(player_is_active(p)){
-			var _vars = vars;
-			with(call(scr.instance_nearest_array, x, y, instances_matching_gt(instances_matching(Player, "p", p), "id", id))){
-				for(var i = 0; i < lq_size(_vars); i++){
-					variable_instance_set(self, lq_get_key(_vars, i), lq_get_value(_vars, i));
-				}
-				
-				 // Grab Back Pet:
-				if("ntte_pet" in self){
-					with(ntte_pet) if(instance_exists(self) && !instance_exists(leader)){
-						leader = other;
-						
-						 // FX:
-						with(instance_create(x, y, HealFX)){
-							depth = other.depth - 1;
-						}
-						sound_play_pitch(sndHealthChestBig, 1.2 + random(0.1));
-					}
-				}
-			}
-		}
-		
-		instance_destroy();
-	}
-	
-	
 #define SalamanderCanSpec_create(_x, _y)
 	/*
 		Used to temporarily disable the active of Players riding Salamander Pet
@@ -5363,7 +5363,7 @@
 			 // Top Decal:
 			target = instance_create(x, y, TopPot);
 			with(target){
-				name         = "WallEnemy";
+				name         = "NTTEWallEnemy";
 				x            = other.x;
 				y            = other.y;
 				mask_index   = other.mask_index;
@@ -5582,7 +5582,7 @@
 /// GENERAL
 #define game_start
 	 // Delete:
-	with(instances_matching_lt(call(scr.array_combine, obj.Pet, obj.ReviveNTTE, obj.UnlockCont), "id", GameCont.id)){
+	with(instances_matching_lt(call(scr.array_combine, obj.CustomRevive, obj.Pet, obj.UnlockCont), "id", GameCont.id)){
 		instance_delete(self);
 	}
 	

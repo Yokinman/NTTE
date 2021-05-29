@@ -2,6 +2,20 @@
 	Don't call scripts from this file directly, instead use the global LWO "scr", like so:
 		scr = mod_variable_get("mod", "teassets", "scr")
 		script_ref_call(scr.name, ...args)
+		
+	To get NTTE object's instance list, use the global LWO "obj", like so:
+		obj = mod_variable_get("mod", "teassets", "obj")
+		with(instances_matching_ne(obj.Cat, "id")){
+			// Instances are not guaranteed to exist, so either prune the list using some form of instances_matching or check each one manually with instance_exists
+		}
+		
+	To get an NTTE asset's index, use the global LWOs "spr" and "snd", like so:
+		snd = mod_variable_get("mod", "teassets", "snd")
+		spr = mod_variable_get("mod", "teassets", "spr")
+		sprite_index = spr.PalankingIdle
+		mask_index   = spr.msk.Palanking
+		snd_hurt     = snd.PalankingHurt
+		sound_play_music(snd.mus.SealKing)
 */
 
 #define init
@@ -291,12 +305,13 @@
 					!instance_is(self, Van)           &&
 					!instance_is(self, mutbutton)
 				){
-					if("name" in self && name != _name){
-						if(!ds_map_exists(obj_parent, _name)){
-							obj_parent[? _name] = name;
+					var _namePrefix = "NTTE";
+					if(!ds_map_exists(obj_parent, _name)){
+						if("name" in self && string_pos(_namePrefix, name) == 1 && name != _namePrefix + _name){
+							obj_parent[? _name] = string_replace(name, _namePrefix, "");
 						}
 					}
-					name = _name;
+					name = _namePrefix + _name;
 				}
 				
 				 // Bind Events:
@@ -449,7 +464,7 @@
 						
 					with(_nameList){
 						var	_name     = self,
-							_nameInst = instances_matching(_inst, "name", _name);
+							_nameInst = instances_matching(_inst, "name", "NTTE" + _name);
 							
 						for(var _objName = _name; !is_undefined(_objName); _objName = ds_map_find_value(obj_parent, _objName)){
 							var _objList = instances_matching_ne(lq_get(obj, _objName), "id");

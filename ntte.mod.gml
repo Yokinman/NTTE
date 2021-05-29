@@ -3213,7 +3213,7 @@
 						 // Storing Vars w/ Revive:
 						with(other){
 							with(call(scr.instance_nearest_array, _x, _y, instances_matching(Revive, "ntte_storage", null))){
-								ntte_storage = call(scr.obj_create, x, y, "ReviveNTTE");
+								ntte_storage = call(scr.obj_create, x, y, "CustomRevive");
 								with(ntte_storage){
 									creator = other;
 									vars    = _vars;

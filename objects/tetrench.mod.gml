@@ -3721,15 +3721,15 @@
 	}
 
 	 // Stay:
-	var l = offset_dis + (sprite_get_width(spr_strt) * image_xscale * 0.5),
-		d = image_angle;
+	var _l = offset_dis + (sprite_get_width(spr_strt) * image_xscale * 0.5),
+		_d = image_angle;
 		
 	if(hold_x != null){
-		x = hold_x + lengthdir_x(l, d);
+		x         = hold_x + lengthdir_x(_l, _d);
 		xprevious = x;
 	}
 	if(hold_y != null){
-		y = hold_y + lengthdir_y(l, d);
+		y         = hold_y + lengthdir_y(_l, _d);
 		yprevious = y;
 	}
 	

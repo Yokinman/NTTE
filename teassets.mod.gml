@@ -1388,6 +1388,7 @@
 				SewerDrainIdle = sprite(p + "sprSewerDrain",     8, 32, 38);
 				SewerDrainHurt = sprite(p + "sprSewerDrainHurt", 3, 32, 38);
 				SewerDrainDead = sprite(p + "sprSewerDrainDead", 5, 32, 38);
+				msk.SewerDrain = sprite(p + "mskSewerDrain",     1, 32, 38);
 				
 				 // Homage:
 				GatorStatueIdle = sprite(p + "sprGatorStatue",     1, 16, 16);
@@ -1420,7 +1421,6 @@
 				PizzaDrainIdle = sprite(p + "sprPizzaDrain",     8, 32, 38);
 				PizzaDrainHurt = sprite(p + "sprPizzaDrainHurt", 3, 32, 38);
 				PizzaDrainDead = sprite(p + "sprPizzaDrainDead", 5, 32, 38);
-				msk.PizzaDrain = sprite(p + "mskPizzaDrain",     1, 32, 38);
 				
 				 // Rubble:
 				PizzaRubbleIdle = sprite(p + "sprPizzaRubble",     1, 16, 0);
