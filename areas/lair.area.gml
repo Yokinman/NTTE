@@ -757,10 +757,12 @@
 	
 #define ntte_step
 	 // Dissipate Cat Gas Faster:
-	if(instance_exists(ToxicGas)){
-		var _inst = instances_matching_lt(instances_matching(ToxicGas, "cat_toxic", true), "speed", 0.1);
-		if(array_length(_inst)) with(_inst){
-			growspeed -= random(0.002 * current_time_scale);
+	if(array_length(obj.CatToxicGas)){
+		var _inst = instances_matching_lt(obj.CatToxicGas, "speed", 0.1);
+		if(array_length(_inst)){
+			with(_inst){
+				growspeed -= random(0.002 * current_time_scale);
+			}
 		}
 	}
 	

@@ -2556,59 +2556,6 @@
 	call(scr.sound_play_at, x, y, sndPlasmaHit, 1 + orandom(0.1), 1.5);
 	
 	
-#define NewCocoon_create(_x, _y)
-	with(instance_create(_x, _y, CustomProp)){
-		 // Visual:
-		spr_idle = sprCocoon;
-		spr_hurt = sprCocoonHurt;
-		spr_dead = sprCocoonDead;
-		spr_shadow = shd24;
-		
-		 // Sound:
-		snd_dead = sndCocoonBreak;
-		
-		 // Vars:
-		maxhealth = 6;
-		size = 1;
-		
-		return self;
-	}
-	
-#define NewCocoon_death
-	 // Bits:
-	var _ang = random(360);
-	for(var _dir = _ang; _dir < _ang + 360; _dir += (360 / 5)){
-		with(call(scr.fx, x, y, [_dir, 1.5], Feather)){
-			sprite_index = spr.PetSpiderWebBits;
-			image_blend  = make_color_hsv(0, 0, 165);
-			image_angle  = orandom(30);
-			image_index  = irandom(image_number - 1);
-			image_speed  = 0;
-			rot         /= 2;
-		}
-	}
-	
-	 // O no:
-	if(chance(1, 25)){
-		with(call(scr.obj_create, x, y, "SunkenSealSpawn")){
-			alarm0 = 15;
-		}
-	}
-	
-	 // Hatch 1-3 Spiders:
-	else if(chance(4, 5)){
-		repeat(irandom_range(1, 3)){
-			call(scr.obj_create, x, y, "Spiderling");
-		}
-	}
-	
-	 // Normal:
-	else{
-		instance_change(Cocoon, false);
-		instance_destroy();
-	}
-	
-	
 #define PlasmaImpactSmall_create(_x, _y)
 	var	_lastShake = UberCont.opt_shake,
 		_lastFreeze = UberCont.opt_freeze;
@@ -5044,14 +4991,6 @@
 	
 /// GENERAL
 #define ntte_update(_newID)
-	 // Spider Cocoons:
-	if(instance_exists(Cocoon) && Cocoon.id > _newID){
-		with(instances_matching_gt(Cocoon, "id", _newID)){
-			call(scr.obj_create, x, y, "NewCocoon");
-			instance_delete(self);
-		}
-	}
-	
 	 // Scramble Cursed Caves Weapons:
 	if(GameCont.area == area_cursed_caves){
 		if(instance_exists(WepPickup) && WepPickup.id > _newID){
@@ -5073,6 +5012,56 @@
 	}
 	
 #define ntte_end_step
+	 // Custom Cocoon Drops:
+	if(instance_exists(Cocoon)){
+		var _inst = instances_matching_le(Cocoon, "my_health", 0);
+		if(array_length(_inst)){
+			with(_inst){
+				var _kill = false;
+				
+				 // Bits:
+				var _ang = random(360);
+				for(var _dir = _ang; _dir < _ang + 360; _dir += (360 / 5)){
+					with(call(scr.fx, x, y, [_dir, 1.5], Feather)){
+						sprite_index = spr.PetSpiderWebBits;
+						image_blend  = make_color_hsv(0, 0, 165);
+						image_angle  = orandom(30);
+						image_index  = random(image_number);
+						image_speed  = 0;
+						rot         /= 2;
+					}
+				}
+				
+				 // O no:
+				if(chance(1, 25)){
+					with(call(scr.obj_create, x, y, "SunkenSealSpawn")){
+						alarm0 = 15;
+					}
+					_kill = true;
+				}
+				
+				 // Hatch 1-3 Spiders:
+				else if(chance(4, 5)){
+					repeat(irandom_range(1, 3)){
+						call(scr.obj_create, x, y, "Spiderling");
+					}
+					_kill = true;
+				}
+				
+				 // Override Death:
+				if(_kill){
+					var _minID = GameObject.id;
+					instance_destroy();
+					with(instances_matching_gt(GameObject, "id", _minID)){
+						if(!instance_is(self, Corpse) && !instance_is(self, Rad) && !instance_is(self, BigRad)){
+							instance_delete(self);
+						}
+					}
+				}
+			}
+		}
+	}
+	
 	 // Fake Walls:
 	var _visible = false;
 	with(surfWallFakeMaskBot){

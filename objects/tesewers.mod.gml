@@ -2612,10 +2612,11 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 		
 		 // Toxic:
 		repeat(2){
-			with(call(scr.projectile_create, self, _x, _y, ToxicGas, gunangle + orandom(6), 4)){
-				friction  = 0.12;
-				cat_toxic = true;
-				if(!instance_is(other.sit, enemy)) team = 0;
+			with(call(scr.projectile_create, self, _x, _y, "CatToxicGas", gunangle + orandom(6), 4)){
+				friction = 0.12;
+				if(!instance_is(other.sit, enemy)){
+					team = 0;
+				}
 			}
 		}
 		gunangle += 12;
@@ -3128,13 +3129,12 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 			self,
 			x,
 			y,
-			ToxicGas,
+			"CatToxicGas",
 			direction + 180 + orandom(15),
 			2 + random(1)
 		)){
-			friction  = 0.16;
-			team      = 0;
-			cat_toxic = true;
+			friction = 0.16;
+			team     = 0;
 		}
 	}
 	
@@ -3510,7 +3510,7 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 		with(call(scr.projectile_create, self, _x, _y, ToxicGas, _dir + 180 + orandom(20), 3)){
 			move_contact_solid(_dir + 180, 20);
 			friction = 0.1;
-			team = 0;
+			team     = 0;
 		}
 	}
 	
@@ -3532,8 +3532,8 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 	}
 	
 	instance_destroy();
-
-
+	
+	
 #define CatDoor_create(_x, _y)
 	with(instance_create(_x, _y, CustomHitme)){
 		 // Visual:
@@ -3555,6 +3555,7 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 	//	my_wall      = noone;
 		partner      = noone;
 		partner_wall = noone;
+		surf_door    = noone;
 		
 		 // Auto-Sprite:
 		switch(GameCont.area){
@@ -3712,32 +3713,29 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 		var	_hurt      = (nexthurt >= current_frame + 4),
 			_surfScale = call(scr.option_get, "quality:main");
 			
-		with(call(scr.surface_setup, `CatDoor${self}`, _surfW, _surfH, _surfScale)){
-			x = other.x - (w / 2);
-			y = other.y - (h / 2);
+		surf_door   = call(scr.surface_setup, `CatDoor${self}`, _surfW, _surfH, _surfScale);
+		surf_door.x = x - (_surfW / 2);
+		surf_door.y = y - (_surfH / 2);
+		
+		 // Draw:
+		if(_hurt) draw_set_fog(true, image_blend, 0, 0);
+		draw_surface_ext(surf_door.surf, surf_door.x, surf_door.y, 1 / _surfScale, 1 / _surfScale, 0, image_blend, image_alpha);
+		if(_hurt) draw_set_fog(false, 0, 0, 0);
+		
+		 // Update:
+		if(surf_door.reset || abs(openang - lq_defget(surf_door, "lastang", 0)) > 1){
+			surf_door.reset   = false;
+			surf_door.lastang = openang;
 			
-			 // Draw:
-			if(_hurt) draw_set_fog(true, other.image_blend, 0, 0);
-			draw_surface_ext(surf, x, y, 1 / scale, 1 / scale, 0, other.image_blend, other.image_alpha);
-			if(_hurt) draw_set_fog(false, 0, 0, 0);
+			surface_set_target(surf_door.surf);
+			draw_clear_alpha(0, 0);
 			
-			 // Update:
-			if(reset || abs(other.openang - lq_defget(self, "lastang", 0)) > 1){
-				reset = false;
-				lastang = other.openang;
-				
-				surface_set_target(surf);
-				draw_clear_alpha(0, 0);
-				
-				 // Draw 3D Door:
-				with(other){
-					for(var i = 0; i < image_number; i++){
-						draw_sprite_ext(sprite_index, i, (_surfW / 2) * _surfScale, ((_surfH / 2) - i) * _surfScale, image_xscale * _surfScale, image_yscale * _surfScale, image_angle + (openang * image_yscale), c_white, 1);
-					}
-				}
-				
-				surface_reset_target();
+			 // Draw 3D Door:
+			for(var i = 0; i < image_number; i++){
+				draw_sprite_ext(sprite_index, i, (_surfW / 2) * _surfScale, ((_surfH / 2) - i) * _surfScale, image_xscale * _surfScale, image_yscale * _surfScale, image_angle + (openang * image_yscale), c_white, 1);
 			}
+			
+			surface_reset_target();
 		}
 	}
 
@@ -3766,7 +3764,7 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 	
 #define CatDoor_cleanup
 	//instance_delete(my_wall);
-	with(call(scr.surface_setup, `CatDoor${self}`, null, null, null)){
+	with(surf_door){
 		free = true;
 	}
 	
@@ -4044,7 +4042,7 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 		if(instance_exists(Player)){
 			if(!instance_exists(CorpseActive)){
 				if(instance_number(enemy) - instance_number(Van) <= 0){
-					if(array_length(instances_matching(ToxicGas, "cat_toxic", true)) <= 0){
+					if(!array_length(instances_matching_ne(obj.CatToxicGas, "id"))){
 						alarm0 = 20;
 						alarm1 = alarm0 + 20;
 					}
@@ -4254,6 +4252,10 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 	
 	
 #define CatLight_create(_x, _y)
+	/*
+		Flickering ceiling lights used on dark areas
+	*/
+	
 	with(instance_create(_x, _y, CustomObject)){
 		 // Visual:
 		sprite_index = spr.CatLight;
@@ -4276,6 +4278,14 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 	if(image_alpha > 0){
 		image_alpha *= -1;
 	}
+	
+	
+#define CatToxicGas_create(_x, _y)
+	/*
+		ToxicGas that shrinks faster when it stops moving (shrink code in lair.area.gml)
+	*/
+	
+	return instance_create(_x, _y, ToxicGas);
 	
 	
 #define ChairFront_create(_x, _y)
@@ -6024,10 +6034,22 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 #define ntte_draw_shadows
 	 // Doors:
 	if(array_length(obj.CatDoor)){
-		with(instances_matching(obj.CatDoor, "visible", true)){
-			var	_yscale = 0.5 + (0.5 * max(abs(dcos(image_angle + openang)), abs(dsin(image_angle + openang))));
-			with(call(scr.surface_setup, `CatDoor${self}`, null, null, null)){
-				draw_surface_ext(surf, x, y + (h / 2) + (((other.image_number - 1) - (h / 2)) * _yscale), 1 / scale, _yscale / scale, 0, c_white, 1);
+		var _inst = call(scr.instances_seen_nonsync, instances_matching_ne(instances_matching(obj.CatDoor, "visible", true), "surf_door", noone), 16, 24);
+		if(array_length(_inst)){
+			with(_inst){
+				if(surface_exists(surf_door.surf)){
+					var	_yscale = 0.5 + (0.5 * max(abs(dcos(image_angle + openang)), abs(dsin(image_angle + openang))));
+					draw_surface_ext(
+						surf_door.surf,
+						surf_door.x,
+						surf_door.y + (surf_door.h / 2) + (((image_number - 1) - (surf_door.h / 2)) * _yscale),
+						1       / surf_door.scale,
+						_yscale / surf_door.scale,
+						0,
+						c_white,
+						1
+					);
+				}
 			}
 		}
 	}
@@ -6049,15 +6071,18 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 			
 			 // Cat Light:
 			if(array_length(obj.CatLight)){
-				var _inst = instances_matching(obj.CatLight, "visible", true);
+				var	_xAdd = 16 * _gray,
+					_yAdd =  8 * _gray,
+					_inst = call(scr.instances_seen_nonsync, instances_matching(obj.CatLight, "visible", true), _xAdd, _yAdd);
+					
 				if(array_length(_inst)){
 					draw_set_fog(true, draw_get_color(), 0, 0);
 					
 					 // Border:
 					if(_gray){
 						with(_inst){
-							var	_xscAdd = 16 / sprite_get_width(sprite_index),
-								_yscAdd = 8 / sprite_get_height(sprite_index);
+							var	_xscAdd = _xAdd / sprite_get_width(sprite_index),
+								_yscAdd = _yAdd / sprite_get_height(sprite_index);
 								
 							image_xscale += _xscAdd;
 							image_yscale += _yscAdd;

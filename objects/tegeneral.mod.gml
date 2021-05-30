@@ -2866,7 +2866,7 @@
 #define Pet_create(_x, _y)
 	/*
 		An NT:TE pet object
-		Generally don't create this object manually, use 'call(scr.pet_spawn, )' to create pets
+		Generally don't create this object manually, use 'call(scr.pet_create, x, y, name, modType="mod", modName="petlib")' to create pets
 	*/
 	
 	with(instance_create(_x, _y, CustomHitme)){
@@ -3042,47 +3042,6 @@
 			}
 		}
 		else sprite_index = enemy_sprite;
-		
-		 // Push:
-		if(place_meeting(x, y, hitme)){
-			if(place_meeting(x, y, enemy)){
-				with(call(scr.instances_meeting_instance, self, enemy)){
-					if(place_meeting(x, y, other)){
-						if(size <= other.size){
-							motion_add_ct(point_direction(other.x, other.y, x, y), 1);
-						}
-						if(size >= other.size){
-							with(other){
-								motion_add_ct(point_direction(other.x, other.y, x, y), push);
-							}
-						}
-					}
-				}
-			}
-			if(place_meeting(x, y, Player)){
-				with(call(scr.instances_meeting_instance, self, instances_matching_ne(Player, "speed", 0))){
-					if(place_meeting(x, y, other)){
-						if(size - 3 <= other.size){
-							motion_add_ct(point_direction(other.x, other.y, x, y), 1);
-						}
-						if(size - 3 >= other.size){
-							with(other){
-								motion_add_ct(point_direction(other.x, other.y, x, y), push);
-							}
-						}
-					}
-				}
-			}
-		}
-		if(place_meeting(x, y, object_index)){
-			with(call(scr.instances_meeting_instance, self, instances_matching_ge(instances_matching(obj.Pet, "visible", true), "size", size))){
-				if(place_meeting(x, y, other)){
-					with(other){
-						motion_add_ct(point_direction(other.x, other.y, x, y), push);
-					}
-				}
-			}
-		}
 		
 		 // Custom Step Event:
 		mod_script_call(mod_type, mod_name, pet + "_step");
@@ -3406,6 +3365,47 @@
 				}
 			}
 			if(_walled) break;
+		}
+	}
+	
+	 // Push Collision:
+	if(place_meeting(x, y, hitme)){
+		if(place_meeting(x, y, enemy)){
+			with(call(scr.instances_meeting_instance, self, enemy)){
+				if(place_meeting(x, y, other)){
+					if(size <= other.size){
+						motion_add_ct(point_direction(other.x, other.y, x, y), 1);
+					}
+					if(size >= other.size){
+						with(other){
+							motion_add_ct(point_direction(other.x, other.y, x, y), push);
+						}
+					}
+				}
+			}
+		}
+		if(place_meeting(x, y, Player)){
+			with(call(scr.instances_meeting_instance, self, instances_matching_ne(Player, "speed", 0))){
+				if(place_meeting(x, y, other)){
+					if(size - 3 <= other.size){
+						motion_add_ct(point_direction(other.x, other.y, x, y), 1);
+					}
+					if(size - 3 >= other.size){
+						with(other){
+							motion_add_ct(point_direction(other.x, other.y, x, y), push);
+						}
+					}
+				}
+			}
+		}
+		if(place_meeting(x, y, object_index)){
+			with(call(scr.instances_meeting_instance, self, instances_matching_ge(instances_matching(obj.Pet, "visible", true), "size", size))){
+				if(place_meeting(x, y, other)){
+					with(other){
+						motion_add_ct(point_direction(other.x, other.y, x, y), push);
+					}
+				}
+			}
 		}
 	}
 	

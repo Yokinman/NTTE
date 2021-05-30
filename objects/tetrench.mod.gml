@@ -4857,7 +4857,7 @@
 		}
 	}
 	
-		 // Lightning Discs:
+	 // Lightning Discs:
 	if(array_length(obj.LightningDisc)){
 		with(instances_matching_ne(obj.LightningDisc, "id")){
 			scrDrawLightningDisc(sprite_index, image_index, x, y, ammo, radius, 2 * stretch, image_xscale, image_yscale, image_angle + rotation, image_blend, 0.1 * image_alpha);

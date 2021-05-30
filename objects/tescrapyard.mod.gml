@@ -87,7 +87,7 @@
 		spr_land     = spr.BoneRavenLand;
 		spr_wing     = spr.BoneRavenFly;
 		sprite_index = spr_idle;
-		image_index  = irandom(image_number - 1);
+		image_index  = random(image_number);
 		spr_shadow   = shd24;
 		hitid        = [spr_idle, "RAVEN"];
 		depth        = -2;
@@ -1226,7 +1226,7 @@
 		spr_shadow   = shd24;
 		hitid        = 15;
 		sprite_index = spr_idle;
-		image_index  = irandom(image_number - 1);
+		image_index  = random(image_number);
 		depth        = object_get_depth(Raven);
 		
 		 // Sound:

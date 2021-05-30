@@ -3386,8 +3386,10 @@
 							)){
 								var _dis = distance_to_object(other);
 								if(_dis < _disMax){
-									_disMax      = _dis;
-									other.target = self;
+									if(array_find_index(obj.Tesseract, self) < 0){
+										_disMax      = _dis;
+										other.target = self;
+									}
 								}
 							}
 						}

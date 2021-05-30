@@ -119,9 +119,9 @@
 		// Hyper Slug (kinda)
 	];
 	
-	sprite_team_map     = ds_map_create();
-	team_sprite_map     = ds_map_create();
-	team_sprite_obj_map = ds_map_create();
+	sprite_team_map     = ds_map_create(); // Sprite -> Team
+	team_sprite_map     = ds_map_create(); // Sprite -> [Prop Sprite, Enemy Sprite, Ally Sprite, Popo Sprite]
+	team_sprite_obj_map = ds_map_create(); // Object -> (Sprite -> [Prop Sprite Object, Enemy Sprite Object, Ally Sprite Object, Popo Sprite Object])
 	
 	with(_teamGrid){
 		var	_teamList = self,
@@ -178,7 +178,9 @@
 						for(var i = 0; i < _tSize; i++){
 							if(_oList[i] == _obj){
 								var _sprt = _sList[i];
-								if(!ds_map_exists(_map, _sprt)) _map[? _sprt] = _oList;
+								if(!ds_map_exists(_map, _sprt)){
+									_map[? _sprt] = _oList;
+								}
 							}
 						}
 					}
@@ -4990,8 +4992,8 @@
 		_inst = obj_create(_x, _y, _obj);
 	}
 	with(_inst){
-		x = _x;
-		y = _y;
+		x         = _x;
+		y         = _y;
 		xprevious = x;
 		yprevious = y;
 		
@@ -5089,32 +5091,27 @@
 				}
 				
 				 // Object-Specific Setup:
-				switch((string_pos("Custom", object_get_name(target.object_index)) == 1 && "name" in target) ? target.name : target.object_index){
-					// /// ENEMIES ///
-					//case BoneFish:
-					//case "Puffer":
-					//case "HammerShark":
-					//	idle_walk        = [0, 5];
-					//	idle_walk_chance = 1/2;
-					//	break;
-					//	
-					//case Exploder:
-					//	jump_time = 1;
-					//	break;
-					//	
-					//case ExploFreak:
-					//	jump *= 1.2;
-					//	idle_walk        = [0, 5];
-					//	idle_walk_chance = 1;
-					//	
-					//	 // Important:
-					//	target_save.my_health = 0;
-					//	break;
-					//	
-					//case Freak:
-					//	idle_walk        = [0, 5];
-					//	idle_walk_chance = 1;
-					//	break;
+				switch(target.object_index){
+					
+					/// ENEMIES ///
+					
+				//	case Exploder:
+				//		jump_time = 1;
+				//		break;
+				//		
+				//	case ExploFreak:
+				//		jump *= 1.2;
+				//		idle_walk        = [0, 5];
+				//		idle_walk_chance = 1;
+				//		
+				//		 // Important:
+				//		target_save.my_health = 0;
+				//		break;
+				//		
+				//	case Freak:
+				//		idle_walk        = [0, 5];
+				//		idle_walk_chance = 1;
+				//		break;
 						
 					case JungleFly:
 						jump = 0;
@@ -5128,30 +5125,13 @@
 						idle_walk_chance = 1/2;
 						break;
 						
-					//case Necromancer:
-					//	jump *= 2/3;
-					//	idle_walk_chance = 1/16;
-					//	break;
-					//	
-					//case "Seal":
-					//	idle_walk_chance = 1/12;
-					//	break;
+				//	case Necromancer:
+				//		jump *= 2/3;
+				//		idle_walk_chance = 1/16;
+				//		break;
 						
-					case "Spiderling":
-						jump *= 4/5;
-						idle_walk_chance = 1/4;
-						break;
-						
-					case "TopRaven":
-					case "BoneRaven":
-						type    = RavenFly;
-						jump    = 2;
-						grav    = 0;
-						canmove = true;
-						spr_shadow_y--;
-						break;
-						
-					 /// PROPS ///
+					/// PROPS ///
+					
 					case Anchor:
 					case OasisBarrel:
 					case WaterMine:
@@ -5190,15 +5170,22 @@
 							spr_hurt = asset_get_index("sprCactusB" + _t + "Hurt");
 							spr_dead = asset_get_index("sprCactusB" + _t + "Dead");
 						}
-						//case NightCactus:
+				//	case NightCactus:
 						spr_shadow   = sprMine;
 						spr_shadow_y = 9;
 						break;
 						
 					case Cocoon:
-					case "NewCocoon":
 						spr_shadow   = shd16;
-						spr_shadow_y = 3;
+						spr_shadow_y = 2;
+						
+						 // No Extra Cocoons:
+						if(_obj == Cocoon){
+							with(instances_matching_gt(_obj, "id", target)){
+								instance_delete(self);
+							}
+						}
+						
 						break;
 						
 					case FireBaller:
@@ -5275,11 +5262,41 @@
 						spr_shadow_y = -1;
 						break;
 						
-					case "WepPickupGrounded":
-						jump    = 3;
-						wobble  = 8;
-						unstick = true;
-						break;
+					default: // Custom Stuff
+						
+						 // Wall Ravens:
+						if(array_find_index(obj.TopRaven, target) >= 0 || array_find_index(obj.BoneRaven, target) >= 0){
+							type    = RavenFly;
+							jump    = 2;
+							grav    = 0;
+							canmove = true;
+							spr_shadow_y--;
+						}
+						
+						 // Spiderlings:
+						else if(array_find_index(obj.Spiderling, target) >= 0){
+							jump *= 4/5;
+							idle_walk_chance = 1/4;
+						}
+						
+						 // Seals:
+					//	else if(array_find_index(obj.Seal, target) >= 0){
+					//		idle_walk_chance = 1/12;
+					//	}
+					
+						 // Fish:
+					//	else if(instance_is(target, BoneFish) || array_find_index(obj.Puffer, target) >= 0 || array_find_index(obj.HammerShark, target) >= 0){
+					//		idle_walk        = [0, 5];
+					//		idle_walk_chance = 1/2;
+					//	}
+						
+						 // Grounded Weapon:
+						else if(array_find_index(obj.WepPickupGrounded, target) >= 0){
+							jump    = 3;
+							wobble  = 8;
+							unstick = true;
+						}
+						
 				}
 				
 				 // Shadow:
@@ -5354,15 +5371,6 @@
 					
 					 // Object-Specific Post-Setup:
 					switch(target.object_index){
-						//case BoneFish:
-						//case Freak:
-						//case "Puffer":
-						//case "HammerShark": // Swimming bro
-						//	if(area_get_underwater(GameCont.area)){
-						//		z += random_range(8, distance_to_object(Floor) / 2) * ((target.object_index == "Puffer") ? 0.5 : 1);
-						//	}
-						//	break;
-						//	
 						//case FrogEgg: // Hatch
 						//	target.alarm0 = irandom(150) + (distance_to_object(Player) * (1 + GameCont.loops));
 						//	target_save.alarm0 = random_range(10, 30);
@@ -5878,8 +5886,21 @@
 	
 	with(_inst){
 		var	_spr = sprite_index,
-			_obj = (("name" in self && string_pos("Custom", object_get_name(object_index)) == 1) ? name : object_index);
+			_obj = object_index;
 			
+		 // Determine NTTE Object:
+		with(ds_map_keys(team_sprite_obj_map)){
+			if(is_string(self) && self in obj){
+				if(array_find_index(lq_get(obj, self), other) >= 0){
+					_obj = self;
+					while(ds_map_exists(obj_parent, _obj)){
+						_obj = obj_parent[? _obj];
+					}
+					break;
+				}
+			}
+		}
+		
 		 // Sprite:
 		sprite_index = team_get_sprite(_team, _spr);
 		

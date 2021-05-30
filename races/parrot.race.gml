@@ -877,7 +877,7 @@
 									
 									 // Call Alarm Event:
 									with(self){
-										if(_alarmNum != 2 || instance_exists(target) || !instance_is(self, Gator)){ // Gator Fix
+										if(_alarmNum != 2 || instance_exists(target) || (!instance_is(self, Gator) && !instance_is(self, JungleAssassin))){ // Manual Gator / Jungle Assassin Fix
 											try{
 												alarm_set(_alarmNum, 0);
 												event_perform(ev_alarm, _alarmNum);

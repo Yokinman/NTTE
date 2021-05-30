@@ -1589,7 +1589,7 @@
 							call(scr.top_create, 
 								random_range(bbox_left, bbox_right + 1),
 								random_range(bbox_top, bbox_bottom + 1),
-								choose(CrystalProp, CrystalProp, "NewCocoon"),
+								choose(CrystalProp, CrystalProp, Cocoon),
 								-1,
 								-1
 							);
@@ -1613,7 +1613,7 @@
 							call(scr.top_create, 
 								random_range(bbox_left, bbox_right + 1),
 								random_range(bbox_top, bbox_bottom + 1),
-								choose(InvCrystal, InvCrystal, "NewCocoon"),
+								choose(InvCrystal, InvCrystal, Cocoon),
 								-1,
 								-1
 							);
@@ -2368,12 +2368,17 @@
 			}
 			
 			 // Shadow Fixes:
-			var	_obj  = [TV, Pillar, LastIntro, LastCutscene, BigTV, VenuzTV, VenuzCouch, Generator, GeneratorInactive],
+			var	_obj  = [Cocoon, TV, Pillar, LastIntro, LastCutscene, BigTV, VenuzTV, VenuzCouch, Generator, GeneratorInactive],
 				_inst = instances_matching(instances_matching(instances_matching(instances_matching_gt(_obj, "id", _newID), "spr_shadow", shd24), "spr_shadow_x", 0), "spr_shadow_y", 0);
 				
 			if(array_length(_inst)){
 				with(_inst){
 					switch(object_index){
+						case Cocoon:
+							spr_shadow   = shd16;
+							spr_shadow_y = 2;
+							break;
+							
 						case TV:
 							spr_shadow_x = 1;
 							break;
