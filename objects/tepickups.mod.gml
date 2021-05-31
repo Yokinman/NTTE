@@ -5842,11 +5842,15 @@
 									
 									 // Create:
 									if(_type != ""){
+										var _chest = chance(ultra_get("fish", 1), 5);
 										call(scr.obj_create,
 											_x + orandom(4),
 											_y + orandom(4),
-											_type + (chance(ultra_get("fish", 1), 5) ? "Chest" : "Pickup")
+											_type + (_chest ? "Chest" : "Pickup")
 										);
+										if(_chest){
+											instance_create(x, y, FishA);
+										}
 									}
 								}
 							}

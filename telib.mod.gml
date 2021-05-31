@@ -736,8 +736,10 @@
 		_disMax = ((argument_count > 3) ? argument[3] : 1000),
 		_width  = ((argument_count > 4) ? argument[4] : 1),
 		_dis    = _disMax,
-		_disX   = lengthdir_x(_dis, _dir),
-		_disY   = lengthdir_y(_dis, _dir);
+		_disX   =  dcos(_dir),
+		_disY   = -dsin(_dir),
+		_endX   = _x + (_dis * _disX),
+		_endY   = _y + (_dis * _disY);
 		
 	 // Context Fix:
 	if(!is_real(self) || !instance_exists(self)){
@@ -746,36 +748,27 @@
 		}
 	}
 	
-	 // Major Hitscan Mode (Start at max, halve distance until no collision line):
-	while(_dis >= 1 && collision_line(_x, _y, _x + _disX, _y + _disY, Wall, false, false)){
-		_dis  /= 2;
-		_disX /= 2;
-		_disY /= 2;
-	}
-	
-	 // Minor Hitscan Mode (Increment until walled):
-	if(_dis < _disMax){
-		var	_disAdd  = max(2, _dis / 32),
-			_disAddX = lengthdir_x(_disAdd, _dir),
-			_disAddY = lengthdir_y(_disAdd, _dir);
-			
-		while(_dis > 0 && !position_meeting(_x + _disX, _y + _disY, Wall)){
-			_dis  -= _disAdd;
-			_disX += _disAddX;
-			_disY += _disAddY;
+	 // Binary Collision Line Search:
+	var _wall = collision_line(_x, _y, _endX, _endY, Wall, false, false);
+	if(_wall){
+		while(_dis >= 1){
+			_dis /= 2;
+			if(_wall){
+				_endX -= _dis * _disX;
+				_endY -= _dis * _disY;
+			}
+			else{
+				_endX += _dis * _disX;
+				_endY += _dis * _disY;
+			}
+			_wall = collision_line(_x, _y, _endX, _endY, Wall, false, false);
 		}
 	}
 	
 	 // Draw:
-	draw_line_width(
-		_x - 1,
-		_y - 1,
-		_x - 1 + _disX,
-		_y - 1 + _disY,
-		_width
-	);
+	draw_line_width(_x - 1, _y - 1, _endX - 1, _endY - 1, _width);
 	
-	return [_x + _disX, _y + _disY];
+	return [_endX, _endY];
 	
 #define draw_surface_scale(_surf, _x, _y, _scale)
 	/*

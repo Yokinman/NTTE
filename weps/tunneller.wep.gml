@@ -153,12 +153,25 @@
 				
 				 // No Guarantees:
 				if(chance(3, 5)){
-					switch(call(scr.pool, {
-						"normal" : 90,
-						"orchid" : 5 * call(scr.save_get, "orchid:seen", false),
-						"lair"   : 5 * call(scr.unlock_get, "crown:crime")
-					})){
+					var _type = "normal";
+					if(chance(1, 10)){
+						_type = call(scr.pool, {
+							"mutation" : 1,
+							"orchid"   : call(scr.save_get, "orchid:seen", false),
+							"lair"     : call(scr.unlock_get, "crown:crime")
+						});
+					}
+					switch(_type){
 						
+						case "mutation":
+							
+							area_chest = [call(scr.pool, [
+								["SpiritChest",     1],
+								["HammerHeadChest", 1]
+							])];
+							
+							break;
+							
 						case "orchid":
 							
 							area_chest_pos = "random";
@@ -183,7 +196,7 @@
 								[WeaponChest,        5],
 								["Backpack",         3],
 								["BonusAmmoChest",   2],
-								["BonusHealthChest", 2],
+								["BonusHealthChest", 2]
 							])];
 							
 					}
@@ -197,6 +210,22 @@
 				 // Default:
 				if(!array_length(area_chest)){
 					array_push(area_chest, RadChest);
+				}
+				
+				 // Open Mind:
+				var _mind = round(skill_get(mut_open_mind));
+				if(_mind != 0){
+					var _chestNum = array_length(area_chest);
+					repeat(abs(_mind)){
+						if(_mind > 0){
+							array_push(area_chest, area_chest[irandom(_chestNum - 1)]);
+						}
+						else if(_chestNum > 0){
+							area_chest = call(scr.array_delete, area_chest, irandom(_chestNum - 1));
+							_chestNum--;
+						}
+						else break;
+					}
 				}
 				
 				 // Effect:
