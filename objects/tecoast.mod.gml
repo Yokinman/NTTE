@@ -476,8 +476,8 @@
 		mask_index = mskScrapBoss;
 		maxhealth *= 2;
 		my_health *= 2;
-		size = 4;
-		shell = true;
+		size       = 4;
+		shell      = true;
 		
 		return self;
 	}
@@ -560,7 +560,9 @@
 		image_xscale = other.image_xscale;
 		if(other.shell){
 			depth -= 2;
-			with(my_floor) mask_index = mskSalamander;
+			with(my_floor){
+				mask_index = mskSalamander;
+			}
 		}
 	}
 	spr_dead = -1;
@@ -579,7 +581,7 @@
 		 // Floor:
 		var _off = 0;
 		do{
-			my_floor = instance_create(x + _off, y, Floor);
+			my_floor = instance_create(_off, 0, Floor);
 			with(my_floor){
 				x = other.x;
 				y = other.y;
@@ -588,7 +590,7 @@
 				visible    = false;
 				material   = 2;
 			}
-			_off += 100;
+			_off += 32;
 		}
 		until instance_exists(my_floor);
 		

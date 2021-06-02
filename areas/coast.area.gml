@@ -464,7 +464,7 @@
 				}
 			}
 			if(instance_exists(FloorExplo) && FloorExplo.id > _genID){
-				with(instances_matching_gt(FloorExplo, "id", _genID)){
+				with(instances_matching(instances_matching_gt(FloorExplo, "id", _genID), "visible", true)){
 					instance_delete(self);
 				}
 			}

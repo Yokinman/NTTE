@@ -102,9 +102,9 @@
 		sprite_index = spr_idle;
 		
 		 // Vars:
-		white    = true;
-		canmelee = true;
-		area     = null;
+		meleedamage = 2;
+		white       = true;
+		area        = null;
 		
 		return self;
 	}
@@ -1344,7 +1344,6 @@
 		mask_index  = mskLaserCrystal;
 		friction    = 0.1;
 		maxhealth   = 50;
-		meleedamage = 4;
 		canmelee    = false;
 		size        = 5;
 		walk        = 0;
@@ -1383,7 +1382,7 @@
 		if(chance_ct(1, 20)){
 			with(call(scr.fx, [x, 6], [y, 12], [90, random_range(0.2, 0.5)], LaserCharge)){
 				sprite_index = sprSpiralStar;
-				image_index  = choose(0, irandom(image_number - 1));
+				image_index  = choose(0, random(image_number));
 				depth        = other.depth - 1;
 				alarm0       = random_range(15, 30);
 			}
@@ -1397,38 +1396,51 @@
 			}
 		}
 	}
-	else if(chance_ct(1, 10)){
-		with(call(scr.fx, [x, 6], [y, 12], random(1), LaserCharge)){
-			alarm0 = 10 + random(10);
+	else if(chance_ct(1, 5)){
+		with(instance_create(x, y, Dust)){
+			move_contact_solid(random(360), random_range(16, 48));
+			sprite_index = sprLaserCharge;
+			image_index  = random(image_number);
+			direction    = point_direction(x, y, other.x, other.y);
+			speed        = random_range(1, 2);
+			hspeed      += other.hspeed;
+			vspeed      += other.vspeed;
+			friction    /= 2;
 		}
+		/*with(call(scr.fx, [x, 6], [y, 12], random(1), LaserCharge)){
+			alarm0 = 10 + random(10);
+		}*/
 	}
 	
 	 // Manual Contact Damage:
-	if(!is_undefined(area) && place_meeting(x, y, Player)){
+	if(canmelee == false && alarm11 < 0 && place_meeting(x, y, Player)){
 		with(call(scr.instances_meeting_instance, self, instances_matching_ne(Player, "team", team))){
 			if(place_meeting(x, y, other)){
 				with(other){
 					if(projectile_canhit_melee(other)){
-						 // Death:
-						projectile_hit_raw(other, 0, 1);
-						my_health = min(my_health, 0);
-						GameCont.killenemies = true;
-						
-						 // Sound:
-						if(sound_exists(snd_dead)){
-							var _snd = sound_play_pitch(snd_dead, 1.3 + random(0.3));
-							audio_sound_set_track_position(_snd, 0.4 + random(0.1));
-							snd_dead = -1;
-						}
+						projectile_hit_raw(other, meleedamage, 1);
 						sound_play_hit(snd_mele, 0.1);
 						
-						 // Red:
-						with(call(scr.obj_create, x, y, "WarpPortal")){
-							area    = other.area;
-							subarea = other.subarea;
-							loops   = other.loops;
-							with(self){
-								event_perform(ev_step, ev_step_normal);
+						 // Death:
+						my_health = min(my_health, 0);
+						if(!is_undefined(area)){
+							GameCont.killenemies = true;
+							
+							 // Red:
+							with(call(scr.obj_create, x, y, "WarpPortal")){
+								area    = other.area;
+								subarea = other.subarea;
+								loops   = other.loops;
+								with(self){
+									event_perform(ev_step, ev_step_normal);
+								}
+							}
+							
+							 // Sound:
+							if(sound_exists(snd_dead)){
+								var _snd = sound_play_pitch(snd_dead, 1.3 + random(0.3));
+								audio_sound_set_track_position(_snd, 0.4 + random(0.1));
+								snd_dead = -1;
 							}
 						}
 					}
@@ -1474,6 +1486,18 @@
 	}
 	
 	 // Effects:
+	if(white){
+		repeat(16){
+			with(instance_create(x + orandom(4), y + orandom(4), Dust)){
+				motion_add(point_direction(other.x, other.y, x, y), 5);
+				sprite_index  = sprSpiralStar;
+				image_index   = choose(0, random(image_number));
+				image_xscale *= random_range(1, 5);
+				image_yscale  = image_xscale;
+				depth         = -7;
+			}
+		}
+	}
 	sleep(100);
 	
 	 // Wooo:
