@@ -1741,7 +1741,7 @@
 								with(target){
 									ammo = true;
 									roll = true;
-									wep  = call(scr.weapon_decide, 3, 2 + GameCont.hard);
+									wep  = call(scr.weapon_decide, min(6, 2 + GameCont.hard), 3 + GameCont.hard);
 								}
 								call(scr.top_create, x, y, self, 0, 0);
 							}

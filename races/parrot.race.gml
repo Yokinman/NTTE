@@ -537,7 +537,7 @@
 			if(array_length(_featherInst)){
 				with(_featherInst){
 					if(stick){
-						stick = false;
+						stick      = false;
 						stick_wait = 3;
 						motion_add(random(360), 6);
 						
@@ -1539,7 +1539,8 @@
 		Returns an array containing the moved players and their previous position, [id, x, y]
 	*/
 	
-	var	_playerPos   = [],
+	var	_player      = player_find(_vars.index),
+		_playerPos   = [],
 		_targetCrash = (!instance_exists(Player) && instance_is(self, Grunt)); // References player-specific vars in its alarm event, causing a crash
 		
 	 // Targeting:
@@ -1547,8 +1548,8 @@
 		!instance_exists(_vars.target)
 		|| collision_line(x, y, _vars.target.x, _vars.target.y, Wall, false, false)
 		|| !instance_is(_vars.target, hitme)
-		|| _vars.target.team == variable_instance_get(self, "team")
-		|| _vars.target.team == variable_instance_get(player_find(_vars.index), "team")
+		|| _vars.target.team == variable_instance_get(self,    "team")
+		|| _vars.target.team == variable_instance_get(_player, "team")
 		|| _vars.target.mask_index == mskNone
 	){
 		_vars.target = noone;
@@ -1559,18 +1560,24 @@
 			if("team" in self){
 				_inst = instances_matching_ne(_inst, "team", team);
 			}
-			if(player_is_active(_vars.index)){
-				with(player_find(_vars.index)){
-					_inst = instances_matching_ne(_inst, "team", team);
-				}
+			with(_player){
+				_inst = instances_matching_ne(_inst, "team", team);
 			}
 			
 			 // Target Nearest:
-			var _disMax = infinity;
-			if(array_length(_inst)) with(_inst){
-				var _dis = point_distance(x, y, other.x, other.y);
-				if(_dis < _disMax){
-					if(!instance_is(self, prop)){
+			if(array_length(_inst)){
+				var	_tx     = x,
+					_ty     = y,
+					_disMax = infinity;
+					
+				if(instance_exists(_player) && !collision_line(x, y, _player.x, _player.y, Wall, false, false)){
+					_tx = mouse_x[_player.index];
+					_ty = mouse_y[_player.index];
+				}
+				
+				with(_inst){
+					var _dis = point_distance(x, y, _tx, _ty);
+					if(_dis < _disMax){
 						_disMax = _dis;
 						_vars.target = self;
 					}
