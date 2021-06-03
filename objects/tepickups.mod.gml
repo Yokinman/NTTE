@@ -4487,10 +4487,6 @@
 			}
 			if(stick_list[0] == self){
 				stick_time -= current_time_scale;
-				if(stick_time <= 0){
-					instance_destroy();
-					exit;
-				}
 			}
 		}
 		else stick_list = [];
@@ -4596,14 +4592,24 @@
 			}
 		}
 		
-		 // Travel Back to Creator:
-		else if(instance_exists(creator) && (!stick || ultra_get("parrot", 1) > 0)){
-			target = creator;
-			
+		 // No Target:
+		else if(instance_exists(creator)){
 			 // Unstick:
 			if(stick){
 				stick = false;
 				motion_add(random(360), 4);
+			}
+			
+			 // Auto-Target Nearest Enemy:
+			if(button_check(index, "spec") || ("usespec" in creator && creator.usespec > 0)){
+				if(instance_exists(enemy)){
+					target = call(scr.instance_nearest_array, x, y, instances_matching_ne(instances_matching_lt(enemy, "size", 6), "mask_index", mskNone));
+				}
+			}
+			
+			 // Travel Back to Creator:
+			if(!instance_exists(target)){
+				target = creator;
 			}
 		}
 		

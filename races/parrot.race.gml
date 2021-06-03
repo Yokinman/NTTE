@@ -600,8 +600,8 @@
 					feather_ammo--;
 					
 					with(call(scr.obj_create, 
-						(((_num % 3) == 1) ? _tx : x) + orandom(4),
-						(((_num % 3) == 1) ? _ty : y) + orandom(4),
+						(((_num % 3) == 0) ? _tx : x) + orandom(4),
+						(((_num % 3) == 0) ? _ty : y) + orandom(4),
 						"ParrotFeather"
 					)){
 						bskin        = other.bskin;
@@ -649,6 +649,18 @@
 					)){
 						target     = _target;
 						stick_wait = max(stick_wait, 3);
+						
+						 // Insta-Charm:
+						/*if(_activePress){
+							if("ntte_charm" not in target || !target.ntte_charm.charmed){
+								if(place_meeting(x, y, target)){
+									stick_wait = 0;
+									with(self){
+										event_perform(ev_step, ev_step_normal);
+									}
+								}
+							}
+						}*/
 					}
 				}
 			}
@@ -705,38 +717,61 @@
 						with(charm_instance_list){
 							if(other.creator == self || ("creator" in self && !instance_is(self, hitme) && other.creator == creator)){
 								if(!_hitme || !instance_exists(self) || place_meeting(x, y, other)){
-									var	_vars  = charm_instance_vars[array_find_index(charm_instance_list, self)],
-										_charm = charm_instance(other, true);
-										
-									_charm.time    = _vars.time;
-									_charm.index   = _vars.index;
-									_charm.kill    = _vars.kill;
-									_charm.feather = _vars.feather;
-									
-									if(_hitme){
-										with(other){
-											 // Kill When Uncharmed if Infinitely Spawned:
-											if(instance_is(self, enemy) && !enemy_boss && kills <= 0){
-												_charm.kill = true;
-												raddrop = 0;
-											}
+									if("ntte_charm" not in other || !other.ntte_charm.charmed){
+										var	_vars  = charm_instance_vars[array_find_index(charm_instance_list, self)],
+											_charm = charm_instance(other, true);
 											
-											 // Featherize:
-											if(_charm.feather && _charm.time >= 0){
-												do{
-													with(call(scr.obj_create, x + orandom(24), y + orandom(24), "ParrotFeather")){
-														target = other;
-														index  = _charm.index;
-														with(player_find(index)){
-															other.bskin = bskin;
+										_charm.time    = _vars.time;
+										_charm.index   = _vars.index;
+										_charm.kill    = _vars.kill;
+										_charm.feather = _vars.feather;
+										
+										if(_hitme){
+											with(other){
+												 // Kill When Uncharmed if Infinitely Spawned:
+												if(instance_is(self, enemy) && !enemy_boss && kills <= 0){
+													_charm.kill = true;
+													with(creator){
+														if(enemy_boss){
+															_charm.kill = false;
 														}
-														sprite_index = call(scr.race_get_sprite, mod_current, bskin, sprite_index);
-														_charm.time -= stick_time * 1.5;
+													}
+													if(_charm.kill){
+														raddrop = 0;
 													}
 												}
-												until(_charm.time <= 0);
 												
-												_charm.time = 15;
+												 // Featherize:
+												if(_charm.feather && _charm.time >= 0){
+													var _first = noone;
+													do{
+														with(call(scr.obj_create, x + orandom(24), y + orandom(24), "ParrotFeather")){
+															target = other;
+															index  = _charm.index;
+															with(player_find(index)){
+																other.bskin = bskin;
+															}
+															sprite_index = call(scr.race_get_sprite, mod_current, bskin, sprite_index);
+															_charm.time -= min(_charm.time, stick_time * 1.5);
+															
+															 // Insta-Charm:
+															if(!instance_exists(_first)){
+																_first = self;
+															}
+														}
+													}
+													until(_charm.time <= 0);
+													
+													 // Insta-Charm:
+													with(_first){
+														x          = random_range(other.bbox_left, other.bbox_right  + 1);
+														y          = random_range(other.bbox_top,  other.bbox_bottom + 1);
+														stick_wait = 0;
+														with(self){
+															event_perform(ev_step, ev_step_normal);
+														}
+													}
+												}
 											}
 										}
 									}
@@ -869,8 +904,9 @@
 							for(var _alarmNum = 0; _alarmNum <= 10; _alarmNum++){
 								var _alarm = alarm_get(_alarmNum);
 								if(_alarm > 0 && _alarm <= ceil(current_time_scale)){
-									var _playerPos = charm_target(_vars);
-									
+									var	_playerPos = charm_target(_vars),
+										_lastSpeed = speed;
+										
 									if(is_undefined(_minID)){
 										_minID = instance_max;
 									}
@@ -901,6 +937,11 @@
 										_alarm = alarm_get(_alarmNum);
 										if(_alarm > 0){
 											alarm_set(_alarmNum, _alarm + 1);
+										}
+										
+										 // Speed Fix (Rats):
+										if(instance_is(self, enemy) && (canmelee || alarm11 > 0 && alarm11 < 20) && meleedamage > 0){
+											speed = max(speed, _lastSpeed);
 										}
 									}
 									else break;
@@ -1490,30 +1531,44 @@
 			
 			 // Teamerize Nearby Projectiles:
 			if(instance_is(self, hitme)){
-				var _searchDis = 32;
-				call(scr.motion_step, self, 1);
-				if(distance_to_object(projectile) <= _searchDis){
-					with(call(scr.instances_meeting_rectangle,
-						bbox_left   - _searchDis,
-						bbox_top    - _searchDis,
-						bbox_right  + _searchDis,
-						bbox_bottom + _searchDis,
-						instances_matching(instances_matching(projectile, "team", _vars.team), "creator", self)
-					)){
+				for(var i = 0; i < 2; i++){
+					if(i == 1){
 						call(scr.motion_step, self, 1);
-						if(place_meeting(x, y, other)){
-							team = other.team;
-							if(call(scr.sprite_get_team, sprite_index) != 3){
-								call(scr.team_instance_sprite, team, self);
-								if(!instance_exists(self)){
-									continue;
+					}
+					if(i == 0 || speed != 0){
+						var _searchDis = ((i == 0) ? 0 : 32);
+						if(distance_to_object(projectile) <= _searchDis){
+							with(call(scr.instances_meeting_rectangle,
+								bbox_left   - _searchDis,
+								bbox_top    - _searchDis,
+								bbox_right  + _searchDis,
+								bbox_bottom + _searchDis,
+								instances_matching(instances_matching(projectile, "team", _vars.team), "creator", self)
+							)){
+								if(i == 1){
+									call(scr.motion_step, self, 1);
+								}
+								if(i == 0 || speed != 0){
+									if(place_meeting(x, y, other)){
+										team = other.team;
+										if(call(scr.sprite_get_team, sprite_index) != 3){
+											call(scr.team_instance_sprite, team, self);
+											if(!instance_exists(self)){
+												continue;
+											}
+										}
+									}
+								}
+								if(i == 1){
+									call(scr.motion_step, self, -1);
 								}
 							}
 						}
+					}
+					if(i == 1){
 						call(scr.motion_step, self, -1);
 					}
 				}
-				call(scr.motion_step, self, -1);
 			}
 		}
 		
@@ -1570,10 +1625,10 @@
 					_ty     = y,
 					_disMax = infinity;
 					
-				if(instance_exists(_player) && !collision_line(x, y, _player.x, _player.y, Wall, false, false)){
+				/*if(instance_exists(_player) && !collision_line(x, y, _player.x, _player.y, Wall, false, false)){
 					_tx = mouse_x[_player.index];
 					_ty = mouse_y[_player.index];
-				}
+				}*/
 				
 				with(_inst){
 					var _dis = point_distance(x, y, _tx, _ty);
