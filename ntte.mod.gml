@@ -12,7 +12,7 @@
 	 // Bind Events:
 	script_bind(CustomStep,    ntte_step,        0,                            true);
 	script_bind(CustomEndStep, ntte_end_step,    0,                            true);
-	script_bind(CustomDraw,    draw_shadows_top, object_get_depth(SubTopCont), true);
+	script_bind(CustomDraw,    draw_top_shadows, object_get_depth(SubTopCont), true);
 	global.map_bind = ds_map_create();
 	global.map_bind[? "pause"] = noone;
 	global.map_bind[? "load" ] = script_bind(CustomDraw, script_ref_create(ntte_map,  -70, 7, null), object_get_depth(GenCont) - 1, false);
@@ -292,6 +292,132 @@
 		 // No Bounty:
 		else call(scr.crime_alert, _spawnX, _spawnY, 90, 10);
 	}
+		
+		call(scr.floor_set_align, 32, 32);
+		call(scr.floor_set_style, 0, area_sewers);
+		
+		var	_w = 6,
+			_h = 6;
+			
+		with(call(scr.floor_room, _spawnX, _spawnY, 64, FloorNormal, _w, _h, "round", 0, -64)){
+			 // Temporary decoration
+			with(call(scr.obj_create, x, y, FloorMiddle)){
+				mask_index   = -1;
+				sprite_index = spr.BigManhole;
+				image_speed  = 0;
+				depth        = 8;
+			}
+			
+			 // Crates:
+			var _crateNum = 3;
+			with(call(scr.array_shuffle, [
+				[x1 + 16 + 32, y1 + 16     ],
+				[x1 + 16,      y1 + 16 + 32],
+				[x2 - 16 - 32, y1 + 16     ],
+				[x2 - 16,      y1 + 16 + 32],
+				[x1 + 16 + 32, y2 - 16     ],
+				[x1 + 16,      y2 - 16 - 32],
+				[x2 - 16 - 32, y2 - 16     ],
+				[x2 - 16,      y2 - 16 - 32]
+			])){
+				if(_crateNum > 0){
+					var	_crateX = self[0],
+						_crateY = self[1];
+						
+					with(UberCont){
+						if(
+							!collision_rectangle(_crateX - 16, _crateY - 16, _crateX + 15, _crateY + 15, hitme, false, false) &&
+							!collision_rectangle(_crateX - 16, _crateY - 16, _crateX + 15, _crateY + 15, Wall,  false, false)
+						){
+							var _adjacentFloorNum = 0;
+							for(var _d = 0; _d < 360; _d += 90){
+								var	_x = _crateX + lengthdir_x(32, _d),
+									_y = _crateY + lengthdir_y(32, _d);
+									
+								if(collision_rectangle(_x - 16, _y - 16, _x + 15, _y + 15, Floor, false, false)){
+									_adjacentFloorNum++;
+								}
+							}
+							if(_adjacentFloorNum <= 2){
+								call(scr.obj_create, _crateX, _crateY, "WallCrate");
+								_crateNum--;
+							}
+						}
+					}
+				}
+				else break;
+			}
+			
+			 // Pipes:
+			var	_lenX         = (_w / 2) * 32,
+				_lenY         = (_h / 2) * 32,
+				_spawnDirList = [],
+				_bigPipeNum   = irandom_range(2, 2),
+				_pipeNum      = irandom_range(2, 4);
+				
+			for(var _dir = 0; _dir < 360; _dir += 90){
+				array_push(_spawnDirList, _dir);
+			}
+			with(call(scr.array_shuffle, _spawnDirList)){
+				if(_bigPipeNum-- > 0){
+					call(scr.obj_create,
+						other.x + lengthdir_x(_lenX, self),
+						other.y + lengthdir_y(_lenY, self),
+						"BigPipe"
+					);
+				}
+				else break;
+			}
+			with(call(scr.array_shuffle, _spawnDirList)){
+				if(_pipeNum-- > 0){
+					var	_ol = random(1),
+						_od = self + 180 + orandom(60),
+						_ox = lengthdir_x((((_w / 2) * 32) - 64) * _ol, _od),
+						_oy = lengthdir_y((((_h / 2) * 32) - 64) * _ol, _od);
+						
+					with(instance_create(
+						other.x + lengthdir_x(_lenX, self) + lengthdir_x(24, _od),
+						other.y + lengthdir_y(_lenY, self) + lengthdir_y(24, _od) - 8,
+						Pipe
+					)){
+						move_contact_solid(point_direction(0, 0, _ox, _oy), point_distance(0, 0, _ox, _oy));
+						xstart    = x;
+						ystart    = y;
+						xprevious = x;
+						yprevious = y;
+						if(place_meeting(x, y, prop)){
+							instance_delete(self);
+						}
+					}
+				}
+				else break;
+			}
+			
+			 // Enemies:
+			// var	_smallNum = 2,
+			// 	_bigNum   = 2;
+				
+			// repeat(_smallNum){
+			// 	if(chance(1, 3)){
+			// 		repeat(2){
+			// 			call(scr.obj_create, x, y, "BabyGator");
+			// 		}
+			// 	}
+			// 	else{
+			// 		call(scr.obj_create, x, y, Gator);
+			// 	}
+			// }
+			// repeat(_bigNum){
+			// 	call(scr.obj_create, x, y, call(scr.pool, [
+			// 		[BuffGator,     3],
+			// 		["BoneGator",   3 * (GameCont.hard >= 6)],
+			// 		["AlbinoGator", 2 * (GameCont.hard >= 8)]
+			// 	]));
+			// }
+		}
+		call(scr.floor_reset_align);
+		call(scr.floor_reset_style);
+		
 	
 	 // Subtract Big Bandit Ambush Spawns:
 	if(GameCont.area == area_desert){
@@ -1458,63 +1584,10 @@
 		}
 		
 		 // Spawn Crate:
-		var	_minID    = instance_max,
-			_lastArea = GameCont.area;
-			
-		GameCont.area = area_campfire;
-		
+		var _minID = instance_max;
 		with(_roomList){
-			 // Pallet:
-			with(instance_create(x, y, FloorMiddle)){
-				mask_index   = -1;
-				sprite_index = spr.FloorCrate;
-				depth        = 5;
-			}
-			
-			 // Loot:
-			call(scr.chest_create, x, y - 4, choose("CatChest", "BatChest", "RatChest"), true);
-			
-			 // Crate Walls:
-			var _img = 0;
-			for(var _y = y - 16; _y < y + 16; _y += 16){
-				for(var _x = x - 16; _x < x + 16; _x += 16){
-					with(instance_create(_x, _y, Wall)){
-						sprite_index = spr.WallCrateBot;
-						topspr       = spr.WallCrateTop;
-						outspr       = spr.WallCrateOut;
-						image_index  = _img;
-						topindex     = _img;
-						outindex     = _img;
-					}
-					_img++;
-				}
-			}
-		}
-		
-		GameCont.area = _lastArea;
-		
-		 // Wall Drawing Order Fix:
-		var	_wallLast  = instances_matching_lt(Wall, "id", _minID),
-			_wallCrate = instances_matching_gt(Wall, "id", _minID);
-			
-		with(_wallCrate){
-			with(call(scr.instances_meeting_rectangle, bbox_left - 1, bbox_top - 1, bbox_right + 1, bbox_bottom + 1, _wallLast)){
-				with(instance_copy(false)){
-					try{
-						 // GMS2 Fix:
-						if(!null && fork()){
-							var _lastMask = mask_index;
-							mask_index = mskNone;
-							wait 0;
-							if(instance_exists(self)){
-								mask_index = _lastMask;
-							}
-							exit;
-						}
-					}
-					catch(_error){}
-				}
-				instance_delete(self);
+			with(call(scr.obj_create, x, y, "WallCrate")){
+				call(scr.chest_create, x, y - 4, choose("CatChest", "BatChest", "RatChest"), true);
 			}
 		}
 	}
@@ -1966,7 +2039,7 @@
 			with(RogueChest){
 				if(_spawn){
 					_spawn = false;
-					call(scr.floor_set_align, null, null, 32, 32);
+					call(scr.floor_set_align, 32, 32);
 					with(call(scr.floor_room, x, y, 0, FloorNormal, 1, 1, "", 0, 0)){
 						call(scr.obj_create, x, y, "RedAmmoChest");
 					}
@@ -3857,18 +3930,21 @@
 		if(_lag) trace_time("ntte_draw_shadows");
 	}
 	
-#define draw_shadows_top
+#define draw_top_shadows
 	if(ntte_active){
-		if(array_length(obj.TopObject) || array_length(obj.MortarPlasma)){
+		if(array_length(obj.TopObject) || array_length(obj.MortarPlasma) || array_length(obj.BigPipe)){
 			if(!instance_exists(NothingSpiral) && instance_exists(BackCont)){
 				if(lag) trace_time();
 				
-				var	_inst = [obj.TopObject, obj.MortarPlasma],
+				var	_inst = [obj.TopObject, obj.MortarPlasma, obj.BigPipe],
 					_draw = false;
 					
 				for(var i = array_length(_inst) - 1; i >= 0; i--){
 					if(array_length(_inst[i])){
-						_inst[i] = instances_matching_ne(instances_matching_ge(instances_matching(_inst[i], "visible", true), "z", 8), "spr_shadow", -1);
+						_inst[i] = instances_matching_ne(instances_matching(_inst[i], "visible", true), "spr_shadow", -1);
+						if(i != 2){
+							_inst[i] = instances_matching_ge(_inst[i], "z", 8);
+						}
 						if(!_draw && array_length(_inst[i])){
 							_draw = true;
 						}
@@ -3909,20 +3985,24 @@
 							
 							 // Floor Mask:
 							surface_set_target(surf);
-							draw_clear_alpha(0, 0);
+							draw_clear_alpha(c_black, 0);
+							d3d_set_projection_ortho(x, y, w, h, 0);
 								
 								 // Draw Floors:
 								with(call(scr.instances_meeting_rectangle, x, y, x + w, y + h, Floor)){
-									draw_sprite_ext(sprite_index, image_index, (x - _surfX) * _surfScale, (y - 8 - _surfY) * _surfScale, image_xscale * _surfScale, image_yscale * _surfScale, image_angle, image_blend, image_alpha);
+									y -= 8;
+									draw_self();
+									y += 8;
 								}
 								
 								 // Cut Out Walls:
 								draw_set_blend_mode_ext(bm_zero, bm_inv_src_alpha);
 								with(call(scr.instances_meeting_rectangle, x, y, x + w, y + h, Wall)){
-									draw_sprite_ext(outspr, outindex, (x - _surfX) * _surfScale, (y - _surfY) * _surfScale, _surfScale, _surfScale, 0, c_white, 1);
+									draw_sprite(outspr, outindex, x, y);
 								}
 								draw_set_blend_mode(bm_normal);
 								
+							d3d_set_projection_ortho(_vx, _vy, _gw, _gh, 0);
 							surface_reset_target();
 						}
 					}
@@ -3932,20 +4012,13 @@
 						y = _vy;
 						
 						surface_set_target(surf);
-						draw_clear_alpha(0, 0);
+						draw_clear_alpha(c_black, 0);
+						d3d_set_projection_ortho(x, y, w, h, 0);
 							
 							 // Normal Shadows:
 							if(array_length(_inst[0])){
 								with(call(scr.instances_seen_nonsync, _inst[0], 8, 8)){
-									var	_x = x + spr_shadow_x - other.x,
-										_y = y + spr_shadow_y - other.y - 8;
-										
-									if(_surfScale == 1){
-										draw_sprite(spr_shadow, 0, _x, _y);
-									}
-									else{
-										draw_sprite_ext(spr_shadow, 0, _x * _surfScale, _y * _surfScale, _surfScale, _surfScale, 0, c_white, 1);
-									}
+									draw_sprite(spr_shadow, 0, x + spr_shadow_x, y + spr_shadow_y - 8);
 								}
 							}
 							
@@ -3953,27 +4026,40 @@
 							if(array_length(_inst[1])){
 								with(call(scr.instances_seen_nonsync, _inst[1], 8, 8)){
 									var	_percent = clamp(96 / (z - 8), 0.1, 1),
-										_w = ceil(18 * _percent) * _surfScale,
-										_h = ceil(6 * _percent) * _surfScale,
-										_x = (x - other.x) * _surfScale,
-										_y = (y - other.y - 8) * _surfScale;
+										_w       = ceil(18 * _percent),
+										_h       = ceil(6 * _percent),
+										_x       = x,
+										_y       = y - 8;
 										
 									draw_ellipse(_x - (_w / 2), _y - (_h / 2), _x + (_w / 2), _y + (_h / 2), false);
+								}
+							}
+							
+							 // Big Pipe Shadows:
+							if(array_length(_inst[2])){
+								with(call(scr.instances_seen_nonsync, _inst[2], 8, 8)){
+									draw_sprite_ext(
+										spr_top_idle,
+										image_index,
+										x + spr_shadow_x,
+										y + spr_shadow_y,
+										image_xscale,
+										image_yscale,
+										image_angle,
+										image_blend,
+										image_alpha
+									);
 								}
 							}
 							
 							 // Cut Out Floors:
 							with(_surfTopShadowMask){
 								draw_set_blend_mode_ext(bm_zero, bm_inv_src_alpha);
-								call(scr.draw_surface_scale, 
-									surf,
-									(x - other.x) * other.scale,
-									(y - other.y) * other.scale,
-									other.scale / scale
-								);
+								call(scr.draw_surface_scale, surf, x, y, 1 / scale);
 								draw_set_blend_mode(bm_normal);
 							}
 							
+						d3d_set_projection_ortho(_vx, _vy, _gw, _gh, 0);
 						surface_reset_target();
 						
 						 // Draw Surface:
@@ -4241,7 +4327,6 @@
 			
 			surface_set_target(surf);
 			draw_clear_alpha(c_black, 0);
-			
 			d3d_set_projection_ortho(0, 0, w, h, 0);
 			
 			if(_players <= 1 || instance_exists(Player)){
@@ -4480,7 +4565,6 @@
 			}
 			
 			d3d_set_projection_ortho(_vx, _vy, _gw, _gh, 0);
-			
 			surface_reset_target();
 			
 			 // Draw to Screen:
@@ -4539,7 +4623,6 @@
 						
 						surface_set_target(surf);
 						draw_clear_alpha(c_black, 0);
-						
 						d3d_set_projection_ortho(-_hudX, -_hudY, w, h, 0);
 						
 						with(other) with(_player){
@@ -4927,7 +5010,6 @@
 						}
 						
 						d3d_set_projection_ortho(_vx, _vy, _gw, _gh, 0);
-						
 						surface_reset_target();
 						
 						 // Draw to Screen:

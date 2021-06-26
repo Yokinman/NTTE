@@ -2776,6 +2776,9 @@
 			y = other.y - other.z;
 			mask_index = mskNone;
 			depth = -9;
+			if(instance_is(self, enemy)){
+				canfly = true;
+			}
 			
 			 // Shadow:
 			if("spr_shadow_y" in self){
@@ -2865,6 +2868,9 @@
 		if("spr_shadow_y" in self) spr_shadow_y = other.spr_shadow_y;
 		if("angle" in self) angle = 0;
 		else image_angle = 0;
+		if(instance_is(self, enemy) && place_meeting(x, y, Floor)){
+			canfly = false;
+		}
 	}
 	
 	

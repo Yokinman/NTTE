@@ -4089,7 +4089,7 @@
 	 // Flame:
 	QuasarBeam_draw_flame(1, 1, 1);
 	*/
-
+	
 #define QuasarBeam_alrm0
 	alarm0 = random_range(4 + (8 * array_length(ring_lasers)), 16);
 	
@@ -4135,7 +4135,7 @@
 		projectile_hit_np(
 			other,
 			ceil((damage + (blast_hit * damage * (1 + skill_get(mut_laser_brain)))) * image_yscale),
-			(instance_is(other, prop) ? 0 : force),
+			((instance_is(other, prop) || other.team == 0) ? 0 : force),
 			40
 		);
 		direction = _lastDir;

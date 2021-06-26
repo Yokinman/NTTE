@@ -4967,27 +4967,31 @@
 				if(fork()){
 					wait 0;
 					if(instance_exists(self)){
-						var _inst = call(scr.instances_meeting_rectangle, bbox_left - 1, bbox_top - 1, bbox_right, bbox_bottom, TopSmall);
+						var _inst = call(scr.instances_in_rectangle,
+							x - 16,
+							y - 16,
+							x + 16,
+							y + 16,
+							instances_matching_lt(TopSmall, "id", id)
+						);
 						array_sort(_inst, true);
 						
 						 // GMS2:
 						try{
 							if(!null){
 								with(_inst){
-									if(array_find_index(obj.TopTiny, self) < 0){
-										with(instance_copy(false)){
-											if(fork()){
-												var _lastMask = mask_index;
-												mask_index = mskNone;
-												wait 0;
-												if(instance_exists(self)){
-													mask_index = _lastMask;
-												}
-												exit;
+									with(instance_copy(false)){
+										if(fork()){
+											var _lastMask = mask_index;
+											mask_index = mskNone;
+											wait 0;
+											if(instance_exists(self) && mask_index == mskNone){
+												mask_index = _lastMask;
 											}
+											exit;
 										}
-										instance_delete(self);
 									}
+									instance_delete(self);
 								}
 							}
 						}
@@ -4995,10 +4999,8 @@
 						 // GMS1:
 						catch(_error){
 							with(_inst){
-								if(array_find_index(obj.TopTiny, self) < 0){
-									instance_copy(false);
-									instance_delete(self);
-								}
+								instance_copy(false);
+								instance_delete(self);
 							}
 						}
 					}

@@ -1621,6 +1621,87 @@
 	else mask_index = mskBandit;
 	
 	
+#define WallCrate_create(_x, _y)
+	/*
+		A crate made out of wall tiles, destroy the walls to reach the goodies inside
+	*/
+	
+	with(instance_create(_x, _y, FloorMiddle)){
+		 // Pallet:
+		mask_index   = mskIcon;
+		sprite_index = spr.FloorCrate;
+		depth        = 5;
+		
+		 // Crate Walls:
+		var	_img      = 0,
+			_lastArea = GameCont.area;
+			
+		GameCont.area = area_campfire;
+		
+		for(var _wy = bbox_top; _wy < bbox_bottom + 1; _wy += 16){
+			for(var _wx = bbox_left; _wx < bbox_right + 1; _wx += 16){
+				with(instance_create(_wx, _wy, Wall)){
+					sprite_index = spr.WallCrateBot;
+					topspr       = spr.WallCrateTop;
+					outspr       = spr.WallCrateOut;
+					image_index  = _img;
+					topindex     = _img;
+					outindex     = _img;
+				}
+				_img++;
+			}
+		}
+		
+		GameCont.area = _lastArea;
+		
+		 // Fix Drawing Order:
+		if(fork()){
+			wait 0;
+			if(instance_exists(self)){
+				var _inst = call(scr.instances_in_rectangle,
+					bbox_left   - 16,
+					bbox_top    - 16,
+					bbox_right  + 1,
+					bbox_bottom + 1,
+					instances_matching_lt(Wall, "id", id)
+				);
+				array_sort(_inst, true);
+				
+				 // GMS2:
+				try{
+					if(!null){
+						with(_inst){
+							with(instance_copy(false)){
+								if(fork()){
+									var _lastMask = mask_index;
+									mask_index = mskNone;
+									wait 0;
+									if(instance_exists(self) && mask_index == mskNone){
+										mask_index = _lastMask;
+									}
+									exit;
+								}
+							}
+							instance_delete(self);
+						}
+					}
+				}
+				
+				 // GMS1:
+				catch(_error){
+					with(_inst){
+						instance_copy(false);
+						instance_delete(self);
+					}
+				}
+			}
+			exit;
+		}
+		
+		return self;
+	}
+	
+	
 #define WepPickupGrounded_create(_x, _y)
 	with(instance_create(_x, _y, CustomObject)){
 		 // Visual:

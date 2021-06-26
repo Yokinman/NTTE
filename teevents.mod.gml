@@ -513,7 +513,7 @@
 						with(instances_matching_gt(Detail, "id", _minID)){
 							instance_destroy();
 						}
-						var a = GameCont.area;
+						var _lastArea = GameCont.area;
 						GameCont.area = "coast";
 						repeat(1 + irandom(max(_w, _h))){
 							instance_create(
@@ -522,7 +522,7 @@
 								Detail
 							);
 						}
-						GameCont.area = a;
+						GameCont.area = _lastArea;
 					}
 				}
 				
@@ -2587,7 +2587,7 @@
 			}
 		}
 		
-		 // Auto-Style:
+		 // Floorify:
 		var	_floorMaker = noone,
 			_lastArea   = GameCont.area;
 			
@@ -2605,13 +2605,12 @@
 		if(!is_undefined(global.floor_area)){
 			GameCont.area = global.floor_area;
 		}
-		
-		 // Floorify:
 		_inst = instance_create(_x, _y, _obj);
-		with(_floorMaker) instance_destroy();
-		GameCont.area = _lastArea;
-		with(_inst){
-			if(!instance_exists(FloorMaker)){
+		with(_floorMaker){
+			instance_destroy();
+		}
+		if(!instance_exists(FloorMaker)){
+			with(_inst){
 				 // Clear Area:
 				call(scr.wall_delete, bbox_left, bbox_top, bbox_right, bbox_bottom);
 				
@@ -2620,9 +2619,12 @@
 					instance_create(random_range(bbox_left, bbox_right + 1), random_range(bbox_top, bbox_bottom + 1), Detail);
 				}
 			}
-			
-			 // Wallerize:
-			if(instance_exists(Wall)){
+		}
+		GameCont.area = _lastArea;
+		
+		 // Wallerize:
+		if(instance_exists(Wall)){
+			with(_inst){
 				call(scr.floor_walls, self);
 				call(scr.wall_update, bbox_left - 16, bbox_top - 16, bbox_right + 16, bbox_bottom + 16);
 			}

@@ -973,6 +973,9 @@
 		m = "areas/City/";
 		p = m;
 			
+			 // FIX CRAP:
+			sprite_replace(sprWall5Bot, "sprites/" + p + "sprWall5BotFix.png", 3);
+			
 			 // Seal Plaza:
 			FloorSeal            = sprite(p + "sprFloorSeal",         4, 16, 16);
 			SnowFloorSeal        = sprite(p + "sprFloorSeal",         4, 16, 16, shnSnow);
@@ -1383,6 +1386,17 @@
 			
 			//#region PROPS
 			p = m + "Props/"
+				
+				 // Big Pipe:
+				BigPipeBottom     = sprite(p + "sprBigPipeBottom", 1, 24, 32);
+				BigPipeBottomHurt = sprite(p + "sprBigPipeBottom", 1, 24, 32, shnHurt);
+				BigPipeTop        = sprite(p + "sprBigPipeTop",    1, 24, 32);
+				BigPipeTopHurt    = sprite(p + "sprBigPipeTop",    1, 24, 32, shnHurt);
+				BigPipeHole       = sprite(p + "sprBigPipeHole",   1, 24, 32);
+				msk.BigPipe       = sprite(p + "sprBigPipeTop",    1, 24, 24);
+				with([BigPipeHole, msk.BigPipe]){
+					mask = [false, 0];
+				}
 				
 				 // Sewer Drain:
 				SewerDrainIdle = sprite(p + "sprSewerDrain",     8, 32, 38);
