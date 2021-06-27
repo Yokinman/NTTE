@@ -292,132 +292,6 @@
 		 // No Bounty:
 		else call(scr.crime_alert, _spawnX, _spawnY, 90, 10);
 	}
-		
-		call(scr.floor_set_align, 32, 32);
-		call(scr.floor_set_style, 0, area_sewers);
-		
-		var	_w = 6,
-			_h = 6;
-			
-		with(call(scr.floor_room, _spawnX, _spawnY, 64, FloorNormal, _w, _h, "round", 0, -64)){
-			 // Temporary decoration
-			with(call(scr.obj_create, x, y, FloorMiddle)){
-				mask_index   = -1;
-				sprite_index = spr.BigManhole;
-				image_speed  = 0;
-				depth        = 8;
-			}
-			
-			 // Crates:
-			var _crateNum = 3;
-			with(call(scr.array_shuffle, [
-				[x1 + 16 + 32, y1 + 16     ],
-				[x1 + 16,      y1 + 16 + 32],
-				[x2 - 16 - 32, y1 + 16     ],
-				[x2 - 16,      y1 + 16 + 32],
-				[x1 + 16 + 32, y2 - 16     ],
-				[x1 + 16,      y2 - 16 - 32],
-				[x2 - 16 - 32, y2 - 16     ],
-				[x2 - 16,      y2 - 16 - 32]
-			])){
-				if(_crateNum > 0){
-					var	_crateX = self[0],
-						_crateY = self[1];
-						
-					with(UberCont){
-						if(
-							!collision_rectangle(_crateX - 16, _crateY - 16, _crateX + 15, _crateY + 15, hitme, false, false) &&
-							!collision_rectangle(_crateX - 16, _crateY - 16, _crateX + 15, _crateY + 15, Wall,  false, false)
-						){
-							var _adjacentFloorNum = 0;
-							for(var _d = 0; _d < 360; _d += 90){
-								var	_x = _crateX + lengthdir_x(32, _d),
-									_y = _crateY + lengthdir_y(32, _d);
-									
-								if(collision_rectangle(_x - 16, _y - 16, _x + 15, _y + 15, Floor, false, false)){
-									_adjacentFloorNum++;
-								}
-							}
-							if(_adjacentFloorNum <= 2){
-								call(scr.obj_create, _crateX, _crateY, "WallCrate");
-								_crateNum--;
-							}
-						}
-					}
-				}
-				else break;
-			}
-			
-			 // Pipes:
-			var	_lenX         = (_w / 2) * 32,
-				_lenY         = (_h / 2) * 32,
-				_spawnDirList = [],
-				_bigPipeNum   = irandom_range(2, 2),
-				_pipeNum      = irandom_range(2, 4);
-				
-			for(var _dir = 0; _dir < 360; _dir += 90){
-				array_push(_spawnDirList, _dir);
-			}
-			with(call(scr.array_shuffle, _spawnDirList)){
-				if(_bigPipeNum-- > 0){
-					call(scr.obj_create,
-						other.x + lengthdir_x(_lenX, self),
-						other.y + lengthdir_y(_lenY, self),
-						"BigPipe"
-					);
-				}
-				else break;
-			}
-			with(call(scr.array_shuffle, _spawnDirList)){
-				if(_pipeNum-- > 0){
-					var	_ol = random(1),
-						_od = self + 180 + orandom(60),
-						_ox = lengthdir_x((((_w / 2) * 32) - 64) * _ol, _od),
-						_oy = lengthdir_y((((_h / 2) * 32) - 64) * _ol, _od);
-						
-					with(instance_create(
-						other.x + lengthdir_x(_lenX, self) + lengthdir_x(24, _od),
-						other.y + lengthdir_y(_lenY, self) + lengthdir_y(24, _od) - 8,
-						Pipe
-					)){
-						move_contact_solid(point_direction(0, 0, _ox, _oy), point_distance(0, 0, _ox, _oy));
-						xstart    = x;
-						ystart    = y;
-						xprevious = x;
-						yprevious = y;
-						if(place_meeting(x, y, prop)){
-							instance_delete(self);
-						}
-					}
-				}
-				else break;
-			}
-			
-			 // Enemies:
-			// var	_smallNum = 2,
-			// 	_bigNum   = 2;
-				
-			// repeat(_smallNum){
-			// 	if(chance(1, 3)){
-			// 		repeat(2){
-			// 			call(scr.obj_create, x, y, "BabyGator");
-			// 		}
-			// 	}
-			// 	else{
-			// 		call(scr.obj_create, x, y, Gator);
-			// 	}
-			// }
-			// repeat(_bigNum){
-			// 	call(scr.obj_create, x, y, call(scr.pool, [
-			// 		[BuffGator,     3],
-			// 		["BoneGator",   3 * (GameCont.hard >= 6)],
-			// 		["AlbinoGator", 2 * (GameCont.hard >= 8)]
-			// 	]));
-			// }
-		}
-		call(scr.floor_reset_align);
-		call(scr.floor_reset_style);
-		
 	
 	 // Subtract Big Bandit Ambush Spawns:
 	if(GameCont.area == area_desert){
@@ -1145,10 +1019,10 @@
 				
 				 // Corner Walls:
 				with(instances_matching_gt(Floor, "id", _minID)){
-					if(!place_meeting(x - 32, y, Floor) && !place_meeting(x, y - 32, Floor)) instance_create(x,      y,      Wall);
-					if(!place_meeting(x + 32, y, Floor) && !place_meeting(x, y - 32, Floor)) instance_create(x + 16, y,      Wall);
-					if(!place_meeting(x - 32, y, Floor) && !place_meeting(x, y + 32, Floor)) instance_create(x,      y + 16, Wall);
-					if(!place_meeting(x + 32, y, Floor) && !place_meeting(x, y + 32, Floor)) instance_create(x + 16, y + 16, Wall);
+					if(!place_meeting(x - 32, y, Floor) && !place_meeting(x, y - 32, Floor) && !place_meeting(x, y, hitme) && !place_meeting(x, y, chestprop)) instance_create(x,      y,      Wall);
+					if(!place_meeting(x + 32, y, Floor) && !place_meeting(x, y - 32, Floor) && !place_meeting(x, y, hitme) && !place_meeting(x, y, chestprop)) instance_create(x + 16, y,      Wall);
+					if(!place_meeting(x - 32, y, Floor) && !place_meeting(x, y + 32, Floor) && !place_meeting(x, y, hitme) && !place_meeting(x, y, chestprop)) instance_create(x,      y + 16, Wall);
+					if(!place_meeting(x + 32, y, Floor) && !place_meeting(x, y + 32, Floor) && !place_meeting(x, y, hitme) && !place_meeting(x, y, chestprop)) instance_create(x + 16, y + 16, Wall);
 				}
 			}
 			
@@ -1587,7 +1461,7 @@
 		var _minID = instance_max;
 		with(_roomList){
 			with(call(scr.obj_create, x, y, "WallCrate")){
-				call(scr.chest_create, x, y - 4, choose("CatChest", "BatChest", "RatChest"), true);
+				crate_loot = call(scr.chest_create, x, y - 4, choose("CatChest", "BatChest", "RatChest"), true);
 			}
 		}
 	}

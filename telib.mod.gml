@@ -5533,11 +5533,14 @@
 		Basically the second argument of "weapon_post()", but usable outside of a Player object
 	*/
 	
+	 // All Players:
 	if(_index < 0){
 		for(var i = 0; i < maxp; i++){
 			view_shift(i, _dir, _pan);
 		}
 	}
+	
+	 // Normal:
 	else{
 		var _shake = UberCont.opt_shake;
 		UberCont.opt_shake = 1;
@@ -5552,7 +5555,6 @@
 			catch(_error){
 				trace(_error);
 			}
-			
 			instance_delete(self);
 		}
 		

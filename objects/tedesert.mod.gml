@@ -268,11 +268,11 @@
 		hitid    = [spr_idle, "HIKER BANDIT"];
 		
 		 // Vars:
-		maxhealth = 16;
-		my_health = maxhealth;
-		path = [];
+		maxhealth  = 16;
+		my_health  = maxhealth;
+		path       = [];
 		path_delay = 0;
-		can_path = true;
+		can_path   = true;
 		
 		return self;
 	}
@@ -284,7 +284,9 @@
 	}
 	
 	 // Path to Player:
-	if(path_delay > 0) path_delay -= current_time_scale;
+	if(path_delay > 0){
+		path_delay -= current_time_scale;
+	}
 	if(walk > 0 && instance_exists(target)){
 		if(!target_visible){
 			var	_tx      = target.x,
@@ -324,7 +326,8 @@
 		
 		 // Vars:
 		mask_index  = -1;
-		my_health   = 8;
+		maxhealth   = 6;
+		my_health   = maxhealth;
 		team        = 1;
 		size        = 1;
 		target      = noone;
@@ -342,11 +345,15 @@
 #define BanditTent_step
 	 // Holding Chest:
 	with(target){
-		x = other.x;
-		y = other.y + 4;
+		x         = other.x;
+		y         = other.y + 4;
+		xprevious = x;
+		yprevious = y;
+		
+		 // Disable Hitbox:
 		if(mask_index != mskNone){
 			other.target_mask = mask_index;
-			mask_index = mskNone;
+			mask_index        = mskNone;
 		}
 	}
 	
@@ -360,7 +367,9 @@
 #define BanditTent_death
 	 // Release Chest:
 	if(target_mask != mskNone){
-		with(target) mask_index = other.target_mask;
+		with(target){
+			mask_index = other.target_mask;
+		}
 	}
 	
 	 // FX:
@@ -368,8 +377,8 @@
 	for(var _dir = _ang; _dir < _ang + 360; _dir += (360 / 3)){
 		call(scr.fx, x, y, [_dir, 3], Dust);
 	}
-
-
+	
+	
 #define BigCactus_create(_x, _y)
 	with(instance_create(_x, _y, CustomProp)){
 		 // Visual:

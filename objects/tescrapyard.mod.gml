@@ -1631,28 +1631,31 @@
 		mask_index   = mskIcon;
 		sprite_index = spr.FloorCrate;
 		depth        = 5;
+		crate_wall   = [];
+		crate_loot   = noone;
+		
+		 // Clear Space:
+		//call(scr.floor_fill, x, y, bbox_width / 32, bbox_height / 32);
 		
 		 // Crate Walls:
-		var	_img      = 0,
-			_lastArea = GameCont.area;
-			
+		var _lastArea = GameCont.area;
 		GameCont.area = area_campfire;
-		
 		for(var _wy = bbox_top; _wy < bbox_bottom + 1; _wy += 16){
 			for(var _wx = bbox_left; _wx < bbox_right + 1; _wx += 16){
-				with(instance_create(_wx, _wy, Wall)){
-					sprite_index = spr.WallCrateBot;
-					topspr       = spr.WallCrateTop;
-					outspr       = spr.WallCrateOut;
-					image_index  = _img;
-					topindex     = _img;
-					outindex     = _img;
-				}
-				_img++;
+				array_push(crate_wall, instance_create(_wx, _wy, Wall));
 			}
 		}
-		
 		GameCont.area = _lastArea;
+		for(var i = array_length(crate_wall) - 1; i >= 0; i--){
+			with(crate_wall[i]){
+				sprite_index = spr.WallCrateBot;
+				topspr       = spr.WallCrateTop;
+				outspr       = spr.WallCrateOut;
+				image_index  = i;
+				topindex     = i;
+				outindex     = i;
+			}
+		}
 		
 		 // Fix Drawing Order:
 		if(fork()){
@@ -1699,6 +1702,38 @@
 		}
 		
 		return self;
+	}
+	
+#define WallCrate_step
+	if(array_length(crate_wall)){
+		var _wallExisting = instances_matching_ne(crate_wall, "id");
+		
+		 // Loot Taken:
+		if(crate_loot != noone && !instance_exists(crate_loot)){
+			if(array_equals(crate_wall, _wallExisting)){
+				crate_loot = call(scr.instance_nearest_array, x, y, call(scr.instances_meeting_instance, self, instances_matching_gt([chestprop, RadChest, Mimic, SuperMimic], "id", crate_loot)));
+			}
+			if(!instance_exists(crate_loot)){
+				call(scr.wall_clear, self);
+				_wallExisting = [];
+				
+				 // Effects:
+				repeat(15){
+					call(scr.fx, x, y, 3, Dust);
+				}
+			}
+		}
+		
+		 // Crate Smashed:
+		if(!array_equals(crate_wall, _wallExisting)){
+			crate_wall = _wallExisting;
+			
+			 // Sound:
+			sound_play_hit(sndHammer, 0.3);
+			if(!array_length(crate_wall)){
+				sound_play_pitchvol(sndWallBreakJungle, 1.2 + orandom(0.2), 0.5);
+			}
+		}
 	}
 	
 	

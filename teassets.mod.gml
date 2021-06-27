@@ -1367,6 +1367,13 @@
 			 // Fix Decal Not Fully Covering Wall:
 			sprite_replace(sprSewerDecal, "sprites/" + p + "sprWallDecalSewer.png", 1, 16, 24);
 			
+			 // Floors:
+			FloorSewerDirt      = sprite(p + "sprFloorSewerDirt",      4, 16, 16);
+			FloorSewerLightDirt = sprite(p + "sprFloorSewerLightDirt", 4, 16, 16);
+			FloorSewerDrain     = sprite(p + "sprFloorSewerDrain",     1,  0,  0);
+			FloorSewerGrate     = sprite(p + "sprFloorSewerGrate",     8,  2,  2);
+			FloorSewerWeb       = sprite(p + "sprFloorSewerWeb",       1,  0,  0);
+			
 			 // Manhole:
 			PizzaManhole = [
 				sprite(p + "sprPizzaManhole0", 2, 16, 16),
@@ -1379,10 +1386,6 @@
 			msk.SewerPool    = sprite(p + "mskSewerPool",     1, 32, 64);
 			SewerPoolBig     = sprite(p + "sprSewerPoolBig", 25,  0,  0);
 			msk.SewerPoolBig = sprite(p + "mskSewerPoolBig",  1, 80, 80);
-			
-			 // Secret:
-			FloorSewerWeb   = sprite(p + "sprFloorSewerWeb",   1, 0, 0);
-			FloorSewerDrain = sprite(p + "sprFloorSewerDrain", 1, 0, 0);
 			
 			//#region PROPS
 			p = m + "Props/"

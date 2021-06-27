@@ -38,6 +38,7 @@
 	 // Event Execution Order:
 	event_list = [];
 	teevent_add("BlockedRoom");
+	teevent_add("GatorAmbush");
 	teevent_add("MaggotPark");
 	teevent_add("ScorpionCity");
 	teevent_add("BanditCamp");
@@ -109,7 +110,7 @@
 			_chest = [];
 			
 		with(instances_matching_ne([chestprop, RadChest], "object_index", RadMaggotChest)){
-			if(!position_meeting(x, y, PortalClear)){
+			if(place_meeting(x, y, Floor) && !place_meeting(x, y, Wall) && !position_meeting(x, y, PortalClear)){
 				array_push(_chest, self);
 			}
 		}
@@ -411,7 +412,7 @@
 				 // Grab Nearest Chest:
 				var _chest = [];
 				with(instances_matching_ne([chestprop, RadChest, Mimic, SuperMimic], "object_index", RadMaggotChest)){
-					if(!position_meeting(x, y, PortalClear)){
+					if(place_meeting(x, y, Floor) && !position_meeting(x, y, PortalClear)){
 						array_push(_chest, self);
 					}
 				}
@@ -419,12 +420,16 @@
 					instance_create(x, y, Cactus);
 					with(call(scr.instances_meeting_instance, self, Bandit)){
 						if(place_meeting(x, y, other)){
-							x = _cx;
-							y = _cy;
+							x         = _cx;
+							y         = _cy;
+							xprevious = x;
+							yprevious = y;
 						}
 					}
-					x = _cx;
-					y = _cy;
+					x         = _cx;
+					y         = _cy;
+					xprevious = x;
+					yprevious = y;
 				}
 				
 				break;
@@ -1120,6 +1125,201 @@
 	
 	floor_reset_align();
 	
+	
+#define GatorAmbush_text    return `${event_tip}???`;
+#define GatorAmbush_chance  return 1;
+
+#define GatorAmbush_setup
+	 // Smaller Level:
+	with(instances_matching_gt([GenCont, FloorMaker], "goal", 0)){
+		goal = ceil(goal * 0.9);
+	}
+	
+#define GatorAmbush_create
+	var	_w          = 6,
+		_h          = 6,
+		_type       = "round",
+		_dirOff     = 0,
+		_floorDis   = -64,
+		_spawnX     = spawn_x,
+		_spawnY     = spawn_y,
+		_spawnDis   = 128,
+		_spawnFloor = FloorNormal;
+		
+	call(scr.floor_set_align, 32, 32);
+	call(scr.floor_set_style, 0, area_sewers);
+	
+	with(floor_room(_spawnX, _spawnY, _spawnDis, _spawnFloor, _w, _h, _type, _dirOff, _floorDis)){
+		 // Temporary decoration
+		//call(scr.obj_create, x, y, "SewerRug");
+		// with(call(scr.obj_create, x, y, FloorMiddle)){
+		// 	mask_index   = -1;
+		// 	sprite_index = spr.BigManhole;
+		// 	image_speed  = 0;
+		// 	depth        = 8;
+		// }
+		
+		 // Cool Floors:
+		with(floors){
+			sprite_index = spr.FloorSewerDirt; // spr.FloorSewerLightDirt
+			material     = 1;
+			depth        = 9;
+		}
+		
+		 // Crates:
+		var _chestList = [];
+		with(instances_matching_ne([chestprop, RadChest, Mimic, SuperMimic], "object_index", RadMaggotChest)){
+			if(place_meeting(x, y, Floor)){
+				array_push(_chestList, self);
+			}
+		}
+		with(call(scr.array_shuffle, [
+			[x1 + 16 + 32, y1 + 16     ],
+			[x1 + 16,      y1 + 16 + 32],
+			[x2 - 16 - 32, y1 + 16     ],
+			[x2 - 16,      y1 + 16 + 32],
+			[x1 + 16 + 32, y2 - 16     ],
+			[x1 + 16,      y2 - 16 - 32],
+			[x2 - 16 - 32, y2 - 16     ],
+			[x2 - 16,      y2 - 16 - 32]
+		])){
+			var	_crateX = self[0],
+				_crateY = self[1];
+				
+			// with(other){
+				with(UberCont){
+					if(
+						!collision_rectangle(_crateX - 16, _crateY - 16, _crateX + 15, _crateY + 15, hitme, false, false) &&
+						!collision_rectangle(_crateX - 16, _crateY - 16, _crateX + 15, _crateY + 15, Wall,  false, false)
+					){
+						if(array_length(_chestList)){
+							var _adjacentFloorNum = 0;
+							for(var _d = 0; _d < 360; _d += 90){
+								var	_x = _crateX + lengthdir_x(32, _d),
+									_y = _crateY + lengthdir_y(32, _d);
+									
+								if(collision_rectangle(_x - 16, _y - 16, _x + 15, _y + 15, Floor, false, false)){
+									_adjacentFloorNum++;
+								}
+							}
+							if(_adjacentFloorNum <= 2){
+								with(call(scr.obj_create, _crateX, _crateY, "WallCrate")){
+									crate_loot = call(scr.instance_nearest_array, x, y, _chestList)
+									with(crate_loot){
+										instance_create(x, y, Pipe);
+										x         = other.x;
+										y         = other.y - 4;
+										xprevious = x;
+										yprevious = y;
+									}
+									_chestList = call(scr.array_delete_value, _chestList, crate_loot);
+								}
+							}
+						}
+						
+						 // :
+						else if(chance(1, 1)){
+							// if(_crateX > other.x) _crateX -= 16;
+							// if(_crateY > other.y) _crateY -= 16;
+							// var _lastArea = GameCont.area;
+							// //GameCont.area = area_sewers;
+							// instance_create(_crateX, _crateY, Wall);
+							// GameCont.area = _lastArea;
+							//instance_create(_crateX + orandom(4), _crateY + orandom(4), choose(Pipe, MoneyPile));
+						}
+					}
+				}
+			// }
+		}
+		
+		 // Pipes:
+		var	_lenX         = (_w / 2) * 32,
+			_lenY         = (_h / 2) * 32,
+			_spawnDirList = [],
+			_bigPipeNum   = irandom_range(2, 2),
+			_pipeNum      = irandom_range(2, 4);
+			
+		for(var _dir = 0; _dir < 360; _dir += 90){
+			array_push(_spawnDirList, _dir);
+		}
+		with(call(scr.array_shuffle, _spawnDirList)){
+			var _dir = self;
+			if(_bigPipeNum-- > 0){
+				call(scr.obj_create,
+					other.x + lengthdir_x(_lenX, _dir),
+					other.y + lengthdir_y(_lenY, _dir),
+					"BigPipe"
+				);
+				with(floor_fill(
+					other.x + lengthdir_x(_lenX / 2, _dir),
+					other.y + lengthdir_y(_lenY / 2, _dir),
+					max(2, abs(lengthdir_x(_w / 2, _dir))),
+					max(2, abs(lengthdir_y(_h / 2, _dir)))
+				)){
+					sprite_index = spr.FloorSewerGrate;
+					material     = 3;
+					styleb       = 1;
+					depth        = choose(8, 9);
+				}
+			}
+			else{
+				call(scr.obj_create, 
+					other.x + lengthdir_x(_lenX - random_range(16, 40), self),
+					other.y + lengthdir_y(_lenY - random_range(16, 40), self),
+					(array_length(call(scr.instances_in_rectangle, other.x1, other.y1, other.x2, other.y2, Barrel)) ? Pipe : Barrel)
+				);
+			}
+		}
+		// with(call(scr.array_shuffle, _spawnDirList)){
+		// 	if(_pipeNum-- > 0){
+		// 		var	_ol = random(1),
+		// 			_od = self + 180 + orandom(60),
+		// 			_ox = lengthdir_x((((_w / 2) * 32) - 64) * _ol, _od),
+		// 			_oy = lengthdir_y((((_h / 2) * 32) - 64) * _ol, _od);
+					
+		// 		with(instance_create(
+		// 			other.x + lengthdir_x(_lenX, self) + lengthdir_x(24, _od),
+		// 			other.y + lengthdir_y(_lenY, self) + lengthdir_y(24, _od) - 8,
+		// 			Pipe
+		// 		)){
+		// 			move_contact_solid(point_direction(0, 0, _ox, _oy), point_distance(0, 0, _ox, _oy));
+		// 			xstart    = x;
+		// 			ystart    = y;
+		// 			xprevious = x;
+		// 			yprevious = y;
+		// 			if(place_meeting(x, y, prop)){
+		// 				instance_delete(self);
+		// 			}
+		// 		}
+		// 	}
+		// 	else break;
+		// }
+		
+		 // Enemies:
+		var	_smallNum = 2,
+			_bigNum   = 2;
+			
+		repeat(_smallNum){
+			if(chance(1, 3)){
+				repeat(2){
+					call(scr.obj_create, x, y, "BabyGator");
+				}
+			}
+			else{
+				call(scr.obj_create, x, y, Gator);
+			}
+		}
+		repeat(_bigNum){
+			call(scr.obj_create, x, y, call(scr.pool, [
+				[BuffGator,     3],
+				["BoneGator",   3 * (GameCont.hard >= 6)],
+				["AlbinoGator", 2 * (GameCont.hard >= 8)]
+			]));
+		}
+	}
+	
+	floor_reset_align();
+	floor_reset_style();
 	
 #define GatorDen_text    return `${event_tip}DISTANT CHATTER`;
 #define GatorDen_area    return area_sewers;
