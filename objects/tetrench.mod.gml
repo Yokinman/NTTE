@@ -5151,7 +5151,7 @@
 				y = pfloor(_vy, _gh);
 				
 				surface_set_target(surf);
-				d3d_set_projection_ortho(x, y, w, h, 0);
+				//d3d_set_projection_ortho(x, y, w, h, 0);
 				
 				 // Reset:
 				if(reset){
@@ -5172,6 +5172,8 @@
 						draw_set_blend_mode(bm_normal);
 					}
 				}
+				
+				d3d_set_projection_ortho(x, y, w, h, 0);
 				
 				 // Draw Trails:
 				if(array_length(_inst[0])){

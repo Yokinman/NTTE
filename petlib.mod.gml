@@ -4994,8 +4994,9 @@
 				 // Draw Web Sprite Over Web Mask:
 				draw_set_blend_mode_ext(bm_inv_dest_alpha, bm_inv_dest_alpha);
 				draw_rectangle(x, y, x + w, y + h, false);
+				d3d_set_projection_ortho(0, 0, w * scale, h * scale, 0);
 				with(other){
-					draw_sprite_tiled(_sprWeb, 0, 0, 0);
+					draw_sprite_tiled_ext(_sprWeb, 0, (0 - other.x) * other.scale, (0 - other.y) * other.scale, other.scale, other.scale, c_white, 1);
 				}
 				draw_set_blend_mode(bm_normal);
 				
