@@ -4817,12 +4817,10 @@
 				x = view_xview_nonsync;
 				y = view_yview_nonsync;
 				
-				var	_surfX     = x,
-					_surfY     = y,
-					_surfScale = scale;
-					
 				surface_set_target(surf);
-				draw_clear_alpha(0, 0);
+				draw_clear_alpha(c_black, 0);
+				d3d_set_projection_ortho(x, y, w, h, 0);
+				
 				draw_set_color(c_black);
 				
 				with(_instSpider){
@@ -4848,10 +4846,7 @@
 						_y1 = y;
 						
 						 // Drawing Web Mask:
-						draw_vertex(
-							(x - _surfX) * _surfScale,
-							(y - _surfY) * _surfScale
-						);
+						draw_vertex(x, y);
 						
 						 // Slow Enemies:
 						if(_vertexNum++ >= 2){
@@ -4917,8 +4912,8 @@
 							_d = web_add_d;
 							
 						draw_vertex(
-							(x           + lengthdir_x(_l, _d) - _surfX) * _surfScale,
-							(bbox_bottom + lengthdir_y(_l, _d) - _surfY) * _surfScale
+							x           + lengthdir_x(_l, _d),
+							bbox_bottom + lengthdir_y(_l, _d)
 						);
 					}
 					draw_primitive_end();
@@ -4929,23 +4924,25 @@
 					}
 					else{
 						web_bits = 10 + random(20);
-						if(array_length(web_list)) with(web_list[0]){
-							if(frame < other.web_frame){
-								if(other.curse > 0){
-									instance_create(x, y, Curse);
-								}
-								else with(instance_create(x, y, Dust)){
-									image_xscale /= 2;
-									image_yscale /= 2;
-								}
-								with(instance_create(x, y, Feather)){
-									sprite_index = _sprWebBits;
-									image_index  = irandom(image_number - 1);
-									image_angle  = orandom(30);
-									image_speed  = 0;
-									speed       *= 0.5;
-									rot         *= 0.5;
-									alarm0       = 60 + random(30);
+						if(array_length(web_list)){
+							with(web_list[0]){
+								if(frame < other.web_frame){
+									if(other.curse > 0){
+										instance_create(x, y, Curse);
+									}
+									else with(instance_create(x, y, Dust)){
+										image_xscale /= 2;
+										image_yscale /= 2;
+									}
+									with(instance_create(x, y, Feather)){
+										sprite_index = _sprWebBits;
+										image_index  = irandom(image_number - 1);
+										image_angle  = orandom(30);
+										image_speed  = 0;
+										speed       *= 0.5;
+										rot         *= 0.5;
+										alarm0       = 60 + random(30);
+									}
 								}
 							}
 						}
@@ -4996,12 +4993,13 @@
 				
 				 // Draw Web Sprite Over Web Mask:
 				draw_set_blend_mode_ext(bm_inv_dest_alpha, bm_inv_dest_alpha);
-				draw_rectangle(0, 0, w * scale, h * scale, false);
+				draw_rectangle(x, y, x + w, y + h, false);
 				with(other){
-					draw_sprite_tiled_ext(_sprWeb, 0, (0 - _surfX) * _surfScale, (0 - _surfY) * _surfScale, _surfScale, _surfScale, c_white, 1);
+					draw_sprite_tiled(_sprWeb, 0, 0, 0);
 				}
 				draw_set_blend_mode(bm_normal);
 				
+				d3d_set_projection_ortho(view_xview_nonsync, view_yview_nonsync, game_width, game_height, 0);
 				surface_reset_target();
 			}
 		}

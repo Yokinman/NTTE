@@ -288,20 +288,20 @@
 	else instance_destroy();
 	
 #define ClamShield_draw
-	var	_xsc       = image_xscale,
-		_ysc       = image_yscale,
-		_ang       = image_angle,
-		_num       = image_number,
-		_shn       = variable_instance_get(creator, "gunshine", 0),
-		_off       = (_num / 7) * _xsc,
-		_surfScale = call(scr.option_get, "quality:main"),
-		_surfW     = 2 * (_off + max(abs(sprite_height), abs(sprite_width) + ceil((_num - 1) * 2/3 * _xsc))),
-		_surfH     = _surfW;
+	var	_xsc   = image_xscale,
+		_ysc   = image_yscale,
+		_ang   = image_angle,
+		_num   = image_number,
+		_x     = x + lengthdir_x(-6, _ang),
+		_y     = y + lengthdir_y(-6, _ang) + 5,
+		_shn   = (("gunshine" in creator) ? creator.gunshine : 0),
+		_off   = (_num / 7) * _xsc,
+		_surfW = 2 * (_off + max(abs(sprite_height), abs(sprite_width) + ceil((_num - 1) * 2/3 * _xsc))),
+		_surfH = _surfW;
 		
-	with(call(scr.surface_setup, `ClamShield${self}`, _surfW, _surfH, _surfScale)){
-		var _dis = -6;
-		x = other.x + lengthdir_x(_dis, _ang) - (w / 2);
-		y = other.y + lengthdir_y(_dis, _ang) - (h / 2) + 5;
+	with(call(scr.surface_setup, `ClamShield${self}`, _surfW, _surfH, call(scr.option_get, "quality:main"))){
+		x    = _x - (w / 2);
+		y    = _y - (h / 2);
 		free = true;
 		
 		 // Setup:
@@ -310,35 +310,44 @@
 			|| abs(lq_get(self, "lastangle") - _ang) > 1
 			|| lq_get(self, "lastshine") != _shn
 		){
-			reset = false;
+			reset     = false;
 			lastangle = _ang;
 			lastshine = _shn;
 			
 			 // Draw 3D Shield:
 			surface_set_target(surf);
-			draw_clear_alpha(0, 0);
+			draw_clear_alpha(c_black, 0);
+			d3d_set_projection_ortho(x, y, w, h, 0);
 			
 			with(other){
 				 // Shield:
 				for(var i = 0; i < _num; i++){
-					var	_disOff = _off * (1 - sqr((i - ((_num - 1) / 3)) / ((_num - 1) / 2))),
-						_x = (_surfW / 2) + lengthdir_x(_disOff, _ang),
-						_y = (_surfH / 2) + lengthdir_y(_disOff, _ang) - (i * 2/3 * _xsc);
-						
-					draw_sprite_ext(sprite_index, i, _x * _surfScale, _y * _surfScale, _xsc * _surfScale * 1.5, _ysc * _surfScale, _ang, image_blend, 1);
+					var _disOff = _off * (1 - sqr((i - ((_num - 1) / 3)) / ((_num - 1) / 2)));
+					draw_sprite_ext(
+						sprite_index,
+						i,
+						_x + lengthdir_x(_disOff, _ang),
+						_y + lengthdir_y(_disOff, _ang) - (i * 2/3 * _xsc),
+						_xsc * 1.5,
+						_ysc,
+						_ang,
+						image_blend,
+						1
+					);
 				}
 				
 				 // Shine:
 				draw_set_color_write_enable(true, true, true, false);
-				draw_sprite_ext(spr.Shine24, _shn, (_surfW / 2) * _surfScale, (_surfH / 2) * _surfScale, _xsc * _surfScale, _ysc * _surfScale, 0, image_blend, 1);
+				draw_sprite_ext(spr.Shine24, _shn, _x, _y, _xsc, _ysc, 0, image_blend, 1);
 				draw_set_color_write_enable(true, true, true, true);
 			}
 			
+			d3d_set_projection_ortho(view_xview_nonsync, view_yview_nonsync, game_width, game_height, 0);
 			surface_reset_target();
 		}
 		
-		/// Draw Shield:
-			draw_set_alpha(other.image_alpha);
+		 // Draw Shield:
+		draw_set_alpha(other.image_alpha);
 			
 			 // Outline:
 			draw_set_fog(true, c_black, 0, 0);
@@ -350,7 +359,7 @@
 			 // Normal:
 			call(scr.draw_surface_scale, surf, x, y, 1 / scale);
 			
-			draw_set_alpha(1);
+		draw_set_alpha(1);
 	}
 	
 #define ClamShield_hit

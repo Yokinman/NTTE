@@ -2444,7 +2444,7 @@
 	var _clone = surface_create(surface_get_width(_surf), surface_get_height(_surf));
 	
 	surface_set_target(_clone);
-	draw_clear_alpha(0, 0);
+	draw_clear_alpha(c_black, 0);
 	draw_surface(_surf, 0, 0);
 	surface_reset_target();
 	

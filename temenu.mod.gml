@@ -859,9 +859,11 @@
 		_crown = lq_get(crownRace, _race),
 		_vx    = view_xview_nonsync,
 		_vy    = view_yview_nonsync,
+		_gw    = game_width,
+		_gh    = game_height,
 		_w     = 20,
 		_h     = 20,
-		_cx    = game_width - 102,
+		_cx    = _gw - 102,
 		_cy    = 75;
 		
 	if(!is_undefined(_crown) && instance_exists(Loadout)){
@@ -974,7 +976,7 @@
 								_crwnX = x,
 								_crwnY = y + 2;
 								
-							with(call(scr.surface_setup, "CrownCompareScreen", game_width, game_height, 1)){
+							with(call(scr.surface_setup, "CrownCompareScreen", _gw, _gh, 1)){
 								x = _vx;
 								y = _vy;
 								
@@ -993,8 +995,10 @@
 									
 									 // Draw Crown Icon from Screen Surface:
 									surface_set_target(surf);
-									draw_clear_alpha(0, 0);
-									draw_surface(other.surf, -(_crwnX - x - other.x), -(_crwnY - y - other.y));
+									draw_clear_alpha(c_black, 0);
+									d3d_set_projection_ortho(x, y, w, h, 0);
+									draw_surface(other.surf, other.x - _crwnX, other.y - _crwnY);
+									d3d_set_projection_ortho(_vx, _vy, _gw, _gh, 0);
 									surface_reset_target();
 									
 									 // Compare MD5 Hashes w/ Selected/Locked Variants to Determine Crown's Current State (Bro if LoadoutCrown gets exposed pls tell me):
@@ -1307,16 +1311,18 @@
 			
 		with(call(scr.surface_setup, "LoadoutHide", 64, 64, game_scale_nonsync)){
 			with(Loadout){
-				var	_x         = _vx + _gw,
-					_y         = _vy + _gh - 36 + introsettle,
-					_surf      = other.surf,
-					_surfW     = other.w,
-					_surfH     = other.h,
-					_surfScale = other.scale,
-					_surfX     = _x - 32 - _surfW,
-					_surfY     = _y +  4 - _surfH;
+				var	_x     = _vx + _gw,
+					_y     = _vy + _gh - 36 + introsettle,
+					_surf  = other.surf,
+					_surfW = other.w,
+					_surfH = other.h,
+					_surfX = _x - 32 - _surfW,
+					_surfY = _y +  4 - _surfH;
 					
-				with(call(scr.surface_setup, "LoadoutHideScreen", _gw, _gh, _surfScale)){
+				other.x = _surfX;
+				other.y = _surfY;
+				
+				with(call(scr.surface_setup, "LoadoutHideScreen", _gw, _gh, other.scale)){
 					x = _vx;
 					y = _vy;
 					
@@ -1330,7 +1336,8 @@
 					
 					with(other){
 						surface_set_target(_surf);
-						draw_clear_alpha(0, 0);
+						draw_clear_alpha(c_black, 0);
+						d3d_set_projection_ortho(_surfX, _surfY, _surfW, _surfH, 0);
 						
 						 // Offset:
 						var _off = 0;
@@ -1348,7 +1355,7 @@
 							
 							 // The Currently Selected Crown:
 							if(!is_undefined(_crown) && _crown.custom.slct != -1 && _crown.slct != crwn_none){
-								draw_sprite_ext(sprLoadoutCrown, _crown.slct, (_x - _surfX - 60 - _off) * _surfScale, (_y - _surfY - 39 - _off) * _surfScale, _surfScale, _surfScale, 0, c_white, 1);
+								draw_sprite(sprLoadoutCrown, _crown.slct, _x - 60 - _off, _y - 39 - _off);
 							}
 							
 							 // The Character's Starting Weapon:
@@ -1372,7 +1379,7 @@
 								}
 								
 								 // Draw:
-								draw_loadoutwep(_wep, 0, (_x - _surfX - 60 - _off) * _surfScale, (_y - _surfY - 14 + _off) * _surfScale, _surfScale, _surfScale, 0, c_white, 1);
+								draw_loadoutwep(_wep, 0, _x - 60 - _off, _y - 14 + _off, 1, 1, 0, c_white, 1);
 							}
 							
 							draw_set_fog(false, 0, 0, 0);
@@ -1383,26 +1390,24 @@
 							
 							 // Screen:
 							with(other){
-								call(scr.draw_surface_scale, surf, (x - _surfX) * _surfScale, (y - _surfY) * _surfScale, _surfScale / scale);
+								call(scr.draw_surface_scale, surf, x, y, 1 / scale);
 							}
 							
 							 // Loadout:
-							draw_sprite_ext(sprLoadoutSplat, image_index, (_x - _surfX) * _surfScale, ((_y - introsettle) - _surfY) * _surfScale, _surfScale, _surfScale, 0, c_white, 1);
+							draw_sprite(sprLoadoutSplat, image_index, _x, _y - introsettle);
 							if(selected == true){
-								draw_sprite_ext(sprLoadoutOpen, openanim, (_x - _surfX) * _surfScale, ((_y - introsettle) - _surfY) * _surfScale, _surfScale, _surfScale, 0, c_white, 1);
+								draw_sprite(sprLoadoutOpen, openanim, _x, _y - introsettle);
 							}
 							if(_race == "steroids"){
-								draw_loadoutwep(wep_revolver, 0, ((_x - 40 - _off) - _surfX) * _surfScale, ((_y - introsettle - 14) - _surfY + _off) * _surfScale, _surfScale, _surfScale, 0, c_ltgray, 1);
+								draw_loadoutwep(wep_revolver, 0, _x - 40 - _off, _y - introsettle - 14 + _off, 1, 1, 0, c_ltgray, 1);
 							}
 							
 							draw_set_color_write_enable(true, true, true, true);
 							
+						d3d_set_projection_ortho(_vx, _vy, _gw, _gh, 0);
 						surface_reset_target();
 					}
 				}
-				
-				other.x = _surfX;
-				other.y = _surfY;
 			}
 		}
 	}
@@ -1859,20 +1864,22 @@
 														
 													for(var _s = 0; _s < array_length(_surfScale); _s++){
 														with(call(scr.surface_setup, `VisualQuality${_s}`, _surfW, _surfH, _surfScale[_s])){
-															x = _x - 20 - (w / 2);
-															y = _y + 24 - (h / 2);
+															var	_dx = _x - 20,
+																_dy = _y + 24;
+																
+															x = _dx - (w / 2);
+															y = _dy - (h / 2);
 															
 															 // Draw Sprite:
-															var	_dx = (w / 2),
-																_dy = (h / 2) - (2 + sin(current_frame / 10));
-																
 															surface_set_target(surf);
-															draw_clear_alpha(0, 0);
+															draw_clear_alpha(c_black, 0);
+															d3d_set_projection_ortho(x, y, w, h, 0);
 															with(UberCont){
 																if(_s == 0) draw_set_fog(true, _wadeColor, 0, 0);
-																draw_sprite_ext(_spr, _img, _dx * other.scale, _dy * other.scale, other.scale, other.scale, 0, c_white, 1);
+																draw_sprite(_spr, _img, _dx, _dy - (2 + sin(current_frame / 10)));
 																if(_s == 0) draw_set_fog(false, 0, 0, 0);
 															}
+															d3d_set_projection_ortho(view_xview_nonsync, view_yview_nonsync, game_width, game_height, 0);
 															surface_reset_target();
 															
 															 // Draw Clipped Surface:

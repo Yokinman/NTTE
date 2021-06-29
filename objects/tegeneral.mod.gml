@@ -2571,25 +2571,26 @@
 			
 			with(call(scr.surface_setup, "MergeFlak", _size * _num, _size, 1)){
 				surface_set_target(surf);
-				draw_clear_alpha(0, 0);
+				draw_clear_alpha(c_black, 0);
+				d3d_set_projection_ortho(x, y, w, h, 0);
 				
 				with(other){
 					for(var i = 0; i < _num; i++){
 						with(_inst){
-							var	_spr = sprite_index,
-								_img = image_index,
-								_xsc = image_xscale,
-								_ysc = image_yscale,
-								_ang = image_angle,
-								_col = image_blend,
-								_alp = abs(image_alpha),
-								_dis = (sprite_xoffset - (sprite_width / 2)),
-								_x   = (_size / 2) + lengthdir_x(_dis, _ang) + (i * _size),
-								_y   = (_size / 2) + lengthdir_y(_dis, _ang),
+							var	_spr   = sprite_index,
+								_img   = image_index,
+								_xsc   = image_xscale,
+								_ysc   = image_yscale,
+								_ang   = image_angle,
+								_col   = image_blend,
+								_alp   = abs(image_alpha),
+								_dis   = sprite_xoffset - (sprite_width / 2),
+								_x     = (_size / 2) + lengthdir_x(_dis, _ang) + (i * _size),
+								_y     = (_size / 2) + lengthdir_y(_dis, _ang),
 								_pulse = 1 + min(4 / sprite_get_width(_spr), i * (sprite_get_height(_spr) / 64));
 								
 							if(array_find_index(_instMergeFlak, self) >= 0){
-								_img = i;
+								_img   = i;
 								_pulse = 1;
 							}
 							
@@ -2687,11 +2688,12 @@
 					}
 				}
 				
+				d3d_set_projection_ortho(view_xview_nonsync, view_yview_nonsync, game_width, game_height, 0);
 				surface_reset_target();
 				
 				 // Add Sprite:
 				surface_save(surf, `spr${name}.png`);
-				other.sprite_index = sprite_add(`spr${name}.png`, _num, _size / 2, _size / 2);
+				other.sprite_index = sprite_add(`spr${name}.png`, _num, (_size * scale) / 2, (_size * scale) / 2);
 			}
 		}
 	}

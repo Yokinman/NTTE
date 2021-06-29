@@ -1236,7 +1236,8 @@
 				reset = false;
 				
 				surface_set_target(surf);
-				draw_clear_alpha(0, 0);
+				draw_clear_alpha(c_black, 0);
+				d3d_set_projection_ortho(x, y, w, h, 0);
 				
 				with(room_list) if(carpeted){
 					var	_o = 32,
@@ -1281,8 +1282,8 @@
 									}
 								}
 								
-								with(other){ // cant call draw_sprite in lightweight object, sad
-									draw_sprite(_s[n], _i, room_center[0] + ((other.x + xx) * _o) - x, room_center[1] + ((other.y + yy) * _o) - y);
+								with(UberCont){ // cant call draw_sprite in lightweight object, sad
+									draw_sprite(_s[n], _i, room_center[0] + ((other.x + xx) * _o), room_center[1] + ((other.y + yy) * _o));
 								}
 							}
 						}
@@ -1291,6 +1292,7 @@
 				
 				draw_set_fog(false, c_white, 0, 0);
 				
+				d3d_set_projection_ortho(view_xview_nonsync, view_yview_nonsync, game_width, game_height, 0);
 				surface_reset_target();
 			}
 			

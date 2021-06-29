@@ -1165,6 +1165,13 @@
 			material     = 1;
 			depth        = 9;
 		}
+		// with(call(scr.obj_create, x, y, "SludgePool")){
+		// 	sprite_index = msk.SewerPoolBig;
+		// 	spr_floor    = spr.SewerPoolBig;
+		// 	with(self){
+		// 		event_perform(ev_step, ev_step_normal);
+		// 	}
+		// }
 		
 		 // Crates:
 		var _chestList = [];

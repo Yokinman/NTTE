@@ -682,136 +682,136 @@
 	
 	var	_vx             = view_xview_nonsync,
 		_vy             = view_yview_nonsync,
-		_vw             = game_width,
-		_vh             = game_height,
-		_surfX          = pfloor(_vx, _vw),
-		_surfY          = pfloor(_vy, _vh),
-		_surfW          = _vw * 2,
-		_surfH          = _vh * 2,
+		_gw             = game_width,
+		_gh             = game_height,
+		_surfX          = pfloor(_vx, _gw),
+		_surfY          = pfloor(_vy, _gh),
+		_surfW          = _gw * 2,
+		_surfH          = _gh * 2,
 		_surfScaleMain  = call(scr.option_get, "quality:main"),
 		_surfScaleMinor = call(scr.option_get, "quality:minor"),
 		_surfPit        = call(scr.surface_setup, "TrenchPit",        _surfW, _surfH, _surfScaleMain),
 		_surfPitWallTop = call(scr.surface_setup, "TrenchPitWallTop", _surfW, _surfH, _surfScaleMain),
-		_surfPitWallBot = call(scr.surface_setup, "TrenchPitWallBot", _surfW, _surfH, _surfScaleMinor),
-		_surfSpark      = surfPitSpark;
+		_surfPitWallBot = call(scr.surface_setup, "TrenchPitWallBot", _surfW, _surfH, _surfScaleMinor);
 		
-	for(var i = 0; i < array_length(_surfSpark); i++){
-		call(scr.surface_setup, _surfSpark[i].name, null, null, _surfScaleMinor);
-	}
-	
 	 // Pit Walls:
 	with([_surfPitWallTop, _surfPitWallBot]){
 		if(reset || x != _surfX || y != _surfY){
 			reset = false;
-			x = _surfX;
-			y = _surfY;
-			
-			var _surfScale = scale;
+			x     = _surfX;
+			y     = _surfY;
 			
 			 // Draw Pit Walls:
 			surface_set_target(surf);
-			draw_clear_alpha(0, 0);
-			
-			var _inst = [
-				instances_matching_ne(FloorNormal,        "sprite_index", spr.FloorTrenchB), // Normal
-				instances_matching_ne([Wall, FloorExplo], "sprite_index", spr.FloorTrenchB)  // Small
-			];
-			
-			with(draw){
-				for(var j = 0; j < array_length(self); j++){
-					var _spr = self[j];
-					if(array_length(_inst[j])){
-						with(_inst[j]){
-							draw_sprite_ext(_spr, image_index, (x - _surfX) * _surfScale, (y - _surfY) * _surfScale, _surfScale, _surfScale, 0, c_white, 1);
+			draw_clear_alpha(c_black, 0);
+			d3d_set_projection_ortho(x, y, w, h, 0);
+				
+				var _inst = [
+					instances_matching_ne(FloorNormal,        "sprite_index", spr.FloorTrenchB), // Normal
+					instances_matching_ne([Wall, FloorExplo], "sprite_index", spr.FloorTrenchB)  // Small
+				];
+				
+				with(draw){
+					for(var j = 0; j < array_length(self); j++){
+						if(array_length(_inst[j])){
+							var _spr = self[j];
+							with(_inst[j]){
+								draw_sprite(_spr, image_index, x, y);
+							}
 						}
 					}
 				}
-			}
-			
+				
+			d3d_set_projection_ortho(_vx, _vy, _gw, _gh, 0);
 			surface_reset_target();
 		}
 	}
 	
 	 // Pit:
-	with(_surfPit){	
-		var _surfScale = scale;
-		
-		surface_set_target(surf);
-		
+	with(_surfPit){
 		 // Pit Mask:
 		if(reset || x != _surfX || y != _surfY){
 			reset = false;
-			x = _surfX;
-			y = _surfY;
+			x     = _surfX;
+			y     = _surfY;
 			
-			 // Clear:
-			draw_clear_alpha(0, 0);
-			draw_set_color(c_black);
-			
-			 // Draw Pit Floors:
-			var _inst = call(scr.instances_meeting_rectangle, x, y, x + w, y + h, instances_matching(FloorPit, "visible", true));
-			if(array_length(_inst)) with(_inst){
-				draw_sprite_ext(sprite_index, image_index, (x - _surfX) * _surfScale, (y - _surfY) * _surfScale, _surfScale, _surfScale, 0, c_white, 1);
-			}
-			
-			 // Cut Out Non-Pit Floors:
-			var _inst = call(scr.instances_meeting_rectangle, x, y, x + w, y + h, instances_matching_le(instances_matching(FloorPitless, "visible", true), "depth", 8));
-			if(array_length(_inst)){
-				draw_set_blend_mode_ext(bm_zero, bm_inv_src_alpha);
-				with(_inst){
-					draw_sprite_ext(sprite_index, image_index, (x - _surfX) * _surfScale, (y - _surfY) * _surfScale, _surfScale, _surfScale, 0, c_white, 1);
+			surface_set_target(surf);
+			draw_clear_alpha(c_black, 0);
+			d3d_set_projection_ortho(x, y, w, h, 0);
+				
+				 // Draw Pit Floors:
+				var _inst = call(scr.instances_meeting_rectangle, x, y, x + w, y + h, instances_matching(FloorPit, "visible", true));
+				if(array_length(_inst)){
+					with(_inst){
+						draw_self();
+					}
 				}
-				draw_set_blend_mode(bm_normal);
-			}
+				
+				 // Cut Out Non-Pit Floors:
+				var _inst = call(scr.instances_meeting_rectangle, x, y, x + w, y + h, instances_matching_le(instances_matching(FloorPitless, "visible", true), "depth", 8));
+				if(array_length(_inst)){
+					draw_set_blend_mode_ext(bm_zero, bm_inv_src_alpha);
+					with(_inst){
+						draw_self();
+					}
+					draw_set_blend_mode(bm_normal);
+				}
+				
+			d3d_set_projection_ortho(_vx, _vy, _gw, _gh, 0);
+			surface_reset_target();
 		}
 		
 		 // DRAW YOUR PIT SHIT HERE:
+		surface_set_target(surf);
+		d3d_set_projection_ortho(x, y, w, h, 0);
 		draw_set_color_write_enable(true, true, true, false);
-		draw_set_color(c_black/*BackCont.shadcol*/); // long live blue trench
-		draw_rectangle(0, 0, w * scale, h * scale, false);
+			
+			 // Flatten Pit Mask:
+			draw_set_color(c_black /*BackCont.shadcol*/); // long live blue trench
+			draw_rectangle(x, y, x + w, y + h, false);
 			
 			 // Pit Spark:
 			if(array_length(obj.PitSpark)){
 				var _inst = instances_matching(obj.PitSpark, "tentacle_visible", true);
 				if(array_length(_inst)){
-					var _sparkRadius = [[25, 20], [20, 10]];
+					var	_surfSpark   = surfPitSpark,
+						_sparkRadius = [[25, 20], [20, 10]];
+						
+					for(var i = 0; i < array_length(_surfSpark); i++){
+						call(scr.surface_setup, _surfSpark[i].name, null, null, _surfScaleMinor);
+					}
+					
 					with(_inst){
 						var	_sparkBright = (floor(image_index) % 2),
 							_sparkNum    = (dark ? 1 : array_length(_surfSpark));
 							
+						d3d_set_projection_ortho(_vx, _vy, _gw, _gh, 0);
+						
 						for(var i = 0; i < _sparkNum; i++){
 							with(_surfSpark[i]){
 								x = other.x - (w / 2);
 								y = other.y - (h / 2);
 								
-								var	_surfSparkScale = scale,
-									_x = w * 0.5,
-									_y = h * 0.5;
-									
 								surface_set_target(surf);
-								draw_clear_alpha(0, 0);
+								draw_clear_alpha(c_black, 0);
+								d3d_set_projection_ortho(x, y, w, h, 0);
 								
 								with(other){
 									 // Draw mask:
 									draw_set_color_write_enable(true, true, true, true);
-									draw_circle(
-										_x * _surfSparkScale,
-										_y * _surfSparkScale,
-										(_sparkRadius[i + dark][_sparkBright] + irandom(1)) * _surfSparkScale,
-										false
-									);
+									draw_circle(x, y, _sparkRadius[i + dark][_sparkBright] + irandom(1), false);
 									draw_set_color_write_enable(true, true, true, false);
 									
 									 // Draw tentacle:
-									var t = tentacle;
+									var _t = tentacle;
 									draw_sprite_ext(
 										spr.TentacleWheel, 
 										i, 
-										(_x + lengthdir_x(t.distance, t.move_dir)) * _surfSparkScale, 
-										(_y + lengthdir_y(t.distance, t.move_dir)) * _surfSparkScale, 
-										image_xscale * _surfSparkScale * t.scale * t.right, 
-										image_yscale * _surfSparkScale * t.scale, 
-										t.rotation, 
+										x + lengthdir_x(_t.distance, _t.move_dir), 
+										y + lengthdir_y(_t.distance, _t.move_dir), 
+										image_xscale * _t.scale * _t.right, 
+										image_yscale * _t.scale, 
+										_t.rotation, 
 										merge_color(c_black, image_blend,
 											visible
 											? (image_index / image_number)
@@ -824,15 +824,11 @@
 						}
 						
 						surface_set_target(other.surf);
+						d3d_set_projection_ortho(other.x, other.y, other.w, other.h, 0);
 						
 						for(var i = 0; i < _sparkNum; i++){
 							with(_surfSpark[i]){
-								call(scr.draw_surface_scale, 
-									surf,
-									(x - _surfX) * _surfScale,
-									(y - _surfY) * _surfScale,
-									_surfScale / scale
-								);
+								call(scr.draw_surface_scale, surf, x, y, 1 / scale);
 							}
 						}
 					}
@@ -853,10 +849,10 @@
 							draw_sprite_ext(
 								sprite_index,
 								image_index,
-								(x + _ox - _surfX) * _surfScale,
-								(y + _oy - _surfY) * _surfScale,
-								image_xscale * _surfScale * right,
-								image_yscale * _surfScale,
+								x + _ox,
+								y + _oy,
+								image_xscale * right,
+								image_yscale,
 								image_angle,
 								image_blend,
 								image_alpha * _alpha * 2
@@ -867,14 +863,14 @@
 					 // Outlines:
 					draw_set_fog(true, make_color_rgb(235, 0, 67), 0, 0);
 					with(_inst){
-						for(var d = 0; d <= 180; d += 90){
+						for(var _dir = 0; _dir <= 180; _dir += 90){
 							draw_sprite_ext(
 								sprite_index,
 								image_index,
-								(x + dcos(d) - _surfX) * _surfScale,
-								(y - dsin(d) - _surfY) * _surfScale,
-								image_xscale * _surfScale * right,
-								image_yscale * _surfScale,
+								x + dcos(_dir),
+								y - dsin(_dir),
+								image_xscale * right,
+								image_yscale,
 								image_angle,
 								image_blend,
 								image_alpha * _alpha
@@ -889,8 +885,8 @@
 			 // Pit Squid:
 			if(array_length(obj.PitSquid)){
 				with(instances_matching_ne(obj.PitSquid, "id")){
-					var	_xsc  = image_xscale * max(pit_height, 0) * _surfScale,
-						_ysc  = image_yscale * max(pit_height, 0) * _surfScale,
+					var	_xsc  = image_xscale * max(pit_height, 0),
+						_ysc  = image_yscale * max(pit_height, 0),
 						_ang  = image_angle,
 						_col  = merge_color(c_black, image_blend, clamp(pit_height, 0, 1) * (intro ? 1 : 1/3)),
 						_alp  = image_alpha,
@@ -898,9 +894,9 @@
 						
 					 // Eyes:
 					with(eye){
-						var	_x = (x - _surfX) * _surfScale,
-							_y = (y - _surfY) * _surfScale,
-							_l = dis * max(other.pit_height, 0) * _surfScale,
+						var	_x = x,
+							_y = y,
+							_l = dis * max(other.pit_height, 0),
 							_d = dir;
 							
 						with(other){
@@ -917,42 +913,38 @@
 						}
 					}
 					
-					/// Mouth:
-						var	_x = (xpos - _surfX) * _surfScale,
-							_y = (ypos - _surfY) * _surfScale;
-							
-						 // Bite:
-						if(bite > 0 && bite <= 1){
-							draw_sprite_ext(spr_bite, (1 - bite) * sprite_get_number(spr_bite), _x, _y, _xsc, _ysc, _ang, _col, _alp);
-						}
-						
-						 // Spit:
-						else if(spit > 0 && spit <= 1){
-							draw_sprite_ext(spr_fire, (1 - spit) * sprite_get_number(spr_fire), _x, _y, _xsc, _ysc, _ang, _col, _alp);
-						}
+					 // Mouth Bite:
+					if(bite > 0 && bite <= 1){
+						draw_sprite_ext(spr_bite, (1 - bite) * sprite_get_number(spr_bite), xpos, ypos, _xsc, _ysc, _ang, _col, _alp);
+					}
+					
+					 // Mouth Spit:
+					else if(spit > 0 && spit <= 1){
+						draw_sprite_ext(spr_fire, (1 - spit) * sprite_get_number(spr_fire), xpos, ypos, _xsc, _ysc, _ang, _col, _alp);
+					}
 				}
 			}
 			
 			 // Pit Squid Death:
 			if(array_length(obj.PitSquidDeath)){
 				with(instances_matching_ne(obj.PitSquidDeath, "id")){
-					var	_xsc = image_xscale * max(pit_height, 0) * _surfScale,
-						_ysc = image_yscale * max(pit_height, 0) * _surfScale,
+					var	_xsc = image_xscale * max(pit_height, 0),
+						_ysc = image_yscale * max(pit_height, 0),
 						_ang = image_angle,
 						_col = merge_color(c_black, image_blend, clamp(pit_height, 0, 1)),
 						_alp = image_alpha;
 						
 					with(eye){
-						var	_x = (x - _surfX) * _surfScale,
-							_y = (y - _surfY) * _surfScale,
-							l = dis * max(other.pit_height, 0) * _surfScale,
-							d = dir;
+						var	_x = x,
+							_y = y,
+							_l = dis * max(other.pit_height, 0),
+							_d = dir;
 							
 						with(other){
 							if(explo){
 								draw_set_fog(((current_frame % 6) < 2 || (!sink && pit_height < 1)), _col, 0, 0);
-								draw_sprite_ext(spr.PitSquidCornea, image_index, _x,                                    _y,                                    _xsc,       _ysc, _ang, _col, _alp);
-								draw_sprite_ext(spr.PitSquidPupil,  image_index, _x + lengthdir_x(l * image_xscale, d), _y + lengthdir_y(l * image_yscale, d), _xsc * 0.5, _ysc, _ang, _col, _alp);
+								draw_sprite_ext(spr.PitSquidCornea, image_index, _x,                                      _y,                                      _xsc,       _ysc, _ang, _col, _alp);
+								draw_sprite_ext(spr.PitSquidPupil,  image_index, _x + lengthdir_x(_l * image_xscale, _d), _y + lengthdir_y(_l * image_yscale, _d), _xsc * 0.5, _ysc, _ang, _col, _alp);
 								draw_set_fog(false, 0, 0, 0);
 							}
 							draw_sprite_ext(spr.PitSquidEyelid, (explo ? 0 : sprite_get_number(spr.PitSquidEyelid) - 1), _x, _y, _xsc, _ysc, _ang, _col, _alp);
@@ -963,22 +955,17 @@
 			
 			 // Octo pet:
 			if(array_length(obj.Pet)){
-				var _inst = instances_matching(instances_matching(obj.Pet, "pet", "Octo"), "hiding", true);
+				var _inst = instances_matching(instances_matching(instances_matching(obj.Pet, "pet", "Octo"), "hiding", true), "visible", true);
 				if(array_length(_inst)){
 					with(_inst){
-						draw_sprite_ext(sprite_index, image_index, (x - _surfX) * _surfScale, (y - _surfY) * _surfScale, image_xscale * _surfScale, image_yscale * _surfScale, image_angle, image_blend, visible);
+						draw_self_enemy();
 					}
 				}
 			}
 			
 			 // Pit Walls:
 			with(_surfPitWallBot){
-				call(scr.draw_surface_scale, 
-					surf,
-					(x - _surfX) * _surfScale,
-					(y - _surfY) * _surfScale,
-					_surfScale / scale
-				);
+				call(scr.draw_surface_scale, surf, x, y, 1 / scale);
 			}
 			
 			 // WantEel:
@@ -989,10 +976,10 @@
 						draw_sprite_ext(
 							sprite_index,
 							image_index,
-							(x - _surfX) * _surfScale,
-							((y - _surfY) + (12 * (1 - pit_height))) * _surfScale,
-							image_xscale * pit_height * _surfScale,
-							image_yscale * pit_height * _surfScale,
+							x,
+							y + (12 * (1 - pit_height)),
+							image_xscale * pit_height,
+							image_yscale * pit_height,
 							image_angle,
 							image_blend,
 							image_alpha
@@ -1006,10 +993,8 @@
 				with(ProtoStatue){
 					if(pit_get(x, bbox_bottom)){
 						spr_shadow = -1;
-						
-						var _spr = ((sprite_index == spr_hurt) ? spr.PStatTrenchHurt : spr.PStatTrenchIdle);
-						draw_sprite_ext(_spr,                  image_index, (x - _surfX) * _surfScale, (y - _surfY) * _surfScale, _surfScale, _surfScale, 0, c_white, 1);
-						draw_sprite_ext(spr.PStatTrenchLights, anim,        (x - _surfX) * _surfScale, (y - _surfY) * _surfScale, _surfScale, _surfScale, 0, c_white, 1);
+						draw_sprite(((sprite_index == spr_hurt) ? spr.PStatTrenchHurt : spr.PStatTrenchIdle), image_index, x, y);
+						draw_sprite(spr.PStatTrenchLights, anim, x, y);
 					}
 				}
 			}
@@ -1018,24 +1003,14 @@
 				if(array_length(_inst)){
 					with(_inst){
 						if(pit_get(x, bbox_bottom)){
-							var	_spr = spr.PStatTrenchIdle,
-								_img = image_index,
-								_x   = (x - _surfX) * _surfScale,
-								_y   = (y - _surfY) * _surfScale,
-								_xsc = image_xscale * _surfScale,
-								_ysc = image_yscale * _surfScale,
-								_ang = image_angle,
-								_col = image_blend,
-								_alp = image_alpha;
-								
-							draw_sprite_ext(_spr, _img, _x, _y, _xsc, _ysc, _ang, _col, _alp);
+							draw_sprite_ext(spr.PStatTrenchIdle, image_index, x, y, image_xscale, image_yscale, image_angle, image_blend, image_alpha);
 							
+							 // Portal Open:
 							if(place_meeting(x, y, Portal)){
-								_spr = spr.PStatTrenchLights;
-								_img = 0;
-								
-								var	_portal = instance_nearest(x, y, Portal);
-								
+								var	_spr    = spr.PStatTrenchLights,
+									_img    = 0,
+									_portal = instance_nearest(x, y, Portal);
+									
 								if(instance_exists(_portal)){
 									switch(_portal.sprite_index){
 										case sprPortalSpawn:
@@ -1053,7 +1028,7 @@
 								}
 								
 								if(_img > 0){
-									draw_sprite_ext(_spr, _img, _x, _y, _xsc, _ysc, _ang, _col, _alp);
+									draw_sprite_ext(_spr, _img, x, y, image_xscale, image_yscale, image_angle, image_blend, image_alpha);
 								}
 							}
 						}
@@ -1064,21 +1039,17 @@
 			 // Stuff that fell in pit:
 			if(array_length(obj.PitSink)){
 				with(instances_matching_ne(obj.PitSink, "id")){
-					draw_sprite_ext(sprite_index, image_index, (x - _surfX) * _surfScale, (y - _surfY) * _surfScale, image_xscale * _surfScale, image_yscale * _surfScale, image_angle, image_blend, image_alpha);
+					draw_self();
 				}
 			}
 			
 			 // Pit Wall Tops:
 			with(_surfPitWallTop){
-				call(scr.draw_surface_scale, 
-					surf,
-					(x - _surfX) * _surfScale,
-					(y - _surfY) * _surfScale,
-					_surfScale / scale
-				);
+				call(scr.draw_surface_scale, surf, x, y, 1 / scale);
 			}
 			
 		draw_set_color_write_enable(true, true, true, true);
+		d3d_set_projection_ortho(_vx, _vy, _gw, _gh, 0);
 		surface_reset_target();
 		
 		call(scr.draw_surface_scale, surf, x, y, 1 / scale);

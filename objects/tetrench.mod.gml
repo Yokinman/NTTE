@@ -5150,26 +5150,25 @@
 				x = pfloor(_vx, _gw);
 				y = pfloor(_vy, _gh);
 				
-				var	_surfX     = x,
-					_surfY     = y,
-					_surfScale = scale;
-					
 				surface_set_target(surf);
+				d3d_set_projection_ortho(x, y, w, h, 0);
 				
 				 // Reset:
 				if(reset){
 					reset = false;
-					draw_clear_alpha(0, 0);
+					draw_clear_alpha(c_black, 0);
 				}
 				
 				 // Clear Over Time:
 				if(current_frame_active){
 					with(other){
-						var	_x = 32 * dcos(current_frame * 20),
-							_y =  8 * dsin(current_frame * 17);
-							
 						draw_set_blend_mode_ext(bm_zero, bm_inv_src_alpha);
-						draw_sprite_tiled_ext(sprBullet1, 0, (_x - _surfX) * _surfScale, (_y - _surfY) * _surfScale, _surfScale, _surfScale, c_white, 1);
+						draw_sprite_tiled(
+							sprBullet1,
+							0,
+							32 * dcos(current_frame * 20),
+							8  * dsin(current_frame * 17)
+						);
 						draw_set_blend_mode(bm_normal);
 					}
 				}
@@ -5182,40 +5181,43 @@
 					_inst[1] = instances_matching_ne(_inst[1], "roll", 0);
 				}
 				with(_inst){
-					if(array_length(self)) with(self){
-						var _isPlayer = instance_is(self, Player);
-						
-						if(_isPlayer || sprite_index != spr_appear){
-							var	_x1    = x,
-								_y1    = y,
-								_x2    = xprevious,
-								_y2    = yprevious,
-								_dis   = point_distance(_x1, _y1, _x2, _y2),
-								_dir   = point_direction(_x1, _y1, _x2, _y2),
-								_spr   = (_isPlayer ? spr.FishAnglerTrail : spr.AnglerTrail),
-								_img   = image_index,
-								_xsc   = image_xscale * _surfScale * right,
-								_ysc   = image_yscale * _surfScale,
-								_ang   = (_isPlayer ? (sprite_angle + angle) : image_angle),
-								_col   = image_blend,
-								_alp   = image_alpha,
-								_charm = (_col == c_white && "ntte_charm" in self && ntte_charm.charmed);
+					if(array_length(self)){
+						with(self){
+							var _isPlayer = instance_is(self, Player);
+							
+							if(_isPlayer || sprite_index != spr_appear){
+								var	_x1    = x,
+									_y1    = y,
+									_x2    = xprevious,
+									_y2    = yprevious,
+									_dis   = point_distance(_x1, _y1, _x2, _y2),
+									_dir   = point_direction(_x1, _y1, _x2, _y2),
+									_spr   = (_isPlayer ? spr.FishAnglerTrail : spr.AnglerTrail),
+									_img   = image_index,
+									_xsc   = image_xscale * right,
+									_ysc   = image_yscale,
+									_ang   = (_isPlayer ? (sprite_angle + angle) : image_angle),
+									_col   = image_blend,
+									_alp   = image_alpha,
+									_charm = (_col == c_white && "ntte_charm" in self && ntte_charm.charmed);
+									
+								if(_charm){
+									draw_set_fog(true, make_color_rgb(56, 252, 0), 0, 0);
+								}
 								
-							if(_charm){
-								draw_set_fog(true, make_color_rgb(56, 252, 0), 0, 0);
-							}
-							
-							for(var i = 0; i <= _dis; i++){
-								draw_sprite_ext(_spr, _img, (_x1 - _surfX + lengthdir_x(i, _dir)) * _surfScale, (_y1 - _surfY + lengthdir_y(i, _dir)) * _surfScale, _xsc, _ysc, _ang, _col, _alp);
-							}
-							
-							if(_charm){
-								draw_set_fog(false, 0, 0, 0);
+								for(var i = 0; i <= _dis; i++){
+									draw_sprite_ext(_spr, _img, _x1 + lengthdir_x(i, _dir), _y1 + lengthdir_y(i, _dir), _xsc, _ysc, _ang, _col, _alp);
+								}
+								
+								if(_charm){
+									draw_set_fog(false, 0, 0, 0);
+								}
 							}
 						}
 					}
 				}
 				
+				d3d_set_projection_ortho(_vx, _vy, _gw, _gh, 0);
 				surface_reset_target();
 				
 				 // Draw Surface:

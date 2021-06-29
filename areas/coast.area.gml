@@ -914,22 +914,22 @@
 	var	_wave           = wave,
 		_vx             = view_xview_nonsync,
 		_vy             = view_yview_nonsync,
-		_vw             = game_width,
-		_vh             = game_height,
+		_gw             = game_width,
+		_gh             = game_height,
 		_surfScaleTop   = call(scr.option_get, "quality:main"),
 		_surfScaleBot   = call(scr.option_get, "quality:minor"),
 		_surfFloorExt   = 32,
-		_surfFloorW     = (_vw + _surfFloorExt) * 2,
-		_surfFloorH     = (_vh + _surfFloorExt) * 2,
+		_surfFloorW     = (_gw + _surfFloorExt) * 2,
+		_surfFloorH     = (_gh + _surfFloorExt) * 2,
 		_surfFloor      = call(scr.surface_setup, "CoastFloor", _surfFloorW, _surfFloorH, _surfScaleBot),
 		_surfTrans      = call(scr.surface_setup, "CoastTrans", _surfFloorW, _surfFloorH, _surfScaleBot),
 		_surfWavesExt   = 8,
-		_surfWavesW     = _vw + (_surfWavesExt * 2),
-		_surfWavesH     = _vh + (_surfWavesExt * 2),
+		_surfWavesW     = _gw + (_surfWavesExt * 2),
+		_surfWavesH     = _gh + (_surfWavesExt * 2),
 		_surfWaves      = call(scr.surface_setup, "CoastWaves",    _surfWavesW, _surfWavesH, _surfScaleBot),
 		_surfWavesSub   = call(scr.surface_setup, "CoastWavesSub", _surfWavesW, _surfWavesH, _surfScaleBot),
-		_surfSwimW      = _vw,
-		_surfSwimH      = _vh,
+		_surfSwimW      = _gw,
+		_surfSwimH      = _gh,
 		_surfSwimBot    = call(scr.surface_setup, "CoastSwimBot",    _surfSwimW, _surfSwimH, _surfScaleBot),
 		_surfSwimTop    = call(scr.surface_setup, "CoastSwimTop",    _surfSwimW, _surfSwimH, _surfScaleTop),
 		_surfSwimTopSub = call(scr.surface_setup, "CoastSwimTopSub", _surfSwimW, _surfSwimH, _surfScaleTop),
@@ -939,9 +939,8 @@
 	
 	 // Draw Floors to Surface:
 	with(_surfFloor){
-		var	_surfX = pfloor(_vx, _vw) - _surfFloorExt,
-			_surfY = pfloor(_vy, _vh) - _surfFloorExt,
-			_surfScale = scale;
+		var	_surfX = pfloor(_vx, _gw) - _surfFloorExt,
+			_surfY = pfloor(_vy, _gh) - _surfFloorExt;
 			
 		if(
 			reset
@@ -956,24 +955,31 @@
 			_surfTrans.reset = true;
 			
 			 // Update Vars:
-			x = _surfX;
-			y = _surfY;
+			x         = _surfX;
+			y         = _surfY;
 			floor_num = instance_number(Floor);
 			floor_min = instance_max;
 			
 			 // Draw Floors:
 			surface_set_target(surf);
-			draw_clear_alpha(0, 0);
+			draw_clear_alpha(c_black, 0);
+			d3d_set_projection_ortho(x, y, w, h, 0);
 			
 			var _inst = call(scr.instances_meeting_rectangle, x, y, x + w, y + h, instances_matching(Floor, "visible", true));
 			if(array_length(_inst)){
 				var _spr = spr.FloorCoast;
-				with(_inst){
-					//var _spr = ((sprite_index == spr.FloorCoastB) ? spr.FloorCoast : sprite_index);
-					draw_sprite_ext(_spr, image_index, (x - _surfX) * _surfScale, (y - _surfY) * _surfScale, image_xscale * _surfScale, image_yscale * _surfScale, image_angle, image_blend, image_alpha);
+				with(instances_matching(_inst, "sprite_index", _spr)){
+					draw_self();
+				}
+				with(instances_matching_ne(_inst, "sprite_index", _spr)){
+					var _lastSpr = sprite_index;
+					sprite_index = _spr;
+					draw_self();
+					sprite_index = _lastSpr;
 				}
 			}
 			
+			d3d_set_projection_ortho(_vx, _vy, _gw, _gh, 0);
 			surface_reset_target();
 		}
 	}
@@ -987,27 +993,21 @@
 		if(reset){
 			reset = false;
 			
-			var	_surfX = x,
-				_surfY = y,
-				_surfScale = scale;
-			
 			surface_set_target(surf);
-			draw_clear_alpha(0, 0);
+			draw_clear_alpha(c_black, 0);
+			d3d_set_projection_ortho(x, y, w, h, 0);
+			
+			var _dis = 32;
 			
 			 // Main Drawing:
-			var _dis = 32;
 			with(_surfFloor){
-				var	_x = (x - _surfX),
-					_y = (y - _surfY);
-					
-				call(scr.draw_surface_scale, surf, _x * _surfScale, _y * _surfScale, _surfScale / scale);
-				
+				call(scr.draw_surface_scale, surf, x, y, 1 / scale);
 				for(var _dir = 0; _dir < 360; _dir += 45){
 					call(scr.draw_surface_scale, 
 						surf,
-						(_x + lengthdir_x(_dis, _dir)) * _surfScale,
-						(_y + lengthdir_y(_dis, _dir)) * _surfScale,
-						_surfScale / scale
+						x + lengthdir_x(_dis, _dir),
+						y + lengthdir_y(_dis, _dir),
+						1 / scale
 					);
 				}
 			}
@@ -1015,41 +1015,56 @@
 			 // Fill in Gaps (Cardinal Directions Only):
 			var _inst = call(scr.instances_meeting_rectangle, x - _dis, y - _dis, x + _dis + w, y + _dis + h, instances_matching(Floor, "visible", true));
 			if(array_length(_inst)){
-				var	_spr    = spr.FloorCoast,
-					_sprNum = sprite_get_number(_spr);
+				var	_spr           = spr.FloorCoast,
+					_floorHide     = instances_matching(Floor, "visible", false),
+					_floorHideMask = [];
 					
-				with(_inst){
-					var	_x = x - _surfX,
-						_y = y - _surfY;
+				 // Disable Hitbox of Invisible Floors:
+				with(_floorHide){
+					array_push(_floorHideMask, mask_index);
+					mask_index = mskNone;
+				}
+				
+				 // Fill Gaps:
+				for(var _dir = 0; _dir < 360; _dir += 90){
+					var	_ox = lengthdir_x(_dis, _dir),
+						_oy = lengthdir_y(_dis, _dir);
 						
-					for(var _dir = 0; _dir < 360; _dir += 90){
-						var	_ox = lengthdir_x(_dis, _dir),
-							_oy = lengthdir_y(_dis, _dir);
-							
+					with(_inst){
 						for(var _off = 1; _off <= 5; _off++){
-							if(variable_instance_get(instance_place(x + (_ox * _off), y + (_oy * _off), Floor), "visible", false)){
-								for(var i = 2; i <= _off; i++){
-									var	_dx  = _x + (_ox * i),
-										_dy  = _y + (_oy * i),
-										_img = floor((_dx + _surfX + _dy + _surfY) / 32) % _sprNum;
+							if(place_meeting(x + (_ox * _off), y + (_oy * _off), Floor)){
+								while(_off >= 2){
+									var	_x = x + (_ox * _off),
+										_y = y + (_oy * _off);
 										
-									draw_sprite_ext(_spr, _img, _dx * _surfScale, _dy * _surfScale, _surfScale, _surfScale, 0, c_white, 1);
+									draw_sprite(_spr, (_x + _y) / 32, _x, _y);
+									
+									_off--;
 								}
 								break;
 							}
 						}
 					}
 				}
+				
+				 // Restore Hitbox of Invisible Floors:
+				var i = 0;
+				with(_floorHide){
+					mask_index = _floorHideMask[i++];
+				}
 			}
 			
 			 // Details:
 			if(instance_exists(Detail)){
 				var _inst = instances_matching(instances_matching(Detail, "depth", sea_depth + 1), "visible", true);
-				if(array_length(_inst)) with(_inst){
-					draw_sprite_ext(sprite_index, image_index, (x - _surfX) * _surfScale, (y - _surfY) * _surfScale, image_xscale * _surfScale, image_yscale * _surfScale, image_angle, image_blend, image_alpha);
+				if(array_length(_inst)){
+					with(_inst){
+						draw_self();
+					}
 				}
 			}
 			
+			d3d_set_projection_ortho(_vx, _vy, _gw, _gh, 0);
 			surface_reset_target();
 		}
 		
@@ -1173,10 +1188,9 @@
 						draw_set_blend_mode_ext(bm_one, bm_zero);
 						surface_screenshot(_surfSwimTopSubSurf);
 						
-						/// Cut Off Bottom Half:
-							
-							surface_set_target(_surfSwimTopSubSurf);
-							draw_set_blend_mode_ext(bm_zero, bm_inv_src_alpha);
+						 // Cut Off Bottom Half:
+						surface_set_target(_surfSwimTopSubSurf);
+						draw_set_blend_mode_ext(bm_zero, bm_inv_src_alpha);
 							
 							 // Gradient (Laser Sights - Awesome):
 							draw_sprite_ext(
@@ -1198,14 +1212,13 @@
 								draw_set_alpha(1);
 							}
 							
-							draw_set_blend_mode(bm_normal);
+						draw_set_blend_mode(bm_normal);
+						
+						 // Top Halfing:
+						var	_x = _surfSwimTopSubX - _surfSwimTopX,
+							_y = _surfSwimTopSubY - _surfSwimTopY;
 							
-						/// Top Halfing:
-							
-							var	_x = _surfSwimTopSubX - _surfSwimTopX,
-								_y = _surfSwimTopSubY - _surfSwimTopY;
-								
-							surface_set_target(_surfSwimTopSurf);
+						surface_set_target(_surfSwimTopSurf);
 							
 							 // Water Interference Line:
 							draw_set_fog(true, c_white, 0, 0);
@@ -1215,8 +1228,8 @@
 							 // Top Half:
 							draw_surface(_surfSwimTopSubSurf, _x, _y);
 							
-							surface_reset_target();
-							
+						surface_reset_target();
+						
 					 // Revert Hitbox:
 					mask_index = _lastMask;
 				}
@@ -1262,7 +1275,7 @@
 	 // Draw Sea:
 	draw_set_color(background_color);
 	draw_set_alpha(0.6);
-	draw_rectangle(_vx, _vy, _vx + _vw, _vy + _vh, false);
+	draw_rectangle(_vx, _vy, _vx + _gw, _vy + _gh, false);
 	draw_set_alpha(1);
 	
 	 // Caustics:
@@ -1290,43 +1303,43 @@
 			x = _surfX;
 			y = _surfY;
 			
-			var _surfScale = scale;
-			
 			surface_set_target(surf);
-			draw_clear_alpha(0, 0);
+			draw_clear_alpha(c_black, 0);
 			draw_set_fog(true, c_white, 0, 0);
+			d3d_set_projection_ortho(x, y, w, h, 0);
 				
 				 // Floors:
 				with(_surfFloor){
-					call(scr.draw_surface_scale, surf, (x - _surfX) * _surfScale, (y - _surfY) * _surfScale, _surfScale / scale);
+					call(scr.draw_surface_scale, surf, x, y, 1 / scale);
 				}
 				
 				// PalanKing:
 				if(array_length(obj.Palanking)){
 					with(instances_matching_le(instances_matching(obj.Palanking, "visible", true), "z", 4)){
 						if(!place_meeting(x, y, Floor)){
-							draw_sprite_ext(spr_foam, image_index, (x - _surfX) * _surfScale, (y - _surfY) * _surfScale, image_xscale * right * _surfScale, image_yscale * _surfScale, 0, c_white, 1);
+							draw_sprite_ext(spr_foam, image_index, x, y, image_xscale * right, image_yscale, 0, c_white, 1);
 						}
 					}
 				}
 				if(array_length(obj.Creature)){
 					with(instances_matching(obj.Creature, "visible", true)){
-						draw_sprite_ext(spr_foam, image_index, (x - _surfX) * _surfScale, (y - _surfY) * _surfScale, image_xscale * right * _surfScale, image_yscale * _surfScale, image_angle, c_white, 1);
+						draw_sprite_ext(spr_foam, image_index, x, y, image_xscale * right, image_yscale, image_angle, c_white, 1);
 					}
 				}
 				
 				 // Rock Decals:
 				if(array_length(obj.CoastDecal)){
 					with(instances_matching(obj.CoastDecal, "visible", true)){
-						draw_sprite_ext(spr_foam, image_index, (x - _surfX) * _surfScale, (y - _surfY) * _surfScale, image_xscale * _surfScale, image_yscale * _surfScale, image_angle, c_white, 1);
+						draw_sprite_ext(spr_foam, image_index, x, y, image_xscale, image_yscale, image_angle, c_white, 1);
 					}
 				}
 				if(array_length(obj.CoastDecalCorpse)){
 					with(instances_matching(obj.CoastDecalCorpse, "visible", true)){
-						draw_sprite_ext(spr_foam, image_index, (x - _surfX) * _surfScale, (y - _surfY) * _surfScale, image_xscale * _surfScale, image_yscale * _surfScale, image_angle, c_white, 1);
+						draw_sprite_ext(spr_foam, image_index, x, y, image_xscale, image_yscale, image_angle, c_white, 1);
 					}
 				}
 				
+			d3d_set_projection_ortho(_vx, _vy, _gw, _gh, 0);
 			draw_set_fog(false, 0, 0, 0);
 			surface_reset_target();
 		}
@@ -1336,11 +1349,10 @@
 			x = _surfX;
 			y = _surfY;
 			
-			var _surfScale = scale;
-			
 			 // Draw:
 			surface_set_target(surf);
-			draw_clear_alpha(0, 0);
+			draw_clear_alpha(c_black, 0);
+			d3d_set_projection_ortho(x, y, w, h, 0);
 				
 				with([_oRad, _iRad]){
 					var _radius = self;
@@ -1348,9 +1360,9 @@
 						for(var _ang = _waveAng; _ang < _waveAng + 360; _ang += 45){
 							call(scr.draw_surface_scale, 
 								surf,
-								(x - _surfX + lengthdir_x(_radius, _ang)) * _surfScale,
-								(y - _surfY + lengthdir_y(_radius, _ang)) * _surfScale,
-								_surfScale / scale
+								x + lengthdir_x(_radius, _ang),
+								y + lengthdir_y(_radius, _ang),
+								1 / scale
 							);
 						}
 					}
@@ -1358,6 +1370,7 @@
 				}
 				draw_set_blend_mode(bm_normal);
 				
+			d3d_set_projection_ortho(_vx, _vy, _gw, _gh, 0);
 			surface_reset_target();
 			
 			 // Finished Product, Bro:
@@ -1379,7 +1392,7 @@
 			
 		draw_set_color(c_white);
 		draw_set_alpha(_max * (1 - ((flash % _flashInt) / _flashDur)));
-		draw_rectangle(_vx, _vy, _vx + _vw, _vy + _vh, 0);
+		draw_rectangle(_vx, _vy, _vx + _gw, _vy + _gh, 0);
 		draw_set_alpha(1);
 		
 		if((flash % _flashInt) < current_time_scale){

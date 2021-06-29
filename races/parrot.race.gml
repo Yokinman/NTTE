@@ -1812,24 +1812,21 @@
 					 // Outlines:
 					if(_outline){
 						surface_set_target(other.surf);
-						
-						 // Solid Color:
-						draw_set_fog(true, player_get_color(_index), 0, 0);
-						for(var _ang = 0; _ang < 360; _ang += 90){
-							call(scr.draw_surface_scale, 
-								surf,
-								(x - other.x + dcos(_ang)) * other.scale,
-								(y - other.y - dsin(_ang)) * other.scale,
-								other.scale / scale
-							);
-						}
-						draw_set_fog(false, 0, 0, 0);
-						
-						 // Cut Out Enemy:
-						draw_set_blend_mode_ext(bm_zero, bm_inv_src_alpha);
-						call(scr.draw_surface_scale, surf, (x - other.x) * other.scale, (y - other.y) * other.scale, other.scale / scale);
-						draw_set_blend_mode(bm_normal);
-						
+						d3d_set_projection_ortho(other.x, other.y, other.w, other.h, 0);
+							
+							 // Solid Color:
+							draw_set_fog(true, player_get_color(_index), 0, 0);
+							for(var _ang = 0; _ang < 360; _ang += 90){
+								call(scr.draw_surface_scale, surf, x + dcos(_ang), y - dsin(_ang), 1 / scale);
+							}
+							draw_set_fog(false, 0, 0, 0);
+							
+							 // Cut Out Enemy:
+							draw_set_blend_mode_ext(bm_zero, bm_inv_src_alpha);
+							call(scr.draw_surface_scale, surf, x, y, 1 / scale);
+							draw_set_blend_mode(bm_normal);
+							
+						d3d_set_projection_ortho(_vx, _vy, _gw, _gh, 0);
 						surface_reset_target();
 						
 						 // Draw to Screen:

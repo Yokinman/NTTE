@@ -2750,7 +2750,7 @@
 							
 						with(surface_setup("sprWepLocked", sprite_get_width(_spr) + 2, sprite_get_height(_spr) + 2, 1)){
 							surface_set_target(surf);
-							draw_clear_alpha(0, 0);
+							draw_clear_alpha(c_black, 0);
 							
 							with(UberCont){
 								 // Outline:
@@ -2784,7 +2784,7 @@
 							
 							 // Load Each Frame as a Weapon Sprite:
 							for(var i = 0; i < sprite_get_number(_spr); i++){
-								draw_clear_alpha(0, 0);
+								draw_clear_alpha(c_black, 0);
 								with(UberCont){
 									draw_sprite(_spr, i, _sprX, _sprY);
 								}
@@ -3169,7 +3169,7 @@
 				if(reset){
 					reset = false;
 					surface_set_target(surf);
-					draw_clear_alpha(0, 0);
+					draw_clear_alpha(c_black, 0);
 					draw_circle((w / 2) * scale, (h / 2) * scale, 50 * scale, false);
 					surface_reset_target();
 				}
@@ -3762,7 +3762,7 @@ var _shine = argument_count > 4 ? argument[4] : shnNone;
 	
 	with(surface_setup("sprShine", _sprW * _sprImg, _sprH, 1)){
 		surface_set_target(surf);
-		draw_clear_alpha(0, 0);
+		draw_clear_alpha(c_black, 0);
 		
 		with(UberCont){
 			for(var _img = 0; _img < _sprImg; _img++){
@@ -3818,7 +3818,7 @@ var _shine = argument_count > 4 ? argument[4] : shnNone;
 		
 		with(surface_setup("sprMerge", _surfW, _surfH, 1)){
 			surface_set_target(surf);
-			draw_clear_alpha(0, 0);
+			draw_clear_alpha(c_black, 0);
 			
 			with(UberCont){
 				for(var _b = 0; _b <= 1; _b++){
@@ -3906,7 +3906,7 @@ var _shine = argument_count > 4 ? argument[4] : shnNone;
 		
 		with(surface_setup("sprMergeLoadout", _surfW, _surfH, 1)){
 			surface_set_target(surf);
-			draw_clear_alpha(0, 0);
+			draw_clear_alpha(c_black, 0);
 			
 			draw_set_color(c_white);
 			
@@ -3993,7 +3993,7 @@ var _shine = argument_count > 4 ? argument[4] : shnNone;
 			
 		with(surface_setup("sprMergeText", _surfW, _surfH, 1)){
 			surface_set_target(surf);
-			draw_clear_alpha(0, 0);
+			draw_clear_alpha(c_black, 0);
 			
 			 // Background:
 			var	_x1 = -1,
@@ -4040,7 +4040,7 @@ var _shine = argument_count > 4 ? argument[4] : shnNone;
 		for(var _x = 0; _x < array_length(_sprList[0]); _x++){
 			for(var _y = 0; _y < array_length(_sprList[1]); _y++){
 				surface_set_target(surf);
-				draw_clear_alpha(0, 0);
+				draw_clear_alpha(c_black, 0);
 				
 				with(UberCont){
 					for(var _img = 0; _img < _sprImg; _img++){

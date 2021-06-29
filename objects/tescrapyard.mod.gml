@@ -1845,13 +1845,16 @@
 			y = other.y - h;
 			
 			surface_set_target(surf);
-			draw_clear_alpha(0, 0);
+			draw_clear_alpha(c_black, 0);
+			d3d_set_projection_ortho(x, y, w, h, 0);
 			
 			with(other){
-				draw_sprite_ext(_spr, _img, (_x - other.x) * other.scale, (_y - other.y) * other.scale, _xsc * other.scale, _ysc * other.scale, _ang, _col, _alp);
+				draw_sprite_ext(_spr, _img, _x, _y, _xsc, _ysc, _ang, _col, _alp);
 			}
 			
+			d3d_set_projection_ortho(view_xview_nonsync, view_yview_nonsync, game_width, game_height, 0);
 			surface_reset_target();
+			
 			call(scr.draw_surface_scale, surf, x, y, 1 / scale);
 		}
 	}
@@ -2059,43 +2062,49 @@
 						with(_instSludge){
 							var _instNear = call(scr.instances_meeting_rectangle, bbox_left - 8, bbox_top - 8, bbox_right + 8, bbox_bottom + 8, _inst);
 							if(array_length(_instNear)){
-								surface_set_target(_surf);
-								draw_clear_alpha(c_black, 0);
-								
 								 // Grab Screen for Shader:
 								if(_canShader){
+									draw_set_blend_mode_ext(bm_one, bm_zero);
 									surface_screenshot(_surf);
+									draw_set_blend_mode(bm_normal);
 								}
 								
 								 // Stuff in Sludge:
-								draw_set_fog(true, fx_color, 0, 0);
-								with(_instNear){
-									var	_spr = sprite_index,
-										_img = image_index,
-										_xsc = image_xscale * (("right" in self) ? right : 1),
-										_ysc = image_yscale,
-										_col = image_blend,
-										_alp = image_alpha,
-										_w = sprite_get_width(_spr),
-										_h = max(1 / _surfScale,
-											(_canShader && (instance_is(self, Corpse) || instance_is(self, Pickup) || instance_is(self, chestprop) || instance_is(self, prop)))
-											? (sprite_get_bbox_bottom(_spr) + 1) - sprite_get_yoffset(_spr)
-											: 1 + ((string_pos("Sit", sprite_get_name(_spr)) > 0) ? 3 : (_spr == sprRavenIdle || _spr == spr.BoneRavenIdle))
-										),
-										_l = 0,
-										_t = sprite_get_bbox_bottom(_spr) + 1 - _h,
-										_x = x - (sprite_get_xoffset(_spr) * _xsc) + _l,
-										_y = y - (sprite_get_yoffset(_spr) * _ysc) + _t;
-										
-									draw_sprite_part_ext(_spr, _img, _l, _t, _w, _h, (_x - _surfX) * _surfScale, (_y - _surfY) * _surfScale, _xsc * _surfScale, _ysc * _surfScale, _col, _alp);
+								surface_set_target(_surf);
+								if(!_canShader){
+									draw_clear_alpha(c_black, 0);
 								}
-								draw_set_fog(false, 0, 0, 0);
-								
-								 // Cut Out:
-								draw_set_blend_mode_ext(bm_inv_src_alpha, bm_src_alpha);
-								draw_sprite_ext(sprite_index, image_index, (x - _surfX) * _surfScale, (y - _surfY) * _surfScale, image_xscale * _surfScale, image_yscale * _surfScale, image_angle, image_blend, image_alpha);
-								draw_set_blend_mode(bm_normal);
-								
+								d3d_set_projection_ortho(_surfX, _surfY, _surfW, _surfH, 0);
+									
+									draw_set_fog(true, fx_color, 0, 0);
+									with(_instNear){
+										var	_spr = sprite_index,
+											_img = image_index,
+											_xsc = image_xscale * (("right" in self) ? right : 1),
+											_ysc = image_yscale,
+											_col = image_blend,
+											_alp = image_alpha,
+											_w   = sprite_get_width(_spr),
+											_h   = max(1 / _surfScale,
+												(_canShader && (instance_is(self, Corpse) || instance_is(self, Pickup) || instance_is(self, chestprop) || instance_is(self, prop)))
+												? (sprite_get_bbox_bottom(_spr) + 1) - sprite_get_yoffset(_spr)
+												: 1 + ((string_pos("Sit", sprite_get_name(_spr)) > 0) ? 3 : (_spr == sprRavenIdle || _spr == spr.BoneRavenIdle))
+											),
+											_l   = 0,
+											_t   = sprite_get_bbox_bottom(_spr) + 1 - _h,
+											_x   = x - (sprite_get_xoffset(_spr) * _xsc) + _l,
+											_y   = y - (sprite_get_yoffset(_spr) * _ysc) + _t;
+											
+										draw_sprite_part_ext(_spr, _img, _l, _t, _w, _h, _x, _y, _xsc, _ysc, _col, _alp);
+									}
+									draw_set_fog(false, 0, 0, 0);
+									
+									 // Cut Out:
+									draw_set_blend_mode_ext(bm_inv_src_alpha, bm_src_alpha);
+									draw_sprite_ext(sprite_index, image_index, x, y, image_xscale, image_yscale, image_angle, image_blend, image_alpha);
+									draw_set_blend_mode(bm_normal);
+									
+								d3d_set_projection_ortho(view_xview_nonsync, view_yview_nonsync, game_width, game_height, 0);
 								surface_reset_target();
 								
 								 // Draw:

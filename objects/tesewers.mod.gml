@@ -3830,16 +3830,18 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 		_surfH = _surfW + ((image_number - 1) * 2);
 		
 	if(point_seen_ext(x, y, _surfW, _surfH, -1)){
-		var	_hurt      = (nexthurt >= current_frame + 4),
-			_surfScale = call(scr.option_get, "quality:main");
+		var	_surfX     = x - (_surfW / 2),
+			_surfY     = y - (_surfH / 2),
+			_surfScale = call(scr.option_get, "quality:main"),
+			_hurt      = (nexthurt >= current_frame + 4);
 			
 		surf_door   = call(scr.surface_setup, `CatDoor${self}`, _surfW, _surfH, _surfScale);
-		surf_door.x = x - (_surfW / 2);
-		surf_door.y = y - (_surfH / 2);
+		surf_door.x = _surfX;
+		surf_door.y = _surfY;
 		
 		 // Draw:
 		if(_hurt) draw_set_fog(true, image_blend, 0, 0);
-		draw_surface_ext(surf_door.surf, surf_door.x, surf_door.y, 1 / _surfScale, 1 / _surfScale, 0, image_blend, image_alpha);
+		draw_surface_ext(surf_door.surf, _surfX, _surfY, 1 / _surfScale, 1 / _surfScale, 0, image_blend, image_alpha);
 		if(_hurt) draw_set_fog(false, 0, 0, 0);
 		
 		 // Update:
@@ -3848,13 +3850,15 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 			surf_door.lastang = openang;
 			
 			surface_set_target(surf_door.surf);
-			draw_clear_alpha(0, 0);
+			draw_clear_alpha(c_black, 0);
+			d3d_set_projection_ortho(_surfX, _surfY, _surfW, _surfH, 0);
 			
 			 // Draw 3D Door:
 			for(var i = 0; i < image_number; i++){
-				draw_sprite_ext(sprite_index, i, (_surfW / 2) * _surfScale, ((_surfH / 2) - i) * _surfScale, image_xscale * _surfScale, image_yscale * _surfScale, image_angle + (openang * image_yscale), c_white, 1);
+				draw_sprite_ext(sprite_index, i, x, y - i, image_xscale, image_yscale, image_angle + (openang * image_yscale), c_white, 1);
 			}
 			
+			d3d_set_projection_ortho(view_xview_nonsync, view_yview_nonsync, game_width, game_height, 0);
 			surface_reset_target();
 		}
 	}

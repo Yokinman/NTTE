@@ -5453,10 +5453,10 @@
 #define draw_wall_shine
 	if(lag) trace_time();
 	
-	var	_vx = view_xview_nonsync,
-		_vy = view_yview_nonsync,
-		_gw = game_width,
-		_gh = game_height,
+	var	_vx        = view_xview_nonsync,
+		_vy        = view_yview_nonsync,
+		_gw        = game_width,
+		_gh        = game_height,
 		_surfScale = call(scr.option_get, "quality:minor");
 		
 	 // Wall Shine Mask:
@@ -5466,11 +5466,12 @@
 			
 		if(reset || x != _surfX || y != _surfY){
 			reset = false;
-			x = _surfX;
-			y = _surfY;
+			x     = _surfX;
+			y     = _surfY;
 			
 			surface_set_target(surf);
 			draw_clear_alpha(c_black, 0);
+			d3d_set_projection_ortho(x, y, w, h, 0);
 				
 				 // Background:
 				if(background_color == call(scr.area_get_back_color, "red")){
@@ -5479,19 +5480,23 @@
 					 // Cut Out Floors & Walls:
 					draw_set_blend_mode_ext(bm_inv_src_alpha, bm_inv_src_alpha);
 					with(call(scr.instances_meeting_rectangle, x, y, x + w, y + h, Floor)){
-						draw_sprite_ext(sprite_index, image_index, (x - _surfX) * _surfScale, (y - _surfY) * _surfScale, image_xscale * _surfScale, image_yscale * _surfScale, image_angle, image_blend, image_alpha);
+						draw_self();
 					}
 					with(call(scr.instances_meeting_rectangle, x, y, x + w, y + h, Wall)){
 						if(image_speed == 0){
-							draw_sprite_ext(sprite_index, image_index, (x - _surfX) * _surfScale, (y - _surfY) * _surfScale, image_xscale * _surfScale, image_yscale * _surfScale, image_angle, image_blend, image_alpha);
+							draw_self();
 						}
-						else for(var i = 0; i < image_number; i++){
-							draw_sprite_ext(sprite_index, i, (x - _surfX) * _surfScale, (y - _surfY) * _surfScale, image_xscale * _surfScale, image_yscale * _surfScale, image_angle, image_blend, image_alpha);
+						else{
+							var _lastImg = image_index;
+							for(image_index = 0; image_index < image_number; image_index++){
+								draw_self();
+							}
+							image_index = _lastImg;
 						}
-						draw_sprite_ext(topspr, topindex, (x - _surfX) * _surfScale, (y - 8 - _surfY) * _surfScale, _surfScale, _surfScale, 0, image_blend, image_alpha);
+						draw_sprite(topspr, topindex, x, y - 8);
 					}
 					with(call(scr.instances_meeting_rectangle, x, y, x + w, y + h, TopSmall)){
-						draw_sprite_ext(sprite_index, image_index, (x - _surfX) * _surfScale, (y - 8 - _surfY) * _surfScale, _surfScale, _surfScale, 0, c_white, image_alpha);
+						draw_sprite(sprite_index, image_index, x, y - 8);
 					}
 					draw_set_blend_mode(bm_normal);
 				}
@@ -5499,9 +5504,17 @@
 				 // Red Crystal Wall Tops:
 				wall_inst = instances_matching_ne(wall_inst, "id");
 				tops_inst = instances_matching_ne(tops_inst, "id");
-				with(wall_inst) draw_sprite_ext(topspr,       topindex,    (x - _surfX) * _surfScale, (y - 8 - _surfY) * _surfScale, _surfScale, _surfScale, 0, c_white, (solid ? image_alpha : (image_alpha * 0.9)));
-				with(tops_inst) draw_sprite_ext(sprite_index, image_index, (x - _surfX) * _surfScale, (y - 8 - _surfY) * _surfScale, _surfScale, _surfScale, 0, c_white, image_alpha);
+				with(instances_matching(wall_inst, "solid", true)){
+					draw_sprite(topspr, topindex, x, y - 8);
+				}
+				with(instances_matching(wall_inst, "solid", false)){
+					draw_sprite_ext(topspr, topindex, x, y - 8, 1, 1, 0, c_white, 0.9);
+				}
+				with(tops_inst){
+					draw_sprite(sprite_index, image_index, x, y - 8);
+				}
 				
+			d3d_set_projection_ortho(_vx, _vy, _gw, _gh, 0);
 			surface_reset_target();
 		}
 	}
@@ -5511,55 +5524,44 @@
 		x = _vx;
 		y = _vy;
 		
-		if("wave" not in self) wave = 0;
+		if("wave" not in self){
+			wave = 0;
+		}
 		wave += current_time_scale * random_range(1, 2);
 		
 		var	_surfX         = x,
 			_surfY         = y,
 			_shineAng      = 45,
 			_shineSpeed    = 10,
-			_shineWidth    = (30 + orandom(2)) * _surfScale,
+			_shineWidth    = 30 + orandom(2),
 			_shineInterval = 240, // 4-8 Seconds ('wave' adds 1~2)
 			_shineDisMax   = sqrt(2 * sqr(max(_gw, _gh))),
 			_shineDis      = (_shineSpeed * wave) % (_shineDisMax + (_shineInterval * _shineSpeed)),
-			_shineX        = (_vx - _surfX       + lengthdir_x(_shineDis, _shineAng)) * _surfScale,
-			_shineY        = (_vy - _surfY + _gh + lengthdir_y(_shineDis, _shineAng)) * _surfScale,
-			_shineXOff     = lengthdir_x(_shineDisMax, _shineAng + 90) * _surfScale,
-			_shineYOff     = lengthdir_y(_shineDisMax, _shineAng + 90) * _surfScale;
+			_shineX        = _vx + lengthdir_x(_shineDis, _shineAng),
+			_shineY        = _vy + lengthdir_y(_shineDis, _shineAng) + _gh,
+			_shineXOff     = lengthdir_x(_shineDisMax, _shineAng + 90),
+			_shineYOff     = lengthdir_y(_shineDisMax, _shineAng + 90);
 			
 		if(_shineDis < _shineDisMax){
 			surface_set_target(surf);
 			draw_clear_alpha(c_black, 0);
+			d3d_set_projection_ortho(x, y, w, h, 0);
 				
 				 // Mask:
 				draw_set_fog(true, c_black, 0, 0);
 				with(surfWallShineMask){
-					call(scr.draw_surface_scale, 
-						surf,
-						(x - _surfX) * _surfScale,
-						(y - _surfY) * _surfScale,
-						_surfScale / scale
-					);
+					call(scr.draw_surface_scale, surf, x, y, 1 / scale);
 				}
 				/*with(other){
 					if(array_length(obj.RedSpider)){
 						with(instances_matching(obj.RedSpider, "visible", true)){
-							x            -= _surfX;
-							y            -= _surfY;
-							image_xscale *= _surfScale;
-							image_yscale *= _surfScale;
-							
 							event_perform(ev_draw, 0);
-							
-							x            += _surfX;
-							y            += _surfY;
-							image_xscale /= _surfScale;
-							image_yscale /= _surfScale;
+							//draw_self_enemy();
 						}
 					}
 					if(array_length(obj.CrystalPropRed)){
 						with(instances_matching(obj.CrystalPropRed, "visible", true)){
-							draw_sprite_ext(sprite_index, image_index, (x - _surfX) * _surfScale, (y - _surfY) * _surfScale, image_xscale * _surfScale, image_yscale * _surfScale, image_angle, image_blend, image_alpha);
+							draw_self();
 						}
 					}
 				}*/
@@ -5571,6 +5573,7 @@
 				draw_line_width(_shineX + _shineXOff, _shineY + _shineYOff, _shineX - _shineXOff, _shineY - _shineYOff, _shineWidth);
 				draw_set_color_write_enable(true, true, true, true);
 				
+			d3d_set_projection_ortho(_vx, _vy, _gw, _gh, 0);
 			surface_reset_target();
 			
 			 // Ship 'em Out:
@@ -5606,6 +5609,7 @@
 			
 			surface_set_target(surf);
 			draw_clear_alpha(c_black, 0);
+			d3d_set_projection_ortho(x, y, w, h, 0);
 			
 			switch(_type){
 				
@@ -5614,10 +5618,14 @@
 					 // Fake Walls:
 					with(instances_matching_ne(obj.WallFake, "id")){
 						if(image_speed == 0){
-							draw_sprite_ext(sprite_index, image_index, (x - _surfX) * _surfScale, (y - _surfY) * _surfScale, image_xscale * _surfScale, image_yscale * _surfScale, image_angle, image_blend, image_alpha);
+							draw_self();
 						}
-						else for(var i = 0; i < image_number; i++){
-							draw_sprite_ext(sprite_index, i, (x - _surfX) * _surfScale, (y - _surfY) * _surfScale, image_xscale * _surfScale, image_yscale * _surfScale, image_angle, image_blend, image_alpha);
+						else{
+							var _lastImg = image_index;
+							for(image_index = 0; image_index < image_number; image_index++){
+								draw_self();
+							}
+							image_index = _lastImg;
 						}
 					}
 					
@@ -5627,15 +5635,15 @@
 					
 					 // Fake Walls:
 					with(instances_matching_ne(obj.WallFake, "id")){
-						draw_sprite_ext(topspr, topindex, (x - _surfX) * _surfScale, (y - 8 - _surfY) * _surfScale, _surfScale, _surfScale, 0, image_blend, image_alpha);
-						//draw_sprite_part_ext(outspr, outindex, l, r, w, h, (x - 4 + l - _surfX) * _surfScale, (y - 12 + r - _surfY) * _surfScale, _surfScale, _surfScale, image_blend, image_alpha);
+						draw_sprite(topspr, topindex, x, y - 8);
+						//draw_sprite_part(outspr, outindex, l, r, w, h, x - 4 + l, y - 12 + r);
 					}
 					
 					 // Cut Out Normal Walls:
 					draw_set_blend_mode_ext(bm_zero, bm_inv_src_alpha);
 					with(instances_matching(Wall, "solid", true)){
-						draw_sprite_ext(topspr, topindex, (x - _surfX) * _surfScale, (y - 8 - _surfY) * _surfScale, _surfScale, _surfScale, 0, image_blend, image_alpha);
-						draw_sprite_part_ext(outspr, outindex, l, r, w, h, (x - 4 + l - _surfX) * _surfScale, (y - 12 + r - _surfY) * _surfScale, _surfScale, _surfScale, image_blend, image_alpha);
+						draw_sprite(topspr, topindex, x, y - 8);
+						draw_sprite_part(outspr, outindex, l, r, w, h, x - 4 + l, y - 12 + r);
 					}
 					draw_set_blend_mode(bm_normal);
 					
@@ -5643,6 +5651,7 @@
 					
 			}
 			
+			d3d_set_projection_ortho(_vx, _vy, _gw, _gh, 0);
 			surface_reset_target();
 		}
 	}
@@ -5654,28 +5663,29 @@
 		
 		surface_set_target(surf);
 		draw_clear_alpha(c_black, 0);
-		
-		 // Circles:
-		var _inst = instances_matching_gt(Player, "red_wall_fake", 0);
-		if(array_length(_inst)) with(_inst){
-			draw_circle(
-				(x - other.x) * other.scale,
-				(y - other.y + ((_type == "Top") ? -4 : 4)) * other.scale,
-				(32 + sin(current_frame / 10)) * lerp(0.2, red_wall_fake, red_wall_fake) * other.scale,
-				false
-			);
-		}
-		
-		 // Cut Mask out of Circles:
-		draw_set_blend_mode_ext(bm_zero, bm_src_alpha);
-		with(_surfMask){
-			call(scr.draw_surface_scale, 
-				surf,
-				(x - other.x) * other.scale,
-				(y - other.y) * other.scale,
-				other.scale / scale
-			);
-		}
+		d3d_set_projection_ortho(x, y, w, h, 0);
+			
+			 // Circles:
+			var _inst = instances_matching_gt(Player, "red_wall_fake", 0);
+			if(array_length(_inst)){
+				with(_inst){
+					draw_circle(
+						x,
+						y + ((_type == "Top") ? -4 : 4),
+						(32 + sin(current_frame / 10)) * lerp(0.2, red_wall_fake, red_wall_fake),
+						false
+					);
+				}
+			}
+			
+			 // Cut Mask Out of Circles:
+			draw_set_blend_mode_ext(bm_zero, bm_src_alpha);
+			with(_surfMask){
+				call(scr.draw_surface_scale, surf, x, y, 1 / scale);
+			}
+			
+		d3d_set_projection_ortho(_vx, _vy, _gw, _gh, 0);
+		surface_reset_target();
 		
 		 // Stamp Screen Onto Mask:
 		draw_set_blend_mode_ext(bm_one, bm_zero);
@@ -5683,8 +5693,6 @@
 		surface_screenshot(surf);
 		draw_set_color_write_enable(true, true, true, true);
 		draw_set_blend_mode(bm_normal);
-		
-		surface_reset_target();
 	}
 	
 	if(lag) trace_time(script[2] + " " + _type);
