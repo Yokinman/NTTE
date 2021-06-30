@@ -307,14 +307,12 @@
 					!instance_is(self, Van)           &&
 					!instance_is(self, mutbutton)
 				){
-					var _namePrefix = "NTTE";
-					if(!ds_map_exists(obj_parent, _name)){
-						if("name" in self && string_pos(_namePrefix, name) == 1 && name != _namePrefix + _name){
-							obj_parent[? _name] = string_replace(name, _namePrefix, "");
-						}
-					}
-					name = _namePrefix + _name;
+					name = "NTTE" + _name;
 				}
+				if(!ds_map_exists(obj_parent, _name) && "ntte_name" in self && ntte_name != _name){
+					obj_parent[? _name] = ntte_name;
+				}
+				ntte_name = _name;
 				
 				 // Bind Events:
 				with(
@@ -322,80 +320,54 @@
 					? obj_event[? object_index]
 					: ["begin_step", "step", "end_step", "draw"]
 				){
-					var _event = self;
-					if(("on_" + _event) not in _inst || is_undefined(variable_instance_get(_inst, "on_" + _event))){
-						var _varName = (_isCustom ? "on_" : "ntte_bind_") + _event;
-						if(_isCustom || _varName not in _inst || is_undefined(variable_instance_get(_inst, _varName))){
-							var _modScrt = _name + "_" + _event;
-							
-							if(mod_script_exists(_modType, _modName, _modScrt)){
+					var	_event   = self,
+						_varName = "on_" + _event;
+						
+					if(_varName not in _inst || is_undefined(variable_instance_get(_inst, _varName))){
+						var _modScrt = _name + "_" + _event;
+						if(mod_script_exists(_modType, _modName, _modScrt)){
+							 // Normal:
+							if(_isCustom){
 								variable_instance_set(_inst, _varName, script_ref_create_ext(_modType, _modName, _modScrt));
-								
-								 // Auto Script Binding:
-								if(!_isCustom){
-									if(!ds_map_exists(obj_bind, _event)){
-										obj_bind[? _event] = {
-											"list"        : [],
-											"object_list" : []
-										};
-									}
-									var _bind = obj_bind[? _event];
-									
-									 // Bind Draw Event:
-									if(_event == "draw"){
-										if(!ds_map_exists(obj_bind_draw, _inst.depth - 1)){
-											with(script_bind_draw(obj_draw, _inst.depth - 1)){
-												persistent = true;
-												obj_bind_draw[? depth] = self;
-											}
-										}
-									}
-									
-									 // Add to Instance List:
-									array_push(_bind.list, _inst);
-									
-									 // Add to Object List:
-									var	_obj     = _inst.object_index,
-										_objList = _bind.object_list;
-										
-									if(array_length(_objList)){
-										 // Object/Parents Already in List:
-										for(var i = _obj; object_exists(i); i = object_get_parent(i)){
-											if(array_find_index(_objList, i) >= 0){
-												_obj = -1;
-												break;
-											}
-										}
-									}
-									if(object_exists(_obj)){
-										 // Remove Children From List:
-										with(_objList){
-											if(object_is_ancestor(self, _obj)){
-												_objList = array_delete_value(_objList, self);
-											}
-										}
-										
-										 // Add:
-										array_push(_objList, _obj);
-										_bind.object_list = _objList;
-									}
-								}
 							}
 							
-							 // Defaults:
-							else if(_isCustom){
-								with(_inst){
-									switch(_event){
-										case "hurt":
-											on_hurt = enemy_hurt;
-											break;
-											
-										case "draw":
-											if(instance_is(self, CustomEnemy)){
-												on_draw = draw_self_enemy;
-											}
-											break;
+							 // Auto Script Binding:
+							else{
+								 // Bind Draw Event:
+								if(_event == "draw"){
+									_inst.depth = floor(_inst.depth);
+									if(!ds_map_exists(obj_bind_draw, _inst.depth - 1)){
+										with(script_bind_draw(obj_draw, _inst.depth - 1)){
+											obj_bind_draw[? depth] = self;
+											persistent             = true;
+										}
 									}
+								}
+								
+								 // Add to Object List:
+								if(!ds_map_exists(obj_bind, _event)){
+									obj_bind[? _event] = [];
+								}
+								var _nameList = obj_bind[? _event];
+								if(array_find_index(_nameList, _name) < 0){
+									array_push(_nameList, _name);
+								}
+							}
+						}
+						
+						 // Defaults:
+						else if(_isCustom){
+							with(_inst){
+								switch(_event){
+									case "hurt":
+										on_hurt = enemy_hurt;
+										break;
+										
+									case "draw":
+										if(instance_is(self, CustomEnemy)){
+											on_draw = draw_self_enemy;
+										}
+										break;
 								}
 							}
 						}
@@ -466,7 +438,7 @@
 						
 					with(_nameList){
 						var	_name     = self,
-							_nameInst = instances_matching(_inst, "name", "NTTE" + _name);
+							_nameInst = instances_matching(_inst, "ntte_name", _name);
 							
 						for(var _objName = _name; !is_undefined(_objName); _objName = ds_map_find_value(obj_parent, _objName)){
 							var _objList = instances_matching_ne(lq_get(obj, _objName), "id");
@@ -503,29 +475,6 @@
 		}
 	}
 	
-	 // Bound Event Instance Lists, 'instance_copy()' Fix:
-	if(ds_map_size(obj_bind)){
-		with(ds_map_keys(obj_bind)){
-			var	_event    = self,
-				_bind     = obj_bind[? _event],
-				_instList = _bind.list;
-				
-			with(_bind.object_list){
-				if(instance_exists(self) && self.id > _newID){
-					var _inst = instances_matching_ne(instances_matching_gt(self, "id", _newID), "ntte_bind_" + _event, null);
-					if(array_length(_inst)){
-						with(_inst){
-							if(array_find_index(_instList, self) < 0){
-								variable_instance_set(self, "ntte_bind_" + _event, array_clone(variable_instance_get(self, "ntte_bind_" + _event)));
-								array_push(_instList, self);
-							}
-						}
-					}
-				}
-			}
-		}
-	}
-	
 #define ntte_begin_step
 	 // sleep_max():
 	if(global.sleep_max > 0){
@@ -556,22 +505,6 @@
 		ds_map_delete(obj_bind, "end_step");
 	}
 	
-	 // Bound Draw Event Depth Update:
-	if(ds_map_exists(obj_bind, "draw")){
-		var _inst = obj_bind[? "draw"].list;
-		with(ds_map_keys(obj_bind_draw)){
-			_inst = instances_matching_ne(_inst, "depth", self + 1);
-		}
-		if(array_length(_inst)){
-			with(_inst){
-				with(script_bind_draw(obj_draw, depth - 1)){
-					persistent = true;
-					obj_bind_draw[? depth] = self;
-				}
-			}
-		}
-	}
-	
 	 // Lag Debugging:
 	lag_bind_call("end_step");
 	
@@ -595,50 +528,87 @@
 		Calls the given event for the instances bound to it
 	*/
 	
+	var _active = false;
+	
 	if(ds_map_exists(obj_bind, _event)){
-		var _bind = obj_bind[? _event],
-			_inst = instances_matching_ne(_bind.list, "id");
-			
-		_bind.list = _inst;
-		
-		 // Match Depth:
-		if(_event == "draw"){
-			_inst = instances_matching(_inst, "depth", depth + 1);
-		}
-		
-		 // Call Scripts:
-		if(array_length(_inst)){
-			switch(_event){
-				case "begin_step":
-					with(_inst){
-						mod_script_call_self(ntte_bind_begin_step[0], ntte_bind_begin_step[1], ntte_bind_begin_step[2]);
-					}
-					break;
+		with(obj_bind[? _event]){
+			var	_objName    = self,
+				_objModRef  = obj_create_ref[? _objName],
+				_objModType = _objModRef[0],
+				_objModName = _objModRef[1],
+				_objModScrt = _objName + "_" + _event;
+				
+			if(mod_script_exists(_objModType, _objModName, _objModScrt)){
+				var _objList = lq_get(obj, _objName);
+				
+				switch(_event){
 					
-				case "step":
-					with(_inst){
-						mod_script_call_self(ntte_bind_step[0], ntte_bind_step[1], ntte_bind_step[2]);
-					}
-					break;
+					case "draw": // Match Depth
+						
+						var	_objDepth     = other.depth + 1,
+							_objDepthList = instances_matching(_objList, "depth", _objDepth);
+							
+						 // Instance Depth Changed:
+						if("depth_list_last" not in other || !array_equals(_objDepthList, other.depth_list_last)){
+							with(instances_matching_ne(_objList, "depth", _objDepth)){
+								depth = floor(depth);
+								if(depth == _objDepth){
+									array_push(_objDepthList, self);
+								}
+								else if(!ds_map_exists(obj_bind_draw, depth - 1)){
+									with(script_bind_draw(obj_draw, depth - 1)){
+										obj_bind_draw[? depth] = self;
+										persistent             = true;
+									}
+								}
+							}
+						}
+						other.depth_list_last = _objDepthList;
+						
+						_objList = _objDepthList;
+						
+						break;
+						
+					default: // Prune Instance List
+						
+						_objList = instances_matching_ne(_objList, "id");
+						lq_set(obj, _objName, _objList);
+						
+				}
 				
-				case "end_step":
-					with(_inst){
-						mod_script_call_self(ntte_bind_end_step[0], ntte_bind_end_step[1], ntte_bind_end_step[2]);
+				 // Call Events:
+				if(array_length(_objList)){
+					_active = true;
+					
+					 // Drawing Visibility:
+					if(_event == "draw"){
+						_objList = instances_matching(_objList, "visible", true);
 					}
-					break;
-				
-				case "draw":
-					with(instances_matching(_inst, "visible", true)){
-						mod_script_call_self(ntte_bind_draw[0], ntte_bind_draw[1], ntte_bind_draw[2]);
+					
+					 // GMS2:
+					try{
+						if(!null){
+							var _ref = script_ref_create_ext(_objModType, _objModName, _objModScrt);
+							with(_objList){
+								script_ref_call(_ref);
+							}
+						}
 					}
-					break;
+					
+					 // GMS1:
+					catch(_error){
+						with(_objList){
+							mod_script_call_self(_objModType, _objModName, _objModScrt);
+						}
+					}
+					
+					_active = true;
+				}
 			}
-			
-			return true;
 		}
 	}
 	
-	return false;
+	return _active;
 	
 #define lag_bind_call(_event)
 	/*

@@ -4491,7 +4491,7 @@
 						 // draw_set_projection(2) doesn't work on surfaces?
 						switch(_hudIndex){
 							case 1 : _hudX += 227;               break;
-							case 2 : _hudY += 193;               break;
+							case 2 :               _hudY += 193; break;
 							case 3 : _hudX += 227; _hudY += 193; break;
 						}
 						
