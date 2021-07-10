@@ -3644,20 +3644,28 @@
 							
 							 // Specifics:
 							switch(object_index){
-								case Bullet2: // Nerf Shotguns
+								
+								case Bullet2:
+									
+									 // Nerf Shotguns:
 									if(string_pos("SHOTGUN", string_upper(weapon_get_name(_wep))) > 0){
 										speed *= 0.8;
 									}
+									
 									break;
 									
-								case Bolt: // Bolt Marrow Fix
+								case Bolt:
+									
+									 // Bolt Marrow Fix:
 									call(scr.variable_instance_set_list, 
 										call(scr.projectile_create, self, x, y, "DiverHarpoon"),
 										call(scr.variable_instance_get_list, self)
 									);
+									
 									break;
 									
 								default:
+									
 									 // Time Nades:
 									if(instance_is(self, Grenade) && alarm0 > 0){
 										var _time = (alarm2 - alarm0);
@@ -3669,6 +3677,7 @@
 											alarm2 = max(1, alarm0 + _time);
 										}
 									}
+									
 							}
 							
 							 // Enemy Spriterize:
@@ -3689,7 +3698,7 @@
 	}
 	
 	 // Burst Weapon Fix:
-	with(instances_matching([LaserCannon, Burst, GoldBurst, HeavyBurst, HyperBurst, RogueBurst, SawBurst, SplinterBurst, NadeBurst, DragonBurst, ToxicBurst, FlameBurst, WaveBurst, SlugBurst, PopBurst], "creator", self)){
+	with(instances_matching([Burst, GoldBurst, HeavyBurst, HyperBurst, RogueBurst, SawBurst, SplinterBurst, NadeBurst, DragonBurst, ToxicBurst, FlameBurst, WaveBurst, SlugBurst, PopBurst, LaserCannon], "creator", self)){
 		direction = other.gunangle;
 	}
 	
@@ -5268,14 +5277,16 @@
 	
 /// SCRIPTS
 #macro  call                                                                                    script_ref_call
-#macro  obj                                                                                     global.obj
 #macro  scr                                                                                     global.scr
+#macro  obj                                                                                     global.obj
 #macro  spr                                                                                     global.spr
 #macro  snd                                                                                     global.snd
 #macro  msk                                                                                     spr.msk
 #macro  mus                                                                                     snd.mus
 #macro  lag                                                                                     global.debug_lag
-#macro  ntte_mods                                                                               global.mods
+#macro  epsilon                                                                                 global.epsilon
+#macro  mod_current_type                                                                        global.mod_type
+#macro  ntte_mods                                                                               global.ntte_mods
 #macro  type_melee                                                                              0
 #macro  type_bullet                                                                             1
 #macro  type_shell                                                                              2
@@ -5299,7 +5310,6 @@
 #macro  area_hq                                                                                 106
 #macro  area_crib                                                                               107
 #macro  infinity                                                                                1/0
-#macro  epsilon                                                                                 0.00001
 #macro  instance_max                                                                            instance_create(0, 0, DramaCamera)
 #macro  current_frame_active                                                                    ((current_frame + epsilon) % 1) < current_time_scale
 #macro  game_scale_nonsync                                                                      game_screen_get_width_nonsync() / game_width

@@ -2451,6 +2451,15 @@
 		"update"       : []
 	};
 	
+	 // Math Epsilon:
+	global.epsilon = 1;
+	for(var i = 0; i <= 16; i++){
+		global.epsilon = power(10, -i);
+		if(global.epsilon == 0){
+			break;
+		}
+	}
+	
 	 // Reminders:
 	global.remind = [];
 	if(fork()){
@@ -2667,12 +2676,14 @@
 		_name = _ref[1];
 		
 	 // Set Global Variables:
-	mod_variable_set(_type, _name, "obj",       obj);
 	mod_variable_set(_type, _name, "scr",       scr);
+	mod_variable_set(_type, _name, "obj",       obj);
 	mod_variable_set(_type, _name, "spr",       spr);
 	mod_variable_set(_type, _name, "snd",       snd);
 	mod_variable_set(_type, _name, "debug_lag", false);
-	mod_variable_set(_type, _name, "mods",      ntte_mods);
+	mod_variable_set(_type, _name, "epsilon",   global.epsilon);
+	mod_variable_set(_type, _name, "mod_type",  _type);
+	mod_variable_set(_type, _name, "ntte_mods", ntte_mods);
 	
 	 // Add to Mod List:
 	if(_type in ntte_mods){

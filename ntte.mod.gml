@@ -2046,8 +2046,7 @@
 	
 #define ntte_call(_call)
 	/*
-		Calls the given type of script in all NTTE area, object, race, and skill mods
-		Other mod types can be added if desired in the future
+		Calls the given type of script in all NTTE mods
 		
 		Args:
 			call - A string or array, referencing the script to call
@@ -5314,14 +5313,16 @@
 	
 /// SCRIPTS
 #macro  call                                                                                    script_ref_call
-#macro  obj                                                                                     global.obj
 #macro  scr                                                                                     global.scr
+#macro  obj                                                                                     global.obj
 #macro  spr                                                                                     global.spr
 #macro  snd                                                                                     global.snd
 #macro  msk                                                                                     spr.msk
 #macro  mus                                                                                     snd.mus
 #macro  lag                                                                                     global.debug_lag
-#macro  ntte_mods                                                                               global.mods
+#macro  epsilon                                                                                 global.epsilon
+#macro  mod_current_type                                                                        global.mod_type
+#macro  ntte_mods                                                                               global.ntte_mods
 #macro  type_melee                                                                              0
 #macro  type_bullet                                                                             1
 #macro  type_shell                                                                              2
@@ -5345,7 +5346,6 @@
 #macro  area_hq                                                                                 106
 #macro  area_crib                                                                               107
 #macro  infinity                                                                                1/0
-#macro  epsilon                                                                                 0.00001
 #macro  instance_max                                                                            instance_create(0, 0, DramaCamera)
 #macro  current_frame_active                                                                    ((current_frame + epsilon) % 1) < current_time_scale
 #macro  game_scale_nonsync                                                                      game_screen_get_width_nonsync() / game_width

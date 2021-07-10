@@ -44,7 +44,7 @@
 	)){
 		 // Tether Together:
 		tether_inst = _last;
-		_last = self;
+		_last       = self;
 	}
 	with(_fire.creator){
 		electroplasma_last = _last;

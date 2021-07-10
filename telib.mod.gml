@@ -216,7 +216,7 @@
 		Used to manually pass a context through 'script_ref_call' / 'call', as NTT versions before 9943 don't do it correctly
 		
 		Args:
-			context - An instance to pass as the 'self', or an array for '[self, other]'
+			context - An instance or LWO to pass as the 'self', or an array for '[self, other]'
 			ref     - The script reference to call
 			args    - Arguments to pass to the script call
 			
@@ -240,9 +240,9 @@
 			_other = (is_array(_context) ? _context[1] : _context);
 			
 		if(self != _self || other != _other){
-			with([_other]){
-				with([_self]){
-					return mod_script_call(script_ref_create(pass)[0], mod_current, "pass", undefined, _ref);
+			with(_other){
+				with(_self){
+					return mod_script_call(mod_current_type, mod_current, "pass", undefined, _ref);
 				}
 			}
 		}
@@ -288,6 +288,7 @@
 		var	_scrt = array_combine(obj_create_ref[? _name], [_x, _y]),
 			_inst = script_ref_call(_scrt);
 			
+		 // No Return Value:
 		if(is_undefined(_inst) || _inst == 0){
 			_inst = noone;
 		}
@@ -355,19 +356,25 @@
 							}
 						}
 						
-						 // Defaults:
+						 // Override Defaults:
 						else if(_isCustom){
 							with(_inst){
 								switch(_event){
-									case "hurt":
+									
+									case "hurt": // Default doesn't set 'image_index = 0'
+										
 										on_hurt = enemy_hurt;
+										
 										break;
 										
-									case "draw":
+									case "draw": // Default doesn't face 'right'
+										
 										if(instance_is(self, CustomEnemy)){
 											on_draw = draw_self_enemy;
 										}
+										
 										break;
+										
 								}
 							}
 						}
@@ -6075,14 +6082,16 @@
 
 /// SCRIPTS
 #macro  call                                                                                    script_ref_call
-#macro  obj                                                                                     global.obj
 #macro  scr                                                                                     global.scr
+#macro  obj                                                                                     global.obj
 #macro  spr                                                                                     global.spr
 #macro  snd                                                                                     global.snd
 #macro  msk                                                                                     spr.msk
 #macro  mus                                                                                     snd.mus
 #macro  lag                                                                                     global.debug_lag
-#macro  ntte_mods                                                                               global.mods
+#macro  epsilon                                                                                 global.epsilon
+#macro  mod_current_type                                                                        global.mod_type
+#macro  ntte_mods                                                                               global.ntte_mods
 #macro  type_melee                                                                              0
 #macro  type_bullet                                                                             1
 #macro  type_shell                                                                              2
@@ -6106,7 +6115,6 @@
 #macro  area_hq                                                                                 106
 #macro  area_crib                                                                               107
 #macro  infinity                                                                                1/0
-#macro  epsilon                                                                                 0.00001
 #macro  instance_max                                                                            instance_create(0, 0, DramaCamera)
 #macro  current_frame_active                                                                    ((current_frame + epsilon) % 1) < current_time_scale
 #macro  game_scale_nonsync                                                                      game_screen_get_width_nonsync() / game_width

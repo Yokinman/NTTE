@@ -2600,14 +2600,17 @@
 					case "weapon_fire": // Normal Firing
 						
 						_gml += _new + `		else{`
-						_gml += _new + `			var	_lastLoad = reload,`
-						_gml += _new + `			    _lastRads = GameCont.rad;`
-						_gml += _new + `			    `
+						_gml += _new + `			var _lastLoad = reload;`
+						_gml += _new + `			`
 						                			 // Shoot:
 						_gml += _new + `			if(instance_is(self, Player)){`
 						_gml += _new + `				var _lastAmmo = array_clone(ammo),`
 						_gml += _new + `				    _swap     = wep_swap(true, [true], _wep);`
 						_gml += _new + `				    `
+						_gml += _new + `				if(infammo == 0){`
+						_gml += _new + `					GameCont.rad += weapon_get_rads(wep);`
+						_gml += _new + `				}`
+						_gml += _new + `				`
 						_gml += _new + `				player_fire();`
 						_gml += _new + `				`
 						_gml += _new + `				if(instance_exists(self)){`
@@ -2617,20 +2620,22 @@
 						_gml += _new + `					array_copy(ammo, 0, _lastAmmo, 0, array_length(_lastAmmo));`
 						_gml += _new + `				}`
 						_gml += _new + `			}`
-						_gml += _new + `			else player_fire_ext(gunangle, (_wrap.lwo ? _wep : _wrap.wep), x, y, team, (("creator" in self) ? creator : self), accuracy);`
+						_gml += _new + `			else{`
+						_gml += _new + `				GameCont.rad += weapon_get_rads(_wrap.lwo ? _wep : _wrap.wep);`
+						_gml += _new + `				player_fire_ext(gunangle, (_wrap.lwo ? _wep : _wrap.wep), x, y, team, (("creator" in self) ? creator : self), accuracy);`
+						_gml += _new + `			}`
 						_gml += _new + `			`
 						                			 // Fixes:
 						_gml += _new + `			if(instance_exists(self)){`
 						_gml += _new + `				reload = _lastLoad;`
 						_gml += _new + `			}`
-						_gml += _new + `			GameCont.rad = _lastRads;`
 						_gml += _new + `			if(instance_exists(LaserBrain)){`
 						_gml += _new + `				with(instances_matching_gt(LaserBrain, "id", _fireID)){`
 						_gml += _new + `					instance_delete(self);`
 						_gml += _new + `				}`
 						_gml += _new + `			}`
 						_gml += _new + `			if(instance_exists(SteroidsTB)){`
-						_gml += _new + `				with(instances_matching_gt([SteroidsTB], "id", _fireID)){`
+						_gml += _new + `				with(instances_matching_gt(SteroidsTB, "id", _fireID)){`
 						_gml += _new + `					if(instance_is(self + 1, PopupText)){`
 						_gml += _new + `						instance_delete(self + 1);`
 						_gml += _new + `					}`

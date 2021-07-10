@@ -3232,14 +3232,14 @@
 		If the given event is a string then a script reference is automatically generated for teevents.mod
 		
 		Ex:
-			teevent_add(script_ref_create_ext(mod_type_current, mod_current, "MaggotPark"));
+			teevent_add(script_ref_create_ext("mod", "teevents", "MaggotPark"));
 			teevent_add("MaggotPark");
 	*/
 	
 	var _scrt = (
 		is_array(_event)
 		? _event
-		: script_ref_create_ext(script_ref_create(teevent_add)[0], mod_current, _event)
+		: script_ref_create(script_get_index(_event))
 	);
 	
 	array_push(event_list, _scrt);
@@ -3264,7 +3264,7 @@
 		 // Normal:
 		else if(!teevent_get_active(_name)){
 			with(call(scr.obj_create, 0, 0, "NTTEEvent")){
-				mod_type = script_ref_create(teevent_set_active)[0];
+				mod_type = mod_current_type;
 				mod_name = mod_current;
 				event    = _name;
 				tip      = mod_script_call(mod_type, mod_name, event + "_text");
@@ -3364,14 +3364,16 @@
 	
 /// SCRIPTS
 #macro  call                                                                                    script_ref_call
-#macro  obj                                                                                     global.obj
 #macro  scr                                                                                     global.scr
+#macro  obj                                                                                     global.obj
 #macro  spr                                                                                     global.spr
 #macro  snd                                                                                     global.snd
 #macro  msk                                                                                     spr.msk
 #macro  mus                                                                                     snd.mus
 #macro  lag                                                                                     global.debug_lag
-#macro  ntte_mods                                                                               global.mods
+#macro  epsilon                                                                                 global.epsilon
+#macro  mod_current_type                                                                        global.mod_type
+#macro  ntte_mods                                                                               global.ntte_mods
 #macro  type_melee                                                                              0
 #macro  type_bullet                                                                             1
 #macro  type_shell                                                                              2
@@ -3395,7 +3397,6 @@
 #macro  area_hq                                                                                 106
 #macro  area_crib                                                                               107
 #macro  infinity                                                                                1/0
-#macro  epsilon                                                                                 0.00001
 #macro  instance_max                                                                            instance_create(0, 0, DramaCamera)
 #macro  current_frame_active                                                                    ((current_frame + epsilon) % 1) < current_time_scale
 #macro  game_scale_nonsync                                                                      game_screen_get_width_nonsync() / game_width

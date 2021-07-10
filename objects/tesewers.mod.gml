@@ -5692,7 +5692,7 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 			_bgColor  = background_color;
 			
 		if(crown_current == "red"){
-			_scrSetup = script_ref_create_ext("crown", "red", "step");
+			_scrSetup = script_ref_create_ext("crown", crown_current, "step");
 		}
 		
 		call(scr.area_generate, area, subarea, loops, _sx + 16, _sy - 16, true, 0, _scrSetup);
@@ -6328,14 +6328,16 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 	
 /// SCRIPTS
 #macro  call                                                                                    script_ref_call
-#macro  obj                                                                                     global.obj
 #macro  scr                                                                                     global.scr
+#macro  obj                                                                                     global.obj
 #macro  spr                                                                                     global.spr
 #macro  snd                                                                                     global.snd
 #macro  msk                                                                                     spr.msk
 #macro  mus                                                                                     snd.mus
 #macro  lag                                                                                     global.debug_lag
-#macro  ntte_mods                                                                               global.mods
+#macro  epsilon                                                                                 global.epsilon
+#macro  mod_current_type                                                                        global.mod_type
+#macro  ntte_mods                                                                               global.ntte_mods
 #macro  type_melee                                                                              0
 #macro  type_bullet                                                                             1
 #macro  type_shell                                                                              2
@@ -6359,7 +6361,6 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 #macro  area_hq                                                                                 106
 #macro  area_crib                                                                               107
 #macro  infinity                                                                                1/0
-#macro  epsilon                                                                                 0.00001
 #macro  instance_max                                                                            instance_create(0, 0, DramaCamera)
 #macro  current_frame_active                                                                    ((current_frame + epsilon) % 1) < current_time_scale
 #macro  game_scale_nonsync                                                                      game_screen_get_width_nonsync() / game_width
