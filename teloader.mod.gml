@@ -2373,6 +2373,12 @@
 				_gml += `#macro wep_raw  (is_object(wep)  ? ${_scrName}(wep)  : wep)`  + chr(13) + chr(10);
 				_gml += `#macro bwep_raw (is_object(bwep) ? ${_scrName}(bwep) : bwep)` + chr(13) + chr(10);
 				_gml += chr(13) + chr(10);
+				_gml += `#macro epsilon global.epsilon` + chr(13) + chr(10);
+				_gml += chr(13) + chr(10);
+				_gml += `#macro infinity 1/0` + chr(13) + chr(10);
+				_gml += chr(13) + chr(10);
+				_gml += `#macro instance_max instance_create(0, 0, DramaCamera)` + chr(13) + chr(10);
+				_gml += chr(13) + chr(10);
 				
 				_gml += `#define ${_scrName}(_wep)`
 				_gml += _new + `while(is_object(_wep)){`
@@ -2429,8 +2435,8 @@
 				_gml += _new + `			return [_slotWep, _slotNew];`
 				_gml += _new + `		}`
 				_gml += _new + `	}`
-				
-				                		 // Swap Back:
+				                	
+				                	 // Swap Back:
 				_gml += _new + `	else for(var i = array_length(_slot) - 1; i >= 0; i--){`
 				_gml += _new + `		var _primary = _slot[i],`
 				_gml += _new + `		    _swapped = false;`
@@ -2538,29 +2544,45 @@
 				
 				 // Main Code:
 				_gml += `#define ${_scrName}(_wep)`
+				// _gml += _new + `trace_time();`
 				_gml += _new + `if(argument_count && is_object(_wep) && "${_name}" in _wep){`
 				_gml += _new + `	var _wrap = _wep.${_name},`
 				_gml += _new + `	    _call = ${_scrCall};`
 				_gml += _new + `	    `
-				_gml += _new + `	if("${_scrName}" not in _wrap.scr_use || _wrap.scr_use.${_scrName}){`
+				// _gml += _new + `	if("${_scrName}" not in _wrap.scr_use || _wrap.scr_use.${_scrName}){`
 				
 				if(_scrName == "weapon_fire"){
-					_gml += _new + `		var _fireID = instance_create(0, 0, DramaCamera);`
+					_gml += _new + `	var _minID       = instance_max,`
+					_gml += _new + `	    _creator     = (("creator" in self && instance_is(self, FireCont)) ? creator : self),`
+					_gml += _new + `	    _team        = team,`
+					_gml += _new + `	    _teamTag     = _wrap.tag,`
+					_gml += _new + `	    _teamTagList = [];`
+					_gml += _new + `	    `
+					                	 // Apply Epsilon Tag to Team:
+					_gml += _new + `	if("projectile_fire" in _wrap.scr_ref){`
+					_gml += _new + `		team = floor(team);`
+					_gml += _new + `		if(team == _team && 1 / (_team - team) < infinity){`
+					_gml += _new + `			_teamTag = 1 / (_team - team);`
+					_gml += _new + `		}`
+					_gml += _new + `		team += 1 / _teamTag;`
+					_gml += _new + `		array_push(_teamTagList, _teamTag);`
+					_gml += _new + `	}`
+					_gml += _new + `	`
 				}
 				
-				                		 // Modded:
-				_gml += _new + `		if(is_string(_wrap.wep) && mod_script_exists("weapon", _wrap.wep, "${_scrName}")){`
-				_gml += _new + `			var _swap = wep_swap(true, [true, false], _wep);`
-				_gml += _new + `			_call = [_call];`
-				_gml += _new + `			if(fork()){`
-				_gml += _new + `				_call[0] = mod_script_call("weapon", _wrap.wep, "${_scrName}", (_wrap.lwo ? _wep : _wrap.wep));`
-				_gml += _new + `				exit;`
-				_gml += _new + `			}`
-				_gml += _new + `			_call = _call[0];`
-				_gml += _new + `			if(_swap != false){`
-				_gml += _new + `				wep_swap(_swap[0], _swap[1], _wep);`
-				_gml += _new + `			}`
+				                	 // Modded:
+				_gml += _new + `	if(is_string(_wrap.wep) && mod_script_exists("weapon", _wrap.wep, "${_scrName}")){`
+				_gml += _new + `		var _swap = wep_swap(true, [true, false], _wep);`
+				_gml += _new + `		_call = [_call];`
+				_gml += _new + `		if(fork()){`
+				_gml += _new + `			_call[0] = mod_script_call("weapon", _wrap.wep, "${_scrName}", (_wrap.lwo ? _wep : _wrap.wep));`
+				_gml += _new + `			exit;`
 				_gml += _new + `		}`
+				_gml += _new + `		_call = _call[0];`
+				_gml += _new + `		if(_swap != false){`
+				_gml += _new + `			wep_swap(_swap[0], _swap[1], _wep);`
+				_gml += _new + `		}`
+				_gml += _new + `	}`
 				
 				switch(_scrName){
 					
@@ -2572,98 +2594,191 @@
 						
 					case "weapon_loadout": // Normal Loadout Sprite
 						
-						_gml += _new + `		else switch(_wrap.wep){`
-						_gml += _new + `			case wep_revolver                : _call = sprRevolverLoadout;            break;`
-						_gml += _new + `			case wep_golden_revolver         : _call = sprGoldRevolverLoadout;        break;`
-						_gml += _new + `			case wep_chicken_sword           : _call = sprChickenSwordLoadout;        break;`
-						_gml += _new + `			case wep_rogue_rifle             : _call = sprRogueRifleLoadout;          break;`
-						_gml += _new + `			case wep_rusty_revolver          : _call = sprRustyRevolverLoadout;       break;`
-						_gml += _new + `			case wep_golden_wrench           : _call = sprGoldWrenchLoadout;          break;`
-						_gml += _new + `			case wep_golden_machinegun       : _call = sprGoldMachinegunLoadout;      break;`
-						_gml += _new + `			case wep_golden_shotgun          : _call = sprGoldShotgunLoadout;         break;`
-						_gml += _new + `			case wep_golden_crossbow         : _call = sprGoldCrossbowLoadout;        break;`
-						_gml += _new + `			case wep_golden_grenade_launcher : _call = sprGoldGrenadeLauncherLoadout; break;`
-						_gml += _new + `			case wep_golden_laser_pistol     : _call = sprGoldLaserPistolLoadout;     break;`
-						_gml += _new + `			case wep_golden_screwdriver      : _call = sprGoldScrewdriverLoadout;     break;`
-						_gml += _new + `			case wep_golden_assault_rifle    : _call = sprGoldAssaultRifleLoadout;    break;`
-						_gml += _new + `			case wep_golden_slugger          : _call = sprGoldSluggerLoadout;         break;`
-						_gml += _new + `			case wep_golden_splinter_gun     : _call = sprGoldSplintergunLoadout;     break;`
-						_gml += _new + `			case wep_golden_bazooka          : _call = sprGoldBazookaLoadout;         break;`
-						_gml += _new + `			case wep_golden_plasma_gun       : _call = sprGoldPlasmaGunLoadout;       break;`
-						_gml += _new + `			case wep_golden_nuke_launcher    : _call = sprGoldNukeLauncherLoadout;    break;`
-						_gml += _new + `			case wep_golden_disc_gun         : _call = sprGoldDiscgunLoadout;         break;`
-						_gml += _new + `			case wep_golden_frog_pistol      : _call = sprGoldToxicGunLoadout;        break;`
-						_gml += _new + `		}`
+						_gml += _new + `	else switch(_wrap.wep){`
+						_gml += _new + `		case wep_revolver                : _call = sprRevolverLoadout;            break;`
+						_gml += _new + `		case wep_golden_revolver         : _call = sprGoldRevolverLoadout;        break;`
+						_gml += _new + `		case wep_chicken_sword           : _call = sprChickenSwordLoadout;        break;`
+						_gml += _new + `		case wep_rogue_rifle             : _call = sprRogueRifleLoadout;          break;`
+						_gml += _new + `		case wep_rusty_revolver          : _call = sprRustyRevolverLoadout;       break;`
+						_gml += _new + `		case wep_golden_wrench           : _call = sprGoldWrenchLoadout;          break;`
+						_gml += _new + `		case wep_golden_machinegun       : _call = sprGoldMachinegunLoadout;      break;`
+						_gml += _new + `		case wep_golden_shotgun          : _call = sprGoldShotgunLoadout;         break;`
+						_gml += _new + `		case wep_golden_crossbow         : _call = sprGoldCrossbowLoadout;        break;`
+						_gml += _new + `		case wep_golden_grenade_launcher : _call = sprGoldGrenadeLauncherLoadout; break;`
+						_gml += _new + `		case wep_golden_laser_pistol     : _call = sprGoldLaserPistolLoadout;     break;`
+						_gml += _new + `		case wep_golden_screwdriver      : _call = sprGoldScrewdriverLoadout;     break;`
+						_gml += _new + `		case wep_golden_assault_rifle    : _call = sprGoldAssaultRifleLoadout;    break;`
+						_gml += _new + `		case wep_golden_slugger          : _call = sprGoldSluggerLoadout;         break;`
+						_gml += _new + `		case wep_golden_splinter_gun     : _call = sprGoldSplintergunLoadout;     break;`
+						_gml += _new + `		case wep_golden_bazooka          : _call = sprGoldBazookaLoadout;         break;`
+						_gml += _new + `		case wep_golden_plasma_gun       : _call = sprGoldPlasmaGunLoadout;       break;`
+						_gml += _new + `		case wep_golden_nuke_launcher    : _call = sprGoldNukeLauncherLoadout;    break;`
+						_gml += _new + `		case wep_golden_disc_gun         : _call = sprGoldDiscgunLoadout;         break;`
+						_gml += _new + `		case wep_golden_frog_pistol      : _call = sprGoldToxicGunLoadout;        break;`
+						_gml += _new + `	}`
 						
 						break;
 						
 					case "weapon_fire": // Normal Firing
 						
-						_gml += _new + `		else{`
-						_gml += _new + `			var _lastLoad = reload;`
+						_gml += _new + `	else{`
+						_gml += _new + `		var _lastLoad = reload,`
+						_gml += _new + `		    _lastRads = GameCont.rad;`
+						_gml += _new + `		    `
+						                		 // Shoot:
+						_gml += _new + `		if(instance_is(self, Player)){`
+						// _gml += _new + `			var _swap     = wep_swap(true, [true], _wep),`
+						_gml += _new + `			var _lastWep  = wep,`
+						_gml += _new + `			    _lastAmmo = array_clone(ammo);`
+						_gml += _new + `			    `
+						_gml += _new + `			wep = _wrap.wep;`
+						_gml += _new + `			player_fire();`
 						_gml += _new + `			`
-						                			 // Shoot:
-						_gml += _new + `			if(instance_is(self, Player)){`
-						_gml += _new + `				var _lastAmmo = array_clone(ammo),`
-						_gml += _new + `				    _swap     = wep_swap(true, [true], _wep);`
-						_gml += _new + `				    `
-						_gml += _new + `				if(infammo == 0){`
-						_gml += _new + `					GameCont.rad += weapon_get_rads(wep);`
-						_gml += _new + `				}`
-						_gml += _new + `				`
-						_gml += _new + `				player_fire();`
-						_gml += _new + `				`
-						_gml += _new + `				if(instance_exists(self)){`
-						_gml += _new + `					if(_swap != false){`
-						_gml += _new + `						wep_swap(_swap[0], _swap[1], _wep);`
-						_gml += _new + `					}`
-						_gml += _new + `					array_copy(ammo, 0, _lastAmmo, 0, array_length(_lastAmmo));`
-						_gml += _new + `				}`
-						_gml += _new + `			}`
-						_gml += _new + `			else{`
-						_gml += _new + `				GameCont.rad += weapon_get_rads(_wrap.lwo ? _wep : _wrap.wep);`
-						_gml += _new + `				player_fire_ext(gunangle, (_wrap.lwo ? _wep : _wrap.wep), x, y, team, (("creator" in self) ? creator : self), accuracy);`
-						_gml += _new + `			}`
-						_gml += _new + `			`
-						                			 // Fixes:
 						_gml += _new + `			if(instance_exists(self)){`
-						_gml += _new + `				reload = _lastLoad;`
+						// _gml += _new + `				if(_swap != false){`
+						// _gml += _new + `					wep_swap(_swap[0], _swap[1], _wep);`
+						// _gml += _new + `				}`
+						_gml += _new + `				wep = _lastWep;`
+						_gml += _new + `				array_copy(ammo, 0, _lastAmmo, 0, array_length(_lastAmmo));`
 						_gml += _new + `			}`
-						_gml += _new + `			if(instance_exists(LaserBrain)){`
-						_gml += _new + `				with(instances_matching_gt(LaserBrain, "id", _fireID)){`
-						_gml += _new + `					instance_delete(self);`
+						_gml += _new + `		}`
+						_gml += _new + `		else with(_creator){`
+						_gml += _new + `			var _lastX        = x,`
+						_gml += _new + `			    _lastY        = y,`
+						_gml += _new + `			    _lastGunAngle = undefined;`
+						_gml += _new + `			    `
+						_gml += _new + `			x = other.x;`
+						_gml += _new + `			y = other.y;`
+						_gml += _new + `			if("gunangle" in self){`
+						_gml += _new + `				_lastGunAngle = gunangle;`
+						_gml += _new + `				gunangle      = other.gunangle;`
+						_gml += _new + `			}`
+						_gml += _new + `			`
+						_gml += _new + `			player_fire_ext(other.gunangle, _wrap.wep, other.x, other.y, other.team, self, other.accuracy);`
+						_gml += _new + `			`
+						_gml += _new + `			x = _lastX;`
+						_gml += _new + `			y = _lastY;`
+						_gml += _new + `			if("gunangle" in self){`
+						_gml += _new + `				gunangle = _lastGunAngle;`
+						_gml += _new + `			}`
+						_gml += _new + `		}`
+						_gml += _new + `		`
+						                		 // Fixes:
+						_gml += _new + `		if(instance_exists(self)){`
+						_gml += _new + `			reload = _lastLoad;`
+						_gml += _new + `		}`
+						_gml += _new + `		GameCont.rad = _lastRads;`
+						_gml += _new + `		if(instance_exists(LaserBrain)){`
+						_gml += _new + `			with(instances_matching_gt(LaserBrain, "id", _minID)){`
+						_gml += _new + `				instance_delete(self);`
+						_gml += _new + `			}`
+						_gml += _new + `		}`
+						_gml += _new + `		if(instance_exists(SteroidsTB)){`
+						_gml += _new + `			with(instances_matching_gt(SteroidsTB, "id", _minID)){`
+						_gml += _new + `				if(instance_is(self + 1, PopupText)){`
+						_gml += _new + `					instance_delete(self + 1);`
+						_gml += _new + `				}`
+						_gml += _new + `				instance_delete(self);`
+						_gml += _new + `			}`
+						_gml += _new + `		}`
+						_gml += _new + `	}`
+						_gml += _new + `	`
+						                	 // Manually Offset Burst Controllers:
+						_gml += _new + `	if(instance_exists(_creator)){`
+						_gml += _new + `		var _instBurst = instances_matching(instances_matching(instances_matching_gt([Burst, GoldBurst, HeavyBurst, HyperBurst, RogueBurst, SawBurst, SplinterBurst, NadeBurst, DragonBurst, ToxicBurst, FlameBurst, WaveBurst, SlugBurst, PopBurst, LaserCannon], "id", _minID), "creator", _creator), "ntte_burst_offset", null);`
+						_gml += _new + `		if(array_length(_instBurst)){`
+						_gml += _new + `			var _mainX   = _creator.x,`
+						_gml += _new + `			    _mainY   = _creator.y,`
+						_gml += _new + `			    _mainDir = (("gunangle" in _creator) ? _creator.gunangle : gunangle);`
+						_gml += _new + `			    `
+						_gml += _new + `			if(instance_is(self, Player)){`
+						_gml += _new + `				_mainX = xprevious;`
+						_gml += _new + `				_mainY = yprevious;`
+						_gml += _new + `				if(canaim){`
+						_gml += _new + `					_mainDir = point_direction(_mainX, _mainY, mouse_x[index], mouse_y[index]);`
 						_gml += _new + `				}`
 						_gml += _new + `			}`
-						_gml += _new + `			if(instance_exists(SteroidsTB)){`
-						_gml += _new + `				with(instances_matching_gt(SteroidsTB, "id", _fireID)){`
-						_gml += _new + `					if(instance_is(self + 1, PopupText)){`
-						_gml += _new + `						instance_delete(self + 1);`
-						_gml += _new + `					}`
-						_gml += _new + `					instance_delete(self);`
+						_gml += _new + `			`
+						_gml += _new + `			with(_instBurst){`
+						_gml += _new + `				if(x != _mainX || y != _mainY || direction != _mainDir){`
+						_gml += _new + `					ntte_burst_offset = [`
+						_gml += _new + `						point_distance(_mainX, _mainY, x, y),`
+						_gml += _new + `						angle_difference(point_direction(_mainX, _mainY, x, y), _mainDir),`
+						_gml += _new + `						angle_difference(direction, _mainDir)`
+						_gml += _new + `					];`
 						_gml += _new + `				}`
 						_gml += _new + `			}`
 						_gml += _new + `		}`
+						_gml += _new + `	}`
+						_gml += _new + `	`
+						                	 // Tracking Team Tag:
+						_gml += _new + `	if(array_length(_teamTagList)){`
+						                		 // Revert Team:
+						_gml += _new + `		if(instance_exists(self) && team == _team + (1 / _teamTag)){`
+						_gml += _new + `			team = _team;`
+						_gml += _new + `		}`
+						_gml += _new + `		`
+						                		 // Fetch New Team Tags:
+						_gml += _new + `		var _maxID = instance_max;`
+						_gml += _new + `		for(var _inst = _minID + 1; _inst < _maxID; _inst++){`
+						_gml += _new + `			if("team" in _inst && _inst.team == team){`
+						_gml += _new + `				var _tag = 1 / (_inst.team - team);`
+						_gml += _new + `				if(_tag < infinity && array_find_index(_teamTagList, _tag) < 0){`
+						_gml += _new + `					array_push(_teamTagList, _tag);`
+						_gml += _new + `				}`
+						_gml += _new + `			}`
+						_gml += _new + `		}`
+						_gml += _new + `		`
+						                		 // Store Team Tags:
+						_gml += _new + `		var _frameWait = max(0, weapon_get_load(_wep)) + 30;`
+						_gml += _new + `		if("ntte_projectile_tag_list" not in GameCont){`
+						_gml += _new + `			GameCont.ntte_projectile_tag_list = [];`
+						_gml += _new + `		}`
+						_gml += _new + `		with(_teamTagList){`
+						_gml += _new + `			var _pos   = 0,`
+						_gml += _new + `			    _frame = GameCont.timer + _frameWait;`
+						_gml += _new + `			    `
+						_gml += _new + `			with(GameCont.ntte_projectile_tag_list){`
+						_gml += _new + `				if(tag == other){`
+						_gml += _new + `					_frame = max(_frame, frame);`
+						_gml += _new + `					break;`
+						_gml += _new + `				}`
+						_gml += _new + `				_pos++;`
+						_gml += _new + `			}`
+						_gml += _new + `			`
+						_gml += _new + `			GameCont.ntte_projectile_tag_list[_pos] = {`
+						_gml += _new + `				"tag"        : self,`
+						_gml += _new + `				"wep"        : _wep,`
+						_gml += _new + `				"team"       : floor(_team),`
+						_gml += _new + `				"creator"    : _creator,`
+						_gml += _new + `				"frame"      : _frame,`
+						_gml += _new + `				"frame_wait" : _frameWait`
+						_gml += _new + `			};`
+						_gml += _new + `		}`
+						_gml += _new + `	}`
 						
 						break;
 						
 					default: // Normal
 						
-						_gml += _new + `		else _call = ${string_replace(_scrName, "_", ((_scrName == "weapon_melee") ? "_is_" : "_get_"))}(_wrap.wep);`
+						_gml += _new + `	else _call = ${string_replace(_scrName, "_", ((_scrName == "weapon_melee") ? "_is_" : "_get_"))}(_wrap.wep);`
 						
 				}
 				
-				_gml += _new + `	}`
+				// _gml += _new + `	}`
 				_gml += _new + `	`
 				                	 // Custom:
 				_gml += _new + `	if("${_scrName}" in _wrap.scr_ref){`
 				_gml += _new + `		var _wrapRefList = _wrap.scr_ref.${_scrName};`
 				_gml += _new + `		for(var i = 0; i < array_length(_wrapRefList); i++){`
-				_gml += _new + `			_call = script_ref_call(_wrapRefList[i], ${(_scrName == "weapon_fire") ? "_fireID" : "_call"}, _wep);`
+				_gml += _new + `			_call = script_ref_call(_wrapRefList[i], ${/*(_scrName == "weapon_fire") ? "_minID" : */"_call"}, _wep);`
 				_gml += _new + `		}`
 				_gml += _new + `	}`
 				_gml += _new + `	`
+				// _gml += _new + `	trace_time("${_scrName}");`
 				_gml += _new + `	return _call;`
 				_gml += _new + `}`
+				// _gml += _new + `trace_time("${_scrName}");`
 				
 				 // Fixes:
 				switch(_scrName){
@@ -2678,126 +2793,127 @@
 			case "step":
 				
 				_gml += `#define ${_scrName}(_primary)`
+				// _gml += _new + `trace_time();`
 				_gml += _new + `var _wep = (_primary ? wep : bwep);`
 				_gml += _new + `if(is_object(_wep) && "${_name}" in _wep){`
 				_gml += _new + `	var _wrap = _wep.${_name},`
 				_gml += _new + `	    _call = 0;`
 				_gml += _new + `	    `
-				_gml += _new + `	if("${_scrName}" not in _wrap.scr_use || _wrap.scr_use.${_scrName}){`
-				                		 // Modded:
-				_gml += _new + `		if(is_string(_wrap.wep) && mod_script_exists("weapon", _wrap.wep, "${_scrName}")){`
-				_gml += _new + `			var _swap = wep_swap(true, [_primary], _wep);`
-				_gml += _new + `			_call = [_call];`
-				_gml += _new + `			if(fork()){`
-				_gml += _new + `				_call[0] = mod_script_call("weapon", _wrap.wep, "${_scrName}", _primary);`
-				_gml += _new + `				exit;`
-				_gml += _new + `			}`
-				_gml += _new + `			_call = _call[0];`
-				_gml += _new + `			if(_swap != false){`
-				_gml += _new + `				wep_swap(_swap[0], _swap[1], _wep);`
-				_gml += _new + `			}`
+				// _gml += _new + `	if("${_scrName}" not in _wrap.scr_use || _wrap.scr_use.${_scrName}){`
+				                	 // Modded:
+				_gml += _new + `	if(is_string(_wrap.wep) && mod_script_exists("weapon", _wrap.wep, "${_scrName}")){`
+				_gml += _new + `		var _swap = wep_swap(true, [_primary], _wep);`
+				_gml += _new + `		_call = [_call];`
+				_gml += _new + `		if(fork()){`
+				_gml += _new + `			_call[0] = mod_script_call("weapon", _wrap.wep, "${_scrName}", _primary);`
+				_gml += _new + `			exit;`
 				_gml += _new + `		}`
+				_gml += _new + `		_call = _call[0];`
+				_gml += _new + `		if(_swap != false){`
+				_gml += _new + `			wep_swap(_swap[0], _swap[1], _wep);`
+				_gml += _new + `		}`
+				_gml += _new + `	}`
 				
 				switch(_scrName){
 					
 					case "weapon_reloaded": // Normal Reload Effects
 						
-						_gml += _new + `		else{`
-						                			 // Melee:
-						_gml += _new + `			if(weapon_is_melee(_wep)){`
-						_gml += _new + `				sound_play(sndMeleeFlip);`
-						_gml += _new + `			}`
-						
-						                			 // Shell / Bolt:
-						_gml += _new + `			switch(weapon_get_type(_wep)){`
-						_gml += _new + `				case 2:` // Shell
-						_gml += _new + `					sound_play(sndShotReload);`
-						_gml += _new + `					var _num = weapon_get_cost(_wep) * (_primary ? interfacepop : binterfacepop);`
-						_gml += _new + `					if(_num > 0) repeat(_num){`
-						_gml += _new + `						with(instance_create(x, y, Shell)){`
-						_gml += _new + `							sprite_index = ((skill_get(mut_shotgun_shoulders) > 0) ? sprShotShellBig : sprShotShell);`
-						_gml += _new + `							motion_add(other.gunangle + (other.right * 100) + random_range(-20, 20), random_range(2, 4));`
-						_gml += _new + `						}`
-						_gml += _new + `					}`
-						_gml += _new + `					wkick = ((wep == wep_double_shotgun) ? -2 : -1);`
-						_gml += _new + `					break;`
-						_gml += _new + `					`
-						_gml += _new + `				case 3:` // Bolt
-						_gml += _new + `					sound_play(sndCrossReload);`
-						_gml += _new + `					break;`
-						_gml += _new + `			}`
-						
-						                			 // Grenade:
-						_gml += _new + `			switch(_wrap.wep){`
-						_gml += _new + `				case wep_grenade_launcher:`
-						_gml += _new + `				case wep_sticky_launcher:`
-						_gml += _new + `				case wep_golden_grenade_launcher:`
-						_gml += _new + `				case wep_hyper_launcher:`
-						_gml += _new + `				case wep_toxic_launcher:`
-						_gml += _new + `				case wep_cluster_launcher:`
-						_gml += _new + `				case wep_grenade_shotgun:`
-						_gml += _new + `				case wep_grenade_rifle:`
-						_gml += _new + `				case wep_auto_grenade_shotgun:`
-						_gml += _new + `				case wep_ultra_grenade_launcher:`
-						_gml += _new + `				case wep_heavy_grenade_launcher:`
-						_gml += _new + `					sound_play(sndNadeReload);`
-						_gml += _new + `					break;`
-						_gml += _new + `			}`
-						
-						                			 // Energy:
-						_gml += _new + `			if(string_pos("PLASMA", weapon_get_name(_wep)) == 1){`
-						_gml += _new + `				sound_play((skill_get(mut_laser_brain) > 0) ? sndPlasmaReloadUpg : sndPlasmaReload);`
-						_gml += _new + `			}`
-						_gml += _new + `			else if(string_pos("LIGHTNING", weapon_get_name(_wep)) == 1){`
-						_gml += _new + `				sound_play(sndLightningReload);`
-						_gml += _new + `			}`
+						_gml += _new + `	else{`
+						                		 // Melee:
+						_gml += _new + `		if(weapon_is_melee(_wep)){`
+						_gml += _new + `			sound_play(sndMeleeFlip);`
 						_gml += _new + `		}`
+						
+						                		 // Shell / Bolt:
+						_gml += _new + `		switch(weapon_get_type(_wep)){`
+						_gml += _new + `			case 2:` // Shell
+						_gml += _new + `				sound_play(sndShotReload);`
+						_gml += _new + `				var _num = weapon_get_cost(_wep) * (_primary ? interfacepop : binterfacepop);`
+						_gml += _new + `				if(_num > 0) repeat(_num){`
+						_gml += _new + `					with(instance_create(x, y, Shell)){`
+						_gml += _new + `						sprite_index = ((skill_get(mut_shotgun_shoulders) > 0) ? sprShotShellBig : sprShotShell);`
+						_gml += _new + `						motion_add(other.gunangle + (other.right * 100) + random_range(-20, 20), random_range(2, 4));`
+						_gml += _new + `					}`
+						_gml += _new + `				}`
+						_gml += _new + `				wkick = ((wep == wep_double_shotgun) ? -2 : -1);`
+						_gml += _new + `				break;`
+						_gml += _new + `				`
+						_gml += _new + `			case 3:` // Bolt
+						_gml += _new + `				sound_play(sndCrossReload);`
+						_gml += _new + `				break;`
+						_gml += _new + `		}`
+						
+						                		 // Grenade:
+						_gml += _new + `		switch(_wrap.wep){`
+						_gml += _new + `			case wep_grenade_launcher:`
+						_gml += _new + `			case wep_sticky_launcher:`
+						_gml += _new + `			case wep_golden_grenade_launcher:`
+						_gml += _new + `			case wep_hyper_launcher:`
+						_gml += _new + `			case wep_toxic_launcher:`
+						_gml += _new + `			case wep_cluster_launcher:`
+						_gml += _new + `			case wep_grenade_shotgun:`
+						_gml += _new + `			case wep_grenade_rifle:`
+						_gml += _new + `			case wep_auto_grenade_shotgun:`
+						_gml += _new + `			case wep_ultra_grenade_launcher:`
+						_gml += _new + `			case wep_heavy_grenade_launcher:`
+						_gml += _new + `				sound_play(sndNadeReload);`
+						_gml += _new + `				break;`
+						_gml += _new + `		}`
+						
+						                		 // Energy:
+						_gml += _new + `		if(string_pos("PLASMA", weapon_get_name(_wep)) == 1){`
+						_gml += _new + `			sound_play((skill_get(mut_laser_brain) > 0) ? sndPlasmaReloadUpg : sndPlasmaReload);`
+						_gml += _new + `		}`
+						_gml += _new + `		else if(string_pos("LIGHTNING", weapon_get_name(_wep)) == 1){`
+						_gml += _new + `			sound_play(sndLightningReload);`
+						_gml += _new + `		}`
+						_gml += _new + `	}`
 						
 						break;
 						
 					case "step": // Normal Step (Blood Weapons)
 						
-						_gml += _new + `		else switch(_wrap.wep){`
-						_gml += _new + `			case wep_blood_launcher:`
-						_gml += _new + `			case wep_blood_cannon:`
-						_gml += _new + `				if(infammo == 0){`
-						_gml += _new + `					if(`
-						_gml += _new + `						_primary`
-						_gml += _new + `						? (drawempty  == 30 && canfire && button_pressed(index, "fire"))`
-						_gml += _new + `						: (drawemptyb == 30 && canspec && button_pressed(index, "spec") && race == "steroids")`
-						_gml += _new + `					){`
-						_gml += _new + `						var _type = weapon_get_type(_wep),`
-						_gml += _new + `						    _cost = weapon_get_cost(_wep),`
-						_gml += _new + `						    _ammo = ammo[_type],`
-						_gml += _new + `						    _amax = typ_amax[_type];`
-						_gml += _new + `						    `
-						_gml += _new + `						if(_ammo < _cost && _cost < _amax){`
-						_gml += _new + `							var _add = min(_cost, _amax - _ammo);`
-						_gml += _new + `							ammo[_type] += _add;`
-						_gml += _new + `							`
-						                							 // Damage:
-						_gml += _new + `							lasthit = [weapon_get_sprt(_wep), weapon_get_name(_wep)];`
-						_gml += _new + `							projectile_hit_raw(self, floor(sqrt(_add)), true);`
-						_gml += _new + `							sound_play_hit(sndBloodHurt, 0.1);`
-						_gml += _new + `							sleep(40);`
-						_gml += _new + `							`
-						                							 // Insta-Use Ammo:
-						_gml += _new + `							if(_primary && can_shoot == true){`
-						_gml += _new + `								clicked = true;`
-						_gml += _new + `							}`
+						_gml += _new + `	else switch(_wrap.wep){`
+						_gml += _new + `		case wep_blood_launcher:`
+						_gml += _new + `		case wep_blood_cannon:`
+						_gml += _new + `			if(infammo == 0){`
+						_gml += _new + `				if(`
+						_gml += _new + `					_primary`
+						_gml += _new + `					? (drawempty  == 30 && canfire && button_pressed(index, "fire"))`
+						_gml += _new + `					: (drawemptyb == 30 && canspec && button_pressed(index, "spec") && race == "steroids")`
+						_gml += _new + `				){`
+						_gml += _new + `					var _type = weapon_get_type(_wep),`
+						_gml += _new + `					    _cost = weapon_get_cost(_wep),`
+						_gml += _new + `					    _ammo = ammo[_type],`
+						_gml += _new + `					    _amax = typ_amax[_type];`
+						_gml += _new + `					    `
+						_gml += _new + `					if(_ammo < _cost && _cost < _amax){`
+						_gml += _new + `						var _add = min(_cost, _amax - _ammo);`
+						_gml += _new + `						ammo[_type] += _add;`
+						_gml += _new + `						`
+						                						 // Damage:
+						_gml += _new + `						lasthit = [weapon_get_sprt(_wep), weapon_get_name(_wep)];`
+						_gml += _new + `						projectile_hit_raw(self, floor(sqrt(_add)), true);`
+						_gml += _new + `						sound_play_hit(sndBloodHurt, 0.1);`
+						_gml += _new + `						sleep(40);`
+						_gml += _new + `						`
+						                						 // Insta-Use Ammo:
+						_gml += _new + `						if(_primary && can_shoot == true){`
+						_gml += _new + `							clicked = true;`
 						_gml += _new + `						}`
 						_gml += _new + `					}`
 						_gml += _new + `				}`
-						_gml += _new + `				break;`
-						_gml += _new + `		}`
+						_gml += _new + `			}`
+						_gml += _new + `			break;`
+						_gml += _new + `	}`
 						
 						break;
 						
 				}
 				
-				_gml += _new + `	}`
-				
-				_gml += _new;   	 // Custom:
+				// _gml += _new + `	}`
+				_gml += _new + `	`
+				                	 // Custom:
 				_gml += _new + `	if("${_scrName}" in _wrap.scr_ref){`
 				_gml += _new + `		var _wrapRefList = _wrap.scr_ref.${_scrName};`
 				_gml += _new + `		for(var i = 0; i < array_length(_wrapRefList); i++){`
@@ -2805,8 +2921,10 @@
 				_gml += _new + `		}`
 				_gml += _new + `	}`
 				_gml += _new + `	`
+				// _gml += _new + `	trace_time("${_scrName}");`
 				_gml += _new + `	return _call;`
 				_gml += _new + `}`
+				// _gml += _new + `trace_time("${_scrName}");`
 				
 				break;
 				
@@ -2814,6 +2932,7 @@
 			default:
 				
 				_gml += `#define ${_scrName}`
+				//_gml += _new + `trace_time();`
 				_gml += _new + `var _wep = undefined,`
 				_gml += _new + `    _ref = script_ref_create(${_scrName});`
 				_gml += _new + `    `
@@ -2848,21 +2967,21 @@
 				_gml += _new + `	    _call = 0;`
 				_gml += _new + `	    `
 				                	 // Normal:
-				_gml += _new + `	if("${_scrName}" not in _wrap.scr_use || _wrap.scr_use.${_scrName}){`
-				_gml += _new + `		_ref[1] = _wrap.wep;`
-				_gml += _new + `		if(is_string(_ref[1]) && mod_script_exists(_ref[0], _ref[1], _ref[2])){`
-				_gml += _new + `			var _swap = wep_swap(true, [true, false], _wep);`
-				_gml += _new + `			_call = [_call];`
-				_gml += _new + `			if(fork()){`
-				_gml += _new + `				_call[0] = script_ref_call(_ref);`
-				_gml += _new + `				exit;`
-				_gml += _new + `			}`
-				_gml += _new + `			_call = _call[0];`
-				_gml += _new + `			if(_swap != false){`
-				_gml += _new + `				wep_swap(_swap[0], _swap[1], _wep);`
-				_gml += _new + `			}`
+				//_gml += _new + `	if("${_scrName}" not in _wrap.scr_use || _wrap.scr_use.${_scrName}){`
+				_gml += _new + `	_ref[1] = _wrap.wep;`
+				_gml += _new + `	if(is_string(_ref[1]) && mod_script_exists(_ref[0], _ref[1], _ref[2])){`
+				_gml += _new + `		var _swap = wep_swap(true, [true, false], _wep);`
+				_gml += _new + `		_call = [_call];`
+				_gml += _new + `		if(fork()){`
+				_gml += _new + `			_call[0] = script_ref_call(_ref);`
+				_gml += _new + `			exit;`
+				_gml += _new + `		}`
+				_gml += _new + `		_call = _call[0];`
+				_gml += _new + `		if(_swap != false){`
+				_gml += _new + `			wep_swap(_swap[0], _swap[1], _wep);`
 				_gml += _new + `		}`
 				_gml += _new + `	}`
+				//_gml += _new + `	}`
 				_gml += _new + `	`
 				                	 // Custom:
 				_gml += _new + `	if("${_scrName}" in _wrap.scr_ref){`
@@ -2875,8 +2994,10 @@
 				_gml += _new + `		}`
 				_gml += _new + `	}`
 				_gml += _new + `	`
+				//_gml += _new + `	trace_time("${_scrName}");`
 				_gml += _new + `	return _call;`
 				_gml += _new + `}`
+				//_gml += _new + `trace_time("${_scrName}");`
 				
 		}
 		

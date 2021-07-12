@@ -3239,7 +3239,7 @@
 	var _scrt = (
 		is_array(_event)
 		? _event
-		: script_ref_create(script_get_index(_event))
+		: script_ref_create_ext(mod_current_type, mod_current, _event)
 	);
 	
 	array_push(event_list, _scrt);

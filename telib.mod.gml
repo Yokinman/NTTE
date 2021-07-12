@@ -3738,45 +3738,75 @@
 			scrName - The name of the script to modify
 			scrAdd  - A script reference to call after the given script, which can return a custom value for the weapon
 			          The script is called with its 'argument0' being the weapon's current value, and then the normal script's arguments
-			          Can also be a boolean value to toggle the script's base execution
+			          Can also be a boolean value to toggle the script's base execution <-- DISABLED FOR PERFORMANCE, MIGHT NOT BE NEEDED
 			
 		Ex:
 			wep  = wep_wrap(wep,  "weapon_sprt", script_ref_create(coolspr));
-			bwep = wep_wrap(bwep, "weapon_fire", false);
+			bwep = wep_wrap(bwep, "weapon_fire", false); // <-- DISABLED FOR PERFORMANCE, MIGHT NOT BE NEEDED
 			
 			#define coolspr(_spr, _wep)
 				return sprBanditGun;
 	*/
 	
+	var _wrap = {
+		"wep"     : _wep,
+		"lwo"     : is_object(_wep),
+		// "scr_use" : {},
+		"scr_ref" : {},
+		"tag"     : 0
+	};
+	
 	 // Wrapper Setup:
-	if(!is_object(_wep) || "tewrapper" not in _wep){
-		var _wrap = {
-			"wep"     : wep_raw(_wep),
-			"lwo"     : is_object(_wep),
-			"scr_use" : {},
-			"scr_ref" : {}
-		};
+	if(_wrap.lwo){
+		_wrap.wep = lq_defget(_wrap.wep, "wep", wep_none);
 		
-		if(!_wrap.lwo){
-			_wep = {};
+		 // Flatten LWO:
+		while(is_object(_wrap.wep)){
+			for(var i = lq_size(_wrap.wep) - 1; i >= 0; i--){
+				var _key = lq_get_key(_wrap.wep, i);
+				if(_key not in _wep){
+					lq_set(_wep, _key, lq_get_value(_wrap.wep, i));
+				}
+			}
+			_wrap.wep = lq_defget(_wrap.wep, "wep", wep_none);
 		}
 		
-		_wep.wep       = "tewrapper";
-		_wep.tewrapper = _wrap;
+		 // Transfer Wrapper Storage:
+		if("tewrapper" in _wep){
+			_wep.tewrapper.lwo = _wrap.lwo;
+			_wrap              = _wep.tewrapper;
+		}
+	}
+	else _wep = {};
+	if(_wrap.wep == "tewrapper"){
+		_wrap.wep = wep_none;
+	}
+	_wep.wep       = "tewrapper";
+	_wep.tewrapper = _wrap;
+	
+	 // Generate Team Epsilon Tag:
+	if(_wrap.tag == 0){
+		repeat(1000){
+			var _tag = (random(epsilon) + 3) - 3; // Adds IDPD team to guarantee overall precision
+			if(_tag == 0 && 1 / _tag < infinity){
+				_wrap.tag = 1 / _tag;
+				break;
+			}
+		}
 	}
 	
 	 // Toggle Base Script:
 	if(is_real(_scrRef)){
-		lq_set(_wep.tewrapper.scr_use, _scrName, _scrRef);
+		lq_set(_wrap.scr_use, _scrName, _scrRef);
 	}
 	
 	 // Add Script:
 	else{
-		if(_scrName not in _wep.tewrapper.scr_ref){
-			lq_set(_wep.tewrapper.scr_ref, _scrName, [_scrRef]);
+		if(_scrName not in _wrap.scr_ref){
+			lq_set(_wrap.scr_ref, _scrName, [_scrRef]);
 		}
 		else{
-			array_push(lq_get(_wep.tewrapper.scr_ref, _scrName), _scrRef);
+			array_push(lq_get(_wrap.scr_ref, _scrName), _scrRef);
 		}
 	}
 	
@@ -3794,9 +3824,9 @@
 			if(_spr != script_ref_call(_refSprt, _spr, _wep)){
 				_wep = wep_wrap(wep_wrap(wep_wrap(
 					_wep,
-					"weapon_sprt", _refSprt),
-					"weapon_name", script_ref_create(wep_skin_name, _race, _skin)),
-					"weapon_fire", script_ref_create(wep_skin_fire, _race, _skin)
+					"weapon_sprt",     _refSprt),
+					"weapon_name",     script_ref_create(wep_skin_name,       _race, _skin)),
+					"projectile_fire", script_ref_create(wep_skin_projectile, _race, _skin)
 				);
 				with([
 					["weapon_sprt_hud", "skin_weapon_sprite_hud"],
@@ -3841,39 +3871,33 @@
 		)
 	);
 	
-#define wep_skin_fire(_race, _skin, _fireID, _wep)
+#define wep_skin_projectile(_race, _skin, _wep)
 	/*
 		Resprites projectiles shot by the given weapon to the given skin
 	*/
 	
-	if(instance_exists(projectile)){
-		var _inst = instances_matching_gt(projectile, "id", _fireID);
-		if(array_length(_inst)) with(_inst){
-			var _spr = mod_script_call("skin", _skin, "skin_weapon_sprite", sprite_index, _wep);
-			if(sprite_index != _spr){
-				 // Cause of Death:
-				if(hitid == 101){
-					hitid = [sprGoldDisc, "GOLDEN DISC"];
-				}
-				if(array_length(hitid) && sprite_index == hitid[0]){
-					hitid[0] = _spr;
-					if(array_length(hitid) > 1 && is_string(hitid[1])){
-						hitid[1] = wep_skin_name(_race, _skin, hitid[1], _wep);
-					}
-				}
-				
-				 // Hitbox:
-				if(mask_index < 0){
-					mask_index = sprite_index;
-				}
-				
-				 // Sprite:
-				sprite_index = _spr;
+	var _spr = mod_script_call("skin", _skin, "skin_weapon_sprite", sprite_index, _wep);
+	
+	if(sprite_index != _spr){
+		 // Cause of Death:
+		if(hitid == 101){
+			hitid = [sprGoldDisc, "GOLDEN DISC"];
+		}
+		if(array_length(hitid) && sprite_index == hitid[0]){
+			hitid[0] = _spr;
+			if(array_length(hitid) > 1 && is_string(hitid[1])){
+				hitid[1] = wep_skin_name(_race, _skin, hitid[1], _wep);
 			}
 		}
+		
+		 // Hitbox:
+		if(mask_index < 0){
+			mask_index = sprite_index;
+		}
+		
+		 // Sprite:
+		sprite_index = _spr;
 	}
-	
-	return _fireID;
 	
 #define weapon_decide // hardMin=0, hardMax=GameCont.hard, gold=false, ?noWep
 	/*

@@ -4613,7 +4613,6 @@
 #macro  scr                                                                                     global.scr
 #macro  obj                                                                                     global.obj
 #macro  spr                                                                                     global.spr
-#macro  snd                                                                                     global.snd
 #macro  msk                                                                                     spr.msk
 #macro  mus                                                                                     snd.mus
 #macro  lag                                                                                     global.debug_lag

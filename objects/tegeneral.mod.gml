@@ -2159,7 +2159,7 @@
 				
 				 // Player:
 				if(instance_is(creator, Player)){
-					with([creator]){
+					with(creator){
 						 // Steroids:
 						if(!other.primary){
 							call(scr.player_swap, self);
@@ -2242,7 +2242,7 @@
 					if(variable_instance_get(creator, (primary ? "wep" : "bwep"), wep) == wep){
 						 // Player:
 						if(instance_is(creator, Player)){
-							with([creator]){
+							with(creator){
 								 // Steroids:
 								if(!other.primary){
 									call(scr.player_swap, self);
