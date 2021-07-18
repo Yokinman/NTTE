@@ -5638,35 +5638,6 @@
 		}
 	}
 	
-#define ntte_setup_bonus(_inst)
-	 // Crown of Bonus:
-	with(instances_matching(_inst, "bonus_pickup_check", null)){
-		bonus_pickup_check = true;
-		
-		if(!position_meeting(xstart, ystart, ChestOpen)){
-			var _num = 0;
-			
-			with(instances_matching_gt(Player, "bonus_ammo", 0)){
-				_num += bonus_ammo;
-			}
-			
-			if(
-				chance(60, _num)
-				|| place_meeting(x, y, Player)
-				|| place_meeting(x, y, Portal)
-			){
-				if(instance_is(self, Pickup)){
-					call(scr.obj_create, x, y, "BonusAmmoPickup");
-				}
-				else{
-					call(scr.chest_create, x, y, `BonusAmmo${instance_is(self, enemy) ? "Mimic" : "Chest"}`);
-				}
-			}
-			
-			instance_delete(self);
-		}
-	}
-	
 #define ntte_setup_bonus_Shell(_inst)
 	 // Cool Bonus Shells:
 	var _instBonus = instances_matching_ne(Player, "bonus_ammo", 0, null);
@@ -5889,7 +5860,7 @@
 		}
 	}
 	
-	 // Bind Update Scripts:
+	 // Bind Parrot Chest Setup Scripts:
 	var _parrot = false;
 	for(var i = 0; i < maxp; i++){
 		if(player_get_race(i) == "parrot"){
@@ -5897,23 +5868,25 @@
 			break;
 		}
 	}
-	with([
-		["update_feather_chestprop", _parrot,                                                 chestprop],
-		["update_feather_Pickup",    (_parrot && (skill_get(mut_throne_butt) > 0)),           Pickup],
-		["update_bonus",             (crown_current == "bonus" && !instance_exists(GenCont)), [AmmoPickup, HPPickup, AmmoChest, HealthChest, Mimic, SuperMimic]]
-	]){
-		var	_name = self[0],
-			_bind = lq_get(ntte, "bind_" + _name);
-			
-		if(self[1]){
-			if(is_undefined(_bind)){
-				lq_set(ntte, "bind_" + _name, call(scr.ntte_bind_setup, script_ref_create_ext(mod_current_type, mod_current, "ntte_" + _name), self[2]));
-			}
+	var _bind = lq_get(ntte, "bind_setup_feather_chestprop");
+	if(_parrot){
+		if(is_undefined(_bind)){
+			ntte.bind_setup_feather_chestprop = call(scr.ntte_bind_setup, script_ref_create(ntte_setup_feather_chestprop), chestprop);
 		}
-		else if(!is_undefined(_bind)){
-			call(scr.ntte_unbind, _bind);
-			lq_set(ntte, "bind_" + _name, undefined);
+	}
+	else if(!is_undefined(_bind)){
+		call(scr.ntte_unbind, _bind);
+		ntte.bind_setup_feather_chestprop = undefined;
+	}
+	var _bind = lq_get(ntte, "bind_setup_feather_Pickup");
+	if(_parrot && skill_get(mut_throne_butt) > 0){
+		if(is_undefined(_bind)){
+			ntte.bind_setup_feather_Pickup = call(scr.ntte_bind_setup, script_ref_create(ntte_setup_feather_Pickup), Pickup);
 		}
+	}
+	else if(!is_undefined(_bind)){
+		call(scr.ntte_unbind, _bind);
+		ntte.bind_setup_feather_Pickup = undefined;
 	}
 	
 #define ntte_step

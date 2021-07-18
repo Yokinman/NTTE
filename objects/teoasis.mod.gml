@@ -2037,7 +2037,7 @@
 			}
 		}
 		
-		 // Activate Underwater Updates:
+		 // Bind Underwater Object Setup Scripts:
 		if(is_undefined(lq_get(ntte, "bind_setup_underwater_list"))){
 			ntte.bind_setup_underwater_list = [
 				call(scr.ntte_bind_setup, script_ref_create(ntte_setup_underwater_flame), [GroundFlame, BlueFlame]),
@@ -2052,7 +2052,7 @@
 		}
 	}
 	
-	 // Deactivate Underwater Updates:
+	 // Unbind Underwater Object Setup Scripts:
 	else if(!is_undefined(lq_get(ntte, "bind_setup_underwater_list"))){
 		with(ntte.bind_setup_underwater_list){
 			call(scr.ntte_unbind, self);

@@ -44,6 +44,51 @@
 		sound_play_gun(crown_sound(), 0, 0.3);
 	}
 	
+#define step
+	 // Bind Pickup Replacement Script:
+	if(is_undefined(lq_get(ntte, "bind_setup_bonus"))){
+		ntte.bind_setup_bonus = call(scr.ntte_bind_setup, script_ref_create(ntte_setup_bonus), [AmmoPickup, HPPickup, AmmoChest, HealthChest, Mimic, SuperMimic]);
+	}
+	
+#define ntte_setup_bonus(_inst)
+	 // Crown of Bonus:
+	if(crown_current == mod_current){
+		if(!instance_exists(GenCont)){
+			with(instances_matching(_inst, "bonus_pickup_check", null)){
+				bonus_pickup_check = true;
+				
+				if(!position_meeting(xstart, ystart, ChestOpen)){
+					var _num = 0;
+					
+					with(instances_matching_gt(Player, "bonus_ammo", 0)){
+						_num += bonus_ammo;
+					}
+					
+					if(
+						chance(60, _num)
+						|| place_meeting(x, y, Player)
+						|| place_meeting(x, y, Portal)
+					){
+						if(instance_is(self, Pickup)){
+							call(scr.obj_create, x, y, "BonusAmmoPickup");
+						}
+						else{
+							call(scr.chest_create, x, y, `BonusAmmo${instance_is(self, enemy) ? "Mimic" : "Chest"}`);
+						}
+					}
+					
+					instance_delete(self);
+				}
+			}
+		}
+	}
+	
+	 // Unbind Script:
+	else if(!is_undefined(lq_get(ntte, "bind_setup_bonus"))){
+		call(scr.ntte_unbind, ntte.bind_setup_bonus);
+		ntte.bind_setup_bonus = undefined;
+	}
+	
 	
 /// SCRIPTS
 #macro  call                                                                                    script_ref_call
