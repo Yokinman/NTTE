@@ -155,6 +155,35 @@
 	BackCont.shadcol = area_shadow_color();
 	TopCont.darkness = area_darkness();
 	
+#define area_setup_spiral // Between Betweens
+	 // Reset Time:
+	time = 0;
+	
+	 // Did You Just See That?
+	if(chance(1, 3)){
+		with(call(scr.instance_random, Player)){
+			with(instance_create(other.x, other.y, SpiralDebris)){
+				sprite_index = other.spr_hurt;
+				image_index  = 1;
+				turnspeed   *= 2/3;
+				
+				 // Fast Forward:
+				repeat(irandom_range(8, 12)){
+					with(self){
+						event_perform(ev_step, ev_step_normal);
+					}
+				}
+			}
+		}
+	}
+	
+	 // Starfield:
+	for(var i = sprite_get_number(spr.Starfield) - 1; i >= 0; i--){
+		with(call(scr.obj_create, x, y, "SpiralStarfield")){
+			image_index = i;
+		}
+	}
+	
 #define area_setup_floor
 	 // Fix Depth:
 	if(styleb) depth = 8;

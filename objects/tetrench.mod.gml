@@ -1660,7 +1660,7 @@
 			_y  = y + lengthdir_y(_r * image_yscale, _d);
 			
 		with(call(scr.projectile_create, self, _x, _y, (is_enemy ? EnemyLightning : Lightning), point_direction(_x, _y, _tx, _ty) + orandom(12))){
-			ammo = min(30, other.image_xscale + random(other.image_xscale * 2));
+			ammo = min(30, ceil(other.image_xscale + random(other.image_xscale * 2)));
 			with(self){
 				event_perform(ev_alarm, 0);
 			}

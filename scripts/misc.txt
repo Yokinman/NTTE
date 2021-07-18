@@ -13,7 +13,7 @@
 #macro  msk                                                                                     spr.msk
 #macro  mus                                                                                     snd.mus
 #macro  lag                                                                                     global.debug_lag
-#macro  ntte_mods                                                                               global.mods
+#macro  ntte                                                                                    global.ntte_vars
 #macro  current_frame_active                                                                    ((current_frame + global.epsilon) % 1) < current_time_scale
 #define orandom(_num)                                                                   return  random_range(-_num, _num);
 #define chance(_numer, _denom)                                                          return  random(_denom) < _numer;
@@ -21,11 +21,9 @@
 ",
 
 "remove" : [
-	"unlock_get",
-	"obj_create"
+	"ntte_mods"
 ],
 
 "rename" : {
-	"unlock_get(" : "call(scr.unlock_get, ",
-	"obj_create(" : "call(scr.obj_create, "
+	"ntte_mods" : "ntte.mods"
 }

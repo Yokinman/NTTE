@@ -2663,28 +2663,27 @@
 	
 	
 /// GENERAL
-#define ntte_update(_newID)
-	 // Temporary Turret Fix:
-	if(instance_exists(Turret) && Turret.id > _newID){
-		with(instances_matching(instances_matching(instances_matching_gt(Turret, "id", _newID), "mask_index", mskNone), "canfly", false)){
-			mask_index = object_get_mask(Turret);
+#define ntte_setup_Freak(_inst)
+	 // Fish Freaks:
+	var _underwater = call(scr.area_get_underwater, GameCont.area);
+	with(_inst){
+		if("fish_freak" not in self){
+			fish_freak = (_underwater || (GameCont.area == area_labs && GameCont.loops > 0 && chance(1, 7)));
+		}
+		if(fish_freak){
+			spr_idle = spr.FishFreakIdle;
+			spr_walk = spr.FishFreakWalk;
+			spr_hurt = spr.FishFreakHurt;
+			spr_dead = spr.FishFreakDead;
+			hitid    = [spr_idle, "FREAK"];
 		}
 	}
 	
-	 // Fish Freaks:
-	if(instance_exists(Freak) && Freak.id > _newID){
-		var _underwater = call(scr.area_get_underwater, GameCont.area);
-		with(instances_matching_gt(Freak, "id", _newID)){
-			if("fish_freak" not in self){
-				fish_freak = (_underwater || (GameCont.area == area_labs && GameCont.loops > 0 && chance(1, 7)));
-			}
-			if(fish_freak){
-				spr_idle = spr.FishFreakIdle;
-				spr_walk = spr.FishFreakWalk;
-				spr_hurt = spr.FishFreakHurt;
-				spr_dead = spr.FishFreakDead;
-				hitid    = [spr_idle, "FREAK"];
-			}
+#define ntte_setup_PopoFreak(_inst)
+	 // No Infinite Rads:
+	if(GameCont.loops <= 0){
+		with(instances_matching(_inst, "kills", 0)){
+			raddrop = 0;
 		}
 	}
 	

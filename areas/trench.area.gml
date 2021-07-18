@@ -118,6 +118,16 @@
 	 // Tunnel Spawn:
 	safespawn += 2;
 	
+#define area_setup_spiral
+	 // Surprise Cameo:
+	if(chance(1, 6)){
+		with(instance_create(x, y, SpiralDebris)){
+			sprite_index = spr.KingCrabIdle;
+			grow         = 0.1;
+			dist        *= 0.8;
+		}
+	}
+	
 #define area_setup_floor
 	if(styleb){
 		 // Fix Depth:

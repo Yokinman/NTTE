@@ -3196,6 +3196,35 @@
 	}
 	
 	
+#define SpiralStarfield_create(_x, _y)
+	/*
+		Warp Zone's loading screen background
+	*/
+	
+	with(instance_create(_x, _y, SpiralDebris)){
+		 // Visual:
+		sprite_index = spr.Starfield;
+		image_index  = 0;
+		turnspeed    = 0;
+		
+		 // Bind Spiral Setup Script:
+		if(is_undefined(lq_get(ntte, "bind_setup_SpiralStarfield_Spiral"))){
+			ntte.bind_setup_SpiralStarfield_Spiral = call(scr.ntte_bind_setup, script_ref_create(ntte_setup_SpiralStarfield_Spiral), Spiral);
+			ntte_setup_SpiralStarfield_Spiral(Spiral);
+		}
+		
+		return self;
+	}
+	
+#define SpiralStarfield_step
+	 // Spin & Scale:
+	image_xscale = 0.8 + (0.4 * image_index) + (instance_exists(SpiralCont) ? arctan(SpiralCont.time / 100) : 0);
+	image_yscale = image_xscale;
+	rotspeed     = image_xscale;
+	dist         = 0;
+	grow         = 0;
+	
+	
 #define Tesseract_create(_x, _y)
 	/*
 		Loop boss for the Warp Zone
@@ -4654,7 +4683,7 @@
 		var	_pick   = [],
 			_secret = chance(1, 8);
 			
-		with(call(scr.array_combine, [area_desert, area_sewers, area_scrapyards, area_caves, area_city, area_labs, area_palace, choose(area_mansion, area_crib), area_cursed_caves, area_jungle], ntte_mods.area)){
+		with(call(scr.array_combine, [area_desert, area_sewers, area_scrapyards, area_caves, area_city, area_labs, area_palace, choose(area_mansion, area_crib), area_cursed_caves, area_jungle], ntte.mods.area)){
 			var _area = self;
 			if(_area != "red"){
 				 // Cursed:
@@ -5014,25 +5043,40 @@
 	
 	
 /// GENERAL
-#define ntte_update(_newID)
+#define ntte_setup_WepPickup(_inst)
 	 // Scramble Cursed Caves Weapons:
 	if(GameCont.area == area_cursed_caves){
-		if(instance_exists(WepPickup) && WepPickup.id > _newID){
-			with(instances_matching_gt(WepPickup, "id", _newID)){
-				if(roll && call(scr.wep_raw, wep) != "merge"){
-					if(chance(1, 3) || !position_meeting(xstart, ystart, ChestOpen)){
-						 // Curse:
-						curse = max(1, curse);
-						
-						 // Scramble:
-						var _part = call(scr.weapon_merge_decide, 0, GameCont.hard + (2 * curse));
-						if(array_length(_part) >= 2){
-							wep = call(scr.weapon_merge, _part[0], _part[1]);
-						}
+		with(_inst){
+			if(roll && call(scr.wep_raw, wep) != "merge"){
+				if(chance(1, 3) || !position_meeting(xstart, ystart, ChestOpen)){
+					 // Curse:
+					curse = max(1, curse);
+					
+					 // Scramble:
+					var _part = call(scr.weapon_merge_decide, 0, GameCont.hard + (2 * curse));
+					if(array_length(_part) >= 2){
+						wep = call(scr.weapon_merge, _part[0], _part[1]);
 					}
 				}
 			}
 		}
+	}
+	
+#define ntte_setup_SpiralStarfield_Spiral(_inst)
+	 // Starfield Spirals:
+	if(array_length(instances_matching_ne(obj.SpiralStarfield, "id"))){
+		with(instances_matching(_inst, "sprite_index", sprSpiral)){
+			sprite_index = spr.SpiralStarfield;
+			colors       = [make_color_rgb(30, 14, 29), make_color_rgb(16, 10, 25)];
+			lanim        = -100;
+			//grow        += 0.05;
+		}
+	}
+	
+	 // Unbind Script:
+	else if(!is_undefined(lq_get(ntte, "bind_setup_SpiralStarfield_Spiral"))){
+		call(scr.ntte_unbind, ntte.bind_setup_SpiralStarfield_Spiral);
+		ntte.bind_setup_SpiralStarfield_Spiral = undefined;
 	}
 	
 #define ntte_end_step
@@ -5112,6 +5156,8 @@
 		
 		 // Walls Active:
 		if(array_length(obj.WallFake)){
+			var _instMeet = [];
+			
 			 // Visual Fix:
 			var _inst = instances_matching(obj.WallFake, "visible", false);
 			if(array_length(_inst)){
@@ -5122,9 +5168,8 @@
 			
 			 // Fake Wall Collision:
 			if(array_length(obj.WallFakeHelper)){
-				var	_instMeet = [],
-					_instWall = instances_matching_ne(obj.WallFakeHelper, "id");
-					
+				var _instWall = instances_matching_ne(obj.WallFakeHelper, "id");
+				
 				 // Gather Dudes in Fake Walls:
 				with(hitme){
 					if(place_meeting(x, y, CustomObject) && array_length(call(scr.instances_meeting_instance, self, _instWall))){
@@ -5727,9 +5772,9 @@
 #macro  msk                                                                                     spr.msk
 #macro  mus                                                                                     snd.mus
 #macro  lag                                                                                     global.debug_lag
+#macro  ntte                                                                                    global.ntte_vars
 #macro  epsilon                                                                                 global.epsilon
 #macro  mod_current_type                                                                        global.mod_type
-#macro  ntte_mods                                                                               global.ntte_mods
 #macro  type_melee                                                                              0
 #macro  type_bullet                                                                             1
 #macro  type_shell                                                                              2

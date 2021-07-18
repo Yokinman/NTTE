@@ -2730,30 +2730,9 @@
 						_gml += _new + `		}`
 						_gml += _new + `		`
 						                		 // Store Team Tags:
-						_gml += _new + `		var _frameWait = max(0, weapon_get_load(_wep)) + 30;`
-						_gml += _new + `		if("ntte_projectile_tag_list" not in GameCont){`
-						_gml += _new + `			GameCont.ntte_projectile_tag_list = [];`
-						_gml += _new + `		}`
+						_gml += _new + `		var _frameSearch = max(0, weapon_get_load(_wep)) + 30;`
 						_gml += _new + `		with(_teamTagList){`
-						_gml += _new + `			var _pos   = 0,`
-						_gml += _new + `			    _frame = GameCont.timer + _frameWait;`
-						_gml += _new + `			    `
-						_gml += _new + `			with(GameCont.ntte_projectile_tag_list){`
-						_gml += _new + `				if(tag == other){`
-						_gml += _new + `					_frame = max(_frame, frame);`
-						_gml += _new + `					break;`
-						_gml += _new + `				}`
-						_gml += _new + `				_pos++;`
-						_gml += _new + `			}`
-						_gml += _new + `			`
-						_gml += _new + `			GameCont.ntte_projectile_tag_list[_pos] = {`
-						_gml += _new + `				"tag"        : self,`
-						_gml += _new + `				"wep"        : _wep,`
-						_gml += _new + `				"team"       : floor(_team),`
-						_gml += _new + `				"creator"    : _creator,`
-						_gml += _new + `				"frame"      : _frame,`
-						_gml += _new + `				"frame_wait" : _frameWait`
-						_gml += _new + `			};`
+						_gml += _new + `			script_ref_call(global.scr.projectile_tag_search, self, _team, _creator, _wrap.scr_ref.projectile_fire, _frameSearch, _wep);`
 						_gml += _new + `		}`
 						_gml += _new + `	}`
 						

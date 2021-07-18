@@ -45,19 +45,17 @@
 		sound_play_gun(crown_sound(), 0, 0.3);
 	}
 	
-#define ntte_update(_newID)
+#define ntte_setup_FloorMaker(_inst)
 	 // Smaller Levels:
 	if(crown_current == mod_current){
-		if(instance_exists(FloorMaker) && FloorMaker.id > _newID){
-			with(instances_matching_gt(FloorMaker, "id", _newID)){
-				goal = round(goal * 0.4);
-				
-				 // Fix:
-				if(instance_number(Floor) > goal){
-					with(GenCont){
-						if(alarm0 < 0) alarm0 = 3;
-						if(alarm2 < 0) alarm2 = 2;
-					}
+		with(_inst){
+			goal = round(goal * 0.4);
+			
+			 // Fix:
+			if(instance_number(Floor) > goal){
+				with(GenCont){
+					if(alarm0 < 0) alarm0 = 3;
+					if(alarm2 < 0) alarm2 = 2;
 				}
 			}
 		}

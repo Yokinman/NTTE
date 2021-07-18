@@ -1356,12 +1356,6 @@
 	flagprojcont_set("cluster",    proj_cluster);
 	flagprojcont_set("hyper",      proj_hyper);
 	
-	 // Merged Weapon PopupText Fix:
-	global.wep_name_popup = [
-		ds_list_create(), // weapon key (makeshift ds_map, normal doesn't support LWO)
-		ds_list_create()  // text to delete
-	];
-	
 #define cleanup
 	mod_script_call("mod", "teassets", "ntte_cleanup", script_ref_create(cleanup));
 	
@@ -2356,21 +2350,33 @@
 	 // Cool Prompt Subtext:
 	if(instance_is(self, WepPickup) && is_object(_wep)){
 		if("stock" in _wep.base && "front" in _wep.base){
+			var _list = (
+				("ntte_merge_name_popup" in GameCont)
+				? GameCont.ntte_merge_name_popup
+				: [[/* wep */],  [/* subtext to delete */]]
+			);
+			
 			 // Generate & Store Text:
-			if(ds_list_find_index(global.wep_name_popup[0], _wep) < 0){
+			if(array_find_index(_list[0], _wep) < 0){
 				var _spr = mod_script_call("mod", "teassets", "weapon_merge_subtext", _wep.base.stock, _wep.base.front);
 				if(sprite_exists(_spr)){
-					var _text = `#@(${_spr})`;
-					ds_list_add(global.wep_name_popup[0], _wep);
-					ds_list_add(global.wep_name_popup[1], _text);
+					array_push(_list[0], _wep);
+					array_push(_list[1], `#@(${_spr})`);
+					
+					 // Bind PopupText Fix Script:
+					if(is_undefined(lq_get(ntte, "bind_setup_merge_PopupText"))){
+						ntte.bind_setup_merge_PopupText = call(scr.ntte_bind_setup, script_ref_create(ntte_setup_merge_PopupText), PopupText);
+					}
 				}
 			}
 			
 			 // Add Text:
-			var _pos = ds_list_find_index(global.wep_name_popup[0], _wep);
+			var _pos = array_find_index(_list[0], _wep);
 			if(_pos >= 0){
-				_name += global.wep_name_popup[1][| _pos];
+				_name += _list[1][_pos];
 			}
+			
+			GameCont.ntte_merge_name_popup = _list;
 		}
 	}
 	
@@ -2456,29 +2462,40 @@
 		}
 	}
 	
-#define ntte_update(_newID)
+#define ntte_setup_merge_PopupText(_inst)
 	 // Undo Merged Weapon Prompt Subtext:
-	if(ds_list_size(global.wep_name_popup[0])){
-		if(instance_exists(PopupText) && PopupText.id > _newID){
-			with(instances_matching_gt(PopupText, "id", _newID)){
-				with(ds_list_to_array(global.wep_name_popup[1])){
-					other.text = string_replace(other.text, self, "");
-				}
+	if("ntte_merge_name_popup" in GameCont && array_length(GameCont.ntte_merge_name_popup[0])){
+		var	_list        = GameCont.ntte_merge_name_popup,
+			_wepList     = _list[0],
+			_wepTextList = _list[1];
+			
+		 // Remove Subtext:
+		with(_inst){
+			with(_wepTextList){
+				other.text = string_replace(other.text, self, "");
 			}
-			with(ds_list_to_array(global.wep_name_popup[0])){
-				if(!array_length(instances_matching(WepPickup, "wep", self))){
-					var _pos = ds_list_find_index(global.wep_name_popup[0], self);
-					with(global.wep_name_popup){
-						ds_list_delete(self, _pos);
-					}
+		}
+		
+		 // Remove From List:
+		with(_wepList){
+			if(!array_length(instances_matching(WepPickup, "wep", self))){
+				var _pos = array_find_index(_list[0], self);
+				for(var i = array_length(_list) - 1; i >= 0; i--){
+					_list[i] = call(scr.array_delete, _list[i], _pos);
 				}
 			}
 		}
 	}
 	
+	 // Unbind Script:
+	else if(!is_undefined(lq_get(ntte, "bind_setup_merge_PopupText"))){
+		call(scr.ntte_unbind, ntte.bind_setup_merge_PopupText);
+		ntte.bind_setup_merge_PopupText = undefined;
+	}
+	
+#define ntte_setup_merge_projectile(_inst)
 	 // Collect Merged Projectiles, 'instance_copy()' Fix:
-	if(instance_exists(projectile) && projectile.id > _newID){
-		var _inst = instances_matching_gt(projectile, "id", _newID);
+	if(flagProjContActive){
 		with(flagProjCont){
 			var _instFlag = instances_matching_ne(_inst, flag, null);
 			if(array_length(_instFlag)){
@@ -2493,6 +2510,12 @@
 				}
 			}
 		}
+	}
+	
+	 // Unbind Script:
+	else if(!is_undefined(lq_get(ntte, "bind_setup_merge_projectile"))){
+		call(scr.ntte_unbind, ntte.bind_setup_merge_projectile);
+		ntte.bind_setup_merge_projectile = undefined;
 	}
 	
 #define ntte_step
@@ -3105,6 +3128,11 @@
 				flagProjContActive = true;
 				array_push(inst, other);
 				array_push(vars, variable_instance_get(other, flag));
+				
+				 // Bind 'instance_copy()' Fix Script:
+				if(is_undefined(lq_get(ntte, "bind_setup_merge_projectile"))){
+					ntte.bind_setup_merge_projectile = call(scr.ntte_bind_setup, script_ref_create(ntte_setup_merge_projectile), projectile);
+				}
 			}
 		}
 	}
@@ -4616,9 +4644,9 @@
 #macro  msk                                                                                     spr.msk
 #macro  mus                                                                                     snd.mus
 #macro  lag                                                                                     global.debug_lag
+#macro  ntte                                                                                    global.ntte_vars
 #macro  epsilon                                                                                 global.epsilon
 #macro  mod_current_type                                                                        global.mod_type
-#macro  ntte_mods                                                                               global.ntte_mods
 #macro  type_melee                                                                              0
 #macro  type_bullet                                                                             1
 #macro  type_shell                                                                              2

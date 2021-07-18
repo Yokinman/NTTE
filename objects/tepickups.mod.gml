@@ -5592,112 +5592,87 @@
 		instance_delete(self);
 	}
 	
-#define ntte_update(_newID, _genID)
-	if(is_real(_genID)){
-		 // Cursed Ammo Chests:
-		if(
-			(instance_exists(AmmoChest) && AmmoChest.id > _genID) ||
-			(instance_exists(Mimic)     && Mimic.id     > _genID)
-		){
-			with(instances_matching(instances_matching_gt([AmmoChest, Mimic], "id", _genID), "ntte_curse_check", null)){
-				ntte_curse_check = true;
-				
-				if(!instance_is(self, IDPDChest)){
-					var	_mimic        = instance_is(self, Mimic),
-						_cursedArea   = (crown_current == crwn_curses || GameCont.area == area_cursed_caves),
-						_cursedPlayer = array_length(instances_matching_gt(instances_matching_gt(Player, "curse", 0), "bcurse", 0));
-						
-					if(chance(_cursedArea, (_mimic ? 3 : 5)) | chance(_cursedPlayer, _cursedPlayer + 1)){
-						call(scr.chest_create, x, y, (_mimic ? "CursedMimic" : "CursedAmmoChest"));
-						instance_delete(self);
+#define ntte_setup_feather_chestprop(_inst)
+	 // Chests Give Feathers (Parrot):
+	with(_inst){
+		with(call(scr.obj_create, x, y, "ParrotChester")){
+			creator = other;
+			switch(other.object_index){
+				case WeaponChest:
+					if(ultra_get("steroids", 1) > 0){
+						num *= 2;
 					}
-				}
-			}
-		}
-		
-		 // Crown of Bonus:
-		if(crown_current == "bonus"){
-			if(instance_exists(AmmoPickup) || instance_exists(HPPickup) || instance_exists(AmmoChest) || instance_exists(HealthChest) || instance_exists(Mimic) || instance_exists(SuperMimic)){
-				var _inst = instances_matching(instances_matching_gt([AmmoPickup, HPPickup, AmmoChest, HealthChest, Mimic, SuperMimic], "id", _genID), "bonus_pickup_check", null);
-				if(array_length(_inst)){
-					with(_inst){
-						bonus_pickup_check = true;
-						
-						if(!position_meeting(xstart, ystart, ChestOpen)){
-							var _num = 0;
-							with(instances_matching_gt(Player, "bonus_ammo", 0)){
-								_num += bonus_ammo;
-							}
-							if(
-								chance(60, _num)
-								|| place_meeting(x, y, Player)
-								|| place_meeting(x, y, Portal)
-							){
-								if(instance_is(self, Pickup)){
-									call(scr.obj_create, x, y, "BonusAmmoPickup");
-								}
-								else{
-									call(scr.chest_create, x, y, `BonusAmmo${instance_is(self, enemy) ? "Mimic" : "Chest"}`);
-								}
-							}
-							instance_delete(self);
-						}
+					break;
+					
+				case AmmoChest:
+				case AmmoChestMystery:
+					if(ultra_get("steroids", 2) > 0){
+						num *= 2;
 					}
-				}
-			}
-		}
-		
-		 // New Chest:
-		if(instance_exists(chestprop) && chestprop.id > _genID){
-			 // Fix Steroids Mystery Chests:
-			if(ultra_get("steroids", 2) > 0){
-				with(instances_matching(instances_matching_gt(AmmoChestMystery, "id", _genID), "sprite_index", sprAmmoChestMystery)){
-					sprite_index = sprAmmoChestSteroids;
-				}
-			}
-			
-			 // Chests Give Feathers (Parrot):
-			with(instances_matching_gt(chestprop, "id", _genID)){
-				with(call(scr.obj_create, x, y, "ParrotChester")){
-					creator = other;
-					switch(other.object_index){
-						case IDPDChest:
-							num *= 2;
-							break;
-							
-						case BigWeaponChest:
-						case BigCursedChest:
-							num *= 3;
-							break;
-							
-						case GiantWeaponChest:
-						case GiantAmmoChest:
-							num *= 6;
-							break;
-					}
-				}
-			}
-		}
-		
-		 // Pickups Give Feathers (Parrot Throne Butt):
-		if(skill_get(mut_throne_butt) > 0){
-			if(instance_exists(Pickup) && Pickup.id > _genID){
-				with(instances_matching(instances_matching_gt(Pickup, "id", _genID), "mask_index", mskPickup)){
-					with(call(scr.obj_create, x, y, "ParrotChester")){
-						creator = other;
-						small   = true;
-						num     = ceil(skill_get(mut_throne_butt));
-					}
-				}
+					break;
+					
+				case IDPDChest:
+					num *= 2;
+					break;
+					
+				case BigWeaponChest:
+				case BigCursedChest:
+					num *= 3;
+					break;
+					
+				case GiantWeaponChest:
+				case GiantAmmoChest:
+					num *= 6;
+					break;
 			}
 		}
 	}
 	
+#define ntte_setup_feather_Pickup(_inst)
+	 // Pickups Give Feathers (Parrot Throne Butt):
+	with(instances_matching(_inst, "mask_index", mskPickup)){
+		with(call(scr.obj_create, x, y, "ParrotChester")){
+			creator = other;
+			small   = true;
+			num     = ceil(skill_get(mut_throne_butt));
+		}
+	}
+	
+#define ntte_setup_bonus(_inst)
+	 // Crown of Bonus:
+	with(instances_matching(_inst, "bonus_pickup_check", null)){
+		bonus_pickup_check = true;
+		
+		if(!position_meeting(xstart, ystart, ChestOpen)){
+			var _num = 0;
+			
+			with(instances_matching_gt(Player, "bonus_ammo", 0)){
+				_num += bonus_ammo;
+			}
+			
+			if(
+				chance(60, _num)
+				|| place_meeting(x, y, Player)
+				|| place_meeting(x, y, Portal)
+			){
+				if(instance_is(self, Pickup)){
+					call(scr.obj_create, x, y, "BonusAmmoPickup");
+				}
+				else{
+					call(scr.chest_create, x, y, `BonusAmmo${instance_is(self, enemy) ? "Mimic" : "Chest"}`);
+				}
+			}
+			
+			instance_delete(self);
+		}
+	}
+	
+#define ntte_setup_bonus_Shell(_inst)
 	 // Cool Bonus Shells:
-	if(instance_exists(Shell) && Shell.id > _newID){
-		var _inst = instances_matching_ne(Player, "bonus_ammo", 0, null);
-		with(instances_matching_gt(Shell, "id", _newID)){
-			if(sprite_index != sprSodaCan && array_length(call(scr.instances_meeting_point, x, y, _inst))){
+	var _instBonus = instances_matching_ne(Player, "bonus_ammo", 0, null);
+	if(array_length(_instBonus)){
+		with(instances_matching_ne(_inst, "sprite_index", sprSodaCan)){
+			if(array_length(call(scr.instances_meeting_point, x, y, _instBonus))){
 				sprite_index = (
 					((sprite_get_bbox_right(sprite_index) + 1) - sprite_get_bbox_left(sprite_index) > 3)
 					? spr.BonusShellHeavy
@@ -5709,6 +5684,53 @@
 			}
 		}
 	}
+	
+	 // Unbind Script:
+	else if(!is_undefined(lq_get(ntte, "bind_setup_bonus_Shell"))){
+		call(scr.ntte_unbind, ntte.bind_setup_bonus_Shell);
+		ntte.bind_setup_bonus_Shell = undefined;
+	}
+	
+#define ntte_setup_AmmoChest(_inst)
+	 // Cursed Ammo Chests:
+	ntte_setup_Mimic(instances_matching(_inst, "object_index", AmmoChest, AmmoChestMystery));
+	
+	 // Fix Steroids Mystery Chests:
+	if(ultra_get("steroids", 2) > 0){
+		with(instances_matching(instances_matching(_inst, "object_index", AmmoChestMystery), "sprite_index", sprAmmoChestMystery)){
+			sprite_index = sprAmmoChestSteroids;
+		}
+	}
+	
+#define ntte_setup_Mimic(_inst)
+	var	_cursedArea   = (crown_current == crwn_curses || GameCont.area == area_cursed_caves),
+		_cursedPlayer = array_length(instances_matching_gt(instances_matching_gt(Player, "curse", 0), "bcurse", 0));
+		
+	 // Cursed:
+	with(instances_matching(_inst, "curse", null)){
+		if(chance(_cursedArea, (instance_is(self, Mimic) ? 3 : 5)) || chance(_cursedPlayer, _cursedPlayer + 1)){
+			with(script_bind_step(cursedchester_step, 0, self)){
+				event_perform(ev_step, ev_step_normal);
+			}
+		}
+	}
+	
+#define cursedchester_step(_target)
+	/*
+		Waits until the level has finished generating to curse the given ammo chest
+	*/
+	
+	if(instance_exists(_target)){
+		if(!instance_exists(GenCont)){
+			call(scr.chest_create,
+				_target.x,
+				_target.y,
+				(instance_is(_target, enemy) ? "CursedMimic" : "CursedAmmoChest")
+			);
+			instance_delete(_target);
+		}
+	}
+	else instance_destroy();
 	
 #define ntte_begin_step
 	 // Bonus Spirits:
@@ -5867,123 +5889,157 @@
 		}
 	}
 	
+	 // Bind Update Scripts:
+	var _parrot = false;
+	for(var i = 0; i < maxp; i++){
+		if(player_get_race(i) == "parrot"){
+			_parrot = true;
+			break;
+		}
+	}
+	with([
+		["update_feather_chestprop", _parrot,                                                 chestprop],
+		["update_feather_Pickup",    (_parrot && (skill_get(mut_throne_butt) > 0)),           Pickup],
+		["update_bonus",             (crown_current == "bonus" && !instance_exists(GenCont)), [AmmoPickup, HPPickup, AmmoChest, HealthChest, Mimic, SuperMimic]]
+	]){
+		var	_name = self[0],
+			_bind = lq_get(ntte, "bind_" + _name);
+			
+		if(self[1]){
+			if(is_undefined(_bind)){
+				lq_set(ntte, "bind_" + _name, call(scr.ntte_bind_setup, script_ref_create_ext(mod_current_type, mod_current, "ntte_" + _name), self[2]));
+			}
+		}
+		else if(!is_undefined(_bind)){
+			call(scr.ntte_unbind, _bind);
+			lq_set(ntte, "bind_" + _name, undefined);
+		}
+	}
+	
 #define ntte_step
 	if(instance_exists(Player)){
 		 // Bonus Ammo:
 		var _inst = instances_matching_ne(Player, "bonus_ammo", 0, null);
-		if(array_length(_inst)) with(_inst){
-			if(player_active){
-				var _ammo = 0;
-				
-				 // Restore Ammo:
-				if("bonus_ammo_save" in self){
-					for(var i = min(array_length(ammo), array_length(bonus_ammo_save)) - 1; i >= 0; i--){
-						var _diff = (bonus_ammo_save[i] - ammo[i]);
-						if(_diff > 0){
-							ammo[i] += _diff;
-							_ammo   += _diff;
+		if(array_length(_inst)){
+			with(_inst){
+				if(player_active){
+					var _ammo = 0;
+					
+					 // Restore Ammo:
+					if("bonus_ammo_save" in self){
+						for(var i = min(array_length(ammo), array_length(bonus_ammo_save)) - 1; i >= 0; i--){
+							var _diff = (bonus_ammo_save[i] - ammo[i]);
+							if(_diff > 0){
+								ammo[i] += _diff;
+								_ammo   += _diff;
+							}
 						}
 					}
-				}
-				bonus_ammo_save = array_clone(ammo);
-				drawempty       = 0;
-				drawemptyb      = 0;
-				
-				 // Restore Internal Ammo:
-				if("bonus_ammo_save_internal" not in self){
-					bonus_ammo_save_internal = [];
-				}
-				var _wepList = [wep, bwep];
-				for(var i = 0; i < array_length(_wepList); i++){
-					var _wep = _wepList[i];
-					if(
-						is_object(_wep)
-						&& "ammo" in _wep
-						&& "cost" in _wep
-						&& i < array_length(bonus_ammo_save_internal)
-					){
-						var	_save = bonus_ammo_save_internal[i],
-							_diff = (_save[1] - _wep.ammo);
-							
-						if(_save[0] == _wep && _diff > 0){
-							_wep.ammo += _diff;
-							_ammo     += _diff;
-						}
-					}
-					bonus_ammo_save_internal[i] = [_wep, lq_defget(_wep, "ammo", 0)];
-				}
-				
-				 // Timer:
-				if("bonus_ammo_max" not in self || abs(bonus_ammo_max) < abs(bonus_ammo)){
-					bonus_ammo_max = bonus_ammo;
-				}
-				if(bonus_ammo > 0){
-					if("bonus_ammo_tick" not in self){
-						bonus_ammo_tick = 0;
-					}
-					if(bonus_ammo_tick == 0 && _ammo > 0){
-						bonus_ammo_tick = 1;
-					}
+					bonus_ammo_save = array_clone(ammo);
+					drawempty       = 0;
+					drawemptyb      = 0;
 					
-					var	_last = bonus_ammo,
-						_tick = bonus_ammo_tick * current_time_scale;
-						
-					bonus_ammo -= _tick;
-					
-					 // End:
-					if(bonus_ammo <= 0){
-						bonus_ammo               = 0;
-						bonus_ammo_max           = 0;
-						bonus_ammo_tick          = 0;
-						bonus_ammo_flash         = 0;
-						bonus_ammo_save          = [];
+					 // Restore Internal Ammo:
+					if("bonus_ammo_save_internal" not in self){
 						bonus_ammo_save_internal = [];
 					}
-					
-					 // Particles:
-					else if((_last % 30) < _tick){
-						with(instance_create(x, y, WepSwap)){
-							sprite_index = sprGunWarrant;
-							image_angle  = other.gunangle - 90;
-							image_blend  = c_aqua;
-							creator      = other;
+					var _wepList = [wep, bwep];
+					for(var i = 0; i < array_length(_wepList); i++){
+						var _wep = _wepList[i];
+						if(
+							is_object(_wep)
+							&& "ammo" in _wep
+							&& "cost" in _wep
+							&& i < array_length(bonus_ammo_save_internal)
+						){
+							var	_save = bonus_ammo_save_internal[i],
+								_diff = (_save[1] - _wep.ammo);
+								
+							if(_save[0] == _wep && _diff > 0){
+								_wep.ammo += _diff;
+								_ammo     += _diff;
+							}
 						}
+						bonus_ammo_save_internal[i] = [_wep, lq_defget(_wep, "ammo", 0)];
 					}
-				}
-				
-				 // Effects:
-				if(_ammo > 0 || bonus_ammo == 0){
-					 // Sound:
-					sound_play_pitchvol(
-						choose(sndGruntFire, sndRogueRifle),
-						(0.6 + random(1)) / clamp(_ammo, 1, 3),
-						0.8 + (0.1 * _ammo)
-					);
 					
-					 // Visual:
-					with(call(scr.obj_create, x, y, "BonusAmmoFire")){
-						creator = other;
-						
-						 // Normal:
-						if(other.bonus_ammo != 0){
-							image_index  = max(2 - image_speed, 3 - (_ammo / 3));
-							image_xscale = 0.425 + (0.075 * _ammo);
-							image_xscale = min(1.2, image_xscale);
-							image_yscale = image_xscale;
+					 // Timer:
+					if("bonus_ammo_max" not in self || abs(bonus_ammo_max) < abs(bonus_ammo)){
+						bonus_ammo_max = bonus_ammo;
+					}
+					if(bonus_ammo > 0){
+						if("bonus_ammo_tick" not in self){
+							bonus_ammo_tick = 0;
 						}
+						if(bonus_ammo_tick == 0 && _ammo > 0){
+							bonus_ammo_tick = 1;
+						}
+						
+						var	_last = bonus_ammo,
+							_tick = bonus_ammo_tick * current_time_scale;
+							
+						bonus_ammo -= _tick;
 						
 						 // End:
-						else{
-							sound_play_pitchvol(sndLaserCannon, 1.4 + random(0.2), 0.8);
-							sound_play_pitchvol(sndEmpty,       0.8 + random(0.1), 1);
+						if(bonus_ammo <= 0){
+							bonus_ammo               = 0;
+							bonus_ammo_max           = 0;
+							bonus_ammo_tick          = 0;
+							bonus_ammo_flash         = 0;
+							bonus_ammo_save          = [];
+							bonus_ammo_save_internal = [];
+						}
+						
+						 // Particles:
+						else if((_last % 30) < _tick){
+							with(instance_create(x, y, WepSwap)){
+								sprite_index = sprGunWarrant;
+								image_angle  = other.gunangle - 90;
+								image_blend  = c_aqua;
+								creator      = other;
+							}
 						}
 					}
 					
-					 // HUD:
-					bonus_ammo_flash = 1;
+					 // Effects:
+					if(_ammo > 0 || bonus_ammo == 0){
+						 // Sound:
+						sound_play_pitchvol(
+							choose(sndGruntFire, sndRogueRifle),
+							(0.6 + random(1)) / clamp(_ammo, 1, 3),
+							0.8 + (0.1 * _ammo)
+						);
+						
+						 // Visual:
+						with(call(scr.obj_create, x, y, "BonusAmmoFire")){
+							creator = other;
+							
+							 // Normal:
+							if(other.bonus_ammo != 0){
+								image_index  = max(2 - image_speed, 3 - (_ammo / 3));
+								image_xscale = 0.425 + (0.075 * _ammo);
+								image_xscale = min(1.2, image_xscale);
+								image_yscale = image_xscale;
+							}
+							
+							 // End:
+							else{
+								sound_play_pitchvol(sndLaserCannon, 1.4 + random(0.2), 0.8);
+								sound_play_pitchvol(sndEmpty,       0.8 + random(0.1), 1);
+							}
+						}
+						
+						 // HUD:
+						bonus_ammo_flash = 1;
+					}
 				}
+				else bonus_ammo_tick = 0;
 			}
-			else bonus_ammo_tick = 0;
+			
+			 // Bind Shell Resprite Script:
+			if(is_undefined(lq_get(ntte, "bind_setup_bonus_Shell"))){
+				ntte.bind_setup_bonus_Shell = call(scr.ntte_bind_setup, script_ref_create(ntte_setup_bonus_Shell), Shell);
+			}
 		}
 		
 		 // Eyes Custom Pickup Attraction:
@@ -6723,9 +6779,9 @@
 #macro  msk                                                                                     spr.msk
 #macro  mus                                                                                     snd.mus
 #macro  lag                                                                                     global.debug_lag
+#macro  ntte                                                                                    global.ntte_vars
 #macro  epsilon                                                                                 global.epsilon
 #macro  mod_current_type                                                                        global.mod_type
-#macro  ntte_mods                                                                               global.ntte_mods
 #macro  type_melee                                                                              0
 #macro  type_bullet                                                                             1
 #macro  type_shell                                                                              2

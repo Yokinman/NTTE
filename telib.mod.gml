@@ -381,22 +381,18 @@
 					}
 				}
 				
-				 // Automatic Stuff:
-				if(_isCustom){
-					on_create = script_ref_create(obj_create, _x, _y, _name);
+				 // Automatic Hittable Stuff:
+				if(_isCustom && instance_is(self, hitme)){
+					 // Fill HP:
+					if(my_health == 1){
+						if(instance_is(self, CustomHitme) || instance_is(self, CustomProp)){
+							my_health = maxhealth;
+						}
+					}
 					
-					if(instance_is(self, hitme)){
-						 // Fill HP:
-						if(my_health == 1){
-							if(instance_is(self, CustomHitme) || instance_is(self, CustomProp)){
-								my_health = maxhealth;
-							}
-						}
-						
-						 // Set Sprite:
-						if(sprite_index == -1 && "spr_idle" in self){
-							sprite_index = spr_idle;
-						}
+					 // Set Sprite:
+					if(sprite_index == -1 && "spr_idle" in self){
+						sprite_index = spr_idle;
 					}
 				}
 				
@@ -406,13 +402,10 @@
 					array_push(_objList, self);
 				}
 				
-				 // Add Name to Object Search List:
-				if(!ds_map_exists(obj_search, object_index)){
-					obj_search[? object_index] = [];
-				}
-				var _objSearchList = obj_search[? object_index];
-				if(array_find_index(_objSearchList, _name) < 0){
-					array_push(_objSearchList, _name);
+				 // Bind Object Search Script:
+				var _objSearchKey = _name + ":" + object_get_name(object_index);
+				if(!ds_map_exists(obj_search, _objSearchKey)){
+					obj_search[? _objSearchKey] = call(scr.ntte_bind_setup, script_ref_create(ntte_setup_obj_search, _name, object_index), object_index);
 				}
 			}
 		}
@@ -433,53 +426,30 @@
 	
 	return noone;
 	
-#define ntte_update(_newID)
-	 // NT:TE Object Instance Lists, 'instance_copy()' Fix:
-	if(ds_map_size(obj_search)){
-		with(ds_map_keys(obj_search)){
-			var _obj = self;
-			if(instance_exists(_obj)){
-				if(_obj.id > _newID){
-					var	_inst     = instances_matching_gt(_obj, "id", _newID),
-						_nameList = obj_search[? _obj];
-						
-					with(_nameList){
-						var	_name     = self,
-							_nameInst = instances_matching(_inst, "ntte_name", _name);
-							
-						for(var _objName = _name; !is_undefined(_objName); _objName = ds_map_find_value(obj_parent, _objName)){
-							var _objList = instances_matching_ne(lq_get(obj, _objName), "id");
-							
-							lq_set(obj, _objName, _objList);
-							
-							if(array_length(_nameInst)){
-								with(_nameInst){
-									if(array_find_index(_objList, self) < 0){
-										array_push(_objList, self);
-									}
-								}
-							}
-							
-							if(!array_length(_objList)){
-								_nameList = array_delete_value(_nameList, _objName);
-							}
-						}
-					}
-					if(array_length(_nameList)){
-						obj_search[? _obj] = _nameList;
-					}
-					
-					 // Done:
-					else ds_map_delete(obj_search, _obj);
+#define ntte_setup_obj_search(_name, _object, _inst)
+	var _nameInst = instances_matching(_inst, "ntte_name", _name);
+	
+	 // Manage Object Instance Lists:
+	for(var _objName = _name; !is_undefined(_objName); _objName = ds_map_find_value(obj_parent, _objName)){
+		 // Prune Destroyed Instances:
+		var _objList = instances_matching_ne(lq_get(obj, _objName), "id");
+		lq_set(obj, _objName, _objList);
+		
+		 // Store New Instances, 'instance_copy()' Fix:
+		if(array_length(_nameInst)){
+			with(_nameInst){
+				if(array_find_index(_objList, self) < 0){
+					array_push(_objList, self);
 				}
-			}
-			else if(!instance_exists(PauseButton) && !instance_exists(BackMainMenu) && UberCont.alarm2 < 0){
-				with(obj_search[? _obj]){
-					lq_set(obj, self, instances_matching_ne(lq_get(obj, self), "id"));
-				}
-				ds_map_delete(obj_search, _obj);
 			}
 		}
+	}
+	
+	 // Stop Searching:
+	if(!array_length(lq_get(obj, _name))){
+		var _objSearchKey = _name + ":" + object_get_name(_object);
+		call(scr.ntte_unbind, obj_search[? _objSearchKey]);
+		ds_map_delete(obj_search, _objSearchKey);
 	}
 	
 #define ntte_begin_step
@@ -980,6 +950,99 @@
 		speed *= power(0.8, skill_get(mut_euphoria));
 	}
 	instance_destroy();
+	
+#define projectile_tag_search // tag, team, creator, scriptRef, frameSearch, ?wep
+	/*
+		Searches for new projectiles matching the given tag, team, and creator, calling the given script for each instance
+		
+		Args:
+			tag         - The team epsilon tag to search for
+			team        - The team to search for
+			creator     - The creator to search for
+			scriptRef   - The script or list of scripts to call for each projectile instance
+			frameSearch - The number of frames until the search ends, resets when new projectiles are found
+			wep         - Optional, won't stop searching until the creator isn't holding this weapon or it's fully reloaded
+	*/
+	
+	var	_tag         = argument[0],
+		_team        = floor(argument[1]),
+		_creator     = argument[2],
+		_scriptRef   = array_clone(argument[3]),
+		_frameSearch = argument[4],
+		_frame       = GameCont.timer + _frameSearch,
+		_wep         = ((argument_count > 5) ? argument[5] : undefined),
+		_pos         = 0;
+		
+	if("ntte_projectile_tag_list" not in GameCont){
+		GameCont.ntte_projectile_tag_list = [];
+	}
+	
+	 // Override Old Tag:
+	with(GameCont.ntte_projectile_tag_list){
+		if(tag == _tag){
+			_frame = max(_frame, frame);
+			break;
+		}
+		_pos++;
+	}
+	
+	 // Add to List:
+	GameCont.ntte_projectile_tag_list[_pos] = {
+		"tag"          : _tag,
+		"team"         : _team,
+		"creator"      : _creator,
+		"ref_list"     : ((array_length(_scriptRef) && is_string(_scriptRef[0])) ? [_scriptRef] : _scriptRef),
+		"frame"        : _frame,
+		"frame_search" : _frameSearch,
+		"wep"          : _wep
+	};
+	
+	 // Bind Setup Script:
+	if(is_undefined(lq_get(ntte, "bind_setup_projectile_tag"))){
+		ntte.bind_setup_projectile_tag = call(scr.ntte_bind_setup, script_ref_create(ntte_setup_projectile_tag), projectile);
+	}
+	
+#define ntte_setup_projectile_tag(_inst)
+	 // Capture Tagged Projectiles:
+	if("ntte_projectile_tag_list" in GameCont && array_length(GameCont.ntte_projectile_tag_list)){
+		var _gameFrame = GameCont.timer;
+		array_sort(_inst, true);
+		with(GameCont.ntte_projectile_tag_list){
+			var _instSearch = instances_matching(instances_matching(_inst, "team", team), "creator", creator);
+			
+			 // Search for Tagged Teams:
+			if(array_length(_instSearch)){
+				var _wep = wep;
+				with(_instSearch){
+					if(1 / (team - other.team) == other.tag){
+						other.frame = max(other.frame, _gameFrame + other.frame_search);
+						with(other.ref_list){
+							call(scr.pass, other, self, _wep);
+						}
+					}
+				}
+			}
+			
+			 // Done Searching:
+			if(frame <= _gameFrame){
+				if(
+					is_undefined(wep)
+					|| (
+						("wep"  not in creator || "reload"  not in creator || creator.wep  != wep || creator.reload  <= 0) &&
+						("bwep" not in creator || "breload" not in creator || creator.bwep != wep || creator.breload <= 0)
+					)
+				){
+					GameCont.ntte_projectile_tag_list = call(scr.array_delete_value, GameCont.ntte_projectile_tag_list, self);
+				}
+			}
+		}
+	}
+	
+	 // Unbind Script:
+	else if(!is_undefined(lq_get(ntte, "bind_setup_projectile_tag"))){
+		call(scr.ntte_unbind, ntte.bind_setup_projectile_tag);
+		ntte.bind_setup_projectile_tag = undefined;
+	}
 	
 #define enemy_hurt(_damage, _force, _direction)
 	my_health -= _damage;           // Damage
@@ -3817,7 +3880,7 @@
 		Returns the given weapon as a resprited variant for the given skin if one exists
 	*/
 	
-	if(is_string(_skin) && array_find_index(ntte_mods.skin, _skin) >= 0){
+	if(is_string(_skin) && array_find_index(ntte.mods.skin, _skin) >= 0){
 		var _refSprt = script_ref_create_ext("skin", _skin, "skin_weapon_sprite");
 		if(mod_script_exists(_refSprt[0], _refSprt[1], _refSprt[2])){
 			var _spr = weapon_get_sprt(_wep);
@@ -6113,9 +6176,9 @@
 #macro  msk                                                                                     spr.msk
 #macro  mus                                                                                     snd.mus
 #macro  lag                                                                                     global.debug_lag
+#macro  ntte                                                                                    global.ntte_vars
 #macro  epsilon                                                                                 global.epsilon
 #macro  mod_current_type                                                                        global.mod_type
-#macro  ntte_mods                                                                               global.ntte_mods
 #macro  type_melee                                                                              0
 #macro  type_bullet                                                                             1
 #macro  type_shell                                                                              2

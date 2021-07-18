@@ -1127,7 +1127,7 @@
 	
 	
 #define GatorAmbush_text    return `${event_tip}???`;
-#define GatorAmbush_chance  return 1;
+#define GatorAmbush_chance  return 0;
 
 #define GatorAmbush_setup
 	 // Smaller Level:
@@ -1841,6 +1841,10 @@
 #define FirePit_area    return area_scrapyards;
 #define FirePit_chance  return ((GameCont.subarea != 3) ? 1/12 : 0);
 
+#define FirePit_setup
+	 // Bind Steam Spawning Script:
+	bind_setup_steam = call(scr.ntte_bind_setup, script_ref_create(FirePit_setup_steam), RainSplash);
+	
 #define FirePit_create
 	var	_spawnX = spawn_x,
 		_spawnY = spawn_y;
@@ -1924,6 +1928,22 @@
 		}
 	}
 	*/
+	
+#define FirePit_cleanup
+	 // Unbind Script:
+	call(scr.ntte_unbind, bind_setup_steam);
+	
+#define FirePit_setup_steam(_inst)
+	 // Rain Turns to Steam:
+	with(_inst){
+		with(instance_create(x, y, Breath)){
+			image_yscale = choose(-1, 1);
+			image_angle  = random(90);
+			if(!place_meeting(x, y + 8, Floor)){
+				depth = -8;
+			}
+		}
+	}
 	
 	
 #define SealPlaza_text    return `${event_tip}DISTANT RELATIVES`;
@@ -3332,33 +3352,6 @@
 		spawn_y  = 10016;
 		
 		return self;
-	}
-	
-	
-/// GENERAL
-#define ntte_update(_newID)
-	 // Rain Turns to Steam:
-	if(teevent_get_active("FirePit")){
-		if(instance_exists(RainSplash) && RainSplash.id > _newID){
-			with(instances_matching_gt(RainSplash, "id", _newID)){
-				with(instance_create(x, y, Breath)){
-					image_yscale = choose(-1, 1);
-					image_angle  = random(90);
-					if(!place_meeting(x, y + 8, Floor)){
-						depth = -8;
-					}
-				}
-			}
-		}
-	}
-	
-	 // No Infinite Rads:
-	if(GameCont.loops <= 0){
-		if(instance_exists(PopoFreak) && PopoFreak.id > _newID){
-			with(instances_matching(instances_matching_gt(PopoFreak, "id", _newID), "kills", 0)){
-				raddrop = 0;
-			}
-		}
 	}
 	
 	

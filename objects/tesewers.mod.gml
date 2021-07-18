@@ -10,9 +10,6 @@
 		call(scr.obj_add, script_ref_create(i));
 	}
 	
-	 // Bind Events:
-	script_bind(CustomDraw, draw_bigpipe_top, object_get_depth(SubTopCont) - 1, true);
-	
 #define cleanup
 	mod_script_call("mod", "teassets", "ntte_cleanup", script_ref_create(cleanup));
 	
@@ -2095,123 +2092,6 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 			motion_add(point_direction(other.x, other.y, x, y), other.force);
 		}
 	}
-	
-	
-#define BigPipe_create(_x, _y)
-	/*
-		A big pipe that spawns bounty hunters
-	*/
-	
-	with(instance_create(_x, _y, CustomHitme)){
-		 // Visual:
-		spr_idle     = spr.BigPipeBottom;
-		spr_hurt     = spr.BigPipeBottomHurt;
-		spr_dead     = sprSmallGeneratorDead;
-		spr_top_idle = spr.BigPipeTop;
-		spr_top_hurt = spr.BigPipeTopHurt;
-		spr_shadow   = msk.BigPipe;
-		spr_shadow_y = 5;
-		image_speed  = 0.4;
-		image_xscale = choose(-1, 1);
-		depth        = 1;
-		
-		 // Sound:
-		snd_hurt = sndHitMetal;
-		snd_dead = sndGeneratorBreak;
-		
-		 // Vars:
-		mask_index = msk.BigPipe;
-		friction   = 1000;
-		maxhealth  = 60;
-		size       = 4;
-		team       = 0;
-		
-		 // Hole:
-		hole_inst = call(scr.obj_create, x, y + 8, "ManholeOpen");
-		with(hole_inst){
-			sprite_index = spr.BigPipeHole;
-			visible      = false;
-			big          = true;
-		}
-		
-		 // TopSmalls:
-	//	for(var _ox = -32; _ox < 32; _ox += 32){
-	//		for(var _oy = -16; _oy < 48; _oy += 32){
-	//			instance_create(pround(x + _ox, 16), pround(y + _oy, 16), Top);
-	//		}
-	//	}
-		
-		return self;
-	}
-	
-#define BigPipe_step
-	 // Collision:
-	if(place_meeting(x, y, hitme)){
-		var	_x = bbox_center_x,
-			_y = bbox_center_y;
-			
-		with(call(scr.instances_meeting_instance, self, instances_matching_ne(hitme, "team", 0))){
-			if(!instance_is(self, prop)){
-				motion_add_ct(point_direction(_x, _y, x, y), 0.5);
-				
-				 // Damage:
-				if(instance_is(self, enemy) && meleedamage > 0 && size > other.size && projectile_canhit_melee(other)){
-					projectile_hit(other, meleedamage);
-				}
-			}
-		}
-	}
-	
-	 // Animate:
-	if(sprite_index == spr_hurt && anim_end){
-		sprite_index = spr_idle;
-		image_index  = 0;
-	}
-	
-	 // Spawn Gators:
-	if(button_pressed(0, "horn")){
-		with(call(scr.obj_create, x, y - 8, choose(Gator, BuffGator, "BabyGator", "BoneGator", "AlbinoGator"))){
-			with(call(scr.obj_create, x, y, "PalankingToss")){
-				direction    = point_direction(x, y, mouse_x, mouse_y) + random_range(-60, 60);
-				speed        = random_range(2, 4);
-				zspeed       = 6;
-				creator      = other;
-				depth        = other.depth;
-				mask_index   = other.mask_index;
-				spr_shadow_y = other.spr_shadow_y;
-			}
-		}
-	}
-	
-	 // Death:
-	if(my_health <= 0){
-		instance_destroy();
-	}
-	
-#define BigPipe_end_step
-	 // Stay Still:
-	x = xstart;
-	y = ystart;
-	
-#define BigPipe_destroy
-	 // Reveal Hole:
-	with(hole_inst){
-		visible = true;
-		big     = false;
-		x       = other.x;
-		y       = other.y;
-	}
-	
-	 // Corpse:
-	call(scr.corpse_drop, self, 0, 0);
-	
-	 // Sound:
-	if(snd_dead == sndGeneratorBreak){
-		sound_play_hit(sndSewerPipeBreak, 0.3);
-	}
-	
-	 // Clear Walls:
-	instance_create(x, y, PortalClear);
 	
 	
 #define BoneGator_create(_x, _y)
@@ -4691,11 +4571,17 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 		depth       = 1000;
 		
 		 // Vars:
-		area        = GameCont.area;
-		cavein      = false;
-		cavein_dis  = 800;
-		cavein_pan  = 0;
-		cavein_inst = [];
+		area            = GameCont.area;
+		cavein          = false;
+		cavein_dis      = 800;
+		cavein_pan      = 0;
+		cavein_inst     = [];
+		bind_setup_list = [];
+		
+		 // Bind Update Scripts:
+		with([Wall, TopSmall, FloorExplo, Debris]){
+			array_push(other.bind_setup_list, call(scr.ntte_bind_setup, script_ref_create(LairBorder_setup_sprite, other, self), self));
+		}
 		
 		return self;
 	}
@@ -4903,6 +4789,59 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 			view_yview_nonsync + game_height,
 			false
 		);
+	}
+	
+#define LairBorder_cleanup
+	 // Unbind Update Scripts:
+	with(bind_setup_list){
+		call(scr.ntte_unbind, self);
+	}
+	
+#define LairBorder_setup_sprite(_borderInst, _object, _objectInst)
+	 // Forcing Lair/Pizza Sewers Border Wall Sprites:
+	with(_borderInst){
+		var _inst = instances_matching_ge(_objectInst, "y", y);
+		if(array_length(_inst)){
+			switch(_object){
+				case Debris : _inst = instances_matching(_inst, "sprite_index", call(scr.area_get_sprite, GameCont.area, sprDebris1)); break;
+				default     : _inst = instances_matching(_inst, "area", GameCont.area);
+			}
+			if(array_length(_inst)){
+				switch(_object){
+					
+					case Wall:
+						
+						var	_sprBot = call(scr.area_get_sprite, area, sprWall1Bot),
+							_sprTop = call(scr.area_get_sprite, area, sprWall1Top),
+							_sprOut = call(scr.area_get_sprite, area, sprWall1Out);
+							
+						with(_inst){
+							sprite_index = _sprBot;
+							topspr       = _sprTop;
+							outspr       = _sprOut;
+							area         = other.area;
+						}
+						
+						break;
+						
+					default:
+						
+						var _spr = -1;
+						
+						switch(_object){
+							case TopSmall   : _spr = call(scr.area_get_sprite, area, sprWall1Trans);  break;
+							case FloorExplo : _spr = call(scr.area_get_sprite, area, sprFloor1Explo); break;
+							case Debris     : _spr = call(scr.area_get_sprite, area, sprDebris1);     break;
+						}
+						
+						with(_inst){
+							sprite_index = _spr;
+							area         = other.area;
+						}
+						
+				}
+			}
+		}
 	}
 	
 	
@@ -6304,24 +6243,6 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 	if(array_length(obj.FlameSpark)){
 		with(instances_matching_ne(obj.FlameSpark, "id")){
 			draw_sprite_ext(sprite_index, image_index, x, y, image_xscale * 3, image_yscale * 3, image_angle, image_blend, image_alpha * 0.1);
-		}
-	}
-	
-#define draw_bigpipe_top
-	 // Big Pipe Tops:
-	if(array_length(obj.BigPipe)){
-		with(instances_matching(obj.BigPipe, "visible", true)){
-			draw_sprite_ext(
-				((sprite_index == spr_hurt) ? spr_top_hurt : spr_top_idle),
-				image_index,
-				x,
-				y,
-				image_xscale,
-				image_yscale,
-				image_angle,
-				image_blend,
-				image_alpha
-			);
 		}
 	}
 	

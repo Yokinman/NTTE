@@ -2748,6 +2748,13 @@
 		stat.diverted = 0;
 	}
 	
+#define Twins_name
+	return (
+		("partner" not in self || partner == noone || instance_exists(partner))
+		? "TWINS"
+		: "TWIN"
+	);
+	
 #define Twins_ttip
 	return [
 		"SUBSPACE HIGHWAY THROUGH YOUR HEAD",
@@ -3169,6 +3176,11 @@
 	 // Stat:
 	if("mutations" not in stat){
 		stat.mutations = 0;
+	}
+	
+	 // Bind Rad Attraction Script:
+	if(is_undefined(lq_get(ntte, "bind_setup_Orchid_Rad"))){
+		ntte.bind_setup_Orchid_Rad = call(scr.ntte_bind_setup, script_ref_create(ntte_setup_Orchid_Rad), [Rad, BigRad]);
 	}
 	
 #define Orchid_ttip
@@ -4425,89 +4437,82 @@
 	}
 	else sound_play_hit(snd_dead, 0.2);
 	
-#define ntte_update(_newID, _genID)
-	if(array_length(obj.Pet)){
-		 // Mantis Rad Attraction:
-		if(
-			(instance_exists(Rad)    && Rad.id    > _newID) ||
-			(instance_exists(BigRad) && BigRad.id > _newID)
-		){
-			var _targetInst = instances_matching(instances_matching(obj.Pet, "pet", "Orchid"), "visible", true);
-			if(array_length(_targetInst)){
-				with(instances_matching_gt([Rad, BigRad], "id", _newID)){
-					var	_target = noone,
-						_disMax = infinity;
-						
-					with(_targetInst){
-						if(instance_exists(leader) && !array_length(skill_inst)){
-							var _dis = point_distance(x, y, other.x, other.y);
-							if(_dis < _disMax){
-								_disMax = _dis;
-								_target = self;
-							}
-						}
-					}
-					
-					 // Grab:
-					if(instance_exists(_target)){
-						with(call(scr.fx, x + (hspeed / 2), y + (vspeed / 2), [direction, 0.4], "VaultFlowerSparkle")){
-							alarm0 = random_range(20, 30);
-							image_alpha *= 2;
-						}
-						call(scr.rad_path, self, _target);
-					}
-				}
-			}
-		}
-		
-		 // Salamander Throne Butt Text:
-		if(instance_exists(SkillIcon) && SkillIcon.id > _newID){
-			if(array_length(instances_matching(obj.Pet, "pet", "Salamander"))){
-				with(instances_matching(instances_matching_gt(SkillIcon, "id", _newID), "skill", mut_throne_butt)){
-					 // Append Character Names:
-					for(var i = 0; i < maxp; i++){
-						if(player_is_active(i)){
-							var _title = call(scr.race_get_title, player_get_race(i));
-							if(string_pos(_title, text) != 1){
-								text = _title + " - " + text;
-							}
-							break;
-						}
-					}
-					
-					 // Add Salamander:
-					text += "@s#SALAMANDER - @wPUNTED @sENEMIES @rEXPLODE@s";
-				}
-			}
-		}
-	}
 	
-	 // Spawn Guardian Pet:
-	if(instance_exists(LastDie)){
-		
-		var _inst = instances_matching_gt(LastDie, "id", _newID);
-		if(array_length(_inst))	with(_inst){
+/// GENERAL
+#define ntte_setup_SkillIcon(_inst)
+	 // Salamander Throne Butt Text:
+	if(array_length(instances_matching(obj.Pet, "pet", "Salamander"))){
+		with(instances_matching(_inst, "skill", mut_throne_butt)){
+			 // Append Character Names:
+			for(var i = 0; i < maxp; i++){
+				if(player_is_active(i)){
+					var _title = call(scr.race_get_title, player_get_race(i));
+					if(string_pos(_title, text) != 1){
+						text = _title + " - " + text;
+					}
+					break;
+				}
+			}
 			
-			with(call(scr.pet_create, x, y, "Guardian")){
-				sprite_index = spr_appear;
+			 // Add Salamander:
+			text += "@s#SALAMANDER - @wPUNTED @sENEMIES @rEXPLODE@s";
+		}
+	}
+	
+#define ntte_setup_LastDie(_inst)
+	 // Spawn Guardian Pet:
+	with(_inst){
+		with(call(scr.pet_create, x, y, "Guardian")){
+			sprite_index = spr_appear;
+		}
+	}
+	
+#define ntte_setup_YungCuz(_inst)
+	 // Spawn Cuz Pet:
+	with(instances_matching(_inst, "ntte_cuz", null)){
+		ntte_cuz = (
+			(spr_idle == sprCuzIdle)
+			? call(scr.pet_create, x, y, "Cuz")
+			: noone
+		);
+		with(ntte_cuz){
+			cuz = other;
+		}
+	}
+	
+#define ntte_setup_Orchid_Rad(_inst)
+	 // Mantis Rad Attraction:
+	var _targetInst = instances_matching(instances_matching(obj.Pet, "pet", "Orchid"), "visible", true);
+	if(array_length(_targetInst)){
+		with(_inst){
+			var	_target = noone,
+				_disMax = infinity;
+				
+			with(_targetInst){
+				if(instance_exists(leader) && !array_length(skill_inst)){
+					var _dis = point_distance(x, y, other.x, other.y);
+					if(_dis < _disMax){
+						_disMax = _dis;
+						_target = self;
+					}
+				}
+			}
+			
+			 // Grab:
+			if(instance_exists(_target)){
+				with(call(scr.fx, x + (hspeed / 2), y + (vspeed / 2), [direction, 0.4], "VaultFlowerSparkle")){
+					alarm0 = random_range(20, 30);
+					image_alpha *= 2;
+				}
+				call(scr.rad_path, self, _target);
 			}
 		}
 	}
 	
-	 // Spawn Cuz Pet:
-	if(is_real(_genID)){
-		if(instance_exists(YungCuz) && YungCuz.id > _genID){
-			with(instances_matching(instances_matching_gt(YungCuz, "id", _genID), "ntte_cuz", null)){
-				ntte_cuz = (
-					(spr_idle == sprCuzIdle)
-					? call(scr.pet_create, x, y, "Cuz")
-					: noone
-				);
-				with(ntte_cuz){
-					cuz = other;
-				}
-			}
-		}
+	 // Unbind Script:
+	else if(!is_undefined(lq_get(ntte, "bind_setup_Orchid_Rad"))){
+		call(scr.ntte_unbind, ntte.bind_setup_Orchid_Rad);
+		ntte.bind_setup_Orchid_Rad = undefined;
 	}
 	
 #define ntte_step
@@ -5284,9 +5289,9 @@
 #macro  msk                                                                                     spr.msk
 #macro  mus                                                                                     snd.mus
 #macro  lag                                                                                     global.debug_lag
+#macro  ntte                                                                                    global.ntte_vars
 #macro  epsilon                                                                                 global.epsilon
 #macro  mod_current_type                                                                        global.mod_type
-#macro  ntte_mods                                                                               global.ntte_mods
 #macro  type_melee                                                                              0
 #macro  type_bullet                                                                             1
 #macro  type_shell                                                                              2

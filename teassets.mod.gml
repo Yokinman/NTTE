@@ -8,13 +8,13 @@
 	obj                   = {};
 	global.obj_create_ref = ds_map_create(); // Pairs an NT:TE object's name with a script reference to its create event
 	global.obj_parent     = ds_map_create(); // Pairs an NT:TE object's name with the name of its parent NT:TE object
-	global.obj_search     = ds_map_create(); // Pairs an object index with a list of names of active NT:TE objects (for 'instance_copy' searching)
+	global.obj_search     = ds_map_create(); // Pairs a "name:objectName" key with a setup script binding for 'instance_copy' searching
 	global.obj_bind       = ds_map_create();
 	global.obj_bind_draw  = ds_map_create();
 	
 	 // Script References:
 	scr = {};
-	with([save_get, save_set, option_get, option_set, stat_get, stat_set, unlock_get, unlock_set, surface_setup, shader_setup, shader_add, script_bind, loadout_wep_save, loadout_wep_reset, trace_error]){
+	with([save_get, save_set, option_get, option_set, stat_get, stat_set, unlock_get, unlock_set, surface_setup, shader_setup, shader_add, script_bind, ntte_bind_setup, ntte_unbind, loadout_wep_save, loadout_wep_reset, trace_error]){
 		lq_set(scr, script_get_name(self), script_ref_create(self));
 	}
 	
@@ -2428,9 +2428,6 @@
 	global.shad        = ds_map_create();
 	global.shad_active = "";
 	
-	 // Cloned Starting Weapons:
-	global.loadout_wep_clone = ds_list_create();
-	
 	 // Mod Lists:
 	ntte_mods = {
 		"mod"    : [],
@@ -2447,9 +2444,25 @@
 		"end_step"     : [],
 		"draw_shadows" : [],
 		"draw_bloom"   : [],
-		"draw_dark"    : [],
-		"update"       : []
+		"draw_dark"    : []
 	};
+	
+	 // Shared Mod Variables:
+	ntte_vars = {
+		"mods"      : ntte_mods,
+		"mods_call" : ntte_mods_call,
+		"version"   : ntte_version
+	};
+	
+	 // Object Setup Script Binding:
+	global.bind_setup             = ds_map_create();
+	global.bind_setup_object_list = [];
+	for(var i = 0; object_exists(i); i++){
+		array_push(global.bind_setup_object_list, noone);
+	}
+	
+	 // Cloned Starting Weapons:
+	global.loadout_wep_clone = ds_list_create();
 	
 	 // Math Epsilon:
 	global.epsilon = 1;
@@ -2599,6 +2612,7 @@
 	ds_map_destroy(global.shad);
 	ds_map_destroy(global.bind);
 	ds_map_destroy(global.bind_hold);
+	ds_map_destroy(global.bind_setup);
 	
 	 // No Crash:
 	with(ntte_mods.race){
@@ -2620,6 +2634,7 @@
 #macro mus snd.mus
 #macro lag global.debug_lag
 
+#macro ntte_vars      global.vars
 #macro ntte_mods      global.mods
 #macro ntte_mods_call global.mods_call
 #macro ntte_version   global.version
@@ -2681,9 +2696,20 @@
 	mod_variable_set(_type, _name, "spr",       spr);
 	mod_variable_set(_type, _name, "snd",       snd);
 	mod_variable_set(_type, _name, "debug_lag", false);
+	mod_variable_set(_type, _name, "ntte_vars", ntte_vars);
 	mod_variable_set(_type, _name, "epsilon",   global.epsilon);
 	mod_variable_set(_type, _name, "mod_type",  _type);
+	
 	mod_variable_set(_type, _name, "ntte_mods", ntte_mods);
+	
+	 // Bind Object Setup Scripts:
+	var _list = [];
+	for(var i = array_length(global.bind_setup_object_list) - 1; i >= 0; i--){
+		if(mod_script_exists(_type, _name, "ntte_setup_" + object_get_name(i))){
+			array_push(_list, ntte_bind_setup(script_ref_create_ext(_type, _name, "ntte_setup_" + object_get_name(i)), i));
+		}
+	}
+	global.bind_setup[? _name + "." + _type] = _list;
 	
 	 // Add to Mod List:
 	if(_type in ntte_mods){
@@ -2855,6 +2881,15 @@
 			}
 		}
 		ds_map_delete(global.bind, _bindKey);
+	}
+	
+	 // Unbind Object Setup Scripts:
+	var _bindKey = _name + "." + _type;
+	if(ds_map_exists(global.bind_setup, _bindKey)){
+		with(global.bind_setup[? _bindKey]){
+			ntte_unbind(self);
+		}
+		ds_map_delete(global.bind_setup, _bindKey);
 	}
 	
 	 // Race Mod Loadout Fix:
@@ -3486,6 +3521,77 @@
 	array_push(global.bind[? _bindKey], _bind);
 	
 	return _bind;
+	
+#define ntte_bind_setup(_script, _obj)
+	/*
+		Binds the given script reference to a setup event for the given object
+		Calls the script with an array of newly created instances
+	*/
+	
+	var	_objectRefList   = global.bind_setup_object_list,
+		_objectChildList = array_create(array_length(_objectRefList), noone),
+		_scriptRef       = array_clone(_script);
+		
+	 // Link Objects to Their Children:
+	for(var i = array_length(_objectChildList) - 1; i >= 0; i--){
+		var _parent = object_get_parent(i);
+		if(object_exists(_parent)){
+			var _childList = _objectChildList[_parent];
+			if(_childList == noone){
+				_childList                = [];
+				_objectChildList[_parent] = _childList;
+			}
+			array_push(_childList, i);
+		}
+	}
+	
+	 // Link Script Reference to Object(s) & Their Children:
+	var	_objectList    = (is_array(_obj) ? array_clone(_obj) : [_obj]),
+		_objectListMax = array_length(_objectList);
+		
+	for(var i = 0; i < _objectListMax; i++){
+		var	_object    = _objectList[i],
+			_childList = _objectChildList[_object],
+			_refList   = _objectRefList[_object];
+			
+		 // Add Children to List:
+		if(_childList != noone){
+			with(_childList){
+				if(array_find_index(_objectList, self) < 0){
+					array_push(_objectList, self);
+					_objectListMax++;
+				}
+			}
+		}
+		
+		 // Store Script Reference:
+		if(_refList == noone){
+			_refList                = [];
+			_objectRefList[_object] = _refList;
+		}
+		array_push(_refList, _scriptRef);
+	}
+	
+	return _scriptRef;
+	
+#define ntte_unbind(_ref)
+	/*
+		Unbinds the given NT:TE script reference from its event
+	*/
+	
+	var _obj = 0;
+	
+	with(global.bind_setup_object_list){
+		if(self != noone){
+			var _refList = call(scr.array_delete_value, self, _ref);
+			global.bind_setup_object_list[_obj] = (
+				array_length(_refList)
+				? _refList
+				: noone
+			);
+		}
+		_obj++;
+	}
 	
 #define sprite /// sprite(_path, _img, _x, _y, _shine = shnNone)
 	var _path = argument[0], _img = argument[1], _x = argument[2], _y = argument[3];

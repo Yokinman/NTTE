@@ -698,79 +698,75 @@
 	
 	if(lag) trace_time(mod_current + "_step");
 	
-#define ntte_update(_newID)
+#define ntte_setup_charm(_inst)
+	 // Charm Inheritance:
 	if(charm_instance_number){
-		 // Grab Charmed Objects:
-		with(charm_object){
-			if(instance_exists(self) && self.id > _newID){
-				with(instances_matching_gt(self, "id", _newID)){
-					 // 'instance_copy()' Fix:
-					if("ntte_charm" in self && ntte_charm.charmed && array_find_index(charm_instance_list, self) < 0){
-						ntte_charm = lq_clone(ntte_charm);
-						array_push(charm_instance_list, self);
-						array_push(charm_instance_vars, ntte_charm);
-					}
-					
-					 // Inherit Charm from Creator:
-					else if("creator" in self){
-						var _hitme = (instance_is(self, hitme) || instance_is(self, becomenemy));
-						with(charm_instance_list){
-							if(other.creator == self || ("creator" in self && !instance_is(self, hitme) && other.creator == creator)){
-								if(!_hitme || !instance_exists(self) || place_meeting(x, y, other)){
-									if("ntte_charm" not in other || !other.ntte_charm.charmed){
-										var	_vars  = charm_instance_vars[array_find_index(charm_instance_list, self)],
-											_charm = charm_instance(other, true);
-											
-										_charm.time    = _vars.time;
-										_charm.index   = _vars.index;
-										_charm.kill    = _vars.kill;
-										_charm.feather = _vars.feather;
-										
-										if(_hitme){
-											with(other){
-												 // Kill When Uncharmed if Infinitely Spawned:
-												if(instance_is(self, enemy) && !enemy_boss && kills <= 0){
-													_charm.kill = true;
-													with(creator){
-														if(enemy_boss){
-															_charm.kill = false;
-														}
-													}
-													if(_charm.kill){
-														raddrop = 0;
-													}
+		with(_inst){
+			 // 'instance_copy()' Fix:
+			if("ntte_charm" in self && ntte_charm.charmed && array_find_index(charm_instance_list, self) < 0){
+				ntte_charm = lq_clone(ntte_charm);
+				array_push(charm_instance_list, self);
+				array_push(charm_instance_vars, ntte_charm);
+			}
+			
+			 // Inherit Charm from Creator:
+			else if("creator" in self){
+				var _hitme = (instance_is(self, hitme) || instance_is(self, becomenemy));
+				with(charm_instance_list){
+					if(other.creator == self || ("creator" in self && !instance_is(self, hitme) && other.creator == creator)){
+						if(!_hitme || !instance_exists(self) || place_meeting(x, y, other)){
+							if("ntte_charm" not in other || !other.ntte_charm.charmed){
+								var	_vars  = charm_instance_vars[array_find_index(charm_instance_list, self)],
+									_charm = charm_instance(other, true);
+									
+								_charm.time    = _vars.time;
+								_charm.index   = _vars.index;
+								_charm.kill    = _vars.kill;
+								_charm.feather = _vars.feather;
+								
+								if(_hitme){
+									with(other){
+										 // Kill When Uncharmed if Infinitely Spawned:
+										if(instance_is(self, enemy) && !enemy_boss && kills <= 0){
+											_charm.kill = true;
+											with(creator){
+												if(enemy_boss){
+													_charm.kill = false;
 												}
-												
-												 // Featherize:
-												if(_charm.feather && _charm.time >= 0){
-													var _first = noone;
-													do{
-														with(call(scr.obj_create, x + orandom(24), y + orandom(24), "ParrotFeather")){
-															target = other;
-															index  = _charm.index;
-															with(player_find(index)){
-																other.bskin = bskin;
-															}
-															sprite_index = call(scr.race_get_sprite, mod_current, bskin, sprite_index);
-															_charm.time -= min(_charm.time, stick_time * 1.5);
-															
-															 // Insta-Charm:
-															if(!instance_exists(_first)){
-																_first = self;
-															}
-														}
+											}
+											if(_charm.kill){
+												raddrop = 0;
+											}
+										}
+										
+										 // Featherize:
+										if(_charm.feather && _charm.time >= 0){
+											var _first = noone;
+											do{
+												with(call(scr.obj_create, x + orandom(24), y + orandom(24), "ParrotFeather")){
+													target = other;
+													index  = _charm.index;
+													with(player_find(index)){
+														other.bskin = bskin;
 													}
-													until(_charm.time <= 0);
+													sprite_index = call(scr.race_get_sprite, mod_current, bskin, sprite_index);
+													_charm.time -= min(_charm.time, stick_time * 1.5);
 													
 													 // Insta-Charm:
-													with(_first){
-														x          = random_range(other.bbox_left, other.bbox_right  + 1);
-														y          = random_range(other.bbox_top,  other.bbox_bottom + 1);
-														stick_wait = 0;
-														with(self){
-															event_perform(ev_step, ev_step_normal);
-														}
+													if(!instance_exists(_first)){
+														_first = self;
 													}
+												}
+											}
+											until(_charm.time <= 0);
+											
+											 // Insta-Charm:
+											with(_first){
+												x          = random_range(other.bbox_left, other.bbox_right  + 1);
+												y          = random_range(other.bbox_top,  other.bbox_bottom + 1);
+												stick_wait = 0;
+												with(self){
+													event_perform(ev_step, ev_step_normal);
 												}
 											}
 										}
@@ -782,49 +778,52 @@
 				}
 			}
 		}
-		
-		 // Allied Crystal Fixes:
-		if(instance_exists(crystaltype)){
-			 // Charge Particles:
-			if(instance_exists(LaserCrystal) || instance_exists(InvLaserCrystal)){
-				if(instance_exists(LaserCharge) && LaserCharge.id > _newID){
-					var _instCharm = instances_matching_ne([LaserCrystal, InvLaserCrystal], "ntte_charm", null);
-					if(array_length(_instCharm)){
-						with(instances_matching_gt(LaserCharge, "id", _newID)){
-							with(_instCharm){
-								if(ntte_charm.charmed){
-									var	_x1  = other.xstart,
-										_y1  = other.ystart,
-										_x2  = x,
-										_y2  = y,
-										_dis = point_distance(_x1, _y1, _x2, _y2),
-										_dir = point_direction(_x1, _y1, _x2, _y2);
-										
-									if(_dis < 5 || (other.alarm0 == floor(1 + (_dis / other.speed)) && abs(angle_difference(other.direction, _dir)) < 0.1)){
-										call(scr.team_instance_sprite, team, other);
-										break;
-									}
-								}
-							}
+	}
+	
+	 // Unbind Scripts:
+	else if(!is_undefined(lq_get(ntte, "bind_setup_charm_list"))){
+		with(ntte.bind_setup_charm_list){
+			call(scr.ntte_unbind, self);
+		}
+		ntte.bind_setup_charm_list = undefined;
+	}
+	
+#define ntte_setup_charm_LaserCharge(_inst)
+	 // Allied Laser Crystal Fix:
+	if(instance_exists(LaserCrystal) || instance_exists(InvLaserCrystal)){
+		var _instCharm = instances_matching_ne([LaserCrystal, InvLaserCrystal], "ntte_charm", null);
+		if(array_length(_instCharm)){
+			with(_inst){
+				with(_instCharm){
+					if(ntte_charm.charmed){
+						var	_x1  = other.xstart,
+							_y1  = other.ystart,
+							_x2  = x,
+							_y2  = y,
+							_dis = point_distance(_x1, _y1, _x2, _y2),
+							_dir = point_direction(_x1, _y1, _x2, _y2);
+							
+						if(_dis < 5 || (other.alarm0 == floor(1 + (_dis / other.speed)) && abs(angle_difference(other.direction, _dir)) < 0.1)){
+							call(scr.team_instance_sprite, team, other);
+							break;
 						}
 					}
 				}
 			}
-			
-			 // Lightning:
-			if(instance_exists(LightningCrystal)){
-				if(instance_exists(EnemyLightning) && EnemyLightning.id > _newID){
-					var _instCharm = instances_matching_ne(LightningCrystal, "ntte_charm", null);
-					if(array_length(_instCharm)){
-						with(instances_matching(instances_matching_gt(EnemyLightning, "id", _newID), "sprite_index", sprEnemyLightning)){
-							if(!instance_exists(creator)){
-								with(instances_matching(_instCharm, "team", team)){
-									if(ntte_charm.charmed && distance_to_object(other) < 56){
-										other.sprite_index = sprLightning;
-										break;
-									}
-								}
-							}
+		}
+	}
+	
+#define ntte_setup_charm_EnemyLightning(_inst)
+	 // Allied Lightning Crystal Fix:
+	if(instance_exists(LightningCrystal)){
+		var _instCharm = instances_matching_ne(LightningCrystal, "ntte_charm", null);
+		if(array_length(_instCharm)){
+			with(instances_matching(_inst, "sprite_index", sprEnemyLightning)){
+				if(!instance_exists(creator)){
+					with(instances_matching(_instCharm, "team", team)){
+						if(ntte_charm.charmed && distance_to_object(other) < 56){
+							other.sprite_index = sprLightning;
+							break;
 						}
 					}
 				}
@@ -1448,6 +1447,15 @@
 					array_push(charm_instance_list, self);
 					array_push(charm_instance_vars, _vars);
 				}
+				
+				 // Bind Setup Scripts:
+				if(is_undefined(lq_get(ntte, "bind_setup_charm_list"))){
+					ntte.bind_setup_charm_list = [
+						call(scr.ntte_bind_setup, script_ref_create(ntte_setup_charm),                charm_object),
+						call(scr.ntte_bind_setup, script_ref_create(ntte_setup_charm_LaserCharge),    LaserCharge),
+						call(scr.ntte_bind_setup, script_ref_create(ntte_setup_charm_EnemyLightning), EnemyLightning)
+					];
+				}
 			}
 			
 			 // Uncharm:
@@ -1863,9 +1871,9 @@
 #macro  msk                                                                                     spr.msk
 #macro  mus                                                                                     snd.mus
 #macro  lag                                                                                     global.debug_lag
+#macro  ntte                                                                                    global.ntte_vars
 #macro  epsilon                                                                                 global.epsilon
 #macro  mod_current_type                                                                        global.mod_type
-#macro  ntte_mods                                                                               global.ntte_mods
 #macro  type_melee                                                                              0
 #macro  type_bullet                                                                             1
 #macro  type_shell                                                                              2

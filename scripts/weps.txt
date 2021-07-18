@@ -11,7 +11,7 @@
 #macro  msk                                                                                     spr.msk
 #macro  mus                                                                                     snd.mus
 #macro  lag                                                                                     global.debug_lag
-#macro  ntte_mods                                                                               global.mods
+#macro  ntte                                                                                    global.ntte_vars
 #macro  type_melee                                                                              0
 #macro  type_bullet                                                                             1
 #macro  type_shell                                                                              2
@@ -27,23 +27,9 @@
 ",
 
 "remove" : [
-	"unlock_get",
-	"obj_create",
-	"projectile_create",
-	"wep_raw",
-	"weapon_fire_init",
-	"weapon_ammo_fire",
-	"weapon_ammo_hud",
-	"weapon_get"
+	"ntte_mods"
 ],
 
 "rename" : {
-	"unlock_get("        : "call(scr.unlock_get, ",
-	"obj_create("        : "call(scr.obj_create, ",
-	"projectile_create(" : "call(scr.projectile_create, self, ",
-	"wep_raw("           : "call(scr.wep_raw, ",
-	"weapon_fire_init("  : "call(scr.weapon_fire_init, ",
-	"weapon_ammo_fire("  : "call(scr.weapon_ammo_fire, ",
-	"weapon_ammo_hud("   : "call(scr.weapon_ammo_hud, ",
-	"weapon_get("        : "call(scr.weapon_get, ",
+	"ntte_mods" : "ntte.mods"
 }

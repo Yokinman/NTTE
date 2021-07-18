@@ -323,7 +323,7 @@
 	underwater_sound(false);
 	
 #macro underwater_area   ((GameCont.area == area_vault) ? GameCont.lastarea : GameCont.area)
-#macro underwater_active (!instance_exists(GenCont) && !instance_exists(LevCont) && array_find_index(ntte_mods.area, underwater_area) >= 0 && call(scr.area_get_underwater, underwater_area))
+#macro underwater_active (!instance_exists(GenCont) && !instance_exists(LevCont) && array_find_index(ntte.mods.area, underwater_area) >= 0 && call(scr.area_get_underwater, underwater_area))
 
 #define BubbleBomb_create(_x, _y)
 	with(instance_create(_x, _y, CustomProjectile)){
@@ -1842,143 +1842,113 @@
 	
 	
 /// GENERAL
-#define ntte_update(_newID)
+#define ntte_setup_hitme(_inst)
 	 // Air Bubble Setup:
-	if(instance_exists(hitme) && hitme.id > _newID){
-		with(instances_matching_gt(hitme, "id", _newID)){
-			if("spr_bubble" not in self){
-				spr_bubble     = -1;
-				spr_bubble_pop = -1;
-				spr_bubble_x   = 0;
-				spr_bubble_y   = 0;
-				
-				 // Auto-Setup:
-				if(
-					team != 0
-					&& !instance_is(self, prop)
-					&& !instance_is(self, Freak)
-					&& snd_dead != sndOasisDeath
-					&& snd_hurt != sndOasisHurt
-					&& snd_hurt != sndOasisBossHurt
-					&& snd_hurt != sndMutant1Hurt
-					&& snd_hurt != sndMutant14Hurt
-					&& snd_hurt != sndSpiderHurt
-					&& snd_hurt != sndLaserCrystalHit
-					&& snd_hurt != sndLightningCrystalHit
-					&& snd_hurt != sndHyperCrystalHurt
-					&& snd_hurt != sndTechnomancerHurt
-					&& snd_hurt != sndNothingHurtHigh
-					&& snd_hurt != sndNothingHurtMid
-					&& snd_hurt != sndNothingHurtLow
-					&& snd_hurt != sndNothing2Hurt
-					&& snd_hurt != sndVanHurt
-				){
-					var	_left   = sprite_get_bbox_left(spr_hurt),
-						_top    = sprite_get_bbox_top(spr_hurt),
-						_right  = sprite_get_bbox_right(spr_hurt)  + 1,
-						_bottom = sprite_get_bbox_bottom(spr_hurt) + 1;
-						
-					 // Big:
-					if(_right - _left < 28 && _bottom - _top < 28){
-						spr_bubble     = sprPlayerBubble;
-						spr_bubble_pop = sprPlayerBubblePop;
-					}
-					
-					 // Normal:
-					else{
-						spr_bubble     = spr.BigBubble;
-						spr_bubble_pop = spr.BigBubblePop;
-					}
-					
-					 // Vertical Offset:
-					spr_bubble_y = floor(((_bottom + _top) / 2) - sprite_get_yoffset(spr_hurt));
-				}
-			}
+	with(_inst){
+		if("spr_bubble" not in self){
+			spr_bubble     = -1;
+			spr_bubble_pop = -1;
+			spr_bubble_x   = 0;
+			spr_bubble_y   = 0;
 			
-			 // Death Pop Setup:
-			if(spr_bubble != -1){
-				if("ntte_bubble_pop" not in GameCont){
-					GameCont.ntte_bubble_pop = [];
+			 // Auto-Setup:
+			if(
+				team != 0
+				&& !instance_is(self, prop)
+				&& !instance_is(self, Freak)
+				&& snd_dead != sndOasisDeath
+				&& snd_hurt != sndOasisHurt
+				&& snd_hurt != sndOasisBossHurt
+				&& snd_hurt != sndMutant1Hurt
+				&& snd_hurt != sndMutant14Hurt
+				&& snd_hurt != sndSpiderHurt
+				&& snd_hurt != sndLaserCrystalHit
+				&& snd_hurt != sndLightningCrystalHit
+				&& snd_hurt != sndHyperCrystalHurt
+				&& snd_hurt != sndTechnomancerHurt
+				&& snd_hurt != sndNothingHurtHigh
+				&& snd_hurt != sndNothingHurtMid
+				&& snd_hurt != sndNothingHurtLow
+				&& snd_hurt != sndNothing2Hurt
+				&& snd_hurt != sndVanHurt
+			){
+				var	_left   = sprite_get_bbox_left(spr_hurt),
+					_top    = sprite_get_bbox_top(spr_hurt),
+					_right  = sprite_get_bbox_right(spr_hurt)  + 1,
+					_bottom = sprite_get_bbox_bottom(spr_hurt) + 1;
+					
+				 // Big:
+				if(_right - _left < 28 && _bottom - _top < 28){
+					spr_bubble     = sprPlayerBubble;
+					spr_bubble_pop = sprPlayerBubblePop;
 				}
-				array_push(
-					GameCont.ntte_bubble_pop,
-					[self, x + spr_bubble_x, y + spr_bubble_y, spr_bubble_pop, true]
-				);
+				
+				 // Normal:
+				else{
+					spr_bubble     = spr.BigBubble;
+					spr_bubble_pop = spr.BigBubblePop;
+				}
+				
+				 // Vertical Offset:
+				spr_bubble_y = floor(((_bottom + _top) / 2) - sprite_get_yoffset(spr_hurt));
 			}
+		}
+		
+		 // Death Pop Setup:
+		if(spr_bubble != -1){
+			if("ntte_bubble_pop" not in GameCont){
+				GameCont.ntte_bubble_pop = [];
+			}
+			array_push(
+				GameCont.ntte_bubble_pop,
+				[self, x + spr_bubble_x, y + spr_bubble_y, spr_bubble_pop, true]
+			);
 		}
 	}
 	
-	 // Underwater Code:
-	if(underwater_active){
-		 // Effects:
-		if(instance_exists(Effect)){
-			 // Extinguish Flames:
-			if(
-				(instance_exists(GroundFlame) && GroundFlame.id > _newID) ||
-				(instance_exists(BlueFlame)   && BlueFlame.id   > _newID)
-			){
-				with(instances_matching_gt([GroundFlame, BlueFlame], "id", _newID)){
-				    instance_create(x, y, Smoke);
-				    instance_destroy();
-				}
-			}
-			
-			 // Bubbles:
-			if(instance_exists(Dust) && Dust.id > _newID){
-				with(instances_matching_gt(Dust, "id", _newID)){
-					instance_create(x, y, Bubble);
-					instance_destroy();
-				}
-			}
-			if(instance_exists(Smoke) || instance_exists(BulletHit) || instance_exists(EBulletHit) || instance_exists(ScorpionBulletHit)){
-				var _inst = instances_matching_gt([Smoke, BulletHit, EBulletHit, ScorpionBulletHit], "id", _newID);
-				if(array_length(_inst)){
-					with(_inst){
-						instance_create(x, y, Bubble);
-						
-						 // Go Away Ugly Smoke:
-						if(object_index == Smoke && (distance_to_object(Flame) < 8 || distance_to_object(TrapFire) < 8)){
-							sprite_index = sprBubble;
-						}
-					}
-				}
-			}
-			if(instance_exists(BoltTrail) && BoltTrail.id > _newID){
-				with(instances_matching_ne(instances_matching_gt(BoltTrail, "id", _newID), "image_xscale", 0)){
-					if(chance(1, 4)){
-						instance_create(x, y, Bubble);
-					}
-				}
-			}
-			if(instance_exists(ChestOpen) && ChestOpen.id > _newID){
-				with(instances_matching_gt(ChestOpen, "id", _newID)){
-					repeat(3){
-						instance_create(x, y, Bubble);
-					}
-					
-					 // Clam Chests:
-					if(sprite_index == sprWeaponChestOpen){
-						sprite_index = sprClamChestOpen;
-					}
-				}
+#define ntte_setup_underwater_sprite(_sprNormal, _sprWater, _inst)
+	 // Clam Chests:
+	with(instances_matching(_inst, "sprite_index", _sprNormal)){
+		sprite_index = _sprWater;
+	}
+	
+#define ntte_setup_underwater_sound(_inst)
+	 // Watery Enemy Sounds:
+	with(instances_matching_ne(_inst, "object_index", CustomEnemy)){
+		if(snd_hurt != -1) snd_hurt = sndOasisHurt;
+		if(snd_dead != -1) snd_dead = sndOasisDeath;
+		if(snd_mele != -1) snd_mele = sndOasisMelee;
+	}
+	
+#define ntte_setup_underwater_bubble(_num, _destroy, _inst)
+	 // Bubbles:
+	with(instances_matching_ne(_inst, "image_xscale", 0)){
+		if(_num >= 1 || chance(_num, 1)){
+			repeat(max(1, _num)){
+				instance_create(x, y, Bubble);
 			}
 		}
 		
-		 // Clam Chests:
-		if(instance_exists(WeaponChest) && WeaponChest.id > _newID){
-			with(instances_matching(instances_matching_gt(WeaponChest, "id", _newID), "sprite_index", sprWeaponChest)){
-				sprite_index = sprClamChest;
-			}
+		 // Replace:
+		if(_destroy){
+			instance_destroy();
 		}
 		
-		 // Watery Enemy Sounds:
-		if(instance_exists(enemy) && enemy.id > _newID){
-			with(instances_matching_ne(instances_matching_gt(enemy, "id", _newID), "object_index", CustomEnemy)){
-				if(snd_hurt != -1) snd_hurt = sndOasisHurt;
-				if(snd_dead != -1) snd_dead = sndOasisDeath;
-				if(snd_mele != -1) snd_mele = sndOasisMelee;
-			}
+		 // Go Away Ugly Flame Smoke:
+		else switch(object_index){
+			case Smoke:
+				if(distance_to_object(Flame) < 8 || distance_to_object(TrapFire) < 8){
+					sprite_index = sprBubble;
+				}
+				break;
 		}
+	}
+	
+#define ntte_setup_underwater_flame(_inst)
+	 // Extinguish Flames:
+	with(_inst){
+	    instance_create(x, y, Smoke);
+	    instance_destroy();
 	}
 	
 #define ntte_begin_step
@@ -2066,11 +2036,33 @@
 				instance_destroy();
 			}
 		}
+		
+		 // Activate Underwater Updates:
+		if(is_undefined(lq_get(ntte, "bind_setup_underwater_list"))){
+			ntte.bind_setup_underwater_list = [
+				call(scr.ntte_bind_setup, script_ref_create(ntte_setup_underwater_flame), [GroundFlame, BlueFlame]),
+				call(scr.ntte_bind_setup, script_ref_create(ntte_setup_underwater_bubble, 1,   true),  Dust),
+				call(scr.ntte_bind_setup, script_ref_create(ntte_setup_underwater_bubble, 1,   false), [Smoke, BulletHit, EBulletHit, ScorpionBulletHit]),
+				call(scr.ntte_bind_setup, script_ref_create(ntte_setup_underwater_bubble, 1/4, false), BoltTrail),
+				call(scr.ntte_bind_setup, script_ref_create(ntte_setup_underwater_bubble, 3,   false), ChestOpen),
+				call(scr.ntte_bind_setup, script_ref_create(ntte_setup_underwater_sprite, sprWeaponChest,     sprClamChest),     WeaponChest),
+				call(scr.ntte_bind_setup, script_ref_create(ntte_setup_underwater_sprite, sprWeaponChestOpen, sprClamChestOpen), ChestOpen),
+				call(scr.ntte_bind_setup, script_ref_create(ntte_setup_underwater_sound), enemy)
+			];
+		}
+	}
+	
+	 // Deactivate Underwater Updates:
+	else if(!is_undefined(lq_get(ntte, "bind_setup_underwater_list"))){
+		with(ntte.bind_setup_underwater_list){
+			call(scr.ntte_unbind, self);
+		}
+		ntte.bind_setup_underwater_list = undefined;
 	}
 	
 #define ntte_step
 	 // Underwater Sounds:
-	if(global.underwater_sound_active || array_find_index(ntte_mods.area, underwater_area) >= 0){
+	if(global.underwater_sound_active || array_find_index(ntte.mods.area, underwater_area) >= 0){
 		underwater_sound(call(scr.area_get_underwater, underwater_area));
 	}
 	
@@ -2182,9 +2174,9 @@
 #macro  msk                                                                                     spr.msk
 #macro  mus                                                                                     snd.mus
 #macro  lag                                                                                     global.debug_lag
+#macro  ntte                                                                                    global.ntte_vars
 #macro  epsilon                                                                                 global.epsilon
 #macro  mod_current_type                                                                        global.mod_type
-#macro  ntte_mods                                                                               global.ntte_mods
 #macro  type_melee                                                                              0
 #macro  type_bullet                                                                             1
 #macro  type_shell                                                                              2

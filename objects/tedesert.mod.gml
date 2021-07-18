@@ -2556,20 +2556,18 @@
 	
 	
 /// GENERAL
-#define ntte_update(_newID)
+#define ntte_setup_WepPickup(_inst)
 	 // Separate Bones:
-	if(instance_exists(WepPickup) && WepPickup.id > _newID){
-		with(instances_matching_gt(WepPickup, "id", _newID)){
-			while(
-				is_object(wep)
-				&& call(scr.wep_raw, wep) == "crabbone"
-				&& lq_defget(wep, "ammo", 1) > 1
-			){
-				wep.ammo--;
-				with(instance_create(x, y, WepPickup)){
-					wep = lq_clone(other.wep);
-					wep.ammo = 1;
-				}
+	with(_inst){
+		while(
+			is_object(wep)
+			&& call(scr.wep_raw, wep) == "crabbone"
+			&& lq_defget(wep, "ammo", 1) > 1
+		){
+			wep.ammo--;
+			with(instance_create(x, y, WepPickup)){
+				wep = lq_clone(other.wep);
+				wep.ammo = 1;
 			}
 		}
 	}

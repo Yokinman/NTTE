@@ -11,8 +11,9 @@
 	}
 	
 	 // Bind Events:
-	script_bind(CustomDraw, draw_sludge,       -4,                           true);
-	script_bind(CustomDraw, draw_trapspin_top, object_get_depth(SubTopCont), true);
+	script_bind(CustomDraw, draw_sludge,       -4,                               true);
+	script_bind(CustomDraw, draw_trapspin_top, object_get_depth(SubTopCont),     true);
+	script_bind(CustomDraw, draw_bigpipe_top,  object_get_depth(SubTopCont) - 1, true);
 	
 	 // Sludge Pool:
 	shadSludgePool = call(scr.shader_add, "SludgePool",
@@ -76,6 +77,123 @@
 	
 #macro shadSludgePool global.shadSludgePool
 
+#define BigPipe_create(_x, _y)
+	/*
+		A big pipe that spawns bounty hunters
+	*/
+	
+	with(instance_create(_x, _y, CustomHitme)){
+		 // Visual:
+		spr_idle     = spr.BigPipeBottom;
+		spr_hurt     = spr.BigPipeBottomHurt;
+		spr_dead     = sprSmallGeneratorDead;
+		spr_top_idle = spr.BigPipeTop;
+		spr_top_hurt = spr.BigPipeTopHurt;
+		spr_shadow   = msk.BigPipe;
+		spr_shadow_y = 5;
+		image_speed  = 0.4;
+		image_xscale = choose(-1, 1);
+		depth        = 1;
+		
+		 // Sound:
+		snd_hurt = sndHitMetal;
+		snd_dead = sndGeneratorBreak;
+		
+		 // Vars:
+		mask_index = msk.BigPipe;
+		friction   = 1000;
+		maxhealth  = 60;
+		size       = 4;
+		team       = 0;
+		
+		 // Hole:
+		hole_inst = call(scr.obj_create, x, y + 8, "ManholeOpen");
+		with(hole_inst){
+			sprite_index = spr.BigPipeHole;
+			visible      = false;
+			big          = true;
+		}
+		
+		 // TopSmalls:
+	//	for(var _ox = -32; _ox < 32; _ox += 32){
+	//		for(var _oy = -16; _oy < 48; _oy += 32){
+	//			instance_create(pround(x + _ox, 16), pround(y + _oy, 16), Top);
+	//		}
+	//	}
+		
+		return self;
+	}
+	
+#define BigPipe_step
+	 // Collision:
+	if(place_meeting(x, y, hitme)){
+		var	_x = bbox_center_x,
+			_y = bbox_center_y;
+			
+		with(call(scr.instances_meeting_instance, self, instances_matching_ne(hitme, "team", 0))){
+			if(!instance_is(self, prop)){
+				motion_add_ct(point_direction(_x, _y, x, y), 0.5);
+				
+				 // Damage:
+				if(instance_is(self, enemy) && meleedamage > 0 && size > other.size && projectile_canhit_melee(other)){
+					projectile_hit(other, meleedamage);
+				}
+			}
+		}
+	}
+	
+	 // Animate:
+	if(sprite_index == spr_hurt && anim_end){
+		sprite_index = spr_idle;
+		image_index  = 0;
+	}
+	
+	 // Spawn Gators:
+	if(button_pressed(0, "horn")){
+		with(call(scr.obj_create, x, y - 8, choose(Gator, BuffGator, "BabyGator", "BoneGator", "AlbinoGator"))){
+			with(call(scr.obj_create, x, y, "PalankingToss")){
+				direction    = point_direction(x, y, mouse_x, mouse_y) + random_range(-60, 60);
+				speed        = random_range(2, 4);
+				zspeed       = 6;
+				creator      = other;
+				depth        = other.depth;
+				mask_index   = other.mask_index;
+				spr_shadow_y = other.spr_shadow_y;
+			}
+		}
+	}
+	
+	 // Death:
+	if(my_health <= 0){
+		instance_destroy();
+	}
+	
+#define BigPipe_end_step
+	 // Stay Still:
+	x = xstart;
+	y = ystart;
+	
+#define BigPipe_destroy
+	 // Reveal Hole:
+	with(hole_inst){
+		visible = true;
+		big     = false;
+		x       = other.x;
+		y       = other.y;
+	}
+	
+	 // Corpse:
+	call(scr.corpse_drop, self, 0, 0);
+	
+	 // Sound:
+	if(snd_dead == sndGeneratorBreak){
+		sound_play_hit(sndSewerPipeBreak, 0.3);
+	}
+	
+	 // Clear Walls:
+	instance_create(x, y, PortalClear);
+	
+	
 #define BoneRaven_create(_x, _y)
 	with(instance_create(_x, _y, CustomEnemy)){
 		 // Visual:
@@ -1968,13 +2086,11 @@
 	
 	
 /// GENERAL
-#define ntte_update(_newID)
+#define ntte_setup_TopDecalScrapyard(_inst)
 	 // Variant Car Decal:
-	if(instance_exists(TopDecalScrapyard) && TopDecalScrapyard.id > _newID){
-		with(instances_matching_gt(TopDecalScrapyard, "id", _newID)){
-			if(chance(1, 2) && image_index == 0){
-				sprite_index = spr.TopDecalScrapyardAlt;
-			}
+	with(instances_matching(_inst, "image_index", 0)){
+		if(chance(1, 2)){
+			sprite_index = spr.TopDecalScrapyardAlt;
 		}
 	}
 	
@@ -2130,6 +2246,24 @@
 		}
 		
 		if(lag) trace_time(script[2]);
+	}
+	
+#define draw_bigpipe_top
+	 // Big Pipe Tops:
+	if(array_length(obj.BigPipe)){
+		with(instances_matching(obj.BigPipe, "visible", true)){
+			draw_sprite_ext(
+				((sprite_index == spr_hurt) ? spr_top_hurt : spr_top_idle),
+				image_index,
+				x,
+				y,
+				image_xscale,
+				image_yscale,
+				image_angle,
+				image_blend,
+				image_alpha
+			);
+		}
 	}
 	
 	

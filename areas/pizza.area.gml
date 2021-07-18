@@ -67,8 +67,8 @@
 		rows_max : 6
 	};
 	turtle_den = _den;
-	goal = (_den.cols_max * _den.rows_max) + 2;
-	safespawn = false;
+	goal       = (_den.cols_max * _den.rows_max) + 2;
+	safespawn  = false;
 	
 	 // Manually Unlock Eyes:
 	try{
@@ -107,6 +107,52 @@
 	}
 	catch(_error){
 		call(scr.trace_error, _error);
+	}
+	
+#define area_setup_spiral
+	 // Void:
+	type = 4;
+	
+	 // Reset:
+	with(Spiral){
+		instance_destroy();
+	}
+	repeat(30){
+		with(self) event_perform(ev_step, ev_step_normal);
+		with(Spiral) event_perform(ev_step, ev_step_normal);
+		with(SpiralStar) event_perform(ev_step, ev_step_normal);
+	}
+	
+	 // Pizza:
+	with(SpiralStar){
+		if(chance(1, 30)){
+			sprite_index  = sprSlice;
+			image_index   = 0;
+			image_xscale *= 2/3;
+			image_yscale *= 2/3;
+			image_angle   = random(360);
+			
+			 // Fast Forward:
+			repeat(irandom(10)){
+				with(self){
+					event_perform(ev_step, ev_step_normal);
+				}
+			}
+		}
+	}
+	
+	 // Manhole Cover:
+	with(instance_create(x, y, SpiralDebris)){
+		sprite_index = spr.Manhole;
+		image_index  = 5;
+		turnspeed   *= 2/3;
+		
+		 // Fast Forward:
+		repeat(irandom_range(8, 12)){
+			with(self){
+				event_perform(ev_step, ev_step_normal);
+			}
+		}
 	}
 	
 #define area_setup_floor
@@ -332,21 +378,22 @@
 		}
 	}
 	
-#define ntte_update(_newID, _genID)
-	if(is_real(_genID) && area_active){
-		 // Yummy HP:
-		if(instance_exists(HPPickup) && HPPickup.id > _genID){
-			with(instances_matching(instances_matching_gt(HPPickup, "id", _genID), "sprite_index", sprHP)){
-				sprite_index = sprSlice;
-				num          = ceil(num / 2);
-			}
+#define ntte_setup_HPPickup(_inst)
+	 // Yummy HP:
+	if(area_active){
+		with(instances_matching(_inst, "sprite_index", sprHP)){
+			sprite_index = sprSlice;
+			num          = ceil(num / 2);
 		}
-		if(instance_exists(HealthChest) && HealthChest.id > _genID){
-			with(instances_matching(instances_matching_gt(HealthChest, "id", _genID), "sprite_index", sprHealthChest)){
-				sprite_index = choose(sprPizzaChest1, sprPizzaChest2);
-				spr_dead     = sprPizzaChestOpen;
-				num          = ceil(num / 2);
-			}
+	}
+	
+#define ntte_setup_HealthChest(_inst)
+	 // Yummy HP:
+	if(area_active){
+		with(instances_matching(_inst, "sprite_index", sprHealthChest)){
+			sprite_index = choose(sprPizzaChest1, sprPizzaChest2);
+			spr_dead     = sprPizzaChestOpen;
+			num          = ceil(num / 2);
 		}
 	}
 	

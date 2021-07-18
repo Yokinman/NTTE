@@ -600,24 +600,33 @@
 		}
 	}
 	
-#define ntte_update(_newID)
+#define ntte_setup_Turret(_inst)
 	 // Resprite turrets iam smash brother and i dont want to recode turrets:
-	if(instance_exists(Turret) && Turret.id > _newID){
-		with(instances_matching(instances_matching_gt(Turret, "id", _newID), "lair_turret", null)){
+	with(_inst){
+		if("lair_turret" not in self){
 			lair_turret = area_active;
-			if(lair_turret){
-				spr_idle     = spr.LairTurretAppear;
-				spr_walk     = spr.LairTurretIdle;
-				spr_hurt     = spr.LairTurretHurt;
-				spr_dead     = spr.LairTurretDead;
-				spr_fire     = spr.LairTurretFire;
-				hitid        = [spr_idle, "LAIR TURRET"];
-				sprite_index = enemy_sprite;
+		}
+		if(lair_turret){
+			spr_idle     = spr.LairTurretAppear;
+			spr_walk     = spr.LairTurretIdle;
+			spr_hurt     = spr.LairTurretHurt;
+			spr_dead     = spr.LairTurretDead;
+			spr_fire     = spr.LairTurretFire;
+			hitid        = [spr_idle, "LAIR TURRET"];
+			sprite_index = enemy_sprite;
+			
+			 // Bind Projectile Replacing Script:
+			if(is_undefined(lq_get(ntte, "bind_setup_LairTurret_EnemyBullet1"))){
+				ntte.bind_setup_LairTurret_EnemyBullet1 = call(scr.ntte_bind_setup, script_ref_create(ntte_setup_LairTurret_EnemyBullet1), EnemyBullet1);
 			}
 		}
 	}
-	if(instance_exists(EnemyBullet1) && EnemyBullet1.id > _newID){
-		with(instances_matching(instances_matching_gt(EnemyBullet1, "id", _newID), "object_index", EnemyBullet1)){
+	
+#define ntte_setup_LairTurret_EnemyBullet1(_inst)
+	 // Lair Turret Bullets:
+	_inst = instances_matching(_inst, "object_index", EnemyBullet1);
+	if(array_length(_inst)){
+		with(_inst){
 			if(
 				is_array(hitid)
 				&& array_length(hitid) > 1
@@ -643,60 +652,11 @@
 		}
 	}
 	
-	 // Forcing Lair/Pizza Sewers Border Wall Sprites:
-	if(array_length(obj.LairBorder)){
-		with(instances_matching_ne(obj.LairBorder, "id")){
-			 // Walls:
-			if(instance_exists(Wall) && Wall.id > _newID){
-				var _inst = instances_matching(instances_matching_ge(instances_matching_gt(Wall, "id", _newID), "y", y), "area", GameCont.area);
-				if(array_length(_inst)){
-					var	_sprBot = call(scr.area_get_sprite, area, sprWall1Bot),
-						_sprTop = call(scr.area_get_sprite, area, sprWall1Top),
-						_sprOut = call(scr.area_get_sprite, area, sprWall1Out);
-						
-					with(_inst){
-						sprite_index = _sprBot;
-						topspr       = _sprTop;
-						outspr       = _sprOut;
-						area         = other.area;
-					}
-				}
-			}
-			
-			 // Outer Walls:
-			if(instance_exists(TopSmall) && TopSmall.id > _newID){
-				var _inst = instances_matching(instances_matching_ge(instances_matching_gt(TopSmall, "id", _newID), "y", y), "area", GameCont.area);
-				if(array_length(_inst)){
-					var _spr = call(scr.area_get_sprite, area, sprWall1Trans);
-					with(_inst){
-						sprite_index = _spr;
-						area         = other.area;
-					}
-				}
-			}
-			
-			 // Destroyed Walls:
-			if(instance_exists(FloorExplo) && FloorExplo.id > _newID){
-				var _inst = instances_matching(instances_matching_ge(instances_matching_gt(FloorExplo, "id", _newID), "y", y), "area", GameCont.area);
-				if(array_length(_inst)){
-					var _spr = call(scr.area_get_sprite, area, sprFloor1Explo);
-					with(_inst){
-						sprite_index = _spr;
-						area         = other.area;
-					}
-				}
-			}
-			
-			 // Wall Debris:
-			if(instance_exists(Debris) && Debris.id > _newID){
-				var _inst = instances_matching(instances_matching_ge(instances_matching_gt(Debris, "id", _newID), "y", y), "sprite_index", call(scr.area_get_sprite, GameCont.area, sprDebris1));
-				if(array_length(_inst)){
-					var _spr = call(scr.area_get_sprite, area, sprDebris1);
-					with(_inst){
-						sprite_index = _spr;
-					}
-				}
-			}
+	 // Unbind Script:
+	if(!array_length(instances_matching(Turret, "lair_turret", true))){
+		if(!is_undefined(lq_get(ntte, "bind_setup_LairTurret_EnemyBullet1"))){
+			call(scr.ntte_unbind, ntte.bind_setup_LairTurret_EnemyBullet1);
+			ntte.bind_setup_LairTurret_EnemyBullet1 = undefined;
 		}
 	}
 	
@@ -1415,9 +1375,9 @@
 #macro  msk                                                                                     spr.msk
 #macro  mus                                                                                     snd.mus
 #macro  lag                                                                                     global.debug_lag
+#macro  ntte                                                                                    global.ntte_vars
 #macro  epsilon                                                                                 global.epsilon
 #macro  mod_current_type                                                                        global.mod_type
-#macro  ntte_mods                                                                               global.ntte_mods
 #macro  type_melee                                                                              0
 #macro  type_bullet                                                                             1
 #macro  type_shell                                                                              2

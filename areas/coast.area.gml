@@ -100,6 +100,22 @@
 		flash = 0;
 	}
 	
+	 // Bind Object Setup Scripts:
+	if(is_undefined(lq_get(ntte, "bind_setup_coast_list"))){
+		var _objList = [hitme, projectile, Corpse, ChestOpen, chestprop, Pickup, Crown, Debris];
+		ntte.bind_setup_coast_list = [
+			call(scr.ntte_bind_setup, script_ref_create(ntte_setup_coast_wading),    _objList),
+			call(scr.ntte_bind_setup, script_ref_create(ntte_setup_coast_unwall),    [Wall, TopSmall, FloorExplo]),
+			call(scr.ntte_bind_setup, script_ref_create(ntte_setup_coast_Dust),      Dust),
+			call(scr.ntte_bind_setup, script_ref_create(ntte_setup_coast_Explosion), Explosion),
+			call(scr.ntte_bind_setup, script_ref_create(ntte_setup_coast_MeltSplat), MeltSplat),
+			call(scr.ntte_bind_setup, script_ref_create(ntte_setup_coast_Portal),    Portal)
+		];
+		with(_objList){
+			ntte_setup_coast_wading(self);
+		}
+	}
+	
 	 // No Walls:
 	if(GameCont.subarea > 0){
 		with(instances_matching(Wall, "area", mod_current)){
@@ -443,144 +459,134 @@
 		}
 	}
 	
-#define ntte_update(_newID, _genID)
-	if(area_active){
-		 // No Walls:
-		if(is_real(_genID)){
-			if(instance_exists(Wall)){
-				if(Wall.id > _genID){
-					with(instances_matching(instances_matching_gt(Wall, "id", _genID), "area", mod_current)){
-						instance_delete(self);
-					}
-				}
-				var _inst = instances_matching(Wall, "visible", false);
-				if(array_length(_inst)) with(_inst){
-					visible = true;
-				}
-			}
-			if(instance_exists(TopSmall) && TopSmall.id > _genID){
-				with(instances_matching_gt(TopSmall, "id", _genID)){
-					instance_delete(self);
-				}
-			}
-			if(instance_exists(FloorExplo) && FloorExplo.id > _genID){
-				with(instances_matching(instances_matching_gt(FloorExplo, "id", _genID), "visible", true)){
-					instance_delete(self);
-				}
-			}
-		}
-		
-		 // Watery Dust:
-		if(instance_exists(Dust) && Dust.id > _newID){
-			with(instances_matching_gt(Dust, "id", _newID)){
-				if(!position_meeting(x, y, Floor)){
-					if(chance(1, 10 + instance_number(AcidStreak))){
-						sound_play_hit(sndOasisCrabAttack, 0.1);
-						with(call(scr.fx, x, y, 2, "WaterStreak")){
-							hspeed += other.hspeed / 2;
-							vspeed += other.vspeed / 2;
-						}
-					}
-					else{
-						if(chance(1, 5) && point_seen(x, y, -1)){
-							sound_play_hit(choose(sndOasisChest, sndOasisMelee), 0.2);
-						}
-						with(instance_create(x, y, Sweat)){
-							hspeed = other.hspeed / 2;
-							vspeed = other.vspeed / 2;
-						}
-					}
-					instance_destroy();
-				}
-			}
-		}
-		
-		 // Watery Explosion Sounds:
-		if(instance_exists(Explosion) && Explosion.id > _newID){
-			with(instances_matching_gt(Explosion, "id", _newID)){
-				if(!position_meeting(x, y, Floor)){
-					sound_volume(sound_play_hit(sndOasisExplosion, 0.2), 5);
-				}
-			}
-		}
-		
-		 // Watery Melting Scorch Marks:
-		if(instance_exists(MeltSplat) && MeltSplat.id > _newID){
-			with(instances_matching_gt(MeltSplat, "id", _newID)){
-				if(!position_meeting(x, y, Floor)){
-					sound_volume(sound_play_hit(sndOasisExplosionSmall, 0.2), 5);
-					repeat((sprite_index == sprMeltSplatBig) ? 16 : 8){
-						if(chance(1, 6)) call(scr.fx, x, y, 4, "WaterStreak");
-						else instance_create(x, y, Sweat);
-					}
-					instance_destroy();
-				}
-			}
-		}
-		
-		 // Underwater Portal Setup:
-		if(instance_exists(Portal) && Portal.id > _newID){
-			with(instances_matching_gt(Portal, "id", _newID)){
-				if(type == 1 && endgame == 100 && image_alpha == 1){
-					visible = false;
-					sound_stop(sndPortalOpen);
-					
-					 // Flash Sea:
-					with(global.sea_bind[? "main"].id){
-						flash = 0;
-					}
-					
-					 // Move to Floor:
-					if(alarm0 > 0){
-						event_perform(ev_alarm, 0);
-					}
-					
-					 // Move to Sea:
-					var	_moveDis = 8,
-						_moveDir = 0;
-						
-					with(Floor){
-						_moveDir += point_direction(bbox_center_x, bbox_center_y, other.x, other.y);
-					}
-					_moveDir /= instance_number(Floor);
-					
-					while(distance_to_object(Floor) < 120){
-						x += lengthdir_x(_moveDis, _moveDir);
-						y += lengthdir_y(_moveDis, _moveDir);
-					}
-					
-					 // Move Spawned Stuff:
-					with(instance_nearest(xstart, ystart, PortalShock)){
-						x = other.x;
-						y = other.y;
-					}
-					repeat(5) with(instance_nearest(xstart, ystart, PortalL)){
-						x = other.x;
-						y = other.y;
-					}
-					
-					xstart    = x;
-					ystart    = y;
-					xprevious = x;
-					yprevious = y;
-				}
-				alarm0 = -1;
-			}
+#define ntte_setup_coast_wading(_inst)
+	 // Setup Wading Variables:
+	with(_inst){
+		if("wading"      not in self) wading      = 0;
+		if("wading_wave" not in self) wading_wave = 0;
+		if("wading_sink" not in self) wading_sink = 0;
+		if("canwade"     not in self) canwade     = true;
+	}
+	
+#define ntte_setup_coast_unwall(_inst)
+	 // No Coast Walls:
+	with(instances_matching(_inst, "area", mod_current, null)){
+		if(visible || object_index != FloorExplo){
+			instance_delete(self);
 		}
 	}
 	
-	 // Wading Setup:
-	if(is_real(_genID)){
-		with([hitme, projectile, Corpse, ChestOpen, chestprop, Pickup, Crown, Debris]){
-			if(instance_exists(self) && self.id > _genID){
-				with(instances_matching_gt(self, "id", _genID)){
-					if("wading"      not in self) wading      = 0;
-					if("wading_wave" not in self) wading_wave = 0;
-					if("wading_sink" not in self) wading_sink = 0;
-					if("canwade"     not in self) canwade     = true;
+	 // Unhide Walls:
+	var _instFix = instances_matching(Wall, "visible", false);
+	if(array_length(_instFix)){
+		with(_instFix){
+			visible = true;
+		}
+	}
+	
+#define ntte_setup_coast_Dust(_inst)
+	 // Watery Dust:
+	with(_inst){
+		if(!position_meeting(x, y, Floor)){
+			if(chance(1, 10 + instance_number(AcidStreak))){
+				sound_play_hit(sndOasisCrabAttack, 0.1);
+				with(call(scr.fx, x, y, 2, "WaterStreak")){
+					hspeed += other.hspeed / 2;
+					vspeed += other.vspeed / 2;
 				}
 			}
+			else{
+				if(chance(1, 5) && point_seen(x, y, -1)){
+					sound_play_hit(choose(sndOasisChest, sndOasisMelee), 0.2);
+				}
+				with(instance_create(x, y, Sweat)){
+					hspeed = other.hspeed / 2;
+					vspeed = other.vspeed / 2;
+				}
+			}
+			instance_destroy();
 		}
+	}
+	
+#define ntte_setup_coast_Explosion(_inst)
+	 // Watery Explosion Sounds:
+	with(_inst){
+		if(!position_meeting(x, y, Floor)){
+			sound_volume(sound_play_hit(sndOasisExplosion, 0.2), 5);
+		}
+	}
+	
+#define ntte_setup_coast_MeltSplat(_inst)
+	 // Watery Melting Scorch Marks:
+	with(_inst){
+		if(!position_meeting(x, y, Floor)){
+			sound_volume(sound_play_hit(sndOasisExplosionSmall, 0.2), 5);
+			repeat((sprite_index == sprMeltSplatBig) ? 16 : 8){
+				if(chance(1, 6)) call(scr.fx, x, y, 4, "WaterStreak");
+				else instance_create(x, y, Sweat);
+			}
+			instance_destroy();
+		}
+	}
+	
+#define ntte_setup_coast_Portal(_inst)
+	 // Underwater Portal Setup:
+	with(_inst){
+		if(type == 1 && endgame == 100 && image_alpha == 1){
+			visible = false;
+			sound_stop(sndPortalOpen);
+			
+			 // Flash Sea:
+			with(global.sea_bind[? "main"].id){
+				flash = 0;
+			}
+			
+			 // Move to Floor:
+			if(alarm0 > 0){
+				with(self){
+					event_perform(ev_alarm, 0);
+				}
+			}
+			
+			 // Move to Sea:
+			if(instance_exists(Floor)){
+				var	_floorX = 0,
+					_floorY = 0;
+					
+				 // Find Level's Center Position:
+				with(Floor){
+					_floorX += bbox_center_x;
+					_floorY += bbox_center_y;
+				}
+				_floorX /= instance_number(Floor);
+				_floorY /= instance_number(Floor);
+				
+				 // Move Away from Floors:
+				var	_moveDis = 8,
+					_moveDir = point_direction(_floorX, _floorY, x, y);
+					
+				while(distance_to_object(Floor) < 120){
+					x += lengthdir_x(_moveDis, _moveDir);
+					y += lengthdir_y(_moveDis, _moveDir);
+				}
+			}
+			
+			 // Move Spawned Stuff:
+			with(instance_nearest(xstart, ystart, PortalShock)){
+				x = other.x;
+				y = other.y;
+			}
+			repeat(5) with(instance_nearest(xstart, ystart, PortalL)){
+				x = other.x;
+				y = other.y;
+			}
+			
+			xstart    = x;
+			ystart    = y;
+			xprevious = x;
+			yprevious = y;
+		}
+		alarm0 = -1;
 	}
 	
 #define ntte_begin_step
@@ -622,6 +628,21 @@
 					}
 				}
 			}
+		}
+	}
+	
+	 // Disable Sea:
+	else{
+		with(ds_map_values(global.sea_bind)){
+			if(instance_exists(id)){
+				id.visible = false;
+			}
+		}
+		if(!is_undefined(lq_get(ntte, "bind_setup_coast_list"))){
+			with(ntte.bind_setup_coast_list){
+				call(scr.ntte_unbind, self);
+			}
+			ntte.bind_setup_coast_list = undefined;
 		}
 	}
 	
@@ -891,13 +912,6 @@
 					}
 				}
 			}
-		}
-	}
-	
-	 // Disable Sea:
-	else with(ds_map_values(global.sea_bind)){
-		if(instance_exists(id)){
-			id.visible = false;
 		}
 	}
 	
@@ -1462,9 +1476,9 @@
 #macro  msk                                                                                     spr.msk
 #macro  mus                                                                                     snd.mus
 #macro  lag                                                                                     global.debug_lag
+#macro  ntte                                                                                    global.ntte_vars
 #macro  epsilon                                                                                 global.epsilon
 #macro  mod_current_type                                                                        global.mod_type
-#macro  ntte_mods                                                                               global.ntte_mods
 #macro  type_melee                                                                              0
 #macro  type_bullet                                                                             1
 #macro  type_shell                                                                              2

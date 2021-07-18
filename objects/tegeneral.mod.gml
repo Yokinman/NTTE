@@ -10,23 +10,8 @@
 		call(scr.obj_add, script_ref_create(i));
 	}
 	
-	 // Overall Floor Bounding Box:
-	global.floor_left   = 0;
-	global.floor_right  = 0;
-	global.floor_top    = 0;
-	global.floor_bottom = 0;
-	if(instance_exists(Floor)){
-		global.floor_left   = Floor.bbox_left;
-		global.floor_right  = Floor.bbox_right;
-		global.floor_top    = Floor.bbox_top;
-		global.floor_bottom = Floor.bbox_bottom;
-		with(Floor){
-			if(bbox_left   < global.floor_left  ) global.floor_left   = bbox_left;
-			if(bbox_right  > global.floor_right ) global.floor_right  = bbox_right;
-			if(bbox_top    < global.floor_top   ) global.floor_top    = bbox_top;
-			if(bbox_bottom > global.floor_bottom) global.floor_bottom = bbox_bottom;
-		}
-	}
+	 // Setup Floor Bounding Area:
+	ntte_setup_Floor(Floor);
 	
 	 // 1-Frame Weapon Sprites:
 	global.gunspr_fix = ds_map_create();
@@ -3833,6 +3818,11 @@
 		bossname = hitid[1];
 		col      = c_red;
 		
+		 // Bind Projectile Setup Script:
+		if(is_undefined(lq_get(ntte, "bind_setup_PetWeaponBoss_projectile"))){
+			ntte.bind_setup_PetWeaponBoss_projectile = call(scr.ntte_bind_setup, script_ref_create(ntte_setup_PetWeaponBoss_projectile), projectile);
+		}
+		
 		return self;
 	}
 	
@@ -4421,6 +4411,24 @@
 		
 		 // Up down:
 		y += z;
+		
+		 // Activate Auto-Topification:
+		if(is_undefined(lq_get(ntte, "bind_setup_topify"))){
+			var _objList = [hitme, projectile, becomenemy, Pickup, chestprop, Corpse, Explosion, MeatExplosion, PlasmaImpact, BigDogExplo, NothingDeath, Nothing2Death, FrogQueenDie, PopoShield, CrystalShield, SharpTeeth, ReviveArea, NecroReviveArea, RevivePopoFreak];
+			for(var _obj = 0; object_exists(_obj); _obj++){
+				if(object_get_parent(_obj) == Effect){
+					if(
+						_obj != RainSplash &&
+						_obj != RainDrop   &&
+						_obj != SnowFlake  &&
+						_obj != Bubble
+					){
+						array_push(_objList, _obj);
+					}
+				}
+			}
+			ntte.bind_setup_topify = call(scr.ntte_bind_setup, script_ref_create(ntte_setup_topify), _objList);
+		}
 		
 		return self;
 	}
@@ -5590,207 +5598,221 @@
 		instance_delete(self);
 	}
 	
-#define ntte_update(_newID, _genID)
+#define ntte_setup_LevelUp(_inst)
 	 // Pet Leveling Up FX:
 	if(array_length(obj.Pet)){
-		if(instance_exists(LevelUp) && LevelUp.id > _newID){
-			with(instances_matching_gt(LevelUp, "id", _newID)){
-				if(instance_is(creator, Player)){
-					with(instances_matching(obj.Pet, "leader", creator)){
-						with(other){
-							instance_copy(false).creator = other;
-						}
+		with(_inst){
+			if(instance_is(creator, Player)){
+				with(instances_matching(obj.Pet, "leader", creator)){
+					with(other){
+						instance_copy(false).creator = other;
 					}
 				}
 			}
 		}
 	}
 	
-	 // Weapon Mimic Boss, Burst Weapon Fix:
-	if(array_length(obj.PetWeaponBoss)){
-		if(instance_exists(projectile) && projectile.id > _newID){
-			with(instances_matching_gt(projectile, "id", _newID)){
-				if(array_find_index(obj.PetWeaponBoss, creator) >= 0){
-					 // Laser Cannon, Brain Fix:
-					if(skill_get(mut_laser_brain) != 0 && object_index == Laser){
-						with(instance_create(x, y, object_index)){
-							if(image_yscale == other.image_yscale){
-								other.image_yscale = 1.4;
-							}
-							instance_delete(self);
-						}
-					}
-					
-					 // Cause of Death:
-					if(hitid == -1){
-						hitid = creator.hitid;
-					}
-					
-					 // Enemy Spriterize:
-					call(scr.team_instance_sprite, 1, self);
+#define ntte_setup_Floor(_inst)
+	var	_left   = 0,
+		_top    = 0,
+		_right  = 0,
+		_bottom = 0;
+		
+	 // Find Floor Collision Area:
+	if(instance_exists(Floor)){
+		_left   = Floor.bbox_left;
+		_top    = Floor.bbox_top;
+		_right  = Floor.bbox_right;
+		_bottom = Floor.bbox_bottom;
+		with(instances_matching_lt(Floor, "bbox_left",   _left  )) if(bbox_left   < _left  ) _left   = bbox_left;
+		with(instances_matching_lt(Floor, "bbox_top",    _top   )) if(bbox_top    < _top   ) _top    = bbox_top;
+		with(instances_matching_gt(Floor, "bbox_right",  _right )) if(bbox_right  > _right ) _right  = bbox_right;
+		with(instances_matching_gt(Floor, "bbox_bottom", _bottom)) if(bbox_bottom > _bottom) _bottom = bbox_bottom;
+	}
+	
+	ntte.floor_left   = _left;
+	ntte.floor_top    = _top;
+	ntte.floor_right  = _right;
+	ntte.floor_bottom = _bottom;
+	
+#define ntte_setup_FloorExplo(_inst)
+	 // TopTiny Fix:
+	if(instance_exists(TopSmall)){
+		with(_inst){
+			var _instSmall = instances_matching(instances_matching(TopSmall, "x", x), "y", y);
+			if(array_length(_instSmall)){
+				with(_instSmall){
+					instance_destroy();
 				}
 			}
 		}
 	}
 	
-	 // Floor Update:
-	if(is_real(_genID)){
-		if(instance_exists(Floor) && Floor.id > _genID){
-			 // Find Floor Collision Area:
-			global.floor_left   = Floor.bbox_left;
-			global.floor_right  = Floor.bbox_right;
-			global.floor_top    = Floor.bbox_top;
-			global.floor_bottom = Floor.bbox_bottom;
-			with(Floor){
-				if(bbox_left   < global.floor_left  ) global.floor_left   = bbox_left;
-				if(bbox_right  > global.floor_right ) global.floor_right  = bbox_right;
-				if(bbox_top    < global.floor_top   ) global.floor_top    = bbox_top;
-				if(bbox_bottom > global.floor_bottom) global.floor_bottom = bbox_bottom;
-			}
-			
-			 // Tiny TopSmall Fix:
-			if(instance_exists(FloorExplo) && FloorExplo.id > _genID){
-				with(instances_matching_gt(FloorExplo, "id", _genID)){
-					var _instSmall = instances_matching(instances_matching(TopSmall, "x", x), "y", y);
-					if(array_length(_instSmall)) with(_instSmall){
-						instance_destroy();
-					}
-				}
+#define ntte_setup_topify(_inst)
+	var _topInst = instances_matching_ne(obj.TopObject, "id");
+	if(array_length(_topInst)){
+		_inst = instances_matching(_inst, "z", null);
+		
+		 // Anti-Lag:
+		if(instance_number(Dust) >= 100){
+			_inst = instances_matching_ne(_inst, "object_index", Dust);
+			if(!array_length(_inst)){
+				exit;
 			}
 		}
-	}
-	
-	 // Auto-Topify New Objects:
-	if(array_length(obj.TopObject)){
-		with([hitme, projectile, becomenemy, Pickup, chestprop, Corpse, Effect, Explosion, MeatExplosion, PlasmaImpact, BigDogExplo, NothingDeath, Nothing2Death, FrogQueenDie, PopoShield, CrystalShield, SharpTeeth, ReviveArea, NecroReviveArea, RevivePopoFreak]){
-			var _object = self;
-			if(instance_exists(_object) && _object.id > _newID){
-				var _inst  = instances_matching(instances_matching_gt(_object, "id", _newID), "z", null),
-					_break = false;
-					
-				 // Object-Specifics:
-				switch(_object){
-					
-					case hitme: // Avoid Wall-Breaking Bros (Big Bandit)
-						
-						with(instances_matching(_inst, "top_object_wallcheck", null)){
-							if(instance_exists(self)){
-								top_object_wallcheck = false;
+		if(instance_number(Smoke) >= 100){
+			_inst = instances_matching_ne(_inst, "object_index", Smoke);
+			if(!array_length(_inst)){
+				exit;
+			}
+		}
+		
+		 // Avoid Wall-Breaking Bros (Big Bandit):
+		with(instances_matching(_inst, "top_object_wallcheck", null)){
+			if(instance_is(self, hitme)){
+				top_object_wallcheck = false;
+				
+				call(scr.motion_step, self, 1);
+				
+				if(place_meeting(x, y, Wall)){
+					 // Check for Wall-Breaking Capabilities:
+					if(position_meeting(x, y, PortalClear)){
+						top_object_wallcheck = true;
+					}
+					else with(call(scr.instances_meeting_instance, self, Wall)){
+						if(instance_exists(self) && place_meeting(x, y, other)){
+							with(other){
+								if(other.solid || solid){
+									x = xprevious;
+									y = yprevious;
+									other.x = other.xprevious;
+									other.y = other.yprevious;
+								}
+								event_perform(ev_collision, Wall);
 								
-								call(scr.motion_step, self, 1);
-								
-								if(place_meeting(x, y, Wall)){
-									 // Check for Wall-Breaking Capabilities:
-									if(position_meeting(x, y, PortalClear)){
+								 // Check for Wall Breakage:
+								if(instance_exists(self)){
+									if(!instance_exists(other)){
 										top_object_wallcheck = true;
-									}
-									else with(call(scr.instances_meeting_instance, self, Wall)){
-										if(instance_exists(self) && place_meeting(x, y, other)){
-											with(other){
-												if(other.solid || solid){
-													x = xprevious;
-													y = yprevious;
-													other.x = other.xprevious;
-													other.y = other.yprevious;
-												}
-												event_perform(ev_collision, Wall);
-												
-												 // Check for Wall Breakage:
-												if(instance_exists(self)){
-													if(!instance_exists(other)){
-														top_object_wallcheck = true;
-														break;
-													}
-												}
-												else break;
-											}
-										}
-									}
-									
-									 // Cancel Topification:
-									if(!instance_exists(self) || top_object_wallcheck){
-										_inst = instances_matching_ne(_inst, "id", self);
-										if(!instance_exists(self)){
-											continue;
-										}
+										break;
 									}
 								}
-								
-								call(scr.motion_step, self, -1);
+								else break;
 							}
 						}
-						
-						break;
-						
-					case Effect: // Anti-Lag
-						
-						_inst = instances_matching_ne(_inst, "object_index", RainSplash, RainDrop, SnowFlake, Bubble);
-						if(instance_number(Smoke) >= 100){
-							_inst = instances_matching_ne(_inst, "object_index", Smoke);
+					}
+					
+					 // Cancel Topification:
+					if(!instance_exists(self) || top_object_wallcheck){
+						_inst = instances_matching_ne(_inst, "id", self);
+						if(!instance_exists(self)){
+							continue;
 						}
-						if(instance_number(Dust) >= 100){
-							_inst = instances_matching_ne(_inst, "object_index", Dust);
-						}
-						
-						break;
-						
+					}
 				}
 				
-				 // Topify:
-				if(array_length(_inst)){
-					with(instances_matching_ne(obj.TopObject, "id")){
-						with(
-							instances_matching(
-							instances_matching_le(
-							instances_matching_ge(
-							instances_matching_le(
-							instances_matching_ge(
-							_inst,
-							"xstart", search_x1),
-							"xstart", search_x2),
-							"ystart", search_y1),
-							"ystart", search_y2),
-							"creator", null, noone, target)
-						){
-							_inst = call(scr.array_delete_value, _inst, self);
-							
-							switch(_object){
-								case Effect:
-									if(!position_meeting(x, y, Floor)){
-										switch(object_index){
-											case ChestOpen:
-											case Debris:
-											case Scorchmark:
-												call(scr.top_create, x, y, self, 0, 0);
-												break;
-												
-											case MeltSplat:
-												instance_destroy();
-												break;
-												
-											default:
-												depth = object_get_depth(SubTopCont) + min(-1, depth);
-										}
-									}
+				call(scr.motion_step, self, -1);
+			}
+		}
+		
+		 // Auto-Topify New Objects:
+		if(array_length(_inst)){
+			with(_topInst){
+				with(
+					instances_matching(
+					instances_matching_le(
+					instances_matching_ge(
+					instances_matching_le(
+					instances_matching_ge(
+					_inst,
+					"xstart", search_x1),
+					"xstart", search_x2),
+					"ystart", search_y1),
+					"ystart", search_y2),
+					"creator", null, noone, target)
+				){
+					_inst = call(scr.array_delete_value, _inst, self); // compare with instances_matching_ne(_inst, "id", self)
+					
+					 // Effects:
+					if(instance_is(self, Effect)){
+						if(!position_meeting(x, y, Floor)){
+							switch(object_index){
+								
+								case ChestOpen:
+								case Debris:
+								case Scorchmark:
+									
+									call(scr.top_create, x, y, self, 0, 0);
+									
 									break;
 									
-								case SharpTeeth:
-									depth = object_get_depth(SubTopCont) + min(-1, depth);
+								case MeltSplat:
+									
+									instance_destroy();
+									
 									break;
 									
 								default:
-									if(place_meeting(x, y, Wall) || !position_meeting(x, y, Floor)){
-										call(scr.top_create, x, y, self, 0, 0);
-									}
+									
+									depth = object_get_depth(SubTopCont) + min(-1, depth);
+									
 							}
 						}
-						if(!array_length(_inst)){
-							break;
-						}
 					}
+					else if(instance_is(self, SharpTeeth)){
+						depth = object_get_depth(SubTopCont) + min(-1, depth);
+					}
+					
+					 // Normal:
+					else if(place_meeting(x, y, Wall) || !position_meeting(x, y, Floor)){
+						call(scr.top_create, x, y, self, 0, 0);
+					}
+				}
+				if(!array_length(_inst)){
+					break;
 				}
 			}
 		}
+	}
+	
+	 // Unbind Script:
+	else if(!is_undefined(lq_get(ntte, "bind_setup_topify"))){
+		call(scr.ntte_unbind, ntte.bind_setup_topify);
+		ntte.bind_setup_topify = undefined;
+	}
+	
+#define ntte_setup_PetWeaponBoss_projectile(_inst)
+	var _wepBossInst = instances_matching_ne(obj.PetWeaponBoss, "id");
+	
+	 // Weapon Mimic Boss Burst Weapon Fix:
+	if(array_length(_wepBossInst)){
+		with(_wepBossInst){
+			with(instances_matching(_inst, "creator", self)){
+				 // Laser Cannon, Brain Fix:
+				if(skill_get(mut_laser_brain) != 0 && object_index == Laser){
+					with(instance_create(x, y, object_index)){
+						if(image_yscale == other.image_yscale){
+							other.image_yscale = 1.4;
+						}
+						instance_delete(self);
+					}
+				}
+				
+				 // Cause of Death:
+				if(hitid == -1){
+					hitid = creator.hitid;
+				}
+				
+				 // Enemy Spriterize:
+				call(scr.team_instance_sprite, 1, self);
+			}
+		}
+	}
+	
+	 // Unbind Script:
+	else if(!is_undefined(lq_get(ntte, "bind_setup_PetWeaponBoss_projectile"))){
+		call(scr.ntte_unbind, ntte.bind_setup_PetWeaponBoss_projectile);
+		ntte.bind_setup_PetWeaponBoss_projectile = undefined;
 	}
 	
 #define ntte_step
@@ -5800,59 +5822,67 @@
 		if(array_length(_instTop)){
 			 // Top Object Floor Collision:
 			if(instance_exists(Floor)){
-				var _instTopFloor = call(scr.instances_meeting_rectangle, global.floor_left - 16, global.floor_top - 16, global.floor_right + 16, global.floor_bottom + 16, _instTop);
-				if(array_length(_instTopFloor)) with(_instTopFloor){
-					if(place_meeting(x + mask_x, y + mask_y, Floor) && (jump != 0 || grav > 0)){
-						 // Wobble:
-						if(wobble != 0 && place_meeting(x + mask_x, y + mask_y, Wall)){
-							var	_wobWest = position_meeting(bbox_left,  y, Floor),
-								_wobEast = position_meeting(bbox_right, y, Floor);
-								
-							if(_wobWest || _wobEast){
-								var _wobMove = ((_wobWest - _wobEast) - wobble_num) * 0.1 * current_time_scale;
-								wobble_num += _wobMove;
-								
-								with(target){
-									image_angle += other.wobble * _wobMove;
-									image_angle += (other.wobble / 16) * sin(current_frame / 10) * other.wobble_num;
+				var _instTopFloor = call(scr.instances_meeting_rectangle,
+					ntte.floor_left   - 16,
+					ntte.floor_top    - 16,
+					ntte.floor_right  + 16,
+					ntte.floor_bottom + 16,
+					_instTop
+				);
+				if(array_length(_instTopFloor)){
+					with(_instTopFloor){
+						if(place_meeting(x + mask_x, y + mask_y, Floor) && (jump != 0 || grav > 0)){
+							 // Wobble:
+							if(wobble != 0 && place_meeting(x + mask_x, y + mask_y, Wall)){
+								var	_wobWest = position_meeting(bbox_left,  y, Floor),
+									_wobEast = position_meeting(bbox_right, y, Floor);
+									
+								if(_wobWest || _wobEast){
+									var _wobMove = ((_wobWest - _wobEast) - wobble_num) * 0.1 * current_time_scale;
+									wobble_num += _wobMove;
+									
+									with(target){
+										image_angle += other.wobble * _wobMove;
+										image_angle += (other.wobble / 16) * sin(current_frame / 10) * other.wobble_num;
+									}
 								}
 							}
-						}
-						
-						 // Jump to Ground:
-						else if(type != RavenFly || !canmove || !position_meeting(x + mask_x, y + mask_y + 8, Wall)){
-							if(instance_exists(target)){
-								jump_x    = x;
-								jump_y    = y;
-								zspeed    = jump;
-								zfriction = grav;
-								
-								if(type != RavenFly){
-									 // Find Open Space to Jump, if Possible:
-									if(unstick) with(target){
-										var	_disMin = 5 * max(speed, other.maxspeed),
-											_disMax = 4 * _disMin,
-											_dir = other.direction,
-											_sx = x + lengthdir_x(_disMin, _dir),
-											_sy = y + lengthdir_y(_disMin, _dir),
-											_tx = _sx,
-											_ty = _sy,
-											_saveMask = mask_index;
+							
+							 // Jump to Ground:
+							else if(type != RavenFly || !canmove || !position_meeting(x + mask_x, y + mask_y + 8, Wall)){
+								if(instance_exists(target)){
+									jump_x    = x;
+									jump_y    = y;
+									zspeed    = jump;
+									zfriction = grav;
+									
+									if(type != RavenFly){
+										 // Find Open Space to Jump, if Possible:
+										if(unstick) with(target){
+											var	_disMin = 5 * max(speed, other.maxspeed),
+												_disMax = 4 * _disMin,
+												_dir = other.direction,
+												_sx = x + lengthdir_x(_disMin, _dir),
+												_sy = y + lengthdir_y(_disMin, _dir),
+												_tx = _sx,
+												_ty = _sy,
+												_saveMask = mask_index;
+												
+											mask_index = lq_defget(other.target_save, "mask_index", mask_index);
 											
-										mask_index = lq_defget(other.target_save, "mask_index", mask_index);
-										
-										if(!place_meeting(_tx, _ty, Floor) || place_meeting(_tx, _ty, Wall)){
-											with(call(scr.instances_meeting_rectangle, x - _disMax - 1, y - _disMax - 1, x + _disMax, y + _disMax, Floor)){
-												with(other){
-													for(var _fx = other.bbox_left; _fx < other.bbox_right + 1; _fx += 8){
-														for(var _fy = other.bbox_top; _fy < other.bbox_bottom + 1; _fy += 8){
-															if(!place_meeting(_fx, _fy, Wall)){
-																var _dis = point_distance(x, y, _fx, _fy);
-																if(_dis < _disMax || (_dis > _disMin && _disMax < _disMin)){
-																	if(abs(angle_difference(point_direction(x, y, _fx, _fy), _dir)) < 90){
-																		_disMax = _dis;
-																		_tx = _fx;
-																		_ty = _fy;
+											if(!place_meeting(_tx, _ty, Floor) || place_meeting(_tx, _ty, Wall)){
+												with(call(scr.instances_meeting_rectangle, x - _disMax - 1, y - _disMax - 1, x + _disMax, y + _disMax, Floor)){
+													with(other){
+														for(var _fx = other.bbox_left; _fx < other.bbox_right + 1; _fx += 8){
+															for(var _fy = other.bbox_top; _fy < other.bbox_bottom + 1; _fy += 8){
+																if(!place_meeting(_fx, _fy, Wall)){
+																	var _dis = point_distance(x, y, _fx, _fy);
+																	if(_dis < _disMax || (_dis > _disMin && _disMax < _disMin)){
+																		if(abs(angle_difference(point_direction(x, y, _fx, _fy), _dir)) < 90){
+																			_disMax = _dis;
+																			_tx = _fx;
+																			_ty = _fy;
+																		}
 																	}
 																}
 															}
@@ -5860,43 +5890,43 @@
 													}
 												}
 											}
+											
+											mask_index = _saveMask;
+											
+											other.jump_x = _tx;
+											other.jump_y = _ty;
 										}
 										
-										mask_index = _saveMask;
+										 // Jump to Target Position:
+										if(target.speed == 0) zspeed *= 2/3;
+										direction = point_direction(x, y, jump_x, jump_y);
+										var d = point_distance(x, y, jump_x, jump_y);
+										speed = min(maxspeed + target.friction, (sqrt(max(0, sqr(d) * ((2 * zfriction * z) + sqr(zspeed)))) - (d * zspeed)) / (2 * z));
 										
-										other.jump_x = _tx;
-										other.jump_y = _ty;
-									}
-									
-									 // Jump to Target Position:
-									if(target.speed == 0) zspeed *= 2/3;
-									direction = point_direction(x, y, jump_x, jump_y);
-									var d = point_distance(x, y, jump_x, jump_y);
-									speed = min(maxspeed + target.friction, (sqrt(max(0, sqr(d) * ((2 * zfriction * z) + sqr(zspeed)))) - (d * zspeed)) / (2 * z));
-									
-									 // Facing:
-									if(speed > 0){
-										with(target){
-											if("gunangle" in self) gunangle = other.direction;
-											if("right"    in self) enemy_face(other.direction);
+										 // Facing:
+										if(speed > 0){
+											with(target){
+												if("gunangle" in self) gunangle = other.direction;
+												if("right"    in self) enemy_face(other.direction);
+											}
 										}
+										
+										 // Sound:
+										call(scr.sound_play_at, x, y, sndAssassinAttack, 1 + orandom(0.4), abs(zspeed) / 3);
 									}
-									
-									 // Sound:
-									call(scr.sound_play_at, x, y, sndAssassinAttack, 1 + orandom(0.4), abs(zspeed) / 3);
 								}
 							}
 						}
-					}
-					
-					 // Unwobble:
-					else if(wobble_num != 0){
-						wobble_num -= wobble_num * 0.5 * current_time_scale;
-						with(target) image_angle -= image_angle * 0.5 * current_time_scale;
 						
-						if(abs(wobble_num) < 0.5){
-							wobble_num = 0;
-							with(target) image_angle = 0;
+						 // Unwobble:
+						else if(wobble_num != 0){
+							wobble_num -= wobble_num * 0.5 * current_time_scale;
+							with(target) image_angle -= image_angle * 0.5 * current_time_scale;
+							
+							if(abs(wobble_num) < 0.5){
+								wobble_num = 0;
+								with(target) image_angle = 0;
+							}
 						}
 					}
 				}
@@ -6028,7 +6058,21 @@
 	 // Top Objects:
 	if(array_length(obj.TopObject)){
 		if(!instance_exists(NothingSpiral) && instance_exists(CustomObject)){
-			var _inst = instances_matching(instances_matching_ne(call(scr.instances_meeting_rectangle, global.floor_left, global.floor_top, global.floor_right, global.floor_bottom, obj.TopObject), "spr_shadow", -1), "visible", true);
+			var _inst = instances_matching(
+				instances_matching_ne(
+					call(scr.instances_meeting_rectangle,
+						ntte.floor_left,
+						ntte.floor_top,
+						ntte.floor_right,
+						ntte.floor_bottom,
+						obj.TopObject
+					),
+					"spr_shadow",
+					-1
+				),
+				"visible",
+				true
+			);
 			if(array_length(_inst)){
 				with(_inst){
 					var	_xsc = image_xscale,
@@ -6058,9 +6102,9 @@
 #macro  msk                                                                                     spr.msk
 #macro  mus                                                                                     snd.mus
 #macro  lag                                                                                     global.debug_lag
+#macro  ntte                                                                                    global.ntte_vars
 #macro  epsilon                                                                                 global.epsilon
 #macro  mod_current_type                                                                        global.mod_type
-#macro  ntte_mods                                                                               global.ntte_mods
 #macro  type_melee                                                                              0
 #macro  type_bullet                                                                             1
 #macro  type_shell                                                                              2
