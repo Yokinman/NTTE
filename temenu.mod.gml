@@ -238,7 +238,7 @@
 		while(mod_exists("mod", "teloader")){
 			wait 0;
 		}
-		with(ntte_mods.race){
+		with(ntte.mods.race){
 			var	_race = self,
 				_path = "race:" + _race + ":",
 				_stat = [
@@ -1091,7 +1091,7 @@
 			
 			 // Custom Crown Icons:
 			if(array_length(_crown.custom.icon) <= 0){
-				with(call(scr.array_combine, [crwn_random], ntte_mods.crown)){
+				with(call(scr.array_combine, [crwn_random], ntte.mods.crown)){
 					with({
 						crwn         : self,
 						locked       : false,
@@ -2902,9 +2902,9 @@
 #macro  msk                                                                                     spr.msk
 #macro  mus                                                                                     snd.mus
 #macro  lag                                                                                     global.debug_lag
+#macro  ntte                                                                                    global.ntte_vars
 #macro  epsilon                                                                                 global.epsilon
 #macro  mod_current_type                                                                        global.mod_type
-#macro  ntte_mods                                                                               global.ntte_mods
 #macro  type_melee                                                                              0
 #macro  type_bullet                                                                             1
 #macro  type_shell                                                                              2

@@ -2700,8 +2700,6 @@
 	mod_variable_set(_type, _name, "epsilon",   global.epsilon);
 	mod_variable_set(_type, _name, "mod_type",  _type);
 	
-	mod_variable_set(_type, _name, "ntte_mods", ntte_mods);
-	
 	 // Bind Object Setup Scripts:
 	var _list = [];
 	for(var i = array_length(global.bind_setup_object_list) - 1; i >= 0; i--){

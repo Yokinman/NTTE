@@ -131,14 +131,14 @@
 #macro  msk                                                                                     spr.msk
 #macro  mus                                                                                     snd.mus
 #macro  lag                                                                                     global.debug_lag
-#macro  ntte_mods                                                                               global.mods
+#macro  ntte                                                                                    global.ntte_vars
 #macro  type_melee                                                                              0
 #macro  type_bullet                                                                             1
 #macro  type_shell                                                                              2
 #macro  type_bolt                                                                               3
 #macro  type_explosive                                                                          4
 #macro  type_energy                                                                             5
-#macro  current_frame_active                                                                    ((current_frame + 0.00001) % 1) < current_time_scale
+#macro  current_frame_active                                                                    ((current_frame + global.epsilon) % 1) < current_time_scale
 #define orandom(_num)                                                                   return  random_range(-_num, _num);
 #define chance(_numer, _denom)                                                          return  random(_denom) < _numer;
 #define chance_ct(_numer, _denom)                                                       return  random(_denom) < (_numer * current_time_scale);
