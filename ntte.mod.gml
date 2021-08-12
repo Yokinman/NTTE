@@ -2,7 +2,7 @@
 	mod_script_call("mod", "teassets", "ntte_init", script_ref_create(init));
 	
 	 // Store Script References:
-	with([mapdata_get, footprint_give]){
+	with([ntte_setup, mapdata_get, footprint_give]){
 		lq_set(scr, script_get_name(self), script_ref_create(self));
 	}
 	
@@ -2113,10 +2113,11 @@
 	
 #define ntte_setup
 	/*
-		Finds newly created instances and calls their object setup scripts
+		Calls object setup scripts with arrays of their newly created instances
+		The arrays can be empty, as other setup scripts may destroy the instances
 	*/
 	
-	var _refObjectMap = mod_variable_get("mod", "teassets", "bind_setup_object_list");
+	var _objectRefList = mod_variable_get("mod", "teassets", "bind_setup_object_list");
 	
 	while(true){
 		var	_maxID    = instance_max,
@@ -2126,8 +2127,8 @@
 			
 		 // Compile New Instances:
 		while(_minID < _maxID){
-			if("object_index" in _minID && _refObjectMap[_minID.object_index] != noone){
-				with(_refObjectMap[_minID.object_index]){
+			if("object_index" in _minID && _objectRefList[_minID.object_index] != noone){
+				with(_objectRefList[_minID.object_index]){
 					var _pos = array_find_index(_refList, self);
 					if(_pos < 0){
 						_pos = array_length(_refList);
@@ -2146,10 +2147,7 @@
 			var _pos = 0;
 			with(_refList){
 				//trace(self);
-				var _inst = instances_matching_ne(_instList[_pos++], "id");
-				if(array_length(_inst)){
-					script_ref_call(self, _inst);
-				}
+				script_ref_call(self, instances_matching_ne(_instList[_pos++], "id"));
 			}
 		}
 		else break;
@@ -3124,19 +3122,44 @@
 				var _inst = instances_matching(_burstInst, "alarm0", 1);
 				if(array_length(_inst)){
 					with(_inst){
-						var	_len = ntte_burst_offset[0],
-							_dir = ntte_burst_offset[1],
-							_ang = ntte_burst_offset[2];
-							
-						with(creator){
-							var	_lastX   = x,
+						with(instance_exists(creator) ? creator : self){
+							var	_player  = instance_is(self,  Player),
+								_laser   = instance_is(other, LaserCannon),
+								_lastX   = x,
 								_lastY   = y,
-								_lastAng = gunangle;
+								_lastAng = (_player ? gunangle : other.direction);
 								
-							x        += lengthdir_x(_len, _dir + gunangle);
-							y        += lengthdir_y(_len, _dir + gunangle);
-							gunangle += _ang;
+							 // Offset:
+							var _len = other.ntte_burst_offset[0];
+							if(round(_len) <= (_laser ? 0 : 16)){
+								var	_dir = other.ntte_burst_offset[1] + _lastAng,
+									_ang = other.ntte_burst_offset[2];
+									
+								x += lengthdir_x(_len, _dir);
+								y += lengthdir_y(_len, _dir);
+								
+								if(_player) gunangle += _ang;
+								else other.direction += _ang;
+							}
+							else{
+								x = other.xstart;
+								y = other.ystart;
+								var _dir = (
+									(other.image_angle == _lastAng || other.image_angle == 0)
+									? other.direction
+									: other.image_angle
+								);
+								if(_player){
+									gunangle = _dir;
+									if(_laser){
+										x -= lengthdir_x(16, gunangle);
+										y -= lengthdir_y(16, gunangle);
+									}
+								}
+								else other.direction = _dir;
+							}
 							
+							 // Fire:
 							with(other){
 								with(self){
 									event_perform(ev_alarm, 0);
@@ -3146,9 +3169,13 @@
 								}
 							}
 							
-							x        = _lastX;
-							y        = _lastY;
-							gunangle = _lastAng;
+							 // Un-Offset:
+							if(instance_exists(self)){
+								x = _lastX;
+								y = _lastY;
+								if(_player) gunangle = _lastAng;
+								else other.direction = _lastAng;
+							}
 						}
 					}
 				}
@@ -3159,6 +3186,9 @@
 		if(array_length(_burstInst)){
 			var _inst = instances_matching_le(_burstInst, "delay", current_time_scale);
 			if(array_length(_inst)){
+				if("ntte_burst_step_list" not in GameCont){
+					GameCont.ntte_burst_step_list = [];
+				}
 				with(_inst){
 					delay = max(delay, current_time_scale) + current_time_scale;
 					array_push(GameCont.ntte_burst_step_list, self);
@@ -3198,19 +3228,44 @@
 		 // Manual Burst Weapon Offsets:
 		if("ntte_burst_step_list" in GameCont && array_length(GameCont.ntte_burst_step_list)){
 			with(instances_matching_ne(GameCont.ntte_burst_step_list, "ntte_burst_offset", null)){
-				var	_len = ntte_burst_offset[0],
-					_dir = ntte_burst_offset[1],
-					_ang = ntte_burst_offset[2];
-					
-				with(creator){
-					var	_lastX   = x,
+				with(instance_exists(creator) ? creator : self){
+					var	_player  = instance_is(self,  Player),
+						_laser   = instance_is(other, LaserCannon),
+						_lastX   = x,
 						_lastY   = y,
-						_lastAng = gunangle;
+						_lastAng = (_player ? gunangle : other.direction);
 						
-					x        += lengthdir_x(_len, _dir + gunangle);
-					y        += lengthdir_y(_len, _dir + gunangle);
-					gunangle += _ang;
+					 // Offset:
+					var _len = other.ntte_burst_offset[0];
+					if(round(_len) <= (_laser ? 0 : 16)){
+						var	_dir = other.ntte_burst_offset[1] + _lastAng,
+							_ang = other.ntte_burst_offset[2];
+							
+						x += lengthdir_x(_len, _dir);
+						y += lengthdir_y(_len, _dir);
+						
+						if(_player) gunangle += _ang;
+						else other.direction += _ang;
+					}
+					else{
+						x = other.xstart;
+						y = other.ystart;
+						var _dir = (
+							(other.image_angle == _lastAng || other.image_angle == 0)
+							? other.direction
+							: other.image_angle
+						);
+						if(_player){
+							gunangle = _dir;
+							if(_laser){
+								x -= lengthdir_x(16, gunangle);
+								y -= lengthdir_y(16, gunangle);
+							}
+						}
+						else other.direction = _dir;
+					}
 					
+					 // Fire:
 					with(other){
 						with(self){
 							delay = current_time_scale;
@@ -3218,9 +3273,13 @@
 						}
 					}
 					
-					x        = _lastX;
-					y        = _lastY;
-					gunangle = _lastAng;
+					 // Un-Offset:
+					if(instance_exists(self)){
+						x = _lastX;
+						y = _lastY;
+						if(_player) gunangle = _lastAng;
+						else other.direction = _lastAng;
+					}
 				}
 			}
 			GameCont.ntte_burst_step_list = [];
@@ -3230,11 +3289,21 @@
 			if(array_length(_inst)){
 				with(_inst){
 					if(instance_exists(creator)){
-						var	_len = point_distance(creator.x, creator.y, x, y),
-							_dir = point_direction(creator.x, creator.y, x, y) + ntte_burst_offset[2];
+						var _len = ntte_burst_offset[0];
+						if(round(_len) <= 0){
+							var	_creatorLen = 16,
+								_creatorDir = (instance_is(creator, Player) ? creator.gunangle : direction),
+								_dir        = _creatorDir + ntte_burst_offset[1];
+								
+							_creatorDir += ntte_burst_offset[2];
 							
-						x = creator.x + lengthdir_x(_len, _dir);
-						y = creator.y + lengthdir_y(_len, _dir);
+							x = creator.x + lengthdir_x(_len, _dir) + lengthdir_x(_creatorLen, _creatorDir);
+							y = creator.y + lengthdir_y(_len, _dir) + lengthdir_y(_creatorLen, _creatorDir);
+						}
+						else{
+							x = xstart;
+							y = ystart;
+						}
 					}
 				}
 			}

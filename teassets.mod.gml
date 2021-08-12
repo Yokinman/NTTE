@@ -3520,15 +3520,57 @@
 	
 	return _bind;
 	
-#define ntte_bind_setup(_script, _obj)
+#define ntte_bind_step(_scriptRef)
 	/*
-		Binds the given script reference to a setup event for the given object
-		Calls the script with an array of newly created instances
+		
 	*/
 	
+	_scriptRef = array_clone(_scriptRef);
+	
+	
+	return _scriptRef;
+	
+#define ntte_bind_begin_step(_scriptRef)
+	/*
+		
+	*/
+	
+	_scriptRef = array_clone(_scriptRef);
+	
+	
+	return _scriptRef;
+	
+#define ntte_bind_end_step(_scriptRef)
+	/*
+		
+	*/
+	
+	_scriptRef = array_clone(_scriptRef);
+	
+	
+	return _scriptRef;
+	
+#define ntte_bind_draw(_scriptRef, _depth)
+	/*
+		
+	*/
+	
+	_scriptRef = array_clone(_scriptRef);
+	
+	
+	return _scriptRef;
+	
+#define ntte_bind_setup(_scriptRef, _obj)
+	/*
+		Binds the given script reference to a setup event for the given object
+		Calls the script with an array of newly created instances of that object
+		The array can be empty, as other setup scripts may destroy the instances
+	*/
+	
+	_scriptRef = array_clone(_scriptRef);
+	
 	var	_objectRefList   = global.bind_setup_object_list,
-		_objectChildList = array_create(array_length(_objectRefList), noone),
-		_scriptRef       = array_clone(_script);
+		_objectChildList = array_create(array_length(_objectRefList), noone);
 		
 	 // Link Objects to Their Children:
 	for(var i = array_length(_objectChildList) - 1; i >= 0; i--){

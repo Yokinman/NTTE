@@ -42,7 +42,7 @@
 		case sprCrystTrail             : return spr.CrystalRedTrail;
 	}
 	
-#define skin_weapon_sprite(_spr, _wep)
+#define skin_weapon_sprite(_wep, _spr)
 	switch(_spr){
 		case sprGoldARifle       : return spr.RedAssaultRifle;
 		case sprGoldBazooka      : return spr.RedBazooka;
@@ -75,11 +75,11 @@
 	}
 	return _spr;
 	
-#define skin_weapon_sprite_hud(_spr, _wep)
+#define skin_weapon_sprite_hud(_wep, _spr)
 	if(_spr == spr.TunnellerHUD) return spr.RedTunnellerHUD;
 	return _spr;
 	
-#define skin_weapon_swap(_swap, _wep)
+#define skin_weapon_swap(_wep, _swap)
 	sound_set_track_position(
 		sound_play_pitchvol(sndHyperCrystalChargeExplo, 0.6, 0.5),
 		1.55

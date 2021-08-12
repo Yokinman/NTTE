@@ -476,6 +476,77 @@
 	 // Lag Debugging:
 	lag_bind_call("step");
 	
+	 // Manage Projectile Trackers:
+	if("ntte_projectile_tag_map" in GameCont && array_length(GameCont.ntte_projectile_tag_map[0])){
+		var	_trackObject          = [projectile, PlasmaImpact, CustomObject, CustomHitme, CustomProp, CustomEnemy, CustomScript, Burst, GoldBurst, HeavyBurst, HyperBurst, RogueBurst, SawBurst, SplinterBurst, NadeBurst, DragonBurst, ToxicBurst, FlameBurst, WaveBurst, SlugBurst, PopBurst, IonBurst, LaserCannon, SentryGun],
+			_trackFrame           = GameCont.ntte_projectile_tag_frame,
+			_creatorTeamTagRefMap = GameCont.ntte_projectile_tag_map,
+			_creatorIndex         = 0,
+			_creatorList          = _creatorTeamTagRefMap[0],
+			_teamTagRefMapList    = _creatorTeamTagRefMap[1];
+			
+		with(_creatorList){
+			var	_creator       = self,
+				_creatorInst   = undefined,
+				_teamTagRefMap = _teamTagRefMapList[_creatorIndex++],
+				_teamIndex     = 0,
+				_teamList      = _teamTagRefMap[0],
+				_tagRefMapList = _teamTagRefMap[1];
+				
+			with(_teamList){
+				var	_team            = self,
+					_teamInstTagList = undefined,
+					_tagRefMap       = _tagRefMapList[_teamIndex++],
+					_tagIndex        = 0,
+					_tagList         = _tagRefMap[0],
+					_refList         = _tagRefMap[1];
+					
+				with(_refList){
+					if(self[1] <= _trackFrame){
+						var _tag = _tagList[_tagIndex++];
+						
+						 // Find Existing Tags:
+						if(is_undefined(_teamInstTagList)){
+							_teamInstTagList = [];
+							if(is_undefined(_creatorInst)){
+								_creatorInst = instances_matching(_trackObject, "creator", _creator);
+							}
+							with(instances_matching(_creatorInst, "team", _team)){
+								array_push(_teamInstTagList, 1 / (team - _team));
+							}
+						}
+						
+						 // Destroy Tag:
+						if(array_find_index(_teamInstTagList, _tag) < 0){
+							with([
+								[_tagRefMap,            _tag],
+								[_teamTagRefMap,        _team],
+								[_creatorTeamTagRefMap, _creator]
+							]){
+								var	_map = self[0],
+									_pos = array_find_index(_map[0], self[1]);
+									
+								for(var i = array_length(_map) - 1; i >= 0; i--){
+									_map[i] = array_delete(_map[i], _pos);
+								}
+								
+								if(array_length(_map[0])){
+									break;
+								}
+							}
+						}
+					}
+					else break; // Sorted by End Frame
+				}
+			}
+		}
+		
+		 // Projectile Tracking Frame:
+		if("ntte_projectile_tag_frame" in GameCont){
+			GameCont.ntte_projectile_tag_frame += current_time_scale;
+		}
+	}
+	
 #define ntte_end_step
 	 // Bound End Step Events:
 	if(!obj_bind_call("end_step")){
@@ -951,90 +1022,274 @@
 	}
 	instance_destroy();
 	
-#define projectile_tag_search // tag, team, creator, scriptRef, frameSearch, ?wep
+#define projectile_tag_create // team, creator, scriptRef, ?frameTime
 	/*
-		Searches for new projectiles matching the given tag, team, and creator, calling the given script for each instance
+		Returns a tagged version of the given team, which is linked to the given creator and script reference
+		The script reference is called when newly created projectiles are found linked to this creator and tagged team
+		The tag is destroyed when no projectile, Burst, or Custom-type instances are linked to this creator and tagged team
 		
 		Args:
-			tag         - The team epsilon tag to search for
-			team        - The team to search for
-			creator     - The creator to search for
-			scriptRef   - The script or list of scripts to call for each projectile instance
-			frameSearch - The number of frames until the search ends, resets when new projectiles are found
-			wep         - Optional, won't stop searching until the creator isn't holding this weapon or it's fully reloaded
+			team      - The projectile team (If already tagged, the new tag will be linked to this team's tag)
+			creator   - The projectile creator
+			scriptRef - A script reference, called with an array of newly created tagged projectiles as the 'argument0'
+			            Instances in the array are only guaranteed to have the variables "damage", "force", "team", "creator", and "hitid"
+			frameTime - Optional, the tag will continue working for this many frames, even if no tagged instances exist
+			            Refreshes this timer when a new tagged projectile is found
+			            
+		Ex:
+			team = projectile_tag_create(team, creator, script_ref_create(image_blend_set, c_blue))
 	*/
 	
-	var	_tag         = argument[0],
-		_team        = floor(argument[1]),
-		_creator     = argument[2],
-		_scriptRef   = array_clone(argument[3]),
-		_frameSearch = argument[4],
-		_frame       = GameCont.timer + _frameSearch,
-		_wep         = ((argument_count > 5) ? argument[5] : undefined),
-		_pos         = 0;
+	if("ntte_projectile_tag_map"   not in GameCont) GameCont.ntte_projectile_tag_map   = [[], []];
+	if("ntte_projectile_tag_frame" not in GameCont) GameCont.ntte_projectile_tag_frame = 0;
+	
+	var	_team                 = argument[0],
+		_teamRaw              = round(_team),
+		_creator              = argument[1],
+		_scriptRef            = array_clone(argument[2]),
+		_frameTime            = ((argument_count > 3) ? argument[3] : 1),
+		_creatorTeamTagRefMap = GameCont.ntte_projectile_tag_map,
+		_creatorList          = _creatorTeamTagRefMap[0],
+		_creatorIndex         = array_find_index(_creatorList, _creator),
+		_teamTagRefMapList    = _creatorTeamTagRefMap[1],
+		_teamTagRefMap        = ((_creatorIndex < 0) ? [[], []] : _teamTagRefMapList[_creatorIndex]),
+		_teamList             = _teamTagRefMap[0],
+		_teamIndex            = array_find_index(_teamList, _teamRaw),
+		_tagRefMapList        = _teamTagRefMap[1],
+		_tagRefMap            = ((_teamIndex < 0) ? [[], []] : _tagRefMapList[_teamIndex]),
+		_tagList              = _tagRefMap[0],
+		_tag                  = 0;
 		
-	if("ntte_projectile_tag_list" not in GameCont){
-		GameCont.ntte_projectile_tag_list = [];
-	}
-	
-	 // Override Old Tag:
-	with(GameCont.ntte_projectile_tag_list){
-		if(tag == _tag){
-			_frame = max(_frame, frame);
-			break;
+	 // Generate Team Epsilon Tag:
+	repeat(1000){
+		var _num = (random(epsilon) + _teamRaw) - _teamRaw; // Adds team to guarantee precision
+		if(_num == 0 && 1 / _num < infinity){
+			if(array_find_index(_tagList, 1 / _num) < 0){
+				_tag = 1 / _num;
+				break;
+			}
 		}
-		_pos++;
 	}
 	
-	 // Add to List:
-	GameCont.ntte_projectile_tag_list[_pos] = {
-		"tag"          : _tag,
-		"team"         : _team,
-		"creator"      : _creator,
-		"ref_list"     : ((array_length(_scriptRef) && is_string(_scriptRef[0])) ? [_scriptRef] : _scriptRef),
-		"frame"        : _frame,
-		"frame_search" : _frameSearch,
-		"wep"          : _wep
-	};
+	 // Store Script Reference:
+	if(_tag != 0){
+		var	_refList      = _tagRefMap[1],
+			_frameEnd     = GameCont.ntte_projectile_tag_frame + _frameTime,
+			_lastTagIndex = array_find_index(_tagList, 1 / (_team - _teamRaw)),
+			_lastRefInfo  = ((_lastTagIndex < 0) ? undefined : _refList[_lastTagIndex]);
+			
+		_tagList = array_clone(_tagList);
+		_refList = array_clone(_refList);
+		
+		 // Save First Argument in Script Reference:
+		for(var i = array_length(_scriptRef); i >= 3; i--){
+			_scriptRef[i] = _scriptRef[i - 1];
+		}
+		_scriptRef[3] = [];
+		
+		 // Setup Maps:
+		if(_creatorIndex < 0){
+			array_push(_creatorList,       _creator);
+			array_push(_teamTagRefMapList, _teamTagRefMap);
+		}
+		if(_teamIndex < 0){
+			array_push(_teamList,      _teamRaw);
+			array_push(_tagRefMapList, _tagRefMap);
+		}
+		
+		 // Sort Into List:
+		var _tagIndex = array_length(_tagList);
+		while(_tagIndex > 0 && _refList[_tagIndex - 1][1] > _frameEnd){
+			_tagList[_tagIndex] = _tagList[_tagIndex - 1];
+			_refList[_tagIndex] = _refList[_tagIndex - 1];
+			_tagIndex--;
+		}
+		_tagList[_tagIndex] = _tag;
+		_refList[_tagIndex] = [_scriptRef, _frameEnd, _frameTime, _lastRefInfo, {}];
+		_tagRefMap[0]       = _tagList;
+		_tagRefMap[1]       = _refList;
+		
+		 // Bind Setup Script:
+		if(is_undefined(lq_get(ntte, "bind_setup_projectile_tag"))){
+			ntte.bind_setup_projectile_tag = call(scr.ntte_bind_setup, script_ref_create(ntte_setup_projectile_tag), [projectile, PlasmaImpact]);
+		}
+		
+		return _teamRaw + (1 / _tag);
+	}
 	
-	 // Bind Setup Script:
-	if(is_undefined(lq_get(ntte, "bind_setup_projectile_tag"))){
-		ntte.bind_setup_projectile_tag = call(scr.ntte_bind_setup, script_ref_create(ntte_setup_projectile_tag), projectile);
+	return _team;
+	
+#define projectile_tag_get_value // teamTag, creator, name, defValue=undefined
+	/*
+		Returns the value associated with the given name, creator, and tagged team
+		Returns 'undefined' or the given default value if no value exists
+	*/
+	
+	var	_teamTag  = argument[0],
+		_creator  = argument[1],
+		_name     = argument[2],
+		_defValue = ((argument_count > 3) ? argument[3] : undefined);
+		
+	if("ntte_projectile_tag_map" in GameCont){
+		var	_creatorTeamTagRefMap = GameCont.ntte_projectile_tag_map,
+			_creatorList          = _creatorTeamTagRefMap[0],
+			_creatorIndex         = array_find_index(_creatorList, _creator);
+			
+		if(_creatorIndex >= 0){
+			var	_teamTagRefMapList = _creatorTeamTagRefMap[1],
+				_teamTagRefMap     = _teamTagRefMapList[_creatorIndex],
+				_teamList          = _teamTagRefMap[0],
+				_teamRaw           = round(_teamTag),
+				_teamIndex         = array_find_index(_teamList, _teamRaw);
+				
+			if(_teamIndex >= 0){
+				var	_tagRefMapList = _teamTagRefMap[1],
+					_tagRefMap     = _tagRefMapList[_teamIndex],
+					_tagList       = _tagRefMap[0],
+					_tagIndex      = array_find_index(_tagList, 1 / (_teamTag - _teamRaw));
+					
+				if(_tagIndex >= 0){
+					return lq_defget(_tagRefMap[1][_tagIndex][4], _name, _defValue);
+				}
+			}
+		}
+	}
+	
+	return _defValue;
+	
+#define projectile_tag_set_value(_teamTag, _creator, _name, _value)
+	/*
+		Assigns the given value to the given name, creator, and tagged team
+	*/
+	
+	if("ntte_projectile_tag_map" in GameCont){
+		var	_creatorTeamTagRefMap = GameCont.ntte_projectile_tag_map,
+			_creatorList          = _creatorTeamTagRefMap[0],
+			_creatorIndex         = array_find_index(_creatorList, _creator);
+			
+		if(_creatorIndex >= 0){
+			var	_teamTagRefMapList = _creatorTeamTagRefMap[1],
+				_teamTagRefMap     = _teamTagRefMapList[_creatorIndex],
+				_teamList          = _teamTagRefMap[0],
+				_teamRaw           = round(_teamTag),
+				_teamIndex         = array_find_index(_teamList, _teamRaw);
+				
+			if(_teamIndex >= 0){
+				var	_tagRefMapList = _teamTagRefMap[1],
+					_tagRefMap     = _tagRefMapList[_teamIndex],
+					_tagList       = _tagRefMap[0],
+					_tagIndex      = array_find_index(_tagList, 1 / (_teamTag - _teamRaw));
+					
+				if(_tagIndex >= 0){
+					lq_set(_tagRefMap[1][_tagIndex][4], _name, _value);
+				}
+			}
+		}
 	}
 	
 #define ntte_setup_projectile_tag(_inst)
-	 // Capture Tagged Projectiles:
-	if("ntte_projectile_tag_list" in GameCont && array_length(GameCont.ntte_projectile_tag_list)){
-		var _gameFrame = GameCont.timer;
-		array_sort(_inst, true);
-		with(GameCont.ntte_projectile_tag_list){
-			var _instSearch = instances_matching(instances_matching(_inst, "team", team), "creator", creator);
+	if("ntte_projectile_tag_map" in GameCont && array_length(GameCont.ntte_projectile_tag_map[0])){
+		var	_trackFrame           = GameCont.ntte_projectile_tag_frame,
+			_creatorTeamTagRefMap = GameCont.ntte_projectile_tag_map,
+			_creatorIndex         = 0,
+			_creatorList          = _creatorTeamTagRefMap[0],
+			_teamTagRefMapList    = _creatorTeamTagRefMap[1];
 			
-			 // Search for Tagged Teams:
-			if(array_length(_instSearch)){
-				var _wep = wep;
-				with(_instSearch){
-					if(1 / (team - other.team) == other.tag){
-						other.frame = max(other.frame, _gameFrame + other.frame_search);
-						with(other.ref_list){
-							call(scr.pass, other, self, _wep);
+		array_sort(_inst, true);
+		
+		 // Capture Tagged Projectiles:
+		with(_creatorList){
+			var	_creator     = self,
+				_creatorInst = instances_matching(_inst, "creator", _creator);
+				
+			if(array_length(_creatorInst)){
+				var	_teamTagRefMap = _teamTagRefMapList[_creatorIndex],
+					_teamIndex     = 0,
+					_teamList      = _teamTagRefMap[0],
+					_tagRefMapList = _teamTagRefMap[1];
+					
+				with(_teamList){
+					var	_team     = self,
+						_teamInst = instances_matching(_creatorInst, "team", _team);
+						
+					if(array_length(_teamInst)){
+						var	_tagRefMap = _tagRefMapList[_teamIndex],
+							_tagIndex  = 0,
+							_tagList   = _tagRefMap[0],
+							_refList   = _tagRefMap[1];
+							
+						with(_tagList){
+							var	_tag     = self,
+								_tagInst = [];
+								
+							 // Gather Tagged Instances:
+							with(_teamInst){
+								if(1 / (team - _team) == _tag){
+									array_push(_tagInst, self);
+									_inst        = instances_matching_ne(_inst,        "id", id);
+									_creatorInst = instances_matching_ne(_creatorInst, "id", id);
+									_teamInst    = instances_matching_ne(_teamInst,    "id", id);
+									
+									//  // PlasmaImpact Fix:
+									// if(instance_is(self, PlasmaImpact)){
+									// 	typ       = 0;
+									// 	deflected = false;
+									// }
+								}
+							}
+							
+							 // Call Script:
+							if(array_length(_tagInst)){
+								var	_refInfo  = _refList[_tagIndex],
+									_frameEnd = _trackFrame + _refInfo[2];
+									
+								while(true){
+									var _refIndex = array_find_index(_tagRefMap[0], _refInfo);
+									
+									 // Reset Search Time:
+									if(_refIndex >= 0){
+										_refInfo[1] = _frameEnd;
+										
+										 // Re-Sort Into List:
+										var	_tagListNew = array_delete(_tagRefMap[0], _refIndex),
+											_refListNew = array_delete(_tagRefMap[1], _refIndex);
+											
+										_refIndex = array_length(_tagListNew);
+										while(_refIndex > 0 && _refListNew[_refIndex - 1][1] > _frameEnd){
+											_tagListNew[_refIndex] = _tagListNew[_refIndex - 1];
+											_refListNew[_refIndex] = _refListNew[_refIndex - 1];
+											_refIndex--;
+										}
+										_tagListNew[_refIndex] = _tag;
+										_refListNew[_refIndex] = _refInfo;
+										_tagRefMap[0]          = _tagListNew;
+										_tagRefMap[1]          = _refListNew;
+									}
+									
+									 // Call Script:
+									var _refCall = _refInfo[0];
+									_refCall[@3] = _tagInst;
+									script_ref_call(_refCall);
+									
+									 // Previous Tag:
+									_refInfo = _refInfo[3];
+									if(is_undefined(_refInfo)){
+										break;
+									}
+									_tagInst  = instances_matching_ne(_tagInst, "id");
+									_frameEnd = max(_frameEnd, _trackFrame + _refInfo[2]);
+								}
+							}
+							
+							_tagIndex++;
 						}
 					}
+					
+					_teamIndex++;
 				}
 			}
 			
-			 // Done Searching:
-			if(frame <= _gameFrame){
-				if(
-					is_undefined(wep)
-					|| (
-						("wep"  not in creator || "reload"  not in creator || creator.wep  != wep || creator.reload  <= 0) &&
-						("bwep" not in creator || "breload" not in creator || creator.bwep != wep || creator.breload <= 0)
-					)
-				){
-					GameCont.ntte_projectile_tag_list = call(scr.array_delete_value, GameCont.ntte_projectile_tag_list, self);
-				}
-			}
+			_creatorIndex++;
 		}
 	}
 	
@@ -3800,23 +4055,20 @@
 			wep     - The weapon to modify
 			scrName - The name of the script to modify
 			scrAdd  - A script reference to call after the given script, which can return a custom value for the weapon
-			          The script is called with its 'argument0' being the weapon's current value, and then the normal script's arguments
-			          Can also be a boolean value to toggle the script's base execution <-- DISABLED FOR PERFORMANCE, MIGHT NOT BE NEEDED
+			          The script is called with the original script's arguments and then the current return value
 			
 		Ex:
-			wep  = wep_wrap(wep,  "weapon_sprt", script_ref_create(coolspr));
-			bwep = wep_wrap(bwep, "weapon_fire", false); // <-- DISABLED FOR PERFORMANCE, MIGHT NOT BE NEEDED
+			wep = wep_wrap(wep, "weapon_sprt", script_ref_create(coolspr));
 			
-			#define coolspr(_spr, _wep)
+			#define coolspr(_wep, _spr)
 				return sprBanditGun;
 	*/
 	
 	var _wrap = {
 		"wep"     : _wep,
 		"lwo"     : is_object(_wep),
-		// "scr_use" : {},
-		"scr_ref" : {},
-		"tag"     : 0
+	//	"scr_use" : {},
+		"scr_ref" : {}
 	};
 	
 	 // Wrapper Setup:
@@ -3847,17 +4099,6 @@
 	_wep.wep       = "tewrapper";
 	_wep.tewrapper = _wrap;
 	
-	 // Generate Team Epsilon Tag:
-	if(_wrap.tag == 0){
-		repeat(1000){
-			var _tag = (random(epsilon) + 3) - 3; // Adds IDPD team to guarantee overall precision
-			if(_tag == 0 && 1 / _tag < infinity){
-				_wrap.tag = 1 / _tag;
-				break;
-			}
-		}
-	}
-	
 	 // Toggle Base Script:
 	if(is_real(_scrRef)){
 		lq_set(_wrap.scr_use, _scrName, _scrRef);
@@ -3884,12 +4125,12 @@
 		var _refSprt = script_ref_create_ext("skin", _skin, "skin_weapon_sprite");
 		if(mod_script_exists(_refSprt[0], _refSprt[1], _refSprt[2])){
 			var _spr = weapon_get_sprt(_wep);
-			if(_spr != script_ref_call(_refSprt, _spr, _wep)){
+			if(_spr != script_ref_call(_refSprt, _wep, _spr)){
 				_wep = wep_wrap(wep_wrap(wep_wrap(
 					_wep,
-					"weapon_sprt",     _refSprt),
-					"weapon_name",     script_ref_create(wep_skin_name,       _race, _skin)),
-					"projectile_fire", script_ref_create(wep_skin_projectile, _race, _skin)
+					"weapon_sprt",      _refSprt),
+					"weapon_name",      script_ref_create(wep_skin_name,             _race, _skin)),
+					"projectile_setup", script_ref_create(wep_skin_projectile_setup, _race, _skin)
 				);
 				with([
 					["weapon_sprt_hud", "skin_weapon_sprite_hud"],
@@ -3906,7 +4147,7 @@
 	
 	return _wep;
 	
-#define wep_skin_name(_race, _skin, _name, _wep)
+#define wep_skin_name(_race, _skin, _wep, _name)
 	/*
 		Returns the given weapon's name with "GOLDEN" replaced by the given skin's name, or prefixed by it if "GOLDEN" isn't mentioned
 	*/
@@ -3934,32 +4175,34 @@
 		)
 	);
 	
-#define wep_skin_projectile(_race, _skin, _wep)
+#define wep_skin_projectile_setup(_race, _skin, _inst, _wep)
 	/*
 		Resprites projectiles shot by the given weapon to the given skin
 	*/
 	
-	var _spr = mod_script_call("skin", _skin, "skin_weapon_sprite", sprite_index, _wep);
-	
-	if(sprite_index != _spr){
-		 // Cause of Death:
-		if(hitid == 101){
-			hitid = [sprGoldDisc, "GOLDEN DISC"];
-		}
-		if(array_length(hitid) && sprite_index == hitid[0]){
-			hitid[0] = _spr;
-			if(array_length(hitid) > 1 && is_string(hitid[1])){
-				hitid[1] = wep_skin_name(_race, _skin, hitid[1], _wep);
+	with(_inst){
+		var _spr = mod_script_call("skin", _skin, "skin_weapon_sprite", _wep, sprite_index);
+		
+		if(sprite_index != _spr){
+			 // Cause of Death:
+			if(hitid == 101){
+				hitid = [sprGoldDisc, "GOLDEN DISC"];
 			}
+			if(array_length(hitid) && sprite_index == hitid[0]){
+				hitid[0] = _spr;
+				if(array_length(hitid) > 1 && is_string(hitid[1])){
+					hitid[1] = wep_skin_name(_race, _skin, _wep, hitid[1]);
+				}
+			}
+			
+			 // Hitbox:
+			if(mask_index < 0){
+				mask_index = sprite_index;
+			}
+			
+			 // Sprite:
+			sprite_index = _spr;
 		}
-		
-		 // Hitbox:
-		if(mask_index < 0){
-			mask_index = sprite_index;
-		}
-		
-		 // Sprite:
-		sprite_index = _spr;
 	}
 	
 #define weapon_decide // hardMin=0, hardMax=GameCont.hard, gold=false, ?noWep

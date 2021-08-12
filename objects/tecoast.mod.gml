@@ -3164,7 +3164,7 @@
 		}
 	}
 	
-#define cool_hammer(_sprHammer, _spr, _wep)
+#define cool_hammer(_sprHammer)
 	return _sprHammer;
 	
 	

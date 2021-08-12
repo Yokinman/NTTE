@@ -723,7 +723,7 @@
 #macro git_branch  global.git_branch
 #macro git_version global.git_version
 
-#macro wrapper_script_base  ["init", "cleanup", "wep_base", "wep_swap", "weapon_raw", "weapon_name", "weapon_text", "weapon_swap", "weapon_sprt", "weapon_sprt_hud", "weapon_loadout", "weapon_area", "weapon_type", "weapon_cost", "weapon_rads", "weapon_load", "weapon_auto", "weapon_melee", "weapon_gold", "weapon_laser_sight", "weapon_fire", "weapon_reloaded", "step"]
+#macro wrapper_script_base  ["init", "cleanup", "wep_base", "wep_swap", "projectile_setup", "weapon_raw", "weapon_name", "weapon_text", "weapon_swap", "weapon_sprt", "weapon_sprt_hud", "weapon_loadout", "weapon_area", "weapon_type", "weapon_cost", "weapon_rads", "weapon_load", "weapon_auto", "weapon_melee", "weapon_gold", "weapon_laser_sight", "weapon_fire", "weapon_reloaded", "step"]
 #macro wrapper_script_avoid ["weapon_get_list", "weapon_get_name", "weapon_get_text", "weapon_get_swap", "weapon_get_sprt", "weapon_get_sprite", "weapon_get_sprt_hud", "weapon_get_area", "weapon_get_type", "weapon_get_cost", "weapon_get_rads", "weapon_get_load", "weapon_get_auto", "weapon_is_melee", "weapon_get_gold", "weapon_get_laser_sight", "weapon_set_name", "weapon_set_text", "weapon_set_swap", "weapon_set_sprt", "weapon_set_sprite", "weapon_set_area", "weapon_set_type", "weapon_set_cost", "weapon_set_rads", "weapon_set_load", "weapon_set_auto", "weapon_post"]
 
 #define game_start
@@ -2366,19 +2366,25 @@
 				_gml += `#define ${_scrName}`
 				_gml += _new + `mod_script_call("mod", "teassets", "ntte_${_scrName}", script_ref_create(${_scrName}));`
 				
+				 // Macros:
+				if(_scrName == "cleanup"){
+					_gml += chr(13) + chr(10);
+					_gml += `#macro wep_raw  (is_object(wep)  ? ${_scrName}(wep)  : wep)`  + chr(13) + chr(10);
+					_gml += `#macro bwep_raw (is_object(bwep) ? ${_scrName}(bwep) : bwep)` + chr(13) + chr(10);
+					_gml += chr(13) + chr(10);
+					_gml += `#macro call script_ref_call` + chr(13) + chr(10);
+					_gml += `#macro scr  global.scr`      + chr(13) + chr(10);
+					_gml += chr(13) + chr(10);
+					_gml += `#macro epsilon global.epsilon` + chr(13) + chr(10);
+					_gml += chr(13) + chr(10);
+					_gml += `#macro infinity 1/0` + chr(13) + chr(10);
+					_gml += chr(13) + chr(10);
+					_gml += `#macro instance_max instance_create(0, 0, DramaCamera)` + chr(13) + chr(10);
+				}
+				
 				break;
 				
 			case "wep_base": // Returns the base "wep" value for a LWO weapon
-				
-				_gml += `#macro wep_raw  (is_object(wep)  ? ${_scrName}(wep)  : wep)`  + chr(13) + chr(10);
-				_gml += `#macro bwep_raw (is_object(bwep) ? ${_scrName}(bwep) : bwep)` + chr(13) + chr(10);
-				_gml += chr(13) + chr(10);
-				_gml += `#macro epsilon global.epsilon` + chr(13) + chr(10);
-				_gml += chr(13) + chr(10);
-				_gml += `#macro infinity 1/0` + chr(13) + chr(10);
-				_gml += chr(13) + chr(10);
-				_gml += `#macro instance_max instance_create(0, 0, DramaCamera)` + chr(13) + chr(10);
-				_gml += chr(13) + chr(10);
 				
 				_gml += `#define ${_scrName}(_wep)`
 				_gml += _new + `while(is_object(_wep)){`
@@ -2499,6 +2505,46 @@
 				
 				break;
 				
+			case "projectile_setup": // Calls custom setup code for the given projectile instances
+				
+				_gml += `#define ${_scrName}(_inst, _wep, _mainShot, _mainX, _mainY, _mainDirection, _mainAccuracy, _mainTeam, _mainCreator)`
+				_gml += _new + `if(is_object(_wep) && "${_name}" in _wep){`
+				_gml += _new + `	var _wrap = _wep.${_name};`
+				_gml += _new + `	`
+				                	 // Re-Tag Team:
+				_gml += _new + `	if(_mainShot){`
+				_gml += _new + `		var _teamTag = call(scr.projectile_tag_create,`
+				_gml += _new + `			_mainTeam,`
+				_gml += _new + `			_mainCreator,`
+				_gml += _new + `			script_ref_create(${_scrName}, _wep, false, _mainX, _mainY, _mainDirection, _mainAccuracy, _mainTeam, _mainCreator),`
+				_gml += _new + `			max(1, weapon_get_load(_wep))`
+				_gml += _new + `		);`
+				_gml += _new + `		with(_inst){`
+				_gml += _new + `			team = _teamTag;`
+				_gml += _new + `		}`
+				_gml += _new + `	}`
+				_gml += _new + `	`
+				                	 // Custom:
+				_gml += _new + `	if("${_scrName}" in _wrap.scr_ref){`
+				_gml += _new + `		var _wrapRefList = _wrap.scr_ref.${_scrName},`
+				_gml += _new + `		    _wrapRefMax  = array_length(_wrapRefList);`
+				_gml += _new + `		    `
+				_gml += _new + `		for(var i = 0; i < _wrapRefMax; i++){`
+				_gml += _new + `			script_ref_call(_wrapRefList[i], _inst, _wep, _mainShot, _mainX, _mainY, _mainDirection, _mainAccuracy, _mainTeam, _mainCreator);`
+				_gml += _new + `			_inst = instances_matching_ne(_inst, "id");`
+				_gml += _new + `		}`
+				_gml += _new + `	}`
+				_gml += _new + `}`
+				                
+				                 // Reset Team:
+				_gml += _new + `else if(_mainShot){`
+				_gml += _new + `	with(_inst){`
+				_gml += _new + `		team = _lastTeam;`
+				_gml += _new + `	}`
+				_gml += _new + `}`
+				
+				break;
+				
 			case "weapon_raw": // Returns the original wrapped weapon 
 				
 				_gml += `#define ${_scrName}(_wep)`
@@ -2552,20 +2598,24 @@
 				// _gml += _new + `	if("${_scrName}" not in _wrap.scr_use || _wrap.scr_use.${_scrName}){`
 				
 				if(_scrName == "weapon_fire"){
-					_gml += _new + `	var _minID       = instance_max,`
-					_gml += _new + `	    _creator     = (("creator" in self && instance_is(self, FireCont)) ? creator : self),`
-					_gml += _new + `	    _team        = team,`
-					_gml += _new + `	    _teamTag     = _wrap.tag,`
-					_gml += _new + `	    _teamTagList = [];`
+					_gml += _new + `	var _minID     = instance_max,`
+					_gml += _new + `	    _x         = x,`
+					_gml += _new + `	    _y         = y,`
+					_gml += _new + `	    _direction = gunangle,`
+					_gml += _new + `	    _accuracy  = accuracy,`
+					_gml += _new + `	    _team      = team,`
+					_gml += _new + `	    _teamTag   = undefined,`
+					_gml += _new + `	    _creator   = (("creator" in self && instance_is(self, FireCont)) ? creator : self);`
 					_gml += _new + `	    `
 					                	 // Apply Epsilon Tag to Team:
-					_gml += _new + `	if("projectile_fire" in _wrap.scr_ref){`
-					_gml += _new + `		team = floor(team);`
-					_gml += _new + `		if(team == _team && 1 / (_team - team) < infinity){`
-					_gml += _new + `			_teamTag = 1 / (_team - team);`
-					_gml += _new + `		}`
-					_gml += _new + `		team += 1 / _teamTag;`
-					_gml += _new + `		array_push(_teamTagList, _teamTag);`
+					_gml += _new + `	if("projectile_setup" in _wrap.scr_ref){`
+					_gml += _new + `		_teamTag = call(scr.projectile_tag_create,`
+					_gml += _new + `			_team,`
+					_gml += _new + `			_creator,`
+					_gml += _new + `			script_ref_create(projectile_setup, _wep, true, _x, _y, _direction, _accuracy, _team, _creator),`
+					_gml += _new + `			max(1, weapon_get_load(_wep))`
+					_gml += _new + `		);`
+					_gml += _new + `		team = _teamTag;`
 					_gml += _new + `	}`
 					_gml += _new + `	`
 				}
@@ -2622,13 +2672,15 @@
 					case "weapon_fire": // Normal Firing
 						
 						_gml += _new + `	else{`
-						_gml += _new + `		var _lastLoad = reload,`
-						_gml += _new + `		    _lastRads = GameCont.rad;`
+						_gml += _new + `		var _lastLoad     = reload,`
+						_gml += _new + `		    _lastRads     = GameCont.rad,`
+						_gml += _new + `		    _lastCanShoot = can_shoot;`
 						_gml += _new + `		    `
 						                		 // Shoot:
 						_gml += _new + `		if(instance_is(self, Player)){`
 						// _gml += _new + `			var _swap     = wep_swap(true, [true], _wep),`
 						_gml += _new + `			var _lastWep  = wep,`
+						_gml += _new + `			    _lastDraw = drawempty,`
 						_gml += _new + `			    _lastAmmo = array_clone(ammo);`
 						_gml += _new + `			    `
 						_gml += _new + `			wep = _wrap.wep;`
@@ -2638,7 +2690,8 @@
 						// _gml += _new + `				if(_swap != false){`
 						// _gml += _new + `					wep_swap(_swap[0], _swap[1], _wep);`
 						// _gml += _new + `				}`
-						_gml += _new + `				wep = _lastWep;`
+						_gml += _new + `				wep       = _lastWep;`
+						_gml += _new + `				drawempty = _lastDraw;`
 						_gml += _new + `				array_copy(ammo, 0, _lastAmmo, 0, array_length(_lastAmmo));`
 						_gml += _new + `			}`
 						_gml += _new + `		}`
@@ -2664,10 +2717,9 @@
 						_gml += _new + `		}`
 						_gml += _new + `		`
 						                		 // Fixes:
-						_gml += _new + `		if(instance_exists(self)){`
-						_gml += _new + `			reload = _lastLoad;`
-						_gml += _new + `		}`
+						_gml += _new + `		reload       = _lastLoad;`
 						_gml += _new + `		GameCont.rad = _lastRads;`
+						_gml += _new + `		can_shoot    = _lastCanShoot;`
 						_gml += _new + `		if(instance_exists(LaserBrain)){`
 						_gml += _new + `			with(instances_matching_gt(LaserBrain, "id", _minID)){`
 						_gml += _new + `				instance_delete(self);`
@@ -2712,28 +2764,38 @@
 						_gml += _new + `	}`
 						_gml += _new + `	`
 						                	 // Tracking Team Tag:
-						_gml += _new + `	if(array_length(_teamTagList)){`
+						_gml += _new + `	if(!is_undefined(_teamTag)){`
 						                		 // Revert Team:
-						_gml += _new + `		if(instance_exists(self) && team == _team + (1 / _teamTag)){`
+						_gml += _new + `		if(instance_exists(self) && team == _teamTag){`
 						_gml += _new + `			team = _team;`
 						_gml += _new + `		}`
 						_gml += _new + `		`
-						                		 // Fetch New Team Tags:
-						_gml += _new + `		var _maxID = instance_max;`
-						_gml += _new + `		for(var _inst = _minID + 1; _inst < _maxID; _inst++){`
-						_gml += _new + `			if("team" in _inst && _inst.team == team){`
-						_gml += _new + `				var _tag = 1 / (_inst.team - team);`
-						_gml += _new + `				if(_tag < infinity && array_find_index(_teamTagList, _tag) < 0){`
-						_gml += _new + `					array_push(_teamTagList, _tag);`
-						_gml += _new + `				}`
-						_gml += _new + `			}`
-						_gml += _new + `		}`
+						//                 		 // Track Any New Tags:
+						// _gml += _new + `		var _maxID  = instance_max,`
+						// _gml += _new + `		    _tagMap = ds_map_create();`
+						// _gml += _new + `		    `
+						// _gml += _new + `		_tagMap[? string(_teamTag)] = _teamTag;`
+						// _gml += _new + `		`
+						// _gml += _new + `		for(var _inst = _minID; _inst < _maxID; _inst++){`
+						// _gml += _new + `			if("team" in _inst){`
+						// _gml += _new + `				var _tagKey = string(_inst.team);`
+						// _gml += _new + `				if(!ds_map_exists(_tagMap, _tagKey)){`
+						// _gml += _new + `					_tagMap[? _tagKey] = call(scr.projectile_tag_create,`
+						// _gml += _new + `						_inst.team,`
+						// _gml += _new + `						_creator,`
+						// _gml += _new + `						script_ref_create(projectile_setup, _wep, true, _x, _y, _direction, _accuracy, _inst.team, _creator),`
+						// _gml += _new + `						max(1, weapon_get_load(_wep))`
+						// _gml += _new + `					);`
+						// _gml += _new + `				}`
+						// _gml += _new + `				else trace("??");`
+						// _gml += _new + `				_inst.team = _tagMap[? _tagKey];`
+						// _gml += _new + `			}`
+						// _gml += _new + `		}`
+						// _gml += _new + `		`
+						// _gml += _new + `		ds_map_destroy(_tagMap);`
 						_gml += _new + `		`
-						                		 // Store Team Tags:
-						_gml += _new + `		var _frameSearch = max(0, weapon_get_load(_wep)) + 30;`
-						_gml += _new + `		with(_teamTagList){`
-						_gml += _new + `			script_ref_call(global.scr.projectile_tag_search, self, _team, _creator, _wrap.scr_ref.projectile_fire, _frameSearch, _wep);`
-						_gml += _new + `		}`
+						                		 // Capture New Projectiles:
+						_gml += _new + `		call(scr.ntte_setup);`
 						_gml += _new + `	}`
 						
 						break;
@@ -2748,9 +2810,11 @@
 				_gml += _new + `	`
 				                	 // Custom:
 				_gml += _new + `	if("${_scrName}" in _wrap.scr_ref){`
-				_gml += _new + `		var _wrapRefList = _wrap.scr_ref.${_scrName};`
-				_gml += _new + `		for(var i = 0; i < array_length(_wrapRefList); i++){`
-				_gml += _new + `			_call = script_ref_call(_wrapRefList[i], ${/*(_scrName == "weapon_fire") ? "_minID" : */"_call"}, _wep);`
+				_gml += _new + `		var _wrapRefList = _wrap.scr_ref.${_scrName},`
+				_gml += _new + `		    _wrapRefMax  = array_length(_wrapRefList);`
+				_gml += _new + `		    `
+				_gml += _new + `		for(var i = 0; i < _wrapRefMax; i++){`
+				_gml += _new + `			_call = script_ref_call(_wrapRefList[i], _wep, _call);`
 				_gml += _new + `		}`
 				_gml += _new + `	}`
 				_gml += _new + `	`
@@ -2894,9 +2958,11 @@
 				_gml += _new + `	`
 				                	 // Custom:
 				_gml += _new + `	if("${_scrName}" in _wrap.scr_ref){`
-				_gml += _new + `		var _wrapRefList = _wrap.scr_ref.${_scrName};`
-				_gml += _new + `		for(var i = 0; i < array_length(_wrapRefList); i++){`
-				_gml += _new + `			_call = script_ref_call(_wrapRefList[i], _call, _primary);`
+				_gml += _new + `		var _wrapRefList = _wrap.scr_ref.${_scrName},`
+				_gml += _new + `		    _wrapRefMax  = array_length(_wrapRefList);`
+				_gml += _new + `		    `
+				_gml += _new + `		for(var i = 0; i < _wrapRefMax; i++){`
+				_gml += _new + `			_call = script_ref_call(_wrapRefList[i], _primary, _call);`
 				_gml += _new + `		}`
 				_gml += _new + `	}`
 				_gml += _new + `	`
@@ -2964,12 +3030,13 @@
 				_gml += _new + `	`
 				                	 // Custom:
 				_gml += _new + `	if("${_scrName}" in _wrap.scr_ref){`
-				_gml += _new + `		var _wrapRefList = _wrap.scr_ref.${_scrName};`
-				_gml += _new + `		for(var i = 0; i < array_length(_wrapRefList); i++){`
+				_gml += _new + `		var _wrapRefList = _wrap.scr_ref.${_scrName},`
+				_gml += _new + `		    _wrapRefMax  = array_length(_wrapRefList);`
+				_gml += _new + `		    `
+				_gml += _new + `		for(var i = 0; i < _wrapRefMax; i++){`
 				_gml += _new + `			var _wrapRef = array_clone(_wrapRefList[i]);`
-				_gml += _new + `			array_push(_wrapRef, _call);`
 				_gml += _new + `			array_copy(_wrapRef, array_length(_wrapRef), _ref, 3, array_length(_ref) - 3);`
-				_gml += _new + `			_call = script_ref_call(_wrapRef);`
+				_gml += _new + `			_call = script_ref_call(_wrapRef, _call);`
 				_gml += _new + `		}`
 				_gml += _new + `	}`
 				_gml += _new + `	`

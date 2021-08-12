@@ -539,15 +539,23 @@
 	else y += z;
 	
 #define BubbleBomb_draw
-	var _col = image_blend;
+	var _blink = chance_ct(1, 8 + (image_number - image_index));
 	
-	 // Flash:
-	if(chance_ct(1, 8 + (image_number - image_index))){
-		_col = c_black;
+	 // Blink:
+	if(_blink){
+		var _lastCol = image_blend;
+		image_blend = c_black;;
 	}
 	
 	 // Draw:
-	draw_sprite_ext(sprite_index, image_index, x, y - z, image_xscale, image_yscale, image_angle, _col, image_alpha);
+	y -= z;
+	draw_self();
+	y += z;
+	
+	 // Unblink:
+	if(_blink){
+		image_blend = _lastCol;
+	}
 	
 #define BubbleBomb_hit
 	if(z < 24 && !instance_is(other, prop) && other.team != 0){

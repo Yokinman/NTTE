@@ -37,7 +37,7 @@
 		case sprTangleSeed   : return spr.PlantOrchidTangleSeed;
 	}
 	
-#define skin_weapon_sprite(_spr, _wep)
+#define skin_weapon_sprite(_wep, _spr)
 	switch(_spr){
 		case sprGoldARifle       : return spr.OrchidAssaultRifle;
 		case sprGoldBazooka      : return spr.OrchidBazooka;
@@ -72,7 +72,7 @@
 	}
 	return _spr;
 	
-#define skin_weapon_sprite_hud(_spr, _wep)
+#define skin_weapon_sprite_hud(_wep, _spr)
 	if(_spr == spr.TunnellerHUD) return spr.OrchidTunnellerHUD;
 	return _spr;
 	
