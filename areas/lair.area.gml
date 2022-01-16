@@ -1,6 +1,9 @@
 #define init
 	mod_script_call("mod", "teassets", "ntte_init", script_ref_create(init));
 	
+	 // Store Script References:
+	scr.door_create = script_ref_create(door_create);
+	
 	 // Rooms:
 	var L = true;
 	room_center = [10000, 10000];
@@ -1184,6 +1187,53 @@
 			
 			break;
 	}
+	
+#define door_create(_x, _y, _dir)
+	/*
+		Creates a double CatDoor for a normal Floor
+		Returns an array containing both doors
+		
+		Ex:
+			with(FloorNormal){
+				door_create(bbox_center_x, bbox_center_y, 90);
+			}
+	*/
+	
+	var	_dx      = _x + lengthdir_x(16 - 2, _dir),
+		_dy      = _y + lengthdir_y(16 - 2, _dir) + 1,
+		_partner = noone,
+		_inst    = [];
+		
+	for(var i = -1; i <= 1; i += 2){
+		var _side = i;
+		if(_dir < 90 || _dir > 270){
+			_side *= -1; // Depth fix, create bottom door first
+		}
+		with(call(scr.obj_create,
+			_dx + lengthdir_x(16 * _side, _dir - 90),
+			_dy + lengthdir_y(16 * _side, _dir - 90),
+			"CatDoor"
+		)){
+			image_angle  = _dir;
+			image_yscale = -_side;
+			
+			 // Link Doors:
+			partner = _partner;
+			with(partner){
+				partner = other;
+			}
+			_partner = self;
+			
+			 // Ensure LoS Wall Creation:
+			with(self){
+				event_perform(ev_step, ev_step_normal);
+			}
+			
+			array_push(_inst, self);
+		}
+	}
+	
+	return _inst;
 	
 #define draw_rugs
 	if(!instance_exists(GenCont)){

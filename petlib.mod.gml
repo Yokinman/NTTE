@@ -4737,8 +4737,9 @@
 								_stopped = true;
 							}
 							if(!audio_is_playing(ntte_cuz_snd_id)){
-								var _beat = [sndCuzBye, sndCuzBye, sndCuzWep];
-								
+								var	_lastSeed = random_get_seed(),
+									_beat     = [sndCuzBye, sndCuzBye, sndCuzWep];
+									
 								 // Compile Beat:
 								if(ultra_get(race, 1) > 0){
 									_beat = call(scr.array_combine, [sndCuzHorn, sndCuzHorn, sndCuzHorn, snd_thrn], array_create(8, -1));
@@ -4773,6 +4774,8 @@
 										wkick = 3;
 									}
 								}
+								
+								random_set_seed(_lastSeed);
 							}
 						}
 						

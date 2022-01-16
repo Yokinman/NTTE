@@ -503,7 +503,8 @@
 	speed = 0;
 	
 	 // Idle Sound:
-	if(distance_to_object(Player) < 64){
+	var _nearPlayer = (distance_to_object(Player) < 64);
+	if(_nearPlayer){
 		if(!audio_is_playing(loop_snd)){
 			loop_snd = sound_play(sndMaggotSpawnIdle);
 		}
@@ -517,7 +518,7 @@
 	if(sprite_index != spr_chrg || anim_end){
 		sprite_index = enemy_sprite;
 		if(image_index < 1 && sprite_index == spr_idle){
-			var _num = ((loop_snd == -1) ? 0.2 : 0.3);
+			var _num = (_nearPlayer ? 0.3 : 0.2);
 			image_index += random(image_speed_raw * _num) - image_speed_raw;
 		}
 	}

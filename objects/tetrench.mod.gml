@@ -10,6 +10,11 @@
 		call(scr.obj_add, script_ref_create(i));
 	}
 	
+	 // Store Script References:
+	with([lightning_connect, lightning_disappear]){
+		lq_set(scr, script_get_name(self), script_ref_create(self));
+	}
+	
 	 // Bind Events:
 	script_bind(CustomDraw, draw_anglertrail, -3, true);
 	
@@ -600,7 +605,7 @@
 					elite = 30;
 				}
 				with(arc_inst){
-					call(scr.lightning_connect, other.x, other.y, x, y, 16 * sin((other.wave / 180) * 2 * pi), true, self);
+					lightning_connect(other.x, other.y, x, y, 16 * sin((other.wave / 180) * 2 * pi), true, self);
 				}
 			}
 		}
@@ -959,7 +964,7 @@
 					_d2 = tether_inst.direction;
 				}
 				
-				with(call(scr.lightning_connect,
+				with(lightning_connect(
 					_x1,
 					_y1,
 					_x2,
@@ -1131,17 +1136,15 @@
 			_x2 = tether_x,
 			_y2 = tether_y;
 			
-		with(call(scr.lightning_disappear,
-			call(scr.lightning_connect,
-				_x1,
-				_y1,
-				_x2,
-				_y2,
-				(point_distance(_x1, _y1, _x2, _y2) / 4) * sin((wave / 300) * 2 * pi),
-				(team != 2 && !instance_is(creator, Player)),
-				self
-			)
-		)){
+		with(lightning_disappear(lightning_connect(
+			_x1,
+			_y1,
+			_x2,
+			_y2,
+			(point_distance(_x1, _y1, _x2, _y2) / 4) * sin((wave / 300) * 2 * pi),
+			(team != 2 && !instance_is(creator, Player)),
+			self
+		))){
 			sprite_index = spr.ElectroPlasmaTether;
 			depth        = -3;
 		}
@@ -1911,7 +1914,7 @@
 //			var	_link = link[i],
 //				_next = link[i + 1],
 //				_arc  = lerp(arc_max, arc_min, _link.distance / distance_max) * sin(wave * arc_speed * 2 * pi),
-//				_inst = call(scr.lightning_connect, _link.x, _link.y, _next.x, _next.y, _arc, is_enemy, creator);
+//				_inst = lightning_connect(_link.x, _link.y, _next.x, _next.y, _arc, is_enemy, creator);
 //				
 //			 // Appear Over Walls:
 //			if(_overWall){
@@ -4415,7 +4418,7 @@
 			
 		if((instance_exists(target) || point_distance(x, y, _tx, _ty) < dist_max + 32) && !collision_line(x, y, _tx, _ty, Wall, false, false)){
 			with(creator){
-				var _inst = call(scr.lightning_connect,
+				var _inst = lightning_connect(
 					other.x,
 					other.y,
 					_tx,
@@ -5231,6 +5234,159 @@
 			if(lag) trace_time(script[2]);
 		}
 	}
+	
+#define lightning_connect // x1, y1, x2, y2, arc, enemy=false, inst=self
+	/*
+		Creates a lightning arc between the two given points
+		Automatically sets team, creator, and hitid based on the calling instance
+		
+		Args:
+			x1, y1 - The starting position
+			x2, y2 - The ending position
+			arc    - How far the lightning can offset from its main travel line
+			enemy  - If it's an enemy lightning arc, defaults to false
+			inst   - The creator of the lightning, defaults to self
+			
+		Ex:
+			lightning_connect(x, y, mouse_x, mouse_y, 8 * sin(wave / 60), false, self)
+	*/
+	
+	var	_x1      = argument[0],
+		_y1      = argument[1],
+		_x2      = argument[2],
+		_y2      = argument[3],
+		_arc     = argument[4],
+		_enemy   = ((argument_count > 5) ? argument[5] : false),
+		_inst    = ((argument_count > 6) ? argument[6] : self),
+		_disMax  = point_distance(_x1, _y1, _x2, _y2),
+		_disAdd  = min(_disMax / 8, 10) + ((_enemy && array_find_index(obj.Eel, _inst) >= 0) ? max(0, array_length(instances_matching_ge(obj.Eel, "arcing", 1)) - 1) : 0),
+		_dis     = _disMax,
+		_dir     = point_direction(_x1, _y1, _x2, _y2),
+		_x       = _x1,
+		_y       = _y1,
+		_lx      = _x,
+		_ly      = _y,
+		_wx      = _x,
+		_wy      = _y,
+		_ox      = lengthdir_x(_disAdd, _dir),
+		_oy      = lengthdir_y(_disAdd, _dir),
+		_obj     = (_enemy ? EnemyLightning : Lightning),
+		_proj    = [],
+		_creator = (("creator" in _inst && !instance_is(_inst, hitme)) ? _inst.creator : _inst),
+		_hitid   = (("hitid" in _inst) ? _inst.hitid : -1),
+		_team    = (("team"  in _inst) ? _inst.team  : -1),
+		_imgInd  = -1,
+		_wave    = 0,
+		_off     = 0;
+		
+	while(_dis > _disAdd){
+		_dis -= _disAdd;
+		
+		_x += _ox;
+		_y += _oy;
+		
+		 // Wavy Offset:
+		if(_dis > _disAdd){
+			_wave = (_dis / _disMax) * pi;
+			_off  = (_arc / 6) * sin((_dis / 8) + (current_frame / 6));
+			_wx   = _x + lengthdir_x(_off, _dir - 90) + (_arc * sin(_wave));
+			_wy   = _y + lengthdir_y(_off, _dir - 90) + (_arc * sin(_wave / 2));
+		}
+		
+		 // End:
+		else{
+			_wx = _x2;
+			_wy = _y2;
+		}
+		
+		 // Lightning:
+		with(instance_create(_wx, _wy, _obj)){
+			ammo         = ceil(_dis / _disAdd);
+			image_xscale = -point_distance(_lx, _ly, x, y) / 2;
+			image_angle  = point_direction(_lx, _ly, x, y);
+			direction    = image_angle;
+			creator      = _creator;
+			hitid        = _hitid;
+			team         = _team;
+			
+			 // Exists 1 Frame:
+			if(_imgInd < 0){
+				_imgInd = ((current_frame * image_speed) + (instance_exists(creator) ? (creator.xstart + creator.ystart) : 0)) % image_number;
+			}
+			image_index     = _imgInd;
+			image_speed_raw = image_number;
+			
+			array_push(_proj, self);
+		}
+		
+		_lx = _wx;
+		_ly = _wy;
+	}
+	
+	 // FX:
+	if(chance_ct(array_length(_proj), 200)){
+		with(_proj[irandom(array_length(_proj) - 1)]){
+			with(instance_create(x + orandom(8), y + orandom(8), PortalL)){
+				motion_add(random(360), 1);
+			}
+			if(_enemy){
+				sound_play_hit(sndLightningReload, 0.5);
+			}
+			else{
+				sound_play_pitchvol(sndLightningReload, 1.25 + random(0.5), 0.5);
+			}
+		}
+	}
+	
+	return _proj;
+	
+#define lightning_disappear(_inst)
+	/*
+		Hides or destroys the given lightning instance(s), and replaces them with a BoltTrail disappearing visual
+		Returns the BoltTrail instance(s)
+	*/
+	
+	var _instTrail = [];
+	
+	with(_inst){
+		with(instance_create(x, y, object_index)){
+			other.image_speed = image_speed;
+			instance_delete(self);
+		}
+		with(instance_create(x, y, BoltTrail)){
+			sprite_index = other.sprite_index;
+			image_index  = other.image_index;
+			image_speed  = other.image_speed;
+			image_xscale = other.image_xscale;
+			image_yscale = other.image_yscale * power(0.4 / other.image_speed, 4/3);
+			image_angle  = other.image_angle;
+			image_blend  = other.image_blend;
+			image_alpha  = other.image_alpha;
+			depth        = other.depth;
+			
+			 // Dissipate Enemy Lightning Faster:
+			if(instance_is(other, EnemyLightning)){
+				image_yscale -= random(0.4);
+			}
+			
+			array_push(_instTrail, self);
+		}
+		
+		 // Hide / Destroy Lightning:
+		if(instance_is(self, EnemyLightning)){
+			instance_delete(self);
+		}
+		else{
+			image_index = 0;
+			image_alpha = 0;
+		}
+	}
+	
+	return (
+		array_length(_instTrail)
+		? ((array_length(_instTrail) > 1) ? _instTrail : _instTrail[0])
+		: noone
+	);
 	
 	
 /// Pits Yo

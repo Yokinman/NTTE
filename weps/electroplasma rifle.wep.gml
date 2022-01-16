@@ -65,7 +65,7 @@
 	
 	 // Effects:
 	weapon_post(6, 3, 0);
-	motion_add(gunangle, -3);
+	motion_add(gunangle + 180, 3);
 	
 	
 /// SCRIPTS

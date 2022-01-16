@@ -4,17 +4,37 @@
 	 // Debug Lag:
 	lag = false;
 	
-	 // NT:TE Object Related:
-	obj                   = {};
-	global.obj_create_ref = ds_map_create(); // Pairs an NT:TE object's name with a script reference to its create event
-	global.obj_parent     = ds_map_create(); // Pairs an NT:TE object's name with the name of its parent NT:TE object
-	global.obj_search     = ds_map_create(); // Pairs a "name:objectName" key with a setup script binding for 'instance_copy' searching
-	global.obj_bind       = ds_map_create();
-	global.obj_bind_draw  = ds_map_create();
+	 // Custom Object Related:
+	obj                                = {};
+	global.obj_create_ref_map          = ds_map_create(); // Pairs an NT:TE object's name with a script reference to its create event
+	global.obj_parent_map              = ds_map_create(); // Pairs an NT:TE object's name with the name of its parent NT:TE object
+	global.obj_search_bind_map         = ds_map_create(); // Pairs a "name:objectName" key with a setup script binding for 'instance_copy' searching
+	global.obj_event_varname_list_map  = ds_map_create();
+	global.obj_event_obj_list_map      = ds_map_create();
+	global.obj_draw_depth_instance_map = ds_map_create();
+	
+	 // Custom Object Event Variable Names:
+	with([CustomObject, CustomHitme, CustomProp, CustomProjectile, CustomSlash, CustomEnemy, CustomScript, CustomBeginStep, CustomStep, CustomEndStep, CustomDraw]){
+		var _eventVarNameList = [];
+		with(instance_create(0, 0, self)){
+			with(["on_step", "on_begin_step", "on_end_step", "on_draw", "on_destroy", "on_cleanup", "on_anim", "on_death", "on_hurt", "on_hit", "on_wall", "on_projectile", "on_grenade", "script"]){
+				if(self in other){
+					array_push(_eventVarNameList, self);
+				}
+			}
+			instance_delete(self);
+		}
+		if(array_find_index(_eventVarNameList, "on_step") >= 0){
+			for(var i = 0; i < 10; i++){
+				array_push(_eventVarNameList, `on_alrm${i}`);
+			}
+		}
+		global.obj_event_varname_list_map[? self] = _eventVarNameList;
+	}
 	
 	 // Script References:
 	scr = {};
-	with([save_get, save_set, option_get, option_set, stat_get, stat_set, unlock_get, unlock_set, surface_setup, shader_setup, shader_add, script_bind, ntte_bind_setup, ntte_unbind, loadout_wep_save, loadout_wep_reset, trace_error]){
+	with([save_get, save_set, option_get, option_set, stat_get, stat_set, unlock_get, unlock_set, surface_setup, shader_setup, shader_add, script_bind, ntte_bind_setup, ntte_unbind, loadout_wep_save, loadout_wep_reset, trace_error, merge_weapon_sprite, merge_weapon_loadout_sprite, weapon_merge_subtext]){
 		lq_set(scr, script_get_name(self), script_ref_create(self));
 	}
 	
@@ -2473,6 +2493,58 @@
 		}
 	}
 	
+	 // Projectile Sprite Team Variants:
+	global.sprite_team_variant_table = [
+		[["EnemyBullet",               EnemyBullet4  ], [sprBullet1,            Bullet1        ], [sprIDPDBullet,           IDPDBullet    ]], // Bullet
+		[[sprEnemyBulletHit                          ], [sprBulletHit                          ], [sprIDPDBulletHit                       ]], // Bullet Hit
+		[["EnemyHeavyBullet",          "CustomBullet"], [sprHeavyBullet,        HeavyBullet    ], ["IDPDHeavyBullet",       "CustomBullet"]], // Heavy Bullet
+		[["EnemyHeavyBulletHit"                      ], [sprHeavyBulletHit                     ], ["IDPDHeavyBulletHit"                   ]], // Heavy Bullet Hit
+		[[sprLHBouncer,                LHBouncer     ], [sprBouncerBullet,      BouncerBullet  ], [                                       ]], // Bouncer Bullet
+		[[sprLHBouncer,                LHBouncer     ], [sprBouncerShell,       BouncerBullet  ], [                                       ]], // Bouncer Bullet 2
+		[[sprEnemyBullet1,             EnemyBullet1  ], [sprAllyBullet,         AllyBullet     ], [                                       ]], // Bandit Bullet
+		[[sprEnemyBulletHit                          ], [sprAllyBulletHit                      ], [sprIDPDBulletHit                       ]], // Bandit Bullet Hit
+		[[sprEnemyBullet4,             EnemyBullet4  ], ["AllySniperBullet",    AllyBullet     ], [                                       ]], // Sniper Bullet
+		[[sprEBullet3,                 EnemyBullet3  ], [sprBullet2,            Bullet2        ], [                                       ]], // Shell
+		[[sprEBullet3Disappear,        EnemyBullet3  ], [sprBullet2Disappear,   Bullet2        ], [                                       ]], // Shell Disappear
+		[["EnemySlug",                 "CustomShell" ], [sprSlugBullet,         Slug           ], [sprPopoSlug,             PopoSlug      ]], // Slug
+		[["EnemySlugDisappear",        "CustomShell" ], [sprSlugDisappear,      Slug           ], [sprPopoSlugDisappear,    PopoSlug      ]], // Slug Disappear
+		[["EnemySlugHit"                             ], [sprSlugHit                            ], [sprIDPDBulletHit                       ]], // Slug Hit
+		[["EnemySlug",                 "CustomShell" ], [sprHyperSlug,          Slug           ], [sprPopoSlug,             PopoSlug      ]], // Hyper Slug
+		[["EnemySlugDisappear",        "CustomShell" ], [sprHyperSlugDisappear, Slug           ], [sprPopoSlugDisappear,    PopoSlug      ]], // Hyper Slug Disappear
+		[["EnemyHeavySlug",            "CustomShell" ], [sprHeavySlug,          HeavySlug      ], [                                       ]], // Heavy Slug
+		[["EnemyHeavySlugDisappear",   "CustomShell" ], [sprHeavySlugDisappear, HeavySlug      ], [                                       ]], // Heavy Slug Disappear
+		[["EnemyHeavySlugHit"                        ], [sprHeavySlugHit,                      ], [                                       ]], // Heavy Slug Hit
+		[[sprEFlak,                    "CustomFlak"  ], [sprFlakBullet,         FlakBullet     ], [                                       ]], // Flak
+		[[sprEFlakHit                                ], [sprFlakHit                            ], [                                       ]], // Flak Hit
+		[["EnemySuperFlak",            "CustomFlak"  ], [sprSuperFlakBullet,    SuperFlakBullet], [                                       ]], // Super Flak
+		[["EnemySuperFlakHit"                        ], [sprSuperFlakHit                       ], [                                       ]], // Super Flak Hit
+		[[sprEFlak,                    EFlakBullet   ], [sprFlakBullet,         "CustomFlak"   ], [                                       ]], // Gator Flak
+		[[sprTrapFire                                ], [sprWeaponFire                         ], [sprFireLilHunter                       ]], // Fire
+		[[sprSalamanderBullet                        ], [sprDragonFire                         ], [sprFireLilHunter                       ]], // Fire 2
+		[[sprTrapFire                                ], [sprCannonFire                         ], [sprFireLilHunter                       ]], // Fire 3
+	//	[[sprFireBall                                ], [sprFireBall                           ], [                                       ]], // Fire Ball
+	//	[[sprFireShell                               ], [sprFireShell                          ], [                                       ]], // Fire Shell
+		[[sprEnemyLaser,               EnemyLaser    ], [sprLaser,              Laser          ], [                                       ]], // Laser
+		[[sprEnemyLaserStart                         ], [sprLaserStart                         ], [                                       ]], // Laser Start
+		[[sprEnemyLaserEnd                           ], [sprLaserEnd                           ], [                                       ]], // Laser End
+		[[sprLaserCharge                             ], ["AllyLaserCharge"                     ], [                                       ]], // Laser Particle
+		[[sprEnemyLightning,           EnemyLightning], [sprLightning,          Lightning      ], [                                       ]], // Lightning
+	//	[[sprLightningHit                            ], [sprLightningHit                       ], [                                       ]], // Lightning Hit
+	//	[[sprLightningSpawn                          ], [sprLightningSpawn                     ], [                                       ]], // Lightning Particle
+		[["EnemyPlasmaBall",           "CustomPlasma"], [sprPlasmaBall,         PlasmaBall     ], [sprPopoPlasma,           PopoPlasmaBall]], // Plasma
+		[["EnemyPlasmaBig",            "CustomPlasma"], [sprPlasmaBallBig,      PlasmaBig      ], [                                       ]], // Plasma Big
+		[["EnemyPlasmaHuge",           "CustomPlasma"], [sprPlasmaBallHuge,     PlasmaHuge     ], [                                       ]], // Plasma Huge
+		[["EnemyPlasmaImpact"                        ], [sprPlasmaImpact                       ], [sprPopoPlasmaImpact                    ]], // Plasma Impact
+		[["EnemyPlasmaImpactSmall"                   ], ["PlasmaImpactSmall"                   ], ["PopoPlasmaImpactSmall"                ]], // Plasma Impact Small
+		[["EnemyPlasmaTrail"                         ], [sprPlasmaTrail                        ], [sprPopoPlasmaTrail                     ]], // Plasma Particle
+		[["EnemyVlasmaBullet"                        ], ["VlasmaBullet"                        ], ["PopoVlasmaBullet"                     ]], // Vector Plasma
+		[["EnemyVlasmaCannon"                        ], ["VlasmaCannon"                        ], ["PopoVlasmaCannon"                     ]], // Vector Plasma Cannon
+		[[sprEnemySlash                              ], [sprSlash                              ], [sprEnemySlash                          ]]  // Slash
+		// Devastator
+		// Lightning Cannon
+		// Hyper Slug (kinda)
+	];
+	
 	 // Reminders:
 	global.remind = [];
 	if(fork()){
@@ -2596,23 +2668,11 @@
 		ntte_save();
 	}
 	
-	 // NT:TE Object Related:
-	ds_map_destroy(global.obj_create_ref);
-	ds_map_destroy(global.obj_parent);
-	ds_map_destroy(global.obj_search);
-	ds_map_destroy(global.obj_bind);
-	ds_map_destroy(global.obj_bind_draw);
-	
 	 // Clear Surfaces, Shaders, Script Bindings:
 	with(ds_map_values(global.surf)) if(surf != -1) surface_destroy(surf);
 	with(ds_map_values(global.shad)) if(shad != -1) shader_destroy(shad);
 	with(ds_map_values(global.bind)) with(self) with(id) instance_destroy();
 	with(ds_map_values(global.bind_hold)) with(self) if(instance_exists(self)) instance_destroy();
-	ds_map_destroy(global.surf);
-	ds_map_destroy(global.shad);
-	ds_map_destroy(global.bind);
-	ds_map_destroy(global.bind_hold);
-	ds_map_destroy(global.bind_setup);
 	
 	 // No Crash:
 	with(ntte_mods.race){
@@ -2658,23 +2718,31 @@
 #macro save_auto global.save_auto
 #macro save_path "save.sav"
 
-#macro  area_campfire     0
-#macro  area_desert       1
-#macro  area_sewers       2
-#macro  area_scrapyards   3
-#macro  area_caves        4
-#macro  area_city         5
-#macro  area_labs         6
-#macro  area_palace       7
-#macro  area_vault        100
-#macro  area_oasis        101
-#macro  area_pizza_sewers 102
-#macro  area_mansion      103
-#macro  area_cursed_caves 104
-#macro  area_jungle       105
-#macro  area_hq           106
-#macro  area_crib         107
+#macro area_campfire     0
+#macro area_desert       1
+#macro area_sewers       2
+#macro area_scrapyards   3
+#macro area_caves        4
+#macro area_city         5
+#macro area_labs         6
+#macro area_palace       7
+#macro area_vault        100
+#macro area_oasis        101
+#macro area_pizza_sewers 102
+#macro area_mansion      103
+#macro area_cursed_caves 104
+#macro area_jungle       105
+#macro area_hq           106
+#macro area_crib         107
 
+#macro infinity
+	/*
+		Infinity
+		!!! Not supported by some functions in GMS1 versions, like 'min' and 'max'
+	*/
+	
+	1/0
+	
 #macro game_scale_nonsync
 	/*
 		The local screen's pixel scale
@@ -3188,7 +3256,7 @@
 		
 		Args:
 			name  - The name used to store & retrieve the shader
-			w/h   - The width/height of the surface
+			w, h  - The width/height of the surface
 			        Use 'null' to not update the surface's width/height
 			scale - The scale or quality of the surface
 			        Use 'null' to not update the surface's scale
@@ -3201,8 +3269,8 @@
 			free  - Set to 'true' if you aren't going to use this surface anymore (removes it from the list when 'time' hits 0)
 			reset - Is set to 'true' when the surface is created or the game pauses
 			scale - The scale or quality of the surface
-			w/h   - The drawing width/height of the surface
-			x/y   - The drawing position of the surface, you can set this manually
+			w, h  - The drawing width/height of the surface
+			x, y  - The drawing position of the surface, you can set this manually
 			
 		Ex:
 			with(surface_setup("Test", game_width, game_height, game_scale_nonsync)){
@@ -3278,8 +3346,8 @@
 	
 	 // Surface Setup:
 	with(_surf){
-		if(is_real(_w)) w = _w;
-		if(is_real(_h)) h = _h;
+		if(is_real(_w    )) w     = _w;
+		if(is_real(_h    )) h     = _h;
 		if(is_real(_scale)) scale = _scale;
 		
 		 // Create / Resize Surface:
@@ -3945,184 +4013,499 @@ var _shine = argument_count > 4 ? argument[4] : shnNone;
 		return sprite_add(name + ".png", _sprImg, _sprX, _sprY);
 	}
 	
-#define weapon_merge_sprite(_stock, _front)
+#define merge_weapon_sprite(_wepSpriteList)
 	/*
-		Used to create merge weapon sprites
-		Returns a new sprite made by combining the left half of the given stock sprite with the right half of the given front sprite
-		Doing this here so that the sprite doesnt get unloaded with merge.wep
+		Returns a sprite of slices from the given weapon sprites combined sequentially
 	*/
 	
-	var _sprName = sprite_get_name(_stock) + "|" + sprite_get_name(_front);
-	
-	if(ds_map_exists(spr.MergeWep, _sprName)){
-		return spr.MergeWep[? _sprName];
-	}
-	
+	var	_mergeWepSpriteName = array_join(_wepSpriteList, ":"),
+		_mergeWepSprite     = ds_map_find_value(spr.MergeWep, _mergeWepSpriteName);
+		
 	 // Initial Setup:
-	else if(sprite_exists(_stock) && sprite_exists(_front)){
-		var	_spr   = [_stock, _front],
-			_sprW  = array_create(array_length(_spr), 0),
-			_sprH  = array_create(array_length(_spr), 0),
-			_surfW = 0,
-			_surfH = 0;
+	if(is_undefined(_mergeWepSprite)){
+		var	_mergeStockSlice        = undefined,
+			_mergeFrontSlice        = undefined,
+			_mergeWepSpriteY1       =  infinity,
+			_mergeWepSpriteY2       = -infinity,
+			_mergeWepSpriteWidth    = 0,
+			_mergeWepSpriteImageNum = 0,
+			_mergeWepSpriteList     = ds_map_values(spr.MergeWep),
+			_mergeWepSpriteKeyList  = ds_map_keys(spr.MergeWep);
 			
-		for(var i = 0; i < array_length(_spr); i++){
-			_sprW[i] = sprite_get_width(_spr[i]);
-			_sprH[i] = sprite_get_height(_spr[i]);
-			_surfW   = max(_surfW, _sprW[i]);
-			_surfH   = max(_surfH, _sprH[i]);
+		 // Unmerge Sprites:
+		while(true){
+			var _newWepSpriteList = [];
+			with(_wepSpriteList){
+				var _mergeWepSpriteIndex = array_find_index(_mergeWepSpriteList, self);
+				if(_mergeWepSpriteIndex >= 0){
+					with(string_split(_mergeWepSpriteKeyList[_mergeWepSpriteIndex], ":")){
+						array_push(_newWepSpriteList, real(self));
+					}
+				}
+				else array_push(_newWepSpriteList, self);
+			}
+			if(array_equals(_wepSpriteList, _newWepSpriteList)){
+				break;
+			}
+			else{
+				_wepSpriteList = _newWepSpriteList;
+			}
 		}
 		
-		with(surface_setup("sprMerge", _surfW, _surfH, 1)){
+		 // Setup Sprite Slices:
+		var	_wepSpriteNum   = 0,
+			_wepSpriteCount = array_length(_wepSpriteList);
+			
+		with(_wepSpriteList){
+			var	_wepSprite  = self,
+				_mergeSlice = {
+					"sprite_index"   : _wepSprite,
+					"sprite_width"   : sprite_get_width(_wepSprite),
+					"sprite_height"  : sprite_get_height(_wepSprite),
+					"sprite_xoffset" : sprite_get_xoffset(_wepSprite),
+					"sprite_yoffset" : sprite_get_yoffset(_wepSprite),
+					"sprite_bbox_y1" : sprite_get_bbox_top(_wepSprite)        - sprite_get_yoffset(_wepSprite),
+					"sprite_bbox_y2" : sprite_get_bbox_bottom(_wepSprite) + 1 - sprite_get_yoffset(_wepSprite),
+					"image_number"   : sprite_get_number(_wepSprite),
+					"x1"             : 0,
+					"x2"             : 0,
+					"next_slice"     : undefined
+				};
+				
+			 // Manual Adjustments:
+			switch(_wepSprite){
+				case sprToxicBow:
+					_mergeSlice.sprite_yoffset += 2;
+					break;
+					
+				case sprSuperCrossbow:
+				case sprGatlingSlugger:
+					_mergeSlice.sprite_yoffset += 1;
+					break;
+					
+				case sprAutoShotgun:
+				case sprPartyGun:
+					_mergeSlice.sprite_yoffset -= 1;
+					break;
+					
+				case mskNone:
+					_mergeSlice.sprite_height  = 1;
+					_mergeSlice.sprite_yoffset = 0;
+					_mergeSlice.sprite_bbox_y1 = infinity;
+					_mergeSlice.sprite_bbox_y2 = infinity * ((_wepSpriteNum > 0) ? 1 : -1);
+					_mergeSlice.x2             = 3;
+					break;
+			}
+			
+			 // Determine Slice Dimensions:
+			if(_wepSprite != mskNone){
+				var	_sliceX1 = sprite_get_bbox_left(_wepSprite) + 1,
+					_sliceX3 = sprite_get_bbox_right(_wepSprite),
+					_sliceX2 = round(lerp(_sliceX1, _sliceX3, 0.4));
+					
+				for(var _sliceSide = 0; _sliceSide <= 1; _sliceSide++){
+					var _sliceX = 0;
+					if(_wepSpriteNum == (_wepSpriteCount - 1) * _sliceSide){
+						_sliceX = _mergeSlice.sprite_width * _sliceSide;
+					}
+					else{
+						var _sliceAmount = (_wepSpriteNum / _wepSpriteCount) + (_sliceSide / min(2, _wepSpriteCount));
+						_sliceX = ceil(lerp(
+							lerp(
+								_sliceX1,
+								_sliceX2,
+								clamp(2 * _sliceAmount, 0, 1)
+							),
+							_sliceX3,
+							clamp(2 * (_sliceAmount - 0.5), 0, 1)
+						));
+					}
+					lq_set(_mergeSlice, `x${_sliceSide + 1}`, _sliceX);
+				}
+			}
+			
+			 // Merged Sprite Dimensions:
+			var _mergeSliceSpriteY1 = -_mergeSlice.sprite_yoffset,
+				_mergeSliceSpriteY2 = _mergeSliceSpriteY1 + _mergeSlice.sprite_height;
+				
+			if(_mergeSliceSpriteY1 < _mergeWepSpriteY1) _mergeWepSpriteY1 = _mergeSliceSpriteY1;
+			if(_mergeSliceSpriteY2 > _mergeWepSpriteY2) _mergeWepSpriteY2 = _mergeSliceSpriteY2;
+			
+			_mergeWepSpriteWidth += _mergeSlice.x2 - _mergeSlice.x1;
+			
+			 // Merged Sprite Frame Count:
+			if(_mergeSlice.image_number > _mergeWepSpriteImageNum){
+				_mergeWepSpriteImageNum = _mergeSlice.image_number;
+			}
+			
+			 // Add to List:
+			if(is_undefined(_mergeFrontSlice)){
+				_mergeStockSlice = _mergeSlice;
+			}
+			else{
+				_mergeFrontSlice.next_slice = _mergeSlice;
+			}
+			_mergeFrontSlice = _mergeSlice;
+			_wepSpriteNum++;
+		}
+		
+		 // Create Merged Sprite:
+		var	_mergeWepSpriteHeight  = _mergeWepSpriteY2 - _mergeWepSpriteY1,
+			_mergeWepSpriteXOffset = _mergeStockSlice.sprite_xoffset,
+			_mergeWepSpriteYOffset = -_mergeWepSpriteY1;
+			
+		with(surface_setup(
+			"sprMerge",
+			_mergeWepSpriteWidth * _mergeWepSpriteImageNum,
+			_mergeWepSpriteHeight,
+			1
+		)){
+			free = true;
+			
 			surface_set_target(surf);
 			draw_clear_alpha(c_black, 0);
 			
-			with(UberCont){
-				for(var _b = 0; _b <= 1; _b++){
-					var	_dx = 0,
-						_dy = other.h / 3;
+			for(var _outline = 1; _outline >= 0; _outline--){
+				for(var _mergeWepSpriteImage = 0; _mergeWepSpriteImage < _mergeWepSpriteImageNum; _mergeWepSpriteImage++){
+					var	_slice        = _mergeStockSlice,
+						_sliceXOffset = _mergeWepSpriteWidth * _mergeWepSpriteImage,
+						_lastSlice    = undefined;
 						
-					for(var i = 0; i <= 1; i++){
-						var	_cut = (ceil(_sprW[i] / 2) + 2) - ceil(_sprW[i] / 8),
-							_l   = _cut * i,
-							_w   = (i ? _sprW[i] - _cut : _cut),
-							_t   = 0,
-							_h   = _sprH[i],
-							_x   = _dx,
-							_y   = _dy - sprite_get_yoffset(_spr[i]);
+					while(!is_undefined(_slice)){
+						var	_nextSlice = _slice.next_slice,
+							_isFlash   = (_mergeWepSpriteImage == min(1, _mergeWepSpriteImageNum - 1)),
+							_spr       = _slice.sprite_index,
+							_img       = (_isFlash ? 1 : (_slice.image_number * (_mergeWepSpriteImage / _mergeWepSpriteImageNum))),
+							_l         = _slice.x1,
+							_r         = _slice.x2,
+							_w         = _r - _l,
+							_t         = 0,
+							_h         = _slice.sprite_height,
+							_x         = _sliceXOffset,
+							_y         = _mergeWepSpriteYOffset - _slice.sprite_yoffset;
 							
-						switch(_spr[i]){
-							case sprAutoShotgun:
-								_y += 1;
-								break;
-								
-							case sprAutoCrossbow:
-							case sprSuperCrossbow:
-							case sprGatlingSlugger:
-								_y -= 1;
-								break;
-								
-							case sprToxicBow:
-								_y -= 2;
-								break;
+						with(UberCont){
+							if(_outline == 1){
+								if(!_isFlash){
+									draw_set_fog(true, c_black, 0, 0);
+								}
+								if(!is_undefined(_lastSlice)){
+									draw_sprite_part(_spr, _img, _l, _t, 1, ((_slice.sprite_bbox_y2 < _lastSlice.sprite_bbox_y2) ? ceil(_h / 2) : _h), _x - 1, _y);
+								//	if(_slice.sprite_bbox_y1 <= _lastSlice.sprite_bbox_y1) draw_sprite_part(_spr, _img, _l, _t,                1,  ceil(_h / 2), _x - 1, _y);
+								//	if(_slice.sprite_bbox_y2 >= _lastSlice.sprite_bbox_y2) draw_sprite_part(_spr, _img, _l, _t + ceil(_h / 2), 1, floor(_h / 2), _x - 1, _y + ceil(_h / 2));
+								}
+								if(!is_undefined(_nextSlice)){
+									draw_sprite_part(_spr, _img, _r - 1, _t, 1, ((_slice.sprite_bbox_y2 <= _nextSlice.sprite_bbox_y2) ? ceil(_h / 2) : _h), _x + _w, _y);
+								//	if(_slice.sprite_bbox_y1 < _nextSlice.sprite_bbox_y1) draw_sprite_part(_spr, _img, _r - 1, _t,                1,  ceil(_h / 2), _x + _w, _y);
+								//	if(_slice.sprite_bbox_y2 > _nextSlice.sprite_bbox_y2) draw_sprite_part(_spr, _img, _r - 1, _t + ceil(_h / 2), 1, floor(_h / 2), _x + _w, _y + ceil(_h / 2));
+								}
+								if(!_isFlash){
+									draw_set_fog(false, 0, 0, 0);
+								}
+							}
+							else draw_sprite_part(_spr, _img, _l, _t, _w, _h, _x, _y);
 						}
 						
-						if(_b == 0){
-							draw_sprite_part_ext(_spr[i], 0, _cut - !i, _t, 1, _h, _x + (_cut - _l) - i, _y, 1, 1, c_black, 1);
-						}
-						else{
-							draw_sprite_part_ext(_spr[i], 0, _l, _t, _w, _h, _x, _y, 1, 1, c_white, 1);
-						}
+						_sliceXOffset += _w;
 						
-						_dx += _cut;
+						_lastSlice = _slice;
+						_slice     = _nextSlice;
 					}
 				}
 			}
 			
-			 // Done:
 			surface_reset_target();
-			free = true;
 			
 			 // Add Sprite:
 			surface_save(surf, name + ".png");
-			spr.MergeWep[? _sprName] = sprite_add_weapon(name + ".png", 2, h / 3);
+			_mergeWepSprite = sprite_add(
+				name + ".png",
+				_mergeWepSpriteImageNum,
+				_mergeWepSpriteXOffset,
+				_mergeWepSpriteYOffset
+			);
 			
-			return spr.MergeWep[? _sprName];
+			 // Store Sprite:
+			spr.MergeWep[? _mergeWepSpriteName] = _mergeWepSprite;
 		}
 	}
 	
-	return -1;
+	return _mergeWepSprite;
 	
-#define weapon_merge_sprite_loadout(_stock, _front)
+#define merge_weapon_loadout_sprite(_wepLoadoutSpriteList)
 	/*
-		Used to create merged weapon loadout HUD sprites
-		Returns a new sprite made by combining the left half of the given stock sprite with the right half of the given front sprite
-		Doing this here so that the sprite doesnt get unloaded with merge.wep
+		Returns a sprite of slices from the given weapon loadout sprites combined sequentially
+		circular cut offset some amount towards 20 degrees 
 	*/
 	
-	var _sprName = sprite_get_name(_stock) + "|" + sprite_get_name(_front);
-	
-	if(ds_map_exists(spr.MergeWepLoadout, _sprName)){
-		return spr.MergeWepLoadout[? _sprName];
-	}
-	
+	var	_mergeWepLoadoutSpriteName = array_join(_wepLoadoutSpriteList, ":"),
+		_mergeWepLoadoutSprite     = ds_map_find_value(spr.MergeWepLoadout, _mergeWepLoadoutSpriteName);
+		
 	 // Initial Setup:
-	else if(sprite_exists(_stock) && sprite_exists(_front) && _stock > 0 && _front > 0){
-		var	_spr   = [_stock, _front],
-			_sprW  = array_create(array_length(_spr), 0),
-			_sprH  = array_create(array_length(_spr), 0),
-			_surfW = 0,
-			_surfH = 0;
+	if(is_undefined(_mergeWepLoadoutSprite)){
+		var	_loadoutSpriteAngle            = 15,
+			_loadoutSpriteXFactor          = 1 / dcos(_loadoutSpriteAngle),
+			_mergeStockSlice               = undefined,
+			_mergeFrontSlice               = undefined,
+			_mergeSliceXOffset             = 0,
+			_mergeSliceYOffset             = 0,
+			_mergeWepLoadoutSpriteX1       =  infinity,
+			_mergeWepLoadoutSpriteY1       =  infinity,
+			_mergeWepLoadoutSpriteX2       = -infinity,
+			_mergeWepLoadoutSpriteY2       = -infinity,
+			_mergeWepLoadoutSpriteImageNum = 0,
+			_mergeWepLoadoutSpriteList     = ds_map_values(spr.MergeWepLoadout),
+			_mergeWepLoadoutSpriteKeyList  = ds_map_keys(spr.MergeWepLoadout);
 			
-		for(var i = 0; i < array_length(_spr); i++){
-			_sprW[i] = sprite_get_width(_spr[i]);
-			_sprH[i] = sprite_get_height(_spr[i]);
-			_surfW   = max(_surfW, _sprW[i]);
-			_surfH   = max(_surfH, _sprH[i]);
+		 // Unmerge Sprites:
+		while(true){
+			var _newWepLoadoutSpriteList = [];
+			with(_wepLoadoutSpriteList){
+				var _mergeWepLoadoutSpriteIndex = array_find_index(_mergeWepLoadoutSpriteList, self);
+				if(_mergeWepLoadoutSpriteIndex >= 0){
+					with(string_split(_mergeWepLoadoutSpriteKeyList[_mergeWepLoadoutSpriteIndex], ":")){
+						array_push(_newWepLoadoutSpriteList, real(self));
+					}
+				}
+				else array_push(_newWepLoadoutSpriteList, self);
+			}
+			if(array_equals(_wepLoadoutSpriteList, _newWepLoadoutSpriteList)){
+				break;
+			}
+			else{
+				_wepLoadoutSpriteList = _newWepLoadoutSpriteList;
+			}
 		}
 		
-		with(surface_setup("sprMergeLoadout", _surfW, _surfH, 1)){
-			surface_set_target(surf);
-			draw_clear_alpha(c_black, 0);
+		 // Setup Sprite Slices:
+		var	_wepLoadoutSpriteNum   = 0,
+			_wepLoadoutSpriteCount = array_length(_wepLoadoutSpriteList);
 			
-			draw_set_color(c_white);
-			
-			 // Draw Sprite Halves:
-			for(var i = 0; i < array_length(_spr); i++){
-				var	_uvs       = sprite_get_uvs(_spr[i], 0),
-					_uvsExists = (_uvs[0] != 0 || _uvs[1] != 0 || _uvs[2] != 1 || _uvs[3] != 1),
-					_x         = floor(w / 2) - sprite_get_xoffset(_spr[i]) + (_uvsExists ? _uvs[4] : sprite_get_bbox_left(_spr[i])),
-					_y         = floor(h / 2) - sprite_get_yoffset(_spr[i]) + (_uvsExists ? _uvs[5] : sprite_get_bbox_top(_spr[i])),
-					_w         = (_uvsExists ? (_sprW[i] * _uvs[6]) : (sprite_get_bbox_right(_spr[i]) - sprite_get_bbox_left(_spr[i]))),
-					_h         = (_uvsExists ? (_sprH[i] * _uvs[7]) : (sprite_get_bbox_bottom(_spr[i]) - sprite_get_bbox_top(_spr[i]))),
-					_cutDis    = _w / 3,
-					_cutDir    = 20,
-					_ox        = (_h / 2) * dtan(_cutDir);
-					
-				if(i == 1){
-					_cutDis = _w - _cutDis;
-				}
-				_cutDis += 2;
+		with(_wepLoadoutSpriteList){
+			var	_wepLoadoutSprite = self,
+				_mergeSlice       = {
+					"sprite_index"   : _wepLoadoutSprite,
+					"sprite_width"   : sprite_get_width(_wepLoadoutSprite),
+					"sprite_height"  : sprite_get_height(_wepLoadoutSprite),
+					"sprite_xoffset" : sprite_get_xoffset(_wepLoadoutSprite),
+					"sprite_yoffset" : sprite_get_yoffset(_wepLoadoutSprite),
+					"image_number"   : sprite_get_number(_wepLoadoutSprite),
+					"sprite_length1" : 0,
+					"sprite_length2" : 0,
+					"length1"        : 0,
+					"length2"        : 0,
+					"next_slice"     : undefined
+				};
 				
-				draw_primitive_begin_texture(pr_trianglestrip, sprite_get_texture(_spr[i], 0));
-				
-				with([ // [x, y]
-					[0,             0 ],
-					[_cutDis - _ox, 0 ],
-					[0,             _h],
-					[_cutDis + _ox, _h]
-				]){
-					var _pos = self;
+			 // Determine Slice Dimensions:
+			if(_wepLoadoutSprite != mskNone){
+				var	_sliceDis1 = floor(((sprite_get_bbox_left(_mergeSlice.sprite_index)  + 2) - _mergeSlice.sprite_xoffset) * _loadoutSpriteXFactor) - 4,
+					_sliceDis3 =  ceil(((sprite_get_bbox_right(_mergeSlice.sprite_index) - 1) - _mergeSlice.sprite_xoffset) * _loadoutSpriteXFactor) - 4,
+					_sliceDis2 = /*round*/(lerp(_sliceDis1, _sliceDis3, 0.4));
 					
-					 // Flip:
-					if(i == 1){
-						_pos[0] = _w - _pos[0];
-						_pos[1] = _h - _pos[1];
+				_mergeSlice.sprite_length1 = _sliceDis1;
+				_mergeSlice.sprite_length2 = _sliceDis3;
+				
+				for(var _sliceSide = 0; _sliceSide <= 1; _sliceSide++){
+					var _sliceDis = 0;
+					if(_wepLoadoutSpriteNum == (_wepLoadoutSpriteCount - 1) * _sliceSide){
+						_sliceDis = (
+							(_sliceSide == 0)
+							? _sliceDis1
+							: _sliceDis3
+						);
 					}
-					
-					 // Draw Vertex:
-					var	_dx = _pos[0] + _x,
-						_dy = _pos[1] + _y;
-						
-					draw_vertex_texture(_dx, _dy, _pos[0] / _w, _pos[1] / _h);
+					else{
+						var _sliceAmount = (_wepLoadoutSpriteNum / _wepLoadoutSpriteCount) + (_sliceSide / min(2, _wepLoadoutSpriteCount));
+						_sliceDis = /*ceil*/(lerp(
+							lerp(
+								_sliceDis1,
+								_sliceDis2,
+								clamp(2 * _sliceAmount, 0, 1)
+							),
+							_sliceDis3,
+							clamp(2 * (_sliceAmount - 0.5), 0, 1)
+						));
+					}
+					lq_set(_mergeSlice, `length${_sliceSide + 1}`, _sliceDis);
 				}
-				
-				draw_primitive_end();
+			}
+			else{
+				_mergeSlice.sprite_width   = 1;
+				_mergeSlice.sprite_height  = 1;
+				_mergeSlice.sprite_xoffset = 0;
+				_mergeSlice.sprite_yoffset = 0;
+				_mergeSlice.length1        = -11;
+				_mergeSlice.length2        = -5;
+				_mergeSlice.sprite_length1 = _mergeSlice.length1;
+				_mergeSlice.sprite_length2 = _mergeSlice.length2;
 			}
 			
-			 // Done:
-			surface_reset_target();
+			 // Merged Sprite Dimensions:
+			var	_mergeSliceSpriteX1 =  ceil(_mergeSliceXOffset) - _mergeSlice.sprite_xoffset,
+				_mergeSliceSpriteY1 = floor(_mergeSliceYOffset) - _mergeSlice.sprite_yoffset,
+				_mergeSliceSpriteX2 = _mergeSliceSpriteX1 + _mergeSlice.sprite_width,
+				_mergeSliceSpriteY2 = _mergeSliceSpriteY1 + _mergeSlice.sprite_height;
+				
+			if(_mergeSliceSpriteX1 < _mergeWepLoadoutSpriteX1) _mergeWepLoadoutSpriteX1 = _mergeSliceSpriteX1;
+			if(_mergeSliceSpriteY1 < _mergeWepLoadoutSpriteY1) _mergeWepLoadoutSpriteY1 = _mergeSliceSpriteY1;
+			if(_mergeSliceSpriteX2 > _mergeWepLoadoutSpriteX2) _mergeWepLoadoutSpriteX2 = _mergeSliceSpriteX2;
+			if(_mergeSliceSpriteY2 > _mergeWepLoadoutSpriteY2) _mergeWepLoadoutSpriteY2 = _mergeSliceSpriteY2;
+			
+			_mergeSliceXOffset += lengthdir_x(_mergeSlice.length2 - _mergeSlice.length1, _loadoutSpriteAngle);
+			_mergeSliceYOffset += lengthdir_y(_mergeSlice.length2 - _mergeSlice.length1, _loadoutSpriteAngle);
+			
+			 // Merged Sprite Frame Count:
+			if(_mergeSlice.image_number > _mergeWepLoadoutSpriteImageNum){
+				_mergeWepLoadoutSpriteImageNum = _mergeSlice.image_number;
+			}
+			
+			 // Add to List:
+			if(is_undefined(_mergeFrontSlice)){
+				_mergeStockSlice = _mergeSlice;
+			}
+			else{
+				_mergeFrontSlice.next_slice = _mergeSlice;
+			}
+			_mergeFrontSlice = _mergeSlice;
+			_wepLoadoutSpriteNum++;
+		}
+		
+		 // Create Merged Sprite:
+		var	_mergeWepLoadoutSpriteWidth   = _mergeWepLoadoutSpriteX2 - _mergeWepLoadoutSpriteX1,
+			_mergeWepLoadoutSpriteHeight  = _mergeWepLoadoutSpriteY2 - _mergeWepLoadoutSpriteY1,
+			_mergeWepLoadoutSpriteXOffset = -_mergeWepLoadoutSpriteX1,
+			_mergeWepLoadoutSpriteYOffset = -_mergeWepLoadoutSpriteY1;
+		
+		with(surface_setup(
+			"sprMergeLoadout",
+			_mergeWepLoadoutSpriteWidth * _mergeWepLoadoutSpriteImageNum,
+			_mergeWepLoadoutSpriteHeight,
+			1
+		)){
 			free = true;
+			
+			surface_set_target(surf);
+			draw_clear_alpha(c_black, 0);
+			surface_reset_target();
+			
+			for(var _mergeWepLoadoutSpriteImage = 0; _mergeWepLoadoutSpriteImage < _mergeWepLoadoutSpriteImageNum; _mergeWepLoadoutSpriteImage++){
+				var	_slice        = _mergeStockSlice,
+					_sliceXOffset = _mergeWepLoadoutSpriteXOffset + lengthdir_x(_slice.length1, _loadoutSpriteAngle) + (_mergeWepLoadoutSpriteWidth * _mergeWepLoadoutSpriteImage),
+					_sliceYOffset = _mergeWepLoadoutSpriteYOffset + lengthdir_y(_slice.length1, _loadoutSpriteAngle);
+					
+				while(!is_undefined(_slice)){
+					var	_nextSlice = _slice.next_slice,
+						_spr       = _slice.sprite_index,
+						_sprImg    = _slice.image_number * (_mergeWepLoadoutSpriteImage / _mergeWepLoadoutSpriteImageNum),
+						_sprX      = _slice.sprite_xoffset,
+						_sprY      = _slice.sprite_yoffset;
+						
+					with(UberCont){
+						var	_maskSurface  = surface_create(_slice.sprite_width, _slice.sprite_height),
+							_sliceSurface = surface_create(_slice.sprite_width, _slice.sprite_height);
+							
+						 // Draw Sprite to Surface:
+						surface_set_target(_sliceSurface);
+						draw_clear_alpha(c_black, 0);
+						switch(_spr){
+							case sprGoldScrewdriverLoadout:
+								draw_sprite_ext(_spr, _sprImg, _sprX, _sprY, 1, 1, _loadoutSpriteAngle - 45, c_white, 1);
+								break;
+								
+							default:
+								draw_sprite(_spr, _sprImg, _sprX, _sprY);
+						}
+						surface_reset_target();
+						
+						 // Trim Sprite's Head:
+						if(_slice.length2 < _slice.sprite_length2){
+							 // Create Trim Mask:
+							surface_set_target(_maskSurface);
+							draw_clear_alpha(c_black, 0);
+							draw_circle(
+								_sprX +  ceil(lengthdir_x(_slice.sprite_length2, _loadoutSpriteAngle)),
+								_sprY + floor(lengthdir_y(_slice.sprite_length2, _loadoutSpriteAngle)),
+								ceil(_slice.length2 - _slice.sprite_length2),
+								false
+							);
+							draw_set_blend_mode_ext(bm_zero, bm_inv_src_alpha);
+							draw_set_alpha(0.5);
+							draw_circle(
+								_sprX +  ceil(lengthdir_x(_slice.length2 - 10, _loadoutSpriteAngle)),
+								_sprY + floor(lengthdir_y(_slice.length2 - 10, _loadoutSpriteAngle)),
+								6 + 10,
+								false
+							);
+							draw_set_alpha(1);
+							draw_set_blend_mode(bm_normal);
+							surface_reset_target();
+							
+							 // Trim:
+							surface_set_target(_sliceSurface);
+							draw_set_blend_mode_ext(bm_zero, bm_inv_src_alpha);
+							draw_surface(_maskSurface, 0, 0);
+							draw_set_blend_mode(bm_normal);
+							surface_reset_target();
+						}
+						
+						 // Trim Sprite's Back:
+						if(_slice.length1 > _slice.sprite_length1){
+							 // Create Trim Mask:
+							surface_set_target(_maskSurface);
+							draw_clear_alpha(c_black, 0);
+							draw_circle(
+								_sprX +  ceil(lengthdir_x(_slice.length2, _loadoutSpriteAngle)),
+								_sprY + floor(lengthdir_y(_slice.length2, _loadoutSpriteAngle)),
+								ceil(_slice.length2 - _slice.length1),
+								false
+							);
+							surface_reset_target();
+							
+							 // Trim:
+							surface_set_target(_sliceSurface);
+							draw_set_blend_mode_ext(bm_zero, bm_src_alpha);
+							draw_surface(_maskSurface, 0, 0);
+							draw_set_blend_mode(bm_normal);
+							surface_reset_target();
+						}
+						
+						 // Draw Sliced Sprite:
+						surface_set_target(other.surf);
+						draw_surface(
+							_sliceSurface,
+							 ceil(_sliceXOffset - lengthdir_x(_slice.length1, _loadoutSpriteAngle)) - _sprX,
+							floor(_sliceYOffset - lengthdir_y(_slice.length1, _loadoutSpriteAngle)) - _sprY
+						);
+						surface_reset_target();
+						
+						 // Destroy Surfaces:
+						surface_destroy(_maskSurface);
+						surface_destroy(_sliceSurface);
+					}
+					
+					 // Next Slice:
+					_sliceXOffset += lengthdir_x(_slice.length2 - _slice.length1, _loadoutSpriteAngle);
+					_sliceYOffset += lengthdir_y(_slice.length2 - _slice.length1, _loadoutSpriteAngle);
+					_slice = _nextSlice;
+				}
+			}
 			
 			 // Add Sprite:
 			surface_save(surf, name + ".png");
-			spr.MergeWepLoadout[? _sprName] = sprite_add_weapon(name + ".png", w / 2, h / 2);
+			_mergeWepLoadoutSprite = sprite_add(
+				name + ".png",
+				_mergeWepLoadoutSpriteImageNum,
+				_mergeWepLoadoutSpriteXOffset,
+				_mergeWepLoadoutSpriteYOffset
+			);
 			
-			return spr.MergeWepLoadout[? _sprName];
+			 // Store Sprite:
+			spr.MergeWepLoadout[? _mergeWepLoadoutSpriteName] = _mergeWepLoadoutSprite;
 		}
 	}
 	
-	return -1;
+	return _mergeWepLoadoutSprite;
 	
 #define weapon_merge_subtext(_stock, _front)
 	/*

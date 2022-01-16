@@ -1,6 +1,9 @@
 #define init
 	mod_script_call("mod", "teassets", "ntte_init", script_ref_create(init));
 	
+	 // Store Script References:
+	scr.portal_poof = script_ref_create(portal_poof);
+	
 	 // Gather Objects:
 	for(var i = 1; true; i++){
 		var _scrName = script_get_name(i);
@@ -2771,6 +2774,83 @@
 			
 			break;
 			
+	}
+	
+#define portal_poof()
+	/*
+		Get rid of normal portals, but make it look cool
+	*/
+	
+	if(instance_exists(Portal)){
+		var _inst = instances_matching(instances_matching(instances_matching(instances_matching(Portal, "object_index", Portal), "type", 1, 3), "endgame", 100), "image_alpha", 1);
+		if(array_length(_inst)) with(_inst){
+			if(!place_meeting(x, y, Player)){
+				//sound_stop(sndPortalClose);
+				sound_stop(sndPortalLoop);
+				
+				 // Guardian:
+				if(
+					visible
+					&& type == 1
+					&& endgame >= 100
+					&& !position_meeting(x, y, PortalShock)
+					&& point_seen_ext(x, y, -8, -8, -1)
+					&& chance(1, 2)
+				){
+					with(call(scr.obj_create, x, y, "PortalGuardian")){
+						x = xstart;
+						y = ystart;
+						sprite_index = spr_appear;
+						right = other.image_xscale;
+						portal = true;
+					}
+					call(scr.sound_play_at,
+						x,
+						y,
+						asset_get_index(`sndPortalFlyby${irandom_range(1, 4)}`),
+						2 + orandom(0.1),
+						3
+					);
+				}
+				
+				 // Normal:
+				else with(call(scr.obj_create, x, y, "PortalPoof")){
+					sprite_index = [mskNone, sprPortalDisappear, sprProtoPortalDisappear, sprPopoPortalDisappear][other.type];
+					image_xscale = other.image_xscale;
+					image_yscale = other.image_yscale;
+					image_angle  = other.image_angle;
+					image_blend  = other.image_blend;
+					image_alpha  = other.image_alpha;
+					depth        = other.depth;
+				}
+				
+				 // Rescue Players:
+				if(timer > 30){
+					with(instances_matching(instances_matching_ne(Player, "angle", 0), "roll", 0)){
+						if(point_distance(x, y, other.x, other.y) < 48){
+							if(!collision_line(x, y, other.x, other.y, Wall, false, false)){
+								if(skill_get(mut_throne_butt) > 0){
+									angle = 0;
+								}
+								else{
+									roll = true;
+								}
+							}
+						}
+					}
+				}
+				
+				instance_destroy();
+			}
+		}
+	}
+	
+	 // Prevent Corpse Portal:
+	if(instance_exists(Corpse)){
+		var _inst = instances_matching_gt(Corpse, "alarm0", 0);
+		if(array_length(_inst)) with(_inst){
+			alarm0 = -1;
+		}
 	}
 	
 	

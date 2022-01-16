@@ -1919,13 +1919,13 @@
 	}
 	
 #define CustomPlasma_step
-	var	_width = sprite_get_width(sprite_index),
+	var	_width    = sprite_get_width(sprite_index),
 		_minWidth = minscale * _width;
 		
 	 // Trail:
 	if(chance_ct(_width - 16, 16)){
-		var	o = _minWidth * ((_width >= 32) ? 3/4 : 1/2);
-		with(instance_create(x + orandom(o), y + orandom(o), PlasmaTrail)){
+		var	_off = _minWidth * ((_width >= 32) ? 3/4 : 1/2);
+		with(instance_create(x + orandom(_off), y + orandom(_off), PlasmaTrail)){
 			sprite_index = other.spr_trail;
 		}
 	}
@@ -1944,23 +1944,23 @@
 #define CustomPlasma_anim
 	image_speed = 0;
 	image_index = image_number - 1;
-	speed = minspeed;
+	speed       = minspeed;
 	
 #define CustomPlasma_hit
-	if(projectile_canhit(other)){
+	if(projectile_canhit_np(other) && current_frame_active){
 		projectile_hit_push(other, round(damage * image_xscale), force);
 		
 		 // Shrink:
 		image_xscale -= 0.1;
 		image_yscale -= 0.1;
-		x -= hspeed_raw;
-		y -= vspeed_raw;
+		x            -= hspeed_raw;
+		y            -= vspeed_raw;
 		
 		 // Effects:
 		var	_sleep = (10 / 3) * floor(sprite_width / 16),
 			_shake = 2 + (4 * floor(sprite_get_width(sprite_index) / 32));
 			
-		if(array_length(flak) > 0){
+		if(array_length(flak)){
 			_sleep *= 3;
 		}
 		if(!instance_is(creator, Player)){
@@ -1973,15 +1973,17 @@
 	}
 	
 #define CustomPlasma_wall
-	 // Shrink:
-	image_xscale -= 0.1;
-	image_yscale -= 0.1;
-	x -= hspeed_raw;
-	y -= vspeed_raw;
-	
-	 // Effects:
-	instance_create(x, y, Dust);
-	sound_play_hit(sndHitWall, 0.2);
+	if(current_frame_active){
+		 // Shrink:
+		image_xscale -= 0.1;
+		image_yscale -= 0.1;
+		x            -= hspeed_raw;
+		y            -= vspeed_raw;
+		
+		 // Effects:
+		instance_create(x, y, Dust);
+		sound_play_hit(sndHitWall, 0.2);
+	}
 	
 #define CustomPlasma_destroy
 	sound_play_hit_big(snd_dead, 0.3);
@@ -1991,7 +1993,7 @@
 		_flak     = flak,
 		_flakSize = array_length(_flak);
 		
-	if(_flakSize > 0){
+	if(_flakSize){
 		for(var i = 0; i < _flakSize; i++){
 			var _lq = _flak[i];
 			if(!is_object(_lq)){
@@ -1999,7 +2001,7 @@
 			}
 			
 			 // Big Plasma:
-			if(array_length(lq_get(_lq, "flak")) > 0){
+			if(array_length(lq_get(_lq, "flak"))){
 				with(_lq){
 					if("sprite_index" not in self) sprite_index = sprPlasmaBallBig;
 					if("snd_dead"     not in self) snd_dead     = sndPlasmaBigExplode;
@@ -2160,8 +2162,8 @@
 						
 						call(scr.pass, [self, other], scr.weapon_get, "fire", _wep);
 						
-						team     = _lastTeam;
-						accuracy = _lastAccuracy;
+						if(team == other.team) team = _lastTeam;
+						accuracy = _lastAccuracy * (accuracy / other.accuracy);
 						
 						 // Steroids:
 						if(!other.primary){
@@ -2173,19 +2175,8 @@
 				
 				 // Non-Player:
 				else with(player_fire_ext(direction, wep_none, x, y, team, creator, accuracy)){
-					wep = _wep;
-					call(scr.pass, [self, other], scr.weapon_get, "fire", wep);
-					
-					 // Transfer Variables:
-					with(other.creator){
-						if(friction != 0){
-							hspeed += other.hspeed;
-							vspeed += other.vspeed;
-						}
-						if("wkick"    in self) wkick    = other.wkick;
-						if("wepangle" in self) wepangle = other.wepangle * ((abs(other.wepangle) > 1) ? sign(wepangle) : wepangle);
-						if("reload"   in self) reload  += other.reload;
-					}
+					call(scr.pass, [self, other], scr.weapon_get, "fire", _wep);
+					call(scr.FireCont_end, self);
 				}
 				
 				 // Charge Weapon Fix Reset:
@@ -2206,12 +2197,12 @@
 	
 	with(instance_create(_x, _y, CustomObject)){
 		 // Vars:
-		accuracy  = 1;
-		team      = -1;
-		creator   = noone;
-		primary   = true;
-		wep       = wep_none;
-		fire      = false;
+		accuracy = 1;
+		team     = -1;
+		creator  = noone;
+		primary  = true;
+		wep      = wep_none;
+		fire     = false;
 		
 		return self;
 	}
@@ -2249,8 +2240,8 @@
 									
 									player_fire(other.direction);
 									
-									team     = _lastTeam;
-									accuracy = _lastAccuracy;
+									if(team == other.team) team = _lastTeam;
+									accuracy = _lastAccuracy * (accuracy / other.accuracy);
 								}
 								
 								 // Low Ammo:
@@ -2277,17 +2268,7 @@
 						}
 						
 						 // Non-Player:
-						else with(player_fire_ext(direction, wep, x, y, team, creator, accuracy)){
-							with(other.creator){
-								if(friction != 0){
-									hspeed += other.hspeed;
-									vspeed += other.vspeed;
-								}
-								if("wkick"    in self) wkick    = other.wkick;
-								if("wepangle" in self) wepangle = other.wepangle * ((abs(other.wepangle) > 1) ? sign(wepangle) : wepangle);
-								if("reload"   in self) reload  += other.reload;
-							}
-						}
+						else call(scr.FireCont_end, player_fire_ext(direction, wep, x, y, team, creator, accuracy));
 					}
 				}
 				wep.chrg = 0;
@@ -2378,11 +2359,7 @@
 							
 							 // Fire:
 							with(player_fire_ext(_dir, wep, other.x, other.y, other.team, self)){
-								other.hspeed += hspeed;
-								other.vspeed += vspeed;
-								if("wkick" in other){
-									other.wkick = wkick;
-								}
+								 // Melee Angle:
 								_wepangle = wepangle * ((abs(wepangle) > 1) ? sign(_wepangle) : _wepangle);
 								
 								 // Reload:
@@ -2393,6 +2370,9 @@
 									}
 									other.alarm1 = max(1, _load);
 								}
+								
+								 // Transfer Variables:
+								call(scr.FireCont_end, self);
 							}
 						}
 						instance_delete(self);
@@ -2927,8 +2907,10 @@
 	
 #define Pet_begin_step
 	 // Reset Hitbox:
-	if(mask_index == mskNone && mask_store != null){
-		mask_index = mask_store;
+	if(mask_store != null && visible){
+		if(mask_index == mskNone){
+			mask_index = mask_store;
+		}
 		mask_store = null;
 	}
 	
@@ -2959,8 +2941,10 @@
 	
 #define Pet_step
 	 // Reset Hitbox:
-	if(mask_index == mskNone && mask_store != null){
-		mask_index = mask_store;
+	if(mask_store != null && visible){
+		if(mask_index == mskNone){
+			mask_index = mask_store;
+		}
 		mask_store = null;
 	}
 	
@@ -3136,6 +3120,12 @@
 				with(revive) instance_destroy();
 				visible    = false;
 				persistent = true;
+				
+				 // Disable Hitbox:
+				if(mask_index != mskNone){
+					mask_store = mask_index;
+					mask_index = mskNone;
+				}
 			}
 		}
 	}
@@ -3143,15 +3133,20 @@
 	 // Portal Spin:
 	if(_spin != 0){
 		portal_angle += _spin;
+		
+		 // Sprite:
 		sprite_index = spr_hurt;
 		image_index  = 1;
 		
 		 // No Escape:
 		speed -= min(speed, friction_raw * 3);
-		walk = 0;
+		walk   = 0;
 	}
 	else if(portal_angle != 0){
-		portal_angle = angle_lerp_ct(
+		if(abs(portal_angle) < 1){
+			portal_angle = 0;
+		}
+		else portal_angle = angle_lerp_ct(
 			((portal_angle % 360) + 360) % 360,
 			0,
 			0.2
@@ -3310,8 +3305,10 @@
 	
 #define Pet_end_step
 	 // Reset Hitbox:
-	if(mask_index == mskNone && mask_store != null){
-		mask_index = mask_store;
+	if(mask_store != null && visible){
+		if(mask_index == mskNone){
+			mask_index = mask_store;
+		}
 		mask_store = null;
 	}
 	

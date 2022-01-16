@@ -2043,8 +2043,8 @@
 		 // Initialize Sprites:
 		sprt = -1;
 		icon = -1;
-		mod_script_call_nc("mod", "teassets", "weapon_merge_sprite", _stock.sprt, _front.sprt);
-		mod_script_call_nc("mod", "teassets", "weapon_merge_sprite_loadout", _stock.icon, _front.icon);
+		call(scr.merge_weapon_sprite,         [_stock.sprt, _front.sprt]);
+		call(scr.merge_weapon_loadout_sprite, [_stock.icon, _front.icon]);
 		
 		 // Flags:
 		flag = call(scr.array_combine, _stock.flag, _front.flag);
@@ -2402,7 +2402,7 @@
 		var	_stock = weapon_get_sprt(wep_stat(_wep, "stock")),
 			_front = weapon_get_sprt(wep_stat(_wep, "front"));
 			
-		_spr = mod_script_call("mod", "teassets", "weapon_merge_sprite", _stock, _front);
+		_spr = call(scr.merge_weapon_sprite, [_stock, _front]);
 	}
 	
 	return (sprite_exists(_spr) ? _spr : mskNone);
@@ -2416,7 +2416,7 @@
 		var	_stock = call(scr.weapon_get, "loadout", wep_stat(_wep, "stock")),
 			_front = call(scr.weapon_get, "loadout", wep_stat(_wep, "front"));
 			
-		_spr = mod_script_call("mod", "teassets", "weapon_merge_sprite_loadout", _stock, _front);
+		_spr = call(scr.merge_weapon_loadout_sprite, [_stock, _front]);
 	}
 	
 	return (sprite_exists(_spr) ? _spr : 0);

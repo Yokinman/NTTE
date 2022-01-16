@@ -95,7 +95,7 @@
 	
 #define skin_weapon_sprite_hud(_wep, _spr)
 	if(_spr == spr.TunnellerHUD) return spr.CoolTunnellerHUD;
-	return _spr;
+	return skin_weapon_sprite(_wep, _spr);
 	
 	
 /// SCRIPTS

@@ -38,9 +38,9 @@
 	
 #define weapon_type(_wep)
 	 // Return Other Weapon's Ammo Type:
-	if(instance_is(self, AmmoPickup) && instance_is(other, Player)){
+	if(instance_is(self, AmmoPickup) && instance_is(other, Player) && other.wep == _wep){
 		with(other){
-			return weapon_get_type((_wep == wep) ? bwep : wep);
+			return weapon_get_type(bwep);
 		}
 	}
 	

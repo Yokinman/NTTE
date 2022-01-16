@@ -1534,7 +1534,9 @@
 		
 		 // Sound:
 		if(!audio_is_playing(loop_snd)){
+			var _lastSeed = random_get_seed();
 			loop_snd = call(scr.sound_play_at, x, y, sndFlamerLoop, 1 + orandom(0.1), 3);
+			random_set_seed(_lastSeed);
 		}
 	}
 	else sound_stop(loop_snd);

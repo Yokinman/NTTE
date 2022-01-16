@@ -20,9 +20,9 @@
 	
 #define weapon_name(_wep)     return ((weapon_gold(_wep) != 0) ? "GOLDEN " : "") + "TELEPORT GUN";
 #define weapon_text(_wep)     return ((weapon_gold(_wep) != 0) ? "LUXURY TRAVEL" : "DON'T BLINK");
-#define weapon_sprt(_wep)     return ((weapon_get_gold(_wep) == 0) ? global.sprWep : global.sprWepGold);
-#define weapon_loadout(_wep)  return ((argument_count > 0 && weapon_get_gold(_wep) != 0) ? global.sprWepGoldLoadout : global.sprWepLoadout);
-#define weapon_area(_wep)     return ((argument_count > 0 && weapon_get_gold(_wep) == 0) ? 7 : -1); // 3-2
+#define weapon_sprt(_wep)     return ((weapon_gold(_wep) == 0) ? global.sprWep : global.sprWepGold);
+#define weapon_loadout(_wep)  return ((argument_count > 0 && weapon_gold(_wep) != 0) ? global.sprWepGoldLoadout : global.sprWepLoadout);
+#define weapon_area(_wep)     return ((argument_count > 0 && weapon_gold(_wep) == 0) ? 7 : -1); // 3-2
 #define weapon_gold(_wep)     return ((argument_count > 0 && lq_defget(_wep, "gold", false)) ? -1 : 0);
 #define weapon_type           return type_melee;
 #define weapon_load           return 10; // 0.33 Seconds

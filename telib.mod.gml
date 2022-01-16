@@ -33,159 +33,93 @@
 	}
 	
 	 // Bind Events:
-	global.portal_pickups_bind = script_bind(CustomStep,    portal_pickups_step,  0, false);
-	global.rad_path_bind       = script_bind(CustomEndStep, rad_path_step,        0, false);
-	global.floor_reveal_bind   = script_bind(CustomDraw,    floor_reveal_draw,   -8, false);
+	global.rad_path_bind     = script_bind(CustomEndStep, rad_path_step,      0, false);
+	global.floor_reveal_bind = script_bind(CustomDraw,    floor_reveal_draw, -8, false);
 	
-	 // NT:TE Object Related:
-	obj_create_ref = mod_variable_get("mod", "teassets", "obj_create_ref");
-	obj_parent     = mod_variable_get("mod", "teassets", "obj_parent");
-	obj_search     = mod_variable_get("mod", "teassets", "obj_search");
-	obj_bind       = mod_variable_get("mod", "teassets", "obj_bind");
-	obj_bind_draw  = mod_variable_get("mod", "teassets", "obj_bind_draw");
-	
-	 // Custom Object Event References:
-	obj_event = ds_map_create();
-	with([CustomObject, CustomHitme, CustomProp, CustomProjectile, CustomSlash, CustomEnemy]){
-		var _eventList = [];
-		with(instance_create(0, 0, self)){
-			with(["step", "begin_step", "end_step", "draw", "destroy", "cleanup", "anim", "death", "hurt", "hit", "wall", "projectile", "grenade"]){
-				if(("on_" + self) in other){
-					array_push(_eventList, self);
-				}
-			}
-			instance_delete(self);
-		}
-		if(array_find_index(_eventList, "step") >= 0){
-			for(var i = 0; i < 10; i++){
-				array_push(_eventList, `alrm${i}`);
-			}
-		}
-		obj_event[? self] = _eventList;
-	}
+	 // Custom Object Related:
+	obj_create_ref_map          = mod_variable_get("mod", "teassets", "obj_create_ref_map");
+	obj_parent_map              = mod_variable_get("mod", "teassets", "obj_parent_map");
+	obj_search_bind_map         = mod_variable_get("mod", "teassets", "obj_search_bind_map");
+	obj_event_varname_list_map  = mod_variable_get("mod", "teassets", "obj_event_varname_list_map");
+	obj_event_obj_list_map      = mod_variable_get("mod", "teassets", "obj_event_obj_list_map");
+	obj_draw_depth_instance_map = mod_variable_get("mod", "teassets", "obj_draw_depth_instance_map");
 	
 	 // Lag Debugging:
 	lag_bind = ds_map_create();
 	
-	 // Projectile Team Variants:
-	var _teamGrid = [
-		[[spr.EnemyBullet,             EnemyBullet4  ], [sprBullet1,            Bullet1        ], [sprIDPDBullet,         IDPDBullet    ]], // Bullet
-		[[sprEnemyBulletHit                          ], [sprBulletHit                          ], [sprIDPDBulletHit                     ]], // Bullet Hit
-		[[spr.EnemyHeavyBullet,        "CustomBullet"], [sprHeavyBullet,        HeavyBullet    ], [spr.IDPDHeavyBullet,   "CustomBullet"]], // Heavy Bullet
-		[[spr.EnemyHeavyBulletHit                    ], [sprHeavyBulletHit                     ], [spr.IDPDHeavyBulletHit               ]], // Heavy Bullet Hit
-		[[sprLHBouncer,                LHBouncer     ], [sprBouncerBullet,      BouncerBullet  ], [                                     ]], // Bouncer Bullet
-		[[sprLHBouncer,                LHBouncer     ], [sprBouncerShell,       BouncerBullet  ], [                                     ]], // Bouncer Bullet 2
-		[[sprEnemyBullet1,             EnemyBullet1  ], [sprAllyBullet,         AllyBullet     ], [                                     ]], // Bandit Bullet
-		[[sprEnemyBulletHit                          ], [sprAllyBulletHit                      ], [sprIDPDBulletHit                     ]], // Bandit Bullet Hit
-		[[sprEnemyBullet4,             EnemyBullet4  ], [spr.AllySniperBullet,  AllyBullet     ], [                                     ]], // Sniper Bullet
-		[[sprEBullet3,                 EnemyBullet3  ], [sprBullet2,            Bullet2        ], [                                     ]], // Shell
-		[[sprEBullet3Disappear,        EnemyBullet3  ], [sprBullet2Disappear,   Bullet2        ], [                                     ]], // Shell Disappear
-		[[spr.EnemySlug,               "CustomShell" ], [sprSlugBullet,         Slug           ], [sprPopoSlug,           PopoSlug      ]], // Slug
-		[[spr.EnemySlugDisappear,      "CustomShell" ], [sprSlugDisappear,      Slug           ], [sprPopoSlugDisappear,  PopoSlug      ]], // Slug Disappear
-		[[spr.EnemySlugHit                           ], [sprSlugHit                            ], [sprIDPDBulletHit                     ]], // Slug Hit
-		[[spr.EnemySlug,               "CustomShell" ], [sprHyperSlug,          Slug           ], [sprPopoSlug,           PopoSlug      ]], // Hyper Slug
-		[[spr.EnemySlugDisappear,      "CustomShell" ], [sprHyperSlugDisappear, Slug           ], [sprPopoSlugDisappear,  PopoSlug      ]], // Hyper Slug Disappear
-		[[spr.EnemyHeavySlug,          "CustomShell" ], [sprHeavySlug,          HeavySlug      ], [                                     ]], // Heavy Slug
-		[[spr.EnemyHeavySlugDisappear, "CustomShell" ], [sprHeavySlugDisappear, HeavySlug      ], [                                     ]], // Heavy Slug Disappear
-		[[spr.EnemyHeavySlugHit                      ], [sprHeavySlugHit,                      ], [                                     ]], // Heavy Slug Hit
-		[[sprEFlak,                    "CustomFlak"  ], [sprFlakBullet,         FlakBullet     ], [                                     ]], // Flak
-		[[sprEFlakHit                                ], [sprFlakHit                            ], [                                     ]], // Flak Hit
-		[[spr.EnemySuperFlak,          "CustomFlak"  ], [sprSuperFlakBullet,    SuperFlakBullet], [                                     ]], // Super Flak
-		[[spr.EnemySuperFlakHit                      ], [sprSuperFlakHit                       ], [                                     ]], // Super Flak Hit
-		[[sprEFlak,                    EFlakBullet   ], [sprFlakBullet,         "CustomFlak"   ], [                                     ]], // Gator Flak
-		[[sprTrapFire                                ], [sprWeaponFire                         ], [sprFireLilHunter                     ]], // Fire
-		[[sprSalamanderBullet                        ], [sprDragonFire                         ], [sprFireLilHunter                     ]], // Fire 2
-		[[sprTrapFire                                ], [sprCannonFire                         ], [sprFireLilHunter                     ]], // Fire 3
-	//	[[sprFireBall                                ], [sprFireBall                           ], [                                     ]], // Fire Ball
-	//	[[sprFireShell                               ], [sprFireShell                          ], [                                     ]], // Fire Shell
-		[[sprEnemyLaser,               EnemyLaser    ], [sprLaser,              Laser          ], [                                     ]], // Laser
-		[[sprEnemyLaserStart                         ], [sprLaserStart                         ], [                                     ]], // Laser Start
-		[[sprEnemyLaserEnd                           ], [sprLaserEnd                           ], [                                     ]], // Laser End
-		[[sprLaserCharge                             ], [spr.AllyLaserCharge                   ], [                                     ]], // Laser Particle
-		[[sprEnemyLightning,           EnemyLightning], [sprLightning,          Lightning      ], [                                     ]], // Lightning
-	//	[[sprLightningHit                            ], [sprLightningHit                       ], [                                     ]], // Lightning Hit
-	//	[[sprLightningSpawn                          ], [sprLightningSpawn                     ], [                                     ]], // Lightning Particle
-		[[spr.EnemyPlasmaBall,         "CustomPlasma"], [sprPlasmaBall,         PlasmaBall     ], [sprPopoPlasma,         PopoPlasmaBall]], // Plasma
-		[[spr.EnemyPlasmaBig,          "CustomPlasma"], [sprPlasmaBallBig,      PlasmaBig      ], [                                     ]], // Plasma Big
-		[[spr.EnemyPlasmaHuge,         "CustomPlasma"], [sprPlasmaBallHuge,     PlasmaHuge     ], [                                     ]], // Plasma Huge
-		[[spr.EnemyPlasmaImpact                      ], [sprPlasmaImpact                       ], [sprPopoPlasmaImpact                  ]], // Plasma Impact
-		[[spr.EnemyPlasmaImpactSmall                 ], [spr.PlasmaImpactSmall                 ], [spr.PopoPlasmaImpactSmall            ]], // Plasma Impact Small
-		[[spr.EnemyPlasmaTrail                       ], [sprPlasmaTrail                        ], [sprPopoPlasmaTrail                   ]], // Plasma Particle
-		[[spr.EnemyVlasmaBullet                      ], [spr.VlasmaBullet                      ], [spr.PopoVlasmaBullet                 ]], // Vector Plasma
-		[[spr.EnemyVlasmaCannon                      ], [spr.VlasmaCannon                      ], [spr.PopoVlasmaCannon                 ]], // Vector Plasma Cannon
-		[[sprEnemySlash                              ], [sprSlash                              ], [sprEnemySlash                        ]]  // Slash
-		// Devastator
-		// Lightning Cannon
-		// Hyper Slug (kinda)
-	];
+	 // Projectile Sprite Team Variants:
+	var _spriteTeamVariantTable = mod_variable_get("mod", "teassets", "sprite_team_variant_table");
 	
-	sprite_team_map     = ds_map_create(); // Sprite -> Team
-	team_sprite_map     = ds_map_create(); // Sprite -> [Prop Sprite, Enemy Sprite, Ally Sprite, Popo Sprite]
-	team_sprite_obj_map = ds_map_create(); // Object -> (Sprite -> [Prop Sprite Object, Enemy Sprite Object, Ally Sprite Object, Popo Sprite Object])
+	sprite_team_map                = ds_map_create(); // Sprite -> Team
+	sprite_team_sprite_list_map    = ds_map_create(); // Sprite -> [Enemy Sprite, Ally Sprite, Popo Sprite]
+	obj_sprite_team_obj_list_table = ds_map_create(); // Object -> (Sprite -> [Enemy Object, Ally Object, Popo Object])
 	
-	with(_teamGrid){
-		var	_teamList = self,
-			_teamSize = array_length(_teamList),
-			_sprtList = array_create(_teamSize, -1),
-			_objsList = array_create(_teamSize, -1);
+	with(_spriteTeamVariantTable){
+		var	_teamVariantList  = self,
+			_teamVariantCount = array_length(_teamVariantList),
+			_teamSpriteList   = array_create(_teamVariantCount, -1),
+			_teamObjList      = array_create(_teamVariantCount, -1);
 			
-		for(var i = 0; i < _teamSize; i++){
-			var _team = _teamList[i];
-			if(array_length(_team)){
-				_sprtList[i] = _team[0];
-				if(array_length(_team) > 1){
-					_objsList[i] = _team[1];
+		 // Populate Sprite & Object Lists:
+		for(var _team = 0; _team < _teamVariantCount; _team++){
+			var _variant = _teamVariantList[_team];
+			if(array_length(_variant)){
+				_teamSpriteList[_team] = (is_string(_variant[0]) ? lq_get(spr, _variant[0]) : _variant[0]);
+				if(array_length(_variant) > 1){
+					_teamObjList[_team] = _variant[1];
 				}
 			}
 		}
 		
-		 // Compiling Sprite Maps:
-		with(_sprtList){
-			var _sprt = self;
-			if(sprite_exists(_sprt)){
-				if(!ds_map_exists(team_sprite_map, _sprt)){
-					team_sprite_map[? _sprt] = _sprtList;
+		 // Compile Sprite Team Maps:
+		with(_teamSpriteList){
+			var _sprite = self;
+			if(sprite_exists(_sprite)){
+				if(!ds_map_exists(sprite_team_sprite_list_map, _sprite)){
+					sprite_team_sprite_list_map[? _sprite] = _teamSpriteList;
 				}
-				if(!ds_map_exists(sprite_team_map, _sprt)){
-					sprite_team_map[? _sprt] = sprite_team_start + array_find_index(_sprtList, _sprt);
+				if(!ds_map_exists(sprite_team_map, _sprite)){
+					sprite_team_map[? _sprite] = sprite_start_team + array_find_index(_teamSpriteList, _sprite);
 				}
 			}
 		}
 		
-		 // Compiling Object~Object Map:
-		with(_objsList){
+		 // Compile Sprite Team Object Table:
+		with(_teamObjList){
 			var _obj = self;
 			if(!is_real(_obj) || object_exists(_obj)){
-				if(!ds_map_exists(team_sprite_obj_map, _obj)){
-					var _map = ds_map_create();
+				if(!ds_map_exists(obj_sprite_team_obj_list_table, _obj)){
+					var _spriteTeamObjListMap = ds_map_create();
 					
-					with(_teamGrid){
-						var	_tList = self,
-							_tSize = array_length(_tList),
-							_sList = array_create(_tSize, -1),
-							_oList = array_create(_tSize, -1);
+					with(_spriteTeamVariantTable){
+						var	_tVariantList  = self,
+							_tVariantCount = array_length(_tVariantList),
+							_tSpriteList   = array_create(_tVariantCount, -1),
+							_tObjList      = array_create(_tVariantCount, -1);
 							
-						for(var i = 0; i < _tSize; i++){
-							var _team = _tList[i];
-							if(array_length(_team)){
-								_sList[i] = _team[0];
-								if(array_length(_team) > 1){
-									_oList[i] = _team[1];
+						 // Populate Sprite & Object Lists:
+						for(var _team = 0; _team < _tVariantCount; _team++){
+							var _variant = _tVariantList[_team];
+							if(array_length(_variant)){
+								_tSpriteList[_team] = (is_string(_variant[0]) ? lq_get(spr, _variant[0]) : _variant[0]);
+								if(array_length(_variant) > 1){
+									_tObjList[_team] = _variant[1];
 								}
 							}
 						}
 						
-						for(var i = 0; i < _tSize; i++){
-							if(_oList[i] == _obj){
-								var _sprt = _sList[i];
-								if(!ds_map_exists(_map, _sprt)){
-									_map[? _sprt] = _oList;
+						 // Add Object Lists to Sprite Map:
+						for(var _team = 0; _team < _tVariantCount; _team++){
+							if(_tObjList[_team] == _obj){
+								var _sprite = _tSpriteList[_team];
+								if(!ds_map_exists(_spriteTeamObjListMap, _sprite)){
+									_spriteTeamObjListMap[? _sprite] = _tObjList;
 								}
 							}
 						}
 					}
 					
-					team_sprite_obj_map[? _obj] = _map;
+					obj_sprite_team_obj_list_table[? _obj] = _spriteTeamObjListMap;
 				}
 			}
 		}
@@ -199,17 +133,17 @@
 	
 #macro lag_bind global.debug_lag_bind
 
-#macro obj_create_ref global.obj_create_ref
-#macro obj_parent     global.obj_parent
-#macro obj_search     global.obj_search
-#macro obj_bind       global.obj_bind
-#macro obj_bind_draw  global.obj_bind_draw
-#macro obj_event      global.obj_event
+#macro obj_create_ref_map          global.obj_create_ref_map
+#macro obj_parent_map              global.obj_parent_map
+#macro obj_search_bind_map         global.obj_search_bind_map
+#macro obj_event_varname_list_map  global.obj_event_varname_list_map
+#macro obj_event_obj_list_map      global.obj_event_obj_list_map
+#macro obj_draw_depth_instance_map global.obj_draw_depth_instance_map
 
-#macro sprite_team_start   1
-#macro sprite_team_map     global.sprite_team_map
-#macro team_sprite_map     global.team_sprite_map
-#macro team_sprite_obj_map global.team_sprite_object_map
+#macro sprite_start_team              1
+#macro sprite_team_map                global.sprite_team_map
+#macro sprite_team_sprite_list_map    global.sprite_team_sprite_list_map
+#macro obj_sprite_team_obj_list_table global.obj_sprite_team_obj_list_table
 
 #define pass // context, ref, ...args
 	/*
@@ -240,8 +174,8 @@
 			_other = (is_array(_context) ? _context[1] : _context);
 			
 		if(self != _self || other != _other){
-			with(_other){
-				with(_self){
+			with([_other]){
+				with([_self]){
 					return mod_script_call(mod_current_type, mod_current, "pass", undefined, _ref);
 				}
 			}
@@ -261,7 +195,7 @@
 	
 	if(string_delete(_ref[2], 1, string_length(_name)) == "_create"){
 		 // Store Create Event:
-		obj_create_ref[? _name] = _ref;
+		obj_create_ref_map[? _name] = _ref;
 		
 		 // Instance List:
 		if(_name not in obj){
@@ -284,8 +218,8 @@
 	}
 	
 	 // NT:TE Object:
-	if(ds_map_exists(obj_create_ref, _name)){
-		var	_scrt = array_combine(obj_create_ref[? _name], [_x, _y]),
+	if(ds_map_exists(obj_create_ref_map, _name)){
+		var	_scrt = array_combine(obj_create_ref_map[? _name], [_x, _y]),
 			_inst = script_ref_call(_scrt);
 			
 		 // No Return Value:
@@ -296,36 +230,36 @@
 		 // Auto Assign Things:
 		if(is_real(_inst) && instance_exists(_inst)){
 			with(_inst){
-				var	_isCustom = ds_map_exists(obj_event, object_index),
+				var	_isCustom = ds_map_exists(obj_event_varname_list_map, object_index),
 					_modType  = _scrt[0],
 					_modName  = _scrt[1];
 					
 				 // Set Name:
 				if(
-					!instance_is(self, WepPickup)     &&
-					!instance_is(self, CarVenusFixed) &&
-					!instance_is(self, IceFlower)     &&
-					!instance_is(self, Van)           &&
-					!instance_is(self, mutbutton)
+					   !instance_is(self, WepPickup)
+					&& !instance_is(self, CarVenusFixed)
+					&& !instance_is(self, IceFlower)
+					&& !instance_is(self, Van)
+					&& !instance_is(self, mutbutton)
 				){
 					name = "NTTE" + _name;
 				}
-				if(!ds_map_exists(obj_parent, _name) && "ntte_name" in self && ntte_name != _name){
-					obj_parent[? _name] = ntte_name;
+				if(!ds_map_exists(obj_parent_map, _name) && "ntte_name" in self && ntte_name != _name){
+					obj_parent_map[? _name] = ntte_name;
 				}
 				ntte_name = _name;
 				
 				 // Bind Events:
 				with(
 					_isCustom
-					? obj_event[? object_index]
-					: ["begin_step", "step", "end_step", "draw"]
+					? obj_event_varname_list_map[? object_index]
+					: ["on_begin_step", "on_step", "on_end_step", "on_draw"]
 				){
-					var	_event   = self,
-						_varName = "on_" + _event;
-						
+					var _varName = self;
 					if(_varName not in _inst || is_undefined(variable_instance_get(_inst, _varName))){
-						var _modScrt = _name + "_" + _event;
+						var	_event   = ((string_pos("on_", _varName) == 1) ? string_delete(_varName, 1, 3) : _varName),
+							_modScrt = _name + "_" + _event;
+							
 						if(mod_script_exists(_modType, _modName, _modScrt)){
 							 // Normal:
 							if(_isCustom){
@@ -337,19 +271,19 @@
 								 // Bind Draw Event:
 								if(_event == "draw"){
 									_inst.depth = floor(_inst.depth);
-									if(!ds_map_exists(obj_bind_draw, _inst.depth - 1)){
+									if(!ds_map_exists(obj_draw_depth_instance_map, _inst.depth - 1)){
 										with(script_bind_draw(obj_draw, _inst.depth - 1)){
-											obj_bind_draw[? depth] = self;
-											persistent             = true;
+											obj_draw_depth_instance_map[? depth] = self;
+											persistent = true;
 										}
 									}
 								}
 								
 								 // Add to Object List:
-								if(!ds_map_exists(obj_bind, _event)){
-									obj_bind[? _event] = [];
+								if(!ds_map_exists(obj_event_obj_list_map, _event)){
+									obj_event_obj_list_map[? _event] = [];
 								}
-								var _nameList = obj_bind[? _event];
+								var _nameList = obj_event_obj_list_map[? _event];
 								if(array_find_index(_nameList, _name) < 0){
 									array_push(_nameList, _name);
 								}
@@ -360,15 +294,15 @@
 						else if(_isCustom){
 							with(_inst){
 								switch(_event){
-									
+								
 									case "hurt": // Default doesn't set 'image_index = 0'
-										
+									
 										on_hurt = enemy_hurt;
 										
 										break;
 										
 									case "draw": // Default doesn't face 'right'
-										
+									
 										if(instance_is(self, CustomEnemy)){
 											on_draw = draw_self_enemy;
 										}
@@ -404,8 +338,8 @@
 				
 				 // Bind Object Search Script:
 				var _objSearchKey = _name + ":" + object_get_name(object_index);
-				if(!ds_map_exists(obj_search, _objSearchKey)){
-					obj_search[? _objSearchKey] = call(scr.ntte_bind_setup, script_ref_create(ntte_setup_obj_search, _name, object_index), object_index);
+				if(!ds_map_exists(obj_search_bind_map, _objSearchKey)){
+					obj_search_bind_map[? _objSearchKey] = call(scr.ntte_bind_setup, script_ref_create(ntte_setup_obj_search, _name, object_index), object_index);
 				}
 			}
 		}
@@ -430,7 +364,7 @@
 	var _nameInst = instances_matching(_inst, "ntte_name", _name);
 	
 	 // Manage Object Instance Lists:
-	for(var _objName = _name; !is_undefined(_objName); _objName = ds_map_find_value(obj_parent, _objName)){
+	for(var _objName = _name; !is_undefined(_objName); _objName = ds_map_find_value(obj_parent_map, _objName)){
 		 // Prune Destroyed Instances:
 		var _objList = instances_matching_ne(lq_get(obj, _objName), "id");
 		lq_set(obj, _objName, _objList);
@@ -448,8 +382,8 @@
 	 // Stop Searching:
 	if(!array_length(lq_get(obj, _name))){
 		var _objSearchKey = _name + ":" + object_get_name(_object);
-		call(scr.ntte_unbind, obj_search[? _objSearchKey]);
-		ds_map_delete(obj_search, _objSearchKey);
+		call(scr.ntte_unbind, obj_search_bind_map[? _objSearchKey]);
+		ds_map_delete(obj_search_bind_map, _objSearchKey);
 	}
 	
 #define ntte_begin_step
@@ -460,21 +394,75 @@
 	}
 	
 	 // Bound Begin Step Events:
-	if(!obj_bind_call("begin_step")){
-		ds_map_delete(obj_bind, "begin_step");
+	if(!obj_event_call("begin_step")){
+		ds_map_delete(obj_event_obj_list_map, "begin_step");
 	}
 	
 	 // Lag Debugging:
 	lag_bind_call("begin_step");
 	
+	 // Intercept 'player_fire_at' Burst Controllers:
+	if("ntte_player_fire_at_burst_list" in GameCont && array_length(GameCont.ntte_player_fire_at_burst_list)){
+		GameCont.ntte_player_fire_at_burst_list = instances_matching_ne(GameCont.ntte_player_fire_at_burst_list, "id");
+		
+		 // Intercept Burst Controller Alarm Events:
+		if(current_frame_active){
+			var _inst = instances_matching_le(instances_matching_gt(GameCont.ntte_player_fire_at_burst_list, "alarm0", 0), "alarm0", 2);
+			if(array_length(_inst)){
+				with(_inst){
+					alarm0 = 0;
+					player_fire_at_call(player_fire_at_vars, script_ref_create(player_fire_at_call_event_perform, self, ev_alarm, 0), true, "", undefined);
+					if(instance_exists(self)){
+						if(alarm0 > 0){
+							alarm0 += 2;
+						}
+						if("delay" in self){
+							delay = max(delay, current_time_scale) + current_time_scale;
+						}
+					}
+				}
+			}
+		}
+	}
+	
 #define ntte_step
 	 // Bound Step Events:
-	if(!obj_bind_call("step")){
-		ds_map_delete(obj_bind, "step");
+	if(!obj_event_call("step")){
+		ds_map_delete(obj_event_obj_list_map, "step");
 	}
 	
 	 // Lag Debugging:
 	lag_bind_call("step");
+	
+	 // Intercept 'player_fire_at' Burst Controllers:
+	if("ntte_player_fire_at_burst_list" in GameCont && array_length(GameCont.ntte_player_fire_at_burst_list)){
+		GameCont.ntte_player_fire_at_burst_list = instances_matching_ne(GameCont.ntte_player_fire_at_burst_list, "id");
+		
+		 // Set Laser Cannon Variables:
+		if(instance_exists(LaserCannon)){
+			var _inst = instances_matching(GameCont.ntte_player_fire_at_burst_list, "object_index", LaserCannon);
+			if(array_length(_inst)){
+				var _lastTimeScale = current_time_scale;
+				current_time_scale = epsilon;
+				with(_inst){
+					player_fire_at_call(player_fire_at_vars, script_ref_create(player_fire_at_call_event_perform, self, ev_step, ev_step_normal), true, "", undefined);
+				}
+				current_time_scale = _lastTimeScale;
+			}
+		}
+		
+		 // Intercept Burst Controller Step Events:
+		var _inst = instances_matching_le(GameCont.ntte_player_fire_at_burst_list, "delay", 2 * current_time_scale);
+		if(array_length(_inst)){
+			with(_inst){
+				delay = current_time_scale;
+				player_fire_at_call(player_fire_at_vars, script_ref_create(player_fire_at_call_event_perform, self, ev_step, ev_step_normal), true, "", undefined);
+				if(instance_exists(self)){
+					delay = max(delay, current_time_scale) + (2 * current_time_scale);
+				}
+			}
+		}
+	}
 	
 	 // Manage Projectile Trackers:
 	if("ntte_projectile_tag_map" in GameCont && array_length(GameCont.ntte_projectile_tag_map[0])){
@@ -503,38 +491,50 @@
 					
 				with(_refList){
 					if(self[1] <= _trackFrame){
-						var _tag = _tagList[_tagIndex++];
-						
-						 // Find Existing Tags:
-						if(is_undefined(_teamInstTagList)){
-							_teamInstTagList = [];
-							if(is_undefined(_creatorInst)){
-								_creatorInst = instances_matching(_trackObject, "creator", _creator);
+						if(is_undefined(self[4])){
+							var _tag = _tagList[_tagIndex];
+							
+							 // Find Existing Tags:
+							if(is_undefined(_teamInstTagList)){
+								_teamInstTagList = [];
+								if(is_undefined(_creatorInst)){
+									_creatorInst = instances_matching(_trackObject, "creator", _creator);
+								}
+								with(instances_matching(_creatorInst, "team", _team)){
+									array_push(_teamInstTagList, 1 / (team - _team));
+								}
 							}
-							with(instances_matching(_creatorInst, "team", _team)){
-								array_push(_teamInstTagList, 1 / (team - _team));
-							}
-						}
-						
-						 // Destroy Tag:
-						if(array_find_index(_teamInstTagList, _tag) < 0){
-							with([
-								[_tagRefMap,            _tag],
-								[_teamTagRefMap,        _team],
-								[_creatorTeamTagRefMap, _creator]
-							]){
-								var	_map = self[0],
-									_pos = array_find_index(_map[0], self[1]);
+							
+							 // Destroy Tag:
+							if(array_find_index(_teamInstTagList, _tag) < 0){
+								with([
+									[_tagRefMap,            _tag],
+									[_teamTagRefMap,        _team],
+									[_creatorTeamTagRefMap, _creator]
+								]){
+									var	_map = self[0],
+										_pos = array_find_index(_map[0], self[1]);
+										
+									for(var i = array_length(_map) - 1; i >= 0; i--){
+										_map[i] = array_delete(_map[i], _pos);
+									}
 									
-								for(var i = array_length(_map) - 1; i >= 0; i--){
-									_map[i] = array_delete(_map[i], _pos);
+									if(array_length(_map[0])){
+										break;
+									}
 								}
 								
-								if(array_length(_map[0])){
-									break;
+								 // Remove From Parent Tag's Child List:
+								var _parentRefInfo = self[3];
+								if(!is_undefined(_parentRefInfo) && !is_undefined(_parentRefInfo[4])){
+									_parentRefInfo[4] = array_delete_value(_parentRefInfo[4], self);
+									if(!array_length(_parentRefInfo[4])){
+										_parentRefInfo[4] = undefined;
+									}
 								}
 							}
 						}
+						_tagIndex++;
 					}
 					else break; // Sorted by End Frame
 				}
@@ -549,8 +549,8 @@
 	
 #define ntte_end_step
 	 // Bound End Step Events:
-	if(!obj_bind_call("end_step")){
-		ds_map_delete(obj_bind, "end_step");
+	if(!obj_event_call("end_step")){
+		ds_map_delete(obj_event_obj_list_map, "end_step");
 	}
 	
 	 // Lag Debugging:
@@ -560,10 +560,10 @@
 	if(lag) trace_time();
 	
 	 // Bound Draw Events:
-	if(!obj_bind_call("draw")){
-		ds_map_delete(obj_bind_draw, depth);
-		if(!ds_map_size(obj_bind_draw)){
-			ds_map_delete(obj_bind, "draw");
+	if(!obj_event_call("draw")){
+		ds_map_delete(obj_draw_depth_instance_map, depth);
+		if(!ds_map_size(obj_draw_depth_instance_map)){
+			ds_map_delete(obj_event_obj_list_map, "draw");
 		}
 		instance_destroy();
 		exit;
@@ -571,17 +571,17 @@
 	
 	if(lag) trace_time(`obj_draw, ${depth}`);
 	
-#define obj_bind_call(_event)
+#define obj_event_call(_event)
 	/*
 		Calls the given event for the instances bound to it
 	*/
 	
 	var _active = false;
 	
-	if(ds_map_exists(obj_bind, _event)){
-		with(obj_bind[? _event]){
+	if(ds_map_exists(obj_event_obj_list_map, _event)){
+		with(obj_event_obj_list_map[? _event]){
 			var	_objName    = self,
-				_objModRef  = obj_create_ref[? _objName],
+				_objModRef  = obj_create_ref_map[? _objName],
 				_objModType = _objModRef[0],
 				_objModName = _objModRef[1],
 				_objModScrt = _objName + "_" + _event;
@@ -603,10 +603,10 @@
 								if(depth == _objDepth){
 									array_push(_objDepthList, self);
 								}
-								else if(!ds_map_exists(obj_bind_draw, depth - 1)){
+								else if(!ds_map_exists(obj_draw_depth_instance_map, depth - 1)){
 									with(script_bind_draw(obj_draw, depth - 1)){
-										obj_bind_draw[? depth] = self;
-										persistent             = true;
+										obj_draw_depth_instance_map[? depth] = self;
+										persistent = true;
 									}
 								}
 							}
@@ -742,7 +742,7 @@
 		Returns the line's ending position
 		
 		Args:
-			x/y    - The laser's starting position
+			x, y   - The laser's starting position
 			dir    - The laser's hitscan direction
 			disMax - How far the laser can travel, defaults to 1000
 			width  - The laser's width, defaults to 1
@@ -816,45 +816,46 @@
 	draw_set_color(_col);
 	draw_text_transformed(_x,     _y,     _string, 1, 1, _angle);
 	
-#define string_delete_nt(_string)
+#define string_split_nt(_string)
 	/*
-		Returns a given string with "draw_text_nt()" formatting removed
+		Returns an array of the given string split into 'draw_text_nt()' tags and normal text
 		
 		Ex:
-			string_delete_nt("@2(sprBanditIdle:0)@rBandit") == "  Bandit"
-			string_width(string_delete_nt("@rHey")) == 3
+			string_split_nt("Cool@rBandit@2(sprBanditIdle:-0.4)") == [["", "Cool"], ["r", "Bandit"], ["2(sprBanditIdle:-0.4)", ""]]
 	*/
 	
-	var	_split          = "@",
-		_stringSplit    = string_split(_string, _split),
-		_stringSplitMax = array_length(_stringSplit);
+	var	_splitCharacter        = "@",
+		_splitStringTagIsBlank = true,
+		_NTSplitStringList     = [];
 		
-	for(var i = 1; i < _stringSplitMax; i++){
-		if(_stringSplit[i - 1] != _split){
-			var	_current = _stringSplit[i],
-				_char    = string_upper(string_char_at(_current, 1));
+	with(string_split(_string, _splitCharacter)){
+		var	_splitString    = self,
+			_splitStringTag = "";
+			
+		if(_splitStringTagIsBlank){
+			_splitStringTagIsBlank = false;
+		}
+		else{
+			_splitStringTag = string_char_at(_splitString, 1);
+			switch(string_lower(_splitStringTag)){
 				
-			switch(_char){
-				
-				case "": // CANCEL : "@@rHey" -> "@rHey"
+				case "": // CANCEL
 					
-					if(i < _stringSplitMax - 1){
-						_current = _split;
-					}
+					_splitStringTagIsBlank = true;
 					
 					break;
 					
-				case "W":
-				case "S":
-				case "D":
-				case "R":
-				case "G":
-				case "B":
-				case "P":
-				case "Y":
-				case "Q": // BASIC : "@qHey" -> "Hey"
+				case "w":
+				case "s":
+				case "d":
+				case "r":
+				case "y":
+				case "g":
+				case "b":
+				case "p":
+				case "q": // BASIC
 					
-					_current = string_delete(_current, 1, 1);
+					_splitString = string_delete(_splitString, 1, 1);
 					
 					break;
 					
@@ -867,54 +868,95 @@
 				case "6":
 				case "7":
 				case "8":
-				case "9": // SPRITE OFFSET : "@2(sprBanditIdle:1)Hey" -> "  Hey"
+				case "9":
+				case "(": // ADVANCED
 					
-					if(string_char_at(_current, 2) == "("){
-						_current = string_delete(_current, 1, 1);
+					var	_splitStringTagStartPos = string_pos("(", _splitString),
+						_splitStringTagEndPos   = string_pos(")", _splitString);
 						
-						 // Offset if Drawing Sprite:
-						var _spr = string_split(string_copy(_current, 2, string_pos(")", _current) - 2), ":")[0];
-						if(
-							real(_spr) > 0
-							|| sprite_exists(asset_get_index(_spr))
-							|| _spr == "sprKeySmall"
-							|| _spr == "sprButSmall"
-							|| _spr == "sprButBig"
-						){
-							// draw_text_nt uses width of "A" instead of " ", so this is slightly off on certain fonts
-							if(string_width(" ") > 0){
-								_current = string_repeat(" ", real(_char) * (string_width("A") / string_width(" "))) + _current;
-							}
-						}
+					if(
+						_splitStringTagStartPos < _splitStringTagEndPos
+						&& (_splitStringTagStartPos == 1 || _splitStringTagStartPos == 2)
+					){
+						_splitStringTag = string_copy  (_splitString, 1, _splitStringTagEndPos);
+						_splitString    = string_delete(_splitString, 1, _splitStringTagEndPos);
 					}
-					
-					 // NONE : "@2Hey" -> "@2Hey"
 					else{
-						_current = _split + _current;
-						break;
+						_splitStringTag = "";
 					}
 					
-				case "(": // ADVANCED : "@(sprBanditIdle:1)Hey" -> "Hey"
+					break;
 					
-					var	_bgn = string_pos("(", _current),
-						_end = string_pos(")", _current);
-						
-					if(_bgn < _end){
-						_current = string_delete(_current, _bgn, 1 + _end - _bgn);
-						break;
-					}
+				default: // NONE
 					
-				default: // NONE : "@Hey" -> "@Hey"
-					
-					_current = _split + _current;
+					_splitStringTag = "";
 					
 			}
-			
-			_stringSplit[i] = _current;
+		}
+		
+		 // Add to List:
+		if(_splitStringTag == "" && !_splitStringTagIsBlank && array_length(_NTSplitStringList)){
+			_NTSplitStringList[array_length(_NTSplitStringList) - 1][@ 1] += _splitCharacter + _splitString;
+		}
+		else{
+			array_push(_NTSplitStringList, [_splitStringTag, _splitString]);
 		}
 	}
 	
-	return array_join(_stringSplit, "");
+	return _NTSplitStringList;
+	
+#define string_delete_nt(_string)
+	/*
+		Returns a string of the given string without 'draw_text_nt()' tags
+		
+		Ex:
+			string_delete_nt("@2(sprBanditIdle:0)@rBandit") == "  Bandit"
+			string_width(string_delete_nt("@rHey")) == 3
+	*/
+	
+	var _rawString = "";
+	
+	with(string_split_nt(_string)){
+		var	_tag          = self[0],
+			_tagCharacter = string_char_at(_tag, 1);
+			
+		 // Fill Alignment Tags:
+		switch(_tagCharacter){
+			
+			case "1":
+			case "2":
+			case "3":
+			case "4":
+			case "5":
+			case "6":
+			case "7":
+			case "8":
+			case "9":
+			
+				var _spr = string_split(string_copy(_tag, 2, string_pos(")", _tag) - 2), ":")[0];
+				
+				if(
+					real(_spr) > 0
+					|| sprite_exists(asset_get_index(_spr))
+					|| sprite_exists(asset_get_index("spr" + _spr))
+					|| _spr == "sprButSmall"
+					|| _spr == "sprButBig"
+				){
+					if(string_width(" ") != 0){
+						// draw_text_nt uses width of "A" instead of " ", so this is slightly off on certain fonts
+						_rawString += string_repeat(" ", real(_tagCharacter) * (string_width("A") / string_width(" ")));
+					}
+				}
+				
+				break;
+				
+		}
+		
+		 // Add to String:
+		_rawString += self[1];
+	}
+	
+	return _rawString;
 	
 #define string_space(_string)
 	/*
@@ -1029,7 +1071,7 @@
 		The tag is destroyed when no projectile, Burst, or Custom-type instances are linked to this creator and tagged team
 		
 		Args:
-			team      - The projectile team (If already tagged, the new tag will be linked to this team's tag)
+			team      - The projectile team (If already tagged, the new tag will be a child of this team's tag)
 			creator   - The projectile creator
 			scriptRef - A script reference, called with an array of newly created tagged projectiles as the 'argument0'
 			            Instances in the array are only guaranteed to have the variables "damage", "force", "team", "creator", and "hitid"
@@ -1046,7 +1088,7 @@
 	var	_team                 = argument[0],
 		_teamRaw              = round(_team),
 		_creator              = argument[1],
-		_scriptRef            = array_clone(argument[2]),
+		_scriptRef            = argument[2],
 		_frameTime            = ((argument_count > 3) ? argument[3] : 1),
 		_creatorTeamTagRefMap = GameCont.ntte_projectile_tag_map,
 		_creatorList          = _creatorTeamTagRefMap[0],
@@ -1073,19 +1115,13 @@
 	
 	 // Store Script Reference:
 	if(_tag != 0){
-		var	_refList      = _tagRefMap[1],
-			_frameEnd     = GameCont.ntte_projectile_tag_frame + _frameTime,
-			_lastTagIndex = array_find_index(_tagList, 1 / (_team - _teamRaw)),
-			_lastRefInfo  = ((_lastTagIndex < 0) ? undefined : _refList[_lastTagIndex]);
+		var	_refList        = _tagRefMap[1],
+			_frameEnd       = GameCont.ntte_projectile_tag_frame + _frameTime,
+			_parentTagIndex = array_find_index(_tagList, 1 / (_team - _teamRaw)),
+			_parentRefInfo  = ((_parentTagIndex < 0) ? undefined : _refList[_parentTagIndex]);
 			
 		_tagList = array_clone(_tagList);
 		_refList = array_clone(_refList);
-		
-		 // Save First Argument in Script Reference:
-		for(var i = array_length(_scriptRef); i >= 3; i--){
-			_scriptRef[i] = _scriptRef[i - 1];
-		}
-		_scriptRef[3] = [];
 		
 		 // Setup Maps:
 		if(_creatorIndex < 0){
@@ -1105,9 +1141,17 @@
 			_tagIndex--;
 		}
 		_tagList[_tagIndex] = _tag;
-		_refList[_tagIndex] = [_scriptRef, _frameEnd, _frameTime, _lastRefInfo, {}];
+		_refList[_tagIndex] = [_scriptRef, _frameEnd, _frameTime, _parentRefInfo, undefined, {}];
 		_tagRefMap[0]       = _tagList;
 		_tagRefMap[1]       = _refList;
+		
+		 // Add to Parent Tag's Child List:
+		if(!is_undefined(_parentRefInfo)){
+			if(is_undefined(_parentRefInfo[4])){
+				_parentRefInfo[4] = [];
+			}
+			array_push(_parentRefInfo[4], _refList[_tagIndex]);
+		}
 		
 		 // Bind Setup Script:
 		if(is_undefined(lq_get(ntte, "bind_setup_projectile_tag"))){
@@ -1122,7 +1166,8 @@
 #define projectile_tag_get_value // teamTag, creator, name, defValue=undefined
 	/*
 		Returns the value associated with the given name, creator, and tagged team
-		Returns 'undefined' or the given default value if no value exists
+		Returns 'undefined' or the given default value if no such value exists
+		Any parents of the tag will also be searched recursively for the value
 	*/
 	
 	var	_teamTag  = argument[0],
@@ -1149,7 +1194,15 @@
 					_tagIndex      = array_find_index(_tagList, 1 / (_teamTag - _teamRaw));
 					
 				if(_tagIndex >= 0){
-					return lq_defget(_tagRefMap[1][_tagIndex][4], _name, _defValue);
+					var _refInfo = _tagRefMap[1][_tagIndex];
+					while(!is_undefined(_refInfo)){
+						if(_name in _refInfo[5]){
+							return lq_get(_refInfo[5], _name);
+						}
+						
+						 // Parent Tag:
+						_refInfo = _refInfo[3];
+					}
 				}
 			}
 		}
@@ -1181,7 +1234,7 @@
 					_tagIndex      = array_find_index(_tagList, 1 / (_teamTag - _teamRaw));
 					
 				if(_tagIndex >= 0){
-					lq_set(_tagRefMap[1][_tagIndex][4], _name, _value);
+					lq_set(_tagRefMap[1][_tagIndex][5], _name, _value);
 				}
 			}
 		}
@@ -1214,12 +1267,12 @@
 						
 					if(array_length(_teamInst)){
 						var	_tagRefMap = _tagRefMapList[_teamIndex],
-							_tagIndex  = 0,
 							_tagList   = _tagRefMap[0],
 							_refList   = _tagRefMap[1];
 							
-						with(_tagList){
-							var	_tag     = self,
+						//with(_tagList){
+						for(var _tagIndex = array_length(_tagList) - 1; _tagIndex >= 0; _tagIndex--){
+							var	_tag     = _tagList[_tagIndex],
 								_tagInst = [];
 								
 							 // Gather Tagged Instances:
@@ -1243,45 +1296,55 @@
 								var	_refInfo  = _refList[_tagIndex],
 									_frameEnd = _trackFrame + _refInfo[2];
 									
-								while(true){
-									var _refIndex = array_find_index(_tagRefMap[0], _refInfo);
+								 // Reset Search Time:
+								if(_refInfo[1] != _frameEnd){
+									_refInfo[1] = _frameEnd;
 									
-									 // Reset Search Time:
-									if(_refIndex >= 0){
-										_refInfo[1] = _frameEnd;
+									 // Re-Sort Into List:
+									var	_newTagIndex = array_find_index(_tagRefMap[0], _tag),
+										_newTagList  = array_delete(_tagRefMap[0], _newTagIndex),
+										_newRefList  = array_delete(_tagRefMap[1], _newTagIndex);
 										
-										 // Re-Sort Into List:
-										var	_tagListNew = array_delete(_tagRefMap[0], _refIndex),
-											_refListNew = array_delete(_tagRefMap[1], _refIndex);
-											
-										_refIndex = array_length(_tagListNew);
-										while(_refIndex > 0 && _refListNew[_refIndex - 1][1] > _frameEnd){
-											_tagListNew[_refIndex] = _tagListNew[_refIndex - 1];
-											_refListNew[_refIndex] = _refListNew[_refIndex - 1];
-											_refIndex--;
-										}
-										_tagListNew[_refIndex] = _tag;
-										_refListNew[_refIndex] = _refInfo;
-										_tagRefMap[0]          = _tagListNew;
-										_tagRefMap[1]          = _refListNew;
+									_newTagIndex  = array_length(_newTagList);
+									
+									while(_newTagIndex > 0 && _newRefList[_newTagIndex - 1][1] > _frameEnd){
+										_newTagList[_newTagIndex] = _newTagList[_newTagIndex - 1];
+										_newRefList[_newTagIndex] = _newRefList[_newTagIndex - 1];
+										_newTagIndex--;
 									}
 									
-									 // Call Script:
-									var _refCall = _refInfo[0];
-									_refCall[@3] = _tagInst;
+									_newTagList[_newTagIndex] = _tag;
+									_newRefList[_newTagIndex] = _refInfo;
+									_tagRefMap[0]             = _newTagList;
+									_tagRefMap[1]             = _newRefList;
+								}
+								
+								 // Call Script(s):
+								while(true){
+									var	_refScriptRef = _refInfo[0],
+										_refCall      = [];
+										
+									 // Compile Script Reference:
+									array_copy(_refCall, 0, _refScriptRef, 0, 3);
+									array_push(_refCall, _tagInst);
+									array_copy(_refCall, 4, _refScriptRef, 3, array_length(_refScriptRef) - 3);
+									
+									 // Call Script Reference:
 									script_ref_call(_refCall);
 									
-									 // Previous Tag:
+									 // Parent Tag:
 									_refInfo = _refInfo[3];
 									if(is_undefined(_refInfo)){
 										break;
 									}
-									_tagInst  = instances_matching_ne(_tagInst, "id");
-									_frameEnd = max(_frameEnd, _trackFrame + _refInfo[2]);
+									_tagInst = instances_matching_ne(_tagInst, "id");
+								}
+								
+								 // Early Exit:
+								if(!array_length(_teamInst)){
+									break;
 								}
 							}
-							
-							_tagIndex++;
 						}
 					}
 					
@@ -1301,7 +1364,7 @@
 	
 #define enemy_hurt(_damage, _force, _direction)
 	my_health -= _damage;           // Damage
-	nexthurt = current_frame + 6;   // I-Frames
+	nexthurt   = current_frame + 6; // I-Frames
 	motion_add(_direction, _force); // Knockback
 	sound_play_hit(snd_hurt, 0.2);  // Sound
 	
@@ -1316,7 +1379,7 @@
 		!!! Don't use this for replacing chests with custom chests, put that in level_start or something
 		
 		Args:
-			x/y        - The position the chest will be created at
+			x, y       - The position the chest will be created at
 			obj        - The chest object to create
 			levelStart - Chest is being created at the start of the level, defaults to false
 			             Applies various level-start conditions such as Big Weapon Chests, Mimics, etc.
@@ -1680,10 +1743,10 @@
 		Creates a "pick" key prompt that targets the given instance
 		
 		Args:
-			target    - The instance that the prompt targets
-			text      - The prompt's text, defaults to a blank string
-			mask      - The prompt's hitbox, defaults to 'mskWepPickup'
-			xoff/yoff - The prompt's visual offset, defaults to 0,0
+			target     - The instance that the prompt targets
+			text       - The prompt's text, defaults to a blank string
+			mask       - The prompt's hitbox, defaults to 'mskWepPickup'
+			xoff, yoff - The prompt's visual offset, defaults to 0
 	*/
 	
 	with(argument[0]){
@@ -1851,7 +1914,7 @@
 		Automatically reorients the effect towards its new direction
 		
 		Args:
-			x/y    - Spawn position, can be a 2-element array for [position, randomized offset]
+			x, y   - Spawn position, can be a 2-element array for [position, randomized offset]
 			motion - Can be a speed to apply toward a random direction, or a 2-element array to apply a [direction, speed]
 			object - The effect's object index, or an NT:TE object name
 			
@@ -1921,161 +1984,6 @@
 	}
 	
 	return noone;
-	
-#define player_swap(_player)
-	/*
-		Cycles the given player's weapon slots
-	*/
-	
-	with(["%wep", "%curse", "%reload", "%wkick", "%wepflip", "%wepangle", "%can_shoot", "%clicked", "%interfacepop", "drawempty%"]){
-		var	_name = [string_replace(self, "%", ""), string_replace(self, "%", "b")],
-			_temp = variable_instance_get(_player, _name[0], 0);
-			
-		variable_instance_set(_player, _name[0], variable_instance_get(_player, _name[1], 0));
-		variable_instance_set(_player, _name[1], _temp);
-	}
-	
-#define portal_poof()
-	/*
-		Get rid of normal portals, but make it look cool
-	*/
-	
-	if(instance_exists(Portal)){
-		var _inst = instances_matching(instances_matching(instances_matching(instances_matching(Portal, "object_index", Portal), "type", 1, 3), "endgame", 100), "image_alpha", 1);
-		if(array_length(_inst)) with(_inst){
-			if(!place_meeting(x, y, Player)){
-				//sound_stop(sndPortalClose);
-				sound_stop(sndPortalLoop);
-				
-				 // Guardian:
-				if(
-					visible
-					&& type == 1
-					&& endgame >= 100
-					&& !position_meeting(x, y, PortalShock)
-					&& point_seen_ext(x, y, -8, -8, -1)
-					&& chance(1, 2)
-				){
-					with(obj_create(x, y, "PortalGuardian")){
-						x = xstart;
-						y = ystart;
-						sprite_index = spr_appear;
-						right = other.image_xscale;
-						portal = true;
-					}
-					sound_play_at(
-						x,
-						y,
-						asset_get_index(`sndPortalFlyby${irandom_range(1, 4)}`),
-						2 + orandom(0.1),
-						3
-					);
-				}
-				
-				 // Normal:
-				else with(call(scr.obj_create, x, y, "PortalPoof")){
-					sprite_index = [mskNone, sprPortalDisappear, sprProtoPortalDisappear, sprPopoPortalDisappear][other.type];
-					image_xscale = other.image_xscale;
-					image_yscale = other.image_yscale;
-					image_angle  = other.image_angle;
-					image_blend  = other.image_blend;
-					image_alpha  = other.image_alpha;
-					depth        = other.depth;
-				}
-				
-				 // Rescue Players:
-				if(timer > 30){
-					with(instances_matching(instances_matching_ne(Player, "angle", 0), "roll", 0)){
-						if(point_distance(x, y, other.x, other.y) < 48){
-							if(!collision_line(x, y, other.x, other.y, Wall, false, false)){
-								if(skill_get(mut_throne_butt) > 0){
-									angle = 0;
-								}
-								else{
-									roll = true;
-								}
-							}
-						}
-					}
-				}
-				
-				instance_destroy();
-			}
-		}
-	}
-	
-	 // Prevent Corpse Portal:
-	if(instance_exists(Corpse)){
-		var _inst = instances_matching_gt(Corpse, "alarm0", 0);
-		if(array_length(_inst)) with(_inst){
-			alarm0 = -1;
-		}
-	}
-
-#define portal_pickups()
-	/*
-		Activates manual portal pickup attraction
-	*/
-	
-	with(global.portal_pickups_bind.id){
-		visible = true;
-		return self;
-	}
-	
-#define portal_pickups_step
-	if(visible){
-		visible = false;
-		
-		 // Attract Pickups:
-		if(instance_exists(Pickup) && !instance_exists(Portal) && instance_exists(Player)){
-			var _pluto = skill_get(mut_plutonium_hunger);
-			
-			 // Normal Pickups:
-			if(instance_exists(AmmoPickup) || instance_exists(HPPickup) || instance_exists(RoguePickup)){
-				var _attractDis = 30 + (40 * _pluto);
-				with(instances_matching_ne([AmmoPickup, HPPickup, RoguePickup], "id")){
-					var _p = instance_nearest(x, y, Player);
-					if(instance_exists(_p) && point_distance(x, y, _p.x, _p.y) >= _attractDis){
-						var	_dis = 6 * current_time_scale,
-							_dir = point_direction(x, y, _p.x, _p.y),
-							_x = x + lengthdir_x(_dis, _dir),
-							_y = y + lengthdir_y(_dis, _dir);
-							
-						if(place_free(_x, y)) x = _x;
-						if(place_free(x, _y)) y = _y;
-					}
-				}
-			}
-			
-			 // Rads:
-			if(instance_exists(Rad) || instance_exists(BigRad)){
-				var	_attractDis      = 80 + (60 * _pluto),
-					_attractDisProto = 170;
-					
-				with(instances_matching([Rad, BigRad], "speed", 0)){
-					var _proto = instance_nearest(x, y, ProtoStatue);
-					if(
-						!instance_exists(_proto)
-						|| distance_to_object(_proto) >= _attractDisProto
-						|| collision_line(x, y, _proto.x, _proto.y, Wall, false, false)
-					){
-						if(distance_to_object(Player) >= _attractDis){
-							var _p = instance_nearest(x, y, Player);
-							if(instance_exists(_p)){
-								var	_dis = 12 * current_time_scale,
-									_dir = point_direction(x, y, _p.x, _p.y),
-									_x   = x + lengthdir_x(_dis, _dir),
-									_y   = y + lengthdir_y(_dis, _dir);
-									
-								if(place_free(_x, y)) x = _x;
-								if(place_free(x, _y)) y = _y;
-							}
-						}
-					}
-				}
-			}
-		}
-	}
 	
 #define array_count(_array, _value)
 	/*
@@ -2153,7 +2061,7 @@
 	
 #define pool(_pool)
 	/*
-		Accepts a LWO or array of value:weight pairs, and returns one of the values based on random chance
+		Accepts a LWO or array of value:weight pairs and returns one of the values based on random chance
 		
 		Ex:
 			pool({
@@ -2195,7 +2103,7 @@
 		}
 	}
 	
-	return null;
+	return undefined;
 	
 #define array_delete // array, index, count=1
 	/*
@@ -2419,8 +2327,8 @@
 		Much better performance than checking 'point_in_rectangle()' on every instance
 		
 		Args:
-			x1/y1/x2/y2 - The rectangular area to search
-			obj         - The object(s) to search
+			x1, y1, x2, y2 - The rectangular area to search
+			obj            - The object(s) or instance(s) to search
 	*/
 	
 	return (
@@ -2441,8 +2349,8 @@
 		Much better performance than checking 'collision_rectangle()' on every instance
 		
 		Args:
-			x1/y1/x2/y2 - The rectangular area to search
-			obj         - The object(s) to search
+			x1, y1, x2, y2 - The rectangular area to search
+			obj            - The object(s) or instance(s) to search
 	*/
 	
 	return (
@@ -2463,8 +2371,8 @@
 		Much better performance than checking 'position_meeting()' on every instance
 		
 		Args:
-			x/y - The position to search
-			obj - The object(s) to search
+			x, y - The position to search
+			obj  - The object(s) or instance(s) to search
 	*/
 	
 	return (
@@ -2486,7 +2394,7 @@
 		
 		Args:
 			inst - The instance whose bounding box will be searched, and will be excluded from the returned array
-			obj  - The object(s) to search
+			obj  - The object(s) or instance(s) to search
 	*/
 	
 	return (
@@ -2509,9 +2417,9 @@
 		Much better performance than manually checking 'point_seen()' or 'point_seen_ext()' on every instance
 		
 		Args:
-			obj   - The object(s) to search
-			bx/by - X/Y border offsets like 'point_seen_ext()', defaults to 0,0
-			index - The index of the player's screen, leave undefined to search the overall bounding area of every player's screen
+			obj    - The object(s) or instance(s) to search
+			bx, by - X/Y border offsets like 'point_seen_ext()', defaults to 0,0
+			index  - The index of the player's screen, leave undefined to search the overall bounding area of every player's screen
 	*/
 	
 	var	_obj   = argument[0],
@@ -2571,8 +2479,8 @@
 		!!! Beware of DESYNCS
 		
 		Args:
-			obj   - The object(s) to search
-			bx/by - X/Y border offsets like 'point_seen_ext()', defaults to 0,0
+			obj    - The object(s) or instance(s) to search
+			bx, by - X/Y border offsets like 'point_seen_ext()', defaults to 0,0
 	*/
 	
 	var	_obj = argument[0],
@@ -2952,13 +2860,13 @@
 		Returns the ID of the GenCont used to create the area, or null if the area couldn't be generated
 		
 		Args:
-			area/subarea/loops - Area to generate
-			x/y                - Spawn position
-			setArea            - Set the current area to the generated area
-			                       True  : Sets the area, background_color, BackCont vars, TopCont vars, and calls .mod level_start scripts
-			                       False : Maintains the current area and deletes new IDPD spawns
-			overlapFloor       - Number 0 to 1, determines the percent of current level floors that can be overlapped
-			scrSetup           - Script reference, called right before floor generation
+			area, subarea, loops - Area to generate
+			x, y                 - Spawn position
+			setArea              - Set the current area to the generated area
+			                         True  : Sets the area, background_color, BackCont vars, TopCont vars, and calls .mod level_start scripts
+			                         False : Maintains the current area and deletes new IDPD spawns
+			overlapFloor         - Number 0 to 1, determines the percent of current level floors that can be overlapped
+			scrSetup             - Script reference, called right before floor generation
 			
 		Ex:
 			var _genID = area_generate(area_scrapyards, 3, GameCont.loops, x, y, false, 0, null);
@@ -3484,24 +3392,30 @@
 	
 	 // Store Sprites:
 	if(!mod_variable_exists("mod", mod_current, "area_sprite_map")){
-		var _map = ds_map_create();
-		_map[? 0  ] = [sprFloor0,   sprFloor0,    sprFloor0Explo,   sprWall0Trans,   sprWall0Bot,   sprWall0Out,   sprWall0Top,   sprDebris0,   sprDetail0,   sprNightBones,      sprNightDesertTopDecal];
-		_map[? 1  ] = [sprFloor1,   sprFloor1B,   sprFloor1Explo,   sprWall1Trans,   sprWall1Bot,   sprWall1Out,   sprWall1Top,   sprDebris1,   sprDetail1,   sprBones,           sprDesertTopDecal     ];
-		_map[? 2  ] = [sprFloor2,   sprFloor2B,   sprFloor2Explo,   sprWall2Trans,   sprWall2Bot,   sprWall2Out,   sprWall2Top,   sprDebris2,   sprDetail2,   sprSewerDecal,      sprTopDecalSewers     ];
-		_map[? 3  ] = [sprFloor3,   sprFloor3B,   sprFloor3Explo,   sprWall3Trans,   sprWall3Bot,   sprWall3Out,   sprWall3Top,   sprDebris3,   sprDetail3,   sprScrapDecal,      sprTopDecalScrapyard  ];
-		_map[? 4  ] = [sprFloor4,   sprFloor4B,   sprFloor4Explo,   sprWall4Trans,   sprWall4Bot,   sprWall4Out,   sprWall4Top,   sprDebris4,   sprDetail4,   sprCaveDecal,       sprTopDecalCave       ];
-		_map[? 5  ] = [sprFloor5,   sprFloor5B,   sprFloor5Explo,   sprWall5Trans,   sprWall5Bot,   sprWall5Out,   sprWall5Top,   sprDebris5,   sprDetail5,   sprIceDecal,        sprTopDecalCity       ];
-		_map[? 6  ] = [sprFloor6,   sprFloor6B,   sprFloor6Explo,   sprWall6Trans,   sprWall6Bot,   sprWall6Out,   sprWall6Top,   sprDebris6,   sprDetail6,   -1,                 -1                    ];
-		_map[? 7  ] = [sprFloor7,   sprFloor7B,   sprFloor7Explo,   sprWall7Trans,   sprWall7Bot,   sprWall7Out,   sprWall7Top,   sprDebris7,   -1,           -1,                 sprPalaceTopDecal     ];
-		_map[? 100] = [sprFloor100, sprFloor100B, sprFloor100Explo, sprWall100Trans, sprWall100Bot, sprWall100Out, sprWall100Top, sprDebris100, -1,           -1,                 -1                    ];
-		_map[? 101] = [sprFloor101, sprFloor101B, sprFloor101Explo, sprWall101Trans, sprWall101Bot, sprWall101Out, sprWall101Top, sprDebris101, sprDetail101, sprCoral,           -1                    ];
-		_map[? 102] = [sprFloor102, sprFloor102B, sprFloor102Explo, sprWall102Trans, sprWall102Bot, sprWall102Out, sprWall102Top, sprDebris102, sprDetail102, sprPizzaSewerDecal, sprTopDecalPizzaSewers];
-		_map[? 103] = [sprFloor103, sprFloor103B, sprFloor103Explo, sprWall103Trans, sprWall103Bot, sprWall103Out, sprWall103Top, sprDebris103, -1,           -1,                 -1                    ];
-		_map[? 104] = [sprFloor104, sprFloor104B, sprFloor104Explo, sprWall104Trans, sprWall104Bot, sprWall104Out, sprWall104Top, sprDebris104, sprDetail104, sprInvCaveDecal,    sprTopDecalInvCave    ];
-		_map[? 105] = [sprFloor105, sprFloor105B, sprFloor105Explo, sprWall105Trans, sprWall105Bot, sprWall105Out, sprWall105Top, sprDebris105, -1,           sprJungleDecal,     sprTopDecalJungle     ];
-		_map[? 106] = [sprFloor106, sprFloor106B, sprFloor106Explo, sprWall106Trans, sprWall106Bot, sprWall106Out, sprWall106Top, sprDebris106, -1,           -1,                 sprTopPot             ];
-		_map[? 107] = [sprFloor107, sprFloor107B, sprFloor107Explo, sprWall107Trans, sprWall107Bot, sprWall107Out, sprWall107Top, sprDebris107, -1,           -1,                 -1                    ];
-		global.area_sprite_map = _map;
+		var	_sprBonesList = [sprNightBones,          sprBones,          sprSewerDecal,     sprScrapDecal,        sprCaveDecal,    sprIceDecal,     -1, -1,                -1, sprCoral, sprPizzaSewerDecal,     -1, sprInvCaveDecal,    sprJungleDecal,    -1,        -1],
+			_sprDecalList = [sprNightDesertTopDecal, sprDesertTopDecal, sprTopDecalSewers, sprTopDecalScrapyard, sprTopDecalCave, sprTopDecalCity, -1, sprPalaceTopDecal, -1, -1,       sprTopDecalPizzaSewers, -1, sprTopDecalInvCave, sprTopDecalJungle, sprTopPot, -1];
+			
+		global.area_sprite_map = ds_map_create();
+		
+		with([0, 1, 2, 3, 4, 5, 6, 7, 100, 101, 102, 103, 104, 105, 106, 107]){
+			var	_areaText = string(self),
+				_mapNum   = ds_map_size(global.area_sprite_map),
+				_sprList  = [];
+				
+			with(["sprFloor%", "sprFloor%B", "sprFloor%Explo", "sprWall%Trans", "sprWall%Bot", "sprWall%Out", "sprWall%Top", "sprDebris%", "sprDetail%"]){
+				var _spr = asset_get_index(string_replace(self, "%", _areaText));
+				array_push(_sprList,
+					(self == "sprFloor%B" && !sprite_exists(_spr))
+					? asset_get_index(string_replace(self, "%B", _areaText))
+					: _spr
+				);
+			}
+			
+			array_push(_sprList, _sprBonesList[_mapNum]);
+			array_push(_sprList, _sprDecalList[_mapNum]);
+			
+			global.area_sprite_map[? self] = _sprList;
+		}
 	}
 	
 	 // Convert to Desert Sprite:
@@ -3698,7 +3612,7 @@
 		
 		Args:
 			inst - The instance to copy the hitbox from
-			x/y  - The position to create the PortalClear, defaults to the instance's position
+			x, y - The position to create the PortalClear, defaults to the instance's position
 	*/
 	
 	with(argument[0]){
@@ -3871,181 +3785,28 @@
 	
 	return _free;
 	
-#define lightning_connect // x1, y1, x2, y2, arc, enemy=false, inst=self
-	/*
-		Creates a lightning arc between the two given points
-		Automatically sets team, creator, and hitid based on the calling instance
-		
-		Args:
-			x1/y1 - The starting position
-			x2/y2 - The ending position
-			arc   - How far the lightning can offset from its main travel line
-			enemy - If it's an enemy lightning arc, defaults to false
-			inst  - The creator of the lightning, defaults to self
-			
-		Ex:
-			lightning_connect(x, y, mouse_x, mouse_y, 8 * sin(wave / 60), false, self)
-	*/
-	
-	var	_x1      = argument[0],
-		_y1      = argument[1],
-		_x2      = argument[2],
-		_y2      = argument[3],
-		_arc     = argument[4],
-		_enemy   = ((argument_count > 5) ? argument[5] : false),
-		_inst    = ((argument_count > 6) ? argument[6] : self),
-		_disMax  = point_distance(_x1, _y1, _x2, _y2),
-		_disAdd  = min(_disMax / 8, 10) + ((_enemy && array_find_index(obj.Eel, _inst) >= 0) ? max(0, array_length(instances_matching_ge(obj.Eel, "arcing", 1)) - 1) : 0),
-		_dis     = _disMax,
-		_dir     = point_direction(_x1, _y1, _x2, _y2),
-		_x       = _x1,
-		_y       = _y1,
-		_lx      = _x,
-		_ly      = _y,
-		_wx      = _x,
-		_wy      = _y,
-		_ox      = lengthdir_x(_disAdd, _dir),
-		_oy      = lengthdir_y(_disAdd, _dir),
-		_obj     = (_enemy ? EnemyLightning : Lightning),
-		_proj    = [],
-		_creator = (("creator" in _inst && !instance_is(_inst, hitme)) ? _inst.creator : _inst),
-		_hitid   = (("hitid" in _inst) ? _inst.hitid : -1),
-		_team    = (("team"  in _inst) ? _inst.team  : -1),
-		_imgInd  = -1,
-		_wave    = 0,
-		_off     = 0;
-		
-	while(_dis > _disAdd){
-		_dis -= _disAdd;
-		
-		_x += _ox;
-		_y += _oy;
-		
-		 // Wavy Offset:
-		if(_dis > _disAdd){
-			_wave = (_dis / _disMax) * pi;
-			_off  = (_arc / 6) * sin((_dis / 8) + (current_frame / 6));
-			_wx   = _x + lengthdir_x(_off, _dir - 90) + (_arc * sin(_wave));
-			_wy   = _y + lengthdir_y(_off, _dir - 90) + (_arc * sin(_wave / 2));
-		}
-		
-		 // End:
-		else{
-			_wx = _x2;
-			_wy = _y2;
-		}
-		
-		 // Lightning:
-		with(instance_create(_wx, _wy, _obj)){
-			ammo         = ceil(_dis / _disAdd);
-			image_xscale = -point_distance(_lx, _ly, x, y) / 2;
-			image_angle  = point_direction(_lx, _ly, x, y);
-			direction    = image_angle;
-			creator      = _creator;
-			hitid        = _hitid;
-			team         = _team;
-			
-			 // Exists 1 Frame:
-			if(_imgInd < 0){
-				_imgInd = ((current_frame * image_speed) + (instance_exists(creator) ? (creator.xstart + creator.ystart) : 0)) % image_number;
-			}
-			image_index     = _imgInd;
-			image_speed_raw = image_number;
-			
-			array_push(_proj, self);
-		}
-		
-		_lx = _wx;
-		_ly = _wy;
-	}
-	
-	 // FX:
-	if(chance_ct(array_length(_proj), 200)){
-		with(_proj[irandom(array_length(_proj) - 1)]){
-			with(instance_create(x + orandom(8), y + orandom(8), PortalL)){
-				motion_add(random(360), 1);
-			}
-			if(_enemy){
-				sound_play_hit(sndLightningReload, 0.5);
-			}
-			else{
-				sound_play_pitchvol(sndLightningReload, 1.25 + random(0.5), 0.5);
-			}
-		}
-	}
-	
-	return _proj;
-	
-#define lightning_disappear(_inst)
-	/*
-		Hides or destroys the given lightning instance(s), and replaces them with a BoltTrail disappearing visual
-		Returns the BoltTrail instance(s)
-	*/
-	
-	var _instTrail = [];
-	
-	with(_inst){
-		with(instance_create(x, y, object_index)){
-			other.image_speed = image_speed;
-			instance_delete(self);
-		}
-		with(instance_create(x, y, BoltTrail)){
-			sprite_index = other.sprite_index;
-			image_index  = other.image_index;
-			image_speed  = other.image_speed;
-			image_xscale = other.image_xscale;
-			image_yscale = other.image_yscale * power(0.4 / other.image_speed, 4/3);
-			image_angle  = other.image_angle;
-			image_blend  = other.image_blend;
-			image_alpha  = other.image_alpha;
-			depth        = other.depth;
-			
-			 // Dissipate Enemy Lightning Faster:
-			if(instance_is(other, EnemyLightning)){
-				image_yscale -= random(0.4);
-			}
-			
-			array_push(_instTrail, self);
-		}
-		
-		 // Hide / Destroy Lightning:
-		if(instance_is(self, EnemyLightning)){
-			instance_delete(self);
-		}
-		else{
-			image_index = 0;
-			image_alpha = 0;
-		}
-	}
-	
-	return (
-		array_length(_instTrail)
-		? ((array_length(_instTrail) > 1) ? _instTrail : _instTrail[0])
-		: noone
-	);
-	
 #define wep_raw(_wep)
 	/*
 		For use with LWO weapons
-		Call a weapon's "weapon_raw" script in case of wrapper weapons
+		Calls a weapon's "weapon_raw" script in case of wrapper weapons
 		
 		Ex:
 			wep_raw({ wep:{ wep:{ wep:123 }}}) == 123
 	*/
 	
-	var _raw = _wep;
+	var _rawWep = _wep;
 	
 	 // Find Base Weapon:
-	while(is_object(_raw)){
-		_raw = (("wep" in _raw) ? _raw.wep : wep_none);
+	while(is_object(_rawWep)){
+		_rawWep = (("wep" in _rawWep) ? _rawWep.wep : wep_none);
 	}
 	
 	 // Wrapper:
-	if(is_string(_raw) && mod_script_exists("weapon", _raw, "weapon_raw")){
-		_raw = mod_script_call("weapon", _raw, "weapon_raw", _wep);
+	if(is_string(_rawWep) && mod_script_exists("weapon", _rawWep, "weapon_raw")){
+		_rawWep = mod_script_call("weapon", _rawWep, "weapon_raw", _wep);
 	}
 	
-	return _raw;
+	return _rawWep;
 	
 #define wep_wrap(_wep, _scrName, _scrRef)
 	/*
@@ -4055,7 +3816,7 @@
 			wep     - The weapon to modify
 			scrName - The name of the script to modify
 			scrAdd  - A script reference to call after the given script, which can return a custom value for the weapon
-			          The script is called with the original script's arguments and then the current return value
+			          The script is called with the original script's arguments and then the latest return value
 			
 		Ex:
 			wep = wep_wrap(wep, "weapon_sprt", script_ref_create(coolspr));
@@ -4088,8 +3849,7 @@
 		
 		 // Transfer Wrapper Storage:
 		if("tewrapper" in _wep){
-			_wep.tewrapper.lwo = _wrap.lwo;
-			_wrap              = _wep.tewrapper;
+			_wrap = _wep.tewrapper;
 		}
 	}
 	else _wep = {};
@@ -4132,14 +3892,15 @@
 					"weapon_name",      script_ref_create(wep_skin_name,             _race, _skin)),
 					"projectile_setup", script_ref_create(wep_skin_projectile_setup, _race, _skin)
 				);
-				with([
-					["weapon_sprt_hud", "skin_weapon_sprite_hud"],
-					["weapon_swap",     "skin_weapon_swap"]
-				]){
-					var _ref = script_ref_create_ext("skin", _skin, self[1]);
-					if(mod_script_exists(_ref[0], _ref[1], _ref[2])){
-						_wep = wep_wrap(_wep, self[0], _ref);
-					}
+				
+				 // HUD Sprite:
+				var _ref = script_ref_create_ext("skin", _skin, "skin_weapon_sprite_hud");
+				_wep = wep_wrap(_wep, "weapon_sprt_hud", (mod_script_exists(_ref[0], _ref[1], _ref[2]) ? _ref : _refSprt));
+				
+				 // Swap Sound:
+				var _ref = script_ref_create_ext("skin", _skin, "skin_weapon_swap");
+				if(mod_script_exists(_ref[0], _ref[1], _ref[2])){
+					_wep = wep_wrap(_wep, "weapon_swap", _ref);
 				}
 			}
 		}
@@ -4294,45 +4055,117 @@
 	
 	return _wepDecide;
 	
-#define weapon_get(_name, _wep)
+#define weapon_get(_eventName, _wep)
 	/*
-		Calls the given script from a weapon mod and fetches its return value
+		Calls the given event of the given weapon and returns its returned value
+		If the given event is "fire", the return value is the instance used to fire the given weapon
+		
+		Ex:
+			weapon_get("chrg", "trident") == true
 	*/
 	
-	var _raw = _wep;
+	var _baseWep = _wep;
 	
 	 // Find Base Weapon:
-	while(is_object(_raw) && "wep" in _raw){
-		_raw = _raw.wep;
+	while(is_object(_baseWep) && "wep" in _baseWep){
+		_baseWep = _baseWep.wep;
 	}
 	
 	 // Call Script:
-	if(is_string(_raw)){
-		var _scrt = "weapon_" + _name;
-		if(mod_script_exists("weapon", _raw, _scrt)){
+	if(is_string(_baseWep)){
+		var _scriptName = "weapon_" + _eventName;
+		if(mod_script_exists("weapon", _baseWep, _scriptName)){
+			var _call = [0];
+			if(fork()){
+				_call[0] = (
+					(is_real(self) && instance_exists(self))
+					? (
+						(is_real(other) && instance_exists(other))
+						? mod_script_call("weapon", _baseWep, _scriptName, _wep)
+						: mod_script_call_self("weapon", _baseWep, _scriptName, _wep)
+					)
+					: mod_script_call_nc("weapon", _baseWep, _scriptName, _wep)
+				);
+				exit;
+			}
 			return (
-				(is_real(self) && instance_exists(self))
-				? (
-					(is_real(other) && instance_exists(other))
-					? mod_script_call("weapon", _raw, _scrt, _wep)
-					: mod_script_call_self("weapon", _raw, _scrt, _wep)
-				)
-				: mod_script_call_nc("weapon", _raw, _scrt, _wep)
+				(_eventName == "fire")
+				? self
+				: _call[0]
 			);
 		}
 	}
 	
 	 // Default:
-	switch(_name){
+	switch(_eventName){
 		
 		case "avail":
 		case "burst":
-			
+		
 			return 1;
 			
-		case "loadout":
+		case "fire":
+		
+			var	_minID        = instance_max,
+				_lastLoad     = reload,
+				_lastRads     = GameCont.rad,
+				_lastCanShoot = can_shoot,
+				_fireInst     = self;
+				
+			 // Fire:
+			if(instance_is(self, Player)){
+				var	_lastAmmo = array_clone(ammo),
+					_lastDraw = drawempty,
+					_lastWep  = wep;
+					
+				wep = _wep;
+				player_fire();
+				
+				 // Revert Values:
+				array_copy(ammo, 0, _lastAmmo, 0, array_length(_lastAmmo));
+				drawempty = _lastDraw;
+				wep       = _lastWep;
+			}
+			else _fireInst = player_fire_ext(
+				gunangle,
+				_wep,
+				x,
+				y,
+				team,
+				(("creator" in self) ? creator : self),
+				accuracy
+			);
 			
-			switch(_raw){
+			 // Revert Values:
+			reload       = _lastLoad;
+			GameCont.rad = _lastRads;
+			can_shoot    = _lastCanShoot;
+			
+			 // Delete Effects:
+			if(instance_exists(LaserBrain) || instance_exists(SteroidsTB)){
+				for(var _id = instance_max - 1; _id >= _minID; _id--){
+					if("object_index" in _id){
+						switch(_id.object_index){
+							case LaserBrain:
+								instance_delete(_id);
+								break;
+								
+							case SteroidsTB:
+								if(instance_is(_id + 1, PopupText)){
+									instance_delete(_id + 1);
+								}
+								instance_delete(_id);
+								break;
+						}
+					}
+				}
+			}
+			
+			return _fireInst;
+			
+		case "loadout":
+		
+			switch(_baseWep){
 				case wep_revolver                : return sprRevolverLoadout;
 				case wep_golden_revolver         : return sprGoldRevolverLoadout;
 				case wep_chicken_sword           : return sprChickenSwordLoadout;
@@ -4358,7 +4191,7 @@
 			break;
 			
 		case "raw":
-			
+		
 			return (is_object(_wep) ? wep_none : _wep);
 			
 	}
@@ -4458,7 +4291,7 @@
 			 // Hold to Charge:
 			if(_auto || _fire.wep.chrg_num >= _fire.wep.chrg_max){
 				 // Manual Reload:
-				other.reload += _load - weapon_get_load(_fire.wep);
+				other.reload = min(other.reload, _load);
 				
 				 // Charge Controller:
 				with(other){
@@ -4610,71 +4443,729 @@
 	
 	 // Draw Ammo:
 	if(
-		instance_is(self, Player)
+		is_object(_wep)
+		&& instance_is(self, Player)
 		&& (instance_is(other, TopCont) || instance_is(other, UberCont))
-		&& is_object(_wep)
+		&& player_get_show_hud_local_nonsync(index)
 	){
-		var	_ammo    = lq_defget(_wep, "ammo", 0),
+		var	_x       = view_xview_nonsync + ((bwep == _wep) ? 86 : 42),
+			_y       = view_yview_nonsync + 21,
+			_ammo    = lq_defget(_wep, "ammo", 0),
 			_ammoMax = lq_defget(_wep, "amax", _ammo),
-			_ammoMin = lq_defget(_wep, "amin", round(_ammoMax * 0.2));
+			_ammoMin = lq_defget(_wep, "amin", round(_ammoMax * 0.2)),
+			_color   = (
+				is_real(_ammo)
+				? (
+					(_ammo > 0)
+					? (
+						(bwep != _wep || race == "steroids")
+						? (
+							(_ammo > _ammoMin)
+							? c_white
+							: c_red
+						)
+						: (
+							(_ammo > _ammoMin)
+							? c_ltgray
+							: c_gray
+						)
+					)
+					: c_dkgray
+				)
+				: c_white
+			);
 			
-		draw_ammo(index, (bwep != _wep), (race == "steroids"), _ammo, _ammoMin);
+		 // Co-op Offset:
+		var _active = 0;
+		for(var i = 0; i < maxp; i++){
+			_active += player_is_active(i);
+		}
+		if(_active > 1){
+			_x -= 19;
+		}
+		
+		 // !!!
+		var	_lastH = draw_get_halign(),
+			_lastV = draw_get_valign();
+			
+		draw_set_halign(fa_left);
+		draw_set_valign(fa_top);
+		draw_set_projection(2, index);
+		draw_text_nt(_x, _y, `@(color:${_color})` + string(_ammo));
+		draw_reset_projection();
+		draw_set_halign(_lastH);
+		draw_set_valign(_lastV);
 	}
 	
 	 // Default Sprite:
 	return weapon_get_sprt(_wep);
 	
-#define draw_ammo(_index, _primary, _steroids, _ammo, _ammoMin)
+#define player_weapon_reloaded(_primary)
 	/*
-		Draws ammo HUD text
-		
-		Args:
-			index    - The player to draw HUD for
-			primary  - Is a primary weapon, true/false
-			steroids - Player can dual wield, true/false
-			ammo     - Ammo, can be a string or number
-			ammoMin  - Low ammo threshold
+		Called from a Player instance to run the "reloaded" event for their given slot's weapon
 	*/
 	
-	var _local = player_find_local_nonsync();
+	var	_wep     = (_primary ? wep : bwep),
+		_baseWep = _wep;
+		
+	 // Find Base Weapon:
+	while(is_string(_baseWep) && "wep" in _baseWep){
+		_baseWep = _baseWep.wep;
+	}
 	
-	if(player_is_active(_local) && player_get_show_hud(_index, _local)){
-		if(!instance_exists(menubutton) || _index == _local){
-			var	_x = view_xview_nonsync + (_primary ? 42 : 86),
-				_y = view_yview_nonsync + 21;
-				
-			 // Co-op Offset:
-			var _active = 0;
-			for(var i = 0; i < maxp; i++){
-				_active += player_is_active(i);
-			}
-			if(_active > 1){
-				_x -= 19;
-			}
-			
-			 // Color:
-			var _text = "";
-			if(is_real(_ammo)){
-				_text += "@";
-				if(_ammo > 0){
-					if(_primary || _steroids){
-						if(_ammo > _ammoMin){
-							_text += "w";
-						}
-						else _text += "r";
-					}
-					else _text += "s";
+	 // Call Script:
+	if(is_string(_baseWep) && mod_script_exists("weapon", _baseWep, "weapon_reloaded")){
+		if(fork()){
+			if(is_real(self) && instance_exists(self)){
+				if(is_real(other) && instance_exists(other)){
+					mod_script_call("weapon", _baseWep, "weapon_reloaded", _wep);
 				}
-				else _text += "d";
+				else{
+					mod_script_call_self("weapon", _baseWep, "weapon_reloaded", _wep);
+				}
 			}
-			_text += string(_ammo);
+			else{
+				mod_script_call_nc("weapon", _baseWep, "weapon_reloaded", _wep);
+			}
+			exit;
+		}
+	}
+	
+	 // Default:
+	else{
+		var _rawWep = (is_string(_baseWep) ? wep_raw(_wep) : _baseWep);
+		
+		 // Melee:
+		if(weapon_is_melee(_wep)){
+			sound_play(sndMeleeFlip);
+		}
+		
+		 // Shell / Bolt:
+		switch(weapon_get_type(_wep)){
 			
-			 // !!!
-			draw_set_halign(fa_left);
-			draw_set_valign(fa_top);
-			draw_set_projection(2, _index);
-			draw_text_nt(_x, _y, _text);
-			draw_reset_projection();
+			case type_shell:
+			
+				sound_play(sndShotReload);
+				
+				 // Casings:
+				var _num = weapon_get_cost(_wep) * (_primary ? interfacepop : binterfacepop);
+				if(_num > 0) repeat(_num){
+					with(instance_create(x, y, Shell)){
+						sprite_index = (
+							(skill_get(mut_shotgun_shoulders) > 0)
+							? sprShotShellBig
+							: sprShotShell
+						);
+						motion_add(
+							other.gunangle + (other.right * 100) + random_range(-20, 20),
+							random_range(2, 4)
+						);
+					}
+				}
+				
+				 // Weapon Kick:
+				var _kick = ((_rawWep == wep_double_shotgun) ? -2 : -1);
+				if(_primary){
+					wkick  = _kick;
+				}
+				else{
+					bwkick = _kick;
+				}
+				
+				break;
+				
+			case type_bolt:
+			
+				sound_play(sndCrossReload);
+				
+				break;
+				
+		}
+		
+		 // Grenade:
+		switch(_rawWep){
+			case wep_grenade_launcher:
+			case wep_sticky_launcher:
+			case wep_golden_grenade_launcher:
+			case wep_hyper_launcher:
+			case wep_toxic_launcher:
+			case wep_cluster_launcher:
+			case wep_grenade_shotgun:
+			case wep_grenade_rifle:
+			case wep_auto_grenade_shotgun:
+			case wep_ultra_grenade_launcher:
+			case wep_heavy_grenade_launcher:
+				sound_play(sndNadeReload);
+				break;
+		}
+		
+		 // Energy:
+		var _wepName = weapon_get_name(_wep);
+		if(string_pos("PLASMA", _wepName) == 1){
+			sound_play(
+				(skill_get(mut_laser_brain) > 0)
+				? sndPlasmaReloadUpg
+				: sndPlasmaReload
+			);
+		}
+		else if(string_pos("LIGHTNING", _wepName) == 1){
+			sound_play(sndLightningReload);
+		}
+	}
+	
+#define player_weapon_step(_primary)
+	/*
+		Called from a Player instance to run the "step" event for their given slot's weapon
+	*/
+	
+	var	_wep     = (_primary ? wep : bwep),
+		_baseWep = _wep;
+		
+	 // Find Base Weapon:
+	while(is_string(_baseWep) && "wep" in _baseWep){
+		_baseWep = _baseWep.wep;
+	}
+	
+	 // Call Script:
+	if(is_string(_baseWep) && mod_script_exists("weapon", _baseWep, "weapon_step")){
+		if(fork()){
+			if(is_real(self) && instance_exists(self)){
+				if(is_real(other) && instance_exists(other)){
+					mod_script_call("weapon", _baseWep, "weapon_step", _wep);
+				}
+				else{
+					mod_script_call_self("weapon", _baseWep, "weapon_step", _wep);
+				}
+			}
+			else{
+				mod_script_call_nc("weapon", _baseWep, "weapon_step", _wep);
+			}
+			exit;
+		}
+	}
+	
+	 // Default (Blood Weapons):
+	else switch(is_string(_baseWep) ? wep_raw(_wep) : _baseWep){
+		
+		case wep_blood_launcher:
+		case wep_blood_cannon:
+		
+			if(infammo == 0){
+				if(
+					_primary
+					? (drawempty  == 30 && canfire && button_pressed(index, "fire"))
+					: (drawemptyb == 30 && canspec && button_pressed(index, "spec") && race == "steroids")
+				){
+					var	_type = weapon_get_type(_wep),
+						_cost = weapon_get_cost(_wep),
+						_ammo = ammo[_type],
+						_amax = typ_amax[_type];
+						
+					if(_ammo < _cost && _cost < _amax){
+						var _add = min(_cost, _amax - _ammo);
+						ammo[_type] += _add;
+						
+						 // Damage:
+						lasthit = [weapon_get_sprt(_wep), weapon_get_name(_wep)];
+						projectile_hit_raw(self, floor(sqrt(_add)), true);
+						sound_play_hit(sndBloodHurt, 0.1);
+						sleep(40);
+						
+						 // Insta-Use Ammo:
+						if(_primary && can_shoot == true){
+							clicked = true;
+						}
+					}
+				}
+			}
+			
+			break;
+			
+	}
+	
+#define player_swap(_player)
+	/*
+		Cycles the given player's weapon slots
+	*/
+	
+	with(["%wep", "%curse", "%reload", "%wkick", "%wepflip", "%wepangle", "%can_shoot", "%clicked", "%interfacepop", "drawempty%"]){
+		var	_name = [string_replace(self, "%", ""), string_replace(self, "%", "b")],
+			_temp = variable_instance_get(_player, _name[0], 0);
+			
+		variable_instance_set(_player, _name[0], variable_instance_get(_player, _name[1], 0));
+		variable_instance_set(_player, _name[1], _temp);
+	}
+	
+#define player_get_show_hud_local_nonsync(_index)
+	/*
+		Returns whether the given player's HUD is visible on the local player's screen
+	*/
+	
+	var _hudIndex = player_get_hud_index(_index);
+	
+	if(_hudIndex == 0 || (!instance_exists(PauseButton) && !instance_exists(BackMainMenu))){
+		if(_hudIndex < 2 || !instance_exists(LevCont)){
+			if(!instance_exists(PopoScene)){
+				for(var _local = 0; _local < maxp; _local++){
+					if(
+						player_is_active(_local)
+						&& player_is_local_nonsync(_local)
+						&& player_get_show_hud(_index, _local)
+					){
+						return true;
+					}
+				}
+			}
+		}
+	}
+	
+	return false;
+	
+#define player_get_hud_index // ?playerIndex
+	/*
+		Returns an array of player indices in order of their HUD from left to right, top to bottom
+		If a player index is given, returns that specific player's HUD index
+		!!! Add '_nonsync' to script name
+	*/
+	
+	var	_playerIndex = ((argument_count > 0) ? argument[0] : undefined),
+		_hudList     = [];
+		
+	for(var _isOnline = 0; _isOnline <= 1; _isOnline++){
+		for(var _index = 0; _index < maxp; _index++){
+			if(player_is_active(_index)){
+				if(player_is_local_nonsync(_index) ^ _isOnline){
+					if(_isOnline == 0){
+						array_push(_hudList, _index);
+					}
+					else for(var i = 0; player_is_active(player_find_local_nonsync(i)); i++){
+						if(player_get_show_hud(_index, player_find_local_nonsync(i))){
+							array_push(_hudList, _index);
+							break;
+						}
+					}
+				}
+			}
+		}
+	}
+	
+	return (
+		is_undefined(_playerIndex)
+		? _hudList
+		: array_find_index(_hudList, _playerIndex)
+	);
+	
+#define player_fire_at // ?position, ?direction, ?accuracy, ?wep, ?team, creator=self, isBasic=false
+	/*
+		Fires a given weapon from a given instance at a given position, direction, accuracy, and team
+		Firing that occurs over time will reference these values over the firing instance's values
+		Returns a LWO containing the firing values that can be updated at any time
+		!!! Will not work properly with custom weapons that use 'wait'
+		
+		Args:
+			position  - The firing position  (leave undefined to reference the firing instance's 'position', use a LWO for { ?x, ?y, distance=0, ?direction, rotation=0 })
+			direction - The firing direction (leave undefined to reference the firing instance's 'gunangle', use a LWO for { ?direction, rotation=0 })
+			accuracy  - The firing accuracy  (leave undefined to reference the firing instance's 'accuracy')
+			wep       - The firing weapon    (leave undefined to reference the firing instance's 'wep', use an array for [wep] to pass by reference)
+			team      - The firing team      (leave undefined to reference the firing instance's 'team')
+			creator   - The firing instance  (defaults to 'self')
+			isBasic   - Is a basic/raw shot? (defaults to 'false' - takes ammo, adds reload, creates effects, etc.)
+			
+		Vars:
+			x, y               - The firing position
+			position_distance  - The firing position's offset distance  (defaults to 0)
+			position_direction - The firing position's offset direction (leave undefined to reference the firing direction)
+			position_rotation  - The firing position's offset rotation  (defaults to 0)
+			direction          - The firing direction
+			direction_rotation - The firing direction's offset rotation (defaults to 0)
+			wep                - The firing weapon
+			creator            - The firing instance
+			creator_wep        - The firing instance's weapon (the value to override with the firing weapon)
+			is_active          - Firing that occurs over time will reference these values over the firing instance's values?
+			instance_list      - An array of instances that may actively reference the firing values
+			
+		Ex:
+			player_fire_at([mouse_x, mouse_y], { rotation: 180 });
+	*/
+	
+	var	_position  = ((argument_count > 0) ? argument[0] : undefined),
+		_direction = ((argument_count > 1) ? argument[1] : undefined),
+		_accuracy  = ((argument_count > 2) ? argument[2] : undefined),
+		_wep       = ((argument_count > 3) ? argument[3] : undefined),
+		_team      = ((argument_count > 4) ? argument[4] : undefined),
+		_creator   = ((argument_count > 5) ? argument[5] : self),
+		_isBasic   = ((argument_count > 6) ? argument[6] : false);
+		
+	 // Setup Firing Values:
+	if(is_undefined(_position)) _position  = [undefined, undefined];
+	if(!is_object(_position  )) _position  = { "x": _position[0], "y": _position[1] };
+	if(!is_object(_direction )) _direction = { "direction": _direction };
+	var _at = {
+		"x"                  : (("x"         in _position ) ? _position.x          : undefined),
+		"y"                  : (("y"         in _position ) ? _position.y          : undefined),
+		"position_distance"  : (("distance"  in _position ) ? _position.distance   : 0),
+		"position_direction" : (("direction" in _position ) ? _position.direction  : undefined),
+		"position_rotation"  : (("rotation"  in _position ) ? _position.rotation   : 0),
+		"direction"          : (("direction" in _direction) ? _direction.direction : undefined),
+		"direction_rotation" : (("rotation"  in _direction) ? _direction.rotation  : 0),
+		"wep"                : _wep,
+		"creator"            : _creator,
+		"creator_wep"        : (("wep" in _creator) ? _creator.wep : undefined),
+		"is_active"          : true,
+		"instance_list"      : []
+	};
+	
+	 // Player Firing:
+	if(instance_is(_creator, Player)){
+		 // Set Vars:
+		with(_creator){
+			switch(_accuracy){ case undefined: break; default: var _lastAccuracy = accuracy; accuracy = _accuracy; }
+			switch(_team    ){ case undefined: break; default: var _lastTeam     = team;     team     = _team;     }
+		}
+		
+		 // Fire Weapon:
+		player_fire_at_call(
+			_at,
+			script_ref_create(
+				player_fire_at_call_player_fire,
+				_creator,
+				_isBasic,
+				wep_none
+			),
+			true,
+			"",
+			undefined
+		);
+		
+		 // Revert Vars:
+		with(_creator){
+			switch(_accuracy){ case undefined: break; default: accuracy = _lastAccuracy * (accuracy / _accuracy); }
+			switch(_team    ){ case undefined: break; default: if(team == _team) team = _lastTeam;                }
+		}
+	}
+	
+	 // Non-Player Firing:
+	else{
+		var	_atX                = _at.x,
+			_atY                = _at.y,
+			_atPositionDistance = _at.position_distance,
+			_atDirection        = _at.direction,
+			_atAccuracy         = _accuracy,
+			_atWep              = _at.wep,
+			_atTeam             = _team;
+			
+		 // Default Values:
+		switch(_atX        ){ case undefined: _atX         = (("x"        in _creator) ? _creator.x        : 0       ); }
+		switch(_atY        ){ case undefined: _atY         = (("y"        in _creator) ? _creator.y        : 0       ); }
+		switch(_atDirection){ case undefined: _atDirection = (("gunangle" in _creator) ? _creator.gunangle : 0       ); }
+		switch(_atAccuracy ){ case undefined: _atAccuracy  = (("accuracy" in _creator) ? _creator.accuracy : 1       ); }
+		switch(_atWep      ){ case undefined: _atWep       = (("wep"      in _creator) ? _creator.wep      : wep_none); }
+		switch(_atTeam     ){ case undefined: _atTeam      = (("team"     in _creator) ? _creator.team     : 0       ); }
+		
+		 // Offset Position:
+		switch(_atPositionDistance){
+			case 0: break;
+			default:
+				var _atPositionDirection = _at.position_direction;
+				switch(_atPositionDirection){
+					case undefined:
+						_atPositionDirection = _atDirection;
+				}
+				_atPositionDirection += _at.position_rotation;
+				_atX += lengthdir_x(_atPositionDistance, _atPositionDirection);
+				_atY += lengthdir_y(_atPositionDistance, _atPositionDirection);
+		}
+		
+		 // Offset Direction:
+		_atDirection += _at.direction_rotation;
+		
+		 // Fire Weapon:
+		player_fire_at_call(
+			_at,
+			script_ref_create(
+				player_fire_at_call_player_fire,
+				player_fire_ext(_atDirection, wep_none, _atX, _atY, _atTeam, _creator, _atAccuracy),
+				_isBasic,
+				(is_array(_atWep) ? _atWep[0] : _atWep)
+			),
+			true,
+			"",
+			undefined
+		);
+	}
+	
+	return _at;
+	
+#define player_fire_at_call(_at, _scriptCallRef, _canWrapEvents, _wrapEventVarName, _wrapEventRef)
+	/*
+		Modifies an instance while calling a script, then optionally wraps the events of any instances this created
+		
+		Args:
+			at               - A LWO containing values for modifying an instance
+			scriptCallRef    - The script reference to call after modifying an instance
+			canWrapEvents    - Can wrap the events of instances created by the script call?
+			wrapEventVarName - This event's variable name, or a blank string if not a wrapped event
+			wrapEventRef     - This event's script reference, or 'undefined' if not a wrapped event
+	*/
+	
+	 // Just in Case:
+	if(!argument_count) exit;
+	
+	 // Set Event Reference:
+	if(_wrapEventVarName in self){
+		variable_instance_set(self, _wrapEventVarName, _scriptCallRef);
+	}
+	
+	 // Set Vars, Call Script, & Capture Instances:
+	var _atCreator = _at.creator;
+	if(_at.is_active && instance_exists(_atCreator)){
+		var	_atX                = _at.x,
+			_atY                = _at.y,
+			_atPositionDistance = _at.position_distance,
+			_atDirection        = _at.direction,
+			_atWep              = _at.wep,
+			_minID              = (_canWrapEvents ? instance_max : undefined);
+			
+		 // Set Creator Vars:
+		with(_atCreator){
+			var	_hasGunAngle   = ("gunangle" in self),
+				_lastXPrevious = xprevious,
+				_lastYPrevious = yprevious;
+				
+			 // Set Position:
+			switch(_atX){ case undefined: break; default: var _lastX = x, _lastHSpeed = hspeed; x = _atX; }
+			switch(_atY){ case undefined: break; default: var _lastY = y, _lastVSpeed = vspeed; y = _atY; }
+			
+			 // Offset Position:
+			switch(_atPositionDistance){
+				case 0: break;
+				default:
+					var _atPositionDirection = _at.position_direction;
+					
+					 // Get Position Offset Direction:
+					switch(_atPositionDirection){
+						case undefined:
+							switch(_atDirection){
+								case undefined:
+									_atPositionDirection = (_hasGunAngle ? gunangle : 0);
+									break;
+									
+								default:
+									_atPositionDirection = _atDirection;
+							}
+					}
+					_atPositionDirection += _at.position_rotation;
+					
+					 // Apply Position Offset:
+					var	_atXOffset = lengthdir_x(_atPositionDistance, _atPositionDirection),
+						_atYOffset = lengthdir_y(_atPositionDistance, _atPositionDirection);
+						
+					x += _atXOffset;
+					y += _atYOffset;
+			}
+			
+			 // Set Aim Direction:
+			if(_hasGunAngle){
+				var	_atDirectionRotation = _at.direction_rotation;
+				switch(_atDirection){
+					case undefined: break;
+					default:
+						var _lastDirection = gunangle;
+						gunangle = _atDirection;
+				}
+				gunangle += _atDirectionRotation;
+			}
+			
+			 // Set Weapon:
+			switch(_atWep){
+				case undefined: break;
+				default:
+					var	_atCreatorWep = _at.creator_wep,
+						_hasWep       = ("wep"  in self && wep  == _atCreatorWep),
+						_hasBWep      = ("bwep" in self && bwep == _atCreatorWep);
+						
+					if(_hasWep ){ var _atWepIsRef = is_array(_atWep), _setWep = (_atWepIsRef ? _atWep[0] : _atWep); wep  = _setWep; }
+					if(_hasBWep){ var _atWepIsRef = is_array(_atWep), _setWep = (_atWepIsRef ? _atWep[0] : _atWep); bwep = _setWep; }
+			}
+		}
+		
+		 // Call Script Reference:
+		_at.is_active = false;
+		if(fork()){
+			script_ref_call(_scriptCallRef);
+			exit;
+		}
+		_at.is_active = true;
+		
+		 // Revert Creator Vars:
+		with(_atCreator){
+			 // Revert Weapon:
+			switch(_atWep){
+				case undefined: break;
+				default:
+					if(_hasBWep){ if(bwep != _setWep && _atWepIsRef){ _atWep[0] = bwep; } bwep = _atCreatorWep; }
+					if(_hasWep ){ if(wep  != _setWep && _atWepIsRef){ _atWep[0] = wep;  } wep  = _atCreatorWep; }
+			}
+			
+			 // Revert Aim Direction:
+			if(_hasGunAngle){
+				switch(_atDirection){
+					case undefined : gunangle -= _atDirectionRotation; break;
+					default        : gunangle  = _lastDirection;
+				}
+			}
+			
+			 // Revert Position:
+			if(xprevious == _lastXPrevious && yprevious == _lastYPrevious){
+				switch(_atX){ case undefined: switch(_atPositionDistance){ case 0: break; default: x -= _atXOffset; } break; default: x = _lastX; hspeed = _lastHSpeed; }
+				switch(_atY){ case undefined: switch(_atPositionDistance){ case 0: break; default: y -= _atYOffset; } break; default: y = _lastY; vspeed = _lastVSpeed; }
+			}
+		}
+		
+		 // Wrap Events of New Instances:
+		if(_canWrapEvents){
+			for(var _inst = instance_max - 1; _inst >= _minID; _inst--){
+				if("object_index" in _inst){
+					var _instObject = _inst.object_index;
+					
+					 // Wrap Event Scripts:
+					if(ds_map_exists(obj_event_varname_list_map, _instObject)){
+						with(obj_event_varname_list_map[? _instObject]){
+							var _instEventRef = variable_instance_get(_inst, self);
+							if(array_length(_instEventRef) >= 3){
+								var _instEventWrapRef = script_ref_create(
+									player_fire_at_call,
+									_at,
+									_instEventRef,
+									(instance_is(_instObject, CustomObject) || instance_is(_instObject, CustomScript)), // Causes slight inconsistencies, but significantly reduces lag
+									self
+								);
+								array_push(_instEventWrapRef, _instEventWrapRef);
+								variable_instance_set(_inst, self, _instEventWrapRef);
+							}
+						}
+					}
+					
+					 // Intercept Burst Controller Events:
+					else switch(_instObject){
+					
+						case Burst:
+						case GoldBurst:
+						case HeavyBurst:
+						case HyperBurst:
+						case RogueBurst:
+						case SawBurst:
+						case SplinterBurst:
+						case NadeBurst:
+						case DragonBurst:
+						case ToxicBurst:
+						case FlameBurst:
+						case WaveBurst:
+						case SlugBurst:
+						case PopBurst:
+						case IonBurst:
+						case LaserCannon:
+						
+							with(_inst){
+								 // Store Vars:
+								player_fire_at_vars = _at;
+								
+								 // Bind Scripts & Store Instance:
+								if("ntte_player_fire_at_burst_list" not in GameCont){
+									GameCont.ntte_player_fire_at_burst_list = [];
+								}
+								if(array_find_index(GameCont.ntte_player_fire_at_burst_list, self) < 0){
+									array_push(GameCont.ntte_player_fire_at_burst_list, self);
+								}
+								
+								 // Increase Firing Delay:
+								if(alarm0 > 0){
+									alarm0++;
+								}
+								if("delay" in self){
+									delay = max(delay, current_time_scale) + (2 * current_time_scale);
+								}
+							}
+							
+							break;
+							
+					}
+					
+					 // Add to Instance List:
+					array_push(_at.instance_list, _inst);
+				}
+			}
+		}
+	}
+	
+	 // Call Script Reference:
+	else if(fork()){
+		script_ref_call(_scriptCallRef);
+		exit;
+	}
+	
+	 // Revert Event Reference:
+	if(_wrapEventVarName in self){
+		var _scriptRef = variable_instance_get(self, _wrapEventVarName);
+		if(_scriptRef != _scriptCallRef){
+			if(array_length(_scriptRef) >= 3){
+				_wrapEventRef[@ array_find_index(_wrapEventRef, _scriptCallRef)] = _scriptRef;
+			}
+			else _wrapEventRef = _scriptRef;
+		}
+		variable_instance_set(self, _wrapEventVarName, _wrapEventRef);
+	}
+	
+#define player_fire_at_call_player_fire(_inst, _isBasic, _wep)
+	/*
+		Used to call weapon firing code from a Player or FireCont during 'player_fire_at_call'
+	*/
+	
+	with(_inst){
+		var _fireInst = self;
+		
+		 // Fire:
+		if(_isBasic){
+			_fireInst = weapon_get("fire", (instance_is(self, Player) ? wep : _wep));
+		}
+		else if(instance_is(self, Player)){
+			player_fire();
+		}
+		else{
+			_fireInst = player_fire_ext(gunangle, _wep, x, y, team, (("creator" in self) ? creator : self), accuracy);
+		}
+		
+		 // Transfer Variables:
+		if(instance_is(_fireInst, FireCont)){
+			FireCont_end(_fireInst);
+		}
+	}
+	
+#define player_fire_at_call_event_perform(_inst, _eventType, _eventValue)
+	/*
+		Used to call 'event_perform' during 'player_fire_at_call'
+	*/
+	
+	with(_inst){
+		event_perform(_eventType, _eventValue);
+	}
+	
+#define FireCont_end // inst=self
+	/*
+		Transfers a given FireCont instance's variables to its creator
+	*/
+	
+	with((argument_count > 0) ? argument[0] : self){
+		if("creator" in self){
+			with(creator){
+				if(friction != 0){
+					hspeed += other.hspeed;
+					vspeed += other.vspeed;
+				}
+				if("wkick"    in self) wkick    = other.wkick;
+				if("wepangle" in self) wepangle = other.wepangle * ((abs(other.wepangle) > 1) ? sign(wepangle) : wepangle);
+				if("reload"   in self) reload  += other.reload;
+			}
 		}
 	}
 	
@@ -5230,7 +5721,7 @@
 		Creates the given NT:TE pet, and sets up its stats, sprites, and other variables
 		
 		Args:
-			x/y             - The position the pet will be created at
+			x, y            - The position the pet will be created at
 			name            - The name of the pet to spawn
 			modType/modName - The mod that the pet is stored in (defaults to petlib.mod)
 			
@@ -5784,49 +6275,6 @@
 	
 	return noone;
 	
-#define door_create(_x, _y, _dir)
-	/*
-		Creates a double CatDoor for a normal Floor
-		Returns an array containing both doors
-		
-		Ex:
-			with(FloorNormal){
-				door_create(bbox_center_x, bbox_center_y, 90);
-			}
-	*/
-	
-	var	_dx      = _x + lengthdir_x(16 - 2, _dir),
-		_dy      = _y + lengthdir_y(16 - 2, _dir) + 1,
-		_partner = noone,
-		_inst    = [];
-		
-	for(var i = -1; i <= 1; i += 2){
-		var _side = i;
-		if(_dir < 90 || _dir > 270){
-			_side *= -1; // Depth fix, create bottom door first
-		}
-		with(obj_create(_dx + lengthdir_x(16 * _side, _dir - 90), _dy + lengthdir_y(16 * _side, _dir - 90), "CatDoor")){
-			image_angle  = _dir;
-			image_yscale = -_side;
-			
-			 // Link Doors:
-			partner = _partner;
-			with(partner){
-				partner = other;
-			}
-			_partner = self;
-			
-			 // Ensure LoS Wall Creation:
-			with(self){
-				event_perform(ev_step, ev_step_normal);
-			}
-			
-			array_push(_inst, self);
-		}
-	}
-	
-	return _inst;
-	
 #define sleep_max(_milliseconds)
 	/*
 		Like 'sleep()', but doesn't stack with multiple 'sleep_max()' calls on the same frame
@@ -5868,35 +6316,38 @@
 		UberCont.opt_shake = _shake;
 	}
 	
-#define motion_step(_inst, _mult)
+#define motion_step(_inst, _notReverse)
 	/*
-		Performs a given instance's basic movement code, scaled by a given number
+		Performs a given instance's basic movement code, normally or reversed
+		Normally this script would use a multiplier, but today it uses a boolean
 	*/
 	
-	if(_mult > 0){
-		if(_inst.friction_raw != 0 && _inst.speed_raw != 0){
-			_inst.speed_raw -= min(abs(_inst.speed_raw), _inst.friction_raw * _mult) * sign(_inst.speed_raw);
+	with(_inst){
+		if(_notReverse){
+			if(friction_raw != 0 && speed_raw != 0){
+				speed_raw -= min(abs(speed_raw), friction_raw) * sign(speed_raw);
+			}
+			if(gravity_raw != 0){
+				hspeed_raw += lengthdir_x(gravity_raw, gravity_direction);
+				vspeed_raw += lengthdir_y(gravity_raw, gravity_direction);
+			}
+			if(speed_raw != 0){
+				x += hspeed_raw;
+				y += vspeed_raw;
+			}
 		}
-		if(_inst.gravity_raw != 0){
-			_inst.hspeed_raw += lengthdir_x(_inst.gravity_raw, _inst.gravity_direction) * _mult;
-			_inst.vspeed_raw += lengthdir_y(_inst.gravity_raw, _inst.gravity_direction) * _mult;
-		}
-		if(_inst.speed_raw != 0){
-			_inst.x += _inst.hspeed_raw * _mult;
-			_inst.y += _inst.vspeed_raw * _mult;
-		}
-	}
-	else{
-		if(_inst.speed_raw != 0){
-			_inst.y += _inst.vspeed_raw * _mult;
-			_inst.x += _inst.hspeed_raw * _mult;
-		}
-		if(_inst.gravity_raw != 0){
-			_inst.vspeed_raw += lengthdir_y(_inst.gravity_raw, _inst.gravity_direction) * _mult;
-			_inst.hspeed_raw += lengthdir_x(_inst.gravity_raw, _inst.gravity_direction) * _mult;
-		}
-		if(_inst.friction_raw != 0 && _inst.speed_raw != 0){
-			_inst.speed_raw -= min(abs(_inst.speed_raw), _inst.friction_raw * _mult) * sign(_inst.speed_raw);
+		else{
+			if(speed_raw != 0){
+				y -= vspeed_raw;
+				x -= hspeed_raw;
+			}
+			if(gravity_raw != 0){
+				vspeed_raw -= lengthdir_y(gravity_raw, gravity_direction);
+				hspeed_raw -= lengthdir_x(gravity_raw, gravity_direction);
+			}
+			if(friction_raw != 0 && speed_raw != 0){
+				speed_raw -= min(abs(speed_raw), -friction_raw) * sign(speed_raw);
+			}
 		}
 	}
 	
@@ -5907,7 +6358,7 @@
 		Volume = (playerDis / fadeDis) ^ -fadeFactor
 		
 		Args:
-			x/y        - The sound's position
+			x, y       - The sound's position
 			sound      - The sound index to play
 			pitch      - The played sound's initial pitch, defaults to 1
 			volume     - The played sound's initial volume, defaults to 1 (combines with the fade effect)
@@ -6170,11 +6621,11 @@
 			team_get_sprite(1, sprFlakBullet) == sprEFlak
 	*/
 	
-	var	_spriteList  = team_sprite_map[? _sprite],
-		_spriteIndex = _team - sprite_team_start;
+	var	_teamSpriteList = sprite_team_sprite_list_map[? _sprite],
+		_spriteTeam     = _team - sprite_start_team;
 		
-	if(_spriteIndex >= 0 && _spriteIndex < array_length(_spriteList)){
-		return _spriteList[_spriteIndex];
+	if(_spriteTeam >= 0 && _spriteTeam < array_length(_teamSpriteList)){
+		return _teamSpriteList[_spriteTeam];
 	}
 	
 	return _sprite;
@@ -6191,12 +6642,12 @@
 			_obj = object_index;
 			
 		 // Determine NTTE Object:
-		with(ds_map_keys(team_sprite_obj_map)){
+		with(ds_map_keys(obj_sprite_team_obj_list_table)){
 			if(is_string(self) && self in obj){
 				if(array_find_index(lq_get(obj, self), other) >= 0){
 					_obj = self;
-					while(ds_map_exists(obj_parent, _obj)){
-						_obj = obj_parent[? _obj];
+					while(ds_map_exists(obj_parent_map, _obj)){
+						_obj = obj_parent_map[? _obj];
 					}
 					break;
 				}
@@ -6207,12 +6658,12 @@
 		sprite_index = team_get_sprite(_team, _spr);
 		
 		 // Object, for hardcoded stuff:
-		if(ds_map_exists(team_sprite_obj_map, _obj)){
-			var	_objList  = team_sprite_obj_map[? _obj][? _spr],
-				_objIndex = _team - sprite_team_start;
+		if(ds_map_exists(obj_sprite_team_obj_list_table, _obj)){
+			var	_objList = obj_sprite_team_obj_list_table[? _obj][? _spr],
+				_objTeam = _team - sprite_start_team;
 				
-			if(_objIndex >= 0 && _objIndex < array_length(_objList)){
-				var _newObj = _objList[_objIndex];
+			if(_objTeam >= 0 && _objTeam < array_length(_objList)){
+				var _newObj = _objList[_objTeam];
 				if(_obj != _newObj){
 					var _varList = variable_instance_get_list(self);
 					

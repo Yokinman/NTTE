@@ -1,5 +1,5 @@
 "path" : {
-	""         : ["ntte.mod", "petlib.mod", "teevents.mod", "telib.mod", "temenu.mod"],
+	""         : ["ntte.mod", "petlib.mod", "teevents.mod", "telib.mod", "temenu.mod", "temerge.mod"],
 	"areas/"   : ["template", "coast.area", "lair.area", "oasis.area", "pizza.area", "red.area", "trench.area"],
 	"objects/" : ["template", "tecaves.mod", "tecoast.mod", "tedesert.mod", "tegeneral.mod", "telabs.mod", "teoasis.mod", "tepickups.mod", "tescrapyard.mod", "tesewers.mod", "tetrench.mod"],
 	"races/"   : ["template", "bee.race", "parrot.race"],

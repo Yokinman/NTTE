@@ -11,11 +11,13 @@
 	}
 	
 	 // Store Script References:
-	scr.Harpoon_rope   = script_ref_create(Harpoon_rope);
-	scr.Harpoon_unrope = script_ref_create(Harpoon_unrope);
+	with([Harpoon_rope, Harpoon_unrope, portal_pickups]){
+		lq_set(scr, script_get_name(self), script_ref_create(self));
+	}
 	
 	 // Bind Events:
 	script_bind(CustomDraw, draw_diver_laser, -5, true);
+	global.portal_pickups_bind = script_bind(CustomStep, portal_pickups_step, 0, false);
 	
 	 // Harpoon Ropes:
 	global.harpoon_rope_bind = [
@@ -233,10 +235,10 @@
 	}
 	
 #define ClamShield_step
-	var	_wep  = variable_instance_get(creator, "wep",  wep),
-		_bwep = variable_instance_get(creator, "bwep", wep_none);
+	var	_wep  = (("wep"  in creator) ? creator.wep  : wep),
+		_bwep = (("bwep" in creator) ? creator.bwep : wep_none);
 		
-	if(instance_exists(creator) && creator.visible && (wep == _wep || _bwep == wep)){
+	if(instance_exists(creator) && creator.visible && (wep == _wep || wep == _bwep)){
 		var	_shieldList = instances_matching(instances_matching(obj.ClamShield, "wep", wep), "creator", creator),
 			_boltStick  = instances_matching(BoltStick, "target", self),
 			_b          = ((wep == _bwep) ? "b" : "");
@@ -249,13 +251,13 @@
 				
 			if(wep == _bwep && call(scr.wep_raw, _wep) == call(scr.wep_raw, _bwep)){
 				_goalDir += 180;
-				if("bwepangle" in creator){
-					_goalDir += creator.bwepangle;
-				}
+			//	if("bwepangle" in creator){
+			//		_goalDir += creator.bwepangle;
+			//	}
 			}
-			else if("wepangle" in creator){
-				_goalDir += creator.wepangle;
-			}
+		//	else if("wepangle" in creator){
+		//		_goalDir += creator.wepangle;
+		//	}
 			
 			image_angle = angle_lerp_ct(image_angle, _goalDir, (instance_is(creator, Player) ? 1/2 : 1/16));
 			direction   = image_angle;
@@ -1922,7 +1924,7 @@
 		}
 		
 		 // Attract Pickups:
-		call(scr.portal_pickups);
+		portal_pickups();
 		
 		 // Hold Off Seals:
 		with(PalankingSeal){
@@ -5655,6 +5657,71 @@
 		}
 		
 		if(lag) trace_time(script[2]);
+	}
+	
+#define portal_pickups()
+	/*
+		Activates manual portal pickup attraction
+	*/
+	
+	with(global.portal_pickups_bind.id){
+		visible = true;
+		return self;
+	}
+	
+#define portal_pickups_step
+	if(visible){
+		visible = false;
+		
+		 // Attract Pickups:
+		if(instance_exists(Pickup) && !instance_exists(Portal) && instance_exists(Player)){
+			var _pluto = skill_get(mut_plutonium_hunger);
+			
+			 // Normal Pickups:
+			if(instance_exists(AmmoPickup) || instance_exists(HPPickup) || instance_exists(RoguePickup)){
+				var _attractDis = 30 + (40 * _pluto);
+				with(instances_matching_ne([AmmoPickup, HPPickup, RoguePickup], "id")){
+					var _p = instance_nearest(x, y, Player);
+					if(instance_exists(_p) && point_distance(x, y, _p.x, _p.y) >= _attractDis){
+						var	_dis = 6 * current_time_scale,
+							_dir = point_direction(x, y, _p.x, _p.y),
+							_x = x + lengthdir_x(_dis, _dir),
+							_y = y + lengthdir_y(_dis, _dir);
+							
+						if(place_free(_x, y)) x = _x;
+						if(place_free(x, _y)) y = _y;
+					}
+				}
+			}
+			
+			 // Rads:
+			if(instance_exists(Rad) || instance_exists(BigRad)){
+				var	_attractDis      = 80 + (60 * _pluto),
+					_attractDisProto = 170;
+					
+				with(instances_matching([Rad, BigRad], "speed", 0)){
+					var _proto = instance_nearest(x, y, ProtoStatue);
+					if(
+						!instance_exists(_proto)
+						|| distance_to_object(_proto) >= _attractDisProto
+						|| collision_line(x, y, _proto.x, _proto.y, Wall, false, false)
+					){
+						if(distance_to_object(Player) >= _attractDis){
+							var _p = instance_nearest(x, y, Player);
+							if(instance_exists(_p)){
+								var	_dis = 12 * current_time_scale,
+									_dir = point_direction(x, y, _p.x, _p.y),
+									_x   = x + lengthdir_x(_dis, _dir),
+									_y   = y + lengthdir_y(_dis, _dir);
+									
+								if(place_free(_x, y)) x = _x;
+								if(place_free(x, _y)) y = _y;
+							}
+						}
+					}
+				}
+			}
+		}
 	}
 	
 	
