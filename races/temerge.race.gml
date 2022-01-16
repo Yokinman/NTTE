@@ -4,14 +4,14 @@
 #define cleanup
 	mod_script_call("mod", "teassets", "ntte_cleanup", script_ref_create(cleanup));
 	
-#define race_name              return "BEE";
-#define race_text              return "PASSIVE#ACTIVE";
+#define race_name              return "???";
+#define race_text              return "PASSIVE#CAN MERGE WEAPONS";
 #define race_lock              return "???";
 #define race_unlock            return "???";
 #define race_tb_text           return "???";
 #define race_portrait(_p, _b)  return race_sprite_raw("Portrait", _b);
 #define race_mapicon(_p, _b)   return race_sprite_raw("Map",      _b);
-#define race_avail             return call(scr.unlock_get, "race:" + mod_current);
+#define race_avail             return true;//call(scr.unlock_get, "race:" + mod_current);
 
 #define race_ttip
 	 // Ultra:
@@ -44,7 +44,6 @@
 		case sprFishMenuSelected : return race_sprite_raw("Walk",  _b);
 		case sprFishMenuSelect   : return race_sprite_raw("Idle",  _b);
 		case sprFishMenuDeselect : return race_sprite_raw("Idle",  _b);
-		case shd24               : return shd16;
 	}
 	
 	return -1;
@@ -70,10 +69,10 @@
 	return -1;
 	
 #define race_sprite_raw(_sprite, _skin)
-	var _skinSpriteObjList = lq_defget(spr.Race, mod_current, []);
+	var _skinSpriteMapList = lq_defget(spr.Race, mod_current, []);
 	
-	if(_skin >= 0 && _skin < array_length(_skinSpriteObjList)){
-		return lq_defget(_skinSpriteObjList[_skin], _sprite, -1);
+	if(_skin >= 0 && _skin < array_length(_skinSpriteMapList)){
+		return lq_defget(_skinSpriteMapList[_skin], _sprite, -1);
 	}
 	
 	return -1;
@@ -197,10 +196,6 @@
 		exit;
 	}
 	
-	 // Shadow:
-	spr_shadow = race_sprite(shd24);
-	spr_shadow_y = 7;
-	
 	 // Sound:
 	snd_wrld = race_sound(sndMutant1Wrld);
 	snd_hurt = race_sound(sndMutant1Hurt);
@@ -226,7 +221,25 @@
 #define step
 	if(lag) trace_time();
 	
-	
+	 // ACTIVE : Merge Weapons
+	if(wep != wep_none && bwep != wep_none){
+		if(canspec && player_active){
+			if(button_pressed(index, "spec") || usespec > 0){
+				 // Merge Weapons:
+				wep  = call(scr.temerge_merge_weapon, wep, bwep);
+				bwep = wep_none;
+				
+				 // Take Health:
+				var _mergeWepDepth = 1;
+				for(var _wep = wep; "temerge" in _wep; _wep = _wep.temerge.wep[0]){
+					_mergeWepDepth++;
+				}
+				chickendeaths += _mergeWepDepth;
+				maxhealth     -= _mergeWepDepth;
+				my_health      = min(my_health, maxhealth);
+			}
+		}
+	}
 	
 	if(lag) trace_time(mod_current + "_step");
 	

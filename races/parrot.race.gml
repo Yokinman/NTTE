@@ -177,10 +177,10 @@
 		"CHESTS GIVE @rFEATHERS@s"
 	);
 	
-#define race_sprite(_spr)
+#define race_sprite(_sprite)
 	var _b = (("bskin" in self && is_real(bskin)) ? bskin : 0);
 	
-	switch(_spr){
+	switch(_sprite){
 		case sprMutant1Idle      : return race_sprite_raw("Idle",         _b);
 		case sprMutant1Walk      : return race_sprite_raw("Walk",         _b);
 		case sprMutant1Hurt      : return race_sprite_raw("Hurt",         _b);
@@ -217,11 +217,11 @@
 	
 	return -1;
 	
-#define race_sprite_raw(_spr, _skin)
-	var s = lq_defget(spr.Race, mod_current, []);
+#define race_sprite_raw(_sprite, _skin)
+	var _skinSpriteObjList = lq_defget(spr.Race, mod_current, []);
 	
-	if(_skin >= 0 && _skin < array_length(s)){
-		return lq_defget(s[_skin], _spr, -1);
+	if(_skin >= 0 && _skin < array_length(_skinSpriteObjList)){
+		return lq_defget(_skinSpriteObjList[_skin], _sprite, -1);
 	}
 	
 	return -1;
@@ -337,7 +337,7 @@
 	
 #define race_skin_button(_skin)
 	sprite_index = race_sprite_raw("Loadout", _skin);
-	image_index = !race_skin_avail(_skin);
+	image_index  = !race_skin_avail(_skin);
 	
 	
 /// Ultras
@@ -360,7 +360,7 @@
 	
 #define race_ultra_button(_ultra)
 	sprite_index = race_sprite_raw("UltraIcon", 0);
-	image_index = _ultra - 1; // why are ultras 1-based bro
+	image_index  = _ultra - 1; // why are ultras 1-based bro
 	
 #define race_ultra_icon(_ultra)
 	return race_sprite_raw("UltraHUD" + chr(64 + _ultra), 0);

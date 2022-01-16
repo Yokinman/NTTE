@@ -1,6 +1,11 @@
 #define init
 	mod_script_call("mod", "teassets", "ntte_init", script_ref_create(init));
 	
+	 // Store Script References:
+	with([temerge_merge_weapon, temerge_set_weapon_event_script]){
+		lq_set(scr, script_get_name(self), script_ref_create(self));
+	}
+	
 	 // Bind Events:
 	script_bind(CustomDraw, temerge_scale_draw, 0, true);
 	
@@ -1685,13 +1690,6 @@
 	}
 	
 #define ntte_step
-	with(Player){
-		if(button_pressed(index, "horn")){
-			wep  = temerge_merge_weapon(wep, bwep);
-			bwep = wep_none;
-		}
-	}
-	
 	 // Unmuffle Muffled Sounds:
 	with(ds_map_keys(global.sound_muffle_map)){
 		var	_sound  = self,
