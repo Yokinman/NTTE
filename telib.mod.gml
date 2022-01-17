@@ -4509,7 +4509,7 @@
 		_baseWep = _wep;
 		
 	 // Find Base Weapon:
-	while(is_string(_baseWep) && "wep" in _baseWep){
+	while(is_object(_baseWep) && "wep" in _baseWep){
 		_baseWep = _baseWep.wep;
 	}
 	
@@ -4518,14 +4518,14 @@
 		if(fork()){
 			if(is_real(self) && instance_exists(self)){
 				if(is_real(other) && instance_exists(other)){
-					mod_script_call("weapon", _baseWep, "weapon_reloaded", _wep);
+					mod_script_call("weapon", _baseWep, "weapon_reloaded", _primary);
 				}
 				else{
-					mod_script_call_self("weapon", _baseWep, "weapon_reloaded", _wep);
+					mod_script_call_self("weapon", _baseWep, "weapon_reloaded", _primary);
 				}
 			}
 			else{
-				mod_script_call_nc("weapon", _baseWep, "weapon_reloaded", _wep);
+				mod_script_call_nc("weapon", _baseWep, "weapon_reloaded", _primary);
 			}
 			exit;
 		}
@@ -4622,23 +4622,23 @@
 		_baseWep = _wep;
 		
 	 // Find Base Weapon:
-	while(is_string(_baseWep) && "wep" in _baseWep){
+	while(is_object(_baseWep) && "wep" in _baseWep){
 		_baseWep = _baseWep.wep;
 	}
 	
 	 // Call Script:
-	if(is_string(_baseWep) && mod_script_exists("weapon", _baseWep, "weapon_step")){
+	if(is_string(_baseWep) && mod_script_exists("weapon", _baseWep, "step")){
 		if(fork()){
 			if(is_real(self) && instance_exists(self)){
 				if(is_real(other) && instance_exists(other)){
-					mod_script_call("weapon", _baseWep, "weapon_step", _wep);
+					mod_script_call("weapon", _baseWep, "step", _primary);
 				}
 				else{
-					mod_script_call_self("weapon", _baseWep, "weapon_step", _wep);
+					mod_script_call_self("weapon", _baseWep, "step", _primary);
 				}
 			}
 			else{
-				mod_script_call_nc("weapon", _baseWep, "weapon_step", _wep);
+				mod_script_call_nc("weapon", _baseWep, "step", _primary);
 			}
 			exit;
 		}

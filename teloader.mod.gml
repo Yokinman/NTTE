@@ -2861,14 +2861,138 @@
 				_gml += _new + `	}`
 				_gml += _new + `	`
 				                	 // Normal:
-				_gml += _new + `	else{`
-				_gml += _new + `		var _lastSubWep = _wep.wep;`
-				_gml += _new + `		_wep.wep = _wrapWep;`
-				_gml += _new + `		call(scr.player_${(_scrName == "step") ? "weapon_step" : _scrName}, _primary);`
-				_gml += _new + `		_wep.wep = _lastSubWep;`
-				_gml += _new + `	}`
+				switch(_scrName){
+					
+					case "weapon_reloaded":
+					
+						_gml += _new + `	else{`
+						                		 // Melee:
+						_gml += _new + `		if(weapon_is_melee(_wep)){`
+						_gml += _new + `			sound_play(sndMeleeFlip);`
+						_gml += _new + `		}`
+						_gml += _new + `		`
+						                		 // Shell / Bolt:
+						_gml += _new + `		switch(weapon_get_type(_wep)){`
+						_gml += _new + `			`
+						_gml += _new + `			case 2:`
+						_gml += _new + `			`
+						_gml += _new + `				sound_play(sndShotReload);`
+						_gml += _new + `				`
+						_gml += _new + `				 // Casings:`
+						_gml += _new + `				var _num = weapon_get_cost(_wep) * (_primary ? interfacepop : binterfacepop);`
+						_gml += _new + `				if(_num > 0) repeat(_num){`
+						_gml += _new + `					with(instance_create(x, y, Shell)){`
+						_gml += _new + `						sprite_index = (`
+						_gml += _new + `							(skill_get(mut_shotgun_shoulders) > 0)`
+						_gml += _new + `							? sprShotShellBig`
+						_gml += _new + `							: sprShotShell`
+						_gml += _new + `						);`
+						_gml += _new + `						motion_add(`
+						_gml += _new + `							other.gunangle + (other.right * 100) + random_range(-20, 20),`
+						_gml += _new + `							random_range(2, 4)`
+						_gml += _new + `						);`
+						_gml += _new + `					}`
+						_gml += _new + `				}`
+						_gml += _new + `				`
+						                				 // Weapon Kick:
+						_gml += _new + `				var _kick = ((_wrapWep == wep_double_shotgun) ? -2 : -1);`
+						_gml += _new + `				if(_primary){`
+						_gml += _new + `					wkick  = _kick;`
+						_gml += _new + `				}`
+						_gml += _new + `				else{`
+						_gml += _new + `					bwkick = _kick;`
+						_gml += _new + `				}`
+						_gml += _new + `				`
+						_gml += _new + `				break;`
+						_gml += _new + `				`
+						_gml += _new + `			case 3:`
+						_gml += _new + `			`
+						_gml += _new + `				sound_play(sndCrossReload);`
+						_gml += _new + `				`
+						_gml += _new + `				break;`
+						_gml += _new + `				`
+						_gml += _new + `		}`
+						_gml += _new + `		`
+						                		 // Grenade:
+						_gml += _new + `		switch(_wrapWep){`
+						_gml += _new + `			case wep_grenade_launcher:`
+						_gml += _new + `			case wep_sticky_launcher:`
+						_gml += _new + `			case wep_golden_grenade_launcher:`
+						_gml += _new + `			case wep_hyper_launcher:`
+						_gml += _new + `			case wep_toxic_launcher:`
+						_gml += _new + `			case wep_cluster_launcher:`
+						_gml += _new + `			case wep_grenade_shotgun:`
+						_gml += _new + `			case wep_grenade_rifle:`
+						_gml += _new + `			case wep_auto_grenade_shotgun:`
+						_gml += _new + `			case wep_ultra_grenade_launcher:`
+						_gml += _new + `			case wep_heavy_grenade_launcher:`
+						_gml += _new + `				sound_play(sndNadeReload);`
+						_gml += _new + `				break;`
+						_gml += _new + `		}`
+						_gml += _new + `		`
+						                		 // Energy:
+						_gml += _new + `		var _wepName = weapon_get_name(_wep);`
+						_gml += _new + `		if(string_pos("PLASMA", _wepName) == 1){`
+						_gml += _new + `			sound_play(`
+						_gml += _new + `				(skill_get(mut_laser_brain) > 0)`
+						_gml += _new + `				? sndPlasmaReloadUpg`
+						_gml += _new + `				: sndPlasmaReload`
+						_gml += _new + `			);`
+						_gml += _new + `		}`
+						_gml += _new + `		else if(string_pos("LIGHTNING", _wepName) == 1){`
+						_gml += _new + `			sound_play(sndLightningReload);`
+						_gml += _new + `		}`
+						_gml += _new + `	}`
+						_gml += _new + `	`
+						
+						break;
+						
+					case "step":
+					
+						_gml += _new + `	else switch(_wrapWep){`
+						_gml += _new + `		`
+						_gml += _new + `		case wep_blood_launcher:`
+						_gml += _new + `		case wep_blood_cannon:`
+						_gml += _new + `		`
+						_gml += _new + `			if(infammo == 0){`
+						_gml += _new + `				if(`
+						_gml += _new + `					_primary`
+						_gml += _new + `					? (drawempty  == 30 && canfire && button_pressed(index, "fire"))`
+						_gml += _new + `					: (drawemptyb == 30 && canspec && button_pressed(index, "spec") && race == "steroids")`
+						_gml += _new + `				){`
+						_gml += _new + `					var	_type = weapon_get_type(_wep),`
+						_gml += _new + `						_cost = weapon_get_cost(_wep),`
+						_gml += _new + `						_ammo = ammo[_type],`
+						_gml += _new + `						_amax = typ_amax[_type];`
+						_gml += _new + `						`
+						_gml += _new + `					if(_ammo < _cost && _cost < _amax){`
+						_gml += _new + `						var _add = min(_cost, _amax - _ammo);`
+						_gml += _new + `						ammo[_type] += _add;`
+						_gml += _new + `						`
+						                						 // Damage:
+						_gml += _new + `						lasthit = [weapon_get_sprt(_wep), weapon_get_name(_wep)];`
+						_gml += _new + `						projectile_hit_raw(self, floor(sqrt(_add)), true);`
+						_gml += _new + `						sound_play_hit(sndBloodHurt, 0.1);`
+						_gml += _new + `						sleep(40);`
+						_gml += _new + `						`
+						                						 // Insta-Use Ammo:
+						_gml += _new + `						if(_primary && can_shoot == true){`
+						_gml += _new + `							clicked = true;`
+						_gml += _new + `						}`
+						_gml += _new + `					}`
+						_gml += _new + `				}`
+						_gml += _new + `			}`
+						_gml += _new + `			`
+						_gml += _new + `			break;`
+						_gml += _new + `			`
+						_gml += _new + `	}`
+						_gml += _new + `	`
+						
+						break;
+						
+				}
 			//	_gml += _new + `	}`
-				_gml += _new + `	`
+			//	_gml += _new + `	`
 				                	 // Custom:
 				_gml += _new + `	if("${_scrName}" in _wrap.scr_ref){`
 				_gml += _new + `		var	_wrapScrRefs    = _wrap.scr_ref.${_scrName},`
@@ -2878,7 +3002,6 @@
 				_gml += _new + `			script_ref_call(_wrapScrRefs[i], _primary);`
 				_gml += _new + `		}`
 				_gml += _new + `	}`
-				_gml += _new + `	`
 			//	_gml += _new + `	trace_time("${_scrName}");`
 				_gml += _new + `}`
 			//	_gml += _new + `trace_time("${_scrName}");`

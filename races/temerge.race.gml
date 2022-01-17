@@ -89,6 +89,8 @@
 	sprite_index = race_sprite_raw("Select", 0);
 	image_index = !race_avail();
 	
+	sprite_index = sprCharSelect;
+	
 	
 /// Skins
 #define race_skins
@@ -231,12 +233,19 @@
 				
 				 // Take Health:
 				var _mergeWepDepth = 1;
-				for(var _wep = wep; "temerge" in _wep; _wep = _wep.temerge.wep[0]){
+				for(var _wep = wep; (is_object(_wep) && "temerge" in _wep); _wep = _wep.temerge.wep[0]){
 					_mergeWepDepth++;
 				}
 				chickendeaths += _mergeWepDepth;
 				maxhealth     -= _mergeWepDepth;
-				my_health      = min(my_health, maxhealth);
+				lsthealth      = min(lsthealth, maxhealth);
+				if(my_health > min(1, maxhealth)){
+					projectile_hit_raw(self, min(_mergeWepDepth, my_health - min(1, maxhealth)), 2);
+					lasthit = [weapon_get_sprt(wep), "MERGING WEAPONS"];
+				}
+				
+				 // Effects:
+				call(scr.pickup_text, weapon_get_name(wep), "got");
 			}
 		}
 	}
