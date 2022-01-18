@@ -34,6 +34,9 @@
 		damage = 7;
 		force  = 12;
 		gland  = weapon_get_cost(_wep) / call(scr.weapon_get, "burst", _wep);
+		
+		 // Merged Weapons Support:
+		temerge_on_init = script_ref_create_ext("mod", "temerge", "temerge_HeavyBullet_init");
 	}
 	
 	 // Sounds:

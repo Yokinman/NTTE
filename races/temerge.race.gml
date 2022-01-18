@@ -246,6 +246,7 @@
 				
 				 // Effects:
 				call(scr.pickup_text, weapon_get_name(wep), "got");
+				call(scr.pickup_text, "MAX HP", "add", -_mergeWepDepth);
 			}
 		}
 	}

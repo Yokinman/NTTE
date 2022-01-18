@@ -6629,7 +6629,7 @@
 				
 				 // Flip Sign:
 				if(_num < 0){
-					text = string_replace_all(text, "+", "-");
+					text = string_replace_all(text, "+", "");
 				}
 				
 				break;

@@ -2511,13 +2511,13 @@
 				_gml += _new + `	`
 				                	 // Re-Tag Team:
 				_gml += _new + `	if(_mainShot){`
-				_gml += _new + `		var	_lastTeam  = call(scr.projectile_tag_get_value, _mainTeam, _mainCreator, "${_name}_projectile_setup_team", round(_mainTeam)),`
-				_gml += _new + `			_scriptRef = script_ref_create(${_scrName}, _wep, false, _mainX, _mainY, _mainDirection, _mainAccuracy, _lastTeam, _mainCreator),`
-				_gml += _new + `			_teamTag   = call(scr.projectile_tag_create, _lastTeam, _mainCreator, _scriptRef, max(1, weapon_get_load(_wrap.wep)));`
-				_gml += _new + `			`
-				_gml += _new + `		_scriptRef[9] = _teamTag;`
-				_gml += _new + `		`
 				_gml += _new + `		with(_inst){`
+				_gml += _new + `			var	_lastTeam  = call(scr.projectile_tag_get_value, _mainTeam, _mainCreator, "${_name}_projectile_setup_team", round(_mainTeam)),`
+				_gml += _new + `				_scriptRef = script_ref_create(${_scrName}, _wep, false, _mainX, _mainY, _mainDirection, _mainAccuracy, _lastTeam, _mainCreator),`
+				_gml += _new + `				_teamTag   = call(scr.projectile_tag_create, _lastTeam, _mainCreator, _scriptRef, max(1, weapon_get_load(_wrap.wep)));`
+				_gml += _new + `				`
+				_gml += _new + `			_scriptRef[9] = _teamTag;`
+				_gml += _new + `			`
 				_gml += _new + `			team = _teamTag;`
 				_gml += _new + `		}`
 				_gml += _new + `	}`
