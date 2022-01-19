@@ -66,7 +66,7 @@
 	 // Locked:
 	return global.sprWepLocked;
 	
-#define weapon_sprt_hud(_wep)  
+#define weapon_sprt_hud(_wep)
 	call(scr.weapon_ammo_hud, _wep);
 	return global.sprWepHUD;
 	

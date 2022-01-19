@@ -5070,20 +5070,20 @@
 								 // Store Vars:
 								player_fire_at_vars = _at;
 								
-								 // Bind Scripts & Store Instance:
+								 // Store Instance:
 								if("ntte_player_fire_at_burst_list" not in GameCont){
 									GameCont.ntte_player_fire_at_burst_list = [];
 								}
 								if(array_find_index(GameCont.ntte_player_fire_at_burst_list, self) < 0){
 									array_push(GameCont.ntte_player_fire_at_burst_list, self);
-								}
-								
-								 // Increase Firing Delay:
-								if(alarm0 > 0){
-									alarm0++;
-								}
-								if("delay" in self){
-									delay = max(delay, current_time_scale) + (2 * current_time_scale);
+									
+									 // Increase Firing Delay:
+									if(alarm0 > 0){
+										alarm0++;
+									}
+									if("delay" in self){
+										delay = max(delay, current_time_scale) + (2 * current_time_scale);
+									}
 								}
 							}
 							

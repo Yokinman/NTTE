@@ -2624,6 +2624,10 @@
 		 // Events:
 		on_hit = RedBullet_hit;
 		
+		 // Merged Weapons Support:
+		temerge_on_setup = script_ref_create(RedBullet_temerge_setup);
+		temerge_on_hit   = script_ref_create(RedBullet_temerge_hit, [true]);
+		
 		return self;
 	}
 	
@@ -2632,13 +2636,7 @@
 		projectile_hit(other, min(damage + (bonus_damage * bonus), max(other.my_health, 10)), force);
 		
 		 // Annihilation Time:
-		if(instance_is(other, prop) || other.team == 0 || array_find_index(obj.Tesseract, other) >= 0){
-			call(scr.obj_create, x, y, "RedExplosion");
-		}
-		else{
-			call(scr.enemy_annihilate, other, 2);
-			sleep(150);
-		}
+		RedBullet_annihilate();
 		
 		 // Goodbye:
 		with(instance_create(x, y, BulletHit)){
@@ -2646,6 +2644,41 @@
 		}
 		instance_destroy();
 	}
+	
+#define RedBullet_annihilate
+	 // Prop Annihilation:
+	if(instance_is(other, prop) || other.team == 0 || array_find_index(obj.Tesseract, other) >= 0){
+		call(scr.obj_create, x, y, "RedExplosion");
+	}
+	
+	 // Enemy Annihilation:
+	else{
+		call(scr.enemy_annihilate, other, 2);
+		sleep(150);
+	}
+	
+#define RedBullet_temerge_setup(_inst)
+	 // Color Red:
+	var _color = call(scr.area_get_back_color, "red");
+	with(_inst){
+		image_blend = _color;
+	}
+	
+#define RedBullet_temerge_hit(_canAnnihilate)
+	 // Annihilate:
+	if(_canAnnihilate[0]){
+		if(projectile_canhit(other) && other.my_health > 0){
+			_canAnnihilate[@ 0] = false;
+			RedBullet_annihilate();
+			instance_destroy();
+			
+			 // Disable Event:
+			return true;
+		}
+	}
+	
+	 // Disable Event:
+	else return true;
 	
 	
 #define RedExplosion_create(_x, _y)

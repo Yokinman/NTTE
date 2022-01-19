@@ -83,7 +83,7 @@
 	
 #define step
 	 // Kill:
-	if("annihilation_list" in GameCont){
+	if("annihilation_list" in GameCont && array_length(GameCont.annihilation_list)){
 		with(GameCont.annihilation_list){
 			with(instances_matching((custom ? instances_matching(object_index, "name", name) : object_index), "annihilation_check", null)){
 				annihilation_check = true;
@@ -201,6 +201,9 @@
 		flash      = 3;
 		star_scale = 4/5;
 	}
+	
+	 // Kill These Dudes:
+	step();
 	
 #define string_plural(_string)
 	/*

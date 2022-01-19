@@ -1181,7 +1181,7 @@
 			}
 			
 			 // Revert Melee Angle:
-			wepangle = _mainFire.wepangle;
+			wepangle = abs(wepangle) * sign(_mainFire.wepangle);
 			
 			 // Revert Weapon Kick:
 			if(wkick == 0){
@@ -1295,11 +1295,9 @@
 					 // Replace Projectile:
 					if(_instCanShoot){
 						var	_merge = {
-								"on_fire"      : (("temerge_on_fire" in self) ? temerge_on_fire : undefined),
-								"on_init"      : (("temerge_on_init" in self) ? temerge_on_init : undefined),
-								"on_hit"       : (("temerge_on_hit"  in self) ? temerge_on_hit  : undefined),
-								"on_wall"      : (("temerge_on_wall" in self) ? temerge_on_wall : undefined),
-								"speed_factor" : 0.5 + max(0, abs(speed / 32) * (1 - (friction / 2)))
+								"on_setup" : (("temerge_on_setup" in self) ? temerge_on_setup : undefined),
+								"on_hit"   : (("temerge_on_hit"   in self) ? temerge_on_hit   : undefined),
+								"on_wall"  : (("temerge_on_wall"  in self) ? temerge_on_wall  : undefined)
 							},
 							_fireAt = {
 								"x"                  : undefined,
@@ -1309,11 +1307,17 @@
 								"position_rotation"  : angle_difference(point_direction(_originX, _originY, xstart, ystart), _originDirection),
 								"direction"          : undefined,
 								"direction_rotation" : angle_difference(((direction == 0 && speed == 0) ? ((image_angle == 0) ? _originDirection : image_angle) : direction), _originDirection),
+								"speed_factor"       : (("temerge_speed_factor" in self && !is_undefined(temerge_speed_factor)) ? temerge_speed_factor : (0.5 + max(0, abs(speed / 32) * (1 - (friction / 2))))),
 								"accuracy"           : _mainAccuracy,
 								"wep"                : _wepXmerge_wep_raw,
 								"team"               : team,
-								"creator"            : creator,
-							};
+								"creator"            : creator
+							},
+							_scrPrefix = "temerge_" + object_get_name(
+								("temerge_object" in self && !is_undefined(temerge_object))
+								? temerge_object
+								: object_index
+							);
 							
 						 // Is Independent From the Creator:
 						if(_instWasIndependent || round(_fireAt.position_distance) > 16){
@@ -1323,20 +1327,17 @@
 							_fireAt.direction   = _originDirection;
 						}
 						
-						 // Setup Default Scripts:
-						var _scrName = "temerge_" + object_get_name(
-							("temerge_object" in self && !is_undefined(temerge_object))
-							? temerge_object
-							: object_index
-						);
-						switch(_merge.on_fire){ case undefined: var _scrIndex = script_get_index(`${_scrName}_fire`); if(_scrIndex >= 0) _merge.on_fire = script_ref_create(_scrIndex); }
-						switch(_merge.on_init){ case undefined: var _scrIndex = script_get_index(`${_scrName}_init`); if(_scrIndex >= 0) _merge.on_init = script_ref_create(_scrIndex); }
-						switch(_merge.on_hit ){ case undefined: var _scrIndex = script_get_index(`${_scrName}_hit`);  if(_scrIndex >= 0) _merge.on_hit  = script_ref_create(_scrIndex); }
-						switch(_merge.on_wall){ case undefined: var _scrIndex = script_get_index(`${_scrName}_wall`); if(_scrIndex >= 0) _merge.on_wall = script_ref_create(_scrIndex); }
-						
-						 // Call Firing Setup Code:
-						if(!is_undefined(_merge.on_fire)){
-							call(scr.pass, [self, noone], _merge.on_fire, _fireAt);
+						 // Merged Projectile Fire Event:
+						switch(("temerge_on_fire" in self) ? temerge_on_fire : undefined){
+							case undefined:
+								var _scrIndex = script_get_index(`${_scrPrefix}_fire`);
+								if(_scrIndex >= 0){
+									call(scr.pass, [_fireAt.creator, self], script_ref_create(_scrIndex), _fireAt);
+								}
+								break;
+								
+							default:
+								call(scr.pass, [_fireAt.creator, self], temerge_on_fire, _fireAt);
 						}
 						
 						 // Weapon Firing:
@@ -1381,6 +1382,11 @@
 								
 								 // Firing:
 								if(_canShoot){
+									 // Setup Merged Projectile Scripts:
+									switch(_merge.on_setup){ case undefined: var _scrIndex = script_get_index(`${_scrPrefix}_setup`); if(_scrIndex >= 0) _merge.on_setup = script_ref_create(_scrIndex); }
+									switch(_merge.on_hit  ){ case undefined: var _scrIndex = script_get_index(`${_scrPrefix}_hit`);   if(_scrIndex >= 0) _merge.on_hit   = script_ref_create(_scrIndex); }
+									switch(_merge.on_wall ){ case undefined: var _scrIndex = script_get_index(`${_scrPrefix}_wall`);  if(_scrIndex >= 0) _merge.on_wall  = script_ref_create(_scrIndex); }
+									
 									 // Store Firing Frame:
 									var _lastWep = _wep;
 									_wep = _mainWep;
@@ -1393,6 +1399,7 @@
 									}
 									
 									 // Store Values:
+									_merge.speed_factor = _fireAt.speed_factor;
 									if(!is_undefined(_mainMerge) && "main_fire_vars" in _mainMerge){
 										_merge.main_fire_vars = _mainMerge.main_fire_vars;
 									}
@@ -1502,14 +1509,14 @@
 				var _speedFactor = _mainMerge.speed_factor;
 				if(_speedFactor != 1){
 					with(_inst){
-						 // Exceptions:
+						 // Manual Fixes:
 						if(speed != 0){
 							if(instance_is(self, PlasmaBall) || instance_is(self, PlasmaBig) || instance_is(self, PlasmaHuge)){
-								if("temerge_speed_factor_Plasma_instance_list" not in GameCont){
-									GameCont.temerge_speed_factor_Plasma_instance_list = [];
+								if("temerge_Plasma_fix_speed_factor_instance_list" not in GameCont){
+									GameCont.temerge_Plasma_fix_speed_factor_instance_list = [];
 								}
-								if(array_find_index(GameCont.temerge_speed_factor_Plasma_instance_list, self) < 0){
-									array_push(GameCont.temerge_speed_factor_Plasma_instance_list, self);
+								if(array_find_index(GameCont.temerge_Plasma_fix_speed_factor_instance_list, self) < 0){
+									array_push(GameCont.temerge_Plasma_fix_speed_factor_instance_list, self);
 								}
 							}
 							else if(instance_is(self, Rocket)){
@@ -1521,11 +1528,11 @@
 									}
 								}
 								else{
-									if("temerge_speed_factor_Rocket_instance_list" not in GameCont){
-										GameCont.temerge_speed_factor_Rocket_instance_list = [];
+									if("temerge_Rocket_fix_speed_factor_instance_list" not in GameCont){
+										GameCont.temerge_Rocket_fix_speed_factor_instance_list = [];
 									}
-									if(array_find_index(GameCont.temerge_speed_factor_Rocket_instance_list, self) < 0){
-										array_push(GameCont.temerge_speed_factor_Rocket_instance_list, self);
+									if(array_find_index(GameCont.temerge_Rocket_fix_speed_factor_instance_list, self) < 0){
+										array_push(GameCont.temerge_Rocket_fix_speed_factor_instance_list, self);
 									}
 								}
 							}
@@ -1538,27 +1545,27 @@
 									}
 								}
 								else{
-									if("temerge_speed_factor_Nuke_instance_list" not in GameCont){
-										GameCont.temerge_speed_factor_Nuke_instance_list = [];
+									if("temerge_Nuke_fix_speed_factor_instance_list" not in GameCont){
+										GameCont.temerge_Nuke_fix_speed_factor_instance_list = [];
 									}
-									if(array_find_index(GameCont.temerge_speed_factor_Nuke_instance_list, self) < 0){
-										array_push(GameCont.temerge_speed_factor_Nuke_instance_list, self);
+									if(array_find_index(GameCont.temerge_Nuke_fix_speed_factor_instance_list, self) < 0){
+										array_push(GameCont.temerge_Nuke_fix_speed_factor_instance_list, self);
 									}
 								}
 							}
 							else if(instance_is(self, Seeker)){
-								if("temerge_speed_factor_Seeker_instance_list" not in GameCont){
-									GameCont.temerge_speed_factor_Seeker_instance_list = [];
+								if("temerge_Seeker_fix_speed_factor_instance_list" not in GameCont){
+									GameCont.temerge_Seeker_fix_speed_factor_instance_list = [];
 								}
-								if(array_find_index(GameCont.temerge_speed_factor_Seeker_instance_list, self) < 0){
-									array_push(GameCont.temerge_speed_factor_Seeker_instance_list, self);
+								if(array_find_index(GameCont.temerge_Seeker_fix_speed_factor_instance_list, self) < 0){
+									array_push(GameCont.temerge_Seeker_fix_speed_factor_instance_list, self);
 								}
 							}
 						}
-						if("temerge_speed_factor" not in self){
-							temerge_speed_factor = 1;
+						if("temerge_fix_speed_factor" not in self){
+							temerge_fix_speed_factor = 1;
 						}
-						temerge_speed_factor *= _speedFactor;
+						temerge_fix_speed_factor *= _speedFactor;
 						
 						 // Clamp Speed:
 						image_angle -= direction;
@@ -1571,9 +1578,9 @@
 				}
 			}
 			
-			 // Call Projectile Merging Event:
-			if("on_init" in _mainMerge && _mainMerge.on_init != undefined){
-				call(scr.pass, noone, _mainMerge.on_init, _inst);
+			 // Merged Projectile Setup Event:
+			if("on_setup" in _mainMerge && _mainMerge.on_setup != undefined){
+				call(scr.pass, noone, _mainMerge.on_setup, _inst);
 			}
 			_inst = instances_matching_ne(_inst, "id");
 			
@@ -1661,23 +1668,23 @@
 	image_yscale = _setYScale;
 	
 	 // Manual Visual Fixes:
-	if(instance_is(self, Rocket) || instance_is(self, Nuke)){
-		if("temerge_scale_draw_projectile" not in GameCont){
-			GameCont.temerge_scale_draw_projectile = [];
+	if(instance_is(self, Lightning) || instance_is(self, EnemyLightning)){
+		if("temerge_Lightning_fix_draw_scale_instance_list" not in GameCont){
+			GameCont.temerge_Lightning_fix_draw_scale_instance_list = [];
 		}
-		if(array_find_index(GameCont.temerge_scale_draw_projectile, self) < 0){
-			array_push(GameCont.temerge_scale_draw_projectile, self);
+		if(array_find_index(GameCont.temerge_Lightning_fix_draw_scale_instance_list, self) < 0){
+			array_push(GameCont.temerge_Lightning_fix_draw_scale_instance_list, self);
 		}
+		temerge_fix_draw_yscale = image_yscale;
 	}
-	else if(instance_is(self, Lightning)){
-		if("temerge_scale_draw_Lightning" not in GameCont){
-			GameCont.temerge_scale_draw_Lightning = [];
+	else if(instance_is(self, Rocket) || instance_is(self, Nuke)){
+		if("temerge_projectile_fix_draw_scale_instance_list" not in GameCont){
+			GameCont.temerge_projectile_fix_draw_scale_instance_list = [];
 		}
-		if(array_find_index(GameCont.temerge_scale_draw_Lightning, self) < 0){
-			array_push(GameCont.temerge_scale_draw_Lightning, self);
+		if(array_find_index(GameCont.temerge_projectile_fix_draw_scale_instance_list, self) < 0){
+			array_push(GameCont.temerge_projectile_fix_draw_scale_instance_list, self);
 		}
-		temerge_Lightning_scale = image_yscale;
-	}
+	} 
 	
 #define temerge_projectile_add_scale // addXScale, addYScale=addXScale
 	/*
@@ -1697,24 +1704,549 @@
 	);
 	
 #define temerge_scale_draw
-	 // Visually Fix Projectile Scale:
-	if("temerge_scale_draw_projectile" in GameCont && array_length(GameCont.temerge_scale_draw_projectile)){
-		GameCont.temerge_scale_draw_projectile = instances_matching_ne(GameCont.temerge_scale_draw_projectile, "id");
-		with(instances_matching_ge(instances_matching(GameCont.temerge_scale_draw_projectile, "visible", true), "depth", depth)){
-			draw_self();
+	 // Merged Projectile Visual Scale Fixes:
+	with(["Lightning", "projectile"]){
+		var	_drawScaleObjectName          = self,
+			_drawScaleInstanceListVarName = `temerge_${_drawScaleObjectName}_fix_draw_scale_instance_list`;
+			
+		if(_drawScaleInstanceListVarName in GameCont){
+			var _drawScaleInstanceList = variable_instance_get(GameCont, _drawScaleInstanceListVarName);
+			if(array_length(_drawScaleInstanceList)){
+				 // Prune Instance List:
+				_drawScaleInstanceList = instances_matching_ne(_drawScaleInstanceList, "id");
+				
+				 // Visual Scale Fix:
+				var _activeDrawScaleInstanceList = instances_matching_ge(instances_matching(_drawScaleInstanceList, "visible", true), "depth", other.depth);
+				if(array_length(_activeDrawScaleInstanceList)){
+					switch(_drawScaleObjectName){
+						
+						case "Lightning":
+						
+							with(_activeDrawScaleInstanceList){
+								var _yScale = temerge_fix_draw_yscale / 2;
+								image_yscale *= _yScale;
+								draw_self();
+								image_yscale /= _yScale;
+							}
+							
+							break;
+							
+						default:
+						
+							with(_activeDrawScaleInstanceList){
+								draw_self();
+							}
+							
+					}
+				}
+				
+				 // Store Instance List:
+				variable_instance_set(GameCont, _drawScaleInstanceListVarName, _drawScaleInstanceList);
+			}
 		}
 	}
 	
-	 // Visually Fix Lightning Scale:
-	if("temerge_scale_draw_Lightning" in GameCont && array_length(GameCont.temerge_scale_draw_Lightning)){
-		GameCont.temerge_scale_draw_Lightning = instances_matching_ne(GameCont.temerge_scale_draw_Lightning, "id");
-		with(instances_matching_ge(instances_matching(GameCont.temerge_scale_draw_Lightning, "visible", true), "depth", depth)){
-			var _scale = temerge_Lightning_scale / 2;
-			image_yscale *= _scale;
-			draw_self();
-			image_yscale /= _scale;
+#define temerge_projectile_event(_eventVarName, _eventRef)
+	var	_context             = [self, other],
+		_eventRefListVarName = `temerge_${_eventVarName}_list`,
+		_eventRefList        = variable_instance_get(self, _eventRefListVarName),
+		_lastEventRef        = variable_instance_get(self, _eventVarName);
+		
+	 // Set Event Reference:
+	variable_instance_set(self, _eventVarName, _eventRef);
+	
+	 // Call Custom Scripts:
+	with(_eventRefList){
+		if(call(scr.pass, _context, self)){
+			 // Remove Script From Event:
+			_eventRefList = call(scr.array_delete_value, _eventRefList, self);
+			if(instance_exists(other)){
+				variable_instance_set(other, _eventRefListVarName, _eventRefList);
+			}
+			else exit;
+		}
+		else if(!instance_exists(other)){
+			exit;
 		}
 	}
+	
+	 // Call Normal Script:
+	call(scr.pass, _context, _eventRef);
+	
+	 // Revert Event Reference:
+	if(instance_exists(self) && array_length(temerge_on_hit_list)){
+		var _scriptRef = variable_instance_get(self, _eventVarName);
+		if(_scriptRef != _eventRef){
+			if(array_length(_scriptRef) >= 3){
+				_lastEventRef[@ array_find_index(_lastEventRef, _eventRef)] = _scriptRef;
+			}
+			else _lastEventRef = _scriptRef;
+		}
+		variable_instance_set(self, _eventVarName, _lastEventRef);
+	}
+	
+#define CustomProjectile_hit
+	if(projectile_canhit(other)){
+		projectile_hit(other, damage, force);
+		instance_destroy();
+	}
+	
+#define CustomProjectile_wall
+	instance_destroy();
+	
+	
+#define temerge_HeavyBullet_setup(_inst)
+	with(_inst){
+		temerge_projectile_add_force(2);
+		temerge_projectile_add_scale(0.1);
+	}
+	
+	
+#define temerge_UltraBullet_fire(_at)
+	 // Slightly More Accuracy:
+	_at.accuracy *= 0.9;
+	
+#define temerge_UltraBullet_setup(_inst)
+	with(_inst){
+		temerge_projectile_add_force(2);
+		temerge_projectile_add_bloom(0.2);
+		temerge_projectile_add_scale(0.2);
+	}
+	
+	
+#define temerge_BouncerBullet_wall
+	if(place_meeting(x + hspeed_raw, y + vspeed_raw, Wall)){
+		 // Laser Bounce:
+		if(instance_is(self, Laser) || instance_is(self, EnemyLaser)){
+			with(instance_copy(false)){
+				var	_addX = lengthdir_x(2, image_angle),
+					_addY = lengthdir_y(2, image_angle);
+					
+				 // Update Starting Position:
+				x        -= _addX;
+				y        -= _addY;
+				xstart    = x;
+				ystart    = y;
+				xprevious = x;
+				yprevious = y;
+				
+				 // Bounce Direction:
+				if(place_meeting(x + _addX, y, Wall)){
+					_addX *= -1;
+				}
+				else if(place_meeting(x, y + _addY, Wall)){
+					_addY *= -1;
+				}
+				else{
+					_addX *= -1;
+					_addY *= -1;
+				}
+				image_angle = point_direction(0, 0, _addX, _addY);
+				
+				 // Run Hitscan:
+				image_xscale = 1;
+				event_perform(ev_alarm, 0);
+			}
+		}
+		
+		 // Bounce:
+		else if(speed != 0){
+			var _lastDirection = direction;
+			move_bounce_solid(true);
+			if(image_angle == _lastDirection){
+				image_angle = direction;
+			}
+		}
+		
+		 // Effects:
+		instance_create(x, y, Dust);
+		sound_play_hit(sndBouncerBounce, 0.2);
+		
+		 // Disable Event:
+		return true;
+	}
+	
+	
+#define temerge_FlameShell_setup(_inst)
+	with(_inst){
+		with(instance_create(x, y, CustomObject)){
+			target     = other;
+			spd        = other.speed;
+			dir        = other.direction;
+			team       = other.team;
+			creator    = other.creator;
+			on_step    = temerge_FlameShell_flame_step;
+			on_destroy = temerge_FlameShell_flame_destroy;
+		}
+	}
+	
+#define temerge_FlameShell_flame_step
+	if(instance_exists(target)){
+		 // Store Target Variables:
+		x         = target.x;
+		y         = target.y;
+		spd       = target.speed;
+		dir       = target.direction;
+		team      = target.team;
+		creator   = target.creator;
+		
+		 // Release Flames Early:
+		if(spd < 5 && target.friction > 0){
+			instance_destroy();
+		}
+	}
+	else instance_destroy();
+	
+#define temerge_FlameShell_flame_destroy
+	 // Create Flame:
+	with(call(scr.projectile_create,
+		self,
+		x,
+		y,
+		Flame,
+		((spd == 0) ? random(360) : dir),
+		max(1.5, spd / 2)
+	)){
+		 // Untag Team:
+		team = round(team);
+		
+		 // Unstick From Wall:
+		if(place_meeting(x, y, Wall)){
+			move_outside_solid(other.dir + 180, bbox_width);
+			if(place_meeting(x, y, Wall)){
+				x = xprevious;
+				y = yprevious;
+			}
+			else{
+				xprevious = x;
+				yprevious = y;
+			}
+		}
+	}
+	
+	
+#define temerge_UltraShell_setup(_inst)
+	with(_inst){
+		temerge_projectile_add_force(2);
+		temerge_projectile_add_bloom(0.2);
+		temerge_projectile_add_scale(0.2, 0);
+	}
+	
+	
+#define temerge_Slug_setup(_inst)
+	with(_inst){
+		temerge_projectile_add_force(4);
+		temerge_projectile_add_bloom(1/3);
+		temerge_projectile_add_scale(0.25);
+		
+		 // Hits Like a Fist:
+		if("temerge_Slug_impact_size" not in self){
+			temerge_Slug_impact_size = 0;
+		}
+		temerge_Slug_impact_size++;
+	}
+	
+#define temerge_Slug_hit
+	if(temerge_Slug_impact_size != 0){
+		if(
+			projectile_canhit(other)
+			&& other.my_health > 0
+			&& ("canhurt" not in self || canhurt) // Bolts
+		){
+			var _damage = ceil(((damage == 0) ? 1 : damage) * (power(1.5, temerge_Slug_impact_size) - 1));
+			
+			if("temerge_Slug_impact_nexthurt" not in other || other.temerge_Slug_impact_nexthurt <= current_frame){
+				var _lastNextHurt = other.nexthurt;
+				
+				 // Deal Impact Damage:
+				temerge_Slug_impact(self, other, x, y, _damage);
+				
+				with(other){
+					 // Manual I-Frames:
+					temerge_Slug_impact_nexthurt = nexthurt;
+					nexthurt = _lastNextHurt;
+					
+					 // Piercing Fix:
+					if(my_health <= 0){
+						script_bind_end_step(temerge_Slug_health_end_step, 0, self, my_health);
+						my_health = 1;
+					}
+				}
+				
+				 // Disable Slug Effect:
+				if(instance_exists(self)){
+					//image_alpha -= (sign(image_alpha) / 3) * temerge_Slug_impact_size;
+					temerge_Slug_impact_size = 0;
+				}
+				
+				 // Disable Event:
+				return true;
+			}
+			
+			 // Check Post-Collision:
+			else script_bind_end_step(temerge_Slug_hit_end_step, 0, self, other, x, y, _damage);
+		}
+	}
+	
+	 // Disable Event:
+	else return true;
+	
+#define temerge_Slug_hit_end_step(_inst, _hitInst, _hitX, _hitY, _hitDamage)
+	if(!instance_exists(_inst)){
+		temerge_Slug_impact(_inst, instances_matching_ne(_hitInst, "id"), _hitX, _hitY, _hitDamage);
+	}
+	instance_destroy();
+	
+#define temerge_Slug_health_end_step(_slugInst, _lastHealth)
+	with(instances_matching_le(_slugInst, "my_health", 1)){
+		my_health = _lastHealth + (my_health - 1);
+	}
+	instance_destroy();
+	
+#define temerge_Slug_impact(_inst, _hitInst, _hitX, _hitY, _hitDamage)
+	/*
+		Applies merged slug damage & effects to the given instance
+		
+		Args:
+			inst       - The projectile instance
+			hitInst    - The hitme instance
+			hitX, hitY - The position that the hitme instance is being hit from
+			hitDamage  - The damage that is applied to the hitme instance
+			hitMult    - The multiplier for the damage and effects
+	*/
+	
+	with(_hitInst){
+		var	_x   = bbox_center_x,
+			_y   = bbox_center_y,
+			_dir = (
+				(_x == _hitX && _y == _hitY)
+				? random(360)
+				: point_direction(_x, _y, _hitX, _hitY)
+			);
+			
+		 // Hit Effect:
+		with(instance_create(
+			_x + lengthdir_x(min(abs(_hitX - _x), (bbox_width  / 2) + 1), _dir),
+			_y + lengthdir_y(min(abs(_hitY - _y), (bbox_height / 2) + 1), _dir),
+			BulletHit
+		)){
+			var _scale = 0.75 + (max(0, _hitDamage) / 80);
+			sprite_index = ((_scale < 1.5) ? sprSlugHit : sprHeavySlugHit);
+			image_xscale = ((_scale < 1.5) ? _scale     : (_scale / 1.5));
+			image_yscale = image_xscale;
+			depth        = -6;
+			friction     = 0.6;
+			motion_add(_dir + 180 + orandom(30), 4);
+		}
+		
+		 // Hit Damage:
+		if(instance_exists(_inst)){
+			with(_inst){
+				projectile_hit(other, _hitDamage);
+			}
+		}
+		else projectile_hit_raw(self, _hitDamage, 1);
+	}
+	
+	
+#define temerge_HeavySlug_fire(_at)
+	 // Even Slower:
+	if(_at.speed_factor > 0.5){
+		_at.speed_factor = lerp(_at.speed_factor, 0.5, 2/3);
+	}
+	
+#define temerge_HeavySlug_setup(_inst)
+	with(_inst){
+		temerge_projectile_add_force(8);
+		temerge_projectile_add_bloom(1/3);
+		temerge_projectile_add_scale(0.4);
+		
+		 // Hits Like a Truck:
+		if("temerge_Slug_impact_size" not in self){
+			temerge_Slug_impact_size = 0;
+		}
+		temerge_Slug_impact_size += 2;
+	}
+	
+#define temerge_HeavySlug_hit
+	temerge_Slug_hit();
+	
+	
+#define temerge_HyperSlug_setup(_inst)
+	 // Hyperify:
+	with(script_bind_step(temerge_hyper_step, 0)){
+		instance_list = _inst;
+	}
+	
+#define temerge_hyper_step
+	instance_list = instances_matching_ne(instance_list, "id");
+	if(array_length(instance_list)){
+		with(instances_matching_ge(instance_list, "speed", 1)){
+			var _minSpeed = max(1, friction * 10);
+			if(speed >= _minSpeed){
+				var	_stepNum = 0,
+					_stepMax = 20,
+					_isMelee = (array_find_index([Slash, EnemySlash, GuitarSlash, BloodSlash, EnergySlash, EnergyHammerSlash, LightningSlash, CustomSlash, Shank, EnergyShank, HorrorBullet, GuardianDeflect], object_index) >= 0);
+					
+				with(self){
+					while(_stepNum < _stepMax && speed >= _minSpeed){
+						 // Movement:
+						if(friction_raw != 0 && speed_raw != 0){
+							speed_raw -= min(abs(speed_raw), friction_raw) * sign(speed_raw);
+						}
+						if(gravity_raw != 0){
+							hspeed_raw += lengthdir_x(gravity_raw, gravity_direction);
+							vspeed_raw += lengthdir_y(gravity_raw, gravity_direction);
+						}
+						if(speed_raw != 0){
+							x += hspeed_raw;
+							y += vspeed_raw;
+						}
+						
+						 // Smoke Trail:
+						if(chance_ct(1, 10)){
+		        			instance_create(x, y, Smoke);
+						}
+						
+						 // Potential Collision:
+						if(place_meeting(x, y, Wall) || place_meeting(x, y, PortalShock)){
+							x = xprevious;
+							y = yprevious;
+							break;
+						}
+						
+						 // Potential Hit:
+						if(place_meeting(x, y, hitme)){
+							if(array_length(instances_matching_gt(call(scr.instances_meeting_instance, self, instances_matching_ne(hitme, "team", team)), "my_health", 0))){
+								x = xprevious;
+								y = yprevious;
+								break;
+							}
+						}
+						
+						 // Potential Deflection:
+						if(typ != 0){
+							var _collisionObjectList = [];
+							if(place_meeting(x, y, projectile   )) _collisionObjectList = call(scr.array_combine, _collisionObjectList, [Slash, EnemySlash, GuitarSlash, BloodSlash, EnergySlash, EnergyHammerSlash, LightningSlash, CustomSlash, Shank, EnergyShank, HorrorBullet, GuardianDeflect]);
+							if(place_meeting(x, y, CrystalShield)) array_push(_collisionObjectList, CrystalShield);
+							if(place_meeting(x, y, PopoShield   )) array_push(_collisionObjectList, PopoShield);
+							if(place_meeting(x, y, MeatExplosion)) array_push(_collisionObjectList, MeatExplosion);
+							if(place_meeting(x, y, PopoExplosion)) array_push(_collisionObjectList, PopoExplosion);
+							if(array_length(_collisionObjectList)){
+								if(array_length(call(scr.instances_meeting_instance, self, instances_matching_ne(_collisionObjectList, "team", team)))){
+									x = xprevious;
+									y = yprevious;
+									break;
+								}
+							}
+						}
+						if(_isMelee && place_meeting(x, y, projectile)){
+							if(array_length(call(scr.instances_meeting_instance, self, instances_matching_ne(instances_matching_ne(projectile, "team", team), "typ", 0)))){
+								x = xprevious;
+								y = yprevious;
+								break;
+							}
+						}
+						
+						 // End Step:
+						event_perform(ev_step, ev_step_end);
+						if(!instance_exists(self)){
+							break;
+						}
+						
+						 // Store Last Position:
+						xprevious = x;
+						yprevious = y;
+						
+						 // Animate:
+						image_index += image_speed_raw;
+						if(image_index < 0 || image_index >= image_number){
+							image_index -= image_number * sign(image_index);
+							event_perform(ev_other, ev_animation_end);
+							if(!instance_exists(self)){
+								break;
+							}
+						}
+						
+						 // Begin Step:
+						event_perform(ev_step, ev_step_begin);
+						if(!instance_exists(self)){
+							break;
+						}
+						
+						 // Alarms:
+						if(((current_frame + _stepNum + epsilon) % 1) < current_time_scale){
+							var _notExisting = false;
+							for(var _alarmIndex = 0; _alarmIndex < 12; _alarmIndex++){
+								var _alarmNum = alarm_get(_alarmIndex);
+								if(_alarmNum >= 0){
+									//if(event_exists(object_index, ev_alarm, _alarmIndex)){
+										alarm_set(_alarmIndex, --_alarmNum);
+										if(_alarmNum == 0){
+											event_perform(ev_alarm, _alarmIndex);
+											if(!instance_exists(self)){
+												_notExisting = true;
+												break;
+											}
+										}
+									//}
+								}
+							}
+							if(_notExisting){
+								break;
+							}
+						}
+						
+						 // Step:
+						event_perform(ev_step, ev_step_normal);
+						if(!instance_exists(self)){
+							break;
+						}
+						
+						_stepNum += current_time_scale;
+					}
+				}
+				
+				 // Remove From List:
+				if(instance_exists(self) && speed < _minSpeed){
+					other.instance_list = instances_matching_ne(other.instance_list, "id", id);
+				}
+			}
+		}
+	}
+	else instance_destroy();
+	
+	
+#define temerge_Bolt_fire(_at)
+	 // More Accuracy:
+	_at.accuracy *= 0.5;
+	
+#define temerge_Bolt_hit
+	if(
+		projectile_canhit(other)
+		&& other.my_health > 0
+		&& ("canhurt" not in self || canhurt) // Bolts
+	){
+		if(other.my_health <= min(damage, ceil(damage / 2))){
+			 // Manual Damage:
+			projectile_hit(other, damage, force);
+			
+			 // Disable Enemy Hitbox:
+			with(other){
+				if(mask_index != mskNone){
+					script_bind_end_step(temerge_Bolt_hit_end_step, 0, self, mask_index);
+					mask_index = mskNone;
+				}
+			}
+		}
+	}
+	
+#define temerge_Bolt_hit_end_step(_inst, _mask)
+	with(instances_matching(_inst, "mask_index", mskNone)){
+		mask_index = _mask;
+	}
+	instance_destroy();
+	
 	
 #define ntte_step
 	 // Unmuffle Muffled Sounds:
@@ -1742,40 +2274,60 @@
 		}
 	}
 	
-	 // Plasma Speed Fix:
-	if("temerge_speed_factor_Plasma_instance_list" in GameCont && array_length(GameCont.temerge_speed_factor_Plasma_instance_list)){
-		GameCont.temerge_speed_factor_Plasma_instance_list = instances_matching_ne(GameCont.temerge_speed_factor_Plasma_instance_list, "id");
-		with(instances_matching(GameCont.temerge_speed_factor_Plasma_instance_list, "image_speed", 0)){
-			GameCont.temerge_speed_factor_Plasma_instance_list = instances_matching_ne(GameCont.temerge_speed_factor_Plasma_instance_list, "id", id);
-			speed *= temerge_speed_factor;
-		}
-	}
-	
-	 // Rocket Speed Fix:
-	if("temerge_speed_factor_Rocket_instance_list" in GameCont && array_length(GameCont.temerge_speed_factor_Rocket_instance_list)){
-		GameCont.temerge_speed_factor_Rocket_instance_list = instances_matching_ne(GameCont.temerge_speed_factor_Rocket_instance_list, "id");
-		with(GameCont.temerge_speed_factor_Rocket_instance_list){
-			if(speed > 12 * temerge_speed_factor){
-				speed = 12 * temerge_speed_factor;
+	 // Merged Projectile Speed Multiplier Fixes:
+	with(["Plasma", "Rocket", "Nuke", "projectile"]){
+		var	_speedFactorObjectName          = self,
+			_speedFactorInstanceListVarName = `temerge_${_speedFactorObjectName}_fix_speed_factor_instance_list`;
+			
+		if(_speedFactorInstanceListVarName in GameCont){
+			var _speedFactorInstanceList = variable_instance_get(GameCont, _speedFactorInstanceListVarName);
+			if(array_length(_speedFactorInstanceList)){
+				 // Prune Instance List:
+				_speedFactorInstanceList = instances_matching_ne(_speedFactorInstanceList, "id");
+				
+				 // Speed Multiplier Fix:
+				switch(_speedFactorObjectName){
+					
+					case "Plasma":
+					
+						with(instances_matching(_speedFactorInstanceList, "image_speed", 0)){
+							_speedFactorInstanceList = instances_matching_ne(_speedFactorInstanceList, "id", id);
+							speed *= temerge_fix_speed_factor;
+						}
+						
+						break;
+						
+					case "Rocket":
+					
+						with(_speedFactorInstanceList){
+							if(speed > 12 * temerge_fix_speed_factor){
+								speed = 12 * temerge_fix_speed_factor;
+							}
+						}
+						
+						break;
+						
+					case "Nuke":
+					
+						with(_speedFactorInstanceList){
+							if(speed > 5 * temerge_fix_speed_factor){
+								speed = 5 * temerge_fix_speed_factor;
+							}
+						}
+						
+						break;
+						
+					default:
+					
+						with(_speedFactorInstanceList){
+							speed *= temerge_fix_speed_factor;
+						}
+						
+				}
+				
+				 // Store Instance List:
+				variable_instance_set(GameCont, _speedFactorInstanceListVarName, _speedFactorInstanceList);
 			}
-		}
-	}
-	
-	 // Nuke Speed Fix:
-	if("temerge_speed_factor_Nuke_instance_list" in GameCont && array_length(GameCont.temerge_speed_factor_Nuke_instance_list)){
-		GameCont.temerge_speed_factor_Nuke_instance_list = instances_matching_ne(GameCont.temerge_speed_factor_Nuke_instance_list, "id");
-		with(GameCont.temerge_speed_factor_Nuke_instance_list){
-			if(speed > 5 * temerge_speed_factor){
-				speed = 5 * temerge_speed_factor;
-			}
-		}
-	}
-	
-	 // Seeker Speed Fix:
-	if("temerge_speed_factor_Seeker_instance_list" in GameCont && array_length(GameCont.temerge_speed_factor_Seeker_instance_list)){
-		GameCont.temerge_speed_factor_Seeker_instance_list = instances_matching_ne(GameCont.temerge_speed_factor_Seeker_instance_list, "id");
-		with(GameCont.temerge_speed_factor_Seeker_instance_list){
-			speed *= temerge_speed_factor;
 		}
 	}
 	
@@ -1867,325 +2419,6 @@
 			}
 		}
 	}
-	
-#define temerge_projectile_event(_eventVarName, _eventRef)
-	var	_context             = [self, other],
-		_eventRefListVarName = `temerge_${_eventVarName}_list`,
-		_eventRefList        = variable_instance_get(self, _eventRefListVarName),
-		_lastEventRef        = variable_instance_get(self, _eventVarName);
-		
-	 // Set Event Reference:
-	variable_instance_set(self, _eventVarName, _eventRef);
-	
-	 // Call Custom Scripts:
-	with(_eventRefList){
-		if(call(scr.pass, _context, self)){
-			 // Remove Script From Event:
-			_eventRefList = call(scr.array_delete_value, _eventRefList, self);
-			if(instance_exists(other)){
-				variable_instance_set(other, _eventRefListVarName, _eventRefList);
-			}
-			else exit;
-		}
-		else if(!instance_exists(other)){
-			exit;
-		}
-	}
-	
-	 // Call Normal Script:
-	call(scr.pass, _context, _eventRef);
-	
-	 // Revert Event Reference:
-	if(instance_exists(self) && array_length(temerge_on_hit_list)){
-		var _scriptRef = variable_instance_get(self, _eventVarName);
-		if(_scriptRef != _eventRef){
-			if(array_length(_scriptRef) >= 3){
-				_lastEventRef[@ array_find_index(_lastEventRef, _eventRef)] = _scriptRef;
-			}
-			else _lastEventRef = _scriptRef;
-		}
-		variable_instance_set(self, _eventVarName, _lastEventRef);
-	}
-	
-#define CustomProjectile_hit
-	if(projectile_canhit(other)){
-		projectile_hit(other, damage, force);
-		instance_destroy();
-	}
-	
-#define CustomProjectile_wall
-	instance_destroy();
-	
-	
-#define temerge_HeavyBullet_init(_inst)
-	with(_inst){
-		temerge_projectile_add_force(2);
-		temerge_projectile_add_scale(0.1);
-	}
-	
-	
-#define temerge_UltraBullet_fire(_at)
-	 // Slightly More Accuracy:
-	_at.accuracy *= 0.9;
-	
-#define temerge_UltraBullet_init(_inst)
-	with(_inst){
-		temerge_projectile_add_force(2);
-		temerge_projectile_add_bloom(0.2);
-		temerge_projectile_add_scale(0.2);
-	}
-	
-	
-#define temerge_BouncerBullet_wall
-	if(place_meeting(x + hspeed_raw, y + vspeed_raw, Wall)){
-		 // Laser Bounce:
-		if(instance_is(self, Laser) || instance_is(self, EnemyLaser)){
-			with(instance_copy(false)){
-				var	_addX = lengthdir_x(2, image_angle),
-					_addY = lengthdir_y(2, image_angle);
-					
-				 // Update Starting Position:
-				x        -= _addX;
-				y        -= _addY;
-				xstart    = x;
-				ystart    = y;
-				xprevious = x;
-				yprevious = y;
-				
-				 // Bounce Direction:
-				if(place_meeting(x + _addX, y, Wall)){
-					_addX *= -1;
-				}
-				else if(place_meeting(x, y + _addY, Wall)){
-					_addY *= -1;
-				}
-				else{
-					_addX *= -1;
-					_addY *= -1;
-				}
-				image_angle = point_direction(0, 0, _addX, _addY);
-				
-				 // Run Hitscan:
-				image_xscale = 1;
-				event_perform(ev_alarm, 0);
-			}
-		}
-		
-		 // Bounce:
-		else if(speed != 0){
-			var _lastDirection = direction;
-			move_bounce_solid(true);
-			if(image_angle == _lastDirection){
-				image_angle = direction;
-			}
-		}
-		
-		 // Effects:
-		instance_create(x, y, Dust);
-		sound_play_hit(sndBouncerBounce, 0.2);
-		
-		 // Done:
-		return true;
-	}
-	
-	
-#define temerge_FlameShell_init(_inst)
-	with(_inst){
-		with(instance_create(x, y, CustomObject)){
-			target     = other;
-			spd        = other.speed;
-			dir        = other.direction;
-			team       = other.team;
-			creator    = other.creator;
-			on_step    = temerge_FlameShell_flame_step;
-			on_destroy = temerge_FlameShell_flame_destroy;
-		}
-	}
-	
-#define temerge_FlameShell_flame_step
-	if(instance_exists(target)){
-		x         = target.x;
-		y         = target.y;
-		spd       = target.speed;
-		dir       = target.direction;
-		team      = target.team;
-		creator   = target.creator;
-		
-		 // Release Flames Early:
-		if(speed < 5 && target.friction > 0){
-			instance_destroy();
-		}
-	}
-	else instance_destroy();
-	
-#define temerge_FlameShell_flame_destroy
-	with(call(scr.projectile_create,
-		self,
-		x,
-		y,
-		Flame,
-		((spd == 0) ? random(360) : dir),
-		max(1.5, spd / 2)
-	)){
-		 // Untag Team:
-		team = round(team);
-		
-		 // Unstick From Wall:
-		if(place_meeting(x, y, Wall)){
-			move_outside_solid(other.dir + 180, bbox_width);
-			if(place_meeting(x, y, Wall)){
-				x = xprevious;
-				y = yprevious;
-			}
-			else{
-				xprevious = x;
-				yprevious = y;
-			}
-		}
-	}
-	
-	
-#define temerge_Slug_init(_inst)
-	with(_inst){
-		temerge_projectile_add_force(4);
-		temerge_projectile_add_bloom(1/3);
-		temerge_projectile_add_scale(0.25);
-		
-		 // Hits Like a Fist:
-		if("temerge_Slug_impact_size" not in self){
-			temerge_Slug_impact_size = 0;
-		}
-		temerge_Slug_impact_size++;
-	}
-	
-#define temerge_Slug_hit
-	if(temerge_Slug_impact_size != 0){
-		if(
-			projectile_canhit(other)
-			&& other.my_health > 0
-			&& ("canhurt" not in self || canhurt) // Bolts
-		){
-			var _damage = ceil(((damage == 0) ? 1 : damage) * (power(1.5, temerge_Slug_impact_size) - 1));
-			
-			if("temerge_Slug_nexthurt" not in other || other.temerge_Slug_nexthurt <= current_frame){
-				var _lastNextHurt = other.nexthurt;
-				
-				 // Deal Impact Damage:
-				temerge_Slug_impact(self, other, x, y, _damage);
-				
-				with(other){
-					 // Manual I-Frames:
-					temerge_Slug_nexthurt = nexthurt;
-					nexthurt              = _lastNextHurt;
-					
-					 // Piercing Fix:
-					if(my_health <= 0){
-						script_bind_end_step(temerge_Slug_health_end_step, 0, self, my_health);
-						my_health = 1;
-					}
-				}
-				
-				 // Disable Slug Effect:
-				if(instance_exists(self)){
-					image_alpha -= (sign(image_alpha) / 3) * temerge_Slug_impact_size;
-					temerge_Slug_impact_size = 0;
-				}
-				
-				 // Disable Event:
-				return true;
-			}
-			
-			 // Check Post-Collision:
-			else script_bind_end_step(temerge_Slug_hit_end_step, 0, self, other, x, y, _damage);
-		}
-	}
-	
-	 // Done:
-	else return true;
-	
-#define temerge_Slug_hit_end_step(_inst, _hitInst, _hitX, _hitY, _hitDamage)
-	if(!instance_exists(_inst)){
-		temerge_Slug_impact(_inst, instances_matching_ne(_hitInst, "id"), _hitX, _hitY, _hitDamage);
-	}
-	instance_destroy();
-	
-#define temerge_Slug_health_end_step(_slugInst, _lastHealth)
-	with(instances_matching_le(_slugInst, "my_health", 1)){
-		my_health = _lastHealth + (my_health - 1);
-	}
-	instance_destroy();
-	
-#define temerge_Slug_impact(_inst, _hitInst, _hitX, _hitY, _hitDamage)
-	/*
-		Applies merged slug damage & effects to the given instance
-		
-		Args:
-			inst       - The projectile instance
-			hitInst    - The hitme instance
-			hitX, hitY - The position that the hitme instance is being hit from
-			hitDamage  - The damage that is applied to the hitme instance
-			hitMult    - The multiplier for the damage and effects
-	*/
-	
-	with(_hitInst){
-		var	_x   = bbox_center_x,
-			_y   = bbox_center_y,
-			_dir = (
-				(_x == _hitX && _y == _hitY)
-				? random(360)
-				: point_direction(_x, _y, _hitX, _hitY)
-			);
-			
-		 // Hit Effect:
-		with(instance_create(
-			_x + lengthdir_x(min(abs(_hitX - _x), (bbox_width  / 2) + 1), _dir),
-			_y + lengthdir_y(min(abs(_hitY - _y), (bbox_height / 2) + 1), _dir),
-			BulletHit
-		)){
-			var _scale = 0.75 + (max(0, _hitDamage) / 80);
-			sprite_index = ((_scale < 1.5) ? sprSlugHit : sprHeavySlugHit);
-			image_xscale = ((_scale < 1.5) ? _scale     : (_scale / 1.5));
-			image_yscale = image_xscale;
-			depth        = -6;
-			friction     = 0.6;
-			motion_add(_dir + 180 + orandom(30), 4);
-		}
-		
-		 // Hit Damage:
-		if(instance_exists(_inst)){
-			with(_inst){
-				projectile_hit(other, _hitDamage);
-			}
-		}
-		else projectile_hit_raw(self, _hitDamage, 1);
-	}
-	
-	
-#define temerge_Bolt_fire(_at)
-	 // More Accuracy:
-	_at.accuracy *= 0.5;
-	
-#define temerge_Bolt_hit
-	if(projectile_canhit(other) && other.my_health > 0 && ("canhurt" not in self || canhurt)){
-		if(other.my_health <= min(damage, ceil(damage / 2))){
-			 // Manual Damage:
-			projectile_hit(other, damage, force);
-			
-			 // Disable Enemy Hitbox:
-			with(other){
-				if(mask_index != mskNone){
-					script_bind_end_step(temerge_Bolt_hit_end_step, 0, self, mask_index);
-					mask_index = mskNone;
-				}
-			}
-		}
-	}
-	
-#define temerge_Bolt_hit_end_step(_inst, _mask)
-	with(instances_matching(_inst, "mask_index", mskNone)){
-		mask_index = _mask;
-	}
-	instance_destroy();
 	
 	
 /// SCRIPTS
