@@ -335,7 +335,7 @@
 		 // Vars:
 		mask_index = mskSuperFlakBullet;
 		friction   = 0.4;
-		damage     = 0;
+		damage     = 3;
 		force      = 2;
 		typ        = 1;
 		z          = 0;
@@ -595,7 +595,9 @@
 		_num = lerp(1, 3, big);
 		
 	for(var _dir = _ang; _dir < _ang + 360; _dir += (360 / _num)){
-		call(scr.projectile_create, self, x + lengthdir_x(_dis, _dir), y - z + lengthdir_y(_dis, _dir), "BubbleExplosion");
+		with(call(scr.projectile_create, self, x + lengthdir_x(_dis, _dir), y - z + lengthdir_y(_dis, _dir), "BubbleExplosion")){
+			damage = other.damage;
+		}
 	}
 	
 	 // Big Bombage Effects:

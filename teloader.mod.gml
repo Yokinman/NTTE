@@ -2505,12 +2505,12 @@
 				
 			case "projectile_setup": // Calls custom setup code for the given projectile instances
 			
-				_gml += `#define ${_scrName}(_inst, _wep, _mainShot, _mainX, _mainY, _mainDirection, _mainAccuracy, _mainTeam, _mainCreator)`
+				_gml += `#define ${_scrName}(_inst, _wep, _isMain, _mainX, _mainY, _mainDirection, _mainAccuracy, _mainTeam, _mainCreator)`
 				_gml += _new + `if(is_object(_wep) && "${_name}" in _wep){`
 				_gml += _new + `	var _wrap = _wep.${_name};`
 				_gml += _new + `	`
 				                	 // Re-Tag Team:
-				_gml += _new + `	if(_mainShot){`
+				_gml += _new + `	if(_isMain){`
 				_gml += _new + `		with(_inst){`
 				_gml += _new + `			var	_lastTeam  = call(scr.projectile_tag_get_value, _mainTeam, _mainCreator, "${_name}_projectile_setup_team", round(_mainTeam)),`
 				_gml += _new + `				_scriptRef = script_ref_create(${_scrName}, _wep, false, _mainX, _mainY, _mainDirection, _mainAccuracy, _lastTeam, _mainCreator),`
@@ -2528,14 +2528,14 @@
 				_gml += _new + `			_wrapScrRefsNum = array_length(_wrapScrRefs);`
 				_gml += _new + `			`
 				_gml += _new + `		for(var i = 0; i < _wrapScrRefsNum; i++){`
-				_gml += _new + `			script_ref_call(_wrapScrRefs[i], _inst, _wep, _mainShot, _mainX, _mainY, _mainDirection, _mainAccuracy, _mainTeam, _mainCreator);`
+				_gml += _new + `			script_ref_call(_wrapScrRefs[i], _inst, _wep, _isMain, _mainX, _mainY, _mainDirection, _mainAccuracy, _mainTeam, _mainCreator);`
 				_gml += _new + `			_inst = instances_matching_ne(_inst, "id");`
 				_gml += _new + `		}`
 				_gml += _new + `	}`
 				_gml += _new + `}`
 				                
 				                 // Reset Team:
-				_gml += _new + `else if(_mainShot){`
+				_gml += _new + `else if(_isMain){`
 				_gml += _new + `	with(_inst){`
 				_gml += _new + `		team = _lastTeam;`
 				_gml += _new + `	}`
