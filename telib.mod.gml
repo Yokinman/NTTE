@@ -3391,39 +3391,39 @@
 	*/
 	
 	 // Store Sprites:
-	if(!mod_variable_exists("mod", mod_current, "area_sprite_map")){
+	if(!mod_variable_exists("mod", mod_current, "area_sprite_list_map")){
 		var	_sprBonesList = [sprNightBones,          sprBones,          sprSewerDecal,     sprScrapDecal,        sprCaveDecal,    sprIceDecal,     -1, -1,                -1, sprCoral, sprPizzaSewerDecal,     -1, sprInvCaveDecal,    sprJungleDecal,    -1,        -1],
 			_sprDecalList = [sprNightDesertTopDecal, sprDesertTopDecal, sprTopDecalSewers, sprTopDecalScrapyard, sprTopDecalCave, sprTopDecalCity, -1, sprPalaceTopDecal, -1, -1,       sprTopDecalPizzaSewers, -1, sprTopDecalInvCave, sprTopDecalJungle, sprTopPot, -1];
 			
-		global.area_sprite_map = ds_map_create();
+		global.area_sprite_list_map = ds_map_create();
 		
 		with([0, 1, 2, 3, 4, 5, 6, 7, 100, 101, 102, 103, 104, 105, 106, 107]){
 			var	_areaText = string(self),
-				_mapNum   = ds_map_size(global.area_sprite_map),
+				_mapNum   = ds_map_size(global.area_sprite_list_map),
 				_sprList  = [];
 				
 			with(["sprFloor%", "sprFloor%B", "sprFloor%Explo", "sprWall%Trans", "sprWall%Bot", "sprWall%Out", "sprWall%Top", "sprDebris%", "sprDetail%"]){
-				var _spr = asset_get_index(string_replace(self, "%", _areaText));
+				var _addSpr = asset_get_index(string_replace(self, "%", _areaText));
 				array_push(_sprList,
-					(self == "sprFloor%B" && !sprite_exists(_spr))
+					(self == "sprFloor%B" && !sprite_exists(_addSpr))
 					? asset_get_index(string_replace(self, "%B", _areaText))
-					: _spr
+					: _addSpr
 				);
 			}
 			
 			array_push(_sprList, _sprBonesList[_mapNum]);
 			array_push(_sprList, _sprDecalList[_mapNum]);
 			
-			global.area_sprite_map[? self] = _sprList;
+			global.area_sprite_list_map[? self] = _sprList;
 		}
 	}
 	
 	 // Convert to Desert Sprite:
 	if(sprite_exists(_spr)){
-		with(ds_map_values(global.area_sprite_map)){
+		with(ds_map_values(global.area_sprite_list_map)){
 			var i = array_find_index(self, _spr);
 			if(i >= 0){
-				_spr = global.area_sprite_map[? 1][i];
+				_spr = global.area_sprite_list_map[? 1][i];
 				if(_spr == sprDesertTopDecal) _spr = sprTopPot;
 				break;
 			}
@@ -3439,9 +3439,9 @@
 	}
 	
 	 // Normal:
-	if(ds_map_exists(global.area_sprite_map, _area)){
-		var	_list = global.area_sprite_map[? _area],
-			i = array_find_index(global.area_sprite_map[? 1], _spr);
+	if(ds_map_exists(global.area_sprite_list_map, _area)){
+		var	_list = global.area_sprite_list_map[? _area],
+			i = array_find_index(global.area_sprite_list_map[? 1], _spr);
 			
 		if(i >= 0 && i < array_length(_list)){
 			return _list[i];
