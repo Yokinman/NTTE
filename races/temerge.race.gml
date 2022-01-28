@@ -228,7 +228,7 @@
 		if(canspec && player_active){
 			if(button_pressed(index, "spec") || usespec > 0){
 				 // Merge Weapons:
-				wep  = call(scr.temerge_merge_weapon, wep, bwep);
+				wep  = call(scr.temerge_create_weapon, wep, bwep);
 				bwep = wep_none;
 				
 				 // Take Health:
