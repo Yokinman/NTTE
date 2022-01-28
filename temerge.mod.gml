@@ -105,7 +105,8 @@
 	*/
 	
 	var	_instanceListObjectName = object_get_name(_instanceListObject),
-		_instanceListVarName    = `temerge_${_instanceListObjectName}_${_instanceListName}_instance_list`,
+		_instanceVarName        = `temerge_${_instanceListObjectName}_${_instanceListName}_instance`,
+		_instanceListVarName    = `${_instanceVarName}_list`,
 		_instanceList           = variable_instance_get(GameCont, _instanceListVarName);;
 		
 	 // Setup Instance List:
@@ -127,10 +128,7 @@
 	 // Add to Instance List:
 	if(array_find_index(_instanceList, _instance) < 0){
 		array_push(_instanceList, _instance);
-		variable_instance_set(_instance, `is_temerge_${_instanceListName}_instance`, true);
-		if("temerge_instance" not in _instance){
-			_instance.temerge_instance = _instance;
-		}
+		variable_instance_set(_instance, _instanceVarName, _instance);
 		return true;
 	}
 	
@@ -3139,16 +3137,18 @@
 	*/
 	
 	var	_instanceListObjectName = object_get_name(_instanceListObject),
-		_instanceListVarName    = `temerge_${_instanceListObjectName}_${_instanceListName}_instance_list`,
+		_instanceVarName        = `temerge_${_instanceListObjectName}_${_instanceListName}_instance`,
+		_instanceListVarName    = `${_instanceVarName}_list`,
 		_instanceList           = variable_instance_get(GameCont, _instanceListVarName, []);
 		
 	if(array_length(_instanceList)){
-		with(instances_matching(_inst, `is_temerge_${_instanceListName}_instance`, true)){
+		with(instances_matching_ne(_inst, _instanceVarName, null)){
 			if(
 				array_find_index(_instanceList, self) < 0
-				&& array_find_index(_instanceList, temerge_instance) >= 0
+				&& array_find_index(_instanceList, variable_instance_get(self, _instanceVarName)) >= 0
 			){
 				array_push(_instanceList, self);
+				variable_instance_set(self, _instanceVarName, self);
 			}
 		}
 	}

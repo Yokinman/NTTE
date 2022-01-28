@@ -2075,27 +2075,27 @@
 												}
 											}
 											
-											 // Temporary:
-											if(instance_exists(Menu) && call(scr.unlock_get, "race:parrot")){
-												_y -= 2;
+											//  // Temporary:
+											// if(instance_exists(Menu) && call(scr.unlock_get, "race:parrot")){
+											// 	_y -= 2;
 												
-												var _hover = point_in_rectangle(_mx, _my, _x - 12, _y - 8, _x + 12, _y + 8);
+											// 	var _hover = point_in_rectangle(_mx, _my, _x - 12, _y - 8, _x + 12, _y + 8);
 												
-												if(_hover && button_pressed(_index, "fire")){
-													sound_play(sndNoSelect);
-													_y += choose(-1, 1);
-												}
+											// 	if(_hover && button_pressed(_index, "fire")){
+											// 		sound_play(sndNoSelect);
+											// 		_y += choose(-1, 1);
+											// 	}
 												
-												draw_set_fog(true, make_color_hsv(0, 0, (_hover ? 50 : 30)), 0, 0);
-												draw_sprite(sprMapIcon, 4, _x, _y - _hover)
-												draw_set_fog(false, 0, 0, 0);
+											// 	draw_set_fog(true, make_color_hsv(0, 0, (_hover ? 50 : 30)), 0, 0);
+											// 	draw_sprite(sprMapIcon, 4, _x, _y - _hover)
+											// 	draw_set_fog(false, 0, 0, 0);
 												
-												//draw_set_halign(fa_center);
-												//draw_set_valign(fa_middle);
-												//draw_text_nt(_x, _y + (_hover * sin(current_frame / 10)), (_hover ? "@s" : "@d") + "COMING#SOON")
+											// 	//draw_set_halign(fa_center);
+											// 	//draw_set_valign(fa_middle);
+											// 	//draw_text_nt(_x, _y + (_hover * sin(current_frame / 10)), (_hover ? "@s" : "@d") + "COMING#SOON")
 												
-												if(_hover) _tooltip = "@sCOMING#SOON@w?";
-											}
+											// 	if(_hover) _tooltip = "@sCOMING#SOON@w?";
+											// }
 										}
 										
 										 // Get Stats to Display:

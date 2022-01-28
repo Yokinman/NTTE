@@ -1851,8 +1851,31 @@
 						["Feather",       1,  3,   4, true],
 						["FeatherHUD",    8,  5,   5, true]
 					]
+				},
+				
+				"beetle" : {
+					skin : 1,
+					sprt : [
+						["Loadout",       2, 16,  16, true],
+						["Map",           1, 10,  10, true],
+						["Portrait",      1, 20, 221, true],
+						["Select",        2,  0,   0, false],
+						["UltraIcon",     2, 12,  16, false],
+						["UltraHUDA",     1,  8,   9, false],
+						["UltraHUDB",     1,  8,   9, false],
+						["Idle",          4, 12,  12, true],
+						["Walk",          8, 12,  12, true],
+						["Hurt",          3, 12,  12, true],
+						["Dead",         10, 12,  12, true],
+						["GoSit",         3, 12,  12, true],
+						["Sit",           1, 12,  12, true],
+						["Menu",          4, 12,  12, false],
+						["MenuSelect",    4, 12,  12, false],
+						["MenuSelected",  8, 12,  12, false],
+						["MenuDeselect", 10, 12,  12, false]
+					]
 				}/*,
-					
+				
 				"???" : {
 					skin : 2,
 					sprt : [

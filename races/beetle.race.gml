@@ -4,7 +4,7 @@
 #define cleanup
 	mod_script_call("mod", "teassets", "ntte_cleanup", script_ref_create(cleanup));
 	
-#define race_name              return "???";
+#define race_name              return "BEETLE";
 #define race_text              return "PASSIVE#CAN MERGE WEAPONS";
 #define race_lock              return "???";
 #define race_unlock            return "???";
@@ -34,16 +34,16 @@
 	var _b = (("bskin" in self && is_real(bskin)) ? bskin : 0);
 	
 	switch(_sprite){
-		case sprMutant1Idle      : return race_sprite_raw("Idle",  _b);
-		case sprMutant1Walk      : return race_sprite_raw("Walk",  _b);
-		case sprMutant1Hurt      : return race_sprite_raw("Hurt",  _b);
-		case sprMutant1Dead      : return race_sprite_raw("Dead",  _b);
-		case sprMutant1GoSit     : return race_sprite_raw("GoSit", _b);
-		case sprMutant1Sit       : return race_sprite_raw("Sit",   _b);
-		case sprFishMenu         : return race_sprite_raw("Idle",  _b);
-		case sprFishMenuSelected : return race_sprite_raw("Walk",  _b);
-		case sprFishMenuSelect   : return race_sprite_raw("Idle",  _b);
-		case sprFishMenuDeselect : return race_sprite_raw("Idle",  _b);
+		case sprMutant1Idle      : return race_sprite_raw("Idle",         _b);
+		case sprMutant1Walk      : return race_sprite_raw("Walk",         _b);
+		case sprMutant1Hurt      : return race_sprite_raw("Hurt",         _b);
+		case sprMutant1Dead      : return race_sprite_raw("Dead",         _b);
+		case sprMutant1GoSit     : return race_sprite_raw("GoSit",        _b);
+		case sprMutant1Sit       : return race_sprite_raw("Sit",          _b);
+		case sprFishMenu         : return race_sprite_raw("Menu",         _b);
+		case sprFishMenuSelected : return race_sprite_raw("MenuSelected", _b);
+		case sprFishMenuSelect   : return race_sprite_raw("MenuSelect",   _b);
+		case sprFishMenuDeselect : return race_sprite_raw("MenuDeselect", _b);
 	}
 	
 	return -1;
@@ -52,18 +52,18 @@
 	var _sndNone = sndFootPlaSand5; // playing a sound that doesn't exist using sound_play_pitch/sound_play_pitchvol modifies sndSwapPistol's pitch/volume
 	
 	switch(_snd){
-		case sndMutant1Wrld : return _sndNone;
-		case sndMutant1Hurt : return _sndNone;
-		case sndMutant1Dead : return _sndNone;
-		case sndMutant1LowA : return _sndNone;
-		case sndMutant1LowH : return _sndNone;
-		case sndMutant1Chst : return _sndNone;
-		case sndMutant1Valt : return _sndNone;
-		case sndMutant1Crwn : return _sndNone;
-		case sndMutant1Spch : return _sndNone;
-		case sndMutant1IDPD : return _sndNone;
-		case sndMutant1Cptn : return _sndNone;
-		case sndMutant1Thrn : return _sndNone;
+		case sndMutant1Wrld : return sndMutant1Wrld;
+		case sndMutant1Hurt : return sndMutant1Hurt;
+		case sndMutant1Dead : return sndMutant1Dead;
+		case sndMutant1LowA : return sndMutant1LowA;
+		case sndMutant1LowH : return sndMutant1LowH;
+		case sndMutant1Chst : return sndMutant1Chst;
+		case sndMutant1Valt : return sndMutant1Valt;
+		case sndMutant1Crwn : return sndMutant1Crwn;
+		case sndMutant1Spch : return sndMutant1Spch;
+		case sndMutant1IDPD : return sndMutant1IDPD;
+		case sndMutant1Cptn : return sndMutant1Cptn;
+		case sndMutant1Thrn : return sndMutant1Thrn;
 	}
 	
 	return -1;
@@ -88,8 +88,6 @@
 #define race_menu_button
 	sprite_index = race_sprite_raw("Select", 0);
 	image_index = !race_avail();
-	
-	sprite_index = sprCharSelect;
 	
 	
 /// Skins
