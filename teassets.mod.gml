@@ -2793,9 +2793,9 @@
 	
 	 // Bind Object Setup Scripts:
 	var _list = [];
-	for(var i = array_length(global.bind_setup_object_list) - 1; i >= 0; i--){
-		if(mod_script_exists(_type, _name, "ntte_setup_" + object_get_name(i))){
-			array_push(_list, ntte_bind_setup(script_ref_create_ext(_type, _name, "ntte_setup_" + object_get_name(i)), i));
+	for(var _objectIndex = array_length(global.bind_setup_object_list) - 1; _objectIndex >= 0; _objectIndex--){
+		if(mod_script_exists(_type, _name, "ntte_setup_" + object_get_name(_objectIndex))){
+			array_push(_list, ntte_bind_setup(script_ref_create_ext(_type, _name, "ntte_setup_" + object_get_name(_objectIndex)), _objectIndex));
 		}
 	}
 	global.bind_setup[? _name + "." + _type] = _list;
@@ -3710,18 +3710,18 @@
 		Unbinds the given NT:TE script reference from its event
 	*/
 	
-	var _obj = 0;
+	var _objectIndex = 0;
 	
 	with(global.bind_setup_object_list){
 		if(self != noone){
 			var _refList = call(scr.array_delete_value, self, _ref);
-			global.bind_setup_object_list[_obj] = (
+			global.bind_setup_object_list[_objectIndex] = (
 				array_length(_refList)
 				? _refList
 				: noone
 			);
 		}
-		_obj++;
+		_objectIndex++;
 	}
 	
 #define sprite /// sprite(_path, _img, _x, _y, _shine = shnNone)

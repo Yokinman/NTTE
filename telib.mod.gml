@@ -1050,7 +1050,7 @@
 			&& !instance_is(self, EnergyShank)
 			&& !instance_is(self, EnergySlash)
 			&& !instance_is(self, EnergyHammerSlash)
-			&& !instance_is(other, FireCont)
+			&& (!is_real(other) || !instance_is(other, FireCont))
 		){
 			script_bind_begin_step(projectile_euphoria, 0, self);
 		}
@@ -4228,10 +4228,10 @@
 	}
 	
 	 // Weapon Held by Creator:
-	_fire.wepheld = (variable_instance_get(_fire.creator, "wep") == _fire.wep);
+	_fire.wepheld = ("wep" in _fire.creator && _fire.creator.wep == _fire.wep);
 	
 	 // Active / Secondary Firing:
-	_fire.spec = variable_instance_get(self, "specfiring", false);
+	_fire.spec = (("specfiring" in self) ? specfiring : false);
 	if(race == "steroids" && _fire.spec){
 		_fire.primary = false;
 	}
@@ -4258,7 +4258,7 @@
 	with(instance_exists(_fire.creator) ? _fire.creator : self){
 		 // Charge Weapon:
 		if(weapon_get("chrg", _fire.wep) && _fire.wep.chrg >= 0){
-			var	_load = variable_instance_get(self, "reloadspeed", 1) * current_time_scale,
+			var	_load = (("reloadspeed" in self) ? reloadspeed : 1) * current_time_scale,
 				_auto = ((other.race == "steroids") ? (weapon_get("auto", _fire.wep) >= 0) : weapon_get("auto", _fire.wep));
 				
 			 // Charging (chrg: -1==Released, 0==None, 1==Charging, 2==Charged):
@@ -4420,7 +4420,7 @@
 	}
 	
 	 // Not Enough Ammo:
-	reload = variable_instance_get(self, "reloadspeed", 1) * current_time_scale;
+	reload = (("reloadspeed" in self) ? reloadspeed : 1) * current_time_scale;
 	if("anam" in _wep){
 		if(button_pressed(index, (specfiring ? "spec" : "fire"))){
 			wkick = -2;
