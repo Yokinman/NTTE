@@ -101,7 +101,7 @@
 	}
 	
 	 // Bind Object Setup Scripts:
-	if(is_undefined(lq_get(ntte, "bind_setup_coast_list"))){
+	if(lq_get(ntte, "bind_setup_coast_list") == undefined){
 		var _objList = [hitme, projectile, Corpse, ChestOpen, chestprop, Pickup, Crown, Debris];
 		ntte.bind_setup_coast_list = [
 			call(scr.ntte_bind_setup, script_ref_create(ntte_setup_coast_wading),    _objList),
@@ -638,7 +638,7 @@
 				id.visible = false;
 			}
 		}
-		if(!is_undefined(lq_get(ntte, "bind_setup_coast_list"))){
+		if(lq_get(ntte, "bind_setup_coast_list") != undefined){
 			with(ntte.bind_setup_coast_list){
 				call(scr.ntte_unbind, self);
 			}

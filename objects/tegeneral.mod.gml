@@ -4,10 +4,10 @@
 	 // Gather Objects:
 	for(var i = 1; true; i++){
 		var _scrName = script_get_name(i);
-		if(is_undefined(_scrName)){
-			break;
+		if(_scrName != undefined){
+			call(scr.obj_add, script_ref_create(i));
 		}
-		call(scr.obj_add, script_ref_create(i));
+		else break;
 	}
 	
 	 // Setup Floor Bounding Area:
@@ -2140,8 +2140,8 @@
 					_lastChrgNum = undefined;
 					
 				if(is_object(_wep)){
-					if("chrg"     in _wep && !is_undefined(chrg)    ){ _lastChrg    = _wep.chrg;     _wep.chrg     = chrg;     }
-					if("chrg_num" in _wep && !is_undefined(chrg_num)){ _lastChrgNum = _wep.chrg_num; _wep.chrg_num = chrg_num; }
+					if("chrg"     in _wep && chrg     != undefined){ _lastChrg    = _wep.chrg;     _wep.chrg     = chrg;     }
+					if("chrg_num" in _wep && chrg_num != undefined){ _lastChrgNum = _wep.chrg_num; _wep.chrg_num = chrg_num; }
 				}
 				
 				 // Player:
@@ -2181,8 +2181,8 @@
 				
 				 // Charge Weapon Fix Reset:
 				if(is_object(_wep)){
-					if("chrg"     in _wep && !is_undefined(chrg)     && _wep.chrg     == chrg    ) _wep.chrg     = _lastChrg;
-					if("chrg_num" in _wep && !is_undefined(chrg_num) && _wep.chrg_num == chrg_num) _wep.chrg_num = _lastChrgNum;
+					if("chrg"     in _wep && chrg     != undefined && _wep.chrg     == chrg    ) _wep.chrg     = _lastChrg;
+					if("chrg_num" in _wep && chrg_num != undefined && _wep.chrg_num == chrg_num) _wep.chrg_num = _lastChrgNum;
 				}
 			}
 		}
@@ -2314,7 +2314,7 @@
 	if(instance_exists(creator)){
 		if(
 			wep_setup
-			? ("wep" not in creator || is_undefined(creator.wep))
+			? ("wep" not in creator || creator.wep == undefined)
 			: ("wep" in creator && wep == creator.wep)
 		){
 			 // Variable Setup:
@@ -2423,7 +2423,7 @@
 									: _spr
 								);
 							}
-							if(is_undefined(other.gunspr)){
+							if(other.gunspr == undefined){
 								other.gunspr = gunspr;
 							}
 							gunspr = global.gunspr_fix[? _spr];
@@ -2435,7 +2435,7 @@
 		
 		 // Changed Weapon:
 		else{
-			if(!is_undefined(gunspr)){
+			if(gunspr != undefined){
 				creator.gunspr = gunspr;
 			}
 			instance_destroy();
@@ -3816,7 +3816,7 @@
 		col      = c_red;
 		
 		 // Bind Projectile Setup Script:
-		if(is_undefined(lq_get(ntte, "bind_setup_PetWeaponBoss_projectile"))){
+		if(lq_get(ntte, "bind_setup_PetWeaponBoss_projectile") == undefined){
 			ntte.bind_setup_PetWeaponBoss_projectile = call(scr.ntte_bind_setup, script_ref_create(ntte_setup_PetWeaponBoss_projectile), projectile);
 		}
 		
@@ -3994,8 +3994,8 @@
 										_targetDis = point_distance(_cx, _cy, _tx, _ty);
 										
 									if(
-										(is_undefined(_coverDisMax)  || _coverDis  < _coverDisMax) &&
-										(is_undefined(_targetDisMin) || _targetDis > _targetDisMin)
+										(_coverDisMax  == undefined || _coverDis  < _coverDisMax) &&
+										(_targetDisMin == undefined || _targetDis > _targetDisMin)
 									){
 										with(other){
 											if(PetWeaponBoss_point_is_cover(_cx, _cy, _tx, _ty)){
@@ -4410,7 +4410,7 @@
 		y += z;
 		
 		 // Activate Auto-Topification:
-		if(is_undefined(lq_get(ntte, "bind_setup_topify"))){
+		if(lq_get(ntte, "bind_setup_topify") == undefined){
 			var _objList = [hitme, projectile, becomenemy, Pickup, chestprop, Corpse, Explosion, MeatExplosion, PlasmaImpact, BigDogExplo, NothingDeath, Nothing2Death, FrogQueenDie, PopoShield, CrystalShield, SharpTeeth, ReviveArea, NecroReviveArea, RevivePopoFreak];
 			for(var _obj = 0; object_exists(_obj); _obj++){
 				if(object_get_parent(_obj) == Effect){
@@ -5773,7 +5773,7 @@
 	}
 	
 	 // Unbind Script:
-	else if(!is_undefined(lq_get(ntte, "bind_setup_topify"))){
+	else if(lq_get(ntte, "bind_setup_topify") != undefined){
 		call(scr.ntte_unbind, ntte.bind_setup_topify);
 		ntte.bind_setup_topify = undefined;
 	}
@@ -5807,7 +5807,7 @@
 	}
 	
 	 // Unbind Script:
-	else if(!is_undefined(lq_get(ntte, "bind_setup_PetWeaponBoss_projectile"))){
+	else if(lq_get(ntte, "bind_setup_PetWeaponBoss_projectile") != undefined){
 		call(scr.ntte_unbind, ntte.bind_setup_PetWeaponBoss_projectile);
 		ntte.bind_setup_PetWeaponBoss_projectile = undefined;
 	}

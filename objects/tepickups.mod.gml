@@ -4,10 +4,10 @@
 	 // Gather Objects:
 	for(var i = 1; true; i++){
 		var _scrName = script_get_name(i);
-		if(is_undefined(_scrName)){
-			break;
+		if(_scrName != undefined){
+			call(scr.obj_add, script_ref_create(i));
 		}
-		call(scr.obj_add, script_ref_create(i));
+		else break;
 	}
 	
 	 // Store Script References:
@@ -1674,7 +1674,7 @@
 			
 			 // Decide Item:
 			var _drop = call(scr.pool, _pool);
-			if(!is_undefined(_drop)){
+			if(_drop != undefined){
 				drop = _drop;
 				lq_set(_pool, drop, lq_get(_pool, drop) - 1);
 			}
@@ -2954,7 +2954,7 @@
 	
 #define CustomMimic_end_step
 	 // Custom Code on Contact:
-	if(!is_undefined(on_melee) && place_meeting(x, y, Player)){
+	if(on_melee != undefined && place_meeting(x, y, Player)){
 		with(instances_matching(call(scr.instances_meeting_instance, self, Player), "lasthit", hitid)){
 			if(place_meeting(x, y, other)){
 				if(sprite_index == spr_hurt && image_index == 0){
@@ -3884,7 +3884,7 @@
 			case mut_patience:
 				
 				 // Remove Patience Mutation:
-				if(!is_undefined(_lastPat)){
+				if(_lastPat != undefined){
 					if(_lastPat == mut_none){
 						GameCont.skillpoints--;
 					}
@@ -4130,7 +4130,7 @@
 		case mut_patience:
 			
 			 // Remove Patience Mutation:
-			if(!is_undefined(_lastPat)){
+			if(_lastPat != undefined){
 				if(_lastPat == mut_none){
 					GameCont.skillpoints--;
 				}
@@ -5253,7 +5253,7 @@
 		maxhealth  = 30;
 		size       = 3;
 		skill      = mut_last_wish;
-		alive      = (skill_get("reroll") == 0 && ("ntte_reroll_hud" not in GameCont || is_undefined(GameCont.ntte_reroll_hud)));
+		alive      = (skill_get("reroll") == 0 && ("ntte_reroll_hud" not in GameCont || GameCont.ntte_reroll_hud == undefined));
 		prompt     = noone;
 		unlock     = false;
 		
@@ -5268,7 +5268,7 @@
 			 // Normal:
 			else if(skill_get(skill) == 0){
 				var _skillList = [];
-				for(var i = 0; !is_undefined(skill_get_at(i)); i++){
+				for(var i = 0; skill_get_at(i) != undefined; i++){
 					var _skill = skill_get_at(i);
 					if(_skill != mut_patience && call(scr.skill_get_avail, _skill)){
 						array_push(_skillList, _skill);
@@ -5357,7 +5357,7 @@
 		if(
 			skill_get(skill)    == 0 ||
 			skill_get("reroll") != 0 ||
-			("ntte_reroll_hud" in GameCont && !is_undefined(GameCont.ntte_reroll_hud))
+			("ntte_reroll_hud" in GameCont && GameCont.ntte_reroll_hud != undefined)
 		){
 			alive = false;
 		}
@@ -5657,7 +5657,7 @@
 	}
 	
 	 // Unbind Script:
-	else if(!is_undefined(lq_get(ntte, "bind_setup_bonus_Shell"))){
+	else if(lq_get(ntte, "bind_setup_bonus_Shell") != undefined){
 		call(scr.ntte_unbind, ntte.bind_setup_bonus_Shell);
 		ntte.bind_setup_bonus_Shell = undefined;
 	}
@@ -5870,21 +5870,21 @@
 	}
 	var _bind = lq_get(ntte, "bind_setup_feather_chestprop");
 	if(_parrot){
-		if(is_undefined(_bind)){
+		if(_bind == undefined){
 			ntte.bind_setup_feather_chestprop = call(scr.ntte_bind_setup, script_ref_create(ntte_setup_feather_chestprop), chestprop);
 		}
 	}
-	else if(!is_undefined(_bind)){
+	else if(_bind != undefined){
 		call(scr.ntte_unbind, _bind);
 		ntte.bind_setup_feather_chestprop = undefined;
 	}
 	var _bind = lq_get(ntte, "bind_setup_feather_Pickup");
 	if(_parrot && skill_get(mut_throne_butt) > 0){
-		if(is_undefined(_bind)){
+		if(_bind == undefined){
 			ntte.bind_setup_feather_Pickup = call(scr.ntte_bind_setup, script_ref_create(ntte_setup_feather_Pickup), Pickup);
 		}
 	}
-	else if(!is_undefined(_bind)){
+	else if(_bind != undefined){
 		call(scr.ntte_unbind, _bind);
 		ntte.bind_setup_feather_Pickup = undefined;
 	}
@@ -6010,7 +6010,7 @@
 			}
 			
 			 // Bind Shell Resprite Script:
-			if(is_undefined(lq_get(ntte, "bind_setup_bonus_Shell"))){
+			if(lq_get(ntte, "bind_setup_bonus_Shell") == undefined){
 				ntte.bind_setup_bonus_Shell = call(scr.ntte_bind_setup, script_ref_create(ntte_setup_bonus_Shell), Shell);
 			}
 		}

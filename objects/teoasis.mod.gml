@@ -4,10 +4,10 @@
 	 // Gather Objects:
 	for(var i = 1; true; i++){
 		var _scrName = script_get_name(i);
-		if(is_undefined(_scrName)){
-			break;
+		if(_scrName != undefined){
+			call(scr.obj_add, script_ref_create(i));
 		}
-		call(scr.obj_add, script_ref_create(i));
+		else break;
 	}
 	
 	 // Underwater Stuff:
@@ -2048,7 +2048,7 @@
 		}
 		
 		 // Bind Underwater Object Setup Scripts:
-		if(is_undefined(lq_get(ntte, "bind_setup_underwater_list"))){
+		if(lq_get(ntte, "bind_setup_underwater_list") == undefined){
 			ntte.bind_setup_underwater_list = [
 				call(scr.ntte_bind_setup, script_ref_create(ntte_setup_underwater_flame), [GroundFlame, BlueFlame]),
 				call(scr.ntte_bind_setup, script_ref_create(ntte_setup_underwater_bubble, 1,   true),  Dust),
@@ -2063,7 +2063,7 @@
 	}
 	
 	 // Unbind Underwater Object Setup Scripts:
-	else if(!is_undefined(lq_get(ntte, "bind_setup_underwater_list"))){
+	else if(lq_get(ntte, "bind_setup_underwater_list") != undefined){
 		with(ntte.bind_setup_underwater_list){
 			call(scr.ntte_unbind, self);
 		}

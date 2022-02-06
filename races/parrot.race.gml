@@ -781,7 +781,7 @@
 	}
 	
 	 // Unbind Scripts:
-	else if(!is_undefined(lq_get(ntte, "bind_setup_charm_list"))){
+	else if(lq_get(ntte, "bind_setup_charm_list") != undefined){
 		with(ntte.bind_setup_charm_list){
 			call(scr.ntte_unbind, self);
 		}
@@ -906,7 +906,7 @@
 									var	_playerPos = charm_target(_vars),
 										_lastSpeed = speed;
 										
-									if(is_undefined(_minID)){
+									if(_minID == undefined){
 										_minID = instance_max;
 									}
 									
@@ -948,7 +948,7 @@
 							}
 							
 							 // Grab Spawned Things:
-							if(!is_undefined(_minID)){
+							if(_minID != undefined){
 								charm_grab(_vars, _minID);
 							}
 						}
@@ -1449,7 +1449,7 @@
 				}
 				
 				 // Bind Setup Scripts:
-				if(is_undefined(lq_get(ntte, "bind_setup_charm_list"))){
+				if(lq_get(ntte, "bind_setup_charm_list") == undefined){
 					ntte.bind_setup_charm_list = [
 						call(scr.ntte_bind_setup, script_ref_create(ntte_setup_charm),                charm_object),
 						call(scr.ntte_bind_setup, script_ref_create(ntte_setup_charm_LaserCharge),    LaserCharge),

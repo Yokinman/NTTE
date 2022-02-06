@@ -3321,7 +3321,7 @@
 	var _surf = global.surf[? _name];
 	
 	 // Initialize Surface:
-	if(is_undefined(_surf)){
+	if(_surf == undefined){
 		_surf = {
 			"name"  : _name,
 			"surf"  : -1,
@@ -3483,7 +3483,7 @@
 	var _shad = global.shad[? _name];
 	
 	 // Initialize Shader:
-	if(is_undefined(_shad)){
+	if(_shad == undefined){
 		var _beta = false;
 		
 		 // Partial Beta Fix:
@@ -3785,7 +3785,7 @@ var _shine = argument_count > 4 ? argument[4] : shnNone;
 				}
 				
 				 // Process Value:
-				if(!is_undefined(_load)){
+				if(_load != undefined){
 					 // Load Sprites:
 					if(is_object(_load) && "path" in _load){
 						var	_spr    = mskNone,
@@ -4045,7 +4045,7 @@ var _shine = argument_count > 4 ? argument[4] : shnNone;
 		_mergeWepSprite     = ds_map_find_value(spr.MergeWep, _mergeWepSpriteName);
 		
 	 // Initial Setup:
-	if(is_undefined(_mergeWepSprite)){
+	if(_mergeWepSprite == undefined){
 		var	_mergeStockSlice        = undefined,
 			_mergeFrontSlice        = undefined,
 			_mergeWepSpriteY1       =  infinity,
@@ -4162,7 +4162,7 @@ var _shine = argument_count > 4 ? argument[4] : shnNone;
 			}
 			
 			 // Add to List:
-			if(is_undefined(_mergeFrontSlice)){
+			if(_mergeFrontSlice == undefined){
 				_mergeStockSlice = _mergeSlice;
 			}
 			else{
@@ -4194,7 +4194,7 @@ var _shine = argument_count > 4 ? argument[4] : shnNone;
 						_sliceXOffset = _mergeWepSpriteWidth * _mergeWepSpriteImage,
 						_lastSlice    = undefined;
 						
-					while(!is_undefined(_slice)){
+					while(_slice != undefined){
 						var	_nextSlice = _slice.next_slice,
 							_isFlash   = (_mergeWepSpriteImage == min(1, _mergeWepSpriteImageNum - 1)),
 							_spr       = _slice.sprite_index,
@@ -4212,12 +4212,12 @@ var _shine = argument_count > 4 ? argument[4] : shnNone;
 								if(!_isFlash){
 									draw_set_fog(true, c_black, 0, 0);
 								}
-								if(!is_undefined(_lastSlice)){
+								if(_lastSlice != undefined){
 									draw_sprite_part(_spr, _img, _l, _t, 1, ((_slice.sprite_bbox_y2 < _lastSlice.sprite_bbox_y2) ? ceil(_h / 2) : _h), _x - 1, _y);
 								//	if(_slice.sprite_bbox_y1 <= _lastSlice.sprite_bbox_y1) draw_sprite_part(_spr, _img, _l, _t,                1,  ceil(_h / 2), _x - 1, _y);
 								//	if(_slice.sprite_bbox_y2 >= _lastSlice.sprite_bbox_y2) draw_sprite_part(_spr, _img, _l, _t + ceil(_h / 2), 1, floor(_h / 2), _x - 1, _y + ceil(_h / 2));
 								}
-								if(!is_undefined(_nextSlice)){
+								if(_nextSlice != undefined){
 									draw_sprite_part(_spr, _img, _r - 1, _t, 1, ((_slice.sprite_bbox_y2 <= _nextSlice.sprite_bbox_y2) ? ceil(_h / 2) : _h), _x + _w, _y);
 								//	if(_slice.sprite_bbox_y1 < _nextSlice.sprite_bbox_y1) draw_sprite_part(_spr, _img, _r - 1, _t,                1,  ceil(_h / 2), _x + _w, _y);
 								//	if(_slice.sprite_bbox_y2 > _nextSlice.sprite_bbox_y2) draw_sprite_part(_spr, _img, _r - 1, _t + ceil(_h / 2), 1, floor(_h / 2), _x + _w, _y + ceil(_h / 2));
@@ -4265,7 +4265,7 @@ var _shine = argument_count > 4 ? argument[4] : shnNone;
 		_mergeWepLoadoutSprite     = ds_map_find_value(spr.MergeWepLoadout, _mergeWepLoadoutSpriteName);
 		
 	 // Initial Setup:
-	if(is_undefined(_mergeWepLoadoutSprite)){
+	if(_mergeWepLoadoutSprite == undefined){
 		var	_loadoutSpriteAngle            = 15,
 			_loadoutSpriteXFactor          = 1 / dcos(_loadoutSpriteAngle),
 			_mergeStockSlice               = undefined,
@@ -4384,7 +4384,7 @@ var _shine = argument_count > 4 ? argument[4] : shnNone;
 			}
 			
 			 // Add to List:
-			if(is_undefined(_mergeFrontSlice)){
+			if(_mergeFrontSlice == undefined){
 				_mergeStockSlice = _mergeSlice;
 			}
 			else{
@@ -4417,7 +4417,7 @@ var _shine = argument_count > 4 ? argument[4] : shnNone;
 					_sliceXOffset = _mergeWepLoadoutSpriteXOffset + lengthdir_x(_slice.length1, _loadoutSpriteAngle) + (_mergeWepLoadoutSpriteWidth * _mergeWepLoadoutSpriteImage),
 					_sliceYOffset = _mergeWepLoadoutSpriteYOffset + lengthdir_y(_slice.length1, _loadoutSpriteAngle);
 					
-				while(!is_undefined(_slice)){
+				while(_slice != undefined){
 					var	_nextSlice = _slice.next_slice,
 						_spr       = _slice.sprite_index,
 						_sprImg    = _slice.image_number * (_mergeWepLoadoutSpriteImage / _mergeWepLoadoutSpriteImageNum),

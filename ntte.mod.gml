@@ -458,7 +458,7 @@
 			_chaosNum = ((GameCont.subarea == 1) + chance(1, 5)) * (crown_current == "red");
 			
 		 // Guaranteed Spawn:
-		if("ntte_heart_spawn" in GameCont && !is_undefined(GameCont.ntte_heart_spawn)){
+		if("ntte_heart_spawn" in GameCont && GameCont.ntte_heart_spawn != undefined){
 			if(
 				lq_defget(GameCont.ntte_heart_spawn, "area",    GameCont.area)    == GameCont.area    &&
 				lq_defget(GameCont.ntte_heart_spawn, "subarea", GameCont.subarea) == GameCont.subarea &&
@@ -2248,9 +2248,9 @@
 			_name    = _scrt[2],
 			_area    = mod_script_call(_modType, _modName, _name + "_area");
 			
-		if(is_undefined(_area) || GameCont.area == _area){
+		if(_area == undefined || GameCont.area == _area){
 			var _hard = mod_script_call(_modType, _modName, _name + "_hard");
-			if(GameCont.hard >= (is_undefined(_hard) ? 2 : _hard)){
+			if(GameCont.hard >= ((_hard == undefined) ? 2 : _hard)){
 				var _chance = 1;
 				if(mod_script_exists(_modType, _modName, _name + "_chance")){
 					_chance = mod_script_call(_modType, _modName, _name + "_chance");
@@ -4097,7 +4097,7 @@
 					}
 					
 					 // Compile Orchid Rerolls to Draw:
-					if("ntte_reroll_hud" in GameCont && !is_undefined(GameCont.ntte_reroll_hud)){
+					if("ntte_reroll_hud" in GameCont && GameCont.ntte_reroll_hud != undefined){
 						if(skill_get(GameCont.ntte_reroll_hud) != 0){
 							array_push(_skillType, "reroll");
 							array_push(_skillList, GameCont.ntte_reroll_hud);
@@ -4158,7 +4158,7 @@
 						 // Draw:
 						for(var i = 0; true; i++){
 							var _skill = skill_get_at(i);
-							if(is_undefined(_skill)){
+							if(_skill == undefined){
 								break;
 							}
 							if(_skill != mut_patience || real(string(GameCont.hud_patience)) == mut_none){ // yes the game does real(string())
@@ -4207,7 +4207,7 @@
 													 // Get Orchid Mutation With Least Time:
 													array_sort(_inst, false);
 													with(_inst){
-														if(is_undefined(_type) || (type == _type && time > _time)){
+														if(_type == undefined || (type == _type && time > _time)){
 															_type    = type;
 															_time    = time;
 															_timeMax = time_max;
@@ -4930,7 +4930,7 @@
 	
 	if("ntte_pet_icon" in GameCont){
 		with(GameCont.ntte_pet_icon){
-			if(!is_undefined(self)){
+			if(self != undefined){
 				_canDraw = true;
 			}
 			break;
@@ -4943,7 +4943,7 @@
 		if(_lag) trace_time();
 		
 		_mapIndex = (
-			is_undefined(_mapIndex)
+			(_mapIndex == undefined)
 			? GameCont.waypoints
 			: clamp(_mapIndex, 0, GameCont.waypoints)
 		);
@@ -4988,7 +4988,7 @@
 				
 				 // Pet Icons:
 				var _iconList = GameCont.ntte_pet_icon[i];
-				if(!is_undefined(_iconList)){
+				if(_iconList != undefined){
 					for(var _iconNum = 0; _iconNum < array_length(_iconList); _iconNum++){
 						var	_icon    = _iconList[_iconNum],
 							_iconSpr = call(scr.pet_get_sprite, _icon[0], _icon[1], _icon[2], _icon[3], "icon");

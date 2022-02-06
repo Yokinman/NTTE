@@ -408,7 +408,7 @@
 		_crown       = lq_get(crownRace, player_get_race_fix(_p)),
 		_crownPoints = GameCont.crownpoints;
 		
-	if(!is_undefined(_crown)){
+	if(_crown != undefined){
 		if(_crown.custom.slct != -1 && crown_current == _crown.slct && _crown.custom.slct != _crown.slct){
 			switch(_crown.custom.slct){
 				case crwn_random:
@@ -866,7 +866,7 @@
 		_cx    = _gw - 102,
 		_cy    = 75;
 		
-	if(!is_undefined(_crown) && instance_exists(Loadout)){
+	if(_crown != undefined && instance_exists(Loadout)){
 		if(array_length(instances_matching(Loadout, "selected", true)) > 0){
 			 // Loadout Reset:
 			with(_crown.icon){
@@ -1354,7 +1354,7 @@
 							draw_set_fog(true, c_black, 0, 0);
 							
 							 // The Currently Selected Crown:
-							if(!is_undefined(_crown) && _crown.custom.slct != -1 && _crown.slct != crwn_none){
+							if(_crown != undefined && _crown.custom.slct != -1 && _crown.slct != crwn_none){
 								draw_sprite(sprLoadoutCrown, _crown.slct, _x - 60 - _off, _y - 39 - _off);
 							}
 							
@@ -1440,7 +1440,7 @@
 				}
 				
 				 // Custom Crown:
-				if(!is_undefined(_crown) && _crown.custom.slct != -1){
+				if(_crown != undefined && _crown.custom.slct != -1){
 					with(_crown.custom.icon) if(crwn == _crown.custom.slct){
 						with(other){
 							draw_sprite(other.sprite_index, other.image_index, _x - 60 - _off, _y - 39 - _off);
@@ -1981,7 +1981,7 @@
 										_raceSlct    = _statMenu.slct,
 										_raceCurrent = lq_get_key(_raceList, _raceSlct[_index]);
 										
-									if(is_undefined(_raceCurrent)) _raceCurrent = "";
+									if(_raceCurrent == undefined) _raceCurrent = "";
 									
 									 // Auto-Select First Loaded Character:
 									if(!mod_exists("race", _raceCurrent)){

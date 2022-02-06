@@ -4,10 +4,10 @@
 	 // Gather Objects:
 	for(var i = 1; true; i++){
 		var _scrName = script_get_name(i);
-		if(is_undefined(_scrName)){
-			break;
+		if(_scrName != undefined){
+			call(scr.obj_add, script_ref_create(i));
 		}
-		call(scr.obj_add, script_ref_create(i));
+		else break;
 	}
 	
 	 // Store Script References:

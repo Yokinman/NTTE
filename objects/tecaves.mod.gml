@@ -4,10 +4,10 @@
 	 // Gather Objects:
 	for(var i = 1; true; i++){
 		var _scrName = script_get_name(i);
-		if(is_undefined(_scrName)){
-			break;
+		if(_scrName != undefined){
+			call(scr.obj_add, script_ref_create(i));
 		}
-		call(scr.obj_add, script_ref_create(i));
+		else break;
 	}
 	
 	 // Bind Events:
@@ -1423,7 +1423,7 @@
 						
 						 // Death:
 						my_health = min(my_health, 0);
-						if(!is_undefined(area)){
+						if(area != undefined){
 							GameCont.killenemies = true;
 							
 							 // Red:
@@ -3241,7 +3241,7 @@
 		turnspeed    = 0;
 		
 		 // Bind Spiral Setup Script:
-		if(is_undefined(lq_get(ntte, "bind_setup_SpiralStarfield_Spiral"))){
+		if(lq_get(ntte, "bind_setup_SpiralStarfield_Spiral") == undefined){
 			ntte.bind_setup_SpiralStarfield_Spiral = call(scr.ntte_bind_setup, script_ref_create(ntte_setup_SpiralStarfield_Spiral), Spiral);
 			ntte_setup_SpiralStarfield_Spiral(Spiral);
 		}
@@ -5107,7 +5107,7 @@
 	}
 	
 	 // Unbind Script:
-	else if(!is_undefined(lq_get(ntte, "bind_setup_SpiralStarfield_Spiral"))){
+	else if(lq_get(ntte, "bind_setup_SpiralStarfield_Spiral") != undefined){
 		call(scr.ntte_unbind, ntte.bind_setup_SpiralStarfield_Spiral);
 		ntte.bind_setup_SpiralStarfield_Spiral = undefined;
 	}
@@ -5714,14 +5714,14 @@
 					 // Fake Walls:
 					with(instances_matching_ne(obj.WallFake, "id")){
 						draw_sprite(topspr, topindex, x, y - 8);
-						//draw_sprite_part(outspr, outindex, l, r, w, h, x - 4 + l, y - 12 + r);
+						//draw_sprite_part(outspr, outindex, l, r, w, h, x + l - 4, y + r - 12);
 					}
 					
 					 // Cut Out Normal Walls:
 					draw_set_blend_mode_ext(bm_zero, bm_inv_src_alpha);
 					with(instances_matching(Wall, "solid", true)){
 						draw_sprite(topspr, topindex, x, y - 8);
-						draw_sprite_part(outspr, outindex, l, r, w, h, x - 4 + l, y - 12 + r);
+						draw_sprite_part(outspr, outindex, l, r, w, h, x + l - 4, y + r - 12);
 					}
 					draw_set_blend_mode(bm_normal);
 					

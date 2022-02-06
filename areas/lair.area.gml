@@ -619,7 +619,7 @@
 			sprite_index = enemy_sprite;
 			
 			 // Bind Projectile Replacing Script:
-			if(is_undefined(lq_get(ntte, "bind_setup_LairTurret_EnemyBullet1"))){
+			if(lq_get(ntte, "bind_setup_LairTurret_EnemyBullet1") == undefined){
 				ntte.bind_setup_LairTurret_EnemyBullet1 = call(scr.ntte_bind_setup, script_ref_create(ntte_setup_LairTurret_EnemyBullet1), EnemyBullet1);
 			}
 		}
@@ -657,7 +657,7 @@
 	
 	 // Unbind Script:
 	if(!array_length(instances_matching(Turret, "lair_turret", true))){
-		if(!is_undefined(lq_get(ntte, "bind_setup_LairTurret_EnemyBullet1"))){
+		if(lq_get(ntte, "bind_setup_LairTurret_EnemyBullet1") != undefined){
 			call(scr.ntte_unbind, ntte.bind_setup_LairTurret_EnemyBullet1);
 			ntte.bind_setup_LairTurret_EnemyBullet1 = undefined;
 		}

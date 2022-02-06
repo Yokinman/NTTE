@@ -3179,7 +3179,7 @@
 	}
 	
 	 // Bind Rad Attraction Script:
-	if(is_undefined(lq_get(ntte, "bind_setup_Orchid_Rad"))){
+	if(lq_get(ntte, "bind_setup_Orchid_Rad") == undefined){
 		ntte.bind_setup_Orchid_Rad = call(scr.ntte_bind_setup, script_ref_create(ntte_setup_Orchid_Rad), [Rad, BigRad]);
 	}
 	
@@ -4510,7 +4510,7 @@
 	}
 	
 	 // Unbind Script:
-	else if(!is_undefined(lq_get(ntte, "bind_setup_Orchid_Rad"))){
+	else if(lq_get(ntte, "bind_setup_Orchid_Rad") != undefined){
 		call(scr.ntte_unbind, ntte.bind_setup_Orchid_Rad);
 		ntte.bind_setup_Orchid_Rad = undefined;
 	}

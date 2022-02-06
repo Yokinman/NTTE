@@ -24,12 +24,12 @@
 	 // Compile Script References:
 	for(var i = 1; true; i++){
 		var _scrName = script_get_name(i);
-		if(is_undefined(_scrName)){
-			break;
+		if(_scrName != undefined){
+			if(_scrName not in scr){
+				lq_set(scr, _scrName, script_ref_create(i));
+			}
 		}
-		if(_scrName not in scr){
-			lq_set(scr, _scrName, script_ref_create(i));
-		}
+		else break;
 	}
 	
 	 // Bind Events:
@@ -159,25 +159,30 @@
 	*/
 	
 	var	_context = argument[0],
-		_ref     = array_clone(argument[1]);
+		_ref     = argument[1];
 		
-	 // Collect Arguments:
-	if(argument_count > 2){
-		for(var i = 2; i < argument_count; i++){
-			array_push(_ref, argument[i]);
+	if(_context != undefined){
+		 // Collect Arguments:
+		if(argument_count > 2){
+			_ref = array_clone(_ref);
+			for(var i = 2; i < argument_count; i++){
+				array_push(_ref, argument[i]);
+			}
 		}
-	}
-	
-	 // Fix Context:
-	if(!is_undefined(_context)){
-		var	_self  = (is_array(_context) ? _context[0] : _context),
-			_other = (is_array(_context) ? _context[1] : _context);
-			
-		if(self != _self || other != _other){
-			with([_other]){
-				with([_self]){
-					return mod_script_call(mod_current_type, mod_current, "pass", undefined, _ref);
+		
+		 // Set Context & Call Script:
+		if(is_array(_context)){
+			if(self != _context[0] || other != _context[1]){
+				with([_context[1]]){
+					with([_context[0]]){
+						return mod_script_call("mod", mod_current, "pass", undefined, _ref);
+					}
 				}
+			}
+		}
+		else if(self != _context || other != _context){
+			with([_context]){
+				return mod_script_call_self("mod", mod_current, "pass", undefined, _ref);
 			}
 		}
 	}
@@ -223,7 +228,7 @@
 			_inst = script_ref_call(_scrt);
 			
 		 // No Return Value:
-		if(is_undefined(_inst) || _inst == 0){
+		if(_inst == undefined || _inst == 0){
 			_inst = noone;
 		}
 		
@@ -256,7 +261,7 @@
 					: ["on_begin_step", "on_step", "on_end_step", "on_draw"]
 				){
 					var _varName = self;
-					if(_varName not in _inst || is_undefined(variable_instance_get(_inst, _varName))){
+					if(_varName not in _inst || variable_instance_get(_inst, _varName) == undefined){
 						var	_event   = ((string_pos("on_", _varName) == 1) ? string_delete(_varName, 1, 3) : _varName),
 							_modScrt = _name + "_" + _event;
 							
@@ -348,7 +353,7 @@
 	}
 	
 	 // Return List of Objects:
-	if(is_undefined(_name)){
+	if(_name == undefined){
 		var _list = [];
 		
 		for(var i = lq_size(obj) - 1; i >= 0; i--){
@@ -364,7 +369,7 @@
 	var _nameInst = instances_matching(_inst, "ntte_name", _name);
 	
 	 // Manage Object Instance Lists:
-	for(var _objName = _name; !is_undefined(_objName); _objName = ds_map_find_value(obj_parent_map, _objName)){
+	for(var _objName = _name; _objName != undefined; _objName = ds_map_find_value(obj_parent_map, _objName)){
 		 // Prune Destroyed Instances:
 		var _objList = instances_matching_ne(lq_get(obj, _objName), "id");
 		lq_set(obj, _objName, _objList);
@@ -491,13 +496,13 @@
 					
 				with(_refList){
 					if(self[1] <= _trackFrame){
-						if(is_undefined(self[4])){
+						if(self[4] == undefined){
 							var _tag = _tagList[_tagIndex];
 							
 							 // Find Existing Tags:
-							if(is_undefined(_teamInstTagList)){
+							if(_teamInstTagList == undefined){
 								_teamInstTagList = [];
-								if(is_undefined(_creatorInst)){
+								if(_creatorInst == undefined){
 									_creatorInst = instances_matching(_trackObject, "creator", _creator);
 								}
 								with(instances_matching(_creatorInst, "team", _team)){
@@ -526,7 +531,7 @@
 								
 								 // Remove From Parent Tag's Child List:
 								var _parentRefInfo = self[3];
-								if(!is_undefined(_parentRefInfo) && !is_undefined(_parentRefInfo[4])){
+								if(_parentRefInfo != undefined && _parentRefInfo[4] != undefined){
 									_parentRefInfo[4] = array_delete_value(_parentRefInfo[4], self);
 									if(!array_length(_parentRefInfo[4])){
 										_parentRefInfo[4] = undefined;
@@ -1024,7 +1029,7 @@
 		
 		if("team"    in self) team    = _team;
 		if("creator" in self) creator = _creator;
-		if("hitid"   in self) hitid   = (("hitid" in _inst) ? _inst.hitid : hitid);
+		if("hitid"   in self) hitid   = (("hitid" in _inst && _inst.hitid != -1) ? _inst.hitid : hitid);
 		
 		 // Euphoria:
 		if(
@@ -1146,15 +1151,15 @@
 		_tagRefMap[1]       = _refList;
 		
 		 // Add to Parent Tag's Child List:
-		if(!is_undefined(_parentRefInfo)){
-			if(is_undefined(_parentRefInfo[4])){
+		if(_parentRefInfo != undefined){
+			if(_parentRefInfo[4] == undefined){
 				_parentRefInfo[4] = [];
 			}
 			array_push(_parentRefInfo[4], _refList[_tagIndex]);
 		}
 		
 		 // Bind Setup Script:
-		if(is_undefined(lq_get(ntte, "bind_setup_projectile_tag"))){
+		if(lq_get(ntte, "bind_setup_projectile_tag") == undefined){
 			ntte.bind_setup_projectile_tag = call(scr.ntte_bind_setup, script_ref_create(ntte_setup_projectile_tag), [projectile, PlasmaImpact]);
 		}
 		
@@ -1195,7 +1200,7 @@
 					
 				if(_tagIndex >= 0){
 					var _refInfo = _tagRefMap[1][_tagIndex];
-					while(!is_undefined(_refInfo)){
+					while(_refInfo != undefined){
 						if(_name in _refInfo[5]){
 							return lq_get(_refInfo[5], _name);
 						}
@@ -1334,7 +1339,7 @@
 									
 									 // Parent Tag:
 									_refInfo = _refInfo[3];
-									if(is_undefined(_refInfo)){
+									if(_refInfo == undefined){
 										break;
 									}
 									_tagInst = instances_matching_ne(_tagInst, "id");
@@ -1357,7 +1362,7 @@
 	}
 	
 	 // Unbind Script:
-	else if(!is_undefined(lq_get(ntte, "bind_setup_projectile_tag"))){
+	else if(lq_get(ntte, "bind_setup_projectile_tag") != undefined){
 		call(scr.ntte_unbind, ntte.bind_setup_projectile_tag);
 		ntte.bind_setup_projectile_tag = undefined;
 	}
@@ -2432,7 +2437,7 @@
 		_y2    = 0;
 		
 	 // All:
-	if(is_undefined(_index) || _index < 0){
+	if(_index == undefined || _index < 0){
 		_x1 = +infinity;
 		_y1 = +infinity;
 		_x2 = -infinity;
@@ -3711,7 +3716,7 @@
 		}
 		
 		 // Auto Max Distance:
-		if(is_undefined(_disMax)){
+		if(_disMax == undefined){
 			var	_objW = 0,
 				_objH = 0;
 				
@@ -4750,7 +4755,7 @@
 	}
 	
 	return (
-		is_undefined(_playerIndex)
+		(_playerIndex == undefined)
 		? _hudList
 		: array_find_index(_hudList, _playerIndex)
 	);
@@ -4797,9 +4802,9 @@
 		_isBasic   = ((argument_count > 6) ? argument[6] : false);
 		
 	 // Setup Firing Values:
-	if(is_undefined(_position)) _position  = [undefined, undefined];
-	if(!is_object(_position  )) _position  = { "x": _position[0], "y": _position[1] };
-	if(!is_object(_direction )) _direction = { "direction": _direction };
+	if(_position == undefined) _position  = [undefined, undefined];
+	if(!is_object(_position )) _position  = { "x": _position[0], "y": _position[1] };
+	if(!is_object(_direction)) _direction = { "direction": _direction };
 	var _at = {
 		"x"                  : (("x"         in _position ) ? _position.x          : undefined),
 		"y"                  : (("y"         in _position ) ? _position.y          : undefined),

@@ -88,6 +88,7 @@
 		"flame",
 		"slug",
 		"hyper",
+		"toxic",
 		"seeker",
 		"grenade",
 		"sticky"
@@ -96,6 +97,32 @@
 			var _scriptIndex = script_get_index(`temerge_${other}_${self}`);
 			if(_scriptIndex >= 0){
 				temerge_effect_add_event(other, self, script_ref_create(_scriptIndex));
+			}
+		}
+	}
+	
+	 // Merged Projectile Default Events:
+	global.temerge_projectile_object_event_table = ds_map_create();
+	for(var _objectIndex = 0; object_exists(_objectIndex); _objectIndex++){
+		if(object_is_ancestor(_objectIndex, projectile)){
+			var	_objectEventMap = {},
+				_objectHasEvent = false;
+				
+			with(["fire", "setup", "hit", "wall", "destroy"]){
+				var _eventName = self;
+				lq_set(_objectEventMap, _eventName, undefined);
+				for(var _eventObjectIndex = _objectIndex; object_is_ancestor(_eventObjectIndex, projectile); _eventObjectIndex = object_get_parent(_eventObjectIndex)){
+					var _eventScriptIndex = script_get_index(`temerge_${object_get_name(_eventObjectIndex)}_${_eventName}`);
+					if(_eventScriptIndex >= 0){
+						lq_set(_objectEventMap, _eventName, script_ref_create(_eventScriptIndex));
+						_objectHasEvent = true;
+						break;
+					}
+				}
+			}
+			
+			if(_objectHasEvent){
+				global.temerge_projectile_object_event_table[? _objectIndex] = _objectEventMap;
 			}
 		}
 	}
@@ -1467,6 +1494,7 @@
 						 // Replace Projectile:
 						if(_mainMergeFire.can_replace){
 							var	_merge = {
+									"on_fire"      : (("temerge_on_fire"      in self) ? temerge_on_fire      : undefined),
 									"on_setup"     : (("temerge_on_setup"     in self) ? temerge_on_setup     : undefined),
 									"on_hit"       : (("temerge_on_hit"       in self) ? temerge_on_hit       : undefined),
 									"on_wall"      : (("temerge_on_wall"      in self) ? temerge_on_wall      : undefined),
@@ -1474,6 +1502,11 @@
 									"speed_factor" : (("temerge_speed_factor" in self) ? temerge_speed_factor : undefined),
 									"setup_vars"   : {}
 								},
+								_mergeObject = (
+									("temerge_object" in self && temerge_object != undefined)
+									? temerge_object
+									: object_index
+								),
 								_fireAt = {
 									"x"                  : undefined,
 									"y"                  : undefined,
@@ -1487,12 +1520,7 @@
 									"wep"                : _wepXmerge_wep_raw,
 									"team"               : team,
 									"creator"            : creator
-								},
-								_scrPrefix = "temerge_" + object_get_name(
-									("temerge_object" in self && temerge_object != undefined)
-									? temerge_object
-									: object_index
-								);
+								}
 								
 							 // Is Independent From the Creator:
 							if(_instWasIndependent || round(_fireAt.position_distance) > 16){
@@ -1502,22 +1530,19 @@
 								_fireAt.direction   = _originDirection;
 							}
 							
+							 // Setup Default Events:
+							if(ds_map_exists(global.temerge_projectile_object_event_table, _mergeObject)){
+								var _mergeObjectEventMap = global.temerge_projectile_object_event_table[? _mergeObject];
+								switch(_merge.on_fire   ){ case undefined : _merge.on_fire    = _mergeObjectEventMap.fire;    }
+								switch(_merge.on_setup  ){ case undefined : _merge.on_setup   = _mergeObjectEventMap.setup;   }
+								switch(_merge.on_hit    ){ case undefined : _merge.on_hit     = _mergeObjectEventMap.hit;     }
+								switch(_merge.on_wall   ){ case undefined : _merge.on_wall    = _mergeObjectEventMap.wall;    }
+								switch(_merge.on_destroy){ case undefined : _merge.on_destroy = _mergeObjectEventMap.destroy; }
+							}
+							
 							 // Call Merged Projectile Fire Event:
-							switch(("temerge_on_fire" in self) ? temerge_on_fire : undefined){
-								
-								case undefined:
-								
-									var _scrIndex = script_get_index(`${_scrPrefix}_fire`);
-									if(_scrIndex >= 0){
-										call(scr.pass, [_fireAt.creator, self], script_ref_create(_scrIndex), _fireAt, _merge.setup_vars);
-									}
-									
-									break;
-									
-								default:
-								
-									call(scr.pass, [_fireAt.creator, self], temerge_on_fire, _fireAt, _merge.setup_vars);
-									
+							if(_merge.on_fire != undefined){
+								call(scr.pass, self, _merge.on_fire, _fireAt, _merge.setup_vars);
 							}
 							
 							 // Weapon Firing:
@@ -1576,12 +1601,6 @@
 									if(instance_is(self, Player) && !ds_map_exists(_playerSpeedMap, self)){
 										_playerSpeedMap[? self] = speed;
 									}
-									
-									 // Setup Merged Projectile Scripts:
-									switch(_merge.on_setup  ){ case undefined: var _scrIndex = script_get_index(`${_scrPrefix}_setup`);    if(_scrIndex >= 0) _merge.on_setup   = script_ref_create(_scrIndex); }
-									switch(_merge.on_hit    ){ case undefined: var _scrIndex = script_get_index(`${_scrPrefix}_hit`);      if(_scrIndex >= 0) _merge.on_hit     = script_ref_create(_scrIndex); }
-									switch(_merge.on_wall   ){ case undefined: var _scrIndex = script_get_index(`${_scrPrefix}_wall`);     if(_scrIndex >= 0) _merge.on_wall    = script_ref_create(_scrIndex); }
-									switch(_merge.on_destroy){ case undefined: var _scrIndex = script_get_index(`${_scrPrefix}_destroy`);  if(_scrIndex >= 0) _merge.on_destroy = script_ref_create(_scrIndex); }
 									
 									 // Store Variable Container:
 									_merge.speed_factor   = _fireAt.speed_factor;
@@ -1765,9 +1784,7 @@
 			
 			 // Call Setup Event:
 			if(_mainMerge.on_setup != undefined){
-				with(_mainMerge.setup_vars){
-					call(scr.pass, self, _mainMerge.on_setup, _instanceList);
-				}
+				script_ref_call(_mainMerge.on_setup, _instanceList, _mainMerge.setup_vars);
 			}
 		}
 	}
@@ -1782,7 +1799,7 @@
 		
 	with(_instanceList){
 		var _eventRefList = variable_instance_get(self, _eventRefListVarName);
-			
+		
 		 // Setup Event Script Reference List:
 		if(_eventRefList == undefined || !array_length(_eventRefList)){
 			_eventRefList = [];
@@ -1931,53 +1948,58 @@
 		Called from a merged projectile in its wall collision event to make it bounce
 	*/
 	
-	 // Laser Bounce:
-	if(instance_is(self, Laser) || instance_is(self, EnemyLaser)){
-		with(instance_copy(false)){
-			var	_addX = lengthdir_x(2, image_angle),
-				_addY = lengthdir_y(2, image_angle);
-				
-			 // Update Starting Position:
-			x           -= _addX;
-			y           -= _addY;
-			xstart       = x;
-			ystart       = y;
-			xprevious    = x;
-			yprevious    = y;
-			image_xscale = 1;
-			
-			 // Bounce Direction:
-			if(place_meeting(x + _addX, y, Wall)){
-				_addX *= -1;
-			}
-			else if(place_meeting(x, y + _addY, Wall)){
-				_addY *= -1;
-			}
-			else{
-				_addX *= -1;
-				_addY *= -1;
-			}
-			image_angle = point_direction(0, 0, _addX, _addY);
-			direction   = image_angle;
-			
-			 // Rerun Hitscan:
-			event_perform(ev_alarm, 0);
-		}
-	}
-	
-	 // Bounce:
-	else if(speed != 0){
-		var _lastDirection = direction;
-		move_bounce_solid(true);
-		if(image_angle == _lastDirection){
-			image_angle = direction;
-		}
+	switch(object_index){
 		
-		 // Fun:
-		if(instance_is(self, HyperGrenade)){
-			alarm0 = 1;
-			alarm1 = -1;
-		}
+		case Laser:
+		case EnemyLaser:
+		
+			 // Laser Bounce:
+			with(instance_copy(false)){
+				 // Restore Starting Values:
+				xstart       = x;
+				ystart       = y;
+				image_xscale = 1;
+				
+				 // Bounce Direction:
+				var	_addX = lengthdir_x(2, image_angle),
+					_addY = lengthdir_y(2, image_angle);
+					
+				if(place_meeting(x + _addX, y, Wall)){
+					_addX *= -1;
+				}
+				else if(place_meeting(x, y + _addY, Wall)){
+					_addY *= -1;
+				}
+				else{
+					_addX *= -1;
+					_addY *= -1;
+				}
+				image_angle = point_direction(0, 0, _addX, _addY);
+				direction   = image_angle;
+				
+				 // Rerun Hitscan:
+				event_perform(ev_alarm, 0);
+			}
+			
+			break;
+			
+		default:
+		
+			 // Normal Bounce:
+			if(speed != 0){
+				var _lastDirection = direction;
+				move_bounce_solid(true);
+				if(image_angle == _lastDirection){
+					image_angle = direction;
+				}
+				
+				 // Fun:
+				if(instance_is(self, HyperGrenade)){
+					alarm0 = 1;
+					alarm1 = -1;
+				}
+			}
+			
 	}
 	
 #define temerge_projectile_add_scale // instanceList, addXScale, addYScale=addXScale
@@ -2080,11 +2102,11 @@
 				case "setup":
 				
 					 // Call Setup Event:
-					var _lastEffectInstanceList = _effectVars.instance_list;
+					var _effectLastInstanceList = _effectVars.instance_list;
 					_effectVars.instance_list = (is_array(_instance) ? _instance : [_instance]);
 					temerge_effect_call_event(_effectName, _effectEventName, _effectSetupArgList);
 					_instance = _effectVars.instance_list;
-					_effectVars.instance_list = _lastEffectInstanceList;
+					_effectVars.instance_list = _effectLastInstanceList;
 					
 					break;
 					
@@ -2144,10 +2166,13 @@
 		}
 	}
 	
+	 // Prune Instance List:
+	_effectVars.instance_list = instances_matching_ne(_effectVars.instance_list, "id");
+	
 	 // Add Instance to Effect:
 	with(_instance){
 		 // Bind 'instance_copy' Instance Capturing Script:
-		var _effectObjectSetupBindVarName = `temerge_${_effectName}_${object_get_name(object_index)}_setup_bind`;
+		var _effectObjectSetupBindVarName = `bind_setup_temerge_${_effectName}_${object_get_name(object_index)}`;
 		if(lq_get(ntte, _effectObjectSetupBindVarName) == undefined){
 			lq_set(ntte, _effectObjectSetupBindVarName, call(scr.ntte_bind_setup, script_ref_create(temerge_effect_object_setup, _effectName, object_index), object_index));
 		}
@@ -2155,9 +2180,6 @@
 		 // Add to Instance List:
 		if(array_find_index(_effectVars.instance_list, self) < 0){
 			array_push(_effectVars.instance_list, self);
-			
-			 // Prune Instance List:
-			_effectVars.instance_list = instances_matching_ne(_effectVars.instance_list, "id");
 			
 			 // Instance Capturing Identifier:
 			var _effectInstanceVarName = `temerge_${_effectName}_instance`;
@@ -2169,12 +2191,14 @@
 			if(_effectName == "destroy_event" && "temerge_destroy_event_vars" not in self){
 				 // Setup Variables List:
 				if("destroy_event_vars_list" not in _effectVars){
-					_effectVars.destroy_event_vars_list = [];
+					_effectVars.destroy_event_vars_list     = [];
+					_effectVars.destroy_event_instance_list = [];
 				}
 				
 				 // Store Variables:
 				temerge_destroy_event_vars = call(scr.variable_instance_get_list, self);
-				array_push(_effectVars.destroy_event_vars_list, temerge_destroy_event_vars);
+				array_push(_effectVars.destroy_event_vars_list,     temerge_destroy_event_vars);
+				array_push(_effectVars.destroy_event_instance_list, self);
 			}
 		}
 	}
@@ -2215,8 +2239,6 @@
 		if(_effectVars != undefined){
 			var _effectInstanceList = _effectVars.instance_list;
 			if(array_length(_effectInstanceList)){
-				var _lastEffectInstanceList = _effectInstanceList;
-				
 				 // Call Event Scripts:
 				with(global.temerge_effect_event_script_list_table[? _effectName][? _effectEventName]){
 					 // Prune Instance List:
@@ -2246,14 +2268,14 @@
 					if(array_length(_effectDepthInstanceList)){
 						with(_effectDepthInstanceList){
 							other.depth = min(other.depth, depth - 1);
-							trace(other.depth);
 						}
 					}
 				}
 				
 				 // Destroy Event:
 				if("destroy_event_vars_list" in _effectVars){
-					if(!array_equals(_lastEffectInstanceList, _effectInstanceList)){
+					if(!array_equals(_effectVars.destroy_event_instance_list, _effectInstanceList)){
+						_effectVars.destroy_event_instance_list = _effectInstanceList;
 						with(_effectVars.destroy_event_vars_list){
 							if(!instance_exists(id)){
 								 // Remove From List:
@@ -2267,6 +2289,20 @@
 									yprevious = y;
 									direction = other.direction;
 									speed     = other.speed;
+									
+									 // Move Ahead:
+									if(!place_meeting(x + hspeed_raw, y + vspeed_raw, Wall)){
+										x += hspeed_raw;
+										y += vspeed_raw;
+									}
+									
+									 // Offset Lasers:
+									switch(object_index){
+										case Laser:
+										case EnemyLaser:
+											x -= lengthdir_x(12, direction);
+											y -= lengthdir_y(12, direction);
+									}
 									
 									 // Untag Team:
 									team = round(team);
@@ -2320,7 +2356,8 @@
 							 // Store Destroy Event Variables:
 							if("destroy_event_vars_list" in _effectVars){
 								temerge_destroy_event_vars = call(scr.variable_instance_get_list, self);
-								array_push(_effectVars.destroy_event_vars_list, temerge_destroy_event_vars);
+								array_push(_effectVars.destroy_event_vars_list,     temerge_destroy_event_vars);
+								array_push(_effectVars.destroy_event_instance_list, self);
 							}
 						}
 					}
@@ -2333,7 +2370,7 @@
 	}
 	
 	 // Unbind Script:
-	var	_effectObjectSetupBindVarName = `temerge_${_effectName}_${object_get_name(_setupObject)}_setup_bind`,
+	var	_effectObjectSetupBindVarName = `bind_setup_temerge_${_effectName}_${object_get_name(_setupObject)}`,
 		_effectObjectSetupBind        = lq_get(ntte, _effectObjectSetupBindVarName);
 		
 	if(_effectObjectSetupBind != undefined){
@@ -2372,6 +2409,28 @@
 						
 					xprevious = x;
 					yprevious = y;
+					
+					 // Object-Specific:
+					switch(object_index){
+						
+						case Laser:
+						case EnemyLaser:
+						
+							xprevious -= lengthdir_x(2, image_angle);
+							yprevious -= lengthdir_y(2, image_angle);
+							
+							break;
+						
+						case HyperGrenade:
+						
+							if(alarm0 == 0){
+								xprevious -= lengthdir_x(4, direction);
+								yprevious -= lengthdir_y(4, direction);
+							}
+							
+							break;
+							
+					}
 				}
 				
 				 // Apply Motion:
@@ -2685,25 +2744,28 @@
 	var _areaIsUnderwater = call(scr.area_get_underwater, GameCont.area);
 	
 	with(instances_matching_gt(_instanceList, "speed", 0)){
-		with(instance_create(xprevious, yprevious, BoltTrail)){
-			image_xscale = point_distance(x, y, other.x, other.y);
-			image_angle  = point_direction(x, y, other.x, other.y);
-			if(other.temerge_trail_is_sprite){
-				sprite_index  = other.sprite_index;
-				image_index   = other.image_index;
-				image_speed   = 0;
-				image_xscale /= 1 + (other.sprite_width / 2);
-				image_yscale  = other.image_yscale / 2;
-				image_blend   = other.image_blend;
+		if(image_index != 0 || image_speed == 0 || image_number == 1){
+			with(instance_create(xprevious, yprevious, BoltTrail)){
+				image_xscale = point_distance(x, y, other.x, other.y);
+				image_angle  = point_direction(x, y, other.x, other.y);
+				creator      = other.creator;
+				if(other.temerge_trail_is_sprite){
+					sprite_index  = other.sprite_index;
+					image_index   = other.image_index;
+					image_speed   = 0;
+					image_xscale /= 1 + (other.sprite_width / 2);
+					image_yscale  = other.image_yscale / 2;
+					image_blend   = other.image_blend;
+				}
+				else{
+					image_blend = other.temerge_trail_color;
+				}
 			}
-			else{
-				image_blend = other.temerge_trail_color;
+			
+			 // Bubbles:
+			if(_areaIsUnderwater && chance_ct(1, 4)){
+				instance_create(x, y, Bubble);
 			}
-		}
-		
-		 // Bubbles:
-		if(_areaIsUnderwater && chance_ct(1, 4)){
-			instance_create(x, y, Bubble);
 		}
 	}
 	
@@ -2749,25 +2811,70 @@
 	*/
 	
 	if(temerge_flame_amount[0] > 0){
-		var	_x = x,
-			_y = y;
-			
-		 // Unstick From Wall:
-		if(position_meeting(_x, _y, Wall)){
-			_x -= lengthdir_x(12, direction);
-			_y -= lengthdir_y(12, direction);
-		}
-		
-		 // Create Flames:
 		repeat(temerge_flame_amount[0]){
 			call(scr.projectile_create,
 				self,
-				_x,
-				_y,
+				x,
+				y,
 				Flame,
 				((speed == 0) ? random(360) : direction),
 				max(1.5, speed / 2)
 			);
+		}
+	}
+	
+	
+#define temerge_toxic_setup(_instanceList)
+	/*
+		Merged projectile toxic gas releasing effect
+	*/
+	
+	temerge_projectile_add_event(_instanceList, "destroy", script_ref_create(temerge_toxic_projectile_destroy));
+	
+#define temerge_toxic_projectile_destroy
+	/*
+		Toxic projectiles release toxic gas on destruction
+	*/
+	
+	var _num = damage * 2/3;
+	
+	_num = min(floor(_num) + chance(frac(_num), 1), 640);
+	
+	if(_num > 0){
+		var	_x = x,
+			_y = y;
+			
+		 // Move Ahead:
+		if(speed > 0){
+			var	_lastX = x,
+				_lastY = y;
+				
+			move_contact_solid(direction, speed_raw);
+			_x = x;
+			_y = y;
+			
+			x  = _lastX;
+			y  = _lastY;
+		}
+		
+		 // Release Gas:
+		repeat(_num){
+			instance_create(_x, _y, ToxicGas);
+		}
+		
+		 // Sound:
+		call(scr.sound_play_at,
+			_x,
+			_y,
+			sndToxicBoltGas,
+			max(0.6, 1.2 - (0.0125 * _num)) + orandom(0.1),
+			0.2 + (0.05 * _num),
+			320
+		);
+		
+		 // Effects:
+		repeat(ceil(_num / 3)){
+			call(scr.fx, _x, _y, random(sqrt(_num) / 2), Smoke);
 		}
 	}
 	
@@ -2891,7 +2998,7 @@
 	instance_destroy();
 	
 	
-#define temerge_hyper_setup(_instanceList)
+#define temerge_hyper_setup(_instanceList, _hyperSpeed)
 	/*
 		Merged projectile hyper effect
 	*/
@@ -2978,6 +3085,9 @@
 					}
 				}
 			}
+			
+			 // Remove From List:
+			_instanceList = instances_matching_ne(_instanceList, "id", id);
 		}
 		
 		 // Hyper Projectiles:
@@ -2986,9 +3096,11 @@
 				temerge_hyper_speed    = 0;
 				temerge_hyper_minspeed = max(1, min(friction * 10, speed - (4 * friction)));
 			}
-			temerge_hyper_speed++;
+			temerge_hyper_speed += _hyperSpeed;
 		}
 	}
+	
+	return _instanceList;
 	
 #define temerge_hyper_begin_step(_instanceList)
 	/*
@@ -3196,26 +3308,46 @@
 	}
 	
 	
-#define temerge_grenade_setup(_instanceList)
+#define temerge_grenade_setup // instanceList, maxRange, explosionIsSmall=false, explosionIsHeavy=false, explosionIsBlood=false
 	/*
 		Merged projectile timed explosion effect
 	*/
 	
+	var	_instanceList     = argument[0],
+		_maxRange         = argument[1],
+		_explosionIsSmall = ((argument_count > 2) ? argument[2] : false),
+		_explosionIsHeavy = ((argument_count > 3) ? argument[3] : false),
+		_explosionIsBlood = ((argument_count > 4) ? argument[4] : false);
+		
 	if("temerge_grenade_frame" not in GameCont){
 		GameCont.temerge_grenade_frame = 0;
 	}
 	
 	with(_instanceList){
-		if("temerge_grenade_size" not in self){
-			temerge_grenade_size[0] = 0;
-			temerge_grenade_frame   = GameCont.temerge_grenade_frame + (128 / max(6, speed));
+		if("temerge_grenade_explosion_list" not in self){
+			temerge_grenade_explosion_list = [];
+			
+			 // Explosion Delay:
+			temerge_grenade_frame = GameCont.temerge_grenade_frame + ceil(_maxRange / max(6, speed));
 			if(instance_is(self, Grenade)){
 				temerge_grenade_frame += alarm0 / 4;
 				alarm0 = -1;
 			}
+			
+			 // Projectile Events:
 			temerge_projectile_add_event(self, "destroy", script_ref_create(temerge_grenade_projectile_destroy));
+			if(instance_is(self, HyperGrenade)){
+				temerge_projectile_add_event(self, "hit",  script_ref_create(temerge_grenade_HyperGrenade_hit));
+				temerge_projectile_add_event(self, "wall", script_ref_create(temerge_grenade_HyperGrenade_wall));
+			}
 		}
-		temerge_grenade_size[0]++;
+		
+		 // Add Explosion:
+		array_push(temerge_grenade_explosion_list, {
+			"is_small" : _explosionIsSmall,
+			"is_heavy" : _explosionIsHeavy,
+			"is_blood" : _explosionIsBlood
+		});
 	}
 	
 #define temerge_grenade_step(_instanceList)
@@ -3264,49 +3396,117 @@
 	
 #define temerge_grenade_projectile_destroy
 	/*
-		Grenade projectiles create an explosion on death
+		Grenade projectiles create explosions on destruction
 	*/
 	
-	if((!instance_is(self, Lightning) && !instance_is(self, EnemyLightning)) || distance_to_object(Explosion) > 0){
-		var _num = temerge_grenade_size[0];
-		if(_num > 0){
-			var	_x   = bbox_center_x + hspeed,
-				_y   = bbox_center_y + vspeed,
-				_len = ((_num > 1) ? 16 : 0),
-				_ang = random(360);
+	if((object_index != Lightning && object_index != EnemyLightning) || (ammo % 4) < 1){
+		var	_explosionList  = temerge_grenade_explosion_list,
+			_explosionCount = array_length(_explosionList),
+			_explosionAngle = random(360);
+			
+		for(var _explosionIndex = 0; _explosionIndex < _explosionCount; _explosionIndex++){
+			var	_explosion             = _explosionList[_explosionIndex],
+				_explosionIsSmall      = (lq_defget(_explosion, "is_small", false) || damage < 10),
+				_explosionIsHeavy      = lq_defget(_explosion, "is_heavy", false),
+				_explosionIsBlood      = lq_defget(_explosion, "is_blood", false),
+				_explosionOffsetLen    = random(8 * (_explosionCount - 1)),
+				_explosionOffsetDir    = _explosionAngle + (360 * (_explosionIndex / _explosionCount)),
+				_explosionX            = x + lengthdir_x(_explosionOffsetLen, _explosionOffsetDir),
+				_explosionY            = y + lengthdir_y(_explosionOffsetLen, _explosionOffsetDir),
+				_explosionSubCount     = ((_explosionIsBlood && !_explosionIsSmall) ? 3 : 1),
+				_explosionSubAngle     = random(360);
 				
-			if(mask_index == mskNone){
-				_x = x + hspeed;
-				_y = y + vspeed;
+			 // Sounds:
+			if(_explosionIsBlood){
+				sound_play_hit_big(sndMeatExplo,          0.2);
+				sound_play_hit_big(sndBloodLauncherExplo, 0.2);
+			}
+			else{
+				sound_play_hit_big(
+					(
+						(_explosionCount > 1)
+						? (_explosionIsSmall ? sndExplosion  : sndExplosionL)
+						: (_explosionIsSmall ? sndExplosionS : sndExplosion)
+					),
+					0.2
+				);
 			}
 			
-			for(var _dir = _ang; _dir < _ang + 360; _dir += (360 / _num)){
-				with(instance_create(
-					_x + lengthdir_x(_len, _dir),
-					_y + lengthdir_y(_len, _dir),
-					((damage < 10) ? SmallExplosion : Explosion)
+			 // Create Explosions:
+			for(var _explosionSubOffsetDir = _explosionSubAngle; _explosionSubOffsetDir < _explosionSubAngle + 360; _explosionSubOffsetDir += (360 / _explosionSubCount)){
+				var _explosionSubOffsetLen = ((_explosionSubCount > 1) ? 24 : random(1));
+				with(call(scr.projectile_create,
+					self,
+					_explosionX + lengthdir_x(_explosionSubOffsetLen, _explosionSubOffsetDir),
+					_explosionY + lengthdir_y(_explosionSubOffsetLen, _explosionSubOffsetDir),
+					(
+						_explosionIsBlood
+						? MeatExplosion
+						: (
+							_explosionIsSmall
+							? (_explosionIsHeavy ? "SmallGreenExplosion" : SmallExplosion)
+							: (_explosionIsHeavy ? GreenExplosion        : Explosion)
+						)
+					),
+					direction,
+					speed / 4
 				)){
+					friction    = 0.5;
+					image_angle = 0;
+					
 					 // Damage:
-					damage = round(other.damage / 3);
+					damage  = other.damage;
+					damage *= (_explosionIsHeavy ? (4/5) : (1/3));
+					if(_explosionIsBlood){
+						damage *= 0.8;
+					}
+					damage = round(damage);
 					
-					 // Motion:
-					hspeed  += other.hspeed / 4;
-					vspeed  += other.vspeed / 4;
-					friction = 0.5;
-					
-					 // Small:
-					if(instance_is(self, SmallExplosion)){
-						hitid = 56;
-						sound_play_hit_big(sndExplosionS, 0.1);
+					 // Streak Blood:
+					if(_explosionIsBlood){
+						with(instance_create(_explosionX, _explosionY, BloodStreak)){
+							image_angle = _explosionSubOffsetDir;
+						}
 					}
 					
-					 // Normal:
+					 // Hostile to Player:
 					else{
-						hitid = 55;
-						sound_play_hit_big(sndExplosion, 0.1);
+						team = -1;
+						if(hitid == -1){
+							switch(object_index){
+								case Explosion      : hitid = 55; break;
+								case SmallExplosion : hitid = 56; break;
+								case GreenExplosion : hitid = 99; break;
+							}
+						}
 					}
 				}
 			}
+		}
+	}
+	
+#define temerge_grenade_HyperGrenade_hit
+	 // Delay Explosion:
+	alarm1 = max(alarm1, temerge_grenade_frame - GameCont.temerge_grenade_frame);
+	
+#define temerge_grenade_HyperGrenade_wall
+	var _canBounce = false;
+	with(temerge_grenade_explosion_list){
+		if(!is_small && !is_blood){
+			_canBounce = true;
+			break;
+		}
+	}
+	if(_canBounce){
+		 // Delay Explosion:
+		alarm1 = max(alarm1, temerge_grenade_frame - GameCont.temerge_grenade_frame);
+		
+		 // Bounce:
+		if(speed != 0 && "temerge_sticky_target" not in self){
+			friction = 0.4;
+			move_bounce_solid(true);
+			sound_play_hit(sndGrenadeHitWall, 0.2);
+			instance_create(x, y, Dust);
 		}
 	}
 	
@@ -3321,6 +3521,8 @@
 		temerge_sticky_xoffset    = 0;
 		temerge_sticky_yoffset    = 0;
 		temerge_sticky_mask_index = mskNone;
+		
+		 // Projectile Events:
 		temerge_projectile_add_event(self, "hit",  script_ref_create(temerge_sticky_projectile_stick));
 		temerge_projectile_add_event(self, "wall", script_ref_create(temerge_sticky_projectile_stick));
 	}
@@ -3338,26 +3540,28 @@
 				 // Follow Target:
 				x = lerp_ct(x, temerge_sticky_target.x + temerge_sticky_xoffset, 0.5);
 				y = lerp_ct(y, temerge_sticky_target.y + temerge_sticky_yoffset, 0.5);
+				call(scr.motion_step, self, -1);
 				
-				if(image_index > 0){
-					image_index -= min(image_index, image_speed_raw);
-				}
-				
-				 //:
+				 // Thrust:
 				if(speed != 0){
-					x += hspeed_raw;
-					y += vspeed_raw;
-					speed_raw /= power(3, current_time_scale);
-					if(instance_is(temerge_sticky_target, enemy)){
-						with(temerge_sticky_target){
-							motion_add_ct(other.direction, other.speed / max(1, size));
-						}
+					switch(object_index){
+						
+						case Rocket:
+						case Nuke:
+						
+							if(active && instance_is(temerge_sticky_target, hitme)){
+								with(temerge_sticky_target){
+									motion_add_ct(other.direction, other.speed / (3 * (max(0, size) + 1)));
+								}
+							}
+							
+							break;
+							
 					}
-					call(scr.motion_step, self, -1);
 				}
 				
 				 // Disable Hitbox:
-				if(mask_index != mskNone){
+				if(mask_index != mskNone && object_index != UltraBolt){
 					temerge_sticky_mask_index = mask_index;
 					mask_index                = mskNone;
 				}
@@ -3365,7 +3569,7 @@
 			else{
 				temerge_sticky_target = noone;
 				
-				 // Enable Hitbox:
+				 // Restore Hitbox:
 				if(temerge_sticky_mask_index != mskNone){
 					mask_index                = temerge_sticky_mask_index;
 					temerge_sticky_mask_index = mskNone;
@@ -3379,64 +3583,83 @@
 		Sticky projectiles stick to hittables and walls instead of their normal interaction
 	*/
 	
-	if(!instance_exists(temerge_sticky_target)){
+	if(!instance_exists(temerge_sticky_target) && visible){
 		temerge_sticky_target  = other;
-		temerge_sticky_xoffset = (x + (hspeed_raw / 3)) - other.x;
-		temerge_sticky_yoffset = (y + (vspeed_raw / 3)) - other.y;
-		//speed                  = 0;
+		temerge_sticky_xoffset = x - other.x;
+		temerge_sticky_yoffset = y - other.y;
 		
-		 // :
-		repeat(2){
-			if(!place_meeting(
-				other.x + temerge_sticky_xoffset,
-				other.y + temerge_sticky_yoffset,
-				other
-			)){
+		 // Offset Stick Position:
+		if(speed != 0){
+			repeat(3){
 				temerge_sticky_xoffset += hspeed_raw / 3;
 				temerge_sticky_yoffset += vspeed_raw / 3;
+				if(place_meeting(
+					other.x + temerge_sticky_xoffset,
+					other.y + temerge_sticky_yoffset,
+					other
+				)){
+					break;
+				}
 			}
-			else break;
+			x = other.x + temerge_sticky_xoffset + hspeed_raw;
+			y = other.y + temerge_sticky_yoffset + vspeed_raw;
+		}
+		if(instance_is(other, hitme)){
+			var _offsetScale = 1 - (1 / (1 + max(0, other.size)));
+			temerge_sticky_xoffset *= _offsetScale;
+			temerge_sticky_yoffset *= _offsetScale;
 		}
 		
-		 // :
-		if(chance(1, 2)){
-			depth = other.depth + choose(-1, 1);
+		 // Reduce Speed:
+		if(speed > friction * 10){
+			speed = max(friction * 10, speed * 0.6);
 		}
+		
+		 // Appear Above or Below:
+		depth = other.depth + choose(-1, 1);
+		
+		 // Sound:
+		sound_play_hit(sndGrenadeStickWall, 0.1);
 		
 		 // Object-Specific:
 		switch(object_index){
 			
-			case HyperGrenade:
+			case Rocket:
+			case Nuke:
 			
-				alarm1                 += 30;
-				temerge_sticky_xoffset -= lengthdir_x(4, direction);
-				temerge_sticky_yoffset -= lengthdir_y(4, direction);
+				 // Stop Thrusting:
+				if(instance_is(other, Wall) || instance_is(other, prop)){
+					active = false;
+					alarm1 = -1;
+				}
+				
+				break;
+				
+			case UltraBolt:
+			
+				 // Stop Damaging:
+				canhurt = false;
 				
 				break;
 				
 			case Laser:
+			case EnemyLaser:
 			
+				 // Stop Growing:
 				alarm0 = -1;
 				
 				break;
 				
 		}
 		
-		 // Sound:
-		sound_play_hit(sndGrenadeStickWall, 0.1);
-		
+		 // Follow Target:
 		temerge_sticky_post_step(self);
-		 // Disable Hitbox:
-		// if(mask_index != mskNone){
-		// 	temerge_sticky_mask_index = mask_index;
-		// 	mask_index                = mskNone;
-		// }
 	}
 	
 	
 /// MERGED PROJECTILE EFFECTS
 #define temerge_HeavyBullet_setup(_instanceList)
-	 // Big:
+	 // Heavy:
 	temerge_projectile_add_scale(_instanceList, 0.1);
 	
 	 // Hits Like a Fist:
@@ -3513,7 +3736,7 @@
 	
 #define temerge_HyperSlug_setup(_instanceList)
 	 // Hyper:
-	temerge_projectile_add_effect(_instanceList, "hyper");
+	temerge_projectile_add_effect(_instanceList, "hyper", [1]);
 	
 	 // Slug:
 	temerge_Slug_setup(_instanceList);
@@ -3523,31 +3746,23 @@
 	var _num = abs(damage / 2) + (force >= 3);
 	
 	 // Nerf Lightning:
-	if(instance_is(self, Lightning) || instance_is(self, EnemyLightning)){
-		_num -= ammo;
+	switch(object_index){
+		case Lightning:
+		case EnemyLightning:
+			_num -= ammo;
 	}
 	
 	 // Explode Into Shrapnel:
 	_num = min(floor(_num) + chance(frac(_num), 1), 640);
 	if(_num > 0){
-		var	_x = x,
-			_y = y;
-			
-		 // Unstick From Wall:
-		if(position_meeting(_x, _y, Wall)){
-			_x -= lengthdir_x(16, direction);
-			_y -= lengthdir_y(16, direction);
-		}
-		
-		 // Create Shrapnel:
 		repeat(_num){
-			call(scr.projectile_create, self, _x, _y, Bullet2, random(360), random_range(8, 16));
+			call(scr.projectile_create, self, x, y, Bullet2, random(360), random_range(8, 16));
 		}
 		
 		 // Sound:
 		call(scr.sound_play_at,
-			_x,
-			_y,
+			x,
+			y,
 			sndFlakExplode,
 			max(0.6, 1.2 - (0.0125 * _num)) + orandom(0.1),
 			0.2 + (0.05 * _num),
@@ -3556,12 +3771,12 @@
 		
 		 // Effects:
 		repeat(ceil(_num / 3)){
-			call(scr.fx, _x, _y, random(3), Smoke);
+			call(scr.fx, x, y, random(3), Smoke);
 		}
-		with(instance_create(_x, _y, BulletHit)){
+		with(instance_create(x, y, BulletHit)){
 			sprite_index = sprFlakHit;
 		}
-		view_shake_at(_x, _y, _num / 2);
+		view_shake_at(x, y, _num / 2);
 		sleep(_num / 1.5);
 	}
 	
@@ -3574,35 +3789,27 @@
 	var _num = power(max(0, abs(damage) - 1.95), 0.45) + (0.25 * (force >= 3));
 	
 	 // Nerf Lightning:
-	if(instance_is(self, Lightning) || instance_is(self, EnemyLightning)){
-		_num -= ammo * 1.5;
+	switch(object_index){
+		case Lightning:
+		case EnemyLightning:
+			_num -= ammo * 1.5;
 	}
 	
 	 // Explode Into Flak Shrapnel:
 	_num = min(floor(_num) + chance(frac(_num), 1), 40);
 	if(_num > 0){
-		var	_x = x,
-			_y = y;
-			
-		 // Unstick From Wall:
-		if(position_meeting(_x, _y, Wall)){
-			_x -= lengthdir_x(12, direction);
-			_y -= lengthdir_y(12, direction);
-		}
-		
-		 // Create Shrapnel:
 		var _ang = random(360);
-		if(position_meeting(_x + lengthdir_x(16, _ang), _y + lengthdir_y(16, _ang), Wall)){
+		if(position_meeting(x + lengthdir_x(16, _ang), y + lengthdir_y(16, _ang), Wall)){
 			_ang += 180;
 		}
 		for(var _dir = _ang; _dir < _ang + 360; _dir += (360 / _num)){
-			call(scr.projectile_create, self, _x, _y, FlakBullet, _dir, 12);
+			call(scr.projectile_create, self, x, y, FlakBullet, _dir, 12);
 		}
 		
 		 // Sound:
 		call(scr.sound_play_at,
-			_x,
-			_y,
+			x,
+			y,
 			sndSuperFlakExplode,
 			max(0.6, 1.2 - (0.04 * _num)) + orandom(0.1),
 			0.2 + (0.16 * _num),
@@ -3611,12 +3818,12 @@
 		
 		 // Effects:
 		repeat(floor(_num * 2.5)){
-			call(scr.fx, _x, _y, random(3), Smoke);
+			call(scr.fx, x, y, random(3), Smoke);
 		}
-		with(instance_create(_x, _y, BulletHit)){
+		with(instance_create(x, y, BulletHit)){
 			sprite_index = sprSuperFlakHit;
 		}
-		view_shake_at(_x, _y, _num * 2.5);
+		view_shake_at(x, y, _num * 2.5);
 		sleep(_num * 4);
 	}
 	
@@ -3688,42 +3895,14 @@
 	temerge_Bolt_fire(_at);
 	
 #define temerge_ToxicBolt_setup(_instanceList)
+	 // Toxic:
+	temerge_projectile_add_effect(_instanceList, "toxic");
+	with(_instanceList){
+		image_blend = merge_color(image_blend, make_color_rgb(131, 253, 8), 0.5);
+	}
+	
 	 // Bolt:
 	temerge_Bolt_setup(_instanceList);
-	
-#define temerge_ToxicBolt_destroy
-	var _num = damage * 2/3;
-	_num = min(floor(_num) + chance(frac(_num), 1), 640);
-	if(_num > 0){
-		var	_x = x,
-			_y = y;
-			
-		 // Unstick From Wall:
-		if(position_meeting(_x, _y, Wall)){
-			_x -= lengthdir_x(12, direction);
-			_y -= lengthdir_y(12, direction);
-		}
-		
-		 // Release Gas:
-		repeat(_num){
-			instance_create(_x, _y, ToxicGas);
-		}
-		
-		 // Sound:
-		call(scr.sound_play_at,
-			_x,
-			_y,
-			sndToxicBoltGas,
-			max(0.6, 1.2 - (0.0125 * _num)) + orandom(0.1),
-			0.2 + (0.05 * _num),
-			320
-		);
-		
-		 // Effects:
-		repeat(ceil(_num / 3)){
-			call(scr.fx, _x, _y, random(sqrt(_num) / 2), Smoke);
-		}
-	}
 	
 	
 #define temerge_UltraBolt_fire(_at)
@@ -3736,17 +3915,17 @@
 	
 	 // Pierces Walls:
 	with(_instanceList){
-		if("temerge_UltraBolt_wall_count" not in self){
-			temerge_UltraBolt_wall_count = 0;
+		if("temerge_pierce_wall_count" not in self){
+			temerge_pierce_wall_count = 0;
 		}
-		temerge_UltraBolt_wall_count += ceil(damage / 6);
+		temerge_pierce_wall_count += ceil(damage / 6);
 	}
 	
 	 // Bolt:
 	temerge_Bolt_setup(_instanceList);
 	
 #define temerge_UltraBolt_wall
-	if(temerge_UltraBolt_wall_count > 0){
+	if(temerge_pierce_wall_count > 0){
 		 // Break Wall:
 		with(other){
 			instance_create(x, y, FloorExplo);
@@ -3759,7 +3938,7 @@
 		}
 		
 		 // Disable Event:
-		if(--temerge_UltraBolt_wall_count <= 0){
+		if(--temerge_pierce_wall_count <= 0){
 			return true;
 		}
 	}
@@ -3787,18 +3966,18 @@
 #define temerge_Disc_setup(_instanceList)
 	with(_instanceList){
 		 // Setup Variables:
-		if("temerge_Disc_wall_bounce_frame" not in self){
-			temerge_Disc_wall_bounce_frame = current_frame;
-			temerge_Disc_friction          = 0;
-			temerge_Disc_is_ally           = true;
+		if("temerge_disc_wall_bounce_frame" not in self){
+			temerge_disc_wall_bounce_frame = current_frame;
+			temerge_disc_friction          = 0;
+			temerge_disc_is_ally           = true;
 		}
 		
 		 // Bounces:
-		temerge_Disc_wall_bounce_frame = max(current_frame, temerge_Disc_wall_bounce_frame) + 30;
+		temerge_disc_wall_bounce_frame = max(current_frame, temerge_disc_wall_bounce_frame) + 30;
 		
 		 // No Friction:
 		if(friction != 0){
-			temerge_Disc_friction = friction;
+			temerge_disc_friction = friction;
 			if(speed > friction * 10){
 				speed = max(friction * 10, speed - (3 * friction));
 			}
@@ -3809,14 +3988,14 @@
 #define temerge_Disc_wall
 	 // Become Hostile:
 	if(
-		temerge_Disc_is_ally
+		temerge_disc_is_ally
 		&& (
 			!instance_exists(creator)
 			|| distance_to_object(creator) > 16
 			|| point_distance(xstart, ystart, creator.x, creator.y) > 16
 		)
 	){
-		temerge_Disc_is_ally = false;
+		temerge_disc_is_ally = false;
 		team = -1;
 		
 		 // Resprite:
@@ -3828,12 +4007,12 @@
 	}
 	
 	 // Bounce:
-	if(temerge_Disc_wall_bounce_frame > current_frame){
-		var _isLaser = (instance_is(self, Laser) || instance_is(self, EnemyLaser));
+	if(temerge_disc_wall_bounce_frame > current_frame){
+		var _isLaser = (object_index == Laser || object_index == EnemyLaser);
 		
 		 // Hitscan Projectiles Bounce Once:
 		if(_isLaser || instance_is(self, HyperGrenade)){
-			temerge_Disc_wall_bounce_frame -= 30;
+			temerge_disc_wall_bounce_frame -= 30;
 		}
 		
 		 // Bounce:
@@ -3841,7 +4020,7 @@
 		
 		 // Lasers Bounce Once:
 		if(_isLaser){
-			temerge_Disc_wall_bounce_frame = current_frame;
+			temerge_disc_wall_bounce_frame = current_frame;
 		}
 		
 		 // Effects:
@@ -3854,11 +4033,11 @@
 	 // Done:
 	else{
 		 // Restore Friction:
-		if(temerge_Disc_friction != 0){
+		if(temerge_disc_friction != 0){
 			if(friction == 0){
-				friction = temerge_Disc_friction;
+				friction = temerge_disc_friction;
 			}
-			temerge_Disc_friction = 0;
+			temerge_disc_friction = 0;
 		}
 		
 		 // Effects:
@@ -3870,25 +4049,99 @@
 	}
 	
 	
-#define temerge_Grenade_fire(_at, _setup)
-	_setup.is_sticky = other.sticky;
+#define temerge_Grenade_fire(_at, _setupInfo)
+	var	_moveSpeed    = speed,
+		_moveFriction = friction,
+		_moveSteps    = floor(_moveSpeed / _moveFriction),
+		_moveDistance = 0,
+		_explodeSteps = alarm0,
+		_airSteps     = alarm1;
+		
+	 // Determine Travel Distance:
+	if(_explodeSteps > 0 && _explodeSteps < _moveSteps){
+		_moveSteps = _explodeSteps;
+	}
+	if(_airSteps > 0 && _airSteps < _moveSteps){
+		_moveDistance += _airSteps * (_moveSpeed - (_moveFriction * ((_airSteps + 1) / 2)));
+		_moveSpeed    -= _moveFriction * _airSteps;
+		_moveFriction  = (instance_is(self, BloodGrenade) ? 0.5 : 0.4);
+		_moveSteps     = floor(_moveSpeed / _moveFriction);
+		if(_explodeSteps > 0 && _explodeSteps < _moveSteps){
+			_moveSteps = _explodeSteps;
+		}
+	}
+	_moveDistance += _moveSteps * (_moveSpeed - (_moveFriction * ((floor(_moveSpeed / _moveFriction) + 1) / 2)));
 	
-#define temerge_Grenade_setup(_instanceList)
-	 // Explodes on a Timer:
-	temerge_projectile_add_effect(_instanceList, "grenade");
+	 // Store Grenade State:
+	_setupInfo.max_range = _moveDistance;
+	_setupInfo.is_small  = instance_is(self, MiniNade);
+	_setupInfo.is_heavy  = instance_is(self, HeavyNade);
+	_setupInfo.is_blood  = instance_is(self, BloodGrenade);
+	_setupInfo.is_toxic  = instance_is(self, ToxicGrenade);
+	_setupInfo.is_sticky = sticky;
+	
+#define temerge_Grenade_setup(_instanceList, _info)
+	 // Explosion on a Timer:
+	temerge_projectile_add_effect(_instanceList, "grenade", [_info.max_range, _info.is_small, _info.is_heavy, _info.is_blood]);
+	
+	 // Small:
+	if(_info.is_small){
+		temerge_projectile_add_scale(_instanceList, -0.05);
+	}
+	
+	 // Big:
+	if(_info.is_heavy){
+		temerge_projectile_add_scale(_instanceList, 0.1);
+	}
+	
+	 // Bloody:
+	if(_info.is_blood){
+		with(_instanceList){
+			if(!place_meeting(x, y, BloodStreak) || chance(1, 3)){
+				with(instance_create(xstart + hspeed, ystart + vspeed, BloodStreak)){
+					image_angle = other.direction;
+				}
+			}
+		}
+	}
+	
+	 // Toxic:
+	if(_info.is_toxic){
+		temerge_projectile_add_effect(_instanceList, "toxic");
+	}
 	
 	 // Sticky:
-	if(is_sticky){
+	if(_info.is_sticky){
 		temerge_projectile_add_effect(_instanceList, "sticky");
 		with(_instanceList){
 			 // Bigger Explosion:
-			temerge_grenade_size[0] += 2;
-			temerge_grenade_frame   += 30;
+			if(!_info.is_toxic){
+				repeat(2){
+					array_push(temerge_grenade_explosion_list, {});
+				}
+			}
+			
+			 // Longer Delay:
+			temerge_grenade_frame += 30;
 			
 			 // Green:
-			image_blend = merge_color(image_blend, c_lime, 0.4);
+			image_blend = merge_color(image_blend, make_color_rgb(131, 253, 8), 0.5);
 		}
 	}
+	
+	
+#define temerge_HyperGrenade_fire(_at)
+	 // No Speed Multiplier:
+	if(alarm0 > 0){
+		_at.speed_factor = 1;
+	}
+	
+#define temerge_HyperGrenade_setup(_instanceList)
+	 // Hyper:
+	temerge_projectile_add_effect(_instanceList, "hyper", [1]);
+	
+	 // Grenade:
+	temerge_projectile_add_effect(_instanceList, "grenade", [160]);
 	
 	
 /// OBJECTS

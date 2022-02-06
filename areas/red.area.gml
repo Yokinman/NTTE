@@ -33,7 +33,7 @@
 	
 #define area_mapdata(_lastX, _lastY, _lastArea, _lastSubarea, _subarea, _loops)
 	 // Compile Warp Zone Map Data:
-	if(is_undefined(global.mapdata_warp_draw)){
+	if(global.mapdata_warp_draw == undefined){
 		global.mapdata_warp_draw = [];
 		
 		var _mapData = call(scr.mapdata_get, -1);

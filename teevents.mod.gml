@@ -2674,10 +2674,10 @@
 		Has a bias towards nearby floors to help prevent the rectangle from being disconnected from the level
 	*/
 	
-	var	_gridWAuto = is_undefined(global.floor_align_w),
-		_gridHAuto = is_undefined(global.floor_align_h),
-		_gridXAuto = is_undefined(global.floor_align_x),
-		_gridYAuto = is_undefined(global.floor_align_y),
+	var	_gridWAuto = (global.floor_align_w == undefined),
+		_gridHAuto = (global.floor_align_h == undefined),
+		_gridXAuto = (global.floor_align_x == undefined),
+		_gridYAuto = (global.floor_align_y == undefined),
 		_gridW     = (_gridWAuto ? 16    : global.floor_align_w),
 		_gridH     = (_gridHAuto ? 16    : global.floor_align_h),
 		_gridX     = (_gridXAuto ? 10000 : global.floor_align_x),
@@ -2818,7 +2818,7 @@
 		var	_floorMaker = noone,
 			_lastArea   = GameCont.area;
 			
-		if(!is_undefined(global.floor_style)){
+		if(global.floor_style != undefined){
 			GameCont.area = area_campfire;
 			with(instance_create(_x, _y, FloorMaker)){
 				with(instances_matching_gt(Floor, "id", id)){
@@ -2829,7 +2829,7 @@
 			}
 			GameCont.area = _lastArea;
 		}
-		if(!is_undefined(global.floor_area)){
+		if(global.floor_area != undefined){
 			GameCont.area = global.floor_area;
 		}
 		_inst = instance_create(_x, _y, _obj);
