@@ -96,7 +96,6 @@
 			var _off = random_range(20, 60);
 			for(var _ang = -_off; _ang <= _off; _ang += _off){
 				call(scr.projectile_create,
-					self,
 					x,
 					y,
 					"VenomPellet",
@@ -108,7 +107,6 @@
 		
 		 // Normal venom shot:
 		else call(scr.projectile_create,
-			self,
 			x,
 			y,
 			"VenomPellet",
@@ -176,8 +174,8 @@
 	
 	 // Venom Explosion:
 	if(gold){
-		repeat(4 + irandom(4)) call(scr.projectile_create, self, x, y, "VenomPellet", random(360), 8 + random(4));
-		repeat(8 + irandom(8)) call(scr.projectile_create, self, x, y, "VenomPellet", random(360), 4 + random(4));
+		repeat(4 + irandom(4)) call(scr.projectile_create, x, y, "VenomPellet", random(360), 8 + random(4));
+		repeat(8 + irandom(8)) call(scr.projectile_create, x, y, "VenomPellet", random(360), 4 + random(4));
 	}
 	
 	 // Effects:
@@ -1548,7 +1546,6 @@
 			 // Blammo:
 			sound_play(sndOasisShoot);
 			call(scr.projectile_create,
-				self,
 				x,
 				y,
 				"BubbleBomb",
@@ -1583,7 +1580,7 @@
 		
 		 // Bubble Trail:
 		else if(swim > 80){
-			call(scr.projectile_create, self, x, y, "BubbleBomb", direction + orandom(10), 4);
+			call(scr.projectile_create, x, y, "BubbleBomb", direction + orandom(10), 4);
 			sound_play_hit(sndBouncerBounce, 0.3);
 		}
 	}
@@ -1838,7 +1835,7 @@
 				alarm2 = 1;
 				/*
 				sprite_index = spr_fire;
-				flak = call(scr.projectile_create, self, x, y, "SilverScorpionFlak", gunangle, 8);
+				flak = call(scr.projectile_create, x, y, "SilverScorpionFlak", gunangle, 8);
 				*/
 			}
 		}
@@ -1853,7 +1850,7 @@
 		ammo = 10;
 		
 		 // Flak:
-		with(call(scr.projectile_create, self, x, y, "VenomFlak", gunangle, 3)){
+		with(call(scr.projectile_create, x, y, "VenomFlak", gunangle, 3)){
 			friction      = 0.2;
 			image_xscale *= 1.25;
 			image_yscale *= 1.25;
@@ -1875,7 +1872,6 @@
 		
 		 // Pew pew:
 		call(scr.projectile_create,
-			self,
 			x,
 			y,
 			EnemyBullet2,
@@ -1906,17 +1902,17 @@
 	}
 	
 	 // Venom:
-	with(call(scr.projectile_create, self, x, y, "VenomFlak", direction)){
+	with(call(scr.projectile_create, x, y, "VenomFlak", direction)){
 		charging = false;
 		repeat(12){
-			call(scr.projectile_create, self, x, y, EnemyBullet2,  random(360), random_range(3, 5));
-			call(scr.projectile_create, self, x, y, "VenomPellet", random(360), random_range(8, 12));
+			call(scr.projectile_create, x, y, EnemyBullet2,  random(360), random_range(3, 5));
+			call(scr.projectile_create, x, y, "VenomPellet", random(360), random_range(8, 12));
 		}
 	}
 	/*
 	var _num = 7;
 	for(var _ang = 0; _ang < 360; _ang += 360 / _num){
-		call(scr.projectile_create, self, x, y, "SilverScorpionDevastator", direction + _ang, random_range(5, 6));
+		call(scr.projectile_create, x, y, "SilverScorpionDevastator", direction + _ang, random_range(5, 6));
 	}
 	*/
 	
@@ -1938,7 +1934,6 @@
 #define SilverScorpionDevastator_step
 	if(current_frame_active){
 		call(scr.projectile_create,
-			self,
 			x + orandom(9), 
 			y + orandom(9), 
 			choose("VenomPellet", "VenomPelletBack"), 
@@ -1953,7 +1948,7 @@
 	
 #define SilverScorpionDevastator_destroy
 	repeat(7){
-		call(scr.projectile_create, self, x, y, "VenomPellet", random(360), random_range(3, 7));
+		call(scr.projectile_create, x, y, "VenomPellet", random(360), random_range(3, 7));
 	}
 	
 	
@@ -1999,7 +1994,6 @@
 		if(current_frame_active){
 			var _back = chance(1, 2);
 			with(call(scr.projectile_create,
-				self,
 				x, 
 				y, 
 				(_back ? "VenomPelletBack" : "VenomPellet"), 
@@ -2020,7 +2014,6 @@
 		 // Trailing:
 		if(current_frame_active){
 			call(scr.projectile_create,
-				self,
 				x + orandom(11), 
 				y + orandom(11), 
 				choose("VenomPellet", "VenomPelletBack"), 
@@ -2035,7 +2028,7 @@
 				var _l = sin(wave / 2) * 16,
 					_d = direction + (90 * i);
 					
-				with(call(scr.projectile_create, self, x + lengthdir_x(_l, _d), y + lengthdir_y(_l, _d), "VenomPellet", direction, (speed * 1/3))){
+				with(call(scr.projectile_create, x + lengthdir_x(_l, _d), y + lengthdir_y(_l, _d), "VenomPellet", direction, (speed * 1/3))){
 					if(i < 1){
 						depth++;
 						spr_idle = spr.VenomPelletBack;
@@ -2062,10 +2055,10 @@
 	 // Bullets:
 	var _num = 7;
 	for(var _ang = 0; _ang < 360; _ang += 360 / _num){
-		call(scr.projectile_create, self, x, y, "SilverScorpionDevastator", direction + _ang, random_range(5, 6));
+		call(scr.projectile_create, x, y, "SilverScorpionDevastator", direction + _ang, random_range(5, 6));
 	}
 	repeat(12){
-		call(scr.projectile_create, self, x, y, "VenomPellet", random(360), random_range(4, 8));
+		call(scr.projectile_create, x, y, "VenomPellet", random(360), random_range(4, 8));
 	}
 	
 	 // Effects:
@@ -2171,7 +2164,6 @@
 			 // Main Shot:
 			if(i == 0){
 				with(call(scr.projectile_create,
-					self,
 					x,
 					y,
 					EnemyBullet2,
@@ -2184,7 +2176,6 @@
 			
 			 // Side Shots:
 			else call(scr.projectile_create,
-				self,
 				x,
 				y,
 				"VenomPellet",
@@ -2381,7 +2372,6 @@
 		if((_ang % 90) == 0){
 			for(var i = 0; i <= 4; i++){
 				with(call(scr.projectile_create,
-					self,
 					x,
 					y,
 					"VenomPellet",
@@ -2398,7 +2388,6 @@
 		
 		 // Individual:
 		else with(call(scr.projectile_create,
-			self,
 			x,
 			y,
 			"VenomPellet",

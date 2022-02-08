@@ -40,7 +40,7 @@
 	
 	 // Create new hyper Projectile if none exists:
 	if(_needProj){
-		with(call(scr.projectile_create, self, x, y, "ElectroPlasma", _dir)){
+		with(call(scr.projectile_create, x, y, "ElectroPlasma", _dir)){
 			move_contact_solid(_dir, 480);
 			hyper        = "true";
 			tether_range = 1200;

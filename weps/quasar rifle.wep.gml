@@ -34,7 +34,7 @@
 	 // New Beam:
 	if(!instance_exists(_wep.beam) || _wep.beam.creator != _fire.creator || (_fire.spec && _fire.primary)){
 		 // Quasar Beam:
-		with(call(scr.projectile_create, self, x, y, "QuasarBeam", gunangle + orandom(6 * accuracy))){
+		with(call(scr.projectile_create, x, y, "QuasarBeam", gunangle + orandom(6 * accuracy))){
 			image_yscale = 0.6;
 			turn_factor  = 1/100;
 			offset_dis   = 16;

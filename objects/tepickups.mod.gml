@@ -3530,7 +3530,7 @@
 			if(type == "red"){
 				if(frame_active(8) || chance_ct(1, 16)){
 					var _minID = instance_max;
-					with(call(scr.projectile_create, self, x, y, EnemyLightning, random(360))){
+					with(call(scr.projectile_create, x, y, EnemyLightning, random(360))){
 						ammo = irandom_range(3, irandom_range(3, 5));
 						event_perform(ev_alarm, 0);
 					}
@@ -5068,7 +5068,7 @@
 				pickup_text(weapon_get_name(_wep), "got");
 				
 				 // Explosion:
-				with(call(scr.projectile_create, self, other.x, other.y, PopoExplosion)){
+				with(call(scr.pass, self, scr.projectile_create, other.x, other.y, PopoExplosion)){
 					sprite_index = sprRogueExplosion;
 					mask_index   = mskExplosion;
 				}

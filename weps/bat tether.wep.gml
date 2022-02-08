@@ -37,7 +37,7 @@
 	 // Fire:
 	if(call(scr.weapon_ammo_fire, _wep)){
 		 // Bat Coil:
-		with(call(scr.projectile_create, self, x, y, "TeslaCoil", gunangle)){
+		with(call(scr.projectile_create, x, y, "TeslaCoil", gunangle)){
 			dist_max = 64;
 			time     = 7 * (1 + skill_get(mut_laser_brain));
 			bat      = true;

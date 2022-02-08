@@ -146,7 +146,6 @@
 			var d = 90 * (1 - (ammo / ammo_max));
 			for(var i = -sign(d); i <= sign(d); i += 2){
 				with(call(scr.projectile_create,
-					self,
 					x,
 					y,
 					"AlbinoBolt",
@@ -324,7 +323,7 @@
 		if(gonnafire <= 0){
 			alarm1 = 30;
 			
-			call(scr.projectile_create, self, x, y, "AlbinoBolt", gunangle, 16);
+			call(scr.projectile_create, x, y, "AlbinoBolt", gunangle, 16);
 			
 			sound_play_pitchvol(sndHeavyCrossbow, 1.2 + random(0.2), 0.8);
 			sound_play_pitchvol(sndTurretFire,    0.8 + random(0.2), 0.8);
@@ -374,7 +373,7 @@
 			}
 			
 			 // Throw Grenade:
-			call(scr.projectile_create, self, x, y, "AlbinoGrenade", gunangle, random_range(8, 12));
+			call(scr.projectile_create, x, y, "AlbinoGrenade", gunangle, random_range(8, 12));
 			motion_add(gunangle + 180, 2);
 			
 			 // Sound:
@@ -568,7 +567,7 @@
 		_ang = pround(angle, 45);
 		
 	for(var _dir = _ang; _dir < _ang + 360; _dir += 90){
-		with(call(scr.projectile_create, self, x + lengthdir_x(_dis, _dir), y + lengthdir_y(_dis, _dir), "QuasarBeam", _dir)){
+		with(call(scr.projectile_create, x + lengthdir_x(_dis, _dir), y + lengthdir_y(_dis, _dir), "QuasarBeam", _dir)){
 			hold_x         = x;
 			hold_y         = y;
 			scale_goal     = 0.8;
@@ -709,7 +708,7 @@
 				_x = x + lengthdir_x(_l, _d),
 				_y = y + lengthdir_y(_l, _d);
 				
-			call(scr.projectile_create, self, _x, _y, LHBouncer, _d, 3);
+			call(scr.projectile_create, _x, _y, LHBouncer, _d, 3);
 			call(scr.fx, _x, _y, [_d, 2], Smoke);
 			
 			sound_play_hit(sndBouncerSmg, 0.2);
@@ -853,7 +852,7 @@
 			_spd = 2;
 			
 		for(var i = 0; i <= 5; i++){
-			with(call(scr.projectile_create, self, x, y, "VenomPellet", gunangle + orandom(2 + i), _spd * i)){
+			with(call(scr.projectile_create, x, y, "VenomPellet", gunangle + orandom(2 + i), _spd * i)){
 				move_contact_solid(direction, _dis + (_dis * i));
 				
 				 // Effects:
@@ -986,7 +985,7 @@
 	}
 	
 	 // Screech:
-	with(call(scr.projectile_create, self, x, y, "BatScreech")){
+	with(call(scr.pass, self, scr.projectile_create, x, y, "BatScreech")){
 		if(_scale != undefined){
 			image_xscale = _scale;
 			image_yscale = _scale;
@@ -1258,7 +1257,7 @@
 				 // Flak Time:
 				else{
 					wkick -= 4;
-					call(scr.projectile_create, self, x, y, "VenomFlak", gunangle + orandom(10), 12);
+					call(scr.projectile_create, x, y, "VenomFlak", gunangle + orandom(10), 12);
 				}
 			}
 			
@@ -1498,11 +1497,11 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 	}
 	
 	 // Screech:
-	call(scr.projectile_create, self, x, y, "BatScreech");
+	call(scr.pass, self, scr.projectile_create, x, y, "BatScreech");
 	if(_extraNum > 0){
 		var _l = 56;
 		for(var _d = gunangle; _d < gunangle + 360; _d += (360 / _extraNum)){
-			with(call(scr.projectile_create, self, x + lengthdir_x(_l, _d), y + lengthdir_y(_l, _d), "BatScreech")){
+			with(call(scr.pass, self, scr.projectile_create, x + lengthdir_x(_l, _d), y + lengthdir_y(_l, _d), "BatScreech")){
 				image_xscale = _extraScale;
 				image_yscale = _extraScale;
 			}
@@ -1856,7 +1855,7 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 	 // Projectiles:
 	if(ammo > 0){
 		for(var _dir = direction; _dir < direction + 360; _dir += (360 / ammo)){
-			with(call(scr.projectile_create, self, x, y, "BatDisc", _dir)){
+			with(call(scr.projectile_create, x, y, "BatDisc", _dir)){
 				wep     = other.wep;
 				walled  = other.walled;
 				visible = other.visible;
@@ -2170,7 +2169,7 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 		if(ammo <= 0){
 			alarm1 = 20;
 			
-			with(call(scr.projectile_create, self, _x, _y, Grenade, gunangle, 9)){
+			with(call(scr.projectile_create, _x, _y, Grenade, gunangle, 9)){
 				alarm0 = 10 + random(10);
 			}
 			
@@ -2184,7 +2183,7 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 		
 		 // Mini Nade Shots:
 		else{
-			call(scr.projectile_create, self, _x, _y, MiniNade, gunangle, 7 + random(2));
+			call(scr.projectile_create, _x, _y, MiniNade, gunangle, 7 + random(2));
 			
 			 // Effects:
 			wkick = 6;
@@ -2194,7 +2193,7 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 		}
 		
 		 // Shared Effects:
-		with(call(scr.projectile_create, self, _x, _y, TrapFire, gunangle, random(1))){
+		with(call(scr.projectile_create, _x, _y, TrapFire, gunangle, random(1))){
 			image_speed = 0.4;
 		}
 		repeat(1 + irandom(2)) with(call(scr.obj_create, _x, _y, "FlameSpark")) motion_set(other.gunangle + orandom(30), random(5));
@@ -2274,11 +2273,11 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 	 // Explodin':
 	sound_play(sndExplosionL);
 	sound_play(sndFlameCannonEnd);
-	with(call(scr.projectile_create, self, x, y, Explosion)){
+	with(call(scr.projectile_create, x, y, Explosion)){
 		team = -1;
 	}
 	repeat(1 + irandom(2)){
-		with(call(scr.projectile_create, self, x, y, SmallExplosion)){
+		with(call(scr.projectile_create, x, y, SmallExplosion)){
 			team = -1;
 		}
 	}
@@ -2289,7 +2288,7 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 			_y = y + lengthdir_y(_l, _d);
 			
 		if(position_meeting(_x, _y, Floor)){
-			call(scr.projectile_create, self, _x, _y, TrapFire, _d + random_range(60, 90), random(2));
+			call(scr.projectile_create, _x, _y, TrapFire, _d + random_range(60, 90), random(2));
 		}
 		with(call(scr.obj_create, _x, _y, "FlameSpark")){
 			motion_add(_d + random_range(30, 90), random(5));
@@ -2612,7 +2611,7 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 		
 		 // Toxic:
 		repeat(2){
-			with(call(scr.projectile_create, self, _x, _y, "CatToxicGas", gunangle + orandom(6), 4)){
+			with(call(scr.projectile_create, _x, _y, "CatToxicGas", gunangle + orandom(6), 4)){
 				friction = 0.12;
 				if(!instance_is(other.sit, enemy)){
 					team = 0;
@@ -3035,7 +3034,7 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 					){
 						alarm1 = 10;
 						
-						with(call(scr.projectile_create, self, x, y, "CatBossAttack", gunangle)){
+						with(call(scr.projectile_create, x, y, "CatBossAttack", gunangle)){
 							target = other.target;
 							type   = other.super;
 							other.alarm1 += alarm0;
@@ -3126,7 +3125,6 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 	 // Gas:
 	repeat(2 + irandom(3)){
 		with(call(scr.projectile_create,
-			self,
 			x,
 			y,
 			"CatToxicGas",
@@ -3492,7 +3490,7 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 			}
 			
 			 // Gas:
-			with(call(scr.projectile_create, self, _lx + orandom(_radius), _ly + orandom(_radius), ToxicGas, _dir, 1 + random(1))){
+			with(call(scr.projectile_create, _lx + orandom(_radius), _ly + orandom(_radius), ToxicGas, _dir, 1 + random(1))){
 				friction  += random_range(0.1, 0.2);
 				growspeed *= _dis / _line.dis;
 				team       = 0;
@@ -3507,7 +3505,7 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 		}
 		
 		 // Knockback gas:
-		with(call(scr.projectile_create, self, _x, _y, ToxicGas, _dir + 180 + orandom(20), 3)){
+		with(call(scr.projectile_create, _x, _y, ToxicGas, _dir + 180 + orandom(20), 3)){
 			move_contact_solid(_dir + 180, 20);
 			friction = 0.1;
 			team     = 0;
@@ -3846,10 +3844,10 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 //	// nada
 //	
 //#define CatGrenade_destroy
-//	call(scr.projectile_create, self, x, y, Explosion);
+//	call(scr.projectile_create, x, y, Explosion);
 //	
 //	repeat(18){
-//		with(call(scr.projectile_create, self, x, y, ToxicGas, random(360), 4)) {
+//		with(call(scr.projectile_create, x, y, ToxicGas, random(360), 4)) {
 //			friction = 0.2;
 //			team = 0;
 //		}
@@ -4421,10 +4419,10 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 	
 	 // Revenge:
 	repeat(4){
-		call(scr.projectile_create, self, x, y, "GatorStatueFlak");
+		call(scr.projectile_create, x, y, "GatorStatueFlak");
 	}
 	if(instance_exists(prompt) && prompt.visible){
-		with(call(scr.projectile_create, self, x, y, "CustomFlak", 90, 0.1)){
+		with(call(scr.projectile_create, x, y, "CustomFlak", 90, 0.1)){
 			sprite_index = spr.EnemySuperFlak;
 			spr_dead     = spr.EnemySuperFlakHit;
 			depth        = -1;
@@ -4556,7 +4554,7 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 	 // Blammo:
 	call(scr.team_instance_sprite, 
 		call(scr.sprite_get_team, sprite_index),
-		call(scr.projectile_create, self, x, y, EFlakBullet)
+		call(scr.projectile_create, x, y, EFlakBullet)
 	);
 	
 	

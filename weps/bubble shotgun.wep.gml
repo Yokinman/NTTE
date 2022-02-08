@@ -37,7 +37,7 @@
 	
 	 // Bubble Bombs:
 	for(var i = 0; i < 5; i++){
-		with(call(scr.projectile_create, self, x, y, "BubbleBomb", gunangle + orandom(12 * accuracy), random_range(9, 10))){
+		with(call(scr.projectile_create, x, y, "BubbleBomb", gunangle + orandom(12 * accuracy), random_range(9, 10))){
 			move_contact_solid(other.gunangle, 6 + (i * 8));
 			image_speed += (irandom_range(-2, 2) / 50);
 		}

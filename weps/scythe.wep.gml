@@ -233,7 +233,7 @@
 					_dir   = gunangle + orandom(4 * accuracy);
 					
 				 // Slash:
-				with(call(scr.projectile_create, self, 
+				with(call(scr.projectile_create,
 					x + hspeed + lengthdir_x(_dis, _dir),
 					y + vspeed + lengthdir_y(_dis, _dir),
 					"BoneSlash",
@@ -266,7 +266,7 @@
 					
 				 // Bone Arrows:
 				for(var i = -1; i <= 1; i++){
-					call(scr.projectile_create, self, x, y, "BoneArrow", _dir + (i * _off), 16);
+					call(scr.projectile_create, x, y, "BoneArrow", _dir + (i * _off), 16);
 				}
 				
 				 // Sounds:
@@ -284,7 +284,7 @@
 				var _dir = gunangle + orandom(4 * accuracy);
 				
 				 // Slug Bolt:
-				with(call(scr.projectile_create, self, x, y, "BoneArrow", _dir, 20)){
+				with(call(scr.projectile_create, x, y, "BoneArrow", _dir, 20)){
 					big = true;
 				}
 				

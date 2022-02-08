@@ -153,7 +153,7 @@
 							 // Venom Ball:
 							var _targetDir = target_direction;
 							enemy_look(_targetDir);
-							my_venom = call(scr.projectile_create, self, x, y, "VenomBlast", _targetDir);
+							my_venom = call(scr.projectile_create, x, y, "VenomBlast", _targetDir);
 						}
 					}
 				}
@@ -204,7 +204,7 @@
 	var _ang = random(360);
 	for(var _dir = _ang; _dir < _ang + 360; _dir += (360 / 5)){
 		repeat(irandom_range(8, 12)){
-			call(scr.projectile_create, self, x, y, "VenomPellet", _dir + orandom(12), 8 + random(8));
+			call(scr.projectile_create, x, y, "VenomPellet", _dir + orandom(12), 8 + random(8));
 		}
 		
 		 // Effects:
@@ -659,7 +659,6 @@
 					
 				for(var _ang = _dir; _ang < _dir + 360; _ang += (360 / 3)){
 					with(call(scr.projectile_create,
-						self,
 						target.x - lengthdir_x(8, _dir) + lengthdir_x(_len, _ang),
 						target.y - lengthdir_y(8, _dir) + lengthdir_y(_len, _ang),
 						"BubbleExplosionSmall",
@@ -855,10 +854,10 @@
 						_num = 3 + (crown_current == crwn_death),
 						_l   = 8;
 						
-					call(scr.projectile_create, self, x, y, "BubbleExplosion");
+					call(scr.projectile_create, x, y, "BubbleExplosion");
 					
 					for(var _d = _ang; _d < _ang + 360; _d += (360 / _num)){
-						call(scr.projectile_create, self, x + lengthdir_x(_l, _d), y + lengthdir_y(_l, _d), "BubbleExplosionSmall");
+						call(scr.projectile_create, x + lengthdir_x(_l, _d), y + lengthdir_y(_l, _d), "BubbleExplosionSmall");
 					}
 					
 					 // Sound:
@@ -1518,7 +1517,7 @@
 					if(array_length(_inst)) with(_inst){
 						if(distance_to_object(other) <= _dis && !instance_is(self, Grenade)){
 							with(other){
-								with(call(scr.projectile_create, self, other.x, other.y, Flame, random(360), 1)){
+								with(call(scr.projectile_create, other.x, other.y, Flame, random(360), 1)){
 									sprite_index = sprSalamanderBullet;
 								}
 							}
@@ -1678,7 +1677,7 @@
 					call(scr.fx, x, y, [direction + orandom(30), 3], Smoke);
 				}
 				else{
-					with(call(scr.projectile_create, self, x, y, Flame, other.direction + orandom(20), random_range(3, 4))){
+					with(call(scr.projectile_create, x, y, Flame, other.direction + orandom(20), random_range(3, 4))){
 						sprite_index = sprSalamanderBullet;
 					}
 					if(chance(1, 5)){
@@ -3670,7 +3669,7 @@
 									
 									 // Bolt Marrow Fix:
 									call(scr.variable_instance_set_list, 
-										call(scr.projectile_create, self, x, y, "DiverHarpoon"),
+										call(scr.pass, self, scr.projectile_create, x, y, "DiverHarpoon"),
 										call(scr.variable_instance_get_list, self)
 									);
 									
@@ -4425,7 +4424,7 @@
 	else sound_play_hit(snd_hurt, 0.2);
 	
 #define Guardian_death
-	with(call(scr.projectile_create, self, x, y, PopoExplosion, 0, 0)){
+	with(call(scr.projectile_create, x, y, PopoExplosion, 0, 0)){
 		image_xscale /= 3;
 		image_yscale /= 3;
 	}

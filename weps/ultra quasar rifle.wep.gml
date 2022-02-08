@@ -31,7 +31,7 @@
 	if(!instance_is(self, Portal)){
 		
 		 // I guess robots really can eat anything, wow:
-		with(call(scr.projectile_create, self, x, y, "QuasarRing", gunangle)){
+		with(call(scr.projectile_create, x, y, "QuasarRing", gunangle)){
 			image_yscale   = 0;
 			sprite_index   = spr.UltraQuasarBeam;
 			spr_trail	   = spr.UltraQuasarBeamTrail;
@@ -66,7 +66,7 @@
 	var o = 30;
 	for(var i = -2; i <= 2; i++){
 		var d = gunangle + (o * i) * accuracy;
-		with(call(scr.projectile_create, self, x, y, "UltraQuasarBeam", d)){
+		with(call(scr.projectile_create, x, y, "UltraQuasarBeam", d)){
 			image_yscale = 0;
 			scale_goal   = 0.8;
 			offset_dis   = 16;

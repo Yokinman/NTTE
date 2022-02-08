@@ -2689,7 +2689,7 @@
 					
 					 // Create Projectile:
 					var _dir = _angle + ((_fix + orandom(_wep.sprd)) * _accuracy);
-					with(call(scr.projectile_create, self, _x + lengthdir_x(_dis, _dir), _y + lengthdir_y(_dis, _dir), _obj, _dir, _spd)){
+					with(call(scr.projectile_create, _x + lengthdir_x(_dis, _dir), _y + lengthdir_y(_dis, _dir), _obj, _dir, _spd)){
 						 // Offset:
 						if(_wep.move != 0){
 							x += hspeed;
@@ -2825,7 +2825,7 @@
 				
 				 // Flak Ball:
 				if(array_length(_flak) > 0){
-					with(call(scr.projectile_create, self, x, y, "MergeFlak", _angle + orandom(_wep.sprd * _accuracy), random_range(11, 13))){
+					with(call(scr.projectile_create, x, y, "MergeFlak", _angle + orandom(_wep.sprd * _accuracy), random_range(11, 13))){
 						inst = _flak;
 						flag = _flag;
 						event_perform(ev_step, ev_step_normal);
@@ -2928,7 +2928,7 @@
 			}
 		}
 		if(n > 1){
-			with(call(scr.projectile_create, self, x, y, "MergeFlak", _angle + orandom(_wep.sprd * _accuracy), random_range(11, 13))){
+			with(call(scr.projectile_create, x, y, "MergeFlak", _angle + orandom(_wep.sprd * _accuracy), random_range(11, 13))){
 				inst = _flakBall;
 				flag = _flag;
 				event_perform(ev_step, ev_step_normal);
@@ -3368,7 +3368,7 @@
 						image_angle += (direction - _oldDir);
 						
 						 // Lightning Trail:
-						/*with(call(scr.projectile_create, self, x, y, Lightning, point_direction(x, y, o.lastx, o.lasty))){
+						/*with(call(scr.projectile_create, x, y, Lightning, point_direction(x, y, o.lastx, o.lasty))){
 							image_xscale = point_distance(x, y, o.lastx, o.lasty) / 2;
 							image_speed *= 0.8;
 							o.lastx = x;
@@ -4127,14 +4127,14 @@
 					var d = image_angle + 180;
 					for(var l = 0; l < (image_xscale * 2); l += 8){
 						if(chance_ct(1, max(l / 16, 4))){
-							call(scr.projectile_create, self, x + lengthdir_x(l, d), y + lengthdir_y(l, d), Flame, image_angle + orandom(20), random(3));
+							call(scr.projectile_create, x + lengthdir_x(l, d), y + lengthdir_y(l, d), Flame, image_angle + orandom(20), random(3));
 						}
 					}
 					break;
 					
 				case Lightning:
 					if(chance_ct(1, 5)){
-						call(scr.projectile_create, self, x, y, Flame, image_angle + orandom(10), random(3));
+						call(scr.projectile_create, x, y, Flame, image_angle + orandom(10), random(3));
 					}
 					break;
 					
@@ -4142,7 +4142,7 @@
 					if(current_frame % damage >= 1){
 						var d = direction;
 						for(var l = 0; l < speed_raw; l += 8){
-							with(call(scr.projectile_create, self, x + lengthdir_x(l, d), y + lengthdir_y(l, d), Flame, random(360), 1)){
+							with(call(scr.projectile_create, x + lengthdir_x(l, d), y + lengthdir_y(l, d), Flame, random(360), 1)){
 								 // Dissipate Faster:
 								image_index = max(0, (image_number - 1) - (1 + other.damage));
 								
@@ -4225,7 +4225,7 @@
 						_spd = 2 + random((o.amnt * 0.2) / max(1, o.amnt / 20));
 					}
 					
-					with(call(scr.projectile_create, self, o.x + orandom(4), o.y + orandom(4), Flame, _dir, _spd)){
+					with(call(scr.projectile_create, o.x + orandom(4), o.y + orandom(4), Flame, _dir, _spd)){
 						team = o.team;
 						hspeed += o.hspeed / 6;
 						vspeed += o.vspeed / 6;
@@ -4375,7 +4375,7 @@
 				var	_dir = random(360),
 					_spd = 2 + random(min(8, o.amnt / 2));
 					
-				with(call(scr.projectile_create, self, o.x, o.y, MiniNade, _dir, _spd)){
+				with(call(scr.projectile_create, o.x, o.y, MiniNade, _dir, _spd)){
 					team = o.team;
 					hspeed += o.hspeed / 2;
 					vspeed += o.vspeed / 2;

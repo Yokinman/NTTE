@@ -142,7 +142,7 @@
 			var _skill = skill_get(mut_laser_brain);
 			
 			 // Chaos Ball:
-			with(call(scr.projectile_create, self, x, y, "CrystalHeartBullet", gunangle + orandom(4 * accuracy), 4)){
+			with(call(scr.projectile_create, x, y, "CrystalHeartBullet", gunangle + orandom(4 * accuracy), 4)){
 				image_xscale += 0.15 * _skill;
 				image_yscale += 0.15 * _skill;
 				
@@ -265,7 +265,7 @@
 				_dir   = gunangle;
 				
 			 // Shank:
-			with(call(scr.projectile_create, self, 
+			with(call(scr.projectile_create,
 				x + lengthdir_x(_dis, _dir),
 				y + lengthdir_y(_dis, _dir),
 				"RedShank",

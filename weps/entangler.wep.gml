@@ -161,7 +161,7 @@
 		}
 		
 		 // Slash:
-		with(call(scr.projectile_create, self, 
+		with(call(scr.projectile_create,
 			x + lengthdir_x(_dis, _dir),
 			y + lengthdir_y(_dis, _dir),
 			"RedSlash",

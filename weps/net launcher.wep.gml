@@ -25,7 +25,7 @@
 	_wep = _fire.wep;
 	
 	 // Net Nade:
-	call(scr.projectile_create, self, x, y, "NetNade", gunangle + orandom(5 * accuracy), 16);
+	call(scr.projectile_create, x, y, "NetNade", gunangle + orandom(5 * accuracy), 16);
 	
 	 // Sounds:
 	sound_play(sndGrenade);

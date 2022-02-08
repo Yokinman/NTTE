@@ -28,7 +28,7 @@
 	_wep = _fire.wep;
 	
 	 // Big Lightning Disc:
-	with(call(scr.projectile_create, self, x, y, "LightningDisc", gunangle, 14)){
+	with(call(scr.projectile_create, x, y, "LightningDisc", gunangle, 14)){
 		primary     = _fire.primary;
 		charge     *= 2.5;
 		charge_spd /= 2;

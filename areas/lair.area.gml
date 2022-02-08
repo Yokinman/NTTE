@@ -635,7 +635,7 @@
 				&& array_length(hitid) > 1
 				&& hitid[1] == "LAIR TURRET"
 			){
-				with(call(scr.projectile_create, self, x, y, EnemyBullet2, direction, speed)){
+				with(call(scr.pass, self, scr.projectile_create, x, y, EnemyBullet2, direction, speed)){
 					 // Effects:
 					with(instance_create(x, y, AcidStreak)){
 						sprite_index = spr.AcidPuff;

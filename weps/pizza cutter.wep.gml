@@ -131,7 +131,7 @@
 			_dir   = gunangle + orandom(8 * accuracy);
 			
 		 // Slash:
-		with(call(scr.projectile_create, self, 
+		with(call(scr.projectile_create,
 			x + lengthdir_x(_len, _dir),
 			y + lengthdir_y(_len, _dir),
 			Slash,
@@ -172,7 +172,7 @@
 		 // Fully Charged - Launch Disc:
 		if(_charge >= 1){
 			if(call(scr.weapon_ammo_fire, _wep)){
-				with(call(scr.projectile_create, self, x, y, "BatDisc", gunangle + orandom(4 * accuracy))){
+				with(call(scr.projectile_create, x, y, "BatDisc", gunangle + orandom(4 * accuracy))){
 					ammo = _wep.cost;
 					wep  = _wep;
 				}

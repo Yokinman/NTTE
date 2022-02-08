@@ -31,7 +31,7 @@
 	var	_xdis = 0,
 		_ydis = 0;
 		
-	with(call(scr.projectile_create, self, x, y, "TeslaCoil", gunangle)){
+	with(call(scr.projectile_create, x, y, "TeslaCoil", gunangle)){
 		primary = _fire.primary;
 		if(!primary){
 			creator_offy -= 4;

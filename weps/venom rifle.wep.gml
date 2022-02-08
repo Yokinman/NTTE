@@ -29,7 +29,7 @@
 		var _l = 9 * lerp(accuracy, 1, 2/3),
 			_d = _ang + orandom(2 * accuracy);
 			
-		with(call(scr.projectile_create, self, x + lengthdir_x(_l, _d), y + lengthdir_y(_l, _d), "VenomPellet", _dir, 16)){
+		with(call(scr.projectile_create, x + lengthdir_x(_l, _d), y + lengthdir_y(_l, _d), "VenomPellet", _dir, 16)){
 			sprite_index = spr_spwn;
 			image_speed  = 1;
 		}

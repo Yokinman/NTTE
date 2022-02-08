@@ -36,7 +36,7 @@
 #define weapon_ntte_eat
 	 // Unleash da Portal:
 	if(!instance_is(self, Portal)){
-		with(call(scr.projectile_create, self, x, y, "PortalBullet", random(360), 20)){
+		with(call(scr.projectile_create, x, y, "PortalBullet", random(360), 20)){
 			event_perform(ev_other, ev_animation_end);
 			move_contact_solid(direction, random_range(32, 160));
 			instance_destroy();
@@ -52,7 +52,7 @@
 	_wep = _fire.wep;
 	
 	 // Portal Bullet:
-	with(call(scr.projectile_create, self, x, y, "PortalBullet", gunangle, random_range(11, 13))){
+	with(call(scr.projectile_create, x, y, "PortalBullet", gunangle, random_range(11, 13))){
 		mask    = mskPlasma;
 		damage  = 25;
 		spec    = _fire.spec;

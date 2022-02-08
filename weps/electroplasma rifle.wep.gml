@@ -35,7 +35,6 @@
 		_side = variable_instance_get(_fire.creator, "electroplasma_side", 1);
 		
 	with(call(scr.projectile_create,
-		self,
 		x,
 		y,
 		"ElectroPlasma",

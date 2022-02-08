@@ -1464,7 +1464,6 @@
 	var _chestTypes = [AmmoChest, WeaponChest, RadChest];
 	for(var i = 0; i < array_length(_chestTypes); i++){
 		with(call(scr.projectile_create,
-			self,
 			x,
 			y,
 			"CrystalHeartBullet",
@@ -2018,7 +2017,7 @@
 	if(projectile_canhit_melee(other)){
 		 // Death Plasma:
 		//if(other.my_health <= 0){
-		//	call(scr.projectile_create, self, other.x, other.y, ((other.size < 2) ? "PlasmaImpactSmall" : PlasmaImpact));
+		//	call(scr.projectile_create, other.x, other.y, ((other.size < 2) ? "PlasmaImpactSmall" : PlasmaImpact));
 		//}
 		
 		 // Damage:
@@ -2108,7 +2107,7 @@
 					if(instance_exists(self)){
 						 // Vlasma:
 						if(_deflect){
-							with(call(scr.projectile_create, self, _x, _y, (_cannon ? "VlasmaCannon" : "VlasmaBullet"), direction, speed + 2)){
+							with(call(scr.projectile_create, _x, _y, (_cannon ? "VlasmaCannon" : "VlasmaBullet"), direction, speed + 2)){
 								target   = _target;
 								target_x = _targetX;
 								target_y = _targetY;
@@ -2121,7 +2120,7 @@
 						}
 						
 						 // Plasma Impact:
-						with(call(scr.projectile_create, self, _x, _y, (_cannon ? PlasmaImpact : "PlasmaImpactSmall"))){
+						with(call(scr.projectile_create, _x, _y, (_cannon ? PlasmaImpact : "PlasmaImpactSmall"))){
 							depth = _depth;
 							
 							 // Sounds:
@@ -2384,7 +2383,7 @@
 		sound_play(sndPlasma);
 		
 		 // Shoot Mortar:
-		with(call(scr.projectile_create, self, x + (5 * right), y, "MortarPlasma", gunangle, 3)){
+		with(call(scr.projectile_create, x + (5 * right), y, "MortarPlasma", gunangle, 3)){
 			z += 18;
 			var d = point_distance(x, y, _tx, _ty) / speed;
 			zspeed = (d * zfriction * 0.5) - (z / d);
@@ -2565,7 +2564,7 @@
 	
 #define MortarPlasma_destroy
 	 // Impact:
-	with(call(scr.projectile_create, self, x, y, PlasmaImpact)){
+	with(call(scr.projectile_create, x, y, PlasmaImpact)){
 		sprite_index = spr.EnemyPlasmaImpact;
 		damage = 2;
 		
@@ -2657,10 +2656,10 @@
 		sleep(150);
 	}
 	
-#define RedBullet_temerge_setup(_inst)
+#define RedBullet_temerge_setup(_instanceList)
 	 // Color Red:
 	var _color = call(scr.area_get_back_color, "red");
-	with(_inst){
+	with(_instanceList){
 		image_blend = _color;
 	}
 	
@@ -3017,7 +3016,7 @@
 				var	_l = 128,
 					_d = (i * 90) + pround(_dir, 45) + orandom(2);
 					
-				with(call(scr.projectile_create, self, x + lengthdir_x(_l, _d), y + lengthdir_y(_l, _d), "VlasmaBullet", _d + 180, 1)){
+				with(call(scr.projectile_create, x + lengthdir_x(_l, _d), y + lengthdir_y(_l, _d), "VlasmaBullet", _d + 180, 1)){
 					sprite_index = spr.EnemyVlasmaBullet;
 					target       = other;
 					target_x     = other.x;
@@ -3055,7 +3054,7 @@
 	pickup_drop(20, 0);
 	
 	 // Plasma:
-	with(call(scr.team_instance_sprite, 1, call(scr.projectile_create, self, x, y, PlasmaImpact))){
+	with(call(scr.team_instance_sprite, 1, call(scr.projectile_create, x, y, PlasmaImpact))){
 		mask_index = mskPopoPlasmaImpact;
 		call(scr.wall_clear, self);
 	}
@@ -3612,7 +3611,7 @@
 				}
 				
 				 // Fire:
-				_wep.strike = call(scr.projectile_create, self, x, y, "TesseractStrike", _wep.rotation);
+				_wep.strike = call(scr.projectile_create, x, y, "TesseractStrike", _wep.rotation);
 				with(_wep.strike){
 					alarm1 = min(20, other.alarm2 * array_length(other.weapons));
 				}
@@ -3652,7 +3651,7 @@
 				_wep.rotation  = _dir + ((i / _max) * 360);
 				_wep.rotspeed  = _spd;
 				_wep.kick_goal = 10;
-				_wep.strike    = call(scr.projectile_create, self, x, y, "TesseractStrike", _wep.rotation);
+				_wep.strike    = call(scr.projectile_create, x, y, "TesseractStrike", _wep.rotation);
 				with(_wep.strike){
 					alarm1 = other.alarm2 - 15;
 				}
@@ -3754,7 +3753,6 @@
 		
 		 // Exploding Arm:
 		with(call(scr.projectile_create,
-			self,
 			x + lengthdir_x((_wep.offset - _wep.kick) * image_xscale, _wep.rotation),
 			y + lengthdir_y((_wep.offset - _wep.kick) * image_yscale, _wep.rotation),
 			"TesseractArmDeath",
@@ -3853,7 +3851,7 @@
 	instance_create(x, y, PortalClear);
 	
 	 // Explosion:
-	with(call(scr.projectile_create, self, x, y, "RedExplosion", direction)){
+	with(call(scr.projectile_create, x, y, "RedExplosion", direction)){
 		mask_index = mskPopoPlasmaImpact;
 	}
 	/*with(instance_create(x, y, MeltSplat)){
@@ -4137,7 +4135,7 @@
 	}
 	
 	 // Eye Explo:
-	with(call(scr.projectile_create, self, x, y, "RedExplosion")){
+	with(call(scr.projectile_create, x, y, "RedExplosion")){
 		mask_index  = mskPopoPlasmaImpact;
 		image_angle = other.image_angle;
 	}
@@ -4316,7 +4314,7 @@
 					ystart += _oy;
 					
 					 // We Strikin':
-					with(call(scr.projectile_create, self, xstart, ystart, "RedExplosion")){
+					with(call(scr.projectile_create, xstart, ystart, "RedExplosion")){
 						mask_index = mskPopoPlasmaImpact;
 						array_push(_inst, self);
 					}
@@ -4606,7 +4604,7 @@
 				
 			with(call(scr.team_instance_sprite, 
 				call(scr.sprite_get_team, sprite_index),
-				call(scr.projectile_create, self, _x, _y, "VlasmaBullet", _dir + 180)
+				call(scr.projectile_create, _x, _y, "VlasmaBullet", _dir + 180)
 			)){
 				target   = other.target;
 				target_x = other.target_x;
@@ -4621,7 +4619,7 @@
 	 // Explo:
 	with(call(scr.team_instance_sprite, 
 		call(scr.sprite_get_team, sprite_index),
-		call(scr.projectile_create, self, x, y, ((cannon > 0) ? PlasmaImpact : "PlasmaImpactSmall"))
+		call(scr.projectile_create, x, y, ((cannon > 0) ? PlasmaImpact : "PlasmaImpactSmall"))
 	)){
 		depth = other.depth;
 	}

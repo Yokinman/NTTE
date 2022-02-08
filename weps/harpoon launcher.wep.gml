@@ -24,7 +24,7 @@
 	_wep = _fire.wep;
 	
 	 // Linked Harpoons:
-	with(call(scr.projectile_create, self, x, y, "Harpoon", gunangle + orandom(3 * accuracy), 22)){
+	with(call(scr.projectile_create, x, y, "Harpoon", gunangle + orandom(3 * accuracy), 22)){
 		if(instance_exists(creator)){
 			var _rope = variable_instance_get(creator, "harpoon_rope", noone);
 			

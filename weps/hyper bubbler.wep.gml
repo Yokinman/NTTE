@@ -27,7 +27,7 @@
 	var	_l = 20,
 		_d = gunangle + orandom(3 * accuracy);
 		
-	call(scr.projectile_create, self, x + lengthdir_x(_l, _d), y + lengthdir_y(_l, _d), "HyperBubble", _d);
+	call(scr.projectile_create, x + lengthdir_x(_l, _d), y + lengthdir_y(_l, _d), "HyperBubble", _d);
 	
 	 // Sounds:
 	sound_play_pitchvol(sndPlasmaRifle,  0.9 + random(0.3), 1.0);

@@ -386,7 +386,7 @@
 	
 	 // Bubble Excrete:
 	if(big > 0 && z < 24 && image_index >= 6 && chance_ct(big, 5 + max(z, 0))){
-		with(call(scr.projectile_create, self, x + orandom(8), y - z - 8 + orandom(8), "BubbleBomb")){
+		with(call(scr.projectile_create, x + orandom(8), y - z - 8 + orandom(8), "BubbleBomb")){
 			image_speed *= random_range(0.8, 1);
 		}
 	}
@@ -595,7 +595,7 @@
 		_num = lerp(1, 3, big);
 		
 	for(var _dir = _ang; _dir < _ang + 360; _dir += (360 / _num)){
-		with(call(scr.projectile_create, self, x + lengthdir_x(_dis, _dir), y - z + lengthdir_y(_dis, _dir), "BubbleExplosion")){
+		with(call(scr.projectile_create, x + lengthdir_x(_dis, _dir), y - z + lengthdir_y(_dis, _dir), "BubbleExplosion")){
 			damage = other.damage;
 		}
 	}
@@ -731,8 +731,8 @@
 						bubble_bombed = true;
 						
 						 // Bubble Bomb:
-						with(call(scr.projectile_create, other, x, y, "BubbleBomb")){
-							array_push(held, other);
+						with(other){
+							array_push(call(scr.projectile_create, x, y, "BubbleBomb").held, other);
 						}
 						
 						 // Effects:
@@ -753,7 +753,9 @@
 				
 				 // Destroy:
 				else{
-					call(scr.projectile_create, other, x, y, ((damage < 6) ? "BubbleExplosionSmall" : "BubbleExplosion"));
+					with(other){
+						call(scr.projectile_create, x, y, ((damage < 6) ? "BubbleExplosionSmall" : "BubbleExplosion"));
+					}
 					instance_destroy();
 				}
 			}
@@ -1094,7 +1096,7 @@
 		_targets = instances_matching_ne(hitme, "team", team);
 		
 	 // Muzzle Explosion:
-	call(scr.projectile_create, self, x, y, "BubbleExplosionSmall");
+	call(scr.projectile_create, x, y, "BubbleExplosionSmall");
 	
 	 // Hitscan:
 	while(_dist-- > 0 && hits > 0 && !place_meeting(x, y, Wall)){
@@ -1116,26 +1118,28 @@
 			var _inst = call(scr.instances_meeting_instance, self, instances_matching_gt(_targets, "my_health", 0));
 			if(array_length(_inst)){
 				var _hit = false;
-				with(_inst) if(place_meeting(x, y, other)){
-					if(!_hit){
-						_hit = true;
-						with(other){
-							hits--;
-							call(scr.projectile_create, self, x, y, "BubbleExplosionSmall");
+				with(_inst){
+					if(place_meeting(x, y, other)){
+						if(!_hit){
+							_hit = true;
+							with(other){
+								hits--;
+								call(scr.projectile_create, x, y, "BubbleExplosionSmall");
+							}
 						}
+						
+						 // Impact Damage:
+						projectile_hit(self, other.damage, other.force, _dir);
 					}
-					
-					 // Impact Damage:
-					projectile_hit(self, other.damage, other.force, _dir);
 				}
 			}
 		}
 	}
 	
 	 // End Explosion:
-	call(scr.projectile_create, self, x, y, "BubbleExplosion");
+	call(scr.projectile_create, x, y, "BubbleExplosion");
 	if(hits > 0) repeat(hits){
-		call(scr.projectile_create, self, x, y, "BubbleExplosionSmall");
+		call(scr.projectile_create, x, y, "BubbleExplosionSmall");
 	}
 	
 	 // Goodbye:

@@ -958,11 +958,11 @@
 	
 #define SawTrap_destroy
 	 // Explo:
-	with(call(scr.projectile_create, self, x, y, Explosion)){
+	with(call(scr.projectile_create, x, y, Explosion)){
 		team = -1;
 	}
 	repeat(3){
-		with(call(scr.projectile_create, self, x + orandom(6), y + orandom(6), SmallExplosion)){
+		with(call(scr.projectile_create, x + orandom(6), y + orandom(6), SmallExplosion)){
 			team = -1;
 		}
 	}
@@ -1527,7 +1527,7 @@
 					_spd = 6;
 					
 				for(var _dir = image_angle; _dir < image_angle + 360; _dir += 90){
-					call(scr.projectile_create, self, x + lengthdir_x(_dis, _dir), y + lengthdir_y(_dis, _dir), TrapFire, _dir, _spd);
+					call(scr.projectile_create, x + lengthdir_x(_dis, _dir), y + lengthdir_y(_dis, _dir), TrapFire, _dir, _spd);
 				}
 			}
 		}
@@ -1694,7 +1694,7 @@
 			enemy_look(target_direction);
 			
 			if(target_visible && chance(2, 3)) {
-				call(scr.projectile_create, self, x, y, EnemyBullet1, gunangle, 6);
+				call(scr.projectile_create, x, y, EnemyBullet1, gunangle, 6);
 			}
 			
 			else {

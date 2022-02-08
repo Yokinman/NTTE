@@ -1761,7 +1761,7 @@
 				 // Vlasma:
 				with(call(scr.team_instance_sprite, 
 					3,
-					call(scr.projectile_create, self, aim_x, aim_y, "VlasmaBullet", gunangle + 180)
+					call(scr.projectile_create, aim_x, aim_y, "VlasmaBullet", gunangle + 180)
 				)){
 					target	 = other;
 					target_x = other.x;
@@ -1800,7 +1800,7 @@
 				 // Big Vlasma:
 				with(call(scr.team_instance_sprite, 
 					3,
-					call(scr.projectile_create, self, aim_x, aim_y, "VlasmaCannon", gunangle + 180)
+					call(scr.projectile_create, aim_x, aim_y, "VlasmaCannon", gunangle + 180)
 				)){
 					target	 = other;
 					target_x = other.x;
@@ -2178,7 +2178,7 @@
 			 // Player Impact Zone:
 			if(instance_is(self, Player)){
 				var _minID = instance_max;
-				with(call(scr.projectile_create, self, x, y, "BatScreech")){
+				with(call(scr.pass, self, scr.projectile_create, x, y, "BatScreech")){
 					image_alpha = 0;
 					damage      = 4;
 					force       = 1.5;
@@ -2313,7 +2313,7 @@
 		if(target_visible){
 			 // Attack:
 			if(chance(2, 3) && !array_length(instances_matching(projectile, "creator", self))){
-				with(call(scr.projectile_create, self, x, y, "PortalBullet", gunangle, 10)){
+				with(call(scr.projectile_create, x, y, "PortalBullet", gunangle, 10)){
 					portal = other.portal;
 				}
 				
@@ -2444,7 +2444,7 @@
 			image_angle  = 45;
 			depth        = -1;
 		}
-		with(call(scr.projectile_create, self, x, y, "BatScreech")){
+		with(call(scr.projectile_create, x, y, "BatScreech")){
 			image_alpha = 0;
 			force       = 1.5;
 		}
@@ -2460,7 +2460,6 @@
 			var _num = 16;
 			for(var i = 1; i < _num; i++){
 				with(call(scr.projectile_create,
-					self,
 					x,
 					y,
 					HorrorBullet,

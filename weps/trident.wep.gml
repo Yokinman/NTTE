@@ -94,7 +94,7 @@
 				var _off = 220 / _dis;
 				for(var _ang = -_off; _ang <= _off; _ang += _off){
 					for(var i = _dis + (8 * ((_ang == 0) ? 1 : 2/3)); i > 0; i -= 16){
-						with(call(scr.projectile_create, self, 
+						with(call(scr.projectile_create,
 							x + hspeed + lengthdir_x(i, _dir + _ang),
 							y + vspeed + lengthdir_y(i, _dir + _ang) - (_fire.primary ? 0 : 4),
 							Shank,
@@ -134,7 +134,7 @@
 				var _curse = variable_instance_get(_fire.creator, "curse", 0);
 				
 				 // Trident:
-				with(call(scr.projectile_create, self, x, y, "Trident", gunangle, 18 * (1 + (0.3 * _wep.gold)))){
+				with(call(scr.projectile_create, x, y, "Trident", gunangle, 18 * (1 + (0.3 * _wep.gold)))){
 					sprite_index = weapon_get_sprt(_wep);
 					curse        = _curse;
 					wep          = _wep;

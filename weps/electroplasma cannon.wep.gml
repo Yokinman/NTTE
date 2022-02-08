@@ -28,7 +28,7 @@
 	_wep = _fire.wep;
 	
 	 // Projectile:
-	call(scr.projectile_create, self, x, y, "ElectroPlasmaBig", gunangle + orandom(4 * accuracy), 6);
+	call(scr.projectile_create, x, y, "ElectroPlasmaBig", gunangle + orandom(4 * accuracy), 6);
 	
 	 // Sounds:
 	if(skill_get(mut_laser_brain) > 0){

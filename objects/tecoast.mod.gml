@@ -191,8 +191,8 @@
 	
 #define BuriedCar_death
 	 // Explosion:
-	repeat(2) call(scr.projectile_create, self, x + orandom(3), y + orandom(3), Explosion);
-	repeat(2) call(scr.projectile_create, self, x + orandom(3), y + orandom(3), SmallExplosion);
+	repeat(2) call(scr.projectile_create, x + orandom(3), y + orandom(3), Explosion);
+	repeat(2) call(scr.projectile_create, x + orandom(3), y + orandom(3), SmallExplosion);
 	sound_play(sndExplosionCar);
 	
 	 // Break Floor:
@@ -864,7 +864,7 @@
 	if(gonnafire){
 		gonnafire = false;
 		
-		call(scr.projectile_create, self, x, y, "DiverHarpoon", gunangle, 14);
+		call(scr.projectile_create, x, y, "DiverHarpoon", gunangle, 14);
 		sound_play(sndCrossbow);
 		
 		alarm1 = 20 + random(30);
@@ -1113,7 +1113,7 @@
 	if(instance_exists(target)){
 		enemy_look(target_direction + orandom(10));
 	}
-	with(call(scr.projectile_create, self, x, y, EnemySlash, gunangle, 4)){
+	with(call(scr.projectile_create, x, y, EnemySlash, gunangle, 4)){
 		damage = 2;
 	}
 	sound_play(sndChickenSword);
@@ -1562,6 +1562,10 @@
 		alarm1 = 3;
 		alarm2 = alarm0 - 15;
 		
+		 // Merged Weapons Support:
+		temerge_on_setup   = script_ref_create(NetNade_temerge_setup);
+		temerge_on_destroy = script_ref_create(NetNade_temerge_destroy);
+		
 		return self;
 	}
 	
@@ -1654,7 +1658,7 @@
 		}
 		
 		 // Harpoon:
-		with(call(scr.projectile_create, self, _x, _y, "Harpoon", _dir + _off, _spd)){
+		with(call(scr.projectile_create, _x, _y, "Harpoon", _dir + _off, _spd)){
 			 // Explosion FX:
 			with(instance_create(x, y, MeleeHitWall)){
 				motion_add(other.direction, 1 + random(2));
@@ -1680,6 +1684,13 @@
 	if(instance_exists(_link)){
 		Harpoon_rope(_first, _link);
 	}
+	
+#define NetNade_temerge_setup(_instanceList, _info)
+	 // :
+	//call(scr.temerge_projectile_add_effect, _instanceList, "grenade", [176, undefined]);
+	
+#define NetNade_temerge_destroy
+	
 	
 	
 #define Palanking_create(_x, _y)
@@ -2264,7 +2275,6 @@
 		for(var _ang = 0; _ang < 360; _ang += (360 / 16)){
 			 // Ground Smash Slash:
 			with(call(scr.projectile_create,
-				self,
 				_x + lengthdir_x(_dis,         _ang),
 				_y + lengthdir_y(_dis * (2/3), _ang) - 4,
 				"PalankingSlashGround",
@@ -2299,7 +2309,7 @@
 	
 #define Palanking_alrm3
 	 // Slappin:
-	call(scr.projectile_create, self, x, y + 16 - z, "PalankingSlash", gunangle, 8);
+	call(scr.projectile_create, x, y + 16 - z, "PalankingSlash", gunangle, 8);
 	motion_add(gunangle, 4);
 	
 	 // Effects:
@@ -2516,7 +2526,6 @@
 		
 	for(var _ang = 0; _ang < 360; _ang += (360 / 16)){
 		call(scr.projectile_create,
-			self,
 			_x + lengthdir_x(_dis,         _ang),
 			_y + lengthdir_y(_dis * (2/3), _ang) - 4,
 			"PalankingSlashGround",
@@ -2697,12 +2706,11 @@
 	var _dis = 16;
 	for(var _dir = 0; _dir < 360; _dir += 90){
 		call(scr.projectile_create,
-			self,
 			x + lengthdir_x(_dis, _dir) + orandom(32),
 			y + lengthdir_y(_dis, _dir) + orandom(32),
 			"BubbleExplosion"
 		);
-		call(scr.projectile_create, self, x, y, "HyperBubble", _dir, 4);
+		call(scr.projectile_create, x, y, "HyperBubble", _dir, 4);
 	}
 	
 	 // Pickups:
@@ -3120,7 +3128,7 @@
 	motion_set(gunangle, maxspeed);
 	
 	 // Heavy Slash:
-	with(call(scr.projectile_create, self, x, y, EnemySlash, gunangle, (dash - 2) * dash_factor)){
+	with(call(scr.projectile_create, x, y, EnemySlash, gunangle, (dash - 2) * dash_factor)){
 		sprite_index = sprHeavySlash;
 		friction     = 0.4;
 		damage       = 10;
@@ -3345,7 +3353,7 @@
 			 // Shield Mode:
 			if(shield){
 				if(!instance_exists(shield_inst)){
-					shield_inst = call(scr.projectile_create, self, x, y, "ClamShield", gunangle);
+					shield_inst = call(scr.projectile_create, x, y, "ClamShield", gunangle);
 					with(shield_inst){
 						mask_index = sprWall0Out;
 					}
@@ -3672,7 +3680,7 @@
 							
 							 // Stabby:
 							if(_canAttack && _targetDis < 80){
-								with(call(scr.projectile_create, self, x, y, Shank, gunangle, 3)){
+								with(call(scr.projectile_create, x, y, Shank, gunangle, 3)){
 									damage = 2;
 								}
 								motion_add(gunangle, 2);
@@ -3794,7 +3802,7 @@
 							toss_ammo--;
 							toss_time  = 60;
 							toss_speed = random_range(7, 9);
-							toss       = call(scr.projectile_create, self, x, y, "SealDisc", random(360));
+							toss       = call(scr.projectile_create, x, y, "SealDisc", random(360));
 						}
 					}
 					
@@ -3927,7 +3935,7 @@
 			var	_dis = 24 + trident_dist,
 				_dir = gunangle;
 				
-			with(call(scr.projectile_create, self, x + lengthdir_x(_dis, _dir), y + lengthdir_y(_dis, _dir), Shank, _dir + 180, 2)){
+			with(call(scr.projectile_create, x + lengthdir_x(_dis, _dir), y + lengthdir_y(_dis, _dir), Shank, _dir + 180, 2)){
 				image_angle  = _dir;
 				image_xscale = 0.5;
 				depth        = -3;
@@ -3960,7 +3968,7 @@
 			
 			 // Blammo:
 			repeat(6){
-				call(scr.projectile_create, self, x, y, EnemyBullet1, gunangle + orandom(6), 6 + random(2));
+				call(scr.projectile_create, x, y, EnemyBullet1, gunangle + orandom(6), 6 + random(2));
 			}
 			
 			 // Effects:
@@ -3985,7 +3993,7 @@
 			}
 			
 			 // Pew:
-			call(scr.projectile_create, self, x, y, EnemyBullet3, gunangle + orandom(4), 12 + random(2));
+			call(scr.projectile_create, x, y, EnemyBullet3, gunangle + orandom(4), 12 + random(2));
 			
 			 // Effects:
 			call(scr.fx, x, y, [gunangle, 2], Smoke);
@@ -4009,7 +4017,7 @@
 			}
 			
 			 // Shooty:
-			call(scr.projectile_create, self, x, y, EnemyBullet1, gunangle, 6);
+			call(scr.projectile_create, x, y, EnemyBullet1, gunangle, 6);
 			
 			 // Effects:
 			wkick = 10;
@@ -4192,7 +4200,7 @@
 	var	_dis = 8,
 		_dir = image_angle;
 		
-	with(call(scr.projectile_create, self, x + lengthdir_x(_dis, _dir), y + lengthdir_y(_dis, _dir), "BubbleExplosion")){
+	with(call(scr.projectile_create, x + lengthdir_x(_dis, _dir), y + lengthdir_y(_dis, _dir), "BubbleExplosion")){
 		team = -1;
 		
 		 // Sounds:
@@ -4482,7 +4490,7 @@
 			 // Throw Out Anchor:
 			if(!instance_exists(anchor)){
 				alarm1       = 60;
-				anchor       = call(scr.projectile_create, self, x, y, "SealAnchor", gunangle);
+				anchor       = call(scr.projectile_create, x, y, "SealAnchor", gunangle);
 				anchor_throw = 8;
 				anchor_spin  = max(20, abs(anchor_spin)) * sign(anchor_spin);
 				if(enemy_target(x, y)){
@@ -4711,14 +4719,14 @@
 	
 #define SealMine_destroy
 	 // Explode:
-	with(call(scr.projectile_create, self, x, y, Explosion)){
+	with(call(scr.projectile_create, x, y, Explosion)){
 		team = -1;
 	}
 	sound_play(sndExplosion);
 
 	 // Shrapnel:
 	for(var _dir = direction; _dir < direction + 360; _dir += (360 / 6)){
-		with(call(scr.projectile_create, self, x, y, EnemyBullet3, _dir + orandom(20), 7 + random(4))){
+		with(call(scr.projectile_create, x, y, EnemyBullet3, _dir + orandom(20), 7 + random(4))){
 			team = -1;
 		}
 	}
@@ -4958,7 +4966,7 @@
 				_y = y + 4;
 				
 			repeat(choose(2, 3)){
-				call(scr.projectile_create, self, _x, _y, "VenomPellet", gunangle + orandom(10), 10 + random(2));
+				call(scr.projectile_create, _x, _y, "VenomPellet", gunangle + orandom(10), 10 + random(2));
 			}
 			gunangle += (sweep_dir * sweep_spd);
 			

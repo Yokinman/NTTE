@@ -108,7 +108,7 @@
 			_dis   = lerp(10, 20, _skill),
 			_dir   = gunangle;
 			
-		with(call(scr.projectile_create, self, 
+		with(call(scr.projectile_create,
 			x + hspeed + lengthdir_x(_dis, _dir),
 			y + vspeed + lengthdir_y(_dis, _dir),
 			"BoneSlash",
@@ -139,7 +139,7 @@
 	 // Fire:
 	else if(call(scr.weapon_ammo_fire, _wep)){
 		 // Throw Bone:
-		with(call(scr.projectile_create, self, x, y, "Bone", gunangle, lerp(16, 20, skill_get(mut_long_arms)))){
+		with(call(scr.projectile_create, x, y, "Bone", gunangle, lerp(16, 20, skill_get(mut_long_arms)))){
 			wep          = lq_clone(_wep);
 			wep.ammo     = 1;
 			curse        = _curse;

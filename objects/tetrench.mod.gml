@@ -168,7 +168,7 @@
 			 // Gold:
 			if(gold){
 				call(scr.wall_clear, self, x + hspeed, y + vspeed);
-				/*with(call(scr.projectile_create, self, x, y, "BatScreech")){
+				/*with(call(scr.projectile_create, x, y, "BatScreech")){
 					sprite_index = spr.AnglerGoldScreech;
 					image_xscale = 0.5;
 					image_yscale = 0.5;
@@ -204,7 +204,7 @@
 						direction += 180;
 						
 						 // Screech:
-						with(call(scr.projectile_create, self, x, y, "BatScreech")){
+						with(call(scr.projectile_create, x, y, "BatScreech")){
 							sprite_index = spr.AnglerGoldScreech;
 						}
 						
@@ -305,7 +305,7 @@
 		
 		if(gold){
 			 // Screech:
-			with(call(scr.projectile_create, self, x, y, "BatScreech")){
+			with(call(scr.projectile_create, x, y, "BatScreech")){
 				sprite_index = spr.AnglerGoldScreech;
 			}
 			
@@ -431,7 +431,7 @@
 	
 	 // Screech:
 	if(gold){
-		with(call(scr.projectile_create, self, x, y, "BatScreech")){
+		with(call(scr.pass, self, scr.projectile_create, x, y, "BatScreech")){
 			sprite_index = spr.AnglerGoldScreech;
 		}
 		
@@ -645,7 +645,7 @@
 					_dir = point_direction(other.x, other.y, x, y) + orandom(40);
 				}
 			}
-			with(call(scr.projectile_create, self, x, y, EnemyLightning, _dir)){
+			with(call(scr.projectile_create, x, y, EnemyLightning, _dir)){
 				ammo = 2 + random(2);
 				with(self){
 					event_perform(ev_alarm, 0);
@@ -738,14 +738,14 @@
 		spr_dead = spr.EeliteDead;
 		
 		 // Death Lightning:
-		with(call(scr.projectile_create, self, x, y, "LightningDisc", direction + 180 + orandom(15), 6)){
+		with(call(scr.projectile_create, x, y, "LightningDisc", direction + 180 + orandom(15), 6)){
 			is_enemy  = true;
 			maxspeed *= 0.5;
 			radius   *= 4/3;
 			charge   *= 0.5;
 		}
 		repeat(2){
-			with(call(scr.projectile_create, self, x, y, EnemyLightning, random(360), 0.5)){
+			with(call(scr.projectile_create, x, y, EnemyLightning, random(360), 0.5)){
 				alarm0       = 2 + random(4);
 				ammo         = 1 + random(2);
 				image_speed *= random_range(0.75, 1);
@@ -1017,7 +1017,7 @@
 	alarm0 = random_range(5, 10);
 	
 	 // Zap Nearby:
-	with(call(scr.projectile_create, self, x, y, "TeslaCoil")){
+	with(call(scr.projectile_create, x, y, "TeslaCoil")){
 		direction    = random(360);
 		purple       = true;
 		creator      = other;
@@ -1079,7 +1079,7 @@
 					
 				array_push(
 					_inst,
-					call(scr.projectile_create, self, x, y, "ElectroPlasma", _dir, _spd)
+					call(scr.projectile_create, x, y, "ElectroPlasma", _dir, _spd)
 				);
 			}
 		}
@@ -1099,7 +1099,7 @@
 			
 		for(var i = 0; i < _num; i++){
 			var _d = direction + (360 * (i / _num));
-			call(scr.projectile_create, self, x + lengthdir_x(_l, _d), y + lengthdir_y(_l, _d), "ElectroPlasmaImpact", _d);
+			call(scr.projectile_create, x + lengthdir_x(_l, _d), y + lengthdir_y(_l, _d), "ElectroPlasmaImpact", _d);
 		}
 		
 		 // Effects:
@@ -1121,7 +1121,7 @@
 	}
 	
 	 // Normal:
-	else call(scr.projectile_create, self, x, y, "ElectroPlasmaImpact", direction);
+	else call(scr.projectile_create, x, y, "ElectroPlasmaImpact", direction);
 	
 	 // Untether FX:
 	ElectroPlasma_untether();
@@ -1306,10 +1306,10 @@
 				 // Shoot Lightning Disc:
 				var _inst = [];
 				if(type <= 2){
-					array_push(_inst, call(scr.projectile_create, self, x, y, "LightningDisc", _targetDir, 8));
+					array_push(_inst, call(scr.projectile_create, x, y, "LightningDisc", _targetDir, 8));
 				}
 				else for(var _dir = _targetDir; _dir < _targetDir + 360; _dir += (360 / 3)){
-					with(call(scr.projectile_create, self, x, y, "LightningDisc", _dir, 8)){
+					with(call(scr.projectile_create, x, y, "LightningDisc", _dir, 8)){
 						shrink /= 2; // Last twice as long
 						array_push(_inst, self);
 					}
@@ -1662,7 +1662,7 @@
 			_x  = x + lengthdir_x(_r * image_xscale, _d),
 			_y  = y + lengthdir_y(_r * image_yscale, _d);
 			
-		with(call(scr.projectile_create, self, _x, _y, (is_enemy ? EnemyLightning : Lightning), point_direction(_x, _y, _tx, _ty) + orandom(12))){
+		with(call(scr.projectile_create, _x, _y, (is_enemy ? EnemyLightning : Lightning), point_direction(_x, _y, _tx, _ty) + orandom(12))){
 			ammo = min(30, ceil(other.image_xscale + random(other.image_xscale * 2)));
 			with(self){
 				event_perform(ev_alarm, 0);
@@ -1718,7 +1718,7 @@
 		 // Disc Split:
 		var _ang = random(360);
 		for(var _dir = _ang; _dir < _ang + 360; _dir += (360 / 5)){
-			with(call(scr.projectile_create, self, x, y, "LightningDisc", _dir, 10)){
+			with(call(scr.projectile_create, x, y, "LightningDisc", _dir, 10)){
 				charge = other.image_xscale / 1.2;
 				creator_follow = false;
 				
@@ -2446,7 +2446,7 @@
 					dis *= power(0.1, current_time_scale);
 					
 					if(!instance_exists(my_laser)){
-						my_laser = call(scr.projectile_create, other, x, y, "QuasarBeam", _dir);
+						my_laser = call(scr.pass, other, scr.projectile_create, x, y, "QuasarBeam", _dir);
 						with(my_laser){
 							damage         = 6;
 							bend_fric      = 0.2;
@@ -2711,7 +2711,7 @@
 			var	_last = electroplasma_last,
 				_ang  = (2000 / max(1, _targetDis)) * image_xscale;
 				
-			with(call(scr.projectile_create, self, x, y, "ElectroPlasma", gunangle + (_ang * electroplasma_side), 5)){
+			with(call(scr.projectile_create, x, y, "ElectroPlasma", gunangle + (_ang * electroplasma_side), 5)){
 				tether_inst = _last;
 				image_xscale *= other.image_xscale;
 				image_yscale *= other.image_yscale;
@@ -3160,7 +3160,7 @@
 				 // Bomb Attack:
 				if(bomb){
 					bomb = false;
-					with(call(scr.projectile_create, self, x, y, "PitSquidBomb", target_direction)){
+					with(call(scr.projectile_create, x, y, "PitSquidBomb", target_direction)){
 						target  = other.target;
 						triple  = false;
 						ammo    = 4 + irandom(3);
@@ -3326,7 +3326,7 @@
 		
 		 // Spawn Next Bomb:
 		if(ammo > 0){
-			with(call(scr.projectile_create, self, _x, _y, "PitSquidBomb", _dir)){
+			with(call(scr.projectile_create, _x, _y, "PitSquidBomb", _dir)){
 				target = other.target;
 				ammo   = other.ammo - 1;
 			}
@@ -3360,7 +3360,7 @@
 			var	_x = x + lengthdir_x(_len, _dir),
 				_y = y + lengthdir_y(_len, _dir);
 				
-			with(call(scr.projectile_create, self, _x, _y, "PlasmaImpactSmall", direction)){
+			with(call(scr.projectile_create, _x, _y, "PlasmaImpactSmall", direction)){
 				sprite_index = spr.EnemyPlasmaImpactSmall;
 				array_push(_explo, self);
 			}
@@ -3369,14 +3369,14 @@
 
 	 // Single Sucker:
 	else{
-		with(call(scr.projectile_create, self, _x, _y, PlasmaImpact, direction)){
+		with(call(scr.projectile_create, _x, _y, PlasmaImpact, direction)){
 			sprite_index = spr.EnemyPlasmaImpact;
 			array_push(_explo, self);
 		}
 		
 		 // Mortar Time:
 		if(instance_exists(target) && GameCont.loops > 0){
-			with(call(scr.projectile_create, self, x, y, "MortarPlasma", target_direction, 3)){
+			with(call(scr.projectile_create, x, y, "MortarPlasma", target_direction, 3)){
 				zspeed = (point_distance(x, y, other.target.x, other.target.y) * zfriction) / (speed * 2);
 			}
 		}
@@ -4097,7 +4097,7 @@
 	alarm0 = random_range(4 + (8 * array_length(ring_lasers)), 16);
 	
 	 // Laser:
-	with(call(scr.projectile_create, self, x, y, (ultra ? "UltraQuasarBeam" : "QuasarBeam"), random(360))){
+	with(call(scr.projectile_create, x, y, (ultra ? "UltraQuasarBeam" : "QuasarBeam"), random(360))){
 		spr_strt       = -1;
 		follow_creator = false;
 		line_dir_goal  = image_angle + random(orandom(180));

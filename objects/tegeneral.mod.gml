@@ -469,18 +469,18 @@
 							_spd = random_range(2, 6);
 							
 						repeat(2){
-							with(call(scr.projectile_create, self, x, y, EnemyBullet2, _dir, max(0.1, _spd--))){
+							with(call(scr.projectile_create, x, y, EnemyBullet2, _dir, max(0.1, _spd--))){
 								hitid    = _hitid;
 								friction = -0.2;
 							}
 						}
 					}
-					with(call(scr.projectile_create, self, x, y, "VenomFlak")){
+					with(call(scr.projectile_create, x, y, "VenomFlak")){
 						hitid    = _hitid;
 						charging = false;
 						alarm0   = 1;
 					}
-					with(call(scr.projectile_create, self, x, y, GreenExplosion)){
+					with(call(scr.projectile_create, x, y, GreenExplosion)){
 						hitid  = _hitid;
 						alarm0 = -1;
 						
@@ -488,7 +488,7 @@
 						var _ang = random(360);
 						for(var _dir = _ang; _dir < _ang + 360; _dir += (360 / 3)){
 							var _dis = random_range(12, 24);
-							with(call(scr.projectile_create, self, x + lengthdir_x(_dis, _dir), y + lengthdir_y(_dis, _dir), "SmallGreenExplosion")){
+							with(call(scr.projectile_create, x + lengthdir_x(_dis, _dir), y + lengthdir_y(_dis, _dir), "SmallGreenExplosion")){
 								hitid = other.hitid;
 								instance_create(x, y, ScorchGreen);
 							}
@@ -1780,7 +1780,6 @@
 		
 		 // Create Projectile:
 		var _inst = call(scr.projectile_create,
-			self,
 			lq_defget(_lq, "x",            0) + x,
 			lq_defget(_lq, "y",            0) + y,
 			lq_defget(_lq, "object_index", name),
@@ -2014,7 +2013,6 @@
 			
 			 // Create Projectile:
 			var _inst = call(scr.projectile_create,
-				self,
 				lq_defget(_lq, "x",            0) + x,
 				lq_defget(_lq, "y",            0) + y,
 				lq_defget(_lq, "object_index", name),
@@ -2030,7 +2028,7 @@
 	
 	 // Normal:
 	else{
-		with(call(scr.projectile_create, self, x, y, PlasmaImpact)){
+		with(call(scr.projectile_create, x, y, PlasmaImpact)){
 			sprite_index = other.spr_dead;
 			if(!instance_is(creator, Player)){
 				mask_index = mskPopoPlasmaImpact;

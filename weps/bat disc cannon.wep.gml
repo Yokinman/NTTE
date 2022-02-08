@@ -67,7 +67,7 @@
 	 // Fire:
 	if(call(scr.weapon_ammo_fire, _wep)){
 		 // Disc:
-		with(call(scr.projectile_create, self, x, y, "BatDisc", gunangle + orandom(4 * accuracy))){
+		with(call(scr.projectile_create, x, y, "BatDisc", gunangle + orandom(4 * accuracy))){
 			ammo = _wep.cost;
 			wep  = _wep;
 			big  = true;

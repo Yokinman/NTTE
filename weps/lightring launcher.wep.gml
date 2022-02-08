@@ -28,7 +28,7 @@
 	_wep = _fire.wep;
 	
 	 // Lightning Disc:
-	with(call(scr.projectile_create, self, x, y, "LightningDisc", gunangle, 10)){
+	with(call(scr.projectile_create, x, y, "LightningDisc", gunangle, 10)){
 		primary = _fire.primary;
 	}
 	

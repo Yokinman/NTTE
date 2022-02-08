@@ -38,7 +38,7 @@
 	_wep = _fire.wep;
 	
 	 // Bubble Bomb:
-	with(call(scr.projectile_create, self, x, y, "BubbleBomb", gunangle + orandom(6 * accuracy), 10 + random(2))){
+	with(call(scr.projectile_create, x, y, "BubbleBomb", gunangle + orandom(6 * accuracy), 10 + random(2))){
 		move_contact_solid(other.gunangle, 6);
 	}
 	

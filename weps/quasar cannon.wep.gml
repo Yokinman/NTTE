@@ -26,7 +26,7 @@
 	
 	 // Quasar Ring:
 	var _brain = skill_get(mut_laser_brain);
-	with(call(scr.projectile_create, self, x, y, "QuasarRing", gunangle + orandom(8 * accuracy), 4)){
+	with(call(scr.projectile_create, x, y, "QuasarRing", gunangle + orandom(8 * accuracy), 4)){
 		image_yscale = 0;
 		ring_size    = 0.6 * power(1.2, _brain);
 	}

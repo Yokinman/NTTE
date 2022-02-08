@@ -150,7 +150,7 @@
 			_fire.creator.red_ammo -= _cost;
 			
 			 // Annihilator:
-			call(scr.projectile_create, self, x, y, "RedBullet", gunangle, 16);
+			call(scr.projectile_create, x, y, "RedBullet", gunangle, 16);
 			
 			 // Sounds:
 			sound_play_gun(sndShotgun,           0.2, 0.3);
@@ -171,7 +171,7 @@
 				_dir   = gunangle; // + orandom(10 * accuracy);
 				
 			 // Slash:
-			call(scr.projectile_create, self, 
+			call(scr.projectile_create,
 				x + lengthdir_x(_dis, _dir),
 				y + lengthdir_y(_dis, _dir),
 				"RedSlash",

@@ -25,7 +25,7 @@
 	_wep = _fire.wep;
 	
 	 // Quasar Beam:
-	with(call(scr.projectile_create, self, x, y, "QuasarBeam", gunangle + orandom(4 * accuracy))){
+	with(call(scr.projectile_create, x, y, "QuasarBeam", gunangle + orandom(4 * accuracy))){
 		primary       = _fire.primary;
 		turn_factor   = 1/10;
 		shrink_delay  = 8;

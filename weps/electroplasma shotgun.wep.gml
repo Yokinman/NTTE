@@ -30,7 +30,7 @@
 	 // Spread Fire:
 	var _last = variable_instance_get(_fire.creator, "electroplasma_last", noone);
 	for(var i = -2; i <= 2; i++){
-		with(call(scr.projectile_create, self, 
+		with(call(scr.projectile_create,
 			x,
 			y,
 			"ElectroPlasma",

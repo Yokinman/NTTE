@@ -27,7 +27,7 @@
 		_dis   = 20 * _skill,
 		_dir   = gunangle;
 		
-	with(call(scr.projectile_create, self, 
+	with(call(scr.projectile_create,
 		x + lengthdir_x(_dis, _dir),
 		y + lengthdir_y(_dis, _dir),
 		"EnergyBatSlash",

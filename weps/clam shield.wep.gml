@@ -41,7 +41,7 @@
 	
 	 // Create Shield:
 	if(!instance_exists(_wep.inst) || _wep.inst.creator != _fire.creator){
-		_wep.inst = call(scr.projectile_create, self, x, y, "ClamShield", gunangle);
+		_wep.inst = call(scr.projectile_create, x, y, "ClamShield", gunangle);
 		with(_wep.inst){
 			wep = _wep;
 		}
@@ -58,7 +58,7 @@
 			
 		with(other){
 			 // Slash:
-			with(call(scr.projectile_create, self, x, y, "ClamShieldSlash", _dir, lerp(2, 4.5, skill_get(mut_long_arms)))){
+			with(call(scr.projectile_create, x, y, "ClamShieldSlash", _dir, lerp(2, 4.5, skill_get(mut_long_arms)))){
 				var	_tx = x + lengthdir_x(_len, _dir) + _fire.creator.hspeed_raw,
 					_ty = y + lengthdir_y(_len, _dir) + _fire.creator.vspeed_raw,
 					_tl = point_distance(x, y, _tx, _ty),
@@ -108,7 +108,7 @@
 	 // Create Shield:
 	if(_primary || race == "steroids"){
 		if(!instance_exists(_wep.inst) || _wep.inst.creator != self){
-			_wep.inst = call(scr.projectile_create, self, x, y, "ClamShield", gunangle);
+			_wep.inst = call(scr.projectile_create, x, y, "ClamShield", gunangle);
 			with(_wep.inst){
 				wep = _wep;
 			}
