@@ -145,6 +145,12 @@
 #macro sprite_team_sprite_list_map    global.sprite_team_sprite_list_map
 #macro obj_sprite_team_obj_list_table global.obj_sprite_team_obj_list_table
 
+#macro projectile_tag_data_is_setup ("ntte_projectile_tag_data" in GameCont)
+#macro projectile_tag_data          GameCont.ntte_projectile_tag_data
+#macro projectile_tag_key_list      projectile_tag_data.key_list
+#macro projectile_tag_list          projectile_tag_data.list
+#macro projectile_tag_frame         projectile_tag_data.frame
+
 #define pass // context, ref, ...args
 	/*
 		Used to manually pass a context through 'script_ref_call' / 'call', as NTT versions before 9943 don't do it correctly
@@ -470,22 +476,22 @@
 	}
 	
 	 // Manage Projectile Trackers:
-	if("ntte_projectile_tag_map" in GameCont && array_length(GameCont.ntte_projectile_tag_map[0])){
-		var	_tagMap    = GameCont.ntte_projectile_tag_map,
-			_tagFrame  = GameCont.ntte_projectile_tag_frame,
-			_tagObject = undefined,
-			_tagIndex  = 0;
+	if(projectile_tag_data_is_setup && array_length(projectile_tag_list)){
+		var	_tagData       = projectile_tag_data,
+			_tagFrame      = projectile_tag_frame,
+			_tagObjectList = undefined,
+			_tagIndex      = 0;
 			
-		with(_tagMap[1]){
+		with(_tagData.list){
 			if(end_frame <= _tagFrame){
 				if(child_tag_list == undefined){
 					var _tagNotUsed = true;
 					
 					 // Check if Tag is Used:
-					if(_tagObject == undefined){
-						_tagObject = [projectile, PlasmaImpact, CustomObject, CustomHitme, CustomProp, CustomEnemy, CustomScript, Burst, GoldBurst, HeavyBurst, HyperBurst, RogueBurst, SawBurst, SplinterBurst, NadeBurst, DragonBurst, ToxicBurst, FlameBurst, WaveBurst, SlugBurst, PopBurst, IonBurst, LaserCannon, SentryGun];
+					if(_tagObjectList == undefined){
+						_tagObjectList = [projectile, PlasmaImpact, CustomObject, CustomHitme, CustomProp, CustomEnemy, CustomScript, Burst, GoldBurst, HeavyBurst, HyperBurst, RogueBurst, SawBurst, SplinterBurst, NadeBurst, DragonBurst, ToxicBurst, FlameBurst, WaveBurst, SlugBurst, PopBurst, IonBurst, LaserCannon, SentryGun];
 					}
-					var _tagInstanceList = instances_matching(instances_matching(_tagObject, "creator", creator), "team", team);
+					var _tagInstanceList = instances_matching(instances_matching(_tagObjectList, "creator", creator), "team", team);
 					if(array_length(_tagInstanceList)){
 						var	_tagRawTeam = round(team),
 							_tagNum     = 1 / (team - _tagRawTeam);
@@ -500,9 +506,9 @@
 					
 					 // Destroy Tag if Unused:
 					if(_tagNotUsed){
-						var _tagIndex = array_find_index(_tagMap[1], self);
-						_tagMap[0] = array_delete(_tagMap[0], _tagIndex);
-						_tagMap[1] = array_delete(_tagMap[1], _tagIndex);
+						var _tagIndex = array_find_index(_tagData.list, self);
+						_tagData.key_list = array_delete(_tagData.key_list, _tagIndex);
+						_tagData.list     = array_delete(_tagData.list,     _tagIndex);
 						
 						 // Remove From Parent Tag's Child List:
 						if(parent_tag != undefined){
@@ -524,7 +530,7 @@
 		}
 		
 		 // Projectile Tracking Frame:
-		GameCont.ntte_projectile_tag_frame += current_time_scale;
+		projectile_tag_frame += current_time_scale;
 	}
 	
 #define ntte_end_step
@@ -1044,18 +1050,19 @@
 			team = projectile_tag_create(team, creator, script_ref_create(image_blend_set, c_blue))
 	*/
 	
-	if("ntte_projectile_tag_map" not in GameCont){
-		GameCont.ntte_projectile_tag_map   = [[], []];
-		GameCont.ntte_projectile_tag_frame = 0;
+	if(!projectile_tag_data_is_setup){
+		projectile_tag_data     = {};
+		projectile_tag_key_list = [];
+		projectile_tag_list     = [];
+		projectile_tag_frame    = 0;
 	}
 	
 	var	_team         = argument[0],
 		_creator      = argument[1],
 		_tagScriptRef = argument[2],
 		_tagAddFrame  = ((argument_count > 3) ? argument[3] : 1),
-		_tagMap       = GameCont.ntte_projectile_tag_map,
-		_tagKeyList   = _tagMap[0],
-		_tagList      = _tagMap[1],
+		_tagKeyList   = projectile_tag_key_list,
+		_tagList      = projectile_tag_list,
 		_tagNum       = 0,
 		_rawTeam      = round(_team);
 		
@@ -1072,42 +1079,43 @@
 	
 	 // Store Tag Info:
 	if(_tagNum != 0){
-		var	_tagTeam        = _rawTeam + (1 / _tagNum),
-			_tagEndFrame    = GameCont.ntte_projectile_tag_frame + _tagAddFrame,
-			_parentTagIndex = array_find_index(_tagList, `${floor(1 / (_team - _rawTeam))}:${_creator}:${_rawTeam}`),
-			_parentTag      = ((_parentTagIndex < 0) ? undefined : _tagList[_parentTagIndex]);
-			
+		var _tag = {
+			"creator"        : _creator,
+			"team"           : _rawTeam + (1 / _tagNum),
+			"script_ref"     : _tagScriptRef,
+			"add_frame"      : _tagAddFrame,
+			"end_frame"      : projectile_tag_frame + _tagAddFrame,
+			"parent_tag"     : undefined,
+			"child_tag_list" : undefined,
+			"value_map"      : {}
+		};
+		
 		 // Clone Tag Lists:
-		_tagKeyList = array_clone(_tagKeyList);
-		_tagList    = array_clone(_tagList);
-		_tagMap[0]  = _tagKeyList;
-		_tagMap[1]  = _tagList;
+		_tagKeyList             = array_clone(_tagKeyList);
+		_tagList                = array_clone(_tagList);
+		projectile_tag_key_list = _tagKeyList;
+		projectile_tag_list     = _tagList;
 		
 		 // Sort Tag Into Lists:
 		var _tagIndex = array_length(_tagList);
-		while(_tagIndex > 0 && _tagList[_tagIndex - 1].end_frame > _tagEndFrame){
+		while(_tagIndex > 0 && _tagList[_tagIndex - 1].end_frame > _tag.end_frame){
 			_tagKeyList[_tagIndex] = _tagKeyList[_tagIndex - 1];
 			_tagList[_tagIndex]    = _tagList[_tagIndex - 1];
 			_tagIndex--;
 		}
 		_tagKeyList[_tagIndex] = `${floor(_tagNum)}:${_creator}:${_rawTeam}`;
-		_tagList[_tagIndex]    = {
-			"creator"        : _creator,
-			"team"           : _tagTeam,
-			"script_ref"     : _tagScriptRef,
-			"end_frame"      : _tagEndFrame,
-			"add_frame"      : _tagAddFrame,
-			"parent_tag"     : _parentTag,
-			"child_tag_list" : undefined,
-			"value_map"      : {}
-		};
+		_tagList[_tagIndex]    = _tag;
 		
-		 // Add to Parent Tag's Child List:
-		if(_parentTag != undefined){
-			if(_parentTag.child_tag_list == undefined){
-				_parentTag.child_tag_list = [];
+		 // Set Parent Tag:
+		var _tagParentTagIndex = array_find_index(_tagKeyList, `${floor(1 / (_team - _rawTeam))}:${_creator}:${_rawTeam}`);
+		if(_tagParentTagIndex >= 0){
+			_tag.parent_tag = _tagList[_tagParentTagIndex];
+			with(_tag.parent_tag){
+				if(child_tag_list == undefined){
+					child_tag_list = [];
+				}
+				array_push(child_tag_list, _tag);
 			}
-			array_push(_parentTag.child_tag_list, _tagList[_tagIndex]);
 		}
 		
 		 // Bind Setup Script:
@@ -1115,7 +1123,7 @@
 			ntte.bind_setup_projectile_tag = call(scr.ntte_bind_setup, script_ref_create(ntte_setup_projectile_tag), [projectile, PlasmaImpact]);
 		}
 		
-		return _tagTeam;
+		return _tag.team;
 	}
 	
 	return _team;
@@ -1132,20 +1140,19 @@
 		_valueName    = argument[2],
 		_defaultValue = ((argument_count > 3) ? argument[3] : undefined);
 		
-	if("ntte_projectile_tag_map" in GameCont){
+	if(projectile_tag_data_is_setup){
 		var	_tagRawTeam = round(_tagTeam),
-			_tagIndex   = array_find_index(GameCont.ntte_projectile_tag_map[0], `${floor(1 / (_tagTeam - _tagRawTeam))}:${_tagCreator}:${_tagRawTeam}`);
+			_tagIndex   = array_find_index(projectile_tag_key_list, `${floor(1 / (_tagTeam - _tagRawTeam))}:${_tagCreator}:${_tagRawTeam}`);
 			
 		if(_tagIndex >= 0){
-			var _tag = GameCont.ntte_projectile_tag_map[1][_tagIndex];
-			while(_tag != undefined){
+			var _tag = projectile_tag_list[_tagIndex];
+			do{
 				if(_valueName in _tag.value_map){
 					return lq_get(_tag.value_map, _valueName);
 				}
-				
-				 // Parent Tag:
 				_tag = _tag.parent_tag;
 			}
+			until(_tag == undefined);
 		}
 	}
 	
@@ -1156,22 +1163,22 @@
 		Assigns the given value to the given name in the given tag
 	*/
 	
-	if("ntte_projectile_tag_map" in GameCont){
+	if(projectile_tag_data_is_setup){
 		var	_tagRawTeam = round(_tagTeam),
-			_tagIndex   = array_find_index(GameCont.ntte_projectile_tag_map[0], `${floor(1 / (_tagTeam - _tagRawTeam))}:${_tagCreator}:${_tagRawTeam}`);
+			_tagIndex   = array_find_index(projectile_tag_key_list, `${floor(1 / (_tagTeam - _tagRawTeam))}:${_tagCreator}:${_tagRawTeam}`);
 			
 		if(_tagIndex >= 0){
-			lq_set(GameCont.ntte_projectile_tag_map[1][_tagIndex].value_map, _valueName, _value);
+			lq_set(projectile_tag_list[_tagIndex].value_map, _valueName, _value);
 		}
 	}
 	
 #define ntte_setup_projectile_tag(_inst)
-	if("ntte_projectile_tag_map" in GameCont && array_length(GameCont.ntte_projectile_tag_map[0])){
-		var	_tagMap     = GameCont.ntte_projectile_tag_map,
-			_tagFrame   = GameCont.ntte_projectile_tag_frame,
-			_tagKeyList = _tagMap[0],
-			_tagList    = _tagMap[1],
-			_instTagMap = ds_map_create();
+	if(projectile_tag_data_is_setup && array_length(projectile_tag_list)){
+		var	_tagData    = projectile_tag_data,
+			_tagFrame   = projectile_tag_frame,
+			_tagKeyList = _tagData.key_list,
+			_tagList    = _tagData.list,
+			_tagInstMap = ds_map_create();
 			
 		 // Collect Tagged Instances:
 		array_sort(_inst, true);
@@ -1181,11 +1188,11 @@
 				_tagIndex = array_find_index(_tagKeyList, _tagKey);
 				
 			if(_tagIndex >= 0){
-				if(ds_map_exists(_instTagMap, _tagKey)){
-					array_push(_instTagMap[? _tagKey][0], self);
+				if(ds_map_exists(_tagInstMap, _tagKey)){
+					array_push(_tagInstMap[? _tagKey][1], self);
 				}
 				else{
-					_instTagMap[? _tagKey] = [[self], _tagList[_tagIndex], _tagKey];
+					_tagInstMap[? _tagKey] = [_tagList[_tagIndex], [self]];
 				}
 				
 				  // PlasmaImpact Fix:
@@ -1197,24 +1204,24 @@
 		}
 		
 		 // Tagged Instances Found:
-		if(ds_map_size(_instTagMap)){
-			with(ds_map_values(_instTagMap)){
-				var	_tagInst     = self[0],
-					_tag         = self[1],
+		if(ds_map_size(_tagInstMap)){
+			with(ds_map_values(_tagInstMap)){
+				var	_tag         = self[0],
+					_tagInst     = self[1],
 					_tagEndFrame = _tagFrame + _tag.add_frame;
 					
 				 // Reset Search Time:
 				if(_tag.end_frame != _tagEndFrame){
 					_tag.end_frame = _tagEndFrame;
 					
-					var	_tagKey   = self[2],
-						_tagIndex = array_find_index(_tagMap[0], _tagKey);
+					var	_tagIndex = array_find_index(_tagData.list, _tag),
+						_tagKey   = _tagKeyList[_tagIndex];
 						
 					 // Remove Tag From Lists:
-					_tagKeyList = array_delete(_tagMap[0], _tagIndex);
-					_tagList    = array_delete(_tagMap[1], _tagIndex);
-					_tagMap[0]  = _tagKeyList;
-					_tagMap[1]  = _tagList;
+					_tagKeyList       = array_delete(_tagData.key_list, _tagIndex);
+					_tagList          = array_delete(_tagData.list,     _tagIndex);
+					_tagData.key_list = _tagKeyList;
+					_tagData.list     = _tagList;
 					
 					 // Sort Tag Into Lists:
 					_tagIndex = array_length(_tagList);
@@ -1248,7 +1255,7 @@
 				}
 			}
 		}
-		ds_map_destroy(_instTagMap);
+		ds_map_destroy(_tagInstMap);
 	}
 	
 	 // Unbind Script:
