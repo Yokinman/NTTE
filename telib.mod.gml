@@ -156,7 +156,7 @@
 		Used to manually pass a context through 'script_ref_call' / 'call', as NTT versions before 9943 don't do it correctly
 		
 		Args:
-			context - An instance or LWO to pass as the 'self', or an array for '[self, other]'
+			context - An instance to pass as the 'self', or an array for '[self, other]'
 			ref     - The script reference to call
 			args    - Arguments to pass to the script call
 			

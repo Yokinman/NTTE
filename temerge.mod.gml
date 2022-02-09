@@ -146,8 +146,8 @@
 #macro _wepXmerge                 _wep.temerge
 #macro _wepXmerge_is_active       _wepXmerge.is_active
 #macro _wepXmerge_is_part         _wepXmerge.is_part
-#macro _wepXmerge_wep_raw         _wepXmerge.wep
-#macro _wepXmerge_wep             _wepXmerge_wep_raw[@ 0]
+#macro _wepXmerge_raw_wep         _wepXmerge.wep
+#macro _wepXmerge_wep             _wepXmerge_raw_wep[@ 0]
 #macro _wepXmerge_wep_fire_frame  _wepXmerge.wep_fire_frame
 #macro _wepXmerge_fire_frame      _wepXmerge.fire_frame
 #macro _wepXmerge_fire_at         _wepXmerge.fire_at_vars
@@ -198,7 +198,7 @@
 		_wepXmerge                 = {};
 		_wepXmerge_is_active       = true;
 		_wepXmerge_is_part         = (_wepIsPart || call(scr.wep_raw, _wep) == wep_none);
-		_wepXmerge_wep_raw         = [wep_none];
+		_wepXmerge_raw_wep         = [wep_none];
 		_wepXmerge_wep_fire_frame  = 0;
 		_wepXmerge_fire_frame      = 0;
 		_wepXmerge_fire_at         = undefined;
@@ -1540,10 +1540,10 @@
 									"direction_rotation" : angle_difference(((direction == 0 && speed == 0) ? ((image_angle == 0) ? _originDirection : image_angle) : direction), _originDirection),
 									"speed_factor"       : ((_merge.speed_factor == undefined) ? (0.5 + max(0, abs(speed / 32) * (1 - (friction / 2)))) : _merge.speed_factor),
 									"accuracy"           : _mainAccuracy,
-									"wep"                : _wepXmerge_wep_raw,
+									"wep"                : _wepXmerge_wep,
 									"team"               : team,
 									"creator"            : creator
-								}
+								};
 								
 							 // Is Independent From the Creator:
 							if(_instWasIndependent || round(_fireAt.position_distance) > 16){
@@ -1569,6 +1569,9 @@
 							}
 							
 							 // Weapon Firing:
+							if(_fireAt.wep == _wepXmerge_wep){
+								_fireAt.wep = _wepXmerge_raw_wep;
+							}
 							_wep = (
 								is_array(_fireAt.wep)
 								? _fireAt.wep[0]
@@ -1797,6 +1800,11 @@
 				}
 			}
 			
+			 // Call Setup Event:
+			if(_mainMerge.on_setup != undefined){
+				script_ref_call(_mainMerge.on_setup, _instanceList, _mainMerge.setup_vars);
+			}
+			
 			 // Setup Events:
 			with(["hit", "wall", "destroy"]){
 				var	_eventName = self,
@@ -1805,11 +1813,6 @@
 				if(_eventRef != undefined){
 					temerge_projectile_add_event(_instanceList, _eventName, _eventRef);
 				}
-			}
-			
-			 // Call Setup Event:
-			if(_mainMerge.on_setup != undefined){
-				script_ref_call(_mainMerge.on_setup, _instanceList, _mainMerge.setup_vars);
 			}
 		}
 	}
@@ -2826,8 +2829,6 @@
 	if(array_length(_releaseInstanceList)){
 		with(_releaseInstanceList){
 			_instanceList = instances_matching_ne(_instanceList, "id", id);
-			
-			 // Release Flames:
 			temerge_flame_projectile_destroy();
 			temerge_flame_amount[@ 0] = 0;
 		}
@@ -2873,31 +2874,14 @@
 	_num = min(floor(_num) + chance(frac(_num), 1), 640);
 	
 	if(_num > 0){
-		var	_x = x,
-			_y = y;
-			
-		 // Move Ahead:
-		// if(speed > 0){
-		// 	var	_lastX = x,
-		// 		_lastY = y;
-				
-		// 	move_contact_solid(direction, speed_raw);
-		// 	_x = x;
-		// 	_y = y;
-			
-		// 	x  = _lastX;
-		// 	y  = _lastY;
-		// }
-		
-		 // Release Gas:
 		repeat(_num){
-			instance_create(_x, _y, ToxicGas);
+			instance_create(x, y, ToxicGas);
 		}
 		
 		 // Sound:
 		call(scr.sound_play_at,
-			_x,
-			_y,
+			x,
+			y,
 			sndToxicBoltGas,
 			max(0.6, 1.2 - (0.0125 * _num)) + orandom(0.1),
 			0.2 + (0.05 * _num),
@@ -2906,7 +2890,7 @@
 		
 		 // Effects:
 		repeat(ceil(_num / 3)){
-			call(scr.fx, _x, _y, random(sqrt(_num) / 2), Smoke);
+			call(scr.fx, x, y, random(sqrt(_num) / 2), Smoke);
 		}
 	}
 	
@@ -4296,7 +4280,7 @@
 		with(_instanceList){
 			repeat(2){
 				temerge_projectile_add_effect(self, "grenade", [
-					_info.max_range + (30 * speed),
+					_info.max_range + (20 * speed),
 					(_explosion.is_toxic ? undefined : _explosion)
 				]);
 			}

@@ -43,8 +43,8 @@
 	}
 	
 	 // Sounds:
-	sound_play(sndCrossbow);
-	sound_play_pitch(sndNadeReload, 0.8);
+	sound_play_gun(sndCrossbow, 0.2, 0.3);
+	audio_sound_pitch(sound_play_gun(sndNadeReload, 0, 0.3), 0.8);
 	
 	 // Effects:
 	weapon_post(6, 8, -20);

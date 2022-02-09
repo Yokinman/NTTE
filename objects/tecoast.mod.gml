@@ -1141,6 +1141,7 @@
 		rope       = [];
 		corpses    = [];
 		pickup     = false;
+		ammo_type  = type_bolt;
 		setup      = true;
 		
 		return self;
@@ -1332,6 +1333,7 @@
 			image_yscale = other.image_yscale;
 			image_angle  = other.image_angle;
 			target       = other.target;
+			ammo_type    = other.ammo_type;
 		}
 	}
 	
@@ -1441,17 +1443,19 @@
 		}
 		
 		 // Turn Harpoons Into Pickups:
-		with(instances_matching_ne([link1, link2], "id")){
-			if(array_find_index(obj.Harpoon, self) >= 0){
-				pickup = true;
-			}
-			else if(array_find_index(obj.HarpoonStick, self) >= 0){
-				with(call(scr.obj_create, x, y, "HarpoonPickup")){
-					image_yscale = other.image_yscale;
-					image_angle  = other.image_angle;
-					target       = other.target;
+		with([link1, link2]){
+			if(instance_exists(self)){
+				if(array_find_index(obj.Harpoon, self) >= 0){
+					pickup = true;
 				}
-				instance_destroy();
+				else if(array_find_index(obj.HarpoonStick, self) >= 0){
+					with(call(scr.obj_create, x, y, "HarpoonPickup")){
+						image_yscale = other.image_yscale;
+						image_angle  = other.image_angle;
+						target       = other.target;
+					}
+					instance_destroy();
+				}
 			}
 		}
 	}
@@ -1471,6 +1475,7 @@
 		alarm0     = call(scr.pickup_alarm, 90 + random(30), 1/5);
 		pull_spd   = 8;
 		target     = noone;
+		ammo_type  = type_bolt;
 		
 		 // Events:
 		on_step = script_ref_create(HarpoonPickup_step);
@@ -1512,19 +1517,26 @@
 	return (speed <= 0);
 	
 #define HarpoonPickup_open
-	var	_type = type_bolt,
+	var	_type = ammo_type,
 		_num  = num;
 		
 	 // +1 Bolt Ammo:
 	with(instance_is(other, Player) ? other : Player){
-		ammo[_type] = min(ammo[_type] + _num, typ_amax[_type]);
-		
-		 // Text:
-		call(scr.pickup_text,
-			typ_name[_type],
-			((ammo[_type] < typ_amax[_type]) ? "add" : "max"),
-			_num
-		);
+		if(_type == type_melee){
+			if(reload > 0){
+				reload -= 3;
+			}
+		}
+		else{
+			ammo[_type] = min(ammo[_type] + _num, typ_amax[_type]);
+			
+			 // Text:
+			call(scr.pickup_text,
+				typ_name[_type],
+				((ammo[_type] < typ_amax[_type]) ? "add" : "max"),
+				_num
+			);
+		}
 	}
 	
 	
@@ -1563,7 +1575,9 @@
 		alarm2 = alarm0 - 15;
 		
 		 // Merged Weapons Support:
+		temerge_on_fire    = script_ref_create(NetNade_temerge_fire);
 		temerge_on_setup   = script_ref_create(NetNade_temerge_setup);
+		temerge_on_hit     = script_ref_create(NetNade_temerge_hit);
 		temerge_on_destroy = script_ref_create(NetNade_temerge_destroy);
 		
 		return self;
@@ -1641,15 +1655,15 @@
 	for(var _dir = _ang; _dir < _ang + 360; _dir += (360 / _num)){
 		_dis = ((_dis > 0) ? 0 : 8);
 		
-		var	_x = x + lengthdir_x(_dis, _dir),
-			_y = y + lengthdir_y(_dis, _dir),
+		var	_x   = x + lengthdir_x(_dis, _dir),
+			_y   = y + lengthdir_y(_dis, _dir),
 			_off = 0;
 			
 		 // Minor Homing on Nearest Enemy:
 		with(call(scr.instance_nearest_array, 
 			_x + lengthdir_x(3 * _spd, _dir),
 			_y + lengthdir_y(3 * _spd, _dir),
-			instances_matching_ne(enemy, "team", team)
+			instances_matching_ne(instances_matching_ne(enemy, "team", team), "id", lasthit)
 		)){
 			_off = angle_difference(point_direction(other.x, other.y, x, y), _dir);
 			if(abs(_off) >= (360 / _num) / 2){
@@ -1685,12 +1699,91 @@
 		Harpoon_rope(_first, _link);
 	}
 	
-#define NetNade_temerge_setup(_instanceList, _info)
-	 // :
-	//call(scr.temerge_projectile_add_effect, _instanceList, "grenade", [176, undefined]);
+#define NetNade_temerge_fire(_at, _setupInfo)
+	_setupInfo.ammo_type = weapon_get_type(_at.wep);
+	
+#define NetNade_temerge_setup(_instanceList, _setup)
+	with(_instanceList){
+		temerge_net_last_hit  = [noone];
+		temerge_net_ammo_type = _setup.ammo_type;
+	}
+	
+#define NetNade_temerge_hit
+	if(projectile_canhit(other) && other.my_health > 0){
+		temerge_net_last_hit[0] = other;
+	}
 	
 #define NetNade_temerge_destroy
+	/*
+		Net projectiles release linked harpoons on destruction
+	*/
 	
+	var _hitTarget = temerge_net_last_hit[0];
+	
+	if(_hitTarget != noone){
+		var _num = min(1 + floor(damage / 3), 120);
+		if(_num > 0){
+			var	_spd   = 22,
+				_ang   = random(360),
+				_first = noone,
+				_last  = noone;
+				
+			if(instance_exists(_hitTarget) && _hitTarget.my_health <= 0){
+				_hitTarget = noone;
+			}
+			
+			for(var _dir = _ang; _dir < _ang + 360; _dir += (360 / _num)){
+				var _off = 0;
+				
+				 // Minor Homing on Nearest Enemy:
+				with(call(scr.instance_nearest_array, 
+					x + lengthdir_x(3 * _spd, _dir),
+					y + lengthdir_y(3 * _spd, _dir),
+					instances_matching_ne(instances_matching_ne(enemy, "team", team), "id", temerge_net_last_hit[0])
+				)){
+					_off = angle_difference(point_direction(other.x, other.y, x, y), _dir);
+					if(abs(_off) >= (360 / _num) / 2){
+						_off = 0;
+					}
+				}
+				
+				 // Fire Harpoon:
+				with(call(scr.projectile_create, x, y, "Harpoon", _dir + _off, _spd)){
+					move_contact_solid(direction, 8);
+					ammo_type = other.temerge_net_ammo_type;
+					
+					 // Link Harpoons to Enemy:
+					if(_hitTarget != noone){
+						Harpoon_rope(self, _hitTarget);
+					}
+					
+					 // Link Harpoons Together:
+					else{
+						if(_first == noone){
+							_first = self;
+						}
+						if(_last != noone){
+							Harpoon_rope(self, _last);
+						}
+						_last = self;
+					}
+				}
+			}
+			if(_last != noone){
+				Harpoon_rope(_first, _last);
+			}
+			
+			 // Sound:
+			sound_play_hit(((_num > 1) ? sndSuperSplinterGun : sndCrossbow), 0.2);
+			call(scr.sound_play_at, x, y, sndNadeReload, 0.8);
+			
+			 // Effects:
+			repeat(max(3, _num)){
+				call(scr.fx, x, y, 1 + random(2), Dust);
+			}
+			view_shake_at(x, y, 2 * _num);
+		}
+	}
 	
 	
 #define Palanking_create(_x, _y)
@@ -5550,11 +5643,11 @@
 					
 					 // Break:
 					if(break_timer <= 0 || break_force > 1000){
-						if(break_force > 100 || (_rope.broken < 0 && _length <= 1)){
-							if(_rope.broken >= 0){
+						if(break_force > 100 || (broken < 0 && _length <= 1)){
+							if(broken >= 0){
 								sound_play_pitch(sndHammerHeadEnd, 2);
 							}
-							Harpoon_unrope(_rope);
+							Harpoon_unrope(self);
 						}
 					}
 					else break_timer -= current_time_scale;
