@@ -1517,16 +1517,19 @@
 	return (speed <= 0);
 	
 #define HarpoonPickup_open
-	var	_type = ammo_type,
-		_num  = num;
-		
-	 // +1 Bolt Ammo:
+	var _type = ammo_type;
+	
 	with(instance_is(other, Player) ? other : Player){
+		var _num = other.num * (1 + floor(typ_ammo[_type] / 10));
+		
+		 // Cool:
 		if(_type == type_melee){
 			if(reload > 0){
 				reload -= 3;
 			}
 		}
+		
+		 // +1 Bolt Ammo:
 		else{
 			ammo[_type] = min(ammo[_type] + _num, typ_amax[_type]);
 			
@@ -1704,13 +1707,22 @@
 	
 #define NetNade_temerge_setup(_instanceList, _setup)
 	with(_instanceList){
-		temerge_net_last_hit  = [noone];
+		temerge_net_can_fire  = [true];
 		temerge_net_ammo_type = _setup.ammo_type;
 	}
 	
 #define NetNade_temerge_hit
-	if(projectile_canhit(other) && other.my_health > 0){
-		temerge_net_last_hit[0] = other;
+	/*
+		Net projectiles fire harpoons linked to enemies they collide with
+	*/
+	
+	if(
+		temerge_net_can_fire[0]
+		&& projectile_canhit(other)
+		&& other.my_health > 0
+	){
+		NetNade_temerge_destroy();
+		temerge_net_can_fire[0] = false;
 	}
 	
 #define NetNade_temerge_destroy
@@ -1718,64 +1730,59 @@
 		Net projectiles release linked harpoons on destruction
 	*/
 	
-	var _hitTarget = temerge_net_last_hit[0];
-	
-	if(_hitTarget != noone){
-		var _num = min(1 + floor(damage / 3), 120);
+	if(temerge_net_can_fire[0]){
+		var _num = min(damage * 0.4 * ((force >= 3) ? 1 : 0.4), 120);
+		
+		_num = floor(_num) + chance(frac(_num), 1);
+		
 		if(_num > 0){
-			var	_spd   = 22,
-				_ang   = random(360),
-				_first = noone,
-				_last  = noone;
+			var	_ang       = random(360),
+				_spd       = 22,
+				_hitTarget = ((self == other) ? noone : other);
 				
-			if(instance_exists(_hitTarget) && _hitTarget.my_health <= 0){
-				_hitTarget = noone;
-			}
-			
 			for(var _dir = _ang; _dir < _ang + 360; _dir += (360 / _num)){
 				var _off = 0;
 				
-				 // Minor Homing on Nearest Enemy:
-				with(call(scr.instance_nearest_array, 
-					x + lengthdir_x(3 * _spd, _dir),
-					y + lengthdir_y(3 * _spd, _dir),
-					instances_matching_ne(instances_matching_ne(enemy, "team", team), "id", temerge_net_last_hit[0])
-				)){
-					_off = angle_difference(point_direction(other.x, other.y, x, y), _dir);
-					if(abs(_off) >= (360 / _num) / 2){
-						_off = 0;
+				if(instance_exists(_hitTarget)){
+					 // Minor Homing on Nearest Enemy:
+					with(call(scr.instance_nearest_array, 
+						x + lengthdir_x(3 * _spd, _dir),
+						y + lengthdir_y(3 * _spd, _dir),
+						instances_matching_ne(instances_matching_ne(enemy, "team", team), "id", _hitTarget)
+					)){
+						if(!collision_line(x, y, other.x, other.y, Wall, false, false)){
+							_off = angle_difference(point_direction(other.x, other.y, x, y), _dir);
+							if(abs(_off) >= (360 / _num) / 2){
+								_off = 0;
+							}
+						}
+					}
+					
+					 // Fire Harpoon:
+					with(call(scr.projectile_create, x, y, "Harpoon", _dir + _off, _spd)){
+						move_contact_solid(direction, 8);
+						Harpoon_rope(self, _hitTarget);
+						ammo_type = other.temerge_net_ammo_type;
+						
+						 // No Recursion:
+						can_temerge = false;
 					}
 				}
 				
-				 // Fire Harpoon:
-				with(call(scr.projectile_create, x, y, "Harpoon", _dir + _off, _spd)){
-					move_contact_solid(direction, 8);
-					ammo_type = other.temerge_net_ammo_type;
-					
-					 // Link Harpoons to Enemy:
-					if(_hitTarget != noone){
-						Harpoon_rope(self, _hitTarget);
-					}
-					
-					 // Link Harpoons Together:
-					else{
-						if(_first == noone){
-							_first = self;
-						}
-						if(_last != noone){
-							Harpoon_rope(self, _last);
-						}
-						_last = self;
-					}
+				 // Effects:
+				with(instance_create(x, y, MeleeHitWall)){
+					motion_add(_dir + _off, random(2));
+					image_angle  = direction + 180;
+					image_speed  = 0.6;
+					image_yscale = 2/3;
 				}
-			}
-			if(_last != noone){
-				Harpoon_rope(_first, _last);
 			}
 			
 			 // Sound:
-			sound_play_hit(((_num > 1) ? sndSuperSplinterGun : sndCrossbow), 0.2);
-			call(scr.sound_play_at, x, y, sndNadeReload, 0.8);
+			if(instance_exists(_hitTarget)){
+				sound_play_hit(((_num > 1) ? sndSuperSplinterGun : sndCrossbow), 0.2);
+			}
+			call(scr.sound_play_at, x, y, sndGrenadeRifle, 1.2 + orandom(0.1), (instance_exists(_hitTarget) ? 1 : 0.5));
 			
 			 // Effects:
 			repeat(max(3, _num)){

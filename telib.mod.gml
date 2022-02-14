@@ -177,18 +177,19 @@
 		}
 		
 		 // Set Context & Call Script:
+		var	_self  = _context,
+			_other = _context;
+			
 		if(is_array(_context)){
-			if(self != _context[0] || other != _context[1]){
-				with([_context[1]]){
-					with([_context[0]]){
-						return mod_script_call("mod", mod_current, "pass", undefined, _ref);
-					}
-				}
-			}
+			_self  = _context[0];
+			_other = _context[1];
 		}
-		else if(self != _context || other != _context){
-			with([_context]){
-				return mod_script_call_self("mod", mod_current, "pass", undefined, _ref);
+		
+		if(self != _self || other != _other){
+			with([_other]){
+				with([_self]){
+					return mod_script_call("mod", mod_current, "pass", undefined, _ref);
+				}
 			}
 		}
 	}
