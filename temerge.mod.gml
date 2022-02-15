@@ -90,10 +90,12 @@
 		"hyper",
 		"toxic",
 		"seek",
+		"explosion",
 		"grenade",
 		"sticky",
+		"pull",
 		"flare",
-		"pull"
+		"rocket"
 	]){
 		with(["setup", "step", "post_step", "begin_step", "end_step", "draw"]){
 			var _scriptIndex = script_get_index(`temerge_${other}_${self}`);
@@ -1221,6 +1223,12 @@
 	 // Store Initial Firing Values:
 	var _fire = {
 		"last_vars"                  : undefined,
+		"has_shot"                   : true,
+		"shot_count"                 : 0,
+		"shot_replace_count"         : 0,
+		"shot_replace_min"           : max(1, _stockCost),
+		"shot_replace_base"          : power(1.5, 1 + max(0, (_frontCost - 1) / 9)),
+		"shot_replace_cost_interval" : ((_stockCost == 0) ? 1 : abs(_stockCost)),
 		"frame"                      : current_frame,
 		"x"                          : x,
 		"y"                          : y,
@@ -1235,12 +1243,6 @@
 		"ammo_cost"                  : _wepCost,
 		"rads"                       : GameCont.rad,
 		"rads_cost"                  : _wepRads,
-		"has_shot"                   : true,
-		"shot_count"                 : 0,
-		"shot_replace_count"         : 0,
-		"shot_replace_min"           : max(1, _stockCost),
-		"shot_replace_base"          : power(1.5, 1 + max(0, (_frontCost - 1) / 9)),
-		"shot_replace_cost_interval" : ((_stockCost == 0) ? 1 : abs(_stockCost)),
 		"shake"                      : [],
 		"opt_shake"                  : UberCont.opt_shake,
 		"opt_freeze"                 : UberCont.opt_freeze,
@@ -2768,7 +2770,7 @@
 	}
 	
 	
-#define temerge_fixed_plasma_speed_factor_step(_instanceList)
+#define temerge_fixed_plasma_speed_factor_begin_step(_instanceList)
 	/*
 		Fixes the speed multiplier for plasma merged projectiles
 	*/
@@ -3426,101 +3428,42 @@
 	}
 	
 	
-#define temerge_grenade_setup // instanceList, maxRange, ?explosionInfo
+#define temerge_explosion_setup // instanceList, ?explosionInfo
 	/*
-		Merged projectile timed explosion effect
+		Merged projectile destruction explosion effect
 	*/
 	
 	var	_instanceList  = argument[0],
-		_maxRange      = argument[1],
-		_explosionInfo = ((argument_count > 2) ? argument[2] : undefined);
+		_explosionInfo = ((argument_count > 1) ? lq_clone(argument[1]) : {});
 		
-	if("temerge_grenade_frame" not in GameCont){
-		GameCont.temerge_grenade_frame = 0;
+	 // Default Values:
+	with(["is_small", "is_heavy", "is_blood", "is_toxic", "is_cluster"]){
+		if(self not in _explosionInfo){
+			lq_set(_explosionInfo, self, false);
+		}
 	}
 	
+	 // Add Explosion:
 	with(_instanceList){
-		if("temerge_grenade_frame" not in self){
-			temerge_grenade_frame          = GameCont.temerge_grenade_frame;
-			temerge_grenade_explosion_list = [];
-			
-			 // Projectile Events:
-			temerge_projectile_add_event(self, "destroy", script_ref_create(temerge_grenade_projectile_destroy));
-			if(instance_is(self, HyperGrenade)){
-				temerge_projectile_add_event(self, "hit",  script_ref_create(temerge_grenade_HyperGrenade_hit));
-				temerge_projectile_add_event(self, "wall", script_ref_create(temerge_grenade_HyperGrenade_wall));
-			}
+		if("temerge_explosion_list" not in self){
+			temerge_explosion_list = [];
+			temerge_projectile_add_event(self, "destroy", script_ref_create(temerge_explosion_projectile_destroy));
 		}
-		
-		 // Explosion Delay:
-		temerge_grenade_frame = max(temerge_grenade_frame, GameCont.temerge_grenade_frame + (_maxRange / max(6, speed))) - 1;
-		if(instance_is(self, Grenade) && alarm0 > 0){
-			temerge_grenade_frame += alarm0 / 4;
-			alarm0 = -1;
-		}
-		
-		 // Add Explosion:
-		if(_explosionInfo != undefined){
-			array_push(temerge_grenade_explosion_list, _explosionInfo);
-		}
+		array_push(temerge_explosion_list, _explosionInfo);
 	}
 	
 	 // Toxic Explosions:
-	if(_explosionInfo != undefined && _explosionInfo.is_toxic){
+	if(_explosionInfo.is_toxic){
 		temerge_projectile_add_effect(_instanceList, "toxic");
 	}
 	
-#define temerge_grenade_step(_instanceList)
+#define temerge_explosion_projectile_destroy
 	/*
-		Merged grenade projectiles destroy themselves after a certain amount of time
-	*/
-	
-	GameCont.temerge_grenade_frame += current_time_scale;
-	
-	with(instances_matching_le(_instanceList, "temerge_grenade_frame", GameCont.temerge_grenade_frame)){
-		instance_destroy();
-	}
-	
-#define temerge_grenade_end_step(_instanceList)
-	/*
-		Merged grenade projectiles explode when they touch an explosion
-	*/
-	
-	if(instance_exists(Explosion)){
-		var _blinkInstanceList = instances_matching_le(_instanceList, "temerge_grenade_frame", GameCont.temerge_grenade_frame + 10);
-		if(array_length(_blinkInstanceList)){
-			with(_blinkInstanceList){
-				if(place_meeting(x, y, Explosion)){
-					instance_destroy();
-				}
-			}
-		}
-	}
-	
-#define temerge_grenade_draw(_instanceList)
-	/*
-		Merged grenade projectiles visually flash when about to explode
-	*/
-	
-	var _blinkInstanceList = instances_matching(instances_matching_le(_instanceList, "temerge_grenade_frame", GameCont.temerge_grenade_frame + 10), "visible", true);
-	
-	if(array_length(_blinkInstanceList)){
-		draw_set_fog(true, ((((GameCont.temerge_grenade_frame * 0.4) % 2) < 1) ? c_white : c_black), 0, 0);
-		
-		with(_blinkInstanceList){
-			draw_self();
-		}
-		
-		draw_set_fog(false, 0, 0, 0);
-	}
-	
-#define temerge_grenade_projectile_destroy
-	/*
-		Merged grenade projectiles create explosions on destruction
+		Merged explosion projectiles create explosions on destruction
 	*/
 	
 	if((object_index != Lightning && object_index != EnemyLightning) || (ammo % 4) < 1){
-		var	_explosionList  = temerge_grenade_explosion_list,
+		var	_explosionList  = temerge_explosion_list,
 			_explosionCount = array_length(_explosionList),
 			_explosionAngle = random(360);
 			
@@ -3634,28 +3577,123 @@
 		}
 	}
 	
+	
+#define temerge_grenade_setup // instanceList, maxRange, ?explosionInfo
+	/*
+		Merged projectile timed explosion effect
+	*/
+	
+	var	_instanceList  = argument[0],
+		_maxRange      = argument[1],
+		_explosionInfo = ((argument_count > 2) ? argument[2] : undefined);
+		
+	if("temerge_grenade_frame" not in GameCont){
+		GameCont.temerge_grenade_frame = 0;
+	}
+	
+	with(_instanceList){
+		if("temerge_grenade_frame" not in self){
+			temerge_grenade_frame = GameCont.temerge_grenade_frame;
+			
+			 // Hyper Grenade Events:
+			if(instance_is(self, HyperGrenade)){
+				temerge_projectile_add_event(self, "hit",  script_ref_create(temerge_grenade_HyperGrenade_hit));
+				temerge_projectile_add_event(self, "wall", script_ref_create(temerge_grenade_HyperGrenade_wall));
+			}
+		}
+		
+		 // Explosion Delay:
+		temerge_grenade_frame = max(temerge_grenade_frame, GameCont.temerge_grenade_frame + (_maxRange / max(6, speed)));
+		if(instance_is(self, Grenade) && alarm0 > 0){
+			temerge_grenade_frame += alarm0 / 4;
+			alarm0 = -1;
+		}
+	}
+	
+	 // Add Explosion:
+	if(_explosionInfo != undefined){
+		temerge_projectile_add_effect(_instanceList, "explosion", [_explosionInfo]);
+	}
+	
+#define temerge_grenade_step(_instanceList)
+	/*
+		Merged grenade projectiles destroy themselves after a length of time
+	*/
+	
+	GameCont.temerge_grenade_frame += current_time_scale;
+	
+	var _explodeInstanceList = instances_matching_le(_instanceList, "temerge_grenade_frame", GameCont.temerge_grenade_frame);
+	
+	if(array_length(_explodeInstanceList)){
+		with(_explodeInstanceList){
+			instance_destroy();
+		}
+	}
+	
+#define temerge_grenade_end_step(_instanceList)
+	/*
+		Merged grenade projectiles explode if they touch explosions when they're about to explode (for balance purposes)
+	*/
+	
+	if(instance_exists(Explosion)){
+		var _blinkInstanceList = instances_matching_le(_instanceList, "temerge_grenade_frame", GameCont.temerge_grenade_frame + 10);
+		if(array_length(_blinkInstanceList)){
+			with(_blinkInstanceList){
+				if(place_meeting(x, y, Explosion)){
+					instance_destroy();
+				}
+			}
+		}
+	}
+	
+#define temerge_grenade_draw(_instanceList)
+	/*
+		Merged grenade projectiles visually flash when they're about to explode
+	*/
+	
+	var _blinkInstanceList = instances_matching(instances_matching_le(_instanceList, "temerge_grenade_frame", GameCont.temerge_grenade_frame + 10), "visible", true);
+	
+	if(array_length(_blinkInstanceList)){
+		draw_set_fog(true, ((((GameCont.temerge_grenade_frame * 0.4) % 2) < 1) ? c_white : c_black), 0, 0);
+		
+		with(_blinkInstanceList){
+			draw_self();
+		}
+		
+		draw_set_fog(false, 0, 0, 0);
+	}
+	
 #define temerge_grenade_HyperGrenade_hit
-	 // Delay Explosion:
+	/*
+		Merged sticky grenade hyper grenades don't detonate instantly
+	*/
+	
 	alarm1 = max(alarm1, temerge_grenade_frame - GameCont.temerge_grenade_frame);
 	
 #define temerge_grenade_HyperGrenade_wall
-	var _canBounce = false;
-	with(temerge_grenade_explosion_list){
-		if(!is_small && !is_blood){
-			_canBounce = true;
-			break;
+	/*
+		Merged grenade hyper grenades bounce off walls like normal grenades
+	*/
+	
+	if("temerge_explosion_list" in self){
+		var _canBounce = false;
+		with(temerge_explosion_list){
+			if(!is_small && !is_blood){
+				_canBounce = true;
+				break;
+			}
 		}
-	}
-	if(_canBounce){
-		 // Delay Explosion:
-		alarm1 = max(alarm1, temerge_grenade_frame - GameCont.temerge_grenade_frame);
-		
-		 // Bounce:
-		if(speed != 0 && "temerge_sticky_target" not in self){
-			friction = 0.4;
-			move_bounce_solid(true);
-			sound_play_hit(sndGrenadeHitWall, 0.2);
-			instance_create(x, y, Dust);
+		if(_canBounce){
+			 // Delay Explosion:
+			alarm1 = max(alarm1, temerge_grenade_frame - GameCont.temerge_grenade_frame);
+			
+			 // Bounce:
+			if(speed != 0 && "temerge_sticky_target" not in self){
+				friction = 0.4;
+				move_bounce_solid(true);
+				sound_play_hit(sndGrenadeHitWall, 0.2);
+				instance_create(x, y, Dust);
+			}
 		}
 	}
 	
@@ -3806,50 +3844,6 @@
 	}
 	
 	
-#define temerge_flare_step(_instanceList)
-	/*
-		Merged flare projectiles leave behind a trail of flames
-	*/
-	
-	var	_lastSprite = -1,
-		_flameScale = 1;
-		
-	with(_instanceList){
-		if((current_frame % damage) >= 1){
-			if(sprite_index != _lastSprite){
-				_lastSprite = sprite_index;
-				_flameScale = ((sprite_get_bbox_bottom(sprite_index) + 1) - sprite_get_bbox_top(sprite_index)) / 16;
-				if(_flameScale >= 0.375 && _flameScale < 1){
-					_flameScale = 1;
-				}
-			}
-			for(var _length = 0; _length <= speed_raw; _length += 8 * _flameScale){
-				with(instance_create(
-					x + lengthdir_x(_length, direction),
-					y + lengthdir_y(_length, direction),
-					Flame
-				)){
-					 // Motion:
-					motion_add(random(360), 1);
-					
-					 // Dissipate Faster:
-					image_index = max(0, (image_number - 1) - (1 + other.damage));
-					
-					 // Resize:
-					image_xscale *= _flameScale;
-					image_yscale *= _flameScale;
-					
-					 // Setup:
-					projectile_init(other.team, other);
-					
-					 // No Recursion:
-					can_temerge = false;
-				}
-			}
-		}
-	}
-	
-	
 #define temerge_pull_setup(_instanceList)
 	/*
 		Merged projectile enemy pulling effect
@@ -3907,6 +3901,212 @@
 						sprite_index = sprEatBigRad;
 					}
 				}
+			}
+		}
+	}
+	
+	
+#define temerge_flare_step(_instanceList)
+	/*
+		Merged flare projectiles leave behind a trail of flames
+	*/
+	
+	var	_lastSprite = -1,
+		_flameScale = 1;
+		
+	with(_instanceList){
+		if((current_frame % damage) >= 1){
+			if(sprite_index != _lastSprite){
+				_lastSprite = sprite_index;
+				_flameScale = ((sprite_get_bbox_bottom(sprite_index) + 1) - sprite_get_bbox_top(sprite_index)) / 16;
+				if(_flameScale >= 0.375 && _flameScale < 1){
+					_flameScale = 1;
+				}
+			}
+			for(var _length = 0; _length <= speed_raw; _length += 8 * _flameScale){
+				with(instance_create(
+					x + lengthdir_x(_length, direction),
+					y + lengthdir_y(_length, direction),
+					Flame
+				)){
+					 // Motion:
+					motion_add(random(360), 1);
+					
+					 // Dissipate Faster:
+					image_index = max(0, (image_number - 1) - (1 + other.damage));
+					
+					 // Resize:
+					image_xscale *= _flameScale;
+					image_yscale *= _flameScale;
+					
+					 // Setup:
+					projectile_init(other.team, other);
+					
+					 // No Recursion:
+					can_temerge = false;
+				}
+			}
+		}
+	}
+	
+	
+#define temerge_rocket_setup(_instanceList)
+	/*
+		Merged projectile thruster & impact explosion effect
+	*/
+	
+	if("temerge_rocket_frame" not in GameCont){
+		GameCont.temerge_rocket_frame = 0;
+	}
+	
+	with(_instanceList){
+		if("temerge_rocket_frame" not in self){
+			temerge_rocket_frame               = GameCont.temerge_rocket_frame + (5 * (1 - ((friction * 10) / speed)));
+			temerge_rocket_maxspeed            = 0;
+			temerge_rocket_can_add_explosion   = true;
+			temerge_rocket_flame_sprite        = ((damage > 20) ? sprNukeFlame : sprRocketFlame);
+			temerge_rocket_flame_xscale        = 0;
+			temerge_rocket_flame_yscale        = 0;
+			temerge_rocket_flame_offset_length = 0;
+			temerge_projectile_add_event(self, "hit",  script_ref_create(temerge_rocket_projectile_hit));
+			temerge_projectile_add_event(self, "wall", script_ref_create(temerge_rocket_projectile_wall));
+		}
+		if(temerge_rocket_maxspeed >= 0){
+			temerge_rocket_maxspeed = max(temerge_rocket_maxspeed, speed * 2);
+		}
+	}
+	
+#define temerge_rocket_step(_instanceList)
+	/*
+		Merged rocket projectiles accelerate over time and leave behind a smoke trail
+	*/
+	
+	GameCont.temerge_rocket_frame += current_time_scale;
+	
+	var _activeInstanceList = instances_matching_le(_instanceList, "temerge_rocket_frame", GameCont.temerge_rocket_frame);
+	
+	if(array_length(_activeInstanceList)){
+		var	_spriteIndex             = -1,
+			_spriteOffsetLength      = 0,
+			_flameSpriteIndex        = -1,
+			_flameSpriteOffsetLength = 0;
+			
+		with(_activeInstanceList){
+			 // Store Thruster Flame Information:
+			if(_spriteIndex != sprite_index){
+				_spriteIndex        = sprite_index;
+				_spriteOffsetLength = sprite_get_bbox_left(_spriteIndex) - sprite_get_xoffset(_spriteIndex);
+			}
+			if(_flameSpriteIndex != temerge_rocket_flame_sprite){
+				_flameSpriteIndex        = temerge_rocket_flame_sprite;
+				_flameSpriteOffsetLength = sprite_get_xoffset(_flameSpriteIndex) - sprite_get_bbox_right(_flameSpriteIndex);
+			}
+			temerge_rocket_flame_xscale        = min(speed / 12, 2) * image_xscale;
+			temerge_rocket_flame_yscale        = min(speed / 6,  1) * image_yscale;
+			temerge_rocket_flame_offset_length = ((_spriteOffsetLength * image_xscale) + (_flameSpriteOffsetLength * temerge_rocket_flame_xscale)) / 2;
+			
+			 // Thrusting:
+			if(temerge_rocket_maxspeed >= 0){
+				 // Smoke:
+				if(temerge_rocket_maxspeed > 0 && chance_ct(10 + damage, 100)){
+					with(instance_create(
+						x + lengthdir_x(temerge_rocket_flame_offset_length, direction) - hspeed_raw,
+						y + lengthdir_y(temerge_rocket_flame_offset_length, direction) - vspeed_raw,
+						Smoke
+					)){
+						depth = other.depth + choose(-1, -2);
+					}
+				}
+				
+				 // Accelerate:
+				if(speed < temerge_rocket_maxspeed){
+					speed = min(speed + current_time_scale, temerge_rocket_maxspeed);
+				}
+				else if(speed > temerge_rocket_maxspeed){
+					temerge_rocket_maxspeed = speed * 2;
+				}
+			}
+		}
+	}
+	
+#define temerge_rocket_draw(_instanceList)
+	/*
+		Merged rocket projectiles have a visual thruster flame
+	*/
+	
+	var _flameInstanceList = instances_matching(instances_matching_gt(instances_matching_le(_instanceList, "temerge_rocket_frame", GameCont.temerge_rocket_frame), "temerge_rocket_maxspeed", 0), "visible", true);
+	
+	if(array_length(_flameInstanceList)){
+		var _flameImageIndex = 0.4 * GameCont.temerge_rocket_frame;
+		
+		for(var _bloom = 0; _bloom <= (instance_exists(SubTopCont) ? 1 : 0); _bloom++){
+			var	_flameScaleFactor = 1,
+				_flameAlphaFactor = 1;
+				
+			if(_bloom == 1){
+				_flameScaleFactor = 2;
+				_flameAlphaFactor = 0.1;
+				draw_set_blend_mode(bm_add);
+			}
+			
+			with(_flameInstanceList){
+				draw_sprite_ext(
+					temerge_rocket_flame_sprite,
+					_flameImageIndex + id,
+					x + lengthdir_x(temerge_rocket_flame_offset_length, direction),
+					y + lengthdir_y(temerge_rocket_flame_offset_length, direction),
+					temerge_rocket_flame_xscale * _flameScaleFactor,
+					temerge_rocket_flame_yscale * _flameScaleFactor,
+					direction,
+					image_blend,
+					image_alpha * _flameAlphaFactor
+				);
+			}
+			
+			if(_bloom == 1){
+				draw_set_blend_mode(bm_normal);
+			}
+		}
+	}
+	
+#define temerge_rocket_projectile_hit
+	/*
+		Merged rocket projectiles stop thrusting and activate their explosive payload on impact with a hittable
+	*/
+	
+	if(projectile_canhit(other) && other.my_health > 0){
+		temerge_rocket_projectile_wall();
+		
+		 // Activate Explosion:
+		if(temerge_rocket_can_add_explosion){
+			temerge_rocket_can_add_explosion = false;
+			x -= hspeed_raw;
+			y -= vspeed_raw;
+			temerge_projectile_add_effect(self, "explosion");
+			x += hspeed_raw;
+			y += vspeed_raw;
+		}
+	}
+	
+#define temerge_rocket_projectile_wall
+	/*
+		Merged rocket projectiles stop thrusting on impact with a wall
+	*/
+	
+	if(temerge_rocket_maxspeed >= 0){
+		temerge_rocket_maxspeed = -1;
+		
+		 // Thruster Flame Particle:
+		if(visible && temerge_rocket_frame <= GameCont.temerge_rocket_frame){
+			var _len = temerge_rocket_flame_offset_length - (10 * temerge_rocket_flame_xscale);
+			with(instance_create(
+				x + lengthdir_x(_len, direction),
+				y + lengthdir_y(_len, direction),
+				BulletHit
+			)){
+				sprite_index = ((other.temerge_rocket_flame_sprite == sprNukeFlame) ? sprHeavyBulletHit : sprBulletHit);
+				image_xscale = other.temerge_rocket_flame_yscale;
+				image_yscale = other.temerge_rocket_flame_yscale;
 			}
 		}
 	}
@@ -4370,14 +4570,16 @@
 	if(_info.is_sticky){
 		temerge_projectile_add_effect(_instanceList, "sticky");
 		
-		 // Longer Delay, Bigger Explosion:
-		with(_instanceList){
+		 // Bigger Explosion:
+		if(!_explosion.is_toxic){
 			repeat(2){
-				temerge_projectile_add_effect(self, "grenade", [
-					_info.max_range + (20 * speed),
-					(_explosion.is_toxic ? undefined : _explosion)
-				]);
+				temerge_projectile_add_effect(_instanceList, "explosion", [_explosion]);
 			}
+		}
+		
+		 // Longer Delay:
+		with(_instanceList){
+			temerge_projectile_add_effect(self, "grenade", [_info.max_range + (20 * speed)]);
 			
 			 // Green:
 			image_blend = merge_color(image_blend, make_color_rgb(131, 253, 8), 0.5);
@@ -4415,6 +4617,11 @@
 #define temerge_Flare_setup(_instanceList)
 	 // Emits Flames:
 	temerge_projectile_add_effect(_instanceList, "flare");
+	
+	
+#define temerge_Rocket_setup(_instanceList)
+	 // Delivers a Payload:
+	temerge_projectile_add_effect(_instanceList, "rocket");
 	
 	
 /// OBJECTS
@@ -4674,11 +4881,17 @@
 		}
 	}
 	
+	 // Reset Projectile Effect Variables Between Levels:
+	if(instance_exists(GenCont) || instance_exists(LevCont)){
+		if("temerge_effect_vars_map" in GameCont && lq_size(GameCont.temerge_effect_vars_map)){
+			GameCont.temerge_effect_vars_map = {};
+		}
+	}
+	
 	 // Run Newly Created Effect Step Events:
 	if("temerge_effect_call_step_frame" in GameCont && GameCont.temerge_effect_call_step_frame == current_frame){
-		with(instances_matching_ne(GameCont.temerge_effect_call_step_instance_list, "id")){
-			event_perform(ev_step, ev_step_normal);
-		}
+		with(instances_matching(GameCont.temerge_effect_call_step_instance_list, "object_index", CustomObject)) event_perform(ev_step, ev_step_normal);
+		with(instances_matching(GameCont.temerge_effect_call_step_instance_list, "object_index", CustomStep  )) event_perform(ev_step, ev_step_normal);
 		GameCont.temerge_effect_call_step_instance_list = [];
 	}
 	
