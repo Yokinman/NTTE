@@ -4742,8 +4742,8 @@
 		
 		 // Revert Vars:
 		with(_creator){
-			switch(_accuracy){ case undefined: break; default: accuracy = _lastAccuracy * (accuracy / _accuracy); }
-			switch(_team    ){ case undefined: break; default: if(team == _team) team = _lastTeam;                }
+			switch(_accuracy){ case undefined: break; default: if(accuracy == _accuracy) accuracy = _lastAccuracy; else if(_accuracy != 0) accuracy = _lastAccuracy * (accuracy / _accuracy); }
+			switch(_team    ){ case undefined: break; default: if(team     == _team    ) team     = _lastTeam; }
 		}
 	}
 	

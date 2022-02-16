@@ -95,7 +95,9 @@
 		"sticky",
 		"pull",
 		"flare",
-		"rocket"
+		"rocket",
+		"guide",
+		"laser"
 	]){
 		with(["setup", "step", "post_step", "begin_step", "end_step", "draw"]){
 			var _scriptIndex = script_get_index(`temerge_${other}_${self}`);
@@ -3114,11 +3116,14 @@
 	instance_destroy();
 	
 	
-#define temerge_hyper_setup(_instanceList, _hyperSpeed)
+#define temerge_hyper_setup // instanceList, hyperSpeed=1
 	/*
-		Merged projectile hyper effect
+		Merged projectile hyper travel effect
 	*/
 	
+	var	_instanceList = argument[0],
+		_hyperSpeed   = ((argument_count > 1) ? argument[1] : 1);
+		
 	with(_instanceList){
 		 // Hyper Melee:
 		if(speed < 8 && array_find_index([Slash, EnemySlash, GuitarSlash, BloodSlash, EnergySlash, EnergyHammerSlash, LightningSlash, CustomSlash, Shank, EnergyShank], object_index) >= 0){
@@ -3428,13 +3433,14 @@
 	}
 	
 	
-#define temerge_explosion_setup // instanceList, ?explosionInfo
+#define temerge_explosion_setup // instanceList, ?explosionInfo, explosionCount=1
 	/*
 		Merged projectile destruction explosion effect
 	*/
 	
-	var	_instanceList  = argument[0],
-		_explosionInfo = ((argument_count > 1) ? lq_clone(argument[1]) : {});
+	var	_instanceList   = argument[0],
+		_explosionInfo  = ((argument_count > 1) ? lq_clone(argument[1]) : {}),
+		_explosionCount = ((argument_count > 2) ? lq_clone(argument[2]) : 1);
 		
 	 // Default Values:
 	with(["is_small", "is_heavy", "is_blood", "is_toxic", "is_cluster"]){
@@ -3449,7 +3455,9 @@
 			temerge_explosion_list = [];
 			temerge_projectile_add_event(self, "destroy", script_ref_create(temerge_explosion_projectile_destroy));
 		}
-		array_push(temerge_explosion_list, _explosionInfo);
+		repeat(_explosionCount){
+			array_push(temerge_explosion_list, _explosionInfo);
+		}
 	}
 	
 	 // Toxic Explosions:
@@ -3950,11 +3958,15 @@
 	}
 	
 	
-#define temerge_rocket_setup(_instanceList)
+#define temerge_rocket_setup // instanceList, maxSpeedFactor=2, addSpeed=1
 	/*
 		Merged projectile thruster & impact explosion effect
 	*/
 	
+	var	_instanceList   = argument[0],
+		_maxSpeedFactor = ((argument_count > 1) ? argument[1] : 2),
+		_addSpeed       = ((argument_count > 2) ? argument[2] : 1);
+		
 	if("temerge_rocket_frame" not in GameCont){
 		GameCont.temerge_rocket_frame = 0;
 	}
@@ -3962,17 +3974,30 @@
 	with(_instanceList){
 		if("temerge_rocket_frame" not in self){
 			temerge_rocket_frame               = GameCont.temerge_rocket_frame + (5 * (1 - ((friction * 10) / speed)));
-			temerge_rocket_maxspeed            = 0;
-			temerge_rocket_can_add_explosion   = true;
+			temerge_rocket_is_active           = false;
+			temerge_rocket_sound               = -1;
+			temerge_rocket_max_speed           = speed;
+			temerge_rocket_max_speed_factor    = 1;
+			temerge_rocket_add_speed           = 0;
+			temerge_rocket_hit_explosion_count = 1;
 			temerge_rocket_flame_sprite        = ((damage > 20) ? sprNukeFlame : sprRocketFlame);
 			temerge_rocket_flame_xscale        = 0;
 			temerge_rocket_flame_yscale        = 0;
 			temerge_rocket_flame_offset_length = 0;
+			
+			 // Projectile Events:
 			temerge_projectile_add_event(self, "hit",  script_ref_create(temerge_rocket_projectile_hit));
 			temerge_projectile_add_event(self, "wall", script_ref_create(temerge_rocket_projectile_wall));
 		}
-		if(temerge_rocket_maxspeed >= 0){
-			temerge_rocket_maxspeed = max(temerge_rocket_maxspeed, speed * 2);
+		temerge_rocket_max_speed_factor *= _maxSpeedFactor
+		temerge_rocket_add_speed        += _addSpeed;
+		
+		 // Max Acceleration Speed:
+		image_angle -= direction;
+		var _maxSpeed = 16 + bbox_width;
+		image_angle += direction;
+		if(temerge_rocket_max_speed < _maxSpeed){
+			temerge_rocket_max_speed = min(temerge_rocket_max_speed * temerge_rocket_max_speed_factor, _maxSpeed);
 		}
 	}
 	
@@ -3983,8 +4008,21 @@
 	
 	GameCont.temerge_rocket_frame += current_time_scale;
 	
-	var _activeInstanceList = instances_matching_le(_instanceList, "temerge_rocket_frame", GameCont.temerge_rocket_frame);
+	 // Activate Rocket Thrusters:
+	var _activateInstanceList = instances_matching_le(instances_matching(_instanceList, "temerge_rocket_is_active", false), "temerge_rocket_frame", GameCont.temerge_rocket_frame);
+	if(array_length(_activateInstanceList)){
+		with(_activateInstanceList){
+			temerge_rocket_is_active = true;
+			
+			 // Effects:
+			view_shake_at(x, y, 2);
+			temerge_rocket_sound = sound_play_hit(sndRocketFly, 0.2);
+			temerge_projectile_add_event(self, "destroy", script_ref_create(temerge_rocket_sound_projectile_destroy));
+		}
+	}
 	
+	 // Rocket Thrusting:
+	var _activeInstanceList = instances_matching(_instanceList, "temerge_rocket_is_active", true);
 	if(array_length(_activeInstanceList)){
 		var	_spriteIndex             = -1,
 			_spriteOffsetLength      = 0,
@@ -4005,25 +4043,29 @@
 			temerge_rocket_flame_yscale        = min(speed / 6,  1) * image_yscale;
 			temerge_rocket_flame_offset_length = ((_spriteOffsetLength * image_xscale) + (_flameSpriteOffsetLength * temerge_rocket_flame_xscale)) / 2;
 			
-			 // Thrusting:
-			if(temerge_rocket_maxspeed >= 0){
-				 // Smoke:
-				if(temerge_rocket_maxspeed > 0 && chance_ct(10 + damage, 100)){
-					with(instance_create(
-						x + lengthdir_x(temerge_rocket_flame_offset_length, direction) - hspeed_raw,
-						y + lengthdir_y(temerge_rocket_flame_offset_length, direction) - vspeed_raw,
-						Smoke
-					)){
-						depth = other.depth + choose(-1, -2);
-					}
+			 // Smoke:
+			if(speed != 0 && chance_ct(10 + damage, 100)){
+				with(instance_create(
+					x + lengthdir_x(temerge_rocket_flame_offset_length, direction) - hspeed_raw,
+					y + lengthdir_y(temerge_rocket_flame_offset_length, direction) - vspeed_raw,
+					Smoke
+				)){
+					depth = other.depth + choose(-1, -2);
 				}
-				
-				 // Accelerate:
-				if(speed < temerge_rocket_maxspeed){
-					speed = min(speed + current_time_scale, temerge_rocket_maxspeed);
-				}
-				else if(speed > temerge_rocket_maxspeed){
-					temerge_rocket_maxspeed = speed * 2;
+			}
+			
+			 // Accelerate:
+			if(speed < temerge_rocket_max_speed){
+				speed = min(speed + (temerge_rocket_add_speed * current_time_scale), temerge_rocket_max_speed);
+			}
+			
+			 // Update Max Acceleration Speed:
+			else if(speed > temerge_rocket_max_speed){
+				image_angle -= direction;
+				var _maxSpeed = 16 + bbox_width;
+				image_angle += direction;
+				if(temerge_rocket_max_speed < _maxSpeed){
+					temerge_rocket_max_speed = min(temerge_rocket_max_speed * temerge_rocket_max_speed_factor, _maxSpeed);
 				}
 			}
 		}
@@ -4034,7 +4076,7 @@
 		Merged rocket projectiles have a visual thruster flame
 	*/
 	
-	var _flameInstanceList = instances_matching(instances_matching_gt(instances_matching_le(_instanceList, "temerge_rocket_frame", GameCont.temerge_rocket_frame), "temerge_rocket_maxspeed", 0), "visible", true);
+	var _flameInstanceList = instances_matching(instances_matching(_instanceList, "temerge_rocket_is_active", true), "visible", true);
 	
 	if(array_length(_flameInstanceList)){
 		var _flameImageIndex = 0.4 * GameCont.temerge_rocket_frame;
@@ -4078,11 +4120,11 @@
 		temerge_rocket_projectile_wall();
 		
 		 // Activate Explosion:
-		if(temerge_rocket_can_add_explosion){
-			temerge_rocket_can_add_explosion = false;
+		if(temerge_rocket_hit_explosion_count > 0){
 			x -= hspeed_raw;
 			y -= vspeed_raw;
-			temerge_projectile_add_effect(self, "explosion");
+			temerge_projectile_add_effect(self, "explosion", [{}, temerge_rocket_hit_explosion_count]);
+			temerge_rocket_hit_explosion_count = 0;
 			x += hspeed_raw;
 			y += vspeed_raw;
 		}
@@ -4093,11 +4135,13 @@
 		Merged rocket projectiles stop thrusting on impact with a wall
 	*/
 	
-	if(temerge_rocket_maxspeed >= 0){
-		temerge_rocket_maxspeed = -1;
+	 // Kill Thruster:
+	if(temerge_rocket_is_active){
+		 // Stop Sound:
+		audio_stop_sound(temerge_rocket_sound);
 		
-		 // Thruster Flame Particle:
-		if(visible && temerge_rocket_frame <= GameCont.temerge_rocket_frame){
+		 // Particle:
+		if(visible){
 			var _len = temerge_rocket_flame_offset_length - (10 * temerge_rocket_flame_xscale);
 			with(instance_create(
 				x + lengthdir_x(_len, direction),
@@ -4109,6 +4153,133 @@
 				image_yscale = other.temerge_rocket_flame_yscale;
 			}
 		}
+	}
+	
+	 // Stop Thrusting:
+	temerge_rocket_is_active = -1;
+	
+#define temerge_rocket_sound_projectile_destroy
+	/*
+		Merged rocket projectiles stop their thrusting sound on destruction
+	*/
+	
+	audio_stop_sound(temerge_rocket_sound);
+	
+	
+#define temerge_guide_setup(_instanceList, _playerIndex)
+	/*
+		Merged projectile mouse guiding effect
+	*/
+	
+	with(_instanceList){
+		temerge_guide_index = _playerIndex;
+	}
+	
+#define temerge_guide_step(_instanceList)
+	/*
+		Merged guided projectiles turn towards their creator's mouse
+	*/
+	
+	for(var _playerIndex = 0; _playerIndex < maxp; _playerIndex++){
+		if(player_is_active(_playerIndex)){
+			var _guideInstanceList = instances_matching(instances_matching(instances_matching_ne(_instanceList, "speed", 0), "temerge_rocket_is_active", true, null), "temerge_guide_index", _playerIndex);
+			if(array_length(_guideInstanceList)){
+				var	_playerMouseX = mouse_x[_playerIndex],
+					_playerMouseY = mouse_y[_playerIndex];
+					
+				with(_guideInstanceList){
+					var	_turn           = angle_difference(point_direction(x, y, _playerMouseX, _playerMouseY), direction),
+						_turnFactor     = abs(dsin(_turn)) / 12,
+						_turnMoveFactor = -power(_turnFactor * 4, 24 / speed);
+						
+					_turn       *= _turnFactor * current_time_scale;
+					direction   += _turn;
+					image_angle += _turn;
+					x           += hspeed_raw * _turnMoveFactor;
+					y           += vspeed_raw * _turnMoveFactor;
+				}
+			}
+		}
+	}
+	
+	
+#define temerge_laser_setup(_instanceList, _maxDistance)
+	/*
+		Merged projectile beam hitscan effect
+	*/
+	
+	var	_instanceIndex     = 0,
+		_instanceCount     = array_length(_instanceList),
+		_instanceTeam      = undefined,
+		_enemyInstanceList = [];
+		
+	with(_instanceList){
+		var	_moveDistance    = 0,
+			_moveMaxDistance = _maxDistance * (1 - (_instanceIndex / _instanceCount)),
+			_moveAddDistance = max(4, speed),
+			_moveAddXFactor  =  dcos(direction),
+			_moveAddYFactor  = -dsin(direction),
+			_moveStartX      = x,
+			_moveStartY      = y,
+			_meetingEnemy    = false;
+			
+		 // Store Enemy List:
+		if(_instanceTeam != team){
+			_instanceTeam      = team;
+			_enemyInstanceList = instances_matching_ne(hitme, "team", _instanceTeam);
+		}
+		
+		 // Move Ahead to the First Enemy or Wall:
+		while(_moveDistance < _moveMaxDistance){
+			_moveDistance = min(_moveDistance + _moveAddDistance, _moveMaxDistance);
+			x             = _moveStartX + (_moveAddXFactor * _moveDistance);
+			y             = _moveStartY + (_moveAddYFactor * _moveDistance);
+			
+			 // Enemy Collision:
+			if(array_length(_enemyInstanceList) && place_meeting(x, y, hitme)){
+				var _metEnemyInstanceList = call(scr.instances_meeting_instance, self, _enemyInstanceList);
+				if(array_length(_metEnemyInstanceList)){
+					with(_metEnemyInstanceList){
+						if(place_meeting(x, y, other)){
+							_meetingEnemy = true;
+							break;
+						}
+					}
+					if(_meetingEnemy){
+						_moveDistance -= _moveAddDistance;
+						break;
+					}
+				}
+			}
+			
+			 // Wall Collision:
+			if(place_meeting(x, y, Wall)){
+				_moveDistance -= _moveAddDistance;
+				break;
+			}
+		}
+		if(!_meetingEnemy){
+			_moveDistance -= random(_maxDistance / max(2, _instanceCount));
+		}
+		
+		 // Set Position:
+		x = _moveStartX;
+		y = _moveStartY;
+		if(_moveDistance > 0){
+			x        += _moveAddXFactor * _moveDistance;
+			y        += _moveAddYFactor * _moveDistance;
+			xprevious = x;
+			yprevious = y;
+		}
+		
+		 // Particle:
+		if(chance(3, _instanceCount)){
+			with(call(scr.fx, [x, 12], [y, 12], 1, PlasmaTrail)){
+				motion_add(other.direction, 1);
+			}
+		}
+		
+		_instanceIndex++;
 	}
 	
 	
@@ -4191,7 +4362,7 @@
 	
 #define temerge_HyperSlug_setup(_instanceList)
 	 // Hyper:
-	temerge_projectile_add_effect(_instanceList, "hyper", [1]);
+	temerge_projectile_add_effect(_instanceList, "hyper");
 	
 	 // Slug:
 	temerge_Slug_setup(_instanceList);
@@ -4572,9 +4743,7 @@
 		
 		 // Bigger Explosion:
 		if(!_explosion.is_toxic){
-			repeat(2){
-				temerge_projectile_add_effect(_instanceList, "explosion", [_explosion]);
-			}
+			temerge_projectile_add_effect(_instanceList, "explosion", [_explosion, 2]);
 		}
 		
 		 // Longer Delay:
@@ -4608,7 +4777,7 @@
 	
 #define temerge_HyperGrenade_setup(_instanceList)
 	 // Hyper:
-	temerge_projectile_add_effect(_instanceList, "hyper", [1]);
+	temerge_projectile_add_effect(_instanceList, "hyper");
 	
 	 // Grenade:
 	temerge_projectile_add_effect(_instanceList, "grenade", [160]);
@@ -4622,6 +4791,63 @@
 #define temerge_Rocket_setup(_instanceList)
 	 // Delivers a Payload:
 	temerge_projectile_add_effect(_instanceList, "rocket");
+	
+	
+#define temerge_Nuke_fire(_at, _setupInfo)
+	 // Store Creator's Player Index:
+	_setupInfo.player_index = (
+		("index" in _at.creator)
+		? _at.creator.index
+		: -1
+	);
+	
+#define temerge_Nuke_setup(_instanceList, _info)
+	 // Delivers a Big Payload:
+	temerge_projectile_add_effect(_instanceList, "rocket", [1.5, 0.5]);
+	temerge_projectile_add_effect(_instanceList, "explosion");
+	
+	 // Guided by the Mouse:
+	temerge_projectile_add_effect(_instanceList, "guide", [_info.player_index]);
+	
+	
+#define temerge_Laser_fire(_at, _setupInfo)
+	 // Narrow:
+	_at.accuracy *= 0.2;
+	
+	 // Store Distance to First Wall in Path:
+	var	_dis        = 320,
+		_disXFactor =  dcos(image_angle),
+		_disYFactor = -dsin(image_angle),
+		_startX     = xstart,
+		_startY     = ystart,
+		_endX       = _startX + (_dis * _disXFactor),
+		_endY       = _startY + (_dis * _disYFactor),
+		_isWalled   = collision_line(_startX, _startY, _endX, _endY, Wall, false, false);
+		
+	if(_isWalled){
+		while(_dis >= 1){
+			_dis /= 2;
+			if(_isWalled){
+				_endX -= _dis * _disXFactor;
+				_endY -= _dis * _disYFactor;
+			}
+			else{
+				_endX += _dis * _disXFactor;
+				_endY += _dis * _disYFactor;
+			}
+			_isWalled = collision_line(_startX, _startY, _endX, _endY, Wall, false, false);
+		}
+	}
+	
+	_setupInfo.max_distance = point_distance(_startX, _startY, _endX, _endY);
+	
+#define temerge_Laser_setup(_instanceList, _info)
+	 // Beamular:
+	temerge_projectile_add_effect(
+		call(scr.array_shuffle, instances_matching_ne(_instanceList, "speed", 0)),
+		"laser",
+		[_info.max_distance]
+	);
 	
 	
 /// OBJECTS

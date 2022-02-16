@@ -2144,9 +2144,13 @@
 				
 				 // Player:
 				if(instance_is(creator, Player)){
+					var	_team     = team,
+						_accuracy = accuracy,
+						_primary  = primary;
+						
 					with(creator){
 						 // Steroids:
-						if(!other.primary){
+						if(!_primary){
 							call(scr.player_swap, self);
 							specfiring = true;
 						}
@@ -2155,16 +2159,19 @@
 						var	_lastTeam     = team,
 							_lastAccuracy = accuracy;
 							
-						team     = other.team;
-						accuracy = other.accuracy;
+						team     = _team;
+						accuracy = _accuracy;
 						
 						call(scr.pass, [self, other], scr.weapon_get, "fire", _wep);
 						
-						if(team == other.team) team = _lastTeam;
-						accuracy = _lastAccuracy * (accuracy / other.accuracy);
+						if(team     == _team    ) team     = _lastTeam;
+						if(accuracy == _accuracy) accuracy = _lastAccuracy;
+						else if(_accuracy != 0){
+							accuracy = _lastAccuracy * (accuracy / _accuracy);
+						}
 						
 						 // Steroids:
-						if(!other.primary){
+						if(!_primary){
 							specfiring = false;
 							call(scr.player_swap, self);
 						}
@@ -2216,30 +2223,37 @@
 					if(variable_instance_get(creator, (primary ? "wep" : "bwep"), wep) == wep){
 						 // Player:
 						if(instance_is(creator, Player)){
+							var	_team     = team,
+								_accuracy = accuracy,
+								_primary  = primary;
+								
 							with(creator){
 								 // Steroids:
-								if(!other.primary){
+								if(!_primary){
 									call(scr.player_swap, self);
 									specfiring = true;
 								}
 								
 								 // Fire:
-								var	_type = weapon_get_type(other.wep),
-									_cost = weapon_get_cost(other.wep),
-									_rads = weapon_get_rads(other.wep),
+								var	_type = weapon_get_type(wep),
+									_cost = weapon_get_cost(wep),
+									_rads = weapon_get_rads(wep),
 									_ammo = ammo[_type];
 									
 								if(infammo != 0 || (_ammo >= _cost && GameCont.rad >= _rads)){
 									var	_lastTeam     = team,
 										_lastAccuracy = accuracy;
 										
-									team     = other.team;
-									accuracy = other.accuracy;
+									team     = _team;
+									accuracy = _accuracy;
 									
 									player_fire(other.direction);
 									
-									if(team == other.team) team = _lastTeam;
-									accuracy = _lastAccuracy * (accuracy / other.accuracy);
+									if(team     == _team    ) team     = _lastTeam;
+									if(accuracy == _accuracy) accuracy = _lastAccuracy;
+									else if(_accuracy != 0){
+										accuracy = _lastAccuracy * (accuracy / _accuracy);
+									}
 								}
 								
 								 // Low Ammo:
@@ -2258,7 +2272,7 @@
 								}
 								
 								 // Steroids:
-								if(!other.primary){
+								if(!_primary){
 									specfiring = false;
 									call(scr.player_swap, self);
 								}
