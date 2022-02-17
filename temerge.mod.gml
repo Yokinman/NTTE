@@ -97,7 +97,8 @@
 		"flare",
 		"rocket",
 		"guide",
-		"laser"
+		"laser",
+		"plasma"
 	]){
 		with(["setup", "step", "post_step", "begin_step", "end_step", "draw"]){
 			var _scriptIndex = script_get_index(`temerge_${other}_${self}`);
@@ -2424,26 +2425,38 @@
 									}
 									
 									 // Call Event Scripts:
-									with(temerge_destroy_event_ref_list){
-										call(scr.pass, other, self);
-										if(!instance_exists(other)){
-											break;
-										}
-									}
-									
-									 // Prevent Merged Effect Recursion:
-									for(var _id = instance_max - 1; _id >= _minID; _id--){
-										if("team" in _id && "creator" in _id){
-											if("can_temerge" not in _id){
-												_id.can_temerge = false;
+									if(!place_meeting(x, y, PortalShock)){
+										with(temerge_destroy_event_ref_list){
+											call(scr.pass, other, self);
+											if(!instance_exists(other)){
+												break;
 											}
-											if(!_id.can_temerge){
-												_id.team = round(_id.team);
+										}
+										
+										 // Prevent Merged Effect Recursion:
+										for(var _id = instance_max - 1; _id >= _minID; _id--){
+											if("team" in _id && "creator" in _id){
+												if("can_temerge" not in _id){
+													_id.can_temerge = false;
+												}
+												if(!_id.can_temerge){
+													_id.team = round(_id.team);
+												}
 											}
 										}
 									}
 									
 									 // Delete:
+									switch(object_index){
+										case LightningBall:
+										case FlameBall:
+										case BloodBall:
+											var _snd = variable_instance_get(self, "snd");
+											if(instance_number(object_index) <= 1 || _snd != asset_get_index(audio_get_name(_snd))){
+												sound_stop(_snd);
+											}
+											break;
+									}
 									instance_delete(self);
 								}
 							}
@@ -2910,11 +2923,11 @@
 	*/
 	
 	with(_instanceList){
-		if("temerge_flame_amount" not in self){
-			temerge_flame_amount = [0];
+		if("temerge_flame" not in self){
+			temerge_flame = { "amount": 0 };
 			temerge_projectile_add_event(self, "destroy", script_ref_create(temerge_flame_projectile_destroy));
 		}
-		temerge_flame_amount[0]++;
+		temerge_flame.amount++;
 	}
 	
 #define temerge_flame_step(_instanceList)
@@ -2928,7 +2941,7 @@
 		with(_releaseInstanceList){
 			_instanceList = instances_matching_ne(_instanceList, "id", id);
 			temerge_flame_projectile_destroy();
-			temerge_flame_amount[@ 0] = 0;
+			temerge_flame.amount = 0;
 		}
 	}
 	
@@ -2939,8 +2952,8 @@
 		Flame projectiles release their flame on destruction
 	*/
 	
-	if(temerge_flame_amount[0] > 0){
-		repeat(temerge_flame_amount[0]){
+	if(temerge_flame.amount > 0){
+		repeat(temerge_flame.amount){
 			with(call(scr.projectile_create,
 				x,
 				y,
@@ -4205,7 +4218,7 @@
 	
 #define temerge_laser_setup(_instanceList, _maxDistance)
 	/*
-		Merged projectile beam hitscan effect
+		Merged projectile laser beam hitscan effect
 	*/
 	
 	var	_instanceIndex     = 0,
@@ -4280,6 +4293,98 @@
 		}
 		
 		_instanceIndex++;
+	}
+	
+	
+#define temerge_plasma_setup(_instanceList)
+	/*
+		Merged projectile plasma destruction explosion effect
+	*/
+	
+	with(_instanceList){
+		if("temerge_plasma" not in self){
+			temerge_plasma = { "amount": 0 };
+			temerge_projectile_add_event(self, "destroy", script_ref_create(temerge_plasma_projectile_destroy));
+		}
+		temerge_plasma.amount++;
+	}
+	
+#define temerge_plasma_projectile_destroy
+	/*
+		Merged plasma projectiles create plasma explosions on destruction
+	*/
+	
+	if((object_index != Lightning && object_index != EnemyLightning) || (ammo % 4) < 1){
+		var	_explosionX        = x,
+			_explosionY        = y,
+			_explosionMoveAng  = random(360),
+			_explosionMoveTurn = 20 * choose(-1, 1),
+			_explosionCount    = abs(damage / 15) + (temerge_plasma.amount - 1);
+			
+		if(_explosionCount > 1){
+			 // Get Out of Walls:
+			if(position_meeting(_explosionX, _explosionY, Wall)){
+				with(call(scr.instance_nearest_bbox, x, y, Floor)){
+					_explosionMoveAng  = point_direction(other.x, other.y, bbox_center_x, bbox_center_y);
+					_explosionMoveTurn = 0;
+				}
+			}
+			
+			 // Move Towards Nearest Enemy:
+			else with(call(scr.instance_nearest_array, x, y, instances_matching_ne(hitme, "team", team, 0))){
+				if(!collision_line(x, y, other.x, other.y, Wall, false, false)){
+					_explosionMoveAng   = point_direction(other.x, other.y, x, y);
+					_explosionMoveTurn *= 0.5;
+				}
+			}
+		}
+		
+		 // Plasma Explosion:
+		for(var _explosionIndex = 0; _explosionIndex < _explosionCount; _explosionIndex++){
+			with(call(scr.projectile_create, _explosionX, _explosionY, PlasmaImpact)){
+				image_xscale = lerp(0.5, 1, min(_explosionCount - _explosionIndex, 1));
+				image_yscale = image_xscale;
+			}
+			
+			 // Offset Explosion Position:
+			for(var _explosionMoveIndex = 0; _explosionMoveIndex < 2; _explosionMoveIndex++){
+				var	_explosionMoveLen = lerp(8, 16, min(_explosionCount - (_explosionIndex + _explosionMoveIndex), 1)),
+					_explosionMoveX   = lengthdir_x(_explosionMoveLen, _explosionMoveAng),
+					_explosionMoveY   = lengthdir_y(_explosionMoveLen, _explosionMoveAng);
+					
+				 // Bounce Off Walls:
+				if(
+					position_meeting(_explosionX + _explosionMoveX, _explosionY + _explosionMoveY, Wall)
+					&& !position_meeting(_explosionX, _explosionY, Wall)
+				){
+					if(position_meeting(_explosionX + _explosionMoveX, _explosionY, Wall)){
+						_explosionMoveX *= -1;
+					}
+					else if(position_meeting(_explosionX, _explosionY + _explosionMoveY, Wall)){
+						_explosionMoveY *= -1;
+					}
+					else{
+						_explosionMoveX *= -1;
+						_explosionMoveY *= -1;
+					}
+				}
+				_explosionMoveAng = point_direction(0, 0, _explosionMoveX, _explosionMoveY);
+				
+				 // Move Ahead:
+				_explosionX       += _explosionMoveX;
+				_explosionY       += _explosionMoveY;
+				_explosionMoveAng += _explosionMoveTurn + orandom(60);
+			}
+			_explosionMoveTurn += orandom(30);
+		}
+		
+		 // Break Walls:
+		if(_explosionCount > 2){
+			instance_create(x, y, PortalClear);
+		}
+		
+		 // Sound:
+		sound_play_hit_big(((_explosionCount > 2) ? sndPlasmaBigExplode : sndPlasmaHit), 0.3);
 	}
 	
 	
@@ -4848,6 +4953,65 @@
 		"laser",
 		[_info.max_distance]
 	);
+	
+	
+#define temerge_Lightning_setup(_instanceList)
+	 // Zappy:
+	var _instanceCount = array_length(_instanceList);
+	with(_instanceList){
+		if(chance(2, _instanceCount)){
+			with(call(scr.fx, x, y, 0.5, PlasmaTrail)){
+				sprite_index = sprLightning;
+				image_xscale = random(3);
+				image_yscale = random(1);
+				image_angle  = other.direction + orandom(30);
+				motion_add(other.direction, 0.5);
+			}
+		}
+	}
+	
+	
+#define temerge_PlasmaBall_setup(_instanceList)
+	 // Explodes Into Plasma:
+	temerge_projectile_add_effect(_instanceList, "plasma");
+	
+	 // Has Less Friction:
+	with(_instanceList){
+		friction /= 3;
+	}
+	
+	
+#define temerge_PlasmaBig_setup(_instanceList)
+	 // Big:
+	temerge_projectile_add_scale(_instanceList, 0.2);
+	temerge_projectile_scale_damage(_instanceList, 3.5);
+	temerge_projectile_add_force(_instanceList, 4);
+	
+	 // Plasma:
+	temerge_PlasmaBall_setup(_instanceList);
+	
+	
+#define temerge_PlasmaHuge_setup(_instanceList)
+	 // Huge:
+	temerge_projectile_add_scale(_instanceList, 0.4);
+	temerge_projectile_scale_damage(_instanceList, 6.5);
+	temerge_projectile_add_force(_instanceList, 4);
+	
+	 // Plasma:
+	temerge_PlasmaBall_setup(_instanceList);
+	
+#define temerge_PlasmaHuge_destroy
+	 // Break Walls:
+	instance_create(x, y, PortalClear);
+	
+	 // Release Plasma Balls:
+	var	_ballCount = ceil(damage / 13);
+	if(_ballCount > 0){
+		var _ballAngle = random(360);
+		for(var _ballDirection = _ballAngle; _ballDirection < _ballAngle + 360; _ballDirection += (360 / _ballCount)){
+			call(scr.projectile_create, x, y, PlasmaBall, _ballDirection, 2);
+		}
+	}
 	
 	
 /// OBJECTS

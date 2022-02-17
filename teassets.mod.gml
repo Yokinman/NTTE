@@ -1854,7 +1854,7 @@
 				},
 				
 				"beetle" : {
-					skin : 1,
+					skin : 2,
 					sprt : [
 						["Loadout",       2, 16,  16, true],
 						["Map",           1, 10,  10, true],
