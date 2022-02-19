@@ -2442,7 +2442,7 @@
 	
 	return noone;
 	
-#define data_clone(_value, _depth)
+#define data_clone // value, cloneDepth=infinity, ?cloneValueMap
 	/*
 		Returns an exact copy of the given value, and any data stored within the value based on the given depth
 		
@@ -2453,79 +2453,120 @@
 			data_clone(list, 2) == Returns a clone of the main array, sub array, surface, and ds_list
 	*/
 	
-	if(_depth >= 0){
-		_depth--;
+	var	_value         = argument[0],
+		_cloneDepth    = ((argument_count > 1) ? argument[1] : infinity),
+		_cloneValueMap = ((argument_count > 2) ? argument[2] : { "key_list": [], "list": [] });
+		
+	if(_cloneDepth >= 0){
+		_cloneDepth--;
+		
+		 // Predefined Value:
+		var _cloneValueIndex = array_find_index(_cloneValueMap.key_list, _value);
+		if(_cloneValueIndex >= 0){
+			return _cloneValueMap.list[_cloneValueIndex];
+		}
 		
 		 // Array:
 		if(is_array(_value)){
-			var _clone = array_clone(_value);
+			var _cloneValue = array_clone(_value);
 			
-			if(_depth >= 0){
+			 // Prevent Recursion:
+			array_push(_cloneValueMap.key_list, _value);
+			array_push(_cloneValueMap.list,     _cloneValue);
+			
+			 // Clone Sub-Values:
+			if(_cloneDepth >= 0){
 				for(var i = array_length(_value) - 1; i >= 0; i--){
-					_clone[i] = data_clone(_value[i], _depth);
+					_cloneValue[i] = data_clone(_value[i], _cloneDepth, _cloneValueMap);
 				}
 			}
 			
-			return _clone;
+			return _cloneValue;
 		}
 		
 		 // LWO:
 		if(is_object(_value)){
-			var _clone = lq_clone(_value);
+			var _cloneValue = lq_clone(_value);
 			
-			if(_depth >= 0){
+			 // Prevent Recursion:
+			array_push(_cloneValueMap.key_list, _value);
+			array_push(_cloneValueMap.list,     _cloneValue);
+			
+			 // Clone Sub-Values:
+			if(_cloneDepth >= 0){
 				for(var i = lq_size(_value) - 1; i >= 0; i--){
-					lq_set(_clone, lq_get_key(_value, i), data_clone(lq_get_value(_value, i), _depth));
+					lq_set(_cloneValue, lq_get_key(_value, i), data_clone(lq_get_value(_value, i), _cloneDepth, _cloneValueMap));
 				}
 			}
 			
-			return _clone;
+			return _cloneValue;
 		}
 		
 		/* GM data structures are tied to mod files
 		 // DS List:
 		if(ds_list_valid(_value)){
-			var _clone = ds_list_clone(_value);
+			var _cloneValue = ds_list_clone(_value);
 			
-			if(_depth >= 0){
+			 // Prevent Recursion:
+			array_push(_cloneValueMap.key_list, _value);
+			array_push(_cloneValueMap.list,     _cloneValue);
+			
+			 // Clone Sub-Values:
+			if(_cloneDepth >= 0){
 				for(var i = ds_list_size(_value) - 1; i >= 0; i--){
-					_clone[| i] = data_clone(_value[| i], _depth);
+					_cloneValue[| i] = data_clone(_value[| i], _cloneDepth, _cloneValueMap);
 				}
 			}
 			
-			return _clone;
+			return _cloneValue;
 		}
 		
 		 // DS Map:
 		if(ds_map_valid(_value)){
-			var _clone = ds_map_create();
+			var _cloneValue = ds_map_create();
 			
+			 // Prevent Recursion:
+			array_push(_cloneValueMap.key_list, _value);
+			array_push(_cloneValueMap.list,     _cloneValue);
+			
+			 // Clone Sub-Values:
 			with(ds_map_keys(_value)){
-				_clone[? self] = data_clone(_value[? self], _depth);
+				_cloneValue[? self] = data_clone(_value[? self], _cloneDepth, _cloneValueMap);
 			}
 			
-			return _clone;
+			return _cloneValue;
 		}
 		
 		 // DS Grid:
 		if(ds_grid_valid(_value)){
-			var	_w     = ds_grid_width(_value),
-				_h     = ds_grid_height(_value),
-				_clone = ds_grid_create(_w, _h);
+			var	_valueWidth  = ds_grid_width(_value),
+				_valueHeight = ds_grid_height(_value),
+				_cloneValue  = ds_grid_create(_valueWidth, _valueHeight);
 				
-			for(var _x = _w - 1; _x >= 0; _x--){
-				for(var _y = _h - 1; _y >= 0; _y--){
-					_value[# _x, _y] = data_clone(_value[# _x, _y], _depth);
+			 // Prevent Recursion:
+			array_push(_cloneValueMap.key_list, _value);
+			array_push(_cloneValueMap.list,     _cloneValue);
+			
+			 // Clone Sub-Values:
+			for(var _valueX = _valueWidth - 1; _valueX >= 0; _valueX--){
+				for(var _valueY = _valueHeight - 1; _valueY >= 0; _valueY--){
+					_cloneValue[# _valueX, _valueY] = data_clone(_value[# _valueX, _valueY], _cloneDepth, _cloneValueMap);
 				}
 			}
 			
-			return _clone;
+			return _cloneValue;
 		}
 		*/
 		
 		 // Surface:
 		if(surface_exists(_value)){
-			return surface_clone(_value);
+			var _cloneValue = surface_clone(_value);
+			
+			 // Prevent Recursion:
+			array_push(_cloneValueMap.key_list, _value);
+			array_push(_cloneValueMap.list,     _cloneValue);
+			
+			return _cloneValue;
 		}
 	}
 	
@@ -3731,7 +3772,7 @@
 	var _wrap = {
 		"wep"     : _wep,
 		"lwo"     : is_object(_wep),
-	//	"scr_use" : {},
+		"scr_use" : {},
 		"scr_ref" : {}
 	};
 	

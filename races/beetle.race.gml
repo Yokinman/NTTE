@@ -226,12 +226,12 @@
 		if(canspec && player_active){
 			if(button_pressed(index, "spec") || usespec > 0){
 				 // Merge Weapons:
-				wep  = call(scr.temerge_create_weapon, wep, bwep);
+				wep  = call(scr.weapon_add_temerge, wep, bwep);
 				bwep = wep_none;
 				
 				 // Take Health:
 				var _mergeWepDepth = 1;
-				for(var _wep = wep; (is_object(_wep) && "temerge" in _wep); _wep = _wep.temerge.wep[0]){
+				for(var _wep = wep; call(scr.weapon_has_temerge, _wep); _wep = call(scr.weapon_temerge_get_weapon, _wep)){
 					_mergeWepDepth++;
 				}
 				chickendeaths += _mergeWepDepth;
