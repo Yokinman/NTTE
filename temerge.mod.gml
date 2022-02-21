@@ -7,7 +7,7 @@
 	 // Store Script References:
 	with([
 		weapon_set_temerge, weapon_add_temerge, weapon_has_temerge, weapon_temerge_is_part, weapon_temerge_get_weapon, weapon_temerge_set_weapon, weapon_temerge_add_weapon, temerge_weapon_set_event,
-		projectile_add_temerge_event, projectile_add_temerge_effect, projectile_add_temerge_scale, projectile_add_temerge_bloom, projectile_scale_temerge_damage, projectile_add_temerge_force
+		projectile_temerge_add_event, projectile_temerge_add_effect, projectile_temerge_add_scale, projectile_temerge_add_bloom, projectile_temerge_scale_damage, projectile_temerge_add_force
 	]){
 		lq_set(scr, script_get_name(self), script_ref_create(self));
 	}
@@ -1120,7 +1120,7 @@
 	
 	 // Set Weapon, Call Script, & Capture Instances:
 	if(instance_exists(_creator)){
-		var	_minID          = (_canWrapEvents ? instance_max : undefined),
+		var	_minInstanceID  = (_canWrapEvents ? instance_max : undefined),
 			_frontWep       = _wepXmerge_wep,
 			_creatorHasWep  = (_creator.wep  == _wep),
 			_creatorHasBWep = (_creator.bwep == _wep);
@@ -1143,12 +1143,12 @@
 		
 		 // Wrap Events of New Instances:
 		if(_canWrapEvents){
-			for(var _id = instance_max - 1; _id >= _minID; _id--){
-				if("object_index" in _id){
-					var _instObject = _id.object_index;
+			for(var _instanceID = instance_max - 1; _instanceID >= _minInstanceID; _instanceID--){
+				if("object_index" in _instanceID){
+					var _instObject = _instanceID.object_index;
 					if(ds_map_exists(global.obj_event_varname_list_map, _instObject)){
 						with(global.obj_event_varname_list_map[? _instObject]){
-							var _instEventRef = variable_instance_get(_id, self);
+							var _instEventRef = variable_instance_get(_instanceID, self);
 							if(array_length(_instEventRef) >= 3){
 								var _instEventWrapRef = script_ref_create(
 									temerge_weapon_call_event,
@@ -1159,7 +1159,7 @@
 									self
 								);
 								array_push(_instEventWrapRef, _instEventWrapRef);
-								variable_instance_set(_id, self, _instEventWrapRef);
+								variable_instance_set(_instanceID, self, _instEventWrapRef);
 							}
 						}
 					}
@@ -1263,7 +1263,8 @@
 	 // Store Initial Firing Values:
 	var _fire = {
 		"last_vars"                  : undefined,
-		"has_shot"                   : true,
+		"main_vars"                  : undefined,
+		"has_shot"                   : false,
 		"shot_count"                 : 0,
 		"shot_replace_count"         : 0,
 		"shot_replace_min"           : max(1, _stockCost),
@@ -1286,49 +1287,36 @@
 		"shake"                      : [],
 		"opt_shake"                  : UberCont.opt_shake,
 		"opt_freeze"                 : UberCont.opt_freeze,
-		"max_id"                     : instance_max,
-		"max_sound_id"               : sound_play_pitchvol(0, 0, 0)
+		"min_instance_id"            : instance_max,
+		"min_sound_id"               : sound_play_pitchvol(0, 0, 0)
 	};
-	sound_stop(_fire.max_sound_id);
+	sound_stop(_fire.min_sound_id);
 	for(var i = 0; i < maxp; i++){
 		array_push(_fire.shake, view_shake[i]);
 	}
 	_merge.fire_vars = _fire;
-	if("main_fire_vars" not in _merge){
-		_merge.main_fire_vars = _fire;
-		
-		 // Return Ammo Cost:
-		if(infammo == 0){
-			if(instance_is(self, Player)){
-				ammo[_wepType] += _wepCost;
-			}
-			GameCont.rad += _wepRads;
+	if("last_fire_vars" in _merge){
+		var	_lastFire = _merge.last_fire_vars,
+			_mainFire = _lastFire.main_vars;
 			
-			 // Update Stored Values:
-			_fire.ammo = array_clone(ammo);
-			_fire.rads = GameCont.rad;
-		}
-	}
-	else{
-		var _mainFire = _merge.main_fire_vars;
+		_fire.last_vars = _lastFire;
+		_fire.main_vars = _mainFire;
 		
 		 // Update Initial Values:
 		if(_fire.frame > _mainFire.frame){
-			_mainFire.frame        = _fire.frame;
-			_mainFire.x            = _fire.x;
-			_mainFire.y            = _fire.y;
-			_mainFire.hspeed       = _fire.hspeed;
-			_mainFire.vspeed       = _fire.vspeed;
-			_mainFire.wepangle     = _fire.wepangle;
-			_mainFire.wkick        = _fire.wkick;
-			_mainFire.reload       = _fire.reload;
-			_mainFire.ammo         = _fire.ammo;
-			_mainFire.rads         = _fire.rads;
-			_mainFire.shake        = _fire.shake;
-			_mainFire.opt_shake    = _fire.opt_shake;
-			_mainFire.opt_freeze   = _fire.opt_freeze;
-			_mainFire.max_id       = _fire.max_id;
-			_mainFire.max_sound_id = _fire.max_sound_id;
+			_mainFire.frame      = _fire.frame;
+			_mainFire.x          = _fire.x;
+			_mainFire.y          = _fire.y;
+			_mainFire.hspeed     = _fire.hspeed;
+			_mainFire.vspeed     = _fire.vspeed;
+			_mainFire.wepangle   = _fire.wepangle;
+			_mainFire.wkick      = _fire.wkick;
+			_mainFire.reload     = _fire.reload;
+			_mainFire.ammo       = _fire.ammo;
+			_mainFire.rads       = _fire.rads;
+			_mainFire.shake      = _fire.shake;
+			_mainFire.opt_shake  = _fire.opt_shake;
+			_mainFire.opt_freeze = _fire.opt_freeze;
 		}
 		
 		 // Restore Initial Values:
@@ -1341,6 +1329,21 @@
 			for(var i = 0; i < maxp; i++){
 				view_shake[i] = _mainFire.shake[i];
 			}
+		}
+	}
+	else{
+		_fire.main_vars = _fire;
+		
+		 // Return Ammo Cost:
+		if(infammo == 0){
+			if(instance_is(self, Player)){
+				ammo[_wepType] += _wepCost;
+			}
+			GameCont.rad += _wepRads;
+			
+			 // Update Stored Values:
+			_fire.ammo = array_clone(ammo);
+			_fire.rads = GameCont.rad;
 		}
 	}
 	
@@ -1373,15 +1376,19 @@
 	if(_merge != undefined && "fire_vars" in _merge){
 		var _fire = _merge.fire_vars;
 		
+		 // Store Latest Asset Instances:
+		_fire.max_instance_id = instance_max;
+		_fire.max_sound_id    = sound_play_pitchvol(0, 0, 0);
+		sound_stop(_fire.max_sound_id);
+		
 		 // Check if a Teamed Object Was Shot:
-		_fire.has_shot = false;
-		if(instance_exists(projectile) && projectile.id > _fire.max_id){
+		if(instance_exists(projectile) && projectile.id > _fire.min_instance_id){
 			_fire.has_shot = true;
 		}
 		else{
-			var _maxID = instance_max;
-			for(var _id = _fire.max_id; _id < _maxID; _id++){
-				if("team" in _id){
+			var _maxInstanceID = _fire.max_instance_id;
+			for(var _instanceID = _fire.min_instance_id; _instanceID < _maxInstanceID; _instanceID++){
+				if("team" in _instanceID){
 					_fire.has_shot = true;
 					break;
 				}
@@ -1390,8 +1397,8 @@
 		
 		 // Has Shot Teamed Objects:
 		if(_fire.has_shot){
-			if("main_fire_vars" in _merge){
-				var _mainFire = _merge.main_fire_vars;
+			if(_fire.main_vars != undefined){
+				var _mainFire = _fire.main_vars;
 				
 				 // Only Flip Melee Angle After Gaps in Firing:
 				if(sign(wepangle) != sign(_mainFire.wepangle)){
@@ -1429,52 +1436,54 @@
 		}
 		
 		 // Hasn't Shot Teamed Objects:
-		else if("main_fire_vars" in _merge){
-			var _mainFire = _merge.main_fire_vars;
-			
-			 // Muffle Firing Sounds from Stock Weapon:
-			var _maxSoundID = _fire.max_sound_id;
-			for(var _soundID = _mainFire.max_sound_id; _soundID < _maxSoundID; _soundID++){
-				if(audio_is_playing(_soundID)){
-					var _soundIndex = asset_get_index(audio_get_name(_soundID));
-					if(audio_exists(_soundIndex)){
-						if(ds_map_exists(global.sound_muffle_map, _soundIndex)){
-							var _muffle = global.sound_muffle_map[? _soundIndex];
-							_muffle.sound_id = _soundID;
-							if(_muffle.frame < current_frame){
-								_muffle.frame = current_frame;
-								audio_sound_gain(
-									_soundIndex,
-									lerp(audio_sound_get_gain(_soundIndex), _muffle.sound_gain * 0.1, 0.2),
-									0
-								);
+		else{
+			 // Undo Asset Instances Created by Stock Weapon:
+			for(var _lastFire = _fire.last_vars; _lastFire != undefined; _lastFire = _lastFire.last_vars){
+				 // Muffle Firing Sounds:
+				var _maxSoundID = _lastFire.max_sound_id;
+				for(var _soundID = _lastFire.min_sound_id; _soundID < _maxSoundID; _soundID++){
+					if(audio_is_playing(_soundID)){
+						var _soundIndex = asset_get_index(audio_get_name(_soundID));
+						if(audio_exists(_soundIndex)){
+							if(ds_map_exists(global.sound_muffle_map, _soundIndex)){
+								var _muffle = global.sound_muffle_map[? _soundIndex];
+								_muffle.sound_id = _soundID;
+								if(_muffle.frame < current_frame){
+									_muffle.frame = current_frame;
+									audio_sound_gain(
+										_soundIndex,
+										lerp(audio_sound_get_gain(_soundIndex), _muffle.sound_gain * 0.1, 0.2),
+										0
+									);
+								}
 							}
+							else global.sound_muffle_map[? _soundIndex] = {
+								"sound_id"   : _soundID,
+								"sound_gain" : audio_sound_get_gain(_soundIndex),
+								"frame"      : current_frame
+							};
 						}
-						else global.sound_muffle_map[? _soundIndex] = {
-							"sound_id"   : _soundID,
-							"sound_gain" : audio_sound_get_gain(_soundIndex),
-							"frame"      : current_frame
-						};
 					}
+				}
+				
+				 // Delete Instances:
+				var _maxInstanceID = _lastFire.max_instance_id;
+				for(var _instanceID = _lastFire.min_instance_id; _instanceID < _maxInstanceID; _instanceID++){
+					instance_delete(_instanceID);
 				}
 			}
 			
-			 // Delete Effects from Stock Weapon:
-			if(instance_exists(Effect)){
-				var _maxID = _fire.max_id;
-				for(var _id = _mainFire.max_id; _id < _maxID; _id++){
-					if(instance_is(_id, Effect)){
-						instance_delete(_id);
-					}
+			 // Revert Values Set by Stock Weapon:
+			if(_fire.main_vars != undefined){
+				var _mainFire = _fire.main_vars;
+				
+				 // Revert Melee Angle:
+				wepangle = abs(wepangle) * sign(_mainFire.wepangle);
+				
+				 // Revert Weapon Kick:
+				if(wkick == 0){
+					wkick = _mainFire.wkick;
 				}
-			}
-			
-			 // Revert Melee Angle:
-			wepangle = abs(wepangle) * sign(_mainFire.wepangle);
-			
-			 // Revert Weapon Kick:
-			if(wkick == 0){
-				wkick = _mainFire.wkick;
 			}
 		}
 		
@@ -1549,9 +1558,9 @@
 			}
 			
 			 // Replace Projectiles w/ Firing:
-			if("main_fire_vars" in _lastMerge){
+			if("fire_vars" in _lastMerge){
 				var	_lastMergeFire      = _lastMerge.fire_vars,
-					_mainMergeFire      = _lastMerge.main_fire_vars,
+					_mainMergeFire      = _lastMerge.fire_vars.main_vars,
 					_rawWep             = undefined,
 					_wepSprite          = undefined,
 					_stockSprite        = undefined,
@@ -1589,10 +1598,10 @@
 						}
 						
 						 // Replace Projectile:
-						if(_mainMergeFire.has_shot){
+						if(_lastMergeFire.has_shot){
 							if(_lastMergeFire.shot_replace_count < _lastMergeFire.shot_replace_min + floor(logn(_lastMergeFire.shot_replace_base, 1 + _lastMergeFire.shot_count))){
 								var	_merge = {
-										"main_fire_vars" : _mainMergeFire,
+										"last_fire_vars" : _lastMergeFire,
 										"on_fire"        : (("temerge_on_fire"      in self) ? temerge_on_fire      : undefined),
 										"on_setup"       : (("temerge_on_setup"     in self) ? temerge_on_setup     : undefined),
 										"on_hit"         : (("temerge_on_hit"       in self) ? temerge_on_hit       : undefined),
@@ -1699,8 +1708,10 @@
 											
 											 // Not Enough Ammo & Rads to Fire:
 											else{
-												_mainMergeFire.has_shot = false;
-												_canFire                = false;
+												_canFire = false;
+												for(var _mergeFire = _lastMergeFire; _mergeFire != undefined; _mergeFire = _mergeFire.last_vars){
+													_mergeFire.has_shot = false;
+												}
 											}
 										}
 									}
@@ -1780,18 +1791,10 @@
 												call(scr.FireCont_end, self);
 											}
 											
-											 // Update Firing Vars:
-											if("fire_vars" in _merge){
-												var _mergeFire = _merge.fire_vars;
-												
-												 // Link Together:
-												if(_mergeFire.last_vars == undefined){
-													_mergeFire.last_vars = _lastMergeFire;
-												}
-												
-												 // Stop Firing if Nothing Was Shot:
-												if(!_mergeFire.has_shot){
-													_mainMergeFire.has_shot = false;
+											 // Stop Firing if Nothing Was Shot:
+											if("fire_vars" in _merge && !_merge.fire_vars.has_shot){
+												for(var _mergeFire = _lastMergeFire; _mergeFire != undefined; _mergeFire = _mergeFire.last_vars){
+													_mergeFire.has_shot = false;
 												}
 											}
 										}
@@ -1854,9 +1857,6 @@
 		
 		 // Apply Merged Projectile Effects:
 		else if(_lastMerge != undefined && "on_setup" in _lastMerge){
-			 // Ignore Manually Excluded Instances:
-			_instanceList = instances_matching_ne(_instanceList, "can_temerge", false);
-			
 			 // Ignore Instances That Already Have the Effects:
 			with(_instanceList){
 				if("temerge_vars_list" not in self){
@@ -1880,13 +1880,13 @@
 							case PlasmaBig:
 							case PlasmaHuge:
 							
-								projectile_add_temerge_effect(self, "fix_plasma_speed_factor");
+								projectile_temerge_add_effect(self, "fix_plasma_speed_factor");
 								
 								break;
 								
 							case Seeker:
 							
-								projectile_add_temerge_effect(self, "fix_seeker_speed_factor");
+								projectile_temerge_add_effect(self, "fix_seeker_speed_factor");
 								
 								break;
 								
@@ -1901,7 +1901,7 @@
 									}
 								}
 								else{
-									projectile_add_temerge_effect(self, "fix_rocket_speed_factor");
+									projectile_temerge_add_effect(self, "fix_rocket_speed_factor");
 								}
 								
 								break;
@@ -1952,7 +1952,7 @@
 					_eventRef  = lq_get(_lastMerge, `on_${_eventName}`);
 					
 				if(_eventRef != undefined){
-					projectile_add_temerge_event(_instanceList, _eventName, _eventRef);
+					projectile_temerge_add_event(_instanceList, _eventName, _eventRef);
 				}
 			}
 		}
@@ -1994,12 +1994,19 @@
 		if(_effectVars != undefined){
 			var _effectInstanceList = _effectVars.instance_list;
 			if(array_length(_effectInstanceList)){
-				var _minID = instance_max;
+				 // Prune Instance List:
+				_effectInstanceList = instances_matching_ne(_effectInstanceList, "id");
+				
+				 // Untag Instance Teams:
+				var _effectTagInstanceList = instances_matching(_effectInstanceList, "temerge_event_last_team", undefined);
+				with(_effectTagInstanceList){
+					temerge_event_last_team = team;
+					team = round(team);
+				}
 				
 				 // Call Event Scripts:
 				with(global.temerge_effect_event_script_list_table[? _effectName][? _effectEventName]){
-					 // Prune Instance List:
-					_effectInstanceList = instances_matching_ne(_effectInstanceList, "id");
+					 // Clear Instance List:
 					_effectVars.instance_list = [];
 					
 					 // Call Script:
@@ -2016,14 +2023,16 @@
 					if(array_length(_effectVars.instance_list)){
 						_effectInstanceList = call(scr.array_combine, _effectInstanceList, _effectVars.instance_list);
 					}
+					_effectInstanceList = instances_matching_ne(_effectInstanceList, "id");
 					_effectVars.instance_list = _effectInstanceList;
 				}
 				
-				 // Prevent Merged Effect Recursion:
-				for(var _id = instance_max - 1; _id >= _minID; _id--){
-					if("can_temerge" in _id && "team" in _id && "creator" in _id && !_id.can_temerge){
-						_id.team = round(_id.team);
+				 // Retag Instance Teams:
+				with(instances_matching_ne(_effectTagInstanceList, "temerge_event_last_team", undefined)){
+					if(team == temerge_event_last_team){
+						team = temerge_event_last_team;
 					}
+					temerge_event_last_team = undefined;
 				}
 				
 				 // Update Draw Event Depth:
@@ -2047,8 +2056,6 @@
 								
 								 // Dummy Object:
 								with(instance_create(x, y, object_index)){
-									var _minID = id;
-									
 									 // Set Stored Variables:
 									call(scr.variable_instance_set_list, self, other);
 									xprevious = x;
@@ -2076,18 +2083,6 @@
 											call(scr.pass, other, self);
 											if(!instance_exists(other)){
 												break;
-											}
-										}
-										
-										 // Prevent Merged Effect Recursion:
-										for(var _id = instance_max - 1; _id >= _minID; _id--){
-											if("team" in _id && "creator" in _id){
-												if("can_temerge" not in _id){
-													_id.can_temerge = false;
-												}
-												if(!_id.can_temerge){
-													_id.team = round(_id.team);
-												}
 											}
 										}
 									}
@@ -2248,7 +2243,7 @@
 										_context             = [self, other],
 										_eventRefListVarName = `temerge_${_collisionType}_event_ref_list`,
 										_eventRefList        = variable_instance_get(self, _eventRefListVarName),
-										_minID               = instance_max;
+										_minInstanceID       = instance_max;
 										
 									 // Solid Collision:
 									if(_isSolid){
@@ -2301,25 +2296,19 @@
 										}
 									}
 									
-									 // Instances Created During Event:
-									var _maxID = instance_max;
-									for(var _id = _minID; _id < _maxID && instance_exists(self); _id++){
-										 // Prevent Merged Effect Recursion:
-										if("can_temerge" in _id && "team" in _id && "creator" in _id && !_id.can_temerge){
-											_id.team = round(_id.team);
-										}
-										
-										 // Colliding Instance(s):
-										if(instance_is(_id, _collisionObject) && place_meeting(x, y, _id)){
-											_isSolid    = (solid || _id.solid);
-											_context[1] = _id;
+									 // Colliding Instances Created During Event:
+									var _maxInstanceID = instance_max;
+									for(var _instanceID = _minInstanceID; _instanceID < _maxInstanceID && instance_exists(self); _instanceID++){
+										if(instance_is(_instanceID, _collisionObject) && place_meeting(x, y, _instanceID)){
+											_isSolid    = (solid || _instanceID.solid);
+											_context[1] = _instanceID;
 											
 											 // Solid Collision:
 											if(_isSolid){
-												x     = xprevious;
-												y     = yprevious;
-												_id.x = _id.xprevious;
-												_id.y = _id.yprevious;
+												x             = xprevious;
+												y             = yprevious;
+												_instanceID.x = _instanceID.xprevious;
+												_instanceID.y = _instanceID.yprevious;
 											}
 											
 											 // Call Event Scripts:
@@ -2359,14 +2348,14 @@
 													x += hspeed_raw;
 													y += vspeed_raw;
 												}
-												if(instance_exists(_id)){
-													_id.x += _id.hspeed_raw;
-													_id.y += _id.vspeed_raw;
+												if(instance_exists(_instanceID)){
+													_instanceID.x += _instanceID.hspeed_raw;
+													_instanceID.y += _instanceID.vspeed_raw;
 												}
 											}
 											
 											 // Keep Searching:
-											_maxID = instance_max;
+											_maxInstanceID = instance_max;
 										}
 									}
 									
@@ -2571,7 +2560,7 @@
 	with(_instanceList){
 		if("temerge_flame" not in self){
 			temerge_flame = { "amount": 0 };
-			projectile_add_temerge_event(self, "destroy", script_ref_create(temerge_flame_projectile_destroy));
+			projectile_temerge_add_event(self, "destroy", script_ref_create(temerge_flame_projectile_destroy));
 		}
 		temerge_flame.amount++;
 	}
@@ -2600,16 +2589,13 @@
 	
 	if(temerge_flame.amount > 0){
 		repeat(temerge_flame.amount){
-			with(call(scr.projectile_create,
+			call(scr.projectile_create,
 				x,
 				y,
 				Flame,
 				((speed == 0) ? random(360) : direction),
 				max(1.5, speed / 2)
-			)){
-				 // No Recursion:
-				can_temerge = false;
-			}
+			);
 		}
 	}
 	
@@ -2619,7 +2605,7 @@
 		Merged projectile toxic gas-releasing effect
 	*/
 	
-	projectile_add_temerge_event(_instanceList, "destroy", script_ref_create(temerge_toxic_projectile_destroy));
+	projectile_temerge_add_event(_instanceList, "destroy", script_ref_create(temerge_toxic_projectile_destroy));
 	
 #define temerge_toxic_projectile_destroy
 	/*
@@ -2660,13 +2646,13 @@
 	with(_instanceList){
 		if("temerge_slug_size" not in self){
 			temerge_slug_size = 0;
-			projectile_add_temerge_event(self, "hit", script_ref_create(temerge_slug_projectile_hit));
+			projectile_temerge_add_event(self, "hit", script_ref_create(temerge_slug_projectile_hit));
 		}
 		temerge_slug_size += _size;
 	}
 	
 	 // Add Bloom:
-	projectile_add_temerge_bloom(_instanceList, _size / 3);
+	projectile_temerge_add_bloom(_instanceList, _size / 3);
 	
 #define temerge_slug_hit(_instance, _hitInstance, _hitX, _hitY, _hitDamage)
 	/*
@@ -2719,11 +2705,7 @@
 	*/
 	
 	if(temerge_slug_size != 0){
-		if(
-			projectile_canhit(other)
-			&& other.my_health > 0
-			&& ("canhurt" not in self || canhurt) // Bolts
-		){
+		if(projectile_temerge_can_hit_other){
 			var _damage = ceil(((damage == 0) ? 1 : damage) * (power(1.5, temerge_slug_size) - 1));
 			
 			if("temerge_slug_nexthurt" not in other || other.temerge_slug_nexthurt <= current_frame){
@@ -2746,7 +2728,7 @@
 				
 				 // Disable Slug Effect:
 				if(instance_exists(self)){
-					projectile_add_temerge_bloom(self, -temerge_slug_size / 3);
+					projectile_temerge_add_bloom(self, -temerge_slug_size / 3);
 					temerge_slug_size = 0;
 				}
 				
@@ -3043,6 +3025,52 @@
 	}
 	
 	
+#define temerge_pierce_effect_setup(_instanceList, _pierceAmount)
+	/*
+		Merged projectile enemy piercing effect
+	*/
+	
+	with(_instanceList){
+		if("temerge_pierce_amount" not in self){
+			temerge_pierce_amount = 0;
+			projectile_temerge_add_event(self, "hit", script_ref_create(temerge_pierce_projectile_hit));
+		}
+		temerge_pierce_amount = max(temerge_pierce_amount, _pierceAmount);
+	}
+	
+#define temerge_pierce_projectile_hit
+	/*
+		Merged piercing projectiles can survive hitting weaker enemies 
+	*/
+	
+	if(projectile_temerge_can_hit_other){
+		var _pierceHealth = ceil(damage * temerge_pierce_amount);
+		if(other.my_health <= _pierceHealth){
+			 // Manual Damage:
+			projectile_hit(other, max(damage, _pierceHealth), force);
+			
+			 // Temporarily Disable Enemy Hitbox:
+			with(other){
+				if(mask_index != mskNone){
+					script_bind_end_step(temerge_pierce_projectile_hit_mask_end_step, 0, self, mask_index);
+					mask_index = mskNone;
+				}
+			}
+		}
+	}
+	
+#define temerge_pierce_projectile_hit_mask_end_step(_instance, _mask)
+	/*
+		Restores the hitbox of the given pierced enemy
+	*/
+	
+	with(instances_matching(_instance, "mask_index", mskNone)){
+		mask_index = _mask;
+	}
+	
+	instance_destroy();
+	
+	
 #define temerge_seek_effect_setup(_instanceList)
 	/*
 		Merged projectile enemy seeking effect
@@ -3133,7 +3161,7 @@
 	with(_instanceList){
 		if("temerge_explosion_list" not in self){
 			temerge_explosion_list = [];
-			projectile_add_temerge_event(self, "destroy", script_ref_create(temerge_explosion_projectile_destroy));
+			projectile_temerge_add_event(self, "destroy", script_ref_create(temerge_explosion_projectile_destroy));
 		}
 		repeat(_explosionCount){
 			array_push(temerge_explosion_list, _explosionInfo);
@@ -3142,7 +3170,7 @@
 	
 	 // Toxic Explosions:
 	if(_explosionInfo.is_toxic){
-		projectile_add_temerge_effect(_instanceList, "toxic");
+		projectile_temerge_add_effect(_instanceList, "toxic");
 	}
 	
 #define temerge_explosion_projectile_destroy
@@ -3285,8 +3313,8 @@
 			
 			 // Hyper Grenade Events:
 			if(instance_is(self, HyperGrenade)){
-				projectile_add_temerge_event(self, "hit",  script_ref_create(temerge_grenade_HyperGrenade_hit));
-				projectile_add_temerge_event(self, "wall", script_ref_create(temerge_grenade_HyperGrenade_wall));
+				projectile_temerge_add_event(self, "hit",  script_ref_create(temerge_grenade_HyperGrenade_hit));
+				projectile_temerge_add_event(self, "wall", script_ref_create(temerge_grenade_HyperGrenade_wall));
 			}
 		}
 		
@@ -3300,7 +3328,7 @@
 	
 	 // Add Explosion:
 	if(_explosionInfo != undefined){
-		projectile_add_temerge_effect(_instanceList, "explosion", [_explosionInfo]);
+		projectile_temerge_add_effect(_instanceList, "explosion", [_explosionInfo]);
 	}
 	
 #define temerge_grenade_effect_step(_instanceList)
@@ -3313,9 +3341,7 @@
 	var _explodeInstanceList = instances_matching_le(_instanceList, "temerge_grenade_frame", GameCont.temerge_grenade_frame);
 	
 	if(array_length(_explodeInstanceList)){
-		with(_explodeInstanceList){
-			instance_destroy();
-		}
+		projectile_temerge_destroy(_explodeInstanceList);
 	}
 	
 #define temerge_grenade_effect_end_step(_instanceList)
@@ -3328,7 +3354,7 @@
 		if(array_length(_blinkInstanceList)){
 			with(_blinkInstanceList){
 				if(place_meeting(x, y, Explosion)){
-					instance_destroy();
+					projectile_temerge_destroy(self);
 				}
 			}
 		}
@@ -3398,8 +3424,8 @@
 		temerge_sticky_mask_index = mskNone;
 		
 		 // Projectile Events:
-		projectile_add_temerge_event(self, "hit",  script_ref_create(temerge_sticky_projectile_stick));
-		projectile_add_temerge_event(self, "wall", script_ref_create(temerge_sticky_projectile_stick));
+		projectile_temerge_add_event(self, "hit",  script_ref_create(temerge_sticky_projectile_stick));
+		projectile_temerge_add_event(self, "wall", script_ref_create(temerge_sticky_projectile_stick));
 	}
 	
 #define temerge_sticky_effect_post_step(_instanceList)
@@ -3629,9 +3655,6 @@
 					
 					 // Setup:
 					projectile_init(other.team, other);
-					
-					 // No Recursion:
-					can_temerge = false;
 				}
 			}
 		}
@@ -3666,8 +3689,8 @@
 			temerge_rocket_flame_offset_length = 0;
 			
 			 // Projectile Events:
-			projectile_add_temerge_event(self, "hit",  script_ref_create(temerge_rocket_projectile_hit));
-			projectile_add_temerge_event(self, "wall", script_ref_create(temerge_rocket_projectile_wall));
+			projectile_temerge_add_event(self, "hit",  script_ref_create(temerge_rocket_projectile_hit));
+			projectile_temerge_add_event(self, "wall", script_ref_create(temerge_rocket_projectile_wall));
 		}
 		temerge_rocket_max_speed_factor *= _maxSpeedFactor
 		temerge_rocket_add_speed        += _addSpeed;
@@ -3697,7 +3720,7 @@
 			 // Effects:
 			view_shake_at(x, y, 2);
 			temerge_rocket_sound = sound_play_hit(sndRocketFly, 0.2);
-			projectile_add_temerge_event(self, "destroy", script_ref_create(temerge_rocket_sound_projectile_destroy));
+			projectile_temerge_add_event(self, "destroy", script_ref_create(temerge_rocket_sound_projectile_destroy));
 		}
 	}
 	
@@ -3796,14 +3819,14 @@
 		Merged rocket projectiles stop thrusting and activate their explosive payload on impact with a hittable
 	*/
 	
-	if(projectile_canhit(other) && other.my_health > 0){
+	if(projectile_temerge_can_hit_other){
 		temerge_rocket_projectile_wall();
 		
 		 // Activate Explosion:
 		if(temerge_rocket_hit_explosion_count > 0){
 			x -= hspeed_raw;
 			y -= vspeed_raw;
-			projectile_add_temerge_effect(self, "explosion", [{}, temerge_rocket_hit_explosion_count]);
+			projectile_temerge_add_effect(self, "explosion", [{}, temerge_rocket_hit_explosion_count]);
 			temerge_rocket_hit_explosion_count = 0;
 			x += hspeed_raw;
 			y += vspeed_raw;
@@ -3963,17 +3986,23 @@
 	}
 	
 	
-#define temerge_plasma_effect_setup(_instanceList)
+#define temerge_plasma_effect_setup // instanceList, extraAmount=0
 	/*
 		Merged projectile plasma destruction explosion effect
 	*/
 	
+	var	_instanceList = argument[0],
+		_extraAmount  = ((argument_count > 1) ? argument[1] : 0);
+		
 	with(_instanceList){
 		if("temerge_plasma" not in self){
-			temerge_plasma = { "amount": 0 };
-			projectile_add_temerge_event(self, "destroy", script_ref_create(temerge_plasma_projectile_destroy));
+			temerge_plasma = { "extra_amount": 0 };
+			projectile_temerge_add_event(self, "destroy", script_ref_create(temerge_plasma_projectile_destroy));
 		}
-		temerge_plasma.amount++;
+		else{
+			temerge_plasma.extra_amount++;
+		}
+		temerge_plasma.extra_amount += _extraAmount;
 	}
 	
 #define temerge_plasma_projectile_destroy
@@ -3986,7 +4015,7 @@
 			_explosionY        = y,
 			_explosionMoveAng  = random(360),
 			_explosionMoveTurn = 20 * choose(-1, 1),
-			_explosionCount    = abs(damage / 15) + (temerge_plasma.amount - 1);
+			_explosionCount    = abs(damage / 15) + temerge_plasma.extra_amount;
 			
 		if(_explosionCount > 1){
 			 // Get Out of Walls:
@@ -4008,9 +4037,15 @@
 		
 		 // Plasma Explosion:
 		for(var _explosionIndex = 0; _explosionIndex < _explosionCount; _explosionIndex++){
-			with(call(scr.projectile_create, _explosionX, _explosionY, PlasmaImpact)){
-				image_xscale = lerp(0.5, 1, min(_explosionCount - _explosionIndex, 1));
-				image_yscale = image_xscale;
+			with(instance_create(_explosionX, _explosionY, CustomObject)){
+				scale   = lerp(0.5, 1, min(_explosionCount - _explosionIndex, 1));
+				time    = sqrt(_explosionIndex) * 3;
+				team    = other.team;
+				creator = other.creator;
+				on_step = script_ref_create(temerge_plasma_delayed_explosion_step);
+				with(self){
+					event_perform(ev_step, ev_step_normal);
+				}
 			}
 			
 			 // Offset Explosion Position:
@@ -4020,19 +4055,18 @@
 					_explosionMoveY   = lengthdir_y(_explosionMoveLen, _explosionMoveAng);
 					
 				 // Bounce Off Walls:
-				if(
-					position_meeting(_explosionX + _explosionMoveX, _explosionY + _explosionMoveY, Wall)
-					&& !position_meeting(_explosionX, _explosionY, Wall)
-				){
-					if(position_meeting(_explosionX + _explosionMoveX, _explosionY, Wall)){
-						_explosionMoveX *= -1;
-					}
-					else if(position_meeting(_explosionX, _explosionY + _explosionMoveY, Wall)){
-						_explosionMoveY *= -1;
-					}
-					else{
-						_explosionMoveX *= -1;
-						_explosionMoveY *= -1;
+				if(!position_meeting(_explosionX + _explosionMoveX, _explosionY + _explosionMoveY, Floor)){
+					if(position_meeting(_explosionX, _explosionY, Floor)){
+						if(!position_meeting(_explosionX + _explosionMoveX, _explosionY, Floor)){
+							_explosionMoveX *= -1;
+						}
+						else if(!position_meeting(_explosionX, _explosionY + _explosionMoveY, Floor)){
+							_explosionMoveY *= -1;
+						}
+						else{
+							_explosionMoveX *= -1;
+							_explosionMoveY *= -1;
+						}
 					}
 				}
 				_explosionMoveAng = point_direction(0, 0, _explosionMoveX, _explosionMoveY);
@@ -4051,12 +4085,127 @@
 		}
 		
 		 // Sound:
-		sound_play_hit_big(((_explosionCount > 2) ? sndPlasmaBigExplode : sndPlasmaHit), 0.3);
+		sound_play_hit_big(
+			(
+				(_explosionCount > 2)
+				? (projectile_temerge_has_effect(self, "devastator") ? sndDevastatorExplo : sndPlasmaBigExplode)
+				: sndPlasmaHit
+			),
+			0.3
+		);
+	}
+	
+#define temerge_plasma_delayed_explosion_step
+	/*
+		Creates a plasma explosion after an amount of time
+	*/
+	
+	if(time > 0){
+		time -= current_time_scale;
+	}
+	else{
+		with(call(scr.projectile_create, x, y, PlasmaImpact)){
+			image_xscale = other.scale;
+			image_yscale = other.scale;
+		}
+		instance_destroy();
+	}
+	
+	
+#define temerge_devastator_effect_setup(_instanceList)
+	/*
+		Merged projectile plasma trail effect
+	*/
+	
+	with(_instanceList){
+		if("temerge_devastator_scale" not in self){
+			temerge_devastator_scale  = 1/28;
+			temerge_devastator_amount = 0;
+			projectile_temerge_add_event(self, "hit", script_ref_create(temerge_devastator_projectile_hit));
+		}
+		else{
+			temerge_devastator_scale *= 2;
+		}
+		temerge_devastator_amount++;
+	}
+	
+#define temerge_devastator_effect_step(_instanceList)
+	/*
+		Merged devastator projectiles create plasma explosions as they travel
+	*/
+	
+	with(_instanceList){
+		var _explosionAmount = abs(damage) * temerge_devastator_scale;
+		if(chance_ct(_explosionAmount, 1)){
+			var	_explosionScale     = lerp(0.5, 1, min(abs(_explosionAmount), 1)),
+				_explosionOffsetLen = random(16),
+				_explosionOffsetDir = random(360);
+				
+			with(instance_create(
+				x + lengthdir_x(_explosionOffsetLen, _explosionOffsetDir),
+				y + lengthdir_y(_explosionOffsetLen, _explosionOffsetDir),
+				CustomObject
+			)){
+				scale   = _explosionScale;
+				time    = 0;
+				team    = other.team;
+				creator = other.creator;
+				on_step = script_ref_create(temerge_plasma_delayed_explosion_step);
+				
+				 // Extra Offset:
+				if(_explosionAmount > 1 && _explosionOffsetLen > 0){
+					mask_index = mskPlasma;
+					move_contact_solid(_explosionOffsetDir, _explosionOffsetLen * (_explosionAmount - 1));
+				}
+				
+				 // Extra Delayed Explosions:
+				for(var _explosionIndex = 1; _explosionIndex < other.temerge_devastator_amount; _explosionIndex++){
+					with(instance_copy(false)){
+						x    += orandom(2);
+						y    += orandom(2);
+						time += 15 * (_explosionIndex + random(1));
+						with(self){
+							event_perform(ev_step, ev_step_normal);
+						}
+					}
+				}
+				
+				 // Call Step Event:
+				with(self){
+					event_perform(ev_step, ev_step_normal);
+				}
+			}
+		}
+	}
+	
+#define temerge_devastator_projectile_hit
+	/*
+		Merged devastator projectiles create plasma explosions on impact with a hittable
+	*/
+	
+	if(projectile_temerge_can_hit_other){
+		var _explosionScale = lerp(0.5, 1, min(abs(damage) * temerge_devastator_scale, 1));
+		for(var _explosionIndex = 0; _explosionIndex < temerge_devastator_amount; _explosionIndex++){
+			with(instance_create(
+				random_range(other.bbox_left, other.bbox_right  + 1),
+				random_range(other.bbox_top,  other.bbox_bottom + 1),
+				CustomObject
+			)){
+				scale   = _explosionScale;
+				time    = 15 * _explosionIndex;
+				team    = other.team;
+				creator = other.creator;
+				on_step = script_ref_create(temerge_plasma_delayed_explosion_step);
+				with(self){
+					event_perform(ev_step, ev_step_normal);
+				}
+			}
+		}
 	}
 	
 	
 /// MERGED PROJECTILES
-#define projectile_add_temerge_event(_instanceList, _eventName, _eventRef)
+#define projectile_temerge_add_event(_instanceList, _eventName, _eventRef)
 	/*
 		Adds the given merged event to the given projectile instance(s)
 	*/
@@ -4086,7 +4235,7 @@
 			}
 			
 			 // Non-Custom Object:
-			else projectile_add_temerge_effect(self, _eventName + "_event");
+			else projectile_temerge_add_effect(self, _eventName + "_event");
 		}
 		
 		 // Update Destroy Event Variables:
@@ -4106,8 +4255,7 @@
 		Used as a wrapper script for merged projectile events
 	*/
 	
-	var	_minID               = instance_max,
-		_isSolid             = false,
+	var	_isSolid             = false,
 		_isMeeting           = false,
 		_context             = [self, other],
 		_eventRefVarName     = `on_${_eventName}`,
@@ -4134,6 +4282,12 @@
 			
 			break;
 			
+	}
+	
+	 // Untag Team:
+	if("temerge_event_last_team" not in self || temerge_event_last_team == undefined){
+		temerge_event_last_team = team;
+		team = round(team);
 	}
 	
 	 // Call Custom Scripts:
@@ -4172,41 +4326,22 @@
 		}
 	}
 	
+	 // Retag Team:
+	if(team == temerge_event_last_team){
+		team = temerge_event_last_team;
+	}
+	temerge_event_last_team = undefined;
+	
 	 // Call Normal Script:
 	if(_isMeeting != -1 && array_length(_eventRef) >= 3){
 		call(scr.pass, _context, _eventRef);
-	}
-	
-	 // Prevent Merged Effect Recursion:
-	switch(_eventName){
-		
-		case "destroy":
-		
-			for(var _id = instance_max - 1; _id >= _minID; _id--){
-				if("team" in _id && "creator" in _id){
-					if("can_temerge" not in _id){
-						_id.can_temerge = false;
-					}
-					if(!_id.can_temerge){
-						_id.team = round(_id.team);
-					}
-				}
-			}
-			
-			break;
-			
-		default:
-		
-			for(var _id = instance_max - 1; _id >= _minID; _id--){
-				if("can_temerge" in _id && "team" in _id && "creator" in _id && !_id.can_temerge){
-					_id.team = round(_id.team);
-				}
-			}
-			
+		if(!instance_exists(self)){
+			exit;
+		}
 	}
 	
 	 // Revert Event Reference:
-	if(instance_exists(self) && array_length(_eventRefList)){
+	if(array_length(_eventRefList)){
 		var _scriptRef = variable_instance_get(self, _eventRefVarName);
 		if(_scriptRef != _eventRef){
 			if(array_length(_scriptRef) >= 3){
@@ -4276,7 +4411,7 @@
 			
 	}
 	
-#define projectile_add_temerge_scale // instanceList, addXScale, addYScale=addXScale
+#define projectile_temerge_add_scale // instanceList, addXScale, addYScale=addXScale
 	/*
 		Adds to the given merged projectile's scale, with manual visual fixes for certain projectiles
 		
@@ -4300,7 +4435,7 @@
 			case Nuke:
 			case ConfettiBall:
 			
-				projectile_add_temerge_effect(self, "fix_scale");
+				projectile_temerge_add_effect(self, "fix_scale");
 				
 				break;
 				
@@ -4308,14 +4443,14 @@
 			case EnemyLightning:
 			
 				temerge_fix_lightning_yscale = image_yscale;
-				projectile_add_temerge_effect(self, "fix_lightning_yscale");
+				projectile_temerge_add_effect(self, "fix_lightning_yscale");
 				
 				break;
 				
 		}
 	}
 	
-#define projectile_add_temerge_bloom(_instanceList, _bloomAmount)
+#define projectile_temerge_add_bloom(_instanceList, _bloomAmount)
 	/*
 		Adds to the given merged projectile's bloom
 	*/
@@ -4324,7 +4459,7 @@
 		image_alpha += _bloomAmount * sign(image_alpha);
 	}
 	
-#define projectile_scale_temerge_damage(_instanceList, _damageFactor)
+#define projectile_temerge_scale_damage(_instanceList, _damageFactor)
 	/*
 		Scales the given merged projectile's damage
 	*/
@@ -4333,7 +4468,7 @@
 		damage += round(damage * (_damageFactor - 1));
 	}
 	
-#define projectile_add_temerge_force(_instanceList, _forceAmount)
+#define projectile_temerge_add_force(_instanceList, _forceAmount)
 	/*
 		Adds to the given merged projectile's push force
 	*/
@@ -4342,9 +4477,9 @@
 		force += _forceAmount * sign(force);
 	}
 	
-#define projectile_add_temerge_effect // instance, effectName, ?effectSetupArgList
+#define projectile_temerge_add_effect // instance, effectName, ?effectSetupArgList
 	/*
-		Adds the given merged effect to the given merged projectile
+		Adds the given merge effect to the given projectile
 		Future duplicates of the instance created by 'instance_copy' also get the effect
 	*/
 	
@@ -4481,24 +4616,64 @@
 		}
 	}
 	
+#define projectile_temerge_has_effect(_instance, _effectName)
+	/*
+		Returns whether the given instance has the given merge effect
+	*/
+	
+	if("temerge_effect_vars_map" in GameCont){
+		var _effectVars = lq_get(GameCont.temerge_effect_vars_map, _effectName);
+		if(_effectVars != undefined && array_find_index(_effectVars.instance_list, _instance) >= 0){
+			return true;
+		}
+	}
+	
+	return false;
+	
+#define projectile_temerge_destroy(_instance)
+	/*
+		Used as a replacement for 'instance_destroy' in merged projectile events,
+		so projectiles created by destroying merged projectiles are also merged
+	*/
+	
+	with(_instance){
+		 // Retag Team:
+		if(team == temerge_event_last_team){
+			team = temerge_event_last_team;
+		}
+		temerge_event_last_team = undefined;
+		
+		 // Destroy Instance:
+		instance_destroy();
+	}
+	
+#macro projectile_temerge_can_hit_other
+	/*
+		Whether the current merged projectile instance (self) can vaguely hit a hittable instance (other)
+	*/
+	
+	projectile_canhit(other)
+	&& other.my_health > 0
+	&& ("canhurt" not in self || canhurt) // Bolts
+	
 	
 #define HeavyBullet_temerge_setup(_instanceList)
 	 // Heavy:
-	projectile_add_temerge_scale(_instanceList, 0.1);
+	projectile_temerge_add_scale(_instanceList, 0.1);
 	
 	 // Hits Like a Fist:
-	projectile_scale_temerge_damage(_instanceList, 5/3);
-	projectile_add_temerge_force(_instanceList, 2);
+	projectile_temerge_scale_damage(_instanceList, 5/3);
+	projectile_temerge_add_force(_instanceList, 2);
 	
 	
 #define UltraBullet_temerge_setup(_instanceList)
 	 // Big & Bright:
-	projectile_add_temerge_scale(_instanceList, 0.2);
-	projectile_add_temerge_bloom(_instanceList, 0.2);
+	projectile_temerge_add_scale(_instanceList, 0.2);
+	projectile_temerge_add_bloom(_instanceList, 0.2);
 	
 	 // Hits Like a Brick:
-	projectile_scale_temerge_damage(_instanceList, 2.5);
-	projectile_add_temerge_force(_instanceList, 4);
+	projectile_temerge_scale_damage(_instanceList, 2.5);
+	projectile_temerge_add_force(_instanceList, 4);
 	
 	
 #define BouncerBullet_temerge_wall
@@ -4515,20 +4690,20 @@
 	
 #define FlameShell_temerge_setup(_instanceList)
 	 // Releases a Flame:
-	projectile_add_temerge_effect(_instanceList, "flame");
+	projectile_temerge_add_effect(_instanceList, "flame");
 	
 	
 #define UltraShell_temerge_setup(_instanceList)
 	 // Long & Bright:
 	with(_instanceList){
 		if((sprite_get_bbox_bottom(sprite_index) + 1) - sprite_get_bbox_top(sprite_index) <= (sprite_get_bbox_right(sprite_index) + 1) - sprite_get_bbox_left(sprite_index)){
-			projectile_add_temerge_scale(self, 0.1, 0);
+			projectile_temerge_add_scale(self, 0.1, 0);
 		}
 		else{
-			projectile_add_temerge_scale(self, 0, 0.1);
+			projectile_temerge_add_scale(self, 0, 0.1);
 		}
 	}
-	projectile_add_temerge_bloom(_instanceList, 0.2);
+	projectile_temerge_add_bloom(_instanceList, 0.2);
 	
 	 // Floaty:
 	with(instances_matching_gt(_instanceList, "friction", 0)){
@@ -4536,31 +4711,31 @@
 	}
 	
 	 // Hits Like a Dart:
-	projectile_scale_temerge_damage(_instanceList, 2);
-	projectile_add_temerge_force(_instanceList, 2);
+	projectile_temerge_scale_damage(_instanceList, 2);
+	projectile_temerge_add_force(_instanceList, 2);
 	
 	
 #define Slug_temerge_setup(_instanceList)
 	 // Fat:
-	projectile_add_temerge_scale(_instanceList, 0.25);
+	projectile_temerge_add_scale(_instanceList, 0.25);
 	
 	 // Hits Like a Big Fist:
-	projectile_add_temerge_effect(_instanceList, "slug", [1]);
-	projectile_add_temerge_force(_instanceList, 4);
+	projectile_temerge_add_effect(_instanceList, "slug", [1]);
+	projectile_temerge_add_force(_instanceList, 4);
 	
 	
 #define HeavySlug_temerge_setup(_instanceList)
 	 // Obese:
-	projectile_add_temerge_scale(_instanceList, 0.4);
+	projectile_temerge_add_scale(_instanceList, 0.4);
 	
 	 // Hits Like a Truck:
-	projectile_add_temerge_effect(_instanceList, "slug", [2]);
-	projectile_add_temerge_force(_instanceList, 8);
+	projectile_temerge_add_effect(_instanceList, "slug", [2]);
+	projectile_temerge_add_force(_instanceList, 8);
 	
 	
 #define HyperSlug_temerge_setup(_instanceList)
 	 // Hyper:
-	projectile_add_temerge_effect(_instanceList, "hyper");
+	projectile_temerge_add_effect(_instanceList, "hyper");
 	
 	 // Slug:
 	Slug_temerge_setup(_instanceList);
@@ -4607,7 +4782,7 @@
 	
 #define SuperFlakBullet_temerge_setup(_instanceList)
 	 // Big:
-	projectile_add_temerge_scale(_instanceList, 0.2);
+	projectile_temerge_add_scale(_instanceList, 0.2);
 	
 #define SuperFlakBullet_temerge_destroy
 	var _num = min(power(max(0, abs(damage) - 1.95), 0.45) + (0.25 * (force >= 3)), 40);
@@ -4665,37 +4840,11 @@
 	_at.accuracy *= 0.5;
 	
 #define Bolt_temerge_setup(_instanceList)
+	 // Pierces Weaker Enemies:
+	projectile_temerge_add_effect(_instanceList, "pierce", [0.5]);
+	
 	 // Has a Cool Trail:
-	projectile_add_temerge_effect(_instanceList, "trail");
-	
-#define Bolt_temerge_hit
-	if(
-		projectile_canhit(other)
-		&& other.my_health > 0
-		&& ("canhurt" not in self || canhurt) // Bolts
-	){
-		var _pierceHealth = damage - floor(damage * 0.5);
-		
-		 // Pierce Weaker Enemies:
-		if(other.my_health <= _pierceHealth){
-			 // Manual Damage:
-			projectile_hit(other, max(damage, _pierceHealth), force);
-			
-			 // Temporarily Disable Enemy Hitbox:
-			with(other){
-				if(mask_index != mskNone){
-					script_bind_end_step(Bolt_temerge_hit_mask_end_step, 0, self, mask_index);
-					mask_index = mskNone;
-				}
-			}
-		}
-	}
-	
-#define Bolt_temerge_hit_mask_end_step(_instance, _mask)
-	with(instances_matching(_instance, "mask_index", mskNone)){
-		mask_index = _mask;
-	}
-	instance_destroy();
+	projectile_temerge_add_effect(_instanceList, "trail");
 	
 	
 #define HeavyBolt_temerge_fire(_at)
@@ -4704,11 +4853,11 @@
 	
 #define HeavyBolt_temerge_setup(_instanceList)
 	 // Fat:
-	projectile_add_temerge_scale(_instanceList, 0.25);
+	projectile_temerge_add_scale(_instanceList, 0.25);
 	
 	 // Hits Like a Log:
-	projectile_scale_temerge_damage(_instanceList, 2);
-	projectile_add_temerge_force(_instanceList, 2);
+	projectile_temerge_scale_damage(_instanceList, 2);
+	projectile_temerge_add_force(_instanceList, 2);
 	
 	 // Bolt:
 	Bolt_temerge_setup(_instanceList);
@@ -4720,7 +4869,7 @@
 	
 #define ToxicBolt_temerge_setup(_instanceList)
 	 // Toxic:
-	projectile_add_temerge_effect(_instanceList, "toxic");
+	projectile_temerge_add_effect(_instanceList, "toxic");
 	with(_instanceList){
 		image_blend = merge_color(image_blend, make_color_rgb(131, 253, 8), 0.5);
 	}
@@ -4735,7 +4884,7 @@
 	
 #define UltraBolt_temerge_setup(_instanceList)
 	 // Brighter:
-	projectile_add_temerge_bloom(_instanceList, 0.2);
+	projectile_temerge_add_bloom(_instanceList, 0.2);
 	
 	 // Pierces Walls:
 	with(_instanceList){
@@ -4773,18 +4922,18 @@
 	
 #define Splinter_temerge_setup(_instanceList)
 	 // Small:
-	projectile_add_temerge_scale(_instanceList, -0.05);
+	projectile_temerge_add_scale(_instanceList, -0.05);
 	
 	
 #define Seeker_temerge_setup(_instanceList)
 	 // Small:
-	projectile_add_temerge_scale(_instanceList, -0.05);
+	projectile_temerge_add_scale(_instanceList, -0.05);
 	
 	 // Has a Cool Trail:
-	projectile_add_temerge_effect(_instanceList, "trail");
+	projectile_temerge_add_effect(_instanceList, "trail");
 	
 	 // Seeks Enemies:
-	projectile_add_temerge_effect(_instanceList, "seek");
+	projectile_temerge_add_effect(_instanceList, "seek");
 	
 	
 #define Disc_temerge_setup(_instanceList)
@@ -4914,16 +5063,16 @@
 		var _explosion = _info.explosion;
 		
 		 // Explosion on a Timer:
-		projectile_add_temerge_effect(_instanceList, "grenade", [_info.max_range, _explosion]);
+		projectile_temerge_add_effect(_instanceList, "grenade", [_info.max_range, _explosion]);
 		
 		 // Small:
 		if(_explosion.is_small){
-			projectile_add_temerge_scale(_instanceList, -0.05);
+			projectile_temerge_add_scale(_instanceList, -0.05);
 		}
 		
 		 // Big:
 		if(_explosion.is_heavy){
-			projectile_add_temerge_scale(_instanceList, 0.1);
+			projectile_temerge_add_scale(_instanceList, 0.1);
 		}
 		
 		 // Bloody:
@@ -4939,16 +5088,16 @@
 		
 		 // Sticky:
 		if(_info.is_sticky){
-			projectile_add_temerge_effect(_instanceList, "sticky");
+			projectile_temerge_add_effect(_instanceList, "sticky");
 			
 			 // Bigger Explosion:
 			if(!_explosion.is_toxic){
-				projectile_add_temerge_effect(_instanceList, "explosion", [_explosion, 2]);
+				projectile_temerge_add_effect(_instanceList, "explosion", [_explosion, 2]);
 			}
 			
 			 // Longer Delay:
 			with(_instanceList){
-				projectile_add_temerge_effect(self, "grenade", [_info.max_range + (20 * speed)]);
+				projectile_temerge_add_effect(self, "grenade", [_info.max_range + (20 * speed)]);
 				
 				 // Green:
 				image_blend = merge_color(image_blend, make_color_rgb(131, 253, 8), 0.5);
@@ -4957,14 +5106,14 @@
 		
 		 // Ultra:
 		if(_info.is_ultra){
-			projectile_add_temerge_effect(_instanceList, "pull");
+			projectile_temerge_add_effect(_instanceList, "pull");
 			
 			 // Brighter:
-			projectile_add_temerge_bloom(_instanceList, 0.2);
+			projectile_temerge_add_bloom(_instanceList, 0.2);
 			
 			 // Longer Delay:
 			with(_instanceList){
-				projectile_add_temerge_effect(self, "grenade", [_info.max_range + (10 * speed)]);
+				projectile_temerge_add_effect(self, "grenade", [_info.max_range + (10 * speed)]);
 			}
 		}
 	}
@@ -4978,20 +5127,20 @@
 	
 #define HyperGrenade_temerge_setup(_instanceList)
 	 // Hyper:
-	projectile_add_temerge_effect(_instanceList, "hyper");
+	projectile_temerge_add_effect(_instanceList, "hyper");
 	
 	 // Grenade:
-	projectile_add_temerge_effect(_instanceList, "grenade", [160]);
+	projectile_temerge_add_effect(_instanceList, "grenade", [160]);
 	
 	
 #define Flare_temerge_setup(_instanceList)
 	 // Emits Flames:
-	projectile_add_temerge_effect(_instanceList, "flare");
+	projectile_temerge_add_effect(_instanceList, "flare");
 	
 	
 #define Rocket_temerge_setup(_instanceList)
 	 // Delivers a Payload:
-	projectile_add_temerge_effect(_instanceList, "rocket");
+	projectile_temerge_add_effect(_instanceList, "rocket");
 	
 	
 #define Nuke_temerge_fire(_at, _setupInfo)
@@ -5004,11 +5153,11 @@
 	
 #define Nuke_temerge_setup(_instanceList, _info)
 	 // Delivers a Big Payload:
-	projectile_add_temerge_effect(_instanceList, "rocket", [1.5, 0.5]);
-	projectile_add_temerge_effect(_instanceList, "explosion");
+	projectile_temerge_add_effect(_instanceList, "rocket", [1.5, 0.5]);
+	projectile_temerge_add_effect(_instanceList, "explosion");
 	
 	 // Guided by the Mouse:
-	projectile_add_temerge_effect(_instanceList, "guide", [_info.player_index]);
+	projectile_temerge_add_effect(_instanceList, "guide", [_info.player_index]);
 	
 	
 #define Laser_temerge_fire(_at, _setupInfo)
@@ -5044,7 +5193,7 @@
 	
 #define Laser_temerge_setup(_instanceList, _info)
 	 // Beamular:
-	projectile_add_temerge_effect(
+	projectile_temerge_add_effect(
 		call(scr.array_shuffle, instances_matching_ne(_instanceList, "speed", 0)),
 		"laser",
 		[_info.max_distance]
@@ -5069,7 +5218,7 @@
 	
 #define PlasmaBall_temerge_setup(_instanceList)
 	 // Explodes Into Plasma:
-	projectile_add_temerge_effect(_instanceList, "plasma");
+	projectile_temerge_add_effect(_instanceList, "plasma");
 	
 	 // Has Less Friction:
 	with(_instanceList){
@@ -5079,9 +5228,10 @@
 	
 #define PlasmaBig_temerge_setup(_instanceList)
 	 // Big:
-	projectile_add_temerge_scale(_instanceList, 0.2);
-	projectile_scale_temerge_damage(_instanceList, 3.5);
-	projectile_add_temerge_force(_instanceList, 4);
+	projectile_temerge_add_scale(_instanceList, 0.2);
+	projectile_temerge_add_bloom(_instanceList, 1/3);
+	projectile_temerge_scale_damage(_instanceList, 3.5);
+	projectile_temerge_add_force(_instanceList, 4);
 	
 	 // Plasma:
 	PlasmaBall_temerge_setup(_instanceList);
@@ -5089,9 +5239,10 @@
 	
 #define PlasmaHuge_temerge_setup(_instanceList)
 	 // Huge:
-	projectile_add_temerge_scale(_instanceList, 0.4);
-	projectile_scale_temerge_damage(_instanceList, 6.5);
-	projectile_add_temerge_force(_instanceList, 4);
+	projectile_temerge_add_scale(_instanceList, 0.4);
+	projectile_temerge_add_bloom(_instanceList, 2/3);
+	projectile_temerge_scale_damage(_instanceList, 6.5);
+	projectile_temerge_add_force(_instanceList, 4);
 	
 	 // Plasma:
 	PlasmaBall_temerge_setup(_instanceList);
@@ -5110,6 +5261,30 @@
 	}
 	
 	
+#define Devastator_temerge_fire(_at)
+	 // Apply Laser Brain Effect:
+	if(alarm0 > 0 && _at.speed_factor > 0.5){
+		_at.speed_factor = lerp(0.5, _at.speed_factor, 0.4);
+	}
+	
+#define Devastator_temerge_setup(_instanceList)
+	 // Stack Effect - Pierces Enemies:
+	with(_instanceList){
+		if(projectile_temerge_has_effect(self, "devastator")){
+			projectile_temerge_add_effect(self, "pierce", [2]);
+		}
+	}
+	
+	 // Spews Plasma:
+	projectile_temerge_add_effect(_instanceList, "devastator");
+	projectile_temerge_add_effect(_instanceList, "plasma", [1]);
+	
+	 // Has Less Friction:
+	with(_instanceList){
+		friction /= 3;
+	}
+	
+	
 #define ThrownWep_temerge_fire(_at)
 	 // Merge Weapon:
 	wep                = weapon_add_temerge(wep, _at.wep);
@@ -5120,10 +5295,8 @@
 #define ConfettiBall_temerge_hit
 	 // Celebrate Death:
 	if(
-		projectile_canhit(other)
-		&& other.my_health > 0
+		projectile_temerge_can_hit_other
 		&& other.my_health <= damage
-		&& ("canhurt" not in self || canhurt) // Bolts
 		&& ("temerge_confetti_can_hit" not in other || other.temerge_confetti_can_hit)
 	){
 		other.temerge_confetti_can_hit = false;
