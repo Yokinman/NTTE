@@ -2600,6 +2600,81 @@
 	}
 	
 	
+#define temerge_flare_effect_setup // instanceList, flameTrailAmount=1
+	/*
+		Merged projectile flame trail effect
+	*/
+	
+	var	_instanceList     = argument[0],
+		_flameTrailAmount = ((argument_count > 1) ? argument[1] : 1);
+		
+	with(_instanceList){
+		if("temerge_flare_amount" not in self){
+			temerge_flare_amount = 0;
+			temerge_flare_angle  = random(360);
+		}
+		temerge_flare_amount += _flameTrailAmount;
+	}
+	
+#define temerge_flare_effect_step(_instanceList)
+	/*
+		Merged flare projectiles leave behind a trail of flames
+	*/
+	
+	var	_lastSprite = -1,
+		_lastYScale = 1,
+		_flameScale = 1;
+		
+	with(_instanceList){
+		if((current_frame % damage) >= 1){
+			 // Store Sprite Information:
+			if(sprite_index != _lastSprite || image_yscale != _lastYScale){
+				_lastSprite = sprite_index;
+				_flameScale = (((sprite_get_bbox_bottom(sprite_index) + 1) - sprite_get_bbox_top(sprite_index)) * image_yscale) / 16;
+				if(_flameScale >= 0.375 && _flameScale < 1){
+					_flameScale = 1;
+				}
+			}
+			
+			 // Spew Flame(s):
+			for(var _length = 0; _length <= speed_raw; _length += 8 * _flameScale){
+				with(instance_create(
+					x + lengthdir_x(_length, direction),
+					y + lengthdir_y(_length, direction),
+					Flame
+				)){
+					 // Motion:
+					motion_add(other.temerge_flare_angle, other.temerge_flare_amount + random(1));
+					
+					 // Dissipate Faster:
+					image_index = max(0, (image_number - 1) - (1 + other.damage));
+					
+					 // Resize:
+					image_xscale *= _flameScale;
+					image_yscale *= _flameScale;
+					
+					 // Setup:
+					projectile_init(other.team, other);
+					
+					 // Extra Flames:
+					if(other.temerge_flare_amount > 1){
+						var _directionOffset = 0;
+						repeat(other.temerge_flare_amount - 1){
+							_directionOffset += 360 / other.temerge_flare_amount;
+							with(instance_copy(false)){
+								direction += _directionOffset;
+							}
+						}
+					}
+				}
+			}
+			
+			 // Rotate:
+			temerge_flare_angle += 36 / temerge_flare_amount;
+		}
+	}
+	
+	
 #define temerge_toxic_effect_setup(_instanceList)
 	/*
 		Merged projectile toxic gas-releasing effect
@@ -3620,47 +3695,6 @@
 	}
 	
 	
-#define temerge_flare_effect_step(_instanceList)
-	/*
-		Merged flare projectiles leave behind a trail of flames
-	*/
-	
-	var	_lastSprite = -1,
-		_flameScale = 1;
-		
-	with(_instanceList){
-		if((current_frame % damage) >= 1){
-			if(sprite_index != _lastSprite){
-				_lastSprite = sprite_index;
-				_flameScale = ((sprite_get_bbox_bottom(sprite_index) + 1) - sprite_get_bbox_top(sprite_index)) / 16;
-				if(_flameScale >= 0.375 && _flameScale < 1){
-					_flameScale = 1;
-				}
-			}
-			for(var _length = 0; _length <= speed_raw; _length += 8 * _flameScale){
-				with(instance_create(
-					x + lengthdir_x(_length, direction),
-					y + lengthdir_y(_length, direction),
-					Flame
-				)){
-					 // Motion:
-					motion_add(random(360), 1);
-					
-					 // Dissipate Faster:
-					image_index = max(0, (image_number - 1) - (1 + other.damage));
-					
-					 // Resize:
-					image_xscale *= _flameScale;
-					image_yscale *= _flameScale;
-					
-					 // Setup:
-					projectile_init(other.team, other);
-				}
-			}
-		}
-	}
-	
-	
 #define temerge_rocket_effect_setup // instanceList, maxSpeedFactor=2, addSpeed=1
 	/*
 		Merged projectile thruster & impact explosion effect
@@ -4114,7 +4148,7 @@
 	
 #define temerge_devastator_effect_setup(_instanceList)
 	/*
-		Merged projectile plasma trail effect
+		Merged projectile plasma explosion trail effect
 	*/
 	
 	with(_instanceList){
@@ -4200,6 +4234,18 @@
 					event_perform(ev_step, ev_step_normal);
 				}
 			}
+		}
+	}
+	
+	
+#define temerge_blood_trail_effect_step(_instanceList)
+	/*
+		Merged blood trail projectiles leave behind a trail of blood explosions
+	*/
+	
+	with(_instanceList){
+		if(chance_ct(damage + (force >= 3), 270)){
+			call(scr.projectile_create, x + orandom(5), y + orandom(5), MeatExplosion);
 		}
 	}
 	
@@ -5034,7 +5080,7 @@
 	if(_explodeSteps > 0 && _explodeSteps < _moveSteps){
 		_moveSteps = _explodeSteps;
 	}
-	if(_airSteps > 0 && _airSteps < _moveSteps){
+	if(_airSteps > 0 && _airSteps < _moveSteps && !instance_is(self, BloodBall)){
 		_moveDistance += _airSteps * (_moveSpeed - (_moveFriction * ((_airSteps + 1) / 2)));
 		_moveSpeed    -= _moveFriction * _airSteps;
 		_moveFriction  = (instance_is(self, BloodGrenade) ? 0.5 : 0.4);
@@ -5049,11 +5095,12 @@
 	_setupInfo.max_range   = _moveDistance;
 	_setupInfo.is_sticky   = sticky;
 	_setupInfo.is_ultra    = instance_is(self, UltraGrenade);
+	_setupInfo.is_cannon   = instance_is(self, BloodBall);
 	_setupInfo.is_confetti = instance_is(self, ConfettiBall);
 	_setupInfo.explosion   = {
 		"is_small"   : instance_is(self, MiniNade),
 		"is_heavy"   : (_setupInfo.is_ultra || instance_is(self, HeavyNade)),
-		"is_blood"   : instance_is(self, BloodGrenade),
+		"is_blood"   : (instance_is(self, BloodGrenade) || instance_is(self, BloodBall)),
 		"is_toxic"   : instance_is(self, ToxicGrenade),
 		"is_cluster" : instance_is(self, ClusterNade)
 	};
@@ -5079,10 +5126,39 @@
 		if(_explosion.is_blood){
 			with(_instanceList){
 				if(!place_meeting(x, y, BloodStreak) || chance(1, 3)){
-					with(instance_create(xstart + hspeed, ystart + vspeed, BloodStreak)){
-						image_angle = other.direction;
+					var _streakAngleOffset = 15 * ceil(((((sprite_get_bbox_bottom(sprite_index) + 1) - sprite_get_bbox_top(sprite_index)) * image_yscale) / 16) - 1);
+					for(var _streakAngleSide = -1; _streakAngleSide <= 1; _streakAngleSide++){
+						var _streakAngle = ((direction == 0 && speed == 0) ? ((image_angle == 0) ? random(360) : image_angle) : direction);
+						with(instance_create(xstart + hspeed, ystart + vspeed, BloodStreak)){
+							image_angle = _streakAngle + (_streakAngleOffset * _streakAngleSide);
+						}
+						if(_streakAngleOffset == 0){
+							break;
+						}
 					}
 				}
+			}
+		}
+		
+		 // Cannon:
+		if(_info.is_cannon){
+			 // Big:
+			projectile_temerge_add_scale(_instanceList, 0.1);
+			projectile_temerge_scale_damage(_instanceList, 1.5);
+			
+			 // Has Less Friction:
+			with(_instanceList){
+				friction /= 2;
+			}
+			
+			 // Extra Explosion:
+			var _addExplosion = lq_clone(_explosion);
+			_addExplosion.is_small = true;
+			projectile_temerge_add_effect(_instanceList, "explosion", [_addExplosion]);
+			
+			 // Emits Blood Explosions:
+			if(_explosion.is_blood){
+				projectile_temerge_add_effect(_instanceList, "blood_trail");
 			}
 		}
 		
@@ -5136,6 +5212,20 @@
 #define Flare_temerge_setup(_instanceList)
 	 // Emits Flames:
 	projectile_temerge_add_effect(_instanceList, "flare");
+	
+	
+#define FlameBall_temerge_setup(_instanceList)
+	 // Big:
+	projectile_temerge_add_scale(_instanceList, 0.1);
+	projectile_temerge_scale_damage(_instanceList, 1.5);
+	
+	 // Emits Flames:
+	projectile_temerge_add_effect(_instanceList, "flare", [2]);
+	
+	 // Has Less Friction:
+	with(_instanceList){
+		friction /= 3;
+	}
 	
 	
 #define Rocket_temerge_setup(_instanceList)
