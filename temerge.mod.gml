@@ -5471,6 +5471,16 @@
 	projectile_temerge_add_effect(_instanceList, "plasma", [1]);
 	
 	
+#define Slash_temerge_fire(_at)                       temerge_can_delete = false;
+#define Shank_temerge_fire(_at)                       temerge_can_delete = false;
+#define EnergySlash_temerge_fire(_instanceList)       temerge_can_delete = false;
+#define EnergyHammerSlash_temerge_fire(_instanceList) temerge_can_delete = false;
+#define EnergyShank_temerge_fire(_instanceList)       temerge_can_delete = false;
+#define LightningSlash_temerge_fire(_instanceList)    temerge_can_delete = false;
+#define BloodSlash_temerge_fire(_instanceList)        temerge_can_delete = false;
+#define GuitarSlash_temerge_fire(_instanceList)       temerge_can_delete = false;
+
+
 #define ThrownWep_temerge_fire(_at)
 	 // Merge Weapon:
 	wep                = weapon_add_temerge(wep, _at.wep);

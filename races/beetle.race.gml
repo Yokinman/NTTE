@@ -188,6 +188,10 @@
 	}
 	
 	
+#define race_swep
+	return "beetle pistol";
+	
+	
 #define create
 	 // Random lets you play locked characters: (Can remove once 9941+ gets stable build)
 	if(!race_avail()){
