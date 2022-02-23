@@ -7,7 +7,7 @@
 	 // Store Script References:
 	with([
 		weapon_set_temerge, weapon_add_temerge, weapon_has_temerge, weapon_temerge_is_part, weapon_temerge_get_weapon, weapon_temerge_set_weapon, weapon_temerge_add_weapon, temerge_weapon_set_event,
-		projectile_temerge_add_event, projectile_temerge_add_effect, projectile_temerge_add_scale, projectile_temerge_add_bloom, projectile_temerge_scale_damage, projectile_temerge_add_force
+		projectile_temerge_add_event, projectile_temerge_add_effect, projectile_temerge_has_effect, projectile_temerge_add_scale, projectile_temerge_add_bloom, projectile_temerge_scale_damage, projectile_temerge_add_force, projectile_temerge_can_hit, projectile_temerge_wall_bounce, projectile_temerge_destroy
 	]){
 		lq_set(scr, script_get_name(self), script_ref_create(self));
 	}
@@ -1600,6 +1600,8 @@
 						 // Replace Projectile:
 						if(_lastMergeFire.has_shot){
 							if(_lastMergeFire.shot_replace_count < _lastMergeFire.shot_replace_min + floor(logn(_lastMergeFire.shot_replace_base, 1 + _lastMergeFire.shot_count))){
+								_lastMergeFire.shot_replace_count++;
+								
 								var	_merge = {
 										"last_fire_vars" : _lastMergeFire,
 										"on_fire"        : (("temerge_on_fire"      in self) ? temerge_on_fire      : undefined),
@@ -1608,13 +1610,9 @@
 										"on_wall"        : (("temerge_on_wall"      in self) ? temerge_on_wall      : undefined),
 										"on_destroy"     : (("temerge_on_destroy"   in self) ? temerge_on_destroy   : undefined),
 										"speed_factor"   : (("temerge_speed_factor" in self) ? temerge_speed_factor : undefined),
+										"object"         : (("temerge_object"       in self) ? temerge_object       : undefined),
 										"setup_vars"     : {}
 									},
-									_mergeObject = (
-										("temerge_object" in self && temerge_object != undefined)
-										? temerge_object
-										: object_index
-									),
 									_fireAt = {
 										"x"                  : undefined,
 										"y"                  : undefined,
@@ -1639,6 +1637,7 @@
 								}
 								
 								 // Setup Default Events:
+								var _mergeObject = ((_merge.object == undefined) ? object_index : _merge.object);
 								if(ds_map_exists(global.object_temerge_event_table, _mergeObject)){
 									var _mergeObjectEventMap = global.object_temerge_event_table[? _mergeObject];
 									switch(_merge.on_fire   ){ case undefined: _merge.on_fire    = _mergeObjectEventMap.fire;    }
@@ -1679,7 +1678,7 @@
 										&& _mainMergeFire.infammo == 0
 									){
 										for(var _mergeFire = _lastMergeFire; _mergeFire != undefined; _mergeFire = _mergeFire.last_vars){
-											if((_mergeFire.shot_replace_count % _mergeFire.shot_replace_cost_interval) >= 1){
+											if(((_mergeFire.shot_replace_count - 1) % _mergeFire.shot_replace_cost_interval) >= 1){
 												_canCost = false;
 												break;
 											}
@@ -1803,9 +1802,6 @@
 									 // Revert Firing Weapon:
 									_wep = _mainWep;
 								}
-								
-								 // Increment Replaced Shot Count:
-								_lastMergeFire.shot_replace_count++;
 							}
 							
 							 // Increment Shot Count:
@@ -2600,7 +2596,7 @@
 	}
 	
 	
-#define temerge_flare_effect_setup // instanceList, flameTrailAmount=1
+#define temerge_flame_trail_effect_setup // instanceList, flameTrailAmount=1
 	/*
 		Merged projectile flame trail effect
 	*/
@@ -2609,16 +2605,17 @@
 		_flameTrailAmount = ((argument_count > 1) ? argument[1] : 1);
 		
 	with(_instanceList){
-		if("temerge_flare_amount" not in self){
-			temerge_flare_amount = 0;
-			temerge_flare_angle  = random(360);
+		if("temerge_flame_trail_amount" not in self){
+			temerge_flame_trail_amount = 0;
+			temerge_flame_trail_angle  = random(360);
+			projectile_temerge_add_event(_instanceList, "hit", script_ref_create(temerge_flame_trail_projectile_hit));
 		}
-		temerge_flare_amount += _flameTrailAmount;
+		temerge_flame_trail_amount += _flameTrailAmount;
 	}
 	
-#define temerge_flare_effect_step(_instanceList)
+#define temerge_flame_trail_effect_step(_instanceList)
 	/*
-		Merged flare projectiles leave behind a trail of flames
+		Merged flame trail projectiles leave behind a trail of flames
 	*/
 	
 	var	_lastSprite = -1,
@@ -2644,7 +2641,10 @@
 					Flame
 				)){
 					 // Motion:
-					motion_add(other.temerge_flare_angle, other.temerge_flare_amount + random(1));
+					motion_add(
+						other.temerge_flame_trail_angle,
+						other.temerge_flame_trail_amount + random(1)
+					);
 					
 					 // Dissipate Faster:
 					image_index = max(0, (image_number - 1) - (1 + other.damage));
@@ -2657,10 +2657,10 @@
 					projectile_init(other.team, other);
 					
 					 // Extra Flames:
-					if(other.temerge_flare_amount > 1){
+					if(other.temerge_flame_trail_amount > 1){
 						var _directionOffset = 0;
-						repeat(other.temerge_flare_amount - 1){
-							_directionOffset += 360 / other.temerge_flare_amount;
+						repeat(other.temerge_flame_trail_amount - 1){
+							_directionOffset += 360 / other.temerge_flame_trail_amount;
 							with(instance_copy(false)){
 								direction += _directionOffset;
 							}
@@ -2669,8 +2669,25 @@
 				}
 			}
 			
-			 // Rotate:
-			temerge_flare_angle += 36 / temerge_flare_amount;
+			 // Rotate Trail:
+			temerge_flame_trail_angle += 36 / temerge_flame_trail_amount;
+		}
+	}
+	
+#define temerge_flame_trail_projectile_hit
+	/*
+		Merged flame trail projectiles create flames on impact with a hittable
+	*/
+	
+	if(projectile_temerge_can_hit(other) && current_frame_active){
+		repeat(5 * temerge_flame_trail_amount){
+			call(scr.projectile_create,
+				x,
+				y,
+				Flame,
+				random(360),
+				random_range(2, 3) * temerge_flame_trail_amount
+			);
 		}
 	}
 	
@@ -2780,7 +2797,7 @@
 	*/
 	
 	if(temerge_slug_size != 0){
-		if(projectile_temerge_can_hit_other){
+		if(projectile_temerge_can_hit(other)){
 			var _damage = ceil(((damage == 0) ? 1 : damage) * (power(1.5, temerge_slug_size) - 1));
 			
 			if("temerge_slug_nexthurt" not in other || other.temerge_slug_nexthurt <= current_frame){
@@ -3118,7 +3135,7 @@
 		Merged piercing projectiles can survive hitting weaker enemies 
 	*/
 	
-	if(projectile_temerge_can_hit_other){
+	if(projectile_temerge_can_hit(other)){
 		var _pierceHealth = ceil(damage * temerge_pierce_amount);
 		if(other.my_health <= _pierceHealth){
 			 // Manual Damage:
@@ -3853,7 +3870,7 @@
 		Merged rocket projectiles stop thrusting and activate their explosive payload on impact with a hittable
 	*/
 	
-	if(projectile_temerge_can_hit_other){
+	if(projectile_temerge_can_hit(other)){
 		temerge_rocket_projectile_wall();
 		
 		 // Activate Explosion:
@@ -4122,7 +4139,7 @@
 		sound_play_hit_big(
 			(
 				(_explosionCount > 2)
-				? (projectile_temerge_has_effect(self, "devastator") ? sndDevastatorExplo : sndPlasmaBigExplode)
+				? (projectile_temerge_has_effect(self, "plasma_trail") ? sndDevastatorExplo : sndPlasmaBigExplode)
 				: sndPlasmaHit
 			),
 			0.3
@@ -4146,30 +4163,30 @@
 	}
 	
 	
-#define temerge_devastator_effect_setup(_instanceList)
+#define temerge_plasma_trail_effect_setup(_instanceList)
 	/*
 		Merged projectile plasma explosion trail effect
 	*/
 	
 	with(_instanceList){
-		if("temerge_devastator_scale" not in self){
-			temerge_devastator_scale  = 1/28;
-			temerge_devastator_amount = 0;
-			projectile_temerge_add_event(self, "hit", script_ref_create(temerge_devastator_projectile_hit));
+		if("temerge_plasma_trail_scale" not in self){
+			temerge_plasma_trail_scale  = 1/28;
+			temerge_plasma_trail_amount = 0;
+			projectile_temerge_add_event(self, "hit", script_ref_create(temerge_plasma_trail_projectile_hit));
 		}
 		else{
-			temerge_devastator_scale *= 2;
+			temerge_plasma_trail_scale *= 2;
 		}
-		temerge_devastator_amount++;
+		temerge_plasma_trail_amount++;
 	}
 	
-#define temerge_devastator_effect_step(_instanceList)
+#define temerge_plasma_trail_effect_step(_instanceList)
 	/*
-		Merged devastator projectiles create plasma explosions as they travel
+		Merged plasma trail projectiles create plasma explosions as they travel
 	*/
 	
 	with(_instanceList){
-		var _explosionAmount = abs(damage) * temerge_devastator_scale;
+		var _explosionAmount = abs(damage) * temerge_plasma_trail_scale;
 		if(chance_ct(_explosionAmount, 1)){
 			var	_explosionScale     = lerp(0.5, 1, min(abs(_explosionAmount), 1)),
 				_explosionOffsetLen = random(16),
@@ -4193,7 +4210,7 @@
 				}
 				
 				 // Extra Delayed Explosions:
-				for(var _explosionIndex = 1; _explosionIndex < other.temerge_devastator_amount; _explosionIndex++){
+				for(var _explosionIndex = 1; _explosionIndex < other.temerge_plasma_trail_amount; _explosionIndex++){
 					with(instance_copy(false)){
 						x    += orandom(2);
 						y    += orandom(2);
@@ -4212,14 +4229,14 @@
 		}
 	}
 	
-#define temerge_devastator_projectile_hit
+#define temerge_plasma_trail_projectile_hit
 	/*
-		Merged devastator projectiles create plasma explosions on impact with a hittable
+		Merged plasma trail projectiles create plasma explosions on impact with a hittable
 	*/
 	
-	if(projectile_temerge_can_hit_other){
-		var _explosionScale = lerp(0.5, 1, min(abs(damage) * temerge_devastator_scale, 1));
-		for(var _explosionIndex = 0; _explosionIndex < temerge_devastator_amount; _explosionIndex++){
+	if(projectile_temerge_can_hit(other) && current_frame_active){
+		var _explosionScale = lerp(0.5, 1, min(abs(damage) * temerge_plasma_trail_scale, 1));
+		for(var _explosionIndex = 0; _explosionIndex < temerge_plasma_trail_amount; _explosionIndex++){
 			with(instance_create(
 				random_range(other.bbox_left, other.bbox_right  + 1),
 				random_range(other.bbox_top,  other.bbox_bottom + 1),
@@ -4238,6 +4255,67 @@
 	}
 	
 	
+#define temerge_lightning_trail_effect_setup(_instanceList)
+	/*
+		Merged projectile lightning trail effect
+	*/
+	
+	with(_instanceList){
+		if(!projectile_temerge_has_effect(self, "lightning_trail")){
+			projectile_temerge_add_event(self, "hit", script_ref_create(temerge_lightning_trail_projectile_hit));
+		}
+	}
+	
+#define temerge_lightning_trail_effect_step(_instanceList)
+	/*
+		Merged lightning trail projectiles leave behind a trail of lightning rails
+	*/
+	
+	with(_instanceList){
+		if(chance_ct(1, 4)){
+			with(call(scr.projectile_create, x, y, Lightning, random(360))){
+				ammo = min(irandom(other.damage), 27);
+				event_perform(ev_alarm, 0);
+				
+				 // Spawn Effect:
+				visible = false;
+				with(instance_create(x, y, LightningSpawn)){
+					image_angle = other.image_angle;
+				}
+			}
+		}
+	}
+	
+#define temerge_lightning_trail_projectile_hit
+	/*
+		Merged lightning trail projectiles create lightning rails on impact with a hittable
+	*/
+	
+	if(projectile_temerge_can_hit(other) && current_frame_active){
+		with(call(scr.projectile_create, x, y, Lightning, point_direction(x, y, other.x, other.y) + orandom(45))){
+			ammo = min(3 + irandom(other.damage), 27);
+			event_perform(ev_alarm, 0);
+			
+			 // Spawn Effect:
+			visible = false;
+			with(instance_create(x, y, LightningSpawn)){
+				image_angle = other.image_angle;
+			}
+		}
+	}
+	
+	
+#define temerge_blood_trail_effect_setup(_instanceList)
+	/*
+		Merged projectile blood explosion trail effect
+	*/
+	
+	with(_instanceList){
+		if(!projectile_temerge_has_effect(self, "blood_trail")){
+			projectile_temerge_add_event(self, "hit", script_ref_create(temerge_blood_trail_projectile_hit));
+		}
+	}
+	
 #define temerge_blood_trail_effect_step(_instanceList)
 	/*
 		Merged blood trail projectiles leave behind a trail of blood explosions
@@ -4247,6 +4325,15 @@
 		if(chance_ct(damage + (force >= 3), 270)){
 			call(scr.projectile_create, x + orandom(5), y + orandom(5), MeatExplosion);
 		}
+	}
+	
+#define temerge_blood_trail_projectile_hit
+	/*
+		Merged blood trail projectiles create blood explosions on impact with a hittable
+	*/
+	
+	if(projectile_canhit_melee(other) && current_frame_active){
+		call(scr.projectile_create, x + orandom(5), y + orandom(5), MeatExplosion);
 	}
 	
 	
@@ -4396,131 +4483,6 @@
 			else _lastEventRef = _scriptRef;
 		}
 		variable_instance_set(self, _eventRefVarName, _lastEventRef);
-	}
-	
-#define projectile_temerge_wall_bounce()
-	/*
-		Called from a merged projectile in its wall collision event to make it bounce
-	*/
-	
-	switch(object_index){
-		
-		case Laser:
-		case EnemyLaser:
-		
-			 // Laser Bounce:
-			with(instance_copy(false)){
-				 // Restore Starting Values:
-				xstart       = x;
-				ystart       = y;
-				image_xscale = 1;
-				
-				 // Bounce Direction:
-				var	_addX = lengthdir_x(2, image_angle),
-					_addY = lengthdir_y(2, image_angle);
-					
-				if(place_meeting(x + _addX, y, Wall)){
-					_addX *= -1;
-				}
-				else if(place_meeting(x, y + _addY, Wall)){
-					_addY *= -1;
-				}
-				else{
-					_addX *= -1;
-					_addY *= -1;
-				}
-				image_angle = point_direction(0, 0, _addX, _addY);
-				direction   = image_angle;
-				
-				 // Rerun Hitscan:
-				event_perform(ev_alarm, 0);
-			}
-			
-			break;
-			
-		default:
-		
-			 // Normal Bounce:
-			if(speed != 0){
-				var _lastDirection = direction;
-				move_bounce_solid(true);
-				if(image_angle == _lastDirection){
-					image_angle = direction;
-				}
-				
-				 // Fun:
-				if(instance_is(self, HyperGrenade)){
-					alarm0 = 1;
-					alarm1 = -1;
-				}
-			}
-			
-	}
-	
-#define projectile_temerge_add_scale // instanceList, addXScale, addYScale=addXScale
-	/*
-		Adds to the given merged projectile's scale, with manual visual fixes for certain projectiles
-		
-		Args:
-			addXScale - The number to add to the instance's image_xscale
-			addYScale - The number to add to the instance's image_yscale, defaults to addXScale
-	*/
-	
-	var	_instanceList = argument[0],
-		_addXScale    = argument[1],
-		_addYScale    = ((argument_count > 2) ? argument[2] : _addXScale);
-		
-	with(_instanceList){
-		image_xscale += _addXScale * ((image_xscale < 0) ? -1 : 1);
-		image_yscale += _addYScale * ((image_yscale < 0) ? -1 : 1);
-		
-		 // Manual Visual Fixes:
-		switch(object_index){
-			
-			case Rocket:
-			case Nuke:
-			case ConfettiBall:
-			
-				projectile_temerge_add_effect(self, "fix_scale");
-				
-				break;
-				
-			case Lightning:
-			case EnemyLightning:
-			
-				temerge_fix_lightning_yscale = image_yscale;
-				projectile_temerge_add_effect(self, "fix_lightning_yscale");
-				
-				break;
-				
-		}
-	}
-	
-#define projectile_temerge_add_bloom(_instanceList, _bloomAmount)
-	/*
-		Adds to the given merged projectile's bloom
-	*/
-	
-	with(_instanceList){
-		image_alpha += _bloomAmount * sign(image_alpha);
-	}
-	
-#define projectile_temerge_scale_damage(_instanceList, _damageFactor)
-	/*
-		Scales the given merged projectile's damage
-	*/
-	
-	with(_instanceList){
-		damage += round(damage * (_damageFactor - 1));
-	}
-	
-#define projectile_temerge_add_force(_instanceList, _forceAmount)
-	/*
-		Adds to the given merged projectile's push force
-	*/
-	
-	with(_instanceList){
-		force += _forceAmount * sign(force);
 	}
 	
 #define projectile_temerge_add_effect // instance, effectName, ?effectSetupArgList
@@ -4676,6 +4638,142 @@
 	
 	return false;
 	
+#define projectile_temerge_add_scale // instanceList, addXScale, addYScale=addXScale
+	/*
+		Adds to the given merged projectile's scale, with manual visual fixes for certain projectiles
+		
+		Args:
+			addXScale - The number to add to the instance's image_xscale
+			addYScale - The number to add to the instance's image_yscale, defaults to addXScale
+	*/
+	
+	var	_instanceList = argument[0],
+		_addXScale    = argument[1],
+		_addYScale    = ((argument_count > 2) ? argument[2] : _addXScale);
+		
+	with(_instanceList){
+		image_xscale += _addXScale * ((image_xscale < 0) ? -1 : 1);
+		image_yscale += _addYScale * ((image_yscale < 0) ? -1 : 1);
+		
+		 // Manual Visual Fixes:
+		switch(object_index){
+			
+			case Rocket:
+			case Nuke:
+			case ConfettiBall:
+			
+				projectile_temerge_add_effect(self, "fix_scale");
+				
+				break;
+				
+			case Lightning:
+			case EnemyLightning:
+			
+				temerge_fix_lightning_yscale = image_yscale;
+				projectile_temerge_add_effect(self, "fix_lightning_yscale");
+				
+				break;
+				
+		}
+	}
+	
+#define projectile_temerge_add_bloom(_instanceList, _bloomAmount)
+	/*
+		Adds to the given merged projectile's bloom
+	*/
+	
+	with(_instanceList){
+		image_alpha += _bloomAmount * sign(image_alpha);
+	}
+	
+#define projectile_temerge_scale_damage(_instanceList, _damageFactor)
+	/*
+		Scales the given merged projectile's damage
+	*/
+	
+	with(_instanceList){
+		damage += round(damage * (_damageFactor - 1));
+	}
+	
+#define projectile_temerge_add_force(_instanceList, _forceAmount)
+	/*
+		Adds to the given merged projectile's push force
+	*/
+	
+	with(_instanceList){
+		force += _forceAmount * sign(force);
+	}
+	
+#define projectile_temerge_can_hit(_hitInstance)
+	/*
+		Returns whether the current merged projectile instance can vaguely hit the given hittable instance
+	*/
+	
+	return (
+		projectile_canhit(_hitInstance)
+		&& _hitInstance.my_health > 0
+		&& ("canhurt" not in self || canhurt) // Bolts
+	);
+	
+#define projectile_temerge_wall_bounce()
+	/*
+		Called from a merged projectile in its wall collision event to make it bounce
+	*/
+	
+	switch(object_index){
+		
+		case Laser:
+		case EnemyLaser:
+		
+			 // Laser Bounce:
+			with(instance_copy(false)){
+				 // Restore Starting Values:
+				xstart       = x;
+				ystart       = y;
+				image_xscale = 1;
+				
+				 // Bounce Direction:
+				var	_addX = lengthdir_x(2, image_angle),
+					_addY = lengthdir_y(2, image_angle);
+					
+				if(place_meeting(x + _addX, y, Wall)){
+					_addX *= -1;
+				}
+				else if(place_meeting(x, y + _addY, Wall)){
+					_addY *= -1;
+				}
+				else{
+					_addX *= -1;
+					_addY *= -1;
+				}
+				image_angle = point_direction(0, 0, _addX, _addY);
+				direction   = image_angle;
+				
+				 // Rerun Hitscan:
+				event_perform(ev_alarm, 0);
+			}
+			
+			break;
+			
+		default:
+		
+			 // Normal Bounce:
+			if(speed != 0){
+				var _lastDirection = direction;
+				move_bounce_solid(true);
+				if(image_angle == _lastDirection){
+					image_angle = direction;
+				}
+				
+				 // Fun:
+				if(instance_is(self, HyperGrenade)){
+					alarm0 = 1;
+					alarm1 = -1;
+				}
+			}
+			
+	}
+	
 #define projectile_temerge_destroy(_instance)
 	/*
 		Used as a replacement for 'instance_destroy' in merged projectile events,
@@ -4692,15 +4790,6 @@
 		 // Destroy Instance:
 		instance_destroy();
 	}
-	
-#macro projectile_temerge_can_hit_other
-	/*
-		Whether the current merged projectile instance (self) can vaguely hit a hittable instance (other)
-	*/
-	
-	projectile_canhit(other)
-	&& other.my_health > 0
-	&& ("canhurt" not in self || canhurt) // Bolts
 	
 	
 #define HeavyBullet_temerge_setup(_instanceList)
@@ -5151,12 +5240,7 @@
 				friction /= 2;
 			}
 			
-			 // Extra Explosion:
-			var _addExplosion = lq_clone(_explosion);
-			_addExplosion.is_small = true;
-			projectile_temerge_add_effect(_instanceList, "explosion", [_addExplosion]);
-			
-			 // Emits Blood Explosions:
+			 // Spews Blood Explosions:
 			if(_explosion.is_blood){
 				projectile_temerge_add_effect(_instanceList, "blood_trail");
 			}
@@ -5210,8 +5294,8 @@
 	
 	
 #define Flare_temerge_setup(_instanceList)
-	 // Emits Flames:
-	projectile_temerge_add_effect(_instanceList, "flare");
+	 // Spews Flames:
+	projectile_temerge_add_effect(_instanceList, "flame_trail");
 	
 	
 #define FlameBall_temerge_setup(_instanceList)
@@ -5219,13 +5303,13 @@
 	projectile_temerge_add_scale(_instanceList, 0.1);
 	projectile_temerge_scale_damage(_instanceList, 1.5);
 	
-	 // Emits Flames:
-	projectile_temerge_add_effect(_instanceList, "flare", [2]);
-	
 	 // Has Less Friction:
 	with(_instanceList){
 		friction /= 3;
 	}
+	
+	 // Spews Flames:
+	projectile_temerge_add_effect(_instanceList, "flame_trail", [2]);
 	
 	
 #define Rocket_temerge_setup(_instanceList)
@@ -5306,14 +5390,28 @@
 	}
 	
 	
-#define PlasmaBall_temerge_setup(_instanceList)
-	 // Explodes Into Plasma:
-	projectile_temerge_add_effect(_instanceList, "plasma");
+#define LightningBall_temerge_setup(_instanceList)
+	 // Big:
+	projectile_temerge_add_scale(_instanceList, 0.1);
+	projectile_temerge_scale_damage(_instanceList, 1.5);
 	
 	 // Has Less Friction:
 	with(_instanceList){
 		friction /= 3;
 	}
+	
+	 // Spews Lightning:
+	projectile_temerge_add_effect(_instanceList, "lightning_trail");
+	
+	
+#define PlasmaBall_temerge_setup(_instanceList)
+	 // Has Less Friction:
+	with(_instanceList){
+		friction /= 3;
+	}
+	
+	 // Explodes Into Plasma:
+	projectile_temerge_add_effect(_instanceList, "plasma");
 	
 	
 #define PlasmaBig_temerge_setup(_instanceList)
@@ -5358,21 +5456,19 @@
 	}
 	
 #define Devastator_temerge_setup(_instanceList)
-	 // Stack Effect - Pierces Enemies:
 	with(_instanceList){
-		if(projectile_temerge_has_effect(self, "devastator")){
+		 // Stack Effect - Pierces Enemies:
+		if(projectile_temerge_has_effect(self, "plasma_trail")){
 			projectile_temerge_add_effect(self, "pierce", [2]);
 		}
+		
+		 // Has Less Friction:
+		friction /= 3;
 	}
 	
 	 // Spews Plasma:
-	projectile_temerge_add_effect(_instanceList, "devastator");
+	projectile_temerge_add_effect(_instanceList, "plasma_trail");
 	projectile_temerge_add_effect(_instanceList, "plasma", [1]);
-	
-	 // Has Less Friction:
-	with(_instanceList){
-		friction /= 3;
-	}
 	
 	
 #define ThrownWep_temerge_fire(_at)
@@ -5385,7 +5481,7 @@
 #define ConfettiBall_temerge_hit
 	 // Celebrate Death:
 	if(
-		projectile_temerge_can_hit_other
+		projectile_temerge_can_hit(other)
 		&& other.my_health <= damage
 		&& ("temerge_confetti_can_hit" not in other || other.temerge_confetti_can_hit)
 	){
