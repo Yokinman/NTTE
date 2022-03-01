@@ -1858,7 +1858,7 @@
 					sprt : [
 						["Loadout",       2, 16,  16, true],
 						["Map",           1, 10,  10, true],
-						["Portrait",      1, 20, 221, true],
+						["Portrait",      1, 90, 243, true],
 						["Select",        2,  0,   0, false],
 						["UltraIcon",     2, 12,  16, false],
 						["UltraHUDA",     1,  8,   9, false],

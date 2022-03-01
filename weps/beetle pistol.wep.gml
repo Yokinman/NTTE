@@ -42,7 +42,7 @@
 	}
 	
 	 // Sounds:
-	sound_play_gun(sndMachinegun, 0.3, 0.3);
+	sound_play_gun(sndFrogPistol, 0.3, 0.3);
 	
 	 // Effects:
 	weapon_post(4, -2, 0);

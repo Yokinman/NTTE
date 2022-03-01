@@ -3910,17 +3910,16 @@
 		}
 	}
 	
-#define weapon_decide // hardMin=0, hardMax=GameCont.hard, gold=false, ?noWep
+#define weapon_decide // minArea=0, maxArea=GameCont.hard, isGold=false, ?avoidWep
 	/*
 		Returns a random weapon that spawns within the given difficulties
 		Takes standard weapon chest spawning conditions into account
 		
 		Args:
-			hardMin - The minimum weapon spawning difficulty, defaults to 0
-			hardMax - The maximum weapon spawning difficulty, defaults to GameCont.hard
-			gold    - Spawn golden weapons like a mansion chest (true), or not (false, default)
-			          Use -1 to completely exclude golden weapons
-			noWep   - Optional, a weapon or array of weapons to exclude from spawning
+			minArea/maxArea - The weapon spawn difficulty range, defaults to 0 and GameCont.hard
+			isGold          - Is only able to decide from golden weapons? Defaults to false
+			                  Use -1 to completely exclude golden weapons
+			avoidWep        - Optional, a weapon or array of weapons to exclude from spawning
 			
 		Ex:
 			wep = weapon_decide();
@@ -3928,76 +3927,79 @@
 			wep = weapon_decide(2, GameCont.hard, false, [p.wep, p.bwep]);
 	*/
 	
-	var	_hardMin = ((argument_count > 0) ? argument[0] : 0),
-		_hardMax = ((argument_count > 1) ? argument[1] : GameCont.hard),
-		_gold    = ((argument_count > 2) ? argument[2] : false),
-		_noWep   = ((argument_count > 3) ? argument[3] : undefined);
+	var	_minArea   = ((argument_count > 0) ? argument[0] : 0),
+		_maxArea   = ((argument_count > 1) ? argument[1] : GameCont.hard),
+		_isGold    = ((argument_count > 2) ? argument[2] : false),
+		_avoidWep  = ((argument_count > 3) ? argument[3] : undefined),
+		_decideWep = wep_screwdriver;
 		
 	 // Hardmode:
-	_hardMax += ceil((GameCont.hard - (UberCont.hardmode * 13)) / (1 + (UberCont.hardmode * 2))) - GameCont.hard;
+	_maxArea += ceil((GameCont.hard - (UberCont.hardmode * 13)) / (1 + (UberCont.hardmode * 2))) - GameCont.hard;
 	
 	 // Robot:
-	for(var i = 0; i < maxp; i++){
-		if(player_get_race(i) == "robot"){
-			_hardMax++;
+	for(var _playerIndex = 0; _playerIndex < maxp; _playerIndex++){
+		if(player_get_race(_playerIndex) == "robot"){
+			_maxArea++;
 		}
 	}
-	_hardMin += 5 * ultra_get("robot", 1);
+	_minArea += 5 * ultra_get("robot", 1);
 	
 	 // Just in Case:
-	_hardMax = max(0, _hardMax);
-	_hardMin = min(_hardMin, _hardMax);
+	_maxArea = max(_maxArea, 0);
+	_minArea = min(_minArea, _maxArea);
 	
-	 // Default:
-	var _wepDecide = wep_screwdriver;
+	 // Default Weapon:
 	if("wep" in self && wep != wep_none){
-		_wepDecide = wep;
+		_decideWep = wep;
 	}
-	else if(_gold > 0){
-		_wepDecide = choose(wep_golden_wrench, wep_golden_machinegun, wep_golden_shotgun, wep_golden_crossbow, wep_golden_grenade_launcher, wep_golden_laser_pistol);
+	else if(_isGold > 0){
+		_decideWep = choose(wep_golden_wrench, wep_golden_machinegun, wep_golden_shotgun, wep_golden_crossbow, wep_golden_grenade_launcher, wep_golden_laser_pistol);
 		if(GameCont.loops > 0 && random(2) < 1){
-			_wepDecide = choose(wep_golden_screwdriver, wep_golden_assault_rifle, wep_golden_slugger, wep_golden_splinter_gun, wep_golden_bazooka, wep_golden_plasma_gun);
+			_decideWep = choose(wep_golden_screwdriver, wep_golden_assault_rifle, wep_golden_slugger, wep_golden_splinter_gun, wep_golden_bazooka, wep_golden_plasma_gun);
 		}
 	}
 	
-	 // Decide:
-	var	_list    = ds_list_create(),
-		_listMax = weapon_get_list(_list, _hardMin, _hardMax);
+	 // Decide Weapon:
+	var	_wepList     = ds_list_create(),
+		_wepListSize = weapon_get_list(_wepList, _minArea, _maxArea);
 		
-	ds_list_shuffle(_list);
+	ds_list_shuffle(_wepList);
 	
-	for(var i = 0; i < _listMax; i++){
-		var	_wep    = ds_list_find_value(_list, i),
-			_canWep = true;
+	for(var _wepIndex = 0; _wepIndex < _wepListSize; _wepIndex++){
+		var	_wep         = _wepList[| _wepIndex],
+			_wepCanSpawn = true;
 			
 		 // Weapon Exceptions:
-		if(_wep == _noWep || (is_array(_noWep) && array_find_index(_noWep, _wep) >= 0)){
-			_canWep = false;
+		if(_wep == _avoidWep || (is_array(_avoidWep) && array_find_index(_avoidWep, _wep) >= 0)){
+			_wepCanSpawn = false;
 		}
 		
 		 // Gold Check:
-		else if((_gold > 0 && !weapon_get_gold(_wep)) || (_gold < 0 && weapon_get_gold(_wep) == 0)){
-			_canWep = false;
+		else if(
+			   (_isGold > 0 && !weapon_get_gold(_wep))
+			|| (_isGold < 0 && weapon_get_gold(_wep) == 0)
+		){
+			_wepCanSpawn = false;
 		}
 		
 		 // Specific Spawn Conditions:
 		else switch(_wep){
-			case wep_super_disc_gun       : if("curse" not in self || curse <= 0) _canWep = false; break;
-			case wep_golden_nuke_launcher : if(!UberCont.hardmode)                _canWep = false; break;
-			case wep_golden_disc_gun      : if(!UberCont.hardmode)                _canWep = false; break;
-			case wep_gun_gun              : if(crown_current != crwn_guns)        _canWep = false; break;
+			case wep_super_disc_gun       : _wepCanSpawn = ("curse" in self && curse > 0); break;
+			case wep_golden_nuke_launcher : _wepCanSpawn = UberCont.hardmode;              break;
+			case wep_golden_disc_gun      : _wepCanSpawn = UberCont.hardmode;              break;
+			case wep_gun_gun              : _wepCanSpawn = (crown_current == crwn_guns);   break;
 		}
 		
 		 // Success:
-		if(_canWep){
-			_wepDecide = _wep;
+		if(_wepCanSpawn){
+			_decideWep = _wep;
 			break;
 		}
 	}
 	
-	ds_list_destroy(_list);
+	ds_list_destroy(_wepList);
 	
-	return _wepDecide;
+	return _decideWep;
 	
 #define weapon_get(_eventName, _wep)
 	/*

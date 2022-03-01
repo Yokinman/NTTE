@@ -235,7 +235,7 @@
 				
 				 // Take Health:
 				var _mergeWepDepth = 1;
-				for(var _wep = wep; call(scr.weapon_has_temerge, _wep); _wep = call(scr.weapon_temerge_get_weapon, _wep)){
+				for(var _wep = wep; call(scr.weapon_has_temerge, _wep); _wep = call(scr.weapon_get_temerge_weapon, _wep)){
 					_mergeWepDepth++;
 				}
 				chickendeaths += _mergeWepDepth;
