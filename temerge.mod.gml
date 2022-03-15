@@ -6,8 +6,8 @@
 	
 	 // Store Script References:
 	with([
-		weapon_set_temerge, weapon_add_temerge, weapon_has_temerge, weapon_get_temerge_is_part, weapon_get_temerge_weapon, weapon_set_temerge_weapon, weapon_add_temerge_weapon, temerge_weapon_event_set_script,
-		projectile_add_temerge_event, projectile_add_temerge_effect, projectile_has_temerge_effect, projectile_add_temerge_scale, projectile_add_temerge_bloom, projectile_add_temerge_damage, projectile_add_temerge_force, projectile_can_temerge_hit, projectile_wall_temerge_bounce, projectile_temerge_destroy
+		weapon_set_temerge, weapon_deactivate_temerge, weapon_activate_temerge, weapon_add_temerge, weapon_delete_temerge, weapon_has_temerge, weapon_has_temerge_with_weapon, weapon_is_temerge_part, weapon_get_temerge_weapon, weapon_set_temerge_weapon, weapon_add_temerge_weapon, temerge_weapon_event_set_script,
+		projectile_add_temerge_event, projectile_add_temerge_effect, projectile_has_temerge_effect, projectile_add_temerge_scale, projectile_add_temerge_bloom, projectile_add_temerge_damage, projectile_add_temerge_force, projectile_can_temerge_hit, projectile_temerge_wall_bounce, projectile_temerge_destroy
 	]){
 		lq_set(scr, script_get_name(self), script_ref_create(self));
 	}
@@ -57,7 +57,20 @@
 		"weapon_fire",
 		"projectile_setup"
 	]){
-		temerge_weapon_event_set_script(self, script_ref_create(script_get_index("temerge_" + self)));
+		var	_eventName   = self,
+			_scriptIndex = script_get_index("temerge_" + _eventName);
+			
+		if(_scriptIndex >= 0){
+			switch(_eventName){
+				case "weapon_fire":
+				case "player_fire":
+					temerge_weapon_event_set_script(_eventName, script_ref_create(_scriptIndex, false));
+					break;
+					
+				default:
+					temerge_weapon_event_set_script(_eventName, script_ref_create(_scriptIndex));
+			}
+		}
 	}
 	
 	 // Merged Effect Events:
@@ -127,7 +140,7 @@
 	}
 	ds_map_destroy(global.sound_muffle_map);
 	
-#macro _wepXhas_merge             (is_object(_wep) && "temerge" in _wep && _wepXmerge_is_active)
+#macro _wepXhas_merge             ((is_object(_wep) && "temerge" in _wep && _wep.temerge != undefined) ? (_wepXmerge_is_active ? true : -1) : false)
 #macro _wepXmerge                 _wep.temerge
 #macro _wepXmerge_is_active       _wepXmerge.is_active
 #macro _wepXmerge_is_part         _wepXmerge.is_part
@@ -141,13 +154,13 @@
 #macro _wepXmerge_last_rads       _wepXmerge.last_rads
 #macro _wepXmerge_last_stock_cost _wepXmerge.last_stock_cost
 
-#define weapon_set_temerge(_wep, _mergeWep)
+#define weapon_set_temerge(_wep, _withWep)
 	/*
 		Sets the given weapon's merge to one with the given weapon
 		Returns the weapon, inside a lightweight object if it wasn't already
 	*/
 	
-	if(!_wepXhas_merge){
+	if(!is_object(_wep) || "temerge" not in _wep){
 		 // Wrapper Script Setup:
 		with(ds_map_keys(global.weapon_event_script_map)){
 			_wep = call(scr.wep_wrap, _wep, self, global.weapon_event_script_map[? self]);
@@ -162,7 +175,7 @@
 	 // Variable Setup:
 	_wepXmerge                 = {};
 	_wepXmerge_is_active       = true;
-	_wepXmerge_is_part         = (call(scr.wep_raw, _wep) == wep_none);
+	_wepXmerge_is_part         = true;
 	_wepXmerge_raw_wep         = [wep_none];
 	_wepXmerge_wep_fire_frame  = 0;
 	_wepXmerge_fire_frame      = 0;
@@ -173,24 +186,106 @@
 	_wepXmerge_last_stock_cost = 0;
 	
 	 // Set Weapon:
-	weapon_set_temerge_weapon(_wep, _mergeWep);
+	weapon_set_temerge_weapon(_wep, _withWep);
 	
 	return _wep;
 	
-#define weapon_add_temerge(_wep, _mergeWep)
+#define weapon_add_temerge(_wep, _withWep)
 	/*
-		Sets the given weapon's merge to one with the given weapon, or adds it to the front of the given weapon's merge if it has one
+		Sets the given weapon's merge to one with the given weapon, or adds it to the front of the given weapon's active merge if it has one
 		Returns the weapon, inside a lightweight object if it wasn't already
 	*/
 	
 	if(_wepXhas_merge){
-		weapon_add_temerge_weapon(_wep, _mergeWep);
+		weapon_add_temerge_weapon(_wep, _withWep);
 	}
 	else{
-		_wep = weapon_set_temerge(_wep, _mergeWep);
+		_wep = weapon_set_temerge(_wep, _withWep);
 	}
 	
 	return _wep;
+	
+#define weapon_has_temerge(_wep)
+	/*
+		Returns whether the given weapon has an active merge, or -1 if it has an inactive merge
+	*/
+	
+	return _wepXhas_merge;
+	
+#define weapon_has_temerge_with_weapon(_wep, _withWep)
+	/*
+		Returns whether the given weapon has an active merge, or -1 if it has an inactive merge, that contains the given weapon
+	*/
+	
+	var _withWepIsLWO = is_object(_withWep);
+	
+	while(_wepXhas_merge != false){
+		var _mergeWep = _wepXmerge_wep;
+		if(_withWep == (_withWepIsLWO ? _mergeWep : call(scr.wep_raw, _mergeWep))){
+			return (_wepXmerge_is_active ? true : -1);
+		}
+		_wep = _mergeWep;
+	}
+	
+	return false;
+	
+#define weapon_delete_temerge(_wep)
+	/*
+		Deletes the given weapon's merge
+	*/
+	
+	_wepXmerge = undefined;
+	
+#define weapon_activate_temerge(_wep)
+	/*
+		Activates the given weapon's merge
+	*/
+	
+	_wepXmerge_is_active = true;
+	
+#define weapon_deactivate_temerge(_wep)
+	/*
+		Deactivates the given weapon's merge
+	*/
+	
+	_wepXmerge_is_active = false;
+	
+#define weapon_get_temerge_weapon(_wep)
+	/*
+		Returns the given weapon's merge weapon
+	*/
+	
+	return _wepXmerge_wep;
+	
+#define weapon_set_temerge_weapon(_wep, _withWep)
+	/*
+		Sets the given weapon's merge weapon with the given weapon
+	*/
+	
+	_wepXmerge_wep     = _withWep;
+	_wepXmerge_is_part = (call(scr.wep_raw, _wep) == wep_none || weapon_has_temerge_with_weapon(_wep, wep_none));
+	
+#define weapon_add_temerge_weapon(_wep, _withWep)
+	/*
+		Adds to the front of given weapon's active merge with the given weapon
+	*/
+	
+	var _mergeWep = _wepXmerge_wep;
+	
+	if(weapon_has_temerge(_mergeWep)){
+		weapon_add_temerge_weapon(_mergeWep, _withWep);
+		_wepXmerge_is_part = (call(scr.wep_raw, _wep) == wep_none || weapon_has_temerge_with_weapon(_wep, wep_none));
+	}
+	else{
+		weapon_set_temerge_weapon(_wep, weapon_set_temerge(_mergeWep, _withWep));
+	}
+	
+#define weapon_is_temerge_part(_wep)
+	/*
+		Returns whether the given weapon is an empty slot or if its merge has an empty slot (wep_none)
+	*/
+	
+	return _wepXmerge_is_part;
 	
 #define temerge_decide_weapon // wep, minArea=0, maxArea=GameCont.hard, isGold=false, avoidMergeWepList=[]
 	/*
@@ -275,70 +370,14 @@
 	
 	return weapon_add_temerge_weapon(_wep, _mergeWep);
 	
-#define weapon_has_temerge(_wep)
-	/*
-		Returns whether the given weapon has a merge
-	*/
-	
-	return _wepXhas_merge;
-	
-#define weapon_get_temerge_is_part(_wep)
-	/*
-		Returns whether the given weapon's merge has an empty slot
-	*/
-	
-	return _wepXmerge_is_part;
-	
-#define weapon_get_temerge_weapon(_wep)
-	/*
-		Returns the given weapon's merge weapon
-	*/
-	
-	return _wepXmerge_wep;
-	
-#define weapon_set_temerge_weapon(_wep, _mergeWep)
-	/*
-		Sets the given weapon's merge weapon to the given weapon
-	*/
-	
-	_wepXmerge_wep = _mergeWep;
-	
-	 // Is an Empty Slot:
-	if(
-		weapon_has_temerge(_mergeWep)
-		? weapon_get_temerge_is_part(_mergeWep)
-		: (call(scr.wep_raw, _mergeWep) == wep_none)
-	){
-		_wepXmerge_is_part = true;
-	}
-	
-#define weapon_add_temerge_weapon(_wep, _mergeAddWep)
-	/*
-		Adds the given weapon to the front of given weapon's merge
-	*/
-	
-	var _mergeWep = _wepXmerge_wep;
-	
-	if(weapon_has_temerge(_mergeWep)){
-		weapon_add_temerge_weapon(_mergeWep, _mergeAddWep);
-		
-		 // Has an Empty Slot:
-		if(weapon_get_temerge_is_part(_mergeWep)){
-			_wepXmerge_is_part = true;
-		}
-	}
-	else{
-		weapon_set_temerge_weapon(_wep, weapon_set_temerge(_mergeWep, _mergeAddWep));
-	}
-	
-#define temerge_weapon_event_set_script(_eventName, _eventScriptRef)
+#define temerge_weapon_event_set_script(_eventName, _scriptRef)
 	/*
 		Sets the given merged weapon event to the given script reference
 	*/
 	
-	global.weapon_event_script_map[? ((_eventName == "weapon_step") ? "step" : _eventName)] = _eventScriptRef;
+	global.weapon_event_script_map[? ((_eventName == "weapon_step") ? "step" : _eventName)] = _scriptRef;
 	
-#define temerge_weapon_name(_wep, _stockName)
+#define temerge_weapon_name(_wep, _mergeStockName)
 	/*
 		Merged weapons insert their front weapon's name before the last word(s) of their stock weapon's name
 		Words in the stock weapon's name are grouped with words in the front weapon's name for less repetition
@@ -346,7 +385,7 @@
 		Weapon parts are suffixed with "STOCK" or "FRONT" depending on their type
 	*/
 	
-	var _canMergeNameNonSync = true;
+	var _mergeCanGenerateNameByNonSync = true;
 	
 	 // HUD Optimization:
 	if(
@@ -371,7 +410,7 @@
 		}
 		
 		 // Check if Hovering:
-		_canMergeNameNonSync = (
+		_mergeCanGenerateNameByNonSync = (
 			   mouse_y_nonsync <= _y + 13
 			&& mouse_x_nonsync <= _x + 31 + (44 * (wep == _wep && bwep == _wep))
 			&& mouse_y_nonsync >= _y
@@ -381,33 +420,33 @@
 	}
 	
 	 // Generate Merged Name:
-	if(_canMergeNameNonSync && _wepXhas_merge){
-		var _frontName = weapon_get_name(_wepXmerge_wep);
-		if(_stockName != "" || _frontName != ""){
-			var	_stockNameWordList     = [],
-				_stockNameWordTextList = [],
-				_frontNameWordList     = [],
-				_frontNameWordTextList = [],
-				_mergeNameWordList     = ((_frontName == "") ? _stockNameWordList     : _frontNameWordList),
-				_mergeNameWordTextList = ((_frontName == "") ? _stockNameWordTextList : _frontNameWordTextList);
+	if(_mergeCanGenerateNameByNonSync && _wepXhas_merge){
+		var _mergeFrontName = weapon_get_name(_wepXmerge_wep);
+		if(_mergeStockName != "" || _mergeFrontName != ""){
+			var	_mergeStockNameWordList     = [],
+				_mergeStockNameWordTextList = [],
+				_mergeFrontNameWordList     = [],
+				_mergeFrontNameWordTextList = [],
+				_mergeNameWordList          = ((_mergeFrontName == "") ? _mergeStockNameWordList     : _mergeFrontNameWordList),
+				_mergeNameWordTextList      = ((_mergeFrontName == "") ? _mergeStockNameWordTextList : _mergeFrontNameWordTextList);
 				
 			 // Deconstruct Names Into Words:
 			with([
-				[_stockName, _stockNameWordList, _stockNameWordTextList],
-				[_frontName, _frontNameWordList, _frontNameWordTextList]
+				[_mergeStockName, _mergeStockNameWordList, _mergeStockNameWordTextList],
+				[_mergeFrontName, _mergeFrontNameWordList, _mergeFrontNameWordTextList]
 			]){
 				var _name = self[0];
 				if(_name != ""){
-					var	_nameWordList      = self[1],
-						_nameWordTextList  = self[2],
-						_textColor         = c_white,
-						_textShake         = 0,
-						_tagSplitNameIndex = 0;
+					var	_nameWordList          = self[1],
+						_nameWordTextList      = self[2],
+						_nameTextColor         = c_white,
+						_nameTextShake         = 0,
+						_nameTagSplitNameIndex = 0;
 						
 					array_push(_nameWordList, {
 						"space" : " ",
-						"color" : _textColor,
-						"shake" : _textShake,
+						"color" : _nameTextColor,
+						"shake" : _nameTextShake,
 						"text"  : ""
 					});
 					
@@ -417,12 +456,12 @@
 							_lineCount = array_length(_lineList);
 							
 						 // Parse Tag:
-						if(_tagSplitNameIndex++ > 0){
+						if(_nameTagSplitNameIndex++ > 0){
 							if(ds_map_exists(global.nt_tag_color_map, _tagString)){
-								_textColor = global.nt_tag_color_map[? _tagString];
+								_nameTextColor = global.nt_tag_color_map[? _tagString];
 							}
 							else if(_tagString == "q" || _tagString == "Q"){
-								_textShake++;
+								_nameTextShake++;
 							}
 							else{
 								var _tagExtStringStartPos = string_pos("(", _tagString);
@@ -430,7 +469,7 @@
 								 // Custom Colors:
 								if(_tagExtStringStartPos > 0 && string_split(string_delete(_tagString, 1, _tagExtStringStartPos), ":")[0] == "color"){
 									_tagExtStringStartPos += 7;
-									_textColor = real(string_copy(_tagString, _tagExtStringStartPos, string_pos(")", _tagString) - _tagExtStringStartPos));
+									_nameTextColor = real(string_copy(_tagString, _tagExtStringStartPos, string_pos(")", _tagString) - _tagExtStringStartPos));
 								}
 								
 								 // Insert Non-Style Tags Back Into Words:
@@ -453,15 +492,15 @@
 									
 								 // Update Style for Empty Words:
 								if(_nameLastWord.text == ""){
-									_nameLastWord.color = _textColor;
-									_nameLastWord.shake = _textShake;
+									_nameLastWord.color = _nameTextColor;
+									_nameLastWord.shake = _nameTextShake;
 								}
 								
 								 // Active Words:
 								else if(_lineFirstWord != ""){
 									 // Store Latest Style:
-									_nameLastWord.final_color = _textColor;
-									_nameLastWord.final_shake = _textShake;
+									_nameLastWord.final_color = _nameTextColor;
+									_nameLastWord.final_shake = _nameTextShake;
 									
 									 // Insert Raw Tags:
 									if(_tagString != ""){
@@ -477,8 +516,8 @@
 							for(var _lineWordIndex = ((_lineIndex == 0) ? 1 : 0); _lineWordIndex < _lineWordCount; _lineWordIndex++){
 								array_push(_nameWordList, {
 									"space" : ((_lineWordIndex > 0) ? " " : "#"),
-									"color" : _textColor,
-									"shake" : _textShake,
+									"color" : _nameTextColor,
+									"shake" : _nameTextShake,
 									"text"  : _lineWordList[_lineWordIndex]
 								});
 							}
@@ -500,47 +539,47 @@
 			}
 			
 			 // Combine Names (SUPER PLASMA CANNON + AUTO SHOTGUN = SUPER PLASMA AUTO SHOTGUN CANNON):
-			if(_frontName != "" && _stockName != ""){
-				var	_stockNamePrefixCount    = array_length(_stockNameWordList) - 1,
-					_stockNamePrefixList     = array_slice(_stockNameWordList,     0, _stockNamePrefixCount),
-					_stockNamePrefixTextList = array_slice(_stockNameWordTextList, 0, _stockNamePrefixCount),
-					_stockNameSuffix         = _stockNameWordList[_stockNamePrefixCount],
-					_stockNameSuffixText     = _stockNameWordTextList[_stockNamePrefixCount];
+			if(_mergeFrontName != "" && _mergeStockName != ""){
+				var	_mergeStockNamePrefixCount    = array_length(_mergeStockNameWordList) - 1,
+					_mergeStockNamePrefixList     = array_slice(_mergeStockNameWordList,     0, _mergeStockNamePrefixCount),
+					_mergeStockNamePrefixTextList = array_slice(_mergeStockNameWordTextList, 0, _mergeStockNamePrefixCount),
+					_mergeStockNameSuffix         = _mergeStockNameWordList[_mergeStockNamePrefixCount],
+					_mergeStockNameSuffixText     = _mergeStockNameWordTextList[_mergeStockNamePrefixCount];
 					
 				 // Group Prefixes (*PLASMA* CANNON RIFLE > PLASMA PLASMA CANNON RIFLE):
-				for(var _stockNamePrefixIndex = _stockNamePrefixCount - 1; _stockNamePrefixIndex >= 0; _stockNamePrefixIndex--){
-					var _mergeNameWordIndex = array_find_index(_mergeNameWordTextList, _stockNamePrefixTextList[_stockNamePrefixIndex]);
+				for(var _mergeStockNamePrefixIndex = _mergeStockNamePrefixCount - 1; _mergeStockNamePrefixIndex >= 0; _mergeStockNamePrefixIndex--){
+					var _mergeNameWordIndex = array_find_index(_mergeNameWordTextList, _mergeStockNamePrefixTextList[_mergeStockNamePrefixIndex]);
 					if(_mergeNameWordIndex >= 0){
-						temerge_weapon_name_word_add_word(_mergeNameWordList[_mergeNameWordIndex], _stockNamePrefixList[_stockNamePrefixIndex]);
-						_stockNamePrefixList     = call(scr.array_delete, _stockNamePrefixList,     _stockNamePrefixIndex);
-						_stockNamePrefixTextList = call(scr.array_delete, _stockNamePrefixTextList, _stockNamePrefixIndex);
-						_stockNamePrefixCount--;
+						temerge_weapon_name_word_add_style(_mergeNameWordList[_mergeNameWordIndex], _mergeStockNamePrefixList[_mergeStockNamePrefixIndex]);
+						_mergeStockNamePrefixList     = call(scr.array_delete, _mergeStockNamePrefixList,     _mergeStockNamePrefixIndex);
+						_mergeStockNamePrefixTextList = call(scr.array_delete, _mergeStockNamePrefixTextList, _mergeStockNamePrefixIndex);
+						_mergeStockNamePrefixCount--;
 					}
 				}
 				
 				 // Prepend Prefixes:
-				if(_stockNamePrefixCount > 0){
-					_mergeNameWordList     = call(scr.array_combine, _stockNamePrefixList,     _mergeNameWordList);
-					_mergeNameWordTextList = call(scr.array_combine, _stockNamePrefixTextList, _mergeNameWordTextList);
+				if(_mergeStockNamePrefixCount > 0){
+					_mergeNameWordList     = call(scr.array_combine, _mergeStockNamePrefixList,     _mergeNameWordList);
+					_mergeNameWordTextList = call(scr.array_combine, _mergeStockNamePrefixTextList, _mergeNameWordTextList);
 				}
 				
 				 // Remove Redundant Suffixes:
-				switch(_stockNameSuffixText){
+				switch(_mergeStockNameSuffixText){
 					
 					case "GUN":
 					case "PISTOL":
 					case "LAUNCHER":
 					
 						 // SMART MACHINEGUN > SMART MACHINEGUN GUN:
-						_stockNameSuffixText = "";
+						_mergeStockNameSuffixText = "";
 						
 						break;
 						
 					case "REVOLVER":
 					
 						 // ULTRA POP GUN > ULTRA POP GUN REVOLVER:
-						if(array_length(_stockNamePrefixList)){
-							_stockNameSuffixText = "";
+						if(array_length(_mergeStockNamePrefixList)){
+							_mergeStockNameSuffixText = "";
 						}
 						
 						break;
@@ -549,7 +588,7 @@
 					
 						 // ASSAULT SHOTGUN > ASSAULT SHOTGUN RIFLE:
 						if(array_find_index(_mergeNameWordTextList, "ASSAULT") >= 0){
-							_stockNameSuffixText = "";
+							_mergeStockNameSuffixText = "";
 						}
 						
 						break;
@@ -558,7 +597,7 @@
 					
 						 // FLAK MACHINEGUN > FLAK MACHINEGUN CANNON
 						if(array_find_index(_mergeNameWordTextList, "FLAK") >= 0){
-							_stockNameSuffixText = "";
+							_mergeStockNameSuffixText = "";
 						}
 						
 						break;
@@ -566,7 +605,7 @@
 				}
 				
 				 // Append / Replace Suffix:
-				if(_stockNameSuffixText != ""){
+				if(_mergeStockNameSuffixText != ""){
 					var	_mergeNameSuffixIndex = array_length(_mergeNameWordTextList) - 1,
 						_mergeNameSuffixText  = _mergeNameWordTextList[_mergeNameSuffixIndex];
 						
@@ -581,24 +620,24 @@
 						case "LAUNCHER":
 						
 							 // Replace Redundant Suffixes (PLASMA DISC RIFLE > PLASMA DISC GUN RIFLE):
-							_mergeNameWordList[_mergeNameSuffixIndex]     = _stockNameSuffix;
-							_mergeNameWordTextList[_mergeNameSuffixIndex] = _stockNameSuffixText;
+							_mergeNameWordList[_mergeNameSuffixIndex]     = _mergeStockNameSuffix;
+							_mergeNameWordTextList[_mergeNameSuffixIndex] = _mergeStockNameSuffixText;
 							
 							break;
 							
 						default:
 						
 							 // Group Suffixes (HEAVY *MACHINEGUN* > HEAVY MACHINEGUN MACHINEGUN):
-							var _mergeNameWordIndex = array_find_last_index(_mergeNameWordTextList, _stockNameSuffixText);
+							var _mergeNameWordIndex = array_find_last_index(_mergeNameWordTextList, _mergeStockNameSuffixText);
 							if(_mergeNameWordIndex >= 0){
-								temerge_weapon_name_word_add_word(_mergeNameWordList[_mergeNameWordIndex], _stockNameSuffix);
+								temerge_weapon_name_word_add_style(_mergeNameWordList[_mergeNameWordIndex], _mergeStockNameSuffix);
 							}
 							
 							 // Append Suffix:
 							else{
 								_mergeNameSuffixIndex++;
-								array_insert(_mergeNameWordList,     _mergeNameSuffixIndex, _stockNameSuffix);
-								array_insert(_mergeNameWordTextList, _mergeNameSuffixIndex, _stockNameSuffixText);
+								array_insert(_mergeNameWordList,     _mergeNameSuffixIndex, _mergeStockNameSuffix);
+								array_insert(_mergeNameWordTextList, _mergeNameSuffixIndex, _mergeStockNameSuffixText);
 							}
 							
 					}
@@ -607,37 +646,37 @@
 			
 			 // Append Part Type:
 			if(_wepXmerge_is_part){
-				var	_stockIsEmpty = (call(scr.wep_raw, _wep)           == wep_none),
-					_frontIsEmpty = (call(scr.wep_raw, _wepXmerge_wep) == wep_none);
+				var	_mergeStockIsEmpty = (call(scr.wep_raw, _wep)           == wep_none),
+					_mergeFrontIsEmpty = (call(scr.wep_raw, _wepXmerge_wep) == wep_none);
 					
-				if(_stockIsEmpty ^^ _frontIsEmpty){
+				if(_mergeStockIsEmpty ^^ _mergeFrontIsEmpty){
 					var	_mergeNameSuffixIndex = array_length(_mergeNameWordTextList) - 1,
 						_mergeNameSuffixText  = _mergeNameWordTextList[_mergeNameSuffixIndex];
 						
 					if(_mergeNameSuffixText != "PARTS"){
-						var _partWord = {
+						var _mergeNamePartWord = {
 							"space" : " ",
 							"color" : c_white,
 							"shake" : 0,
 							"text"  : ""
 						};
-						if(_mergeNameSuffixText == (_stockIsEmpty ? "STOCK" : "FRONT")){
-							_partWord.text = "PARTS";
+						if(_mergeNameSuffixText == (_mergeStockIsEmpty ? "STOCK" : "FRONT")){
+							_mergeNamePartWord.text = "PARTS";
 						}
 						else{
 							_mergeNameSuffixIndex++;
-							_partWord.text = (_stockIsEmpty ? "FRONT" : "STOCK");
+							_mergeNamePartWord.text = (_mergeStockIsEmpty ? "FRONT" : "STOCK");
 						}
-						_mergeNameWordList[_mergeNameSuffixIndex]     = _partWord;
-						_mergeNameWordTextList[_mergeNameSuffixIndex] = _partWord.text;
+						_mergeNameWordList[_mergeNameSuffixIndex]     = _mergeNamePartWord;
+						_mergeNameWordTextList[_mergeNameSuffixIndex] = _mergeNamePartWord.text;
 					}
 				}
 			}
 			
 			 // Reconstruct Name:
 			var	_mergeName              = "",
-				_lastMergeNameWordColor = c_white,
-				_lastMergeNameWordShake = 0;
+				_mergeNameLastWordColor = c_white,
+				_mergeNameLastWordShake = 0;
 				
 			_mergeNameWordList[0].space = "";
 			
@@ -646,7 +685,7 @@
 				_mergeName += space;
 				
 				 // Color:
-				if(color != _lastMergeNameWordColor){
+				if(color != _mergeNameLastWordColor){
 					var	_tagColorList  = ds_map_values(global.nt_tag_color_map),
 						_tagColorIndex = array_find_index(_tagColorList, color);
 						
@@ -657,13 +696,13 @@
 						_mergeName += `@(color:${color})`;
 					}
 				}
-				_lastMergeNameWordColor = (("final_color" in self) ? final_color : color);
+				_mergeNameLastWordColor = (("final_color" in self) ? final_color : color);
 				
 				 // Shake:
-				if(shake != _lastMergeNameWordShake){
-					_mergeName += string_repeat("@q", shake - _lastMergeNameWordShake);
+				if(shake != _mergeNameLastWordShake){
+					_mergeName += string_repeat("@q", shake - _mergeNameLastWordShake);
 				}
-				_lastMergeNameWordShake = (("final_shake" in self) ? final_shake : shake);
+				_mergeNameLastWordShake = (("final_shake" in self) ? final_shake : shake);
 				
 				 // Add Text:
 				_mergeName += text;
@@ -673,78 +712,78 @@
 		}
 	}
 	
-	return _stockName;
+	return _mergeStockName;
 	
-#define temerge_weapon_name_word_add_word(_nameWord, _nameAddWord)
+#define temerge_weapon_name_word_add_style(_word, _withWord)
 	/*
-		Adds to the style of the given merged weapon name's word using the given additive word
+		Adds to the given merged weapon name word's style with the given merged weapon name word
 	*/
 	
-	var	_nameWordColor           = _nameWord.color,
-		_mergeNameWordColorList  = [global.nt_tag_color_map[? "r"], global.nt_tag_color_map[? "y"], global.nt_tag_color_map[? "g"], global.nt_tag_color_map[? "b"]],
-		_mergeNameWordColorIndex = array_find_index(_mergeNameWordColorList, _nameWordColor);
+	var	_wordColor      = _word.color,
+		_wordColorList  = [global.nt_tag_color_map[? "r"], global.nt_tag_color_map[? "y"], global.nt_tag_color_map[? "g"], global.nt_tag_color_map[? "b"]],
+		_wordColorIndex = array_find_index(_wordColorList, _wordColor);
 		
 	 // Shift Color Hue:
 	if(
 		(
-			_mergeNameWordColorIndex >= 0
-			|| color_get_saturation(_nameWordColor) < 255
-			|| color_get_value(_nameWordColor) < 242
+			_wordColorIndex >= 0
+			|| color_get_saturation(_wordColor) < 255
+			|| color_get_value(_wordColor) < 242
 		)
-		&& _mergeNameWordColorIndex + 1 < array_length(_mergeNameWordColorList)
+		&& _wordColorIndex + 1 < array_length(_wordColorList)
 	){
-		_nameWord.color = _mergeNameWordColorList[_mergeNameWordColorIndex + 1];
+		_word.color = _wordColorList[_wordColorIndex + 1];
 		
 		 // !!!:
-		if(_mergeNameWordColorIndex >= 0){
-			_nameWord.text += "!";
+		if(_wordColorIndex >= 0){
+			_word.text += "!";
 		}
 	}
 	else{
-		var _hue = color_get_hue(_nameWordColor) + 39;
+		var _hue = color_get_hue(_wordColor) + 39;
 		if(_hue >= 255){
 			_hue %= 255;
-			_nameWord.shake++;
+			_word.shake++;
 		}
-		_nameWord.color = make_color_hsv(_hue, 255, 242);
+		_word.color = make_color_hsv(_hue, 255, 242);
 	}
 	
 	 // Combine Shake:
-	_nameWord.shake += _nameAddWord.shake;
+	_word.shake += _withWord.shake;
 	
-#define temerge_weapon_text(_wep, _stockText)
+#define temerge_weapon_text(_wep, _mergeStockText)
 	/*
 		Merged weapons combine the first half of their front weapon's loading tip with the second half of their stock weapon's loading tip
 		Weapon names and certain projectile names are swapped with more fitting references
 	*/
 	
 	if(_wepXhas_merge){
-		var _frontText = weapon_get_text(_wepXmerge_wep);
+		var _mergeFrontText = weapon_get_text(_wepXmerge_wep);
 		
 		if(
-			(is_string(_stockText) && _stockText != "") &&
-			(is_string(_frontText) && _frontText != "")
+			(is_string(_mergeStockText) && _mergeStockText != "") &&
+			(is_string(_mergeFrontText) && _mergeFrontText != "")
 		){
-			var _mergeText = string_lower(_stockText);
-			_frontText = string_lower(_frontText);
+			var _mergeText = string_lower(_mergeStockText);
+			_mergeFrontText = string_lower(_mergeFrontText);
 			
 			 // Fetch Stock Weapon Values:
 			_wepXmerge_is_active = false;
 			
-			var	_stockName = weapon_get_name(_wep),
-				_stockType = weapon_get_type(_wep);
+			var	_mergeStockName = weapon_get_name(_wep),
+				_mergeStockType = weapon_get_type(_wep);
 				
 			_wepXmerge_is_active = true;
 			
 			 // Swap Weapon Names:
 			var _mergeName = string_lower(weapon_get_name(_wep));
-			_frontText = string_replace(_frontText, string_lower(weapon_get_name(_wepXmerge_wep)), _mergeName);
-			_mergeText = string_replace(_mergeText, string_lower(_stockName),                      _mergeName);
+			_mergeFrontText = string_replace(_mergeFrontText, string_lower(weapon_get_name(_wepXmerge_wep)), _mergeName);
+			_mergeText      = string_replace(_mergeText,      string_lower(_mergeStockName),                 _mergeName);
 			
 			 // Swap Projectile Names:
-			if(_stockType >= 0 && _stockType < 6){
-				var _frontType = weapon_get_type(_wepXmerge_wep);
-				if(_stockType != _frontType && _frontType >= 0 && _frontType < 6){
+			if(_mergeStockType >= 0 && _mergeStockType < 6){
+				var _mergeFrontType = weapon_get_type(_wepXmerge_wep);
+				if(_mergeStockType != _mergeFrontType && _mergeFrontType >= 0 && _mergeFrontType < 6){
 					var	_typeTextLists = [
 							["swing"],
 							["bullet"],
@@ -753,113 +792,113 @@
 							["explosive", "grenade", "nade"],
 							["plasma"]
 						],
-						_frontTypeText = _typeTextLists[_frontType][0];
+						_mergeFrontTypeText = _typeTextLists[_mergeFrontType][0];
 						
-					with(_typeTextLists[_stockType]){
-						_mergeText = string_replace_all(_mergeText, self, _frontTypeText);
+					with(_typeTextLists[_mergeStockType]){
+						_mergeText = string_replace_all(_mergeText, self, _mergeFrontTypeText);
 					}
 				}
 			}
 			
 			 // Combine Loading Tips:
-			var	_frontTextWordList  = string_split(_frontText, " "),
-				_mergeTextWordList  = string_split(_mergeText, " "),
-				_mergeTextWordCount = array_length(_mergeTextWordList);
+			var	_mergeFrontTextWordList = string_split(_mergeFrontText, " "),
+				_mergeTextWordList      = string_split(_mergeText,      " "),
+				_mergeTextWordCount     = array_length(_mergeTextWordList);
 				
-			_mergeText  = array_join(array_slice(_frontTextWordList, 0, max(1, floor(array_length(_frontTextWordList) / 2))), " ") + " ";
+			_mergeText  = array_join(array_slice(_mergeFrontTextWordList, 0, max(1, floor(array_length(_mergeFrontTextWordList) / 2))), " ") + " ";
 			_mergeText += array_join(array_slice(_mergeTextWordList, floor(_mergeTextWordCount / 2), ceil(_mergeTextWordCount / 2)), " ");
 			
 			return _mergeText;
 		}
 		
-		return _frontText;
+		return _mergeFrontText;
 	}
 	
-	return _stockText;
+	return _mergeStockText;
 	
-#define temerge_weapon_sprt(_wep, _stockSprite)
+#define temerge_weapon_sprt(_wep, _mergeStockSprite)
 	/*
 		Merged weapons combine vertical slices from the sprites of their weapon parts
 	*/
 	
 	if(_wepXhas_merge){
-		if(sprite_get_name(_stockSprite) == "sprMerge" && _stockSprite == weapon_get_sprt_hud(_wep)){
+		if(sprite_get_name(_mergeStockSprite) == "sprMerge" && _mergeStockSprite == weapon_get_sprt_hud(_wep)){
 			_wepXmerge_is_active = false;
-			_stockSprite = weapon_get_sprt_hud(_wep);
+			_mergeStockSprite = weapon_get_sprt_hud(_wep);
 			_wepXmerge_is_active = true;
 		}
-		return call(scr.merge_weapon_sprite, [_stockSprite, weapon_get_sprt(_wepXmerge_wep)]);
+		return call(scr.merge_weapon_sprite, [_mergeStockSprite, weapon_get_sprt(_wepXmerge_wep)]);
 	}
 	
-	return _stockSprite;
+	return _mergeStockSprite;
 	
-#define temerge_weapon_sprt_hud(_wep, _stockHUDSprite)
+#define temerge_weapon_sprt_hud(_wep, _mergeStockHUDSprite)
 	/*
 		Merged weapons combine vertical slices from the HUD sprites of their weapon parts
 	*/
 	
 	if(_wepXhas_merge){
-		if(sprite_get_name(_stockHUDSprite) == "sprMerge" && _stockHUDSprite == weapon_get_sprt(_wep)){
+		if(sprite_get_name(_mergeStockHUDSprite) == "sprMerge" && _mergeStockHUDSprite == weapon_get_sprt(_wep)){
 			_wepXmerge_is_active = false;
-			_stockHUDSprite = weapon_get_sprt(_wep);
+			_mergeStockHUDSprite = weapon_get_sprt(_wep);
 			_wepXmerge_is_active = true;
 		}
-		return call(scr.merge_weapon_sprite, [_stockHUDSprite, weapon_get_sprt_hud(_wepXmerge_wep)]);
+		return call(scr.merge_weapon_sprite, [_mergeStockHUDSprite, weapon_get_sprt_hud(_wepXmerge_wep)]);
 	}
 	
-	return _stockHUDSprite;
+	return _mergeStockHUDSprite;
 	
-#define temerge_weapon_loadout(_wep, _stockLoadoutSprite)
+#define temerge_weapon_loadout(_wep, _mergeStockLoadoutSprite)
 	/*
 		Merged weapons combine curved slices from the loadout sprites of their weapon parts
 	*/
 	
-	if(_stockLoadoutSprite != 0 && _wepXhas_merge){
-		var _frontLoadoutSprite = call(scr.weapon_get, "loadout", _wep);
+	if(_mergeStockLoadoutSprite != 0 && _wepXhas_merge){
+		var _mergeFrontLoadoutSprite = call(scr.weapon_get, "loadout", _wep);
 		return (
-			(_frontLoadoutSprite == 0)
+			(_mergeFrontLoadoutSprite == 0)
 			? 0
-			: call(scr.merge_weapon_loadout_sprite, [_stockLoadoutSprite, _frontLoadoutSprite])
+			: call(scr.merge_weapon_loadout_sprite, [_mergeStockLoadoutSprite, _mergeFrontLoadoutSprite])
 		);
 	}
 	
-	return _stockLoadoutSprite;
+	return _mergeStockLoadoutSprite;
 	
-#define temerge_weapon_swap(_wep, _stockSwapSound)
+#define temerge_weapon_swap(_wep, _mergeStockSwapSound)
 	/*
 		Merged weapons use their front weapon's swap sound and play the swap sounds of their stock weapon(s) manually
 	*/
 	
 	if(_wepXhas_merge){
-		sound_play_pitchvol(_stockSwapSound, 1, 0.5);
+		sound_play_pitchvol(_mergeStockSwapSound, 1, 0.5);
 		return weapon_get_swap(_wepXmerge_wep);
 	}
 	
-	return _stockSwapSound;
+	return _mergeStockSwapSound;
 	
-#define temerge_weapon_area(_wep, _stockArea)
+#define temerge_weapon_area(_wep, _mergeStockArea)
 	/*
 		Merged weapons use the spawn difficulty of ...
 		***Do later when merged weapon spawning is rebalanced
 	*/
 	
-	return _stockArea;
+	return _mergeStockArea;
 	
-#define temerge_weapon_gold(_wep, _stockGold)
+#define temerge_weapon_gold(_wep, _mergeStockGold)
 	/*
 		Merged weapons are gold if all of their weapon parts are gold
 	*/
 	
-	if(_stockGold != 0 && _wepXhas_merge){
-		var _frontGold = weapon_get_gold(_wepXmerge_wep);
-		if(_frontGold == 0 || _frontGold < _stockGold){
-			return _frontGold;
+	if(_mergeStockGold != 0 && _wepXhas_merge){
+		var _mergeFrontGold = weapon_get_gold(_wepXmerge_wep);
+		if(_mergeFrontGold == 0 || _mergeFrontGold < _mergeStockGold){
+			return _mergeFrontGold;
 		}
 	}
 	
-	return _stockGold;
+	return _mergeStockGold;
 	
-#define temerge_weapon_type(_wep, _stockType)
+#define temerge_weapon_type(_wep, _mergeStockType)
 	/*
 		Merged weapons use their front weapon's ammo type
 	*/
@@ -876,7 +915,7 @@
 		return _mergeType;
 	}
 	
-	return _stockType;
+	return _mergeStockType;
 	
 #macro temerge_weapon_cost_scale_factor
 	/*
@@ -885,38 +924,45 @@
 	
 	0.795
 	
-#define temerge_weapon_cost(_wep, _stockCost)
+#define temerge_weapon_cost(_wep, _mergeStockCost)
 	/*
 		Merged weapons use their front weapon's ammo cost:
 		1. Multiplied by the reduced ammo cost of their stock weapon(s)
 		2. Clamped at max capacity for fun (Back Muscle)
 	*/
 	
-	_wepXmerge_last_stock_cost = _stockCost;
-	
 	if(_wepXhas_merge){
+		_wepXmerge_last_stock_cost = _mergeStockCost;
+		
 		if(_wepXmerge_is_part){
 			return 0;
 		}
 		
-		var	_frontCost = weapon_get_cost(_wepXmerge_wep),
-			_mergeCost = _frontCost;
+		var	_mergeFrontCost = weapon_get_cost(_wepXmerge_wep),
+			_mergeCost      = _mergeFrontCost;
 			
-		if(_stockCost != 0 && _frontCost != 0){
+		if(_mergeStockCost != 0 && _mergeFrontCost != 0){
 			 // Integrate Stock Ammo Cost:
-			_mergeCost += round(_mergeCost * (power(abs(_stockCost), temerge_weapon_cost_scale_factor) - 1));
+			_mergeCost += round(_mergeCost * (power(abs(_mergeStockCost), temerge_weapon_cost_scale_factor) - 1));
 			
 			 // Clamp at Max Ammo:
 			if(_mergeCost > 99){
 				switch(weapon_get_type(_wep)){
 					case type_bullet:
-						if(_mergeCost > 555 && _stockCost <= 555 && _frontCost <= 555){
+						if(
+							_mergeCost > 555
+							&& _mergeStockCost <= 555
+							&& _mergeFrontCost <= 555
+						){
 							_mergeCost = 555;
 						}
 						break;
 						
 					default:
-						if(_stockCost <= 99 && _frontCost <= 99){
+						if(
+							_mergeStockCost <= 99 &&
+							_mergeFrontCost <= 99
+						){
 							_mergeCost = 99;
 						}
 				}
@@ -928,9 +974,9 @@
 		return _mergeCost;
 	}
 	
-	return _stockCost;
+	return _mergeStockCost;
 	
-#define temerge_weapon_rads(_wep, _stockRads)
+#define temerge_weapon_rads(_wep, _mergeStockRads)
 	/*
 		Merged weapons use their front weapon's rad cost:
 		1. Multiplied by the reduced ammo cost of their stock weapon(s)
@@ -943,40 +989,40 @@
 			return 0;
 		}
 		
-		var	_frontRads = weapon_get_rads(_wepXmerge_wep),
-			_mergeRads = _frontRads;
+		var	_mergeFrontRads = weapon_get_rads(_wepXmerge_wep),
+			_mergeRads      = _mergeFrontRads;
 			
-		if(_stockRads != 0 || _frontRads != 0){
+		if(_mergeStockRads != 0 || _mergeFrontRads != 0){
 			 // Integrate Stock Ammo Cost:
 			if(_mergeRads != 0){
 				_wepXmerge_is_active = false;
 				
-				var _stockCost = abs(weapon_get_cost(_wep));
-				if(_stockCost != 0 && _stockCost != 1){
-					_mergeRads += round(_mergeRads * (power(_stockCost, temerge_weapon_cost_scale_factor) - 1));
+				var _mergeStockCost = abs(weapon_get_cost(_wep));
+				if(_mergeStockCost != 0 && _mergeStockCost != 1){
+					_mergeRads += round(_mergeRads * (power(_mergeStockCost, temerge_weapon_cost_scale_factor) - 1));
 				}
 				
 				_wepXmerge_is_active = true;
 			}
 			
 			 // Integrate Stock Rad Cost:
-			if(_stockRads != 0){
-				var	_addRads   = _stockRads / 2,
-					_frontCost = weapon_get_cost(_wepXmerge_wep),
-					_frontType = weapon_get_type(_wepXmerge_wep);
+			if(_mergeStockRads != 0){
+				var	_addRads        = _mergeStockRads / 2,
+					_mergeFrontCost = weapon_get_cost(_wepXmerge_wep),
+					_mergeFrontType = weapon_get_type(_wepXmerge_wep);
 					
-				if(_frontCost != 0){
-					_addRads *= abs(_frontCost);
+				if(_mergeFrontCost != 0){
+					_addRads *= abs(_mergeFrontCost);
 				}
 				
 				_wepXmerge_is_active = false;
 				
-				var _stockType = weapon_get_type(_wep);
-				if(_stockType != _frontType){
-					if(_stockType == type_bullet){
+				var _mergeStockType = weapon_get_type(_wep);
+				if(_mergeStockType != _mergeFrontType){
+					if(_mergeStockType == type_bullet){
 						_addRads *= 3;
 					}
-					else if(_frontType == type_bullet){
+					else if(_mergeFrontType == type_bullet){
 						_addRads /= 3;
 					}
 				}
@@ -987,7 +1033,11 @@
 			}
 			
 			 // Clamp at Max Rads:
-			if(_mergeRads > 1200 && _stockRads <= 1200 && _frontRads <= 1200){
+			if(
+				_mergeRads > 1200
+				&& _mergeStockRads <= 1200
+				&& _mergeFrontRads <= 1200
+			){
 				_mergeRads = 1200;
 			}
 		}
@@ -997,9 +1047,9 @@
 		return _mergeRads;
 	}
 	
-	return _stockRads;
+	return _mergeStockRads;
 	
-#define temerge_weapon_load(_wep, _stockLoad)
+#define temerge_weapon_load(_wep, _mergeStockLoad)
 	/*
 		Merged weapons use their front weapon's reload:
 		1. Multiplied by a reduced factor of the reload of their stock weapon(s)
@@ -1011,12 +1061,12 @@
 			return 1;
 		}
 		
-		var	_frontLoad = weapon_get_load(_wepXmerge_wep),
-			_mergeLoad = _frontLoad * lerp(1, _stockLoad / 8, 0.8);
+		var	_mergeFrontLoad = weapon_get_load(_wepXmerge_wep),
+			_mergeLoad      = _mergeFrontLoad * lerp(1, _mergeStockLoad / 8, 0.8);
 			
 		 // Less Reload Increase:
-		if(_mergeLoad > _frontLoad){
-			_mergeLoad = lerp(_mergeLoad, _frontLoad, 2/3);
+		if(_mergeLoad > _mergeFrontLoad){
+			_mergeLoad = lerp(_mergeLoad, _mergeFrontLoad, 2/3);
 		}
 		
 		 // Integrate Stock Ammo Cost (Ammoless Weapons):
@@ -1029,40 +1079,40 @@
 		return _mergeLoad;
 	}
 	
-	return _stockLoad;
+	return _mergeStockLoad;
 	
-#define temerge_weapon_auto(_wep, _stockIsAuto)
+#define temerge_weapon_auto(_wep, _mergeStockIsAuto)
 	/*
 		Merged weapons are automatic if their stock weapon is automatic, or if one of their other parts is automatic and reloads quickly
 	*/
 	
-	if(_stockIsAuto >= 0 && _wepXhas_merge){
+	if(_mergeStockIsAuto >= 0 && _wepXhas_merge){
 		if(_wepXmerge_is_part){
 			return -1;
 		}
 		
 		_wep = _wepXmerge_wep;
 		
-		var _frontIsAuto = weapon_get_auto(_wep);
-		if(_frontIsAuto ? (weapon_get_load(_wep) <= 8) : (_frontIsAuto < 0)){
-			return _frontIsAuto;
+		var _mergeFrontIsAuto = weapon_get_auto(_wep);
+		if(_mergeFrontIsAuto ? (weapon_get_load(_wep) <= 8) : (_mergeFrontIsAuto < 0)){
+			return _mergeFrontIsAuto;
 		}
 	}
 	
-	return _stockIsAuto;
+	return _mergeStockIsAuto;
 	
-#define temerge_weapon_melee(_wep, _stockIsMelee)
+#define temerge_weapon_melee(_wep, _mergeStockIsMelee)
 	/*
 		Merged weapons are melee if any of their weapon parts are melee
 	*/
 	
-	if(!_stockIsMelee && _wepXhas_merge){
+	if(!_mergeStockIsMelee && _wepXhas_merge){
 		return weapon_is_melee(_wepXmerge_wep);
 	}
 	
-	return _stockIsMelee;
+	return _mergeStockIsMelee;
 	
-#define temerge_weapon_laser_sight(_wep, _stockLaserSight)
+#define temerge_weapon_laser_sight(_wep, _mergeStockLaserSight)
 	/*
 		Merged weapons use the laser sight of their stock weapon(s) (the first one that has a laser sight)
 	*/
@@ -1072,7 +1122,7 @@
 			return false;
 		}
 		
-		if(_stockLaserSight == 0){
+		if(_mergeStockLaserSight == 0){
 			_wep = _wepXmerge_wep;
 			if(_wepXhas_merge){
 				return weapon_get_laser_sight(_wep);
@@ -1080,9 +1130,9 @@
 		}
 	}
 	
-	return _stockLaserSight;
+	return _mergeStockLaserSight;
 	
-#define temerge_weapon_red(_wep, _stockRed)
+#define temerge_weapon_red(_wep, _mergeStockRed)
 	/*
 		Merged weapons alternate between using the red ammo costs of their front, first red-using, and latest-fired weapon parts
 	*/
@@ -1091,52 +1141,52 @@
 		_wepXhas_merge
 		&& (
 			(_wepXmerge_fire_frame < current_frame)
-			? (_stockRed == 0 || (((current_frame - _wepXmerge_fire_frame) % 60) < 30 && !_wepXmerge_is_part))
+			? (_mergeStockRed == 0 || (((current_frame - _wepXmerge_fire_frame) % 60) < 30 && !_wepXmerge_is_part))
 			: (_wepXmerge_wep_fire_frame >= _wepXmerge_fire_frame)
 		)
 	){
 		return call(scr.weapon_get, "red", _wepXmerge_wep);
 	}
 	
-	return _stockRed;
+	return _mergeStockRed;
 	
-#define temerge_weapon_reloaded(_wepIsPrimary)
+#define temerge_weapon_reloaded(_isPrimary)
 	/*
 		Merged weapons call all of their weapon part's reloaded events
 	*/
 	
-	var _wep = (_wepIsPrimary ? wep : bwep);
+	var _wep = (_isPrimary ? wep : bwep);
 	
 	if(_wepXhas_merge && !_wepXmerge_is_part && _wepXmerge_wep_fire_frame >= _wepXmerge_fire_frame){
-		var	_frontWep     = _wepXmerge_wep,
-			_baseFrontWep = _frontWep;
+		var	_mergeWep     = _wepXmerge_wep,
+			_mergeBaseWep = _mergeWep;
 			
 		 // Find Base Front Weapon:
-		while(is_object(_baseFrontWep) && "wep" in _baseFrontWep){
-			_baseFrontWep = _baseFrontWep.wep;
+		while(is_object(_mergeBaseWep) && "wep" in _mergeBaseWep){
+			_mergeBaseWep = _mergeBaseWep.wep;
 		}
 		
 		 // Call Front Weapon's Reloaded Event:
-		if(is_string(_baseFrontWep) && mod_script_exists("weapon", _baseFrontWep, "weapon_reloaded")){
-			temerge_weapon_call_event(_wep, self, script_ref_create_ext("weapon", _baseFrontWep, "weapon_reloaded", _wepIsPrimary), true, "", undefined);
+		if(is_string(_mergeBaseWep) && mod_script_exists("weapon", _mergeBaseWep, "weapon_reloaded")){
+			temerge_weapon_wrap_event(_wep, self, script_ref_create_ext("weapon", _mergeBaseWep, "weapon_reloaded", _isPrimary), true, "", undefined);
 		}
 		else{
-			if(_wepIsPrimary){
-				wep = _frontWep;
+			if(_isPrimary){
+				wep = _mergeWep;
 				
-				call(scr.player_weapon_reloaded, _wepIsPrimary);
+				call(scr.player_weapon_reloaded, _isPrimary);
 				
-				if(wep != _frontWep){
+				if(wep != _mergeWep){
 					_wepXmerge_wep = wep;
 				}
 				wep = _wep;
 			}
 			else{
-				bwep = _frontWep;
+				bwep = _mergeWep;
 				
-				call(scr.player_weapon_reloaded, _wepIsPrimary);
+				call(scr.player_weapon_reloaded, _isPrimary);
 				
-				if(bwep != _frontWep){
+				if(bwep != _mergeWep){
 					_wepXmerge_wep = bwep;
 				}
 				bwep = _wep;
@@ -1144,51 +1194,69 @@
 		}
 	}
 	
-#define temerge_weapon_step(_wepIsPrimary)
+#define temerge_weapon_step(_isPrimary)
 	/*
 		Merged weapons call all of their weapon part's step events
 	*/
 	
-	var _wep = (_wepIsPrimary ? wep : bwep);
+	var _wep = (_isPrimary ? wep : bwep);
 	
-	if(_wepXhas_merge && !_wepXmerge_is_part){
-		var	_frontWep     = _wepXmerge_wep,
-			_baseFrontWep = _frontWep;
+	if(_wepXhas_merge){
+		if(!_wepXmerge_is_part){
+			var	_mergeWep     = _wepXmerge_wep,
+				_mergeBaseWep = _mergeWep;
+				
+			 // Find Base Front Weapon:
+			while(is_object(_mergeBaseWep) && "wep" in _mergeBaseWep){
+				_mergeBaseWep = _mergeBaseWep.wep;
+			}
 			
-		 // Find Base Front Weapon:
-		while(is_object(_baseFrontWep) && "wep" in _baseFrontWep){
-			_baseFrontWep = _baseFrontWep.wep;
-		}
-		
-		 // Call Front Weapon's Step Event:
-		if(is_string(_baseFrontWep) && mod_script_exists("weapon", _baseFrontWep, "step")){
-			temerge_weapon_call_event(_wep, self, script_ref_create_ext("weapon", _baseFrontWep, "step", _wepIsPrimary), true, "", undefined);
-		}
-		else{
-			if(_wepIsPrimary){
-				wep = _frontWep;
-				
-				call(scr.player_weapon_step, _wepIsPrimary);
-				
-				if(wep != _frontWep){
-					_wepXmerge_wep = wep;
-				}
-				wep = _wep;
+			 // Call Front Weapon's Step Event:
+			if(is_string(_mergeBaseWep) && mod_script_exists("weapon", _mergeBaseWep, "step")){
+				temerge_weapon_wrap_event(_wep, self, script_ref_create_ext("weapon", _mergeBaseWep, "step", _isPrimary), true, "", undefined);
 			}
 			else{
-				bwep = _frontWep;
-				
-				call(scr.player_weapon_step, _wepIsPrimary);
-				
-				if(bwep != _frontWep){
-					_wepXmerge_wep = bwep;
+				if(_isPrimary){
+					wep = _mergeWep;
+					
+					call(scr.player_weapon_step, _isPrimary);
+					
+					if(wep != _mergeWep){
+						_wepXmerge_wep = wep;
+					}
+					wep = _wep;
 				}
-				bwep = _wep;
+				else{
+					bwep = _mergeWep;
+					
+					call(scr.player_weapon_step, _isPrimary);
+					
+					if(bwep != _mergeWep){
+						_wepXmerge_wep = bwep;
+					}
+					bwep = _wep;
+				}
+			}
+		}
+		
+		 // Update Part State:
+		if(frame_active(30) && _wepXhas_merge){
+			if(_wepXmerge_is_part){
+				if(call(scr.wep_raw, _wep) != wep_none && !weapon_has_temerge_with_weapon(_wep, wep_none)){
+					do{
+						_wepXmerge_is_part = false;
+						_wep = _wepXmerge_wep;
+					}
+					until(!_wepXhas_merge);
+				}
+			}
+			else if(call(scr.wep_raw, _wepXmerge_wep) == wep_none || (weapon_has_temerge(_wepXmerge_wep) && weapon_is_temerge_part(_wepXmerge_wep))){
+				_wepXmerge_is_part = true;
 			}
 		}
 	}
 	
-#define temerge_weapon_call_event(_wep, _creator, _scriptCallRef, _canWrapEvents, _wrapEventVarName, _wrapEventRef)
+#define temerge_weapon_wrap_event(_wep, _creator, _scriptCallRef, _canWrapEvents, _wrapEventVarName, _wrapEventRef)
 	/*
 		Used to override a Player instance's weapons during the events of custom instances created during certain weapon events
 	*/
@@ -1204,13 +1272,13 @@
 	 // Set Weapon, Call Script, & Capture Instances:
 	if(instance_exists(_creator)){
 		var	_minInstanceID  = (_canWrapEvents ? instance_max : undefined),
-			_frontWep       = _wepXmerge_wep,
+			_mergeWep       = _wepXmerge_wep,
 			_creatorHasWep  = (_creator.wep  == _wep),
 			_creatorHasBWep = (_creator.bwep == _wep);
 			
 		 // Set Player Weapon:
-		if(_creatorHasWep ){ _creator.wep  = _frontWep; }
-		if(_creatorHasBWep){ _creator.bwep = _frontWep; }
+		if(_creatorHasWep ){ _creator.wep  = _mergeWep; }
+		if(_creatorHasBWep){ _creator.bwep = _mergeWep; }
 		
 		 // Call Script Reference:
 		if(fork()){
@@ -1220,8 +1288,8 @@
 		
 		 // Revert Player Weapon:
 		if(instance_exists(_creator)){
-			if(_creatorHasBWep){ if(_creator.bwep != _frontWep){ _wepXmerge_wep = _creator.bwep; } _creator.bwep = _wep; }
-			if(_creatorHasWep ){ if(_creator.wep  != _frontWep){ _wepXmerge_wep = _creator.wep;  } _creator.wep  = _wep; }
+			if(_creatorHasBWep){ if(_creator.bwep != _mergeWep){ _wepXmerge_wep = _creator.bwep; } _creator.bwep = _wep; }
+			if(_creatorHasWep ){ if(_creator.wep  != _mergeWep){ _wepXmerge_wep = _creator.wep;  } _creator.wep  = _wep; }
 		}
 		
 		 // Wrap Events of New Instances:
@@ -1234,7 +1302,7 @@
 							var _instEventRef = variable_instance_get(_instanceID, self);
 							if(array_length(_instEventRef) >= 3){
 								var _instEventWrapRef = script_ref_create(
-									temerge_weapon_call_event,
+									temerge_weapon_wrap_event,
 									_wep,
 									_creator,
 									_instEventRef,
@@ -1269,18 +1337,33 @@
 		variable_instance_set(self, _wrapEventVarName, _wrapEventRef);
 	}
 	
-#define temerge_player_fire(_wep, _at)
+#define temerge_player_fire(_wepIsFront, _wep, _at)
 	/*
 		Merged weapon pre-firing event
 	*/
 	
-	var	_wepType   = type_melee,
-		_wepCost   = 0,
-		_wepRads   = 0,
-		_stockCost = 0,
-		_frontCost = 0;
+	var	_wepType           = type_melee,
+		_wepCost           = 0,
+		_wepRads           = 0,
+		_wepHasMerge       = false,
+		_wepMergeStockCost = 0,
+		_wepMergeFrontCost = 0;
 		
-	if(_wepXhas_merge){
+	 // Front Weapon Setup:
+	if(_wepIsFront){
+		_wepHasMerge = true;
+		
+		 // Fetch Ammo & Rad Info:
+		_wepType           = weapon_get_type(_wep);
+		_wepCost           = weapon_get_cost(_wep);
+		_wepRads           = weapon_get_rads(_wep);
+		_wepMergeStockCost = _wepCost;
+	}
+	
+	 // Stock Weapon Setup:
+	else if(_wepXhas_merge){
+		_wepHasMerge = true;
+		
 		 // Don't Fire:
 		if(_wepXmerge_is_part){
 			_at.wep = wep_none;
@@ -1293,17 +1376,13 @@
 			weapon_get_cost(_wep);
 			weapon_get_rads(_wep);
 		}
-		_wepType   = _wepXmerge_last_type;
-		_wepCost   = _wepXmerge_last_cost;
-		_wepRads   = _wepXmerge_last_rads;
-		_stockCost = _wepXmerge_last_stock_cost;
+		_wepType           = _wepXmerge_last_type;
+		_wepCost           = _wepXmerge_last_cost;
+		_wepRads           = _wepXmerge_last_rads;
+		_wepMergeStockCost = _wepXmerge_last_stock_cost;
 		var _lastWep = _wep;
 		_wep = _wepXmerge_wep;
-		_frontCost = (
-			_wepXhas_merge
-			? _wepXmerge_last_cost
-			: weapon_get_cost(_wep)
-		);
+		_wepMergeFrontCost = (_wepXhas_merge ? _wepXmerge_last_cost : weapon_get_cost(_wep));
 		_wep = _lastWep;
 		
 		 // Store Firing Frame:
@@ -1325,270 +1404,260 @@
 			_at.creator            = _fireAt.creator;
 		}
 	}
-	else{
-		 // Fetch Ammo & Rad Info:
-		_wepType   = weapon_get_type(_wep);
-		_wepCost   = weapon_get_cost(_wep);
-		_wepRads   = weapon_get_rads(_wep);
-		_stockCost = _wepCost;
-	}
 	
-	 // Setup Variable Container:
-	var	_atTeam    = ((_at.team == undefined) ? team : _at.team),
-		_atCreator = _at.creator,
-		_merge     = call(scr.projectile_tag_get_value, _atTeam, _atCreator, "temerge_vars");
-		
-	if(_merge == undefined){
-		_merge = {};
-		call(scr.projectile_tag_set_value, _atTeam, _atCreator, "temerge_vars", _merge);
-	}
-	
-	 // Store Initial Firing Values:
-	var _fire = {
-		"last_vars"                  : undefined,
-		"main_vars"                  : undefined,
-		"has_shot"                   : false,
-		"shot_count"                 : 0,
-		"shot_replace_count"         : 0,
-		"shot_replace_min"           : max(1, _stockCost),
-		"shot_replace_base"          : power(1.5, 1 + max(0, (_frontCost - 1) / 9)),
-		"shot_replace_cost_interval" : ((_stockCost == 0) ? 1 : abs(_stockCost)),
-		"frame"                      : current_frame,
-		"x"                          : x,
-		"y"                          : y,
-		"hspeed"                     : hspeed,
-		"vspeed"                     : vspeed,
-		"wepangle"                   : wepangle,
-		"wkick"                      : wkick,
-		"reload"                     : reload,
-		"infammo"                    : infammo,
-		"ammo"                       : (instance_is(_atCreator, Player) ? array_clone(_atCreator.ammo) : undefined),
-		"ammo_type"                  : _wepType,
-		"ammo_cost"                  : _wepCost,
-		"rads"                       : GameCont.rad,
-		"rads_cost"                  : _wepRads,
-		"shake"                      : [],
-		"opt_shake"                  : UberCont.opt_shake,
-		"opt_freeze"                 : UberCont.opt_freeze,
-		"min_instance_id"            : instance_max,
-		"min_sound_id"               : sound_play_pitchvol(0, 0, 0)
-	};
-	sound_stop(_fire.min_sound_id);
-	for(var i = 0; i < maxp; i++){
-		array_push(_fire.shake, view_shake[i]);
-	}
-	_merge.fire_vars = _fire;
-	if("last_fire_vars" in _merge){
-		var	_lastFire = _merge.last_fire_vars,
-			_mainFire = _lastFire.main_vars;
+	 // Store Values:
+	if(_wepHasMerge){
+		var	_atTeam    = ((_at.team == undefined) ? team : _at.team),
+			_atCreator = _at.creator,
+			_merge     = call(scr.projectile_tag_get_value, _atTeam, _atCreator, "temerge_vars");
 			
-		_fire.last_vars = _lastFire;
-		_fire.main_vars = _mainFire;
-		
-		 // Update Initial Values:
-		if(_fire.frame > _mainFire.frame){
-			_mainFire.frame      = _fire.frame;
-			_mainFire.x          = _fire.x;
-			_mainFire.y          = _fire.y;
-			_mainFire.hspeed     = _fire.hspeed;
-			_mainFire.vspeed     = _fire.vspeed;
-			_mainFire.wepangle   = _fire.wepangle;
-			_mainFire.wkick      = _fire.wkick;
-			_mainFire.reload     = _fire.reload;
-			_mainFire.ammo       = _fire.ammo;
-			_mainFire.rads       = _fire.rads;
-			_mainFire.shake      = _fire.shake;
-			_mainFire.opt_shake  = _fire.opt_shake;
-			_mainFire.opt_freeze = _fire.opt_freeze;
+		 // Setup Variable Container:
+		if(_merge == undefined){
+			_merge = {};
+			call(scr.projectile_tag_set_value, _atTeam, _atCreator, "temerge_vars", _merge);
 		}
 		
-		 // Restore Initial Values:
+		 // Store Initial Firing Values:
+		var _fire = {
+			"last_vars"                  : undefined,
+			"main_vars"                  : undefined,
+			"has_shot"                   : false,
+			"shot_count"                 : 0,
+			"shot_replace_count"         : 0,
+			"shot_replace_min"           : max(1, _wepMergeStockCost),
+			"shot_replace_base"          : power(1.5, 1 + max(0, (_wepMergeFrontCost - 1) / 9)),
+			"shot_replace_cost_interval" : ((_wepMergeStockCost == 0) ? 1 : abs(_wepMergeStockCost)),
+			"frame"                      : current_frame,
+			"x"                          : x,
+			"y"                          : y,
+			"hspeed"                     : hspeed,
+			"vspeed"                     : vspeed,
+			"wepangle"                   : wepangle,
+			"wkick"                      : wkick,
+			"reload"                     : reload,
+			"infammo"                    : infammo,
+			"ammo"                       : (instance_is(_atCreator, Player) ? array_clone(_atCreator.ammo) : undefined),
+			"ammo_type"                  : _wepType,
+			"ammo_cost"                  : _wepCost,
+			"rads"                       : GameCont.rad,
+			"rads_cost"                  : _wepRads,
+			"shake"                      : [],
+			"opt_shake"                  : UberCont.opt_shake,
+			"opt_freeze"                 : UberCont.opt_freeze,
+			"min_instance_id"            : instance_max,
+			"min_sound_id"               : sound_play_pitchvol(0, 0, 0)
+		};
+		sound_stop(_fire.min_sound_id);
+		for(var i = 0; i < maxp; i++){
+			array_push(_fire.shake, view_shake[i]);
+		}
+		_merge.fire_vars = _fire;
+		if("last_fire_vars" in _merge){
+			var	_lastFire = _merge.last_fire_vars,
+				_mainFire = _lastFire.main_vars;
+				
+			_fire.last_vars = _lastFire;
+			_fire.main_vars = _mainFire;
+			
+			 // Update Initial Values:
+			if(_fire.frame > _mainFire.frame){
+				_mainFire.frame      = _fire.frame;
+				_mainFire.x          = _fire.x;
+				_mainFire.y          = _fire.y;
+				_mainFire.hspeed     = _fire.hspeed;
+				_mainFire.vspeed     = _fire.vspeed;
+				_mainFire.wepangle   = _fire.wepangle;
+				_mainFire.wkick      = _fire.wkick;
+				_mainFire.reload     = _fire.reload;
+				_mainFire.ammo       = _fire.ammo;
+				_mainFire.rads       = _fire.rads;
+				_mainFire.shake      = _fire.shake;
+				_mainFire.opt_shake  = _fire.opt_shake;
+				_mainFire.opt_freeze = _fire.opt_freeze;
+			}
+			
+			 // Restore Initial Values:
+			else{
+				x        = _mainFire.x;
+				y        = _mainFire.y;
+				hspeed   = _mainFire.hspeed;
+				vspeed   = _mainFire.vspeed;
+				wepangle = abs(wepangle) * sign(_mainFire.wepangle);
+				for(var i = 0; i < maxp; i++){
+					view_shake[i] = _mainFire.shake[i];
+				}
+			}
+		}
 		else{
-			x        = _mainFire.x;
-			y        = _mainFire.y;
-			hspeed   = _mainFire.hspeed;
-			vspeed   = _mainFire.vspeed;
-			wepangle = abs(wepangle) * sign(_mainFire.wepangle);
-			for(var i = 0; i < maxp; i++){
-				view_shake[i] = _mainFire.shake[i];
-			}
-		}
-	}
-	else{
-		_fire.main_vars = _fire;
-		
-		 // Return Ammo Cost:
-		if(infammo == 0){
-			if(instance_is(self, Player)){
-				ammo[_wepType] += _wepCost;
-			}
-			GameCont.rad += _wepRads;
+			_fire.main_vars = _fire;
 			
-			 // Update Stored Values:
-			_fire.ammo = array_clone(ammo);
-			_fire.rads = GameCont.rad;
+			 // Return Ammo Cost:
+			if(infammo == 0){
+				if(instance_is(self, Player)){
+					ammo[_wepType] += _wepCost;
+				}
+				GameCont.rad += _wepRads;
+				
+				 // Update Stored Values:
+				_fire.ammo = array_clone(ammo);
+				_fire.rads = GameCont.rad;
+			}
+		}
+		
+		 // Temporary Weapon Kick:
+		wkick = 0;
+		
+		 // Reduce Screen Shifting & Disable Freeze Frames:
+		if(!_wepIsFront){
+			UberCont.opt_shake  = 0;
+			UberCont.opt_freeze = 0;
 		}
 	}
 	
-	 // Temporary Weapon Kick:
-	wkick = 0;
-	
-	 // Reduce Screen Shifting & Disable Freeze Frames:
-	//UberCont.opt_shake *= 0.5;
-	if(_wepXhas_merge){
-		//var _mainWep = _wep;
-		//_wep = _wepXmerge_wep;
-		//while(_wepXhas_merge){
-		//	_wep = _wepXmerge_wep;
-		//	UberCont.opt_shake /= 2;
-		//}
-		//_wep = _mainWep;
-		UberCont.opt_shake  = 0;
-		UberCont.opt_freeze = 0;
-	}
-	
-#define temerge_weapon_fire(_wep)
+#define temerge_weapon_fire(_wepIsFront, _wep)
 	/*
 		Merged weapon post-firing event
 	*/
 	
-	var	_team    = team,
-		_creator = (("creator" in self && instance_is(self, FireCont)) ? creator : self),
-		_merge   = call(scr.projectile_tag_get_value, _team, _creator, "temerge_vars");
-		
-	if(_merge != undefined && "fire_vars" in _merge){
-		var _fire = _merge.fire_vars;
-		
-		 // Store Latest Asset Instances:
-		_fire.max_instance_id = instance_max;
-		_fire.max_sound_id    = sound_play_pitchvol(0, 0, 0);
-		sound_stop(_fire.max_sound_id);
-		
-		 // Check if a Teamed Object Was Shot:
-		if(instance_exists(projectile) && projectile.id > _fire.min_instance_id){
-			_fire.has_shot = true;
-		}
-		else{
-			var _maxInstanceID = _fire.max_instance_id;
-			for(var _instanceID = _fire.min_instance_id; _instanceID < _maxInstanceID; _instanceID++){
-				if("team" in _instanceID){
-					_fire.has_shot = true;
-					break;
-				}
+	if(_wepIsFront || _wepXhas_merge){
+		var	_team    = team,
+			_creator = (("creator" in self && instance_is(self, FireCont)) ? creator : self),
+			_merge   = call(scr.projectile_tag_get_value, _team, _creator, "temerge_vars");
+			
+		if(_merge != undefined && "fire_vars" in _merge){
+			var _fire = _merge.fire_vars;
+			
+			 // Store Latest Asset Instances:
+			_fire.max_instance_id = instance_max;
+			_fire.max_sound_id    = sound_play_pitchvol(0, 0, 0);
+			sound_stop(_fire.max_sound_id);
+			
+			 // Check if a Teamed Object Was Shot:
+			if(instance_exists(projectile) && projectile.id > _fire.min_instance_id){
+				_fire.has_shot = true;
 			}
-		}
-		
-		 // Has Shot Teamed Objects:
-		if(_fire.has_shot){
-			if(_fire.main_vars != undefined){
-				var _mainFire = _fire.main_vars;
-				
-				 // Only Flip Melee Angle After Gaps in Firing:
-				if(sign(wepangle) != sign(_mainFire.wepangle)){
-					if("wepangle_side_frame" not in _mainFire || (current_frame - _mainFire.wepangle_side_frame) > 1){
-						_mainFire.wepangle_side = sign(wepangle);
+			else{
+				var _maxInstanceID = _fire.max_instance_id;
+				for(var _instanceID = _fire.min_instance_id; _instanceID < _maxInstanceID; _instanceID++){
+					if("team" in _instanceID){
+						_fire.has_shot = true;
+						break;
 					}
-					_mainFire.wepangle_side_frame = current_frame;
-				}
-				if("wepangle_side" in _mainFire){
-					wepangle = abs(wepangle) * sign(_mainFire.wepangle_side);
-				}
-				
-				 // Combine Weapon Kick:
-				if(wkick == 0){
-					wkick = _fire.wkick;
-				}
-				else if(_fire != _mainFire){
-					wkick = max(abs(wkick), abs(_fire.wkick)) * ((wkick < 0 || _fire.wkick < 0) ? -1 : 1);
-				}
-				
-				 // Combine Motion:
-				x      += _fire.x      - _mainFire.x;
-				y      += _fire.y      - _mainFire.y;
-				hspeed += _fire.hspeed - _mainFire.hspeed;
-				vspeed += _fire.vspeed - _mainFire.vspeed;
-				
-				 // Combine Screenshake:
-				var	_fireShake     = _fire.shake,
-					_mainFireShake = _mainFire.shake;
-					
-				for(var i = 0; i < maxp; i++){
-					view_shake[i] += _fireShake[i] - _mainFireShake[i];
-				}
-			}
-		}
-		
-		 // Hasn't Shot Teamed Objects:
-		else{
-			 // Undo Asset Instances Created by Stock Weapon:
-			for(var _lastFire = _fire.last_vars; _lastFire != undefined; _lastFire = _lastFire.last_vars){
-				 // Muffle Firing Sounds:
-				var _maxSoundID = _lastFire.max_sound_id;
-				for(var _soundID = _lastFire.min_sound_id; _soundID < _maxSoundID; _soundID++){
-					if(audio_is_playing(_soundID)){
-						var _soundIndex = asset_get_index(audio_get_name(_soundID));
-						if(audio_exists(_soundIndex)){
-							if(ds_map_exists(global.sound_muffle_map, _soundIndex)){
-								var _muffle = global.sound_muffle_map[? _soundIndex];
-								_muffle.sound_id = _soundID;
-								if(_muffle.frame < current_frame){
-									_muffle.frame = current_frame;
-									audio_sound_gain(
-										_soundIndex,
-										lerp(audio_sound_get_gain(_soundIndex), _muffle.sound_gain * 0.1, 0.2),
-										0
-									);
-								}
-							}
-							else global.sound_muffle_map[? _soundIndex] = {
-								"sound_id"   : _soundID,
-								"sound_gain" : audio_sound_get_gain(_soundIndex),
-								"frame"      : current_frame
-							};
-						}
-					}
-				}
-				
-				 // Delete Instances:
-				var _maxInstanceID = _lastFire.max_instance_id;
-				for(var _instanceID = _lastFire.min_instance_id; _instanceID < _maxInstanceID; _instanceID++){
-					instance_delete(_instanceID);
 				}
 			}
 			
-			 // Revert Values Set by Stock Weapon:
-			if(_fire.main_vars != undefined){
-				var _mainFire = _fire.main_vars;
-				
-				 // Revert Melee Angle:
-				wepangle = abs(wepangle) * sign(_mainFire.wepangle);
-				
-				 // Revert Weapon Kick:
-				if(wkick == 0){
-					wkick = _mainFire.wkick;
+			 // Has Shot Teamed Objects:
+			if(_fire.has_shot){
+				if(_fire.main_vars != undefined){
+					var _mainFire = _fire.main_vars;
+					
+					 // Only Flip Melee Angle After Gaps in Firing:
+					if(sign(wepangle) != sign(_mainFire.wepangle)){
+						if("wepangle_side_frame" not in _mainFire || (current_frame - _mainFire.wepangle_side_frame) > 1){
+							_mainFire.wepangle_side = sign(wepangle);
+						}
+						_mainFire.wepangle_side_frame = current_frame;
+					}
+					if("wepangle_side" in _mainFire){
+						wepangle = abs(wepangle) * sign(_mainFire.wepangle_side);
+					}
+					
+					 // Combine Weapon Kick:
+					if(wkick == 0){
+						wkick = _fire.wkick;
+					}
+					else if(_fire != _mainFire){
+						wkick = max(abs(wkick), abs(_fire.wkick)) * ((wkick < 0 || _fire.wkick < 0) ? -1 : 1);
+					}
+					
+					 // Combine Motion:
+					x      += _fire.x      - _mainFire.x;
+					y      += _fire.y      - _mainFire.y;
+					hspeed += _fire.hspeed - _mainFire.hspeed;
+					vspeed += _fire.vspeed - _mainFire.vspeed;
+					
+					 // Combine Screenshake:
+					var	_fireShake     = _fire.shake,
+						_mainFireShake = _mainFire.shake;
+						
+					for(var i = 0; i < maxp; i++){
+						view_shake[i] += _fireShake[i] - _mainFireShake[i];
+					}
 				}
 			}
-		}
-		
-		 // Revert Ammo Cost:
-		if(_wepXhas_merge){
-			if(instance_is(_creator, Player)){
-				var _fireAmmo = _fire.ammo;
-				if(_fireAmmo != undefined){
-					array_copy(_creator.ammo, 0, _fireAmmo, 0, array_length(_fireAmmo));
+			
+			 // Hasn't Shot Teamed Objects:
+			else{
+				 // Undo Asset Instances Created by Stock Weapon:
+				for(var _lastFire = _fire.last_vars; _lastFire != undefined; _lastFire = _lastFire.last_vars){
+					 // Muffle Firing Sounds:
+					var _maxSoundID = _lastFire.max_sound_id;
+					for(var _soundID = _lastFire.min_sound_id; _soundID < _maxSoundID; _soundID++){
+						if(audio_is_playing(_soundID)){
+							var _soundIndex = asset_get_index(audio_get_name(_soundID));
+							if(audio_exists(_soundIndex)){
+								if(ds_map_exists(global.sound_muffle_map, _soundIndex)){
+									var _muffle = global.sound_muffle_map[? _soundIndex];
+									_muffle.sound_id = _soundID;
+									if(_muffle.frame < current_frame){
+										_muffle.frame = current_frame;
+										audio_sound_gain(
+											_soundIndex,
+											lerp(audio_sound_get_gain(_soundIndex), _muffle.sound_gain * 0.1, 0.2),
+											0
+										);
+									}
+								}
+								else global.sound_muffle_map[? _soundIndex] = {
+									"sound_id"   : _soundID,
+									"sound_gain" : audio_sound_get_gain(_soundIndex),
+									"frame"      : current_frame
+								};
+							}
+						}
+					}
+					
+					 // Delete Instances:
+					var _maxInstanceID = _lastFire.max_instance_id;
+					for(var _instanceID = _lastFire.min_instance_id; _instanceID < _maxInstanceID; _instanceID++){
+						instance_delete(_instanceID);
+					}
+				}
+				
+				 // Revert Values Set by Stock Weapon:
+				if(_fire.main_vars != undefined){
+					var _mainFire = _fire.main_vars;
+					
+					 // Revert Melee Angle:
+					wepangle = abs(wepangle) * sign(_mainFire.wepangle);
+					
+					 // Revert Weapon Kick:
+					if(wkick == 0){
+						wkick = _mainFire.wkick;
+					}
 				}
 			}
-			GameCont.rad = _fire.rads;
+			
+			 // Revert Ammo Cost:
+			if(!_wepIsFront){
+				if(instance_is(_creator, Player)){
+					var _fireAmmo = _fire.ammo;
+					if(_fireAmmo != undefined){
+						array_copy(_creator.ammo, 0, _fireAmmo, 0, array_length(_fireAmmo));
+					}
+				}
+				GameCont.rad = _fire.rads;
+			}
+			
+			 // Fix Reload:
+			if(reload <= 0 && _fire.reload > 0){
+				reload = max(reload, (("reloadspeed" in self) ? reloadspeed : 1) * current_time_scale);
+			}
+			
+			 // Revert Options:
+			UberCont.opt_shake  = _fire.opt_shake;
+			UberCont.opt_freeze = _fire.opt_freeze;
 		}
-		
-		 // Fix Reload:
-		if(reload <= 0 && _fire.reload > 0){
-			reload = max(reload, (("reloadspeed" in self) ? reloadspeed : 1) * current_time_scale);
-		}
-		
-		 // Revert Options:
-		UberCont.opt_shake  = _fire.opt_shake;
-		UberCont.opt_freeze = _fire.opt_freeze;
 	}
 	
 #define temerge_projectile_setup(_instanceList, _wep, _isMain, _mainX, _mainY, _mainDirection, _mainAccuracy, _mainTeam, _mainCreator)
@@ -1642,12 +1711,12 @@
 			
 			 // Replace Projectiles w/ Firing:
 			if("fire_vars" in _lastMerge){
-				var	_lastMergeFire      = _lastMerge.fire_vars,
-					_mainMergeFire      = _lastMerge.fire_vars.main_vars,
-					_rawWep             = undefined,
-					_wepSprite          = undefined,
-					_stockSprite        = undefined,
-					_instWasIndependent = false;
+				var	_lastMergeFire       = _lastMerge.fire_vars,
+					_mainMergeFire       = _lastMerge.fire_vars.main_vars,
+					_rawWep              = undefined,
+					_wepSprite           = undefined,
+					_wepMergeStockSprite = undefined,
+					_instWasIndependent  = false;
 					
 				with(_sortInstanceList){
 					if(instance_exists(self)){
@@ -1664,12 +1733,12 @@
 									continue;
 								}
 								else{
-									if(_stockSprite == undefined){
+									if(_wepMergeStockSprite == undefined){
 										_wepXmerge_is_active = false;
-										_stockSprite = weapon_get_sprt(_wep);
+										_wepMergeStockSprite = weapon_get_sprt(_wep);
 										_wepXmerge_is_active = true;
 									}
-									if(sprite_index == _stockSprite){
+									if(sprite_index == _wepMergeStockSprite){
 										sprite_index = _wepSprite;
 										if(is_array(hitid) && array_length(hitid) > 1 && hitid[1] == _wepSprite){
 											hitid[1] = sprite_index;
@@ -1841,7 +1910,7 @@
 												_wepXmerge_fire_at = _lastMergeFireAt;
 											}
 											else{
-												temerge_player_fire(_wep, _fireAt);
+												temerge_player_fire(true, _wep, _fireAt);
 												call(scr.pass, self, scr.player_fire_at,
 													{
 														"x"         : _fireAt.x,
@@ -1863,7 +1932,7 @@
 												if(instance_exists(self)){
 													var _lastTeam = team;
 													team = _fireAt.team;
-													temerge_weapon_fire(_wep);
+													temerge_weapon_fire(true, _wep);
 													team = _lastTeam;
 												}
 											}
@@ -2005,17 +2074,11 @@
 			 // Gun Gun Special:
 			var _gunInstanceList = instances_matching(_instanceList, "object_index", ThrownWep);
 			if(array_length(_gunInstanceList)){
-				for(
-					var _frontWep = _wep;
-					_frontWep != undefined;
-					_frontWep = (weapon_has_temerge(_frontWep) ? weapon_get_temerge_weapon(_frontWep) : undefined)
-				){
-					if(call(scr.wep_raw, _frontWep) == wep_gun_gun){
-						with(_gunInstanceList){
-							wep          = weapon_set_temerge(call(scr.wep_raw, _wep), wep);
-							sprite_index = weapon_get_sprt(wep);
-						}
-						break;
+				var _rawWep = call(scr.wep_raw, _wep);
+				if(_rawWep == wep_gun_gun || weapon_has_temerge_with_weapon(_wep, wep_gun_gun)){
+					with(_gunInstanceList){
+						wep          = weapon_set_temerge(_rawWep, wep);
+						sprite_index = weapon_get_sprt(wep);
 					}
 				}
 			}
@@ -4447,7 +4510,7 @@
 					var _defaultScriptIndex = script_get_index(`CustomProjectile_${_eventName}`);
 					_lastEventRef = ((_defaultScriptIndex < 0) ? [] : script_ref_create(_defaultScriptIndex));
 				}
-				variable_instance_set(self, _eventRefVarName, script_ref_create(temerge_event_wrapper, _eventName, _lastEventRef));
+				variable_instance_set(self, _eventRefVarName, script_ref_create(temerge_event_wrap_event, _eventName, _lastEventRef));
 			}
 			
 			 // Non-Custom Object:
@@ -4466,7 +4529,7 @@
 		array_push(_eventRefList, _eventRef);
 	}
 	
-#define temerge_event_wrapper(_eventName, _eventRef)
+#define temerge_event_wrap_event(_eventName, _eventRef)
 	/*
 		Used as a wrapper script for merged projectile events
 	*/
@@ -4798,7 +4861,7 @@
 		&& ("canhurt" not in self || canhurt) // Bolts
 	);
 	
-#define projectile_wall_temerge_bounce()
+#define projectile_temerge_wall_bounce()
 	/*
 		Called from a merged projectile in its wall collision event to make it bounce
 	*/
@@ -4896,7 +4959,7 @@
 	
 #define BouncerBullet_temerge_wall
 	 // Bounce:
-	projectile_wall_temerge_bounce();
+	projectile_temerge_wall_bounce();
 	
 	 // Effects:
 	instance_create(x, y, Dust);
@@ -5207,7 +5270,7 @@
 		}
 		
 		 // Bounce:
-		projectile_wall_temerge_bounce();
+		projectile_temerge_wall_bounce();
 		
 		 // Lasers Bounce Once:
 		if(_isLaser){

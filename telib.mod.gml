@@ -4927,11 +4927,13 @@
 				case undefined: break;
 				default:
 					var	_atCreatorWep = _at.creator_wep,
-						_hasWep       = ("wep"  in self && wep  == _atCreatorWep),
-						_hasBWep      = ("bwep" in self && bwep == _atCreatorWep);
+						_atWepIsRef   = is_array(_atWep),
+						_setWep       = (_atWepIsRef ? _atWep[0] : _atWep),
+						_lastWep      = (("wep"  in self) ? wep  : undefined),
+						_lastBWep     = (("bwep" in self) ? bwep : undefined);
 						
-					if(_hasWep ){ var _atWepIsRef = is_array(_atWep), _setWep = (_atWepIsRef ? _atWep[0] : _atWep); wep  = _setWep; }
-					if(_hasBWep){ var _atWepIsRef = is_array(_atWep), _setWep = (_atWepIsRef ? _atWep[0] : _atWep); bwep = _setWep; }
+					if(_lastWep  == _atCreatorWep) wep  = _setWep;
+					if(_lastBWep == _atCreatorWep) bwep = _setWep;
 			}
 		}
 		
@@ -4949,8 +4951,23 @@
 			switch(_atWep){
 				case undefined: break;
 				default:
-					if(_hasBWep){ if(bwep != _setWep && _atWepIsRef){ _atWep[0] = bwep; } bwep = _atCreatorWep; }
-					if(_hasWep ){ if(wep  != _setWep && _atWepIsRef){ _atWep[0] = wep;  } wep  = _atCreatorWep; }
+					if(_lastWep == _atCreatorWep || _lastBWep == _atCreatorWep){
+						 // Swapped Weapons:
+						if(_lastWep != undefined && _lastBWep != undefined){
+							if(
+								   (wep  == _lastBWep && bwep != _lastBWep)
+								|| (bwep == _lastWep  && wep  != _lastWep)
+							){
+								var _tempLastWep = _lastWep;
+								_lastWep  = _lastBWep;
+								_lastBWep = _tempLastWep;
+							}
+						}
+						
+						 // Revert Weapons:
+						if(_lastBWep == _atCreatorWep){ if(bwep != _setWep && _atWepIsRef){ _atWep[0] = bwep; } bwep = _lastBWep; }
+						if(_lastWep  == _atCreatorWep){ if(wep  != _setWep && _atWepIsRef){ _atWep[0] = wep;  } wep  = _lastWep;  }
+					}
 			}
 			
 			 // Revert Aim Direction:

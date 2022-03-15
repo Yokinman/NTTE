@@ -2485,6 +2485,7 @@
 		"begin_step"   : [],
 		"step"         : [],
 		"end_step"     : [],
+		"draw"         : [],
 		"draw_shadows" : [],
 		"draw_bloom"   : [],
 		"draw_dark"    : []

@@ -209,7 +209,7 @@
 	snd_idpd = race_sound(sndMutant1IDPD);
 	snd_cptn = race_sound(sndMutant1Cptn);
 	snd_thrn = race_sound(sndMutant1Thrn);
-	footkind = 1; // Sho
+	footkind = 1; // Organic
 	
 	 // Re-Get Ultras When Revived:
 	/*for(var i = 0; i < ultra_count(mod_current); i++){

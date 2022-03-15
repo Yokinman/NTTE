@@ -3598,6 +3598,16 @@
 		if(lag) trace_time("ntte_end_step");
 	}
 	
+#define draw
+	if(ntte_active){
+		if(lag) trace_time();
+		
+		 // Call Scripts:
+		ntte_call("draw");
+		
+		if(lag) trace_time("ntte_draw");
+	}
+	
 #define draw_dark // Drawing Grays
 	if(ntte_active){
 		draw_set_color(c_gray);
