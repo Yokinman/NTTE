@@ -216,24 +216,33 @@
 	footkind = 4; // Metal
 	
 	 // Character-Specific Vars:
-	beetle_last_usespec                 = 0;
-	beetle_menu_is_open                 = false;
-	beetle_menu_scale                   = 0;
-	beetle_menu_wkick                   = undefined;
-	beetle_menu_bwkick                  = undefined;
-	beetle_menu_wep                     = wep_none;
-	beetle_menu_bwep                    = wep_none;
-	beetle_menu_wep_selection_wep_list  = [];
-	beetle_menu_bwep_selection_wep_list = [];
-	beetle_menu_selection_wep_index     = 0;
-	beetle_menu_selection_angle         = 0;
-	beetle_menu_selection_state         = undefined;
-	beetle_menu_selection_trail_last_x  = x;
-	beetle_menu_selection_trail_last_y  = y;
-	beetle_menu_merging_scale           = 0;
-	beetle_menu_merging_wep_index_list  = [];
-	beetle_menu_merging_wep_name        = "";
-	beetle_menu_merging_wep_sprite      = mskNone;
+	beetle_last_usespec = 0;
+	beetle_menu_vars    = {
+		"is_open"                    : false,
+		"scale"                      : 0,
+		"last_wkick"                 : undefined,
+		"last_bwkick"                : undefined,
+		"last_canfire"               : undefined,
+		"last_canscope"              : undefined,
+		"revert_last_vars_step_bind" : noone,
+		"wep"                        : wep_none,
+		"bwep"                       : wep_none,
+		"wep_selection_wep_list"     : [],
+		"bwep_selection_wep_list"    : [],
+		"selection_wep_index"        : 0,
+		"selection_angle"            : 0,
+		"selection_state"            : undefined,
+		"selection_trail_last_x"     : x,
+		"selection_trail_last_y"     : y,
+		"merging_scale"              : 0,
+		"merging_wep_index_list"     : [],
+		"merging_wep_name"           : "",
+		"merging_wep_type"           : type_melee,
+		"merging_wep_cost"           : 0,
+		"merging_wep_load"           : 0,
+		"merging_wep_sprite"         : mskNone,
+		"merging_wep_part_num"       : 0
+	};
 	
 	 // Re-Get Ultras When Revived:
 	/*for(var i = 0; i < ultra_count(mod_current); i++){
@@ -245,11 +254,12 @@
 #define step
 	if(lag) trace_time();
 	
-	 // Open Weapon Merging Menu:
-	var	_menuWasOpen    = beetle_menu_is_open,
+	var	_menu           = beetle_menu_vars,
+		_menuWasOpen    = _menu.is_open,
 		_specIsPressed  = button_pressed(index, "spec"),
 		_specIsReleased = button_released(index, "spec");
 		
+	 // Custom Active Support:
 	if((usespec > 0) != (beetle_last_usespec > 0)){
 		if(usespec > 0){
 			_specIsPressed = true;
@@ -258,40 +268,49 @@
 			_specIsReleased = true;
 		}
 	}
-	
-	if(_specIsPressed && !beetle_menu_is_open && canspec && player_active){
-		beetle_menu_is_open         = !beetle_menu_is_open;
-		beetle_menu_selection_angle = gunangle;
-	}
-	
 	beetle_last_usespec = usespec;
 	
+	 // Open Weapon Merging Menu:
+	if(_specIsPressed && !_menu.is_open && canspec && player_active){
+		_menu.is_open         = !_menu.is_open;
+		_menu.selection_angle = gunangle;
+	}
+	
 	 // Weapon Merging Menu:
-	if(beetle_menu_is_open){
+	if(_menu.is_open || _menu.scale != 0){
 		var _menuSelectionWepListSize = 0;
+		
+		 // Setup Variable Reverting Controller:
+		if(!instance_exists(_menu.revert_last_vars_step_bind)){
+			with(script_bind_step(beetle_menu_revert_last_vars_step, 0, _menu, self)){
+				persistent = true;
+				_menu.revert_last_vars_step_bind = self;
+			}
+		}
 		
 		 // Setup Merged Weapon Parts:
 		for(var _wepIndex = 0; _wepIndex <= 1; _wepIndex++){
 			var	_wepVarName              = ((_wepIndex == 0) ? "wep" : "bwep"),
 				_wep                     = variable_instance_get(self, _wepVarName),
-				_menuWep                 = variable_instance_get(self, `beetle_menu_${_wepVarName}`),
-				_menuWepSelectionWepList = variable_instance_get(self, `beetle_menu_${_wepVarName}_selection_wep_list`);
+				_menuWep                 = lq_get(_menu, `${_wepVarName}`),
+				_menuWepSelectionWepList = lq_get(_menu, `${_wepVarName}_selection_wep_list`);
 				
 			if(_menuWep != _wep){
 				_menuWep                 = _wep;
 				_menuWepSelectionWepList = [];
-				variable_instance_set(self, `beetle_menu_${_wepVarName}`,                    _menuWep);
-				variable_instance_set(self, `beetle_menu_${_wepVarName}_selection_wep_list`, _menuWepSelectionWepList);
+				lq_set(_menu, `${_wepVarName}`,                    _menuWep);
+				lq_set(_menu, `${_wepVarName}_selection_wep_list`, _menuWepSelectionWepList);
 				
 				 // Deselect Previous Weapon Parts:
-				if(beetle_menu_selection_wep_index > _menuSelectionWepListSize){
-					beetle_menu_selection_wep_index = _menuSelectionWepListSize;
-				}
-				with(beetle_menu_merging_wep_index_list){
-					if(self >= _menuSelectionWepListSize){
-						other.beetle_menu_merging_wep_index_list = call(scr.array_delete_value, other.beetle_menu_merging_wep_index_list, self);
-					}
-				}
+				_menu.merging_wep_index_list = [];
+				// if(_menu.selection_wep_index > _menuSelectionWepListSize){
+				// 	_menu.selection_wep_index = _menuSelectionWepListSize;
+				// }
+				// with(_menu.merging_wep_index_list){
+				// 	if(self >= _menuSelectionWepListSize){
+				// 		_menu.merging_wep_index_list = call(scr.array_delete_value, _menu.merging_wep_index_list, self);
+				// 	}
+				// }
 				
 				 // Add Weapon Parts to List:
 				while(true){
@@ -308,295 +327,356 @@
 			_menuSelectionWepListSize += array_length(_menuWepSelectionWepList);
 		}
 		
-		 // Weapon Selection:
-		if(_menuSelectionWepListSize > 0){
-			beetle_menu_selection_wep_index = round(_menuSelectionWepListSize * (1 + ((gunangle - beetle_menu_selection_angle) / 360))) % _menuSelectionWepListSize;
-			
-			 // Toggle Current Weapon's Selection:
-			if(button_check(index, "fire") && beetle_menu_scale > 0.75){
-				call(scr.motion_step, self, 1);
+		 // Opened Menu:
+		if(_menu.is_open){
+			 // Weapon Selection:
+			if(_menuSelectionWepListSize > 0){
+				_menu.selection_wep_index = round(_menuSelectionWepListSize * (1 + ((gunangle - _menu.selection_angle) / 360))) % _menuSelectionWepListSize;
 				
-				var	_menuSelectionTrailX        = x + lengthdir_x(10, gunangle),
-					_menuSelectionTrailY        = y + lengthdir_y(10, gunangle),
-					_menuSelectionWepList       = call(scr.array_combine, beetle_menu_wep_selection_wep_list, beetle_menu_bwep_selection_wep_list),
-					_menuSelectionWepIsSelected = (array_find_index(beetle_menu_merging_wep_index_list, beetle_menu_selection_wep_index) >= 0),
-					_menuSelectionWep           = _menuSelectionWepList[beetle_menu_selection_wep_index];
+				 // Toggle Current Weapon's Selection:
+				if(button_check(index, "fire") && _menu.scale > 0.75){
+					call(scr.motion_step, self, 1);
 					
-				call(scr.motion_step, self, -1);
-				
-				 // Store Selection State:
-				if(beetle_menu_selection_state == undefined){
-					beetle_menu_selection_state = !_menuSelectionWepIsSelected;
-				}
-				
-				 // Selection Hand Trail:
-				else with(instance_create(_menuSelectionTrailX, _menuSelectionTrailY, BoltTrail)){
-					image_angle  = point_direction(x, y, other.beetle_menu_selection_trail_last_x, other.beetle_menu_selection_trail_last_y);
-					image_xscale = point_distance(x, y, other.beetle_menu_selection_trail_last_x, other.beetle_menu_selection_trail_last_y);
-					image_yscale = 1.5;
-					image_blend  = c_black;
-					depth        = other.depth + 1;
-				}
-				beetle_menu_selection_trail_last_x = _menuSelectionTrailX;
-				beetle_menu_selection_trail_last_y = _menuSelectionTrailY;
-				
-				 // Toggle Selection:
-				if(beetle_menu_selection_state != _menuSelectionWepIsSelected && _menuSelectionWep != wep_none){
-					if(beetle_menu_selection_state){
-						array_push(beetle_menu_merging_wep_index_list, beetle_menu_selection_wep_index);
-					}
-					else{
-						beetle_menu_merging_wep_index_list = call(scr.array_delete_value, beetle_menu_merging_wep_index_list, beetle_menu_selection_wep_index);
-					}
-					
-					 // Effects:
-					var	_menuSelectionWepSwap     = sndSwapPistol,
-						_menuSelectionEffectScale = array_length(beetle_menu_merging_wep_index_list) / _menuSelectionWepListSize;
+					var	_menuSelectionTrailX        = x + lengthdir_x(10, gunangle),
+						_menuSelectionTrailY        = y + lengthdir_y(10, gunangle),
+						_menuSelectionWepList       = call(scr.array_combine, _menu.wep_selection_wep_list, _menu.bwep_selection_wep_list),
+						_menuSelectionWepIsSelected = (array_find_index(_menu.merging_wep_index_list, _menu.selection_wep_index) >= 0),
+						_menuSelectionWep           = _menuSelectionWepList[_menu.selection_wep_index];
 						
-					with(call(scr.fx, _menuSelectionTrailX, _menuSelectionTrailY, [gunangle, 1], BulletHit)){
-						image_xscale = lerp(1/3, 2/3, _menuSelectionEffectScale);
-						image_yscale = image_xscale;
-						image_blend  = c_black;
-						friction     = 0.1;
+					call(scr.motion_step, self, -1);
+					
+					 // Store Selection State:
+					if(_menu.selection_state == undefined){
+						_menu.selection_state = !_menuSelectionWepIsSelected;
 					}
-					if(beetle_menu_selection_state){
-						if(call(scr.weapon_has_temerge, _menuSelectionWep)){
-							call(scr.weapon_deactivate_temerge, _menuSelectionWep);
-							_menuSelectionWepSwap = weapon_get_swap(_menuSelectionWep);
-							call(scr.weapon_activate_temerge, _menuSelectionWep);
+					
+					 // Selection Hand Trail:
+					else with(instance_create(_menuSelectionTrailX, _menuSelectionTrailY, BoltTrail)){
+						image_angle  = point_direction(x, y, _menu.selection_trail_last_x, _menu.selection_trail_last_y);
+						image_xscale = point_distance(x, y, _menu.selection_trail_last_x, _menu.selection_trail_last_y);
+						image_yscale = 1.5 + (0.5 * dsin((other.wave / 8) * 360));
+						image_blend  = c_black;
+						depth        = other.depth + 1;
+					}
+					_menu.selection_trail_last_x = _menuSelectionTrailX;
+					_menu.selection_trail_last_y = _menuSelectionTrailY;
+					
+					 // Toggle Selection:
+					if(_menu.selection_state != _menuSelectionWepIsSelected && _menuSelectionWep != wep_none){
+						if(_menu.selection_state){
+							array_push(_menu.merging_wep_index_list, _menu.selection_wep_index);
 						}
 						else{
-							_menuSelectionWepSwap = weapon_get_swap(_menuSelectionWep);
+							_menu.merging_wep_index_list = call(scr.array_delete_value, _menu.merging_wep_index_list, _menu.selection_wep_index);
 						}
-						sound_play_pitchvol(_menuSelectionWepSwap, 1, 2/3);
-					}
-					sound_play_pitchvol((beetle_menu_selection_state ? sndPlantPower : sndPlantFire), lerp(1.25, 2, _menuSelectionEffectScale), 2);
-					
-					 // Store Merged Weapon's Name & Sprite:
-					if(array_length(beetle_menu_merging_wep_index_list)){
-						var	_menuMergingWep             = undefined,
-							_menuSelectionWepSpriteList = [];
+						
+						 // Effects:
+						var	_menuSelectionWepSwap     = sndSwapPistol,
+							_menuSelectionEffectScale = array_length(_menu.merging_wep_index_list) / _menuSelectionWepListSize;
 							
-						with(beetle_menu_merging_wep_index_list){
-							var	_menuSelectionWep    = _menuSelectionWepList[self],
-								_menuSelectionRawWep = call(scr.wep_raw, _menuSelectionWep);
-								
-							_menuMergingWep = (
-								(_menuMergingWep == undefined)
-								? _menuSelectionRawWep
-								: call(scr.weapon_add_temerge, _menuMergingWep, _menuSelectionRawWep)
-							);
-							
+						with(call(scr.fx, _menuSelectionTrailX, _menuSelectionTrailY, [gunangle, 1], BulletHit)){
+							image_xscale = lerp(1/3, 2/3, _menuSelectionEffectScale);
+							image_yscale = image_xscale;
+							image_blend  = c_black;
+							depth        = other.depth + 1;
+							hspeed      += other.hspeed * 2/3;
+							vspeed      += other.vspeed * 2/3;
+							friction     = 0.1;
+						}
+						if(_menu.selection_state){
 							if(call(scr.weapon_has_temerge, _menuSelectionWep)){
 								call(scr.weapon_deactivate_temerge, _menuSelectionWep);
-								array_push(_menuSelectionWepSpriteList, weapon_get_sprt(_menuSelectionWep));
+								_menuSelectionWepSwap = weapon_get_swap(_menuSelectionWep);
 								call(scr.weapon_activate_temerge, _menuSelectionWep);
 							}
 							else{
-								array_push(_menuSelectionWepSpriteList, weapon_get_sprt(_menuSelectionWep));
+								_menuSelectionWepSwap = weapon_get_swap(_menuSelectionWep);
 							}
+							sound_play_pitchvol(_menuSelectionWepSwap, 1, 2/3);
 						}
-						
-						beetle_menu_merging_wep_name   = weapon_get_name(_menuMergingWep);
-						beetle_menu_merging_wep_sprite = call(scr.merge_weapon_sprite, _menuSelectionWepSpriteList);
-					}
-				}
-			}
-			else beetle_menu_selection_state = undefined;
-		}
-		
-		 // Merged Weapon Crafting Zone Opening & Closing Animation:
-		if(array_length(beetle_menu_merging_wep_index_list)){
-			if(abs(1 - beetle_menu_merging_scale) > 0.01){
-				beetle_menu_merging_scale = lerp_ct(beetle_menu_merging_scale, 1, 0.2);
-			}
-			else{
-				beetle_menu_merging_scale = 1;
-			}
-		}
-		else if(beetle_menu_merging_scale != 0){
-			if(beetle_menu_merging_scale > 0.01){
-				beetle_menu_merging_scale *= power(2/3, current_time_scale);
-			}
-			else{
-				beetle_menu_merging_scale = 0;
-			}
-		}
-		
-		 // Close Menu & Confirm Selection:
-		if((_specIsPressed && _menuWasOpen) || (_specIsReleased && beetle_menu_scale > 0.75)){
-			beetle_menu_is_open = false;
-			
-			 // Merge Selected Weapons:
-			if(array_length(beetle_menu_merging_wep_index_list)){
-				var _menuMergingHPCost = 2 * (array_length(beetle_menu_merging_wep_index_list) - 1);
-				if(maxhealth > _menuMergingHPCost){
-					var	_menuSelectionWepList     = call(scr.array_combine, beetle_menu_wep_selection_wep_list, beetle_menu_bwep_selection_wep_list),
-						_menuSelectionWepListSize = array_length(_menuSelectionWepList);
-						
-					for(var _menuWepSelectionWepIndex = 0; _menuWepSelectionWepIndex < _menuSelectionWepListSize; _menuWepSelectionWepIndex++){
-						var	_menuSelectionWep          = _menuSelectionWepList[_menuWepSelectionWepIndex],
-							_menuSelectionWepIsPrimary = (_menuWepSelectionWepIndex < array_length(beetle_menu_wep_selection_wep_list));
-							
-						 // Delete Existing Weapon Merges:
-						if(call(scr.weapon_has_temerge, _menuSelectionWep) != false){
-							call(scr.weapon_delete_temerge, _menuSelectionWep);
-						}
-						
-						 // Drop Unselected Weapons:
-						if(_menuSelectionWep != wep_none && array_find_index(beetle_menu_merging_wep_index_list, _menuWepSelectionWepIndex) < 0){
-							with(instance_create(x, y, WepPickup)){
-								wep   = _menuSelectionWep;
-								curse = (_menuSelectionWepIsPrimary ? other.curse : other.bcurse);
-								
-								 // Effects:
-								image_index = 1;
-								call(scr.fx, x, y, 3, Dust);
-							}
-							_menuSelectionWepList[_menuWepSelectionWepIndex] = wep_none;
-						}
-						
-						 // Merging Cursed Secondary Weapon:
-						else if(!_menuSelectionWepIsPrimary){
-							curse = max(curse, bcurse);
-						}
-					}
-					
-					 // Clear Secondary Weapon:
-					bwep   = wep_none;
-					bcurse = 0;
-					
-					 // Merge Selected Weapons:
-					wep = wep_none;
-					with(beetle_menu_merging_wep_index_list){
-						var _menuSelectionWep = _menuSelectionWepList[self];
-						other.wep = (
-							(other.wep == wep_none)
-							? _menuSelectionWep
-							: call(scr.weapon_add_temerge, other.wep, _menuSelectionWep)
+						sound_play_pitchvol(
+							(_menu.selection_state ? sndPlantPower : sndPlantFire),
+							lerp(1.25, 2, _menuSelectionEffectScale),
+							2
 						);
-					}
-					
-					 // Reset Menu:
-					beetle_menu_wep                     = wep;
-					beetle_menu_bwep                    = bwep;
-					beetle_menu_wep_selection_wep_list  = _menuSelectionWepList;
-					beetle_menu_bwep_selection_wep_list = [];
-					beetle_menu_merging_wep_index_list  = [];
-					
-					 // Take Health:
-					if(_menuMergingHPCost != 0){
-						chickendeaths += _menuMergingHPCost;
-						maxhealth     -= _menuMergingHPCost;
-						lsthealth      = min(lsthealth, maxhealth);
-						projectile_hit_raw(self, max(0, my_health - maxhealth), 2);
 						
-						 // Effects:
-						with(call(scr.pickup_text, "MAX HP", "add", -_menuMergingHPCost)){
-							y    -= 58;
-							speed = 0;
-						}
-						with(call(scr.fx, x, y, 3, BloodStreak)){
-							sprite_index = spr.SquidBloodStreak;
+						 // Store Merged Weapon's Information:
+						if(array_length(_menu.merging_wep_index_list)){
+							var	_menuMergingWep             = undefined,
+								_menuSelectionWepSpriteList = [];
+								
+							with(_menu.merging_wep_index_list){
+								var	_menuSelectionWep    = _menuSelectionWepList[self],
+									_menuSelectionRawWep = call(scr.wep_raw, _menuSelectionWep);
+									
+								_menuMergingWep = (
+									(_menuMergingWep == undefined)
+									? _menuSelectionRawWep
+									: call(scr.weapon_add_temerge, _menuMergingWep, _menuSelectionRawWep)
+								);
+								
+								if(call(scr.weapon_has_temerge, _menuSelectionWep)){
+									call(scr.weapon_deactivate_temerge, _menuSelectionWep);
+									array_push(_menuSelectionWepSpriteList, weapon_get_sprt(_menuSelectionWep));
+									call(scr.weapon_activate_temerge, _menuSelectionWep);
+								}
+								else{
+									array_push(_menuSelectionWepSpriteList, weapon_get_sprt(_menuSelectionWep));
+								}
+								if(_menuSelectionWepSpriteList[array_length(_menuSelectionWepSpriteList) - 1] == mskNone){
+									_menuSelectionWepSpriteList[array_length(_menuSelectionWepSpriteList) - 1] = weapon_get_sprt(call(scr.wep_raw, _menuSelectionWep));
+								}
+							}
+							
+							_menu.merging_wep_name   = weapon_get_name(_menuMergingWep);
+							_menu.merging_wep_type   = weapon_get_type(_menuMergingWep);
+							_menu.merging_wep_cost   = weapon_get_cost(_menuMergingWep);
+							_menu.merging_wep_load   = weapon_get_load(_menuMergingWep);
+							_menu.merging_wep_sprite = call(scr.weapon_sprite_list_merge, _menuSelectionWepSpriteList);
 						}
 					}
-					
-					 // Sound:
-					sound_play_pitchvol(
-						sndPlantTBKill,
-						lerp(0.75, 0.25, _menuMergingHPCost / (maxhealth + chickendeaths)),
-						2
-					);
-					
-					 // Weapon Name:
-					call(scr.pickup_text, weapon_get_name(wep), "got");
+				}
+				else _menu.selection_state = undefined;
+			}
+			
+			 // Merged Weapon Crafting Zone Opening & Closing Animation:
+			if(array_length(_menu.merging_wep_index_list)){
+				if(abs(1 - _menu.merging_scale) > 0.01){
+					_menu.merging_scale = lerp_ct(_menu.merging_scale, 1, 1/3);
+				}
+				else{
+					_menu.merging_scale = 1;
 				}
 			}
-		}
-		
-		 // Opening Animation:
-		if(beetle_menu_scale == 0){
-			if(call(scr.weapon_has_temerge, wep)){
-				gunshine = 1;
-				sound_play_pitchvol(sndWeaponPickup, 1 + orandom(0.1), 2/3);
+			else if(_menu.merging_scale != 0){
+				if(_menu.merging_scale > 0.01){
+					_menu.merging_scale *= power(2/3, current_time_scale);
+				}
+				else{
+					_menu.merging_scale = 0;
+				}
 			}
-			sound_play_pitchvol(sndPlantSnareTB, 2 + orandom(0.1), 4/3);
-		}
-		if(abs(1 - beetle_menu_scale) > 0.01){
-			beetle_menu_scale = lerp_ct(beetle_menu_scale, 1, 0.15);
-		}
-		else{
-			beetle_menu_scale = 1;
-		}
-		
-		 // Disable Firing & Laser Sight:
-		canfire  = false;
-		canscope = false;
-	}
-	else if(beetle_menu_scale != 0){
-		 // Enable Firing:
-		canfire = true;
-		
-		 // Closing Animation:
-		if(beetle_menu_scale > 0.05){
-			beetle_menu_scale *= power(0.8, current_time_scale);
-		}
-		
-		 // Menu Closed:
-		else{
-			 // Clear Menu:
-			beetle_menu_scale                   = 0;
-			beetle_menu_wep                     = wep_none;
-			beetle_menu_bwep                    = wep_none;
-			beetle_menu_wep_selection_wep_list  = [];
-			beetle_menu_bwep_selection_wep_list = [];
-			beetle_menu_selection_wep_index     = 0;
-			beetle_menu_selection_state         = undefined;
-			beetle_menu_merging_scale           = 0;
-			beetle_menu_merging_wep_index_list  = [];
 			
-			 // Enable Laser Sight:
-			canscope = true;
+			 // Close Menu & Confirm Selection:
+			if((_specIsPressed && _menuWasOpen) || (_specIsReleased && _menu.scale > 0.75)){
+				_menu.is_open = false;
+				
+				 // Merge Selected Weapons:
+				if(array_length(_menu.merging_wep_index_list)){
+					var _menuMergingHPCost = 2 * (array_length(_menu.merging_wep_index_list) - 1);
+					if(maxhealth > _menuMergingHPCost){
+						var	_menuSelectionWepList     = call(scr.array_combine, _menu.wep_selection_wep_list, _menu.bwep_selection_wep_list),
+							_menuSelectionWepListSize = array_length(_menuSelectionWepList);
+							
+						for(var _menuWepSelectionWepIndex = 0; _menuWepSelectionWepIndex < _menuSelectionWepListSize; _menuWepSelectionWepIndex++){
+							var	_menuSelectionWep          = _menuSelectionWepList[_menuWepSelectionWepIndex],
+								_menuSelectionWepIsPrimary = (_menuWepSelectionWepIndex < array_length(_menu.wep_selection_wep_list));
+								
+							 // Delete Existing Weapon Merges:
+							if(call(scr.weapon_has_temerge, _menuSelectionWep) != false){
+								call(scr.weapon_delete_temerge, _menuSelectionWep);
+							}
+							
+							 // Drop Unselected Weapons:
+							if(_menuSelectionWep != wep_none && array_find_index(_menu.merging_wep_index_list, _menuWepSelectionWepIndex) < 0){
+								with(instance_create(x, y, WepPickup)){
+									wep   = _menuSelectionWep;
+									curse = (_menuSelectionWepIsPrimary ? other.curse : other.bcurse);
+									
+									 // Effects:
+									image_index = 1;
+									call(scr.fx, x, y, 3, Dust);
+								}
+								_menuSelectionWepList[_menuWepSelectionWepIndex] = wep_none;
+							}
+							
+							 // Merging Cursed Secondary Weapon:
+							else if(!_menuSelectionWepIsPrimary){
+								curse = max(curse, bcurse);
+							}
+						}
+						
+						 // Clear Secondary Weapon:
+						bwep   = wep_none;
+						bcurse = 0;
+						
+						 // Merge Selected Weapons:
+						wep = wep_none;
+						with(_menu.merging_wep_index_list){
+							var _menuSelectionWep = _menuSelectionWepList[self];
+							other.wep = (
+								(other.wep == wep_none)
+								? _menuSelectionWep
+								: call(scr.weapon_add_temerge, other.wep, _menuSelectionWep)
+							);
+						}
+						
+						 // Take Health:
+						if(_menuMergingHPCost != 0){
+							chickendeaths += _menuMergingHPCost;
+							maxhealth     -= _menuMergingHPCost;
+							lsthealth      = min(lsthealth, maxhealth);
+							projectile_hit_raw(self, max(0, my_health - maxhealth), 2);
+							
+							 // Effects:
+							with(call(scr.pickup_text, "MAX HP ", "add", -_menuMergingHPCost)){
+								y    -= 58;
+								speed = 0;
+							}
+							with(call(scr.fx, x, y, 3, BloodStreak)){
+								sprite_index = spr.SquidBloodStreak;
+							}
+							_menu.merging_wep_part_num = array_length(_menu.merging_wep_index_list);
+						}
+						
+						 // Sound:
+						sound_play_pitchvol(
+							sndPlantTBKill,
+							lerp(0.75, 0.25, _menuMergingHPCost / (maxhealth + chickendeaths)),
+							2.5
+						);
+						
+						 // Weapon Name:
+						call(scr.pickup_text, weapon_get_name(wep), "got");
+						
+						 // Reset Menu:
+						_menu.wep                     = wep;
+						_menu.bwep                    = bwep;
+						_menu.wep_selection_wep_list  = _menuSelectionWepList;
+						_menu.bwep_selection_wep_list = [];
+						_menu.merging_wep_index_list  = [];
+					}
+				}
+			}
 			
-			 // Effects:
-			if(wep != wep_none){
+			 // Animation:
+			if(_menu.scale == 0){
 				if(call(scr.weapon_has_temerge, wep)){
-					gunshine = 2;
+					gunshine = 1;
+					sound_play_pitchvol(sndWeaponPickup, 1 + orandom(0.1), 2/3);
 				}
-				with(instance_create(x, y, WepSwap)){
-					creator = other;
+				sound_play_pitchvol(sndPlantSnareTB, 2 + orandom(0.1), 4/3);
+			}
+			if(abs(1 - _menu.scale) > 0.01){
+				_menu.scale = lerp_ct(_menu.scale, 1, 0.15);
+			}
+			else{
+				_menu.scale = 1;
+			}
+			
+			 // Disable Firing & Laser Sight:
+			if(canfire ){ _menu.last_canfire  = canfire;  canfire  = false; }
+			if(canscope){ _menu.last_canscope = canscope; canscope = false; }
+		}
+		
+		 // Closing Menu:
+		else{
+			 // Animation:
+			if(_menu.scale > 0.05){
+				_menu.scale *= power(0.8, current_time_scale);
+			}
+			
+			 // Closed:
+			else{
+				 // Clear Menu:
+				with(_menu){
+					scale                   = 0;
+					wep                     = wep_none;
+					bwep                    = wep_none;
+					wep_selection_wep_list  = [];
+					bwep_selection_wep_list = [];
+					selection_wep_index     = 0;
+					selection_state         = undefined;
+					merging_scale           = 0;
+					merging_wep_index_list  = [];
 				}
-				sound_play_hit(weapon_get_swap(wep), 0.1);
+				
+				 // Effects:
+				if(wep != wep_none){
+					 // Sound:
+					sound_play_hit(weapon_get_swap(wep), 0.1);
+					
+					 // Flash:
+					if(call(scr.weapon_has_temerge, wep)){
+						gunshine = 2;
+					}
+					with(instance_create(x, y, WepSwap)){
+						creator = other;
+					}
+					
+					 // Replaced Weapon Parts:
+					if(_menu.merging_wep_part_num > 0){
+						var	_offsetLen = 8,
+							_offsetDir = gunangle + wepangle,
+							_x         = x + lengthdir_x(_offsetLen, _offsetDir),
+							_y         = y + lengthdir_y(_offsetLen, _offsetDir),
+							_ang       = random(360);
+							
+						for(var _dir = _ang; _dir < _ang + 360; _dir += (360 / _menu.merging_wep_part_num)){
+							with(call(scr.fx, _x, _y, [_dir + orandom(70), 3], Shell)){
+								sprite_index = spr.BackpackDebris;
+								image_index  = irandom(image_number - 1);
+								image_speed  = 0;
+								image_xscale = choose(-1, 1);
+								image_blend  = c_silver;
+							}
+						}
+						
+						_menu.merging_wep_part_num = 0;
+					}
+				}
 			}
 		}
-	}
-	
-	 // Hide Weapons While Menu is Open:
-	if(beetle_menu_scale != 0){
-		if(beetle_menu_wkick == undefined || wkick < infinity){
-			beetle_menu_wkick = wkick;
-			wkick = infinity;
-		}
-		else{
-			beetle_menu_wkick -= clamp(beetle_menu_wkick, -current_time_scale, current_time_scale);
-		}
-		if(beetle_menu_bwkick == undefined || bwkick < infinity){
-			beetle_menu_bwkick = bwkick;
-			bwkick = infinity;
-		}
-	}
-	else{
-		if(beetle_menu_wkick != undefined){
-			wkick = beetle_menu_wkick;
-			beetle_menu_wkick = undefined;
-		}
-		if(beetle_menu_bwkick != undefined){
-			bwkick = beetle_menu_bwkick;
-			beetle_menu_bwkick = undefined;
+		
+		 // Hide Weapons While Menu is Open:
+		if(_menu.scale != 0){
+			if(_menu.last_bwkick == undefined || abs(bwkick) < 320){
+				_menu.last_bwkick = bwkick;
+			}
+			if(_menu.last_wkick == undefined || abs(wkick) < 320){
+				_menu.last_wkick = wkick;
+			}
+			else{
+				_menu.last_wkick -= clamp(_menu.last_wkick, -current_time_scale, current_time_scale);
+			}
+			bwkick = 10000;
+			wkick  = 10000;
 		}
 	}
 	
 	if(lag) trace_time(mod_current + "_step");
+	
+#define beetle_menu_revert_last_vars_step(_beetleMenu, _beetleMenuInstance)
+	/*
+		Reverts the given beetle menu's stored variables when closed (player weapon kick, ability to fire, and ability to use a laser sight)
+	*/
+	
+	if(instance_exists(_beetleMenuInstance)){
+		with(_beetleMenuInstance){
+			if(race != mod_current || beetle_menu_vars != _beetleMenu){
+				_beetleMenu.is_open = false;
+				_beetleMenu.scale   = 0;
+			}
+			if(!_beetleMenu.is_open){
+				 // Revert Ability to Fire:
+				if(_beetleMenu.last_canfire != undefined){
+					canfire                  = _beetleMenu.last_canfire;
+					_beetleMenu.last_canfire = undefined;
+				}
+				
+				 // Revert Weapon Kick & Ability to Use a Laser Sight:
+				if(_beetleMenu.scale == 0){
+					if(_beetleMenu.last_wkick    != undefined){ wkick    = _beetleMenu.last_wkick;    _beetleMenu.last_wkick    = undefined; }
+					if(_beetleMenu.last_bwkick   != undefined){ bwkick   = _beetleMenu.last_bwkick;   _beetleMenu.last_bwkick   = undefined; }
+					if(_beetleMenu.last_canscope != undefined){ canscope = _beetleMenu.last_canscope; _beetleMenu.last_canscope = undefined; }
+					with(other){
+						instance_destroy();
+					}
+				}
+			}
+		}
+	}
+	else instance_destroy();
 	
 #define ntte_draw
 	/*
@@ -604,233 +684,277 @@
 	*/
 	
 	if(instance_exists(Player)){
-		var _inst = instances_matching(instances_matching_ne(instances_matching(Player, "race", mod_current), "beetle_menu_scale", 0), "visible", true);
+		var _inst = instances_matching(instances_matching(Player, "race", mod_current), "visible", true);
 		if(array_length(_inst)){
 			with(_inst){
-				var	_menuX                        = pround(x, 1 / game_scale_nonsync),
-					_menuY                        = pround(y, 1 / game_scale_nonsync),
-					_menuScale                    = beetle_menu_scale,
-					_menuWepSelectionWepList      = beetle_menu_wep_selection_wep_list,
-					_menuWepSelectionWepListSize  = array_length(_menuWepSelectionWepList),
-					_menuBWepSelectionWepList     = beetle_menu_bwep_selection_wep_list,
-					_menuBWepSelectionWepListSize = array_length(_menuBWepSelectionWepList),
-					_menuSelectionWepList         = call(scr.array_combine, _menuWepSelectionWepList, _menuBWepSelectionWepList),
-					_menuSelectionWepListSize     = _menuWepSelectionWepListSize + _menuBWepSelectionWepListSize,
-					_handLen2                     = 4 * beetle_menu_scale,
-					_handDir                      = gunangle,
-					_handX1                       = x + lengthdir_x(lerp(5, 10, beetle_menu_scale), _handDir),
-					_handY1                       = y + lengthdir_y(lerp(2, 10, power(beetle_menu_scale, 2)), _handDir) + (3 * (1 - beetle_menu_scale)),
-					_handX2                       = _handX1 + lengthdir_x(_handLen2, _handDir),
-					_handY2                       = _handY1 + lengthdir_y(_handLen2, _handDir) + dsin((wave / 30) * 180),
-					_handRadius                   = lerp(1, 2, beetle_menu_scale);
+				var	_menu      = beetle_menu_vars,
+					_menuScale = _menu.scale;
 					
-				 // Beetle's Hand:
-				draw_set_color(c_black);
-				draw_circle(_handX1 - 1, _handY1 - 1, _handRadius, false);
-				if(beetle_menu_selection_state == undefined){
-					draw_triangle(
-						(_handX1 - 1) + lengthdir_x(_handRadius, _handDir - 90),
-						(_handY1 - 1) + lengthdir_y(_handRadius, _handDir - 90),
-						(_handX1 - 1) - lengthdir_x(_handRadius, _handDir - 90),
-						(_handY1 - 1) - lengthdir_y(_handRadius, _handDir - 90),
-						(_handX2 - 1),
-						(_handY2 - 1),
-						false
-					);
-				}
-				
-				 // Radial Weapon Selection:
-				for(var _menuSelectionWepIndex = 0; _menuSelectionWepIndex < _menuSelectionWepListSize; _menuSelectionWepIndex++){
-					var	_wep    = _menuSelectionWepList[_menuSelectionWepIndex],
-						_wepSpr = -1;
+				if(_menuScale != 0){
+					var	_menuX                        = pround(x, 1 / game_scale_nonsync),
+						_menuY                        = pround(y, 1 / game_scale_nonsync),
+						_menuWepSelectionWepList      = _menu.wep_selection_wep_list,
+						_menuWepSelectionWepListSize  = array_length(_menuWepSelectionWepList),
+						_menuBWepSelectionWepList     = _menu.bwep_selection_wep_list,
+						_menuBWepSelectionWepListSize = array_length(_menuBWepSelectionWepList),
+						_menuSelectionWepList         = call(scr.array_combine, _menuWepSelectionWepList, _menuBWepSelectionWepList),
+						_menuSelectionWepListSize     = _menuWepSelectionWepListSize + _menuBWepSelectionWepListSize,
+						_handLen2                     = 4 * _menuScale,
+						_handDir                      = gunangle,
+						_handX1                       = x + lengthdir_x(lerp(5, 10, _menuScale),           _handDir),
+						_handY1                       = y + lengthdir_y(lerp(2, 10, power(_menuScale, 2)), _handDir) + (3 * (1 - _menuScale)),
+						_handX2                       = _handX1 + lengthdir_x(_handLen2, _handDir),
+						_handY2                       = _handY1 + lengthdir_y(_handLen2, _handDir) + dsin((wave / 60) * 360),
+						_handRadius                   = lerp(1, 2, _menuScale);
 						
-					 // Fetch Weapon Sprite:
-					if(call(scr.weapon_has_temerge, _wep)){
-						call(scr.weapon_deactivate_temerge, _wep);
-						_wepSpr = weapon_get_sprt(_wep);
-						call(scr.weapon_activate_temerge, _wep);
-					}
-					else{
-						_wepSpr = weapon_get_sprt(_wep);
-					}
-					
-					 // Setup Drawing Values:
-					var	_isPrimary    = (_menuSelectionWepIndex < _menuWepSelectionWepListSize),
-						_isMelee      = weapon_is_melee(_isPrimary ? wep : bwep),
-						_wepImg       = gunshine,
-						_wepFlip      = (_isMelee ? (_isPrimary ? wepflip : bwepflip) : right),
-						_wepKick      = 0,
-						_wepAng       = ((_wepFlip < 0) ? 180 : 0),
-						_wepMeleeAng  = 0,
-						_wepCol       = ((array_find_index(beetle_menu_merging_wep_index_list, _menuSelectionWepIndex) < 0) ? c_white : c_black),
-						_wepAlp       = 1,
-						_wepOffsetX   = sprite_get_xoffset(_wepSpr) - floor(lerp(sprite_get_bbox_left(_wepSpr), sprite_get_bbox_right(_wepSpr)  + 1, 0.5)),
-						_wepOffsetY   = sprite_get_yoffset(_wepSpr) - floor(lerp(sprite_get_bbox_top(_wepSpr),  sprite_get_bbox_bottom(_wepSpr) + 1, 0.5)),
-						_wepOffsetLen = 28,
-						_wepOffsetDir = beetle_menu_selection_angle + (360 * (_menuSelectionWepIndex / _menuSelectionWepListSize));
-						
-					if(_wepFlip < 0){
-						_wepOffsetX += sprite_get_width(_wepSpr) - (2 * sprite_get_xoffset(_wepSpr));
-					}
-					
-					 // Draw Separator Line:
-					if(_menuSelectionWepListSize > 1){
-						var	_lineLen1 = lerp(56, 20, power(_menuScale, 1.5)) + (2 * dcos((wave / 30) * 180)),
-							_lineLen2 = _lineLen1 + (16 * power(_menuScale, 2));
-							
-						if(round(_lineLen2 - _lineLen1) > 0){
-							var	_lineDir = _wepOffsetDir + ((360 * (0.5 / _menuSelectionWepListSize)) * _menuScale),
-								_lineX1  = _menuX + lengthdir_x(_lineLen1, _lineDir),
-								_lineY1  = _menuY + lengthdir_y(_lineLen1, _lineDir),
-								_lineX2  = _menuX + lengthdir_x(_lineLen2, _lineDir),
-								_lineY2  = _menuY + lengthdir_y(_lineLen2, _lineDir),
-								_lineW   = 2 * lerp(3, _menuScale, abs(power(_menuScale, 1.5) - 0.5) / 0.5);
-								
-							draw_set_color(c_black);
-							draw_line_width(_lineX1,     _lineY1 - 1, _lineX2,     _lineY2 - 1, _lineW);
-							draw_line_width(_lineX1 - 1, _lineY1,     _lineX2 - 1, _lineY2,     _lineW);
-							draw_line_width(_lineX1,     _lineY1,     _lineX2,     _lineY2,     _lineW);
-							draw_set_color(c_white);
-							draw_line_width(_lineX1 - 1, _lineY1 - 1, _lineX2 - 1, _lineY2 - 1, _lineW);
-						}
-					}
-					
-					 // Menu Opening Animation:
-					if(_menuScale < 1){
-						var	_startKick      = (_isPrimary ? beetle_menu_wkick : 0),
-							_startAng       = (_isPrimary ? gunangle          : (90 + (15 * right))),
-							_startMeleeAng  = (_isPrimary ? wepangle          : 0),
-							_startCol       = (_isPrimary ? image_blend       : c_black),
-							_startAlp       = (_isPrimary ? image_alpha       : -0.5),
-							_startOffsetX   = (_isPrimary ? 0                 : -(2 * right)),
-							_startOffsetY   = (_isPrimary ? swapmove          : -swapmove),
-							_startOffsetDir = (_isPrimary ? _wepAng           : (90 + (90 * right))),
-							_startOffsetLen = 0;
-							
-						_wepKick      = lerp       (_startKick,      _wepKick,      _menuScale);
-						_wepAng       = angle_lerp (_startAng,       _wepAng,       _menuScale);
-						_wepMeleeAng  = angle_lerp (_startMeleeAng,  _wepMeleeAng,  _menuScale);
-						_wepCol       = merge_color(_startCol,       _wepCol,       _menuScale);
-						_wepAlp       = lerp       (_startAlp,       _wepAlp,       _menuScale);
-						_wepOffsetX   = lerp       (_startOffsetX,   _wepOffsetX,   _menuScale);
-						_wepOffsetY   = lerp       (_startOffsetY,   _wepOffsetY,   _menuScale);
-						_wepOffsetDir = angle_lerp (_startOffsetDir, _wepOffsetDir, _menuScale);
-						_wepOffsetLen = lerp       (_startOffsetLen, _wepOffsetLen, _menuScale);
-					}
-					
-					var	_wepX = _menuX + lengthdir_x(_wepOffsetLen, _wepOffsetDir),
-						_wepY = _menuY + lengthdir_y(_wepOffsetLen, _wepOffsetDir);
-						
-					 // Draw Selected Weapon Outline:
-					if(_menuSelectionWepIndex == beetle_menu_selection_wep_index){
-						draw_set_fog(true, c_white, 0, 0);
-						
-						for(var _dir = 0; _dir < 360; _dir += 90){
-							call(scr.draw_weapon,
-								_wepSpr,
-								_wepImg,
-								_wepX + _wepOffsetX + dcos(_dir),
-								_wepY + _wepOffsetY - dsin(_dir),
-								_wepAng,
-								_wepMeleeAng,
-								_wepKick,
-								_wepFlip,
-								_wepCol,
-								_wepAlp * max(0, lerp(-1, 1, _menuScale))
-							);
-						}
-						
-						draw_set_fog(false, 0, 0, 0);
-					}
-					
-					 // Draw Weapon Sprite:
-					call(scr.draw_weapon,
-						_wepSpr,
-						_wepImg,
-						_wepX + _wepOffsetX,
-						_wepY + _wepOffsetY,
-						_wepAng,
-						_wepMeleeAng,
-						_wepKick,
-						_wepFlip,
-						_wepCol,
-						_wepAlp
-					);
-					
-					//  // Draw Selected Weapon Button Prompt:
-					// if(_menuSelectionWepIndex == beetle_menu_selection_wep_index && _menuScale > 0.75){
-					// 	draw_set_font(fntSmall);
-					// 	draw_set_halign(fa_center);
-					// 	draw_set_valign(fa_middle);
-					// 	for(var _buttonOffsetY = 0; _buttonOffsetY <= (button_check(index, "fire") ? 0 : 1); _buttonOffsetY++){
-					// 		draw_text_nt(
-					// 			_wepX + lengthdir_x(-10, _wepOffsetDir),
-					// 			_wepY + lengthdir_y(-10, _wepOffsetDir) - _buttonOffsetY,
-					// 			"@(sprKeySmall:fire)"
-					// 		);
-					// 	}
-					// }
-				}
-				
-				 // Weapon Merging:
-				var	_menuMergingX1      = _menuX - (lerp(24, 32, _menuScale) * beetle_menu_merging_scale),
-					_menuMergingX2      = _menuX + (_menuX - _menuMergingX1),
-					_menuMergingY1      = _menuY - (52 + (4 * _menuScale)),
-					_menuMergingY2      = _menuMergingY1 + (16 * _menuScale),
-					_menuMergingWepSize = array_length(beetle_menu_merging_wep_index_list);
-					
-				draw_set_color(c_black);
-				draw_set_alpha(2/3);
-				draw_roundrect(_menuMergingX1 - 1, _menuMergingY1 - 1, _menuMergingX2 - 1, _menuMergingY2 - 1, false);
-				draw_set_alpha(1);
-				
-				if(_menuMergingWepSize > 0){
-					var _menuMergingHPCost = 2 * (_menuMergingWepSize - 1);
-					draw_set_halign(fa_center);
-					draw_set_valign(fa_bottom);
-					
-					 // Draw Merging Weapon Sprite:
-					draw_sprite(
-						beetle_menu_merging_wep_sprite,
-						0,
-						lerp(_menuMergingX1, _menuMergingX2, 0.5) + sprite_get_xoffset(beetle_menu_merging_wep_sprite) - floor(lerp(sprite_get_bbox_left(beetle_menu_merging_wep_sprite), sprite_get_bbox_right(beetle_menu_merging_wep_sprite)  + 1, 0.5)),
-						lerp(_menuMergingY1, _menuMergingY2, 0.5) + sprite_get_yoffset(beetle_menu_merging_wep_sprite) - floor(lerp(sprite_get_bbox_top(beetle_menu_merging_wep_sprite),  sprite_get_bbox_bottom(beetle_menu_merging_wep_sprite) + 1, 0.5))
-					);
-					
-					 // HP Cost Text:
-					if(_menuMergingHPCost > 0){
-						var _menuMergingHPCostText = "-";
-						
-						 // Amount Text:
-						if(maxhealth > _menuMergingHPCost){
-						}
-						else{
-							_menuMergingHPCostText += "@d";
-						}
-						_menuMergingHPCostText += `${_menuMergingHPCost} `;
-						
-						 // Name Text:
-						if(maxhealth > _menuMergingHPCost){
-							_menuMergingHPCostText += "@q@r";
-						}
-						_menuMergingHPCostText += "MAX HP";
-						
-						 // Draw Text:
-						draw_set_font(fntM);
-						draw_text_nt(
-							lerp(_menuMergingX1, _menuMergingX2, 0.5),
-							_menuMergingY1 - 2,
-							_menuMergingHPCostText
+					 // Beetle's Hand:
+					draw_set_color(c_black);
+					draw_circle(_handX1 - 1, _handY1 - 1, _handRadius, false);
+					if(_menu.selection_state == undefined){
+						draw_triangle(
+							(_handX1 - 1) + lengthdir_x(_handRadius, _handDir - 90),
+							(_handY1 - 1) + lengthdir_y(_handRadius, _handDir - 90),
+							(_handX1 - 1) - lengthdir_x(_handRadius, _handDir - 90),
+							(_handY1 - 1) - lengthdir_y(_handRadius, _handDir - 90),
+							(_handX2 - 1),
+							(_handY2 - 1),
+							false
 						);
 					}
 					
-					 // Draw Merging Weapon Name:
-					draw_set_font(fntSmall);
-					draw_text_nt(
-						lerp(_menuMergingX1, _menuMergingX2, 0.5),
-						_menuMergingY1 - (2 + (10 * (_menuMergingHPCost > 0))),
-						beetle_menu_merging_wep_name
-					);
+					 // Radial Weapon Selection:
+					for(var _menuSelectionWepIndex = 0; _menuSelectionWepIndex < _menuSelectionWepListSize; _menuSelectionWepIndex++){
+						var	_wep    = _menuSelectionWepList[_menuSelectionWepIndex],
+							_wepSpr = -1;
+							
+						 // Fetch Weapon Sprite:
+						if(call(scr.weapon_has_temerge, _wep)){
+							call(scr.weapon_deactivate_temerge, _wep);
+							_wepSpr = weapon_get_sprt(_wep);
+							call(scr.weapon_activate_temerge, _wep);
+						}
+						else{
+							_wepSpr = weapon_get_sprt(_wep);
+						}
+						if(_wepSpr == mskNone){
+							_wepSpr = weapon_get_sprt(call(scr.wep_raw, _wep));
+						}
+						
+						 // Setup Drawing Values:
+						var	_isPrimary    = (_menuSelectionWepIndex < _menuWepSelectionWepListSize),
+							_isMelee      = weapon_is_melee(_isPrimary ? wep : bwep),
+							_wepImg       = gunshine,
+							_wepFlip      = (_isMelee ? (_isPrimary ? wepflip : bwepflip) : right),
+							_wepKick      = 0,
+							_wepAng       = ((_wepFlip < 0) ? 180 : 0),
+							_wepMeleeAng  = 0,
+							_wepCol       = ((array_find_index(_menu.merging_wep_index_list, _menuSelectionWepIndex) < 0) ? c_white : c_black),
+							_wepAlp       = 1,
+							_wepOffsetX   = sprite_get_xoffset(_wepSpr) - floor(lerp(sprite_get_bbox_left(_wepSpr), sprite_get_bbox_right(_wepSpr)  + 1, 0.5)),
+							_wepOffsetY   = sprite_get_yoffset(_wepSpr) - floor(lerp(sprite_get_bbox_top(_wepSpr),  sprite_get_bbox_bottom(_wepSpr) + 1, 0.5)),
+							_wepOffsetLen = 28,
+							_wepOffsetDir = _menu.selection_angle + (360 * (_menuSelectionWepIndex / _menuSelectionWepListSize));
+							
+						if(_wepFlip < 0){
+							_wepOffsetX += sprite_get_width(_wepSpr) - (2 * sprite_get_xoffset(_wepSpr));
+						}
+						
+						 // Draw Separator Line:
+						if(_menuSelectionWepListSize > 1){
+							var	_lineLen1 = lerp(56, 20, power(_menuScale, 1.5)) + (2 * dcos((wave / 60) * 360)),
+								_lineLen2 = _lineLen1 + (16 * power(_menuScale, 2));
+								
+							if(round(_lineLen2 - _lineLen1) > 0){
+								var	_lineDir = _wepOffsetDir + ((360 * (0.5 / _menuSelectionWepListSize)) * _menuScale),
+									_lineX1  = _menuX + lengthdir_x(_lineLen1, _lineDir),
+									_lineY1  = _menuY + lengthdir_y(_lineLen1, _lineDir),
+									_lineX2  = _menuX + lengthdir_x(_lineLen2, _lineDir),
+									_lineY2  = _menuY + lengthdir_y(_lineLen2, _lineDir),
+									_lineW   = 2 * lerp(3, _menuScale, abs(power(_menuScale, 1.5) - 0.5) / 0.5);
+									
+								draw_set_color(c_black);
+								draw_line_width(_lineX1,     _lineY1 - 1, _lineX2,     _lineY2 - 1, _lineW);
+								draw_line_width(_lineX1 - 1, _lineY1,     _lineX2 - 1, _lineY2,     _lineW);
+								draw_line_width(_lineX1,     _lineY1,     _lineX2,     _lineY2,     _lineW);
+								draw_set_color(c_white);
+								draw_line_width(_lineX1 - 1, _lineY1 - 1, _lineX2 - 1, _lineY2 - 1, _lineW);
+							}
+						}
+						
+						 // Menu Opening Animation:
+						if(_menuScale < 1){
+							var	_startKick      = (_isPrimary ? _menu.last_wkick : 0),
+								_startAng       = (_isPrimary ? gunangle         : (90 + (15 * right))),
+								_startMeleeAng  = (_isPrimary ? wepangle         : 0),
+								_startCol       = (_isPrimary ? image_blend      : c_black),
+								_startAlp       = (_isPrimary ? image_alpha      : -0.5),
+								_startOffsetX   = (_isPrimary ? 0                : -(2 * right)),
+								_startOffsetY   = (_isPrimary ? swapmove         : -swapmove),
+								_startOffsetDir = (_isPrimary ? _wepAng          : (90 + (90 * right))),
+								_startOffsetLen = 0;
+								
+							_wepKick      = lerp       (_startKick,      _wepKick,      _menuScale);
+							_wepAng       = angle_lerp (_startAng,       _wepAng,       _menuScale);
+							_wepMeleeAng  = angle_lerp (_startMeleeAng,  _wepMeleeAng,  _menuScale);
+							_wepCol       = merge_color(_startCol,       _wepCol,       _menuScale);
+							_wepAlp       = lerp       (_startAlp,       _wepAlp,       _menuScale);
+							_wepOffsetX   = lerp       (_startOffsetX,   _wepOffsetX,   _menuScale);
+							_wepOffsetY   = lerp       (_startOffsetY,   _wepOffsetY,   _menuScale);
+							_wepOffsetDir = angle_lerp (_startOffsetDir, _wepOffsetDir, _menuScale);
+							_wepOffsetLen = lerp       (_startOffsetLen, _wepOffsetLen, _menuScale);
+						}
+						
+						var	_wepX = _menuX + lengthdir_x(_wepOffsetLen, _wepOffsetDir),
+							_wepY = _menuY + lengthdir_y(_wepOffsetLen, _wepOffsetDir);
+							
+						 // Draw Selected Weapon Outline:
+						if(_menuSelectionWepIndex == _menu.selection_wep_index){
+							draw_set_fog(true, c_white, 0, 0);
+							
+							for(var _dir = 0; _dir < 360; _dir += 90){
+								call(scr.draw_weapon,
+									_wepSpr,
+									_wepImg,
+									_wepX + _wepOffsetX + dcos(_dir),
+									_wepY + _wepOffsetY - dsin(_dir),
+									_wepAng,
+									_wepMeleeAng,
+									_wepKick,
+									_wepFlip,
+									_wepCol,
+									_wepAlp * max(0, lerp(-1, 1, _menuScale))
+								);
+							}
+							
+							draw_set_fog(false, 0, 0, 0);
+						}
+						
+						 // Draw Weapon Sprite:
+						call(scr.draw_weapon,
+							_wepSpr,
+							_wepImg,
+							_wepX + _wepOffsetX,
+							_wepY + _wepOffsetY,
+							_wepAng,
+							_wepMeleeAng,
+							_wepKick,
+							_wepFlip,
+							_wepCol,
+							_wepAlp
+						);
+						
+						//  // Draw Selected Weapon Button Prompt:
+						// if(_menuSelectionWepIndex == _menu.selection_wep_index && _menuScale > 0.75){
+						// 	draw_set_font(fntSmall);
+						// 	draw_set_halign(fa_center);
+						// 	draw_set_valign(fa_middle);
+						// 	for(var _buttonOffsetY = 0; _buttonOffsetY <= (button_check(index, "fire") ? 0 : 1); _buttonOffsetY++){
+						// 		draw_text_nt(
+						// 			_wepX + lengthdir_x(-10, _wepOffsetDir),
+						// 			_wepY + lengthdir_y(-10, _wepOffsetDir) - _buttonOffsetY,
+						// 			"@(sprKeySmall:fire)"
+						// 		);
+						// 	}
+						// }
+					}
+					
+					 // Weapon Merging:
+					var	_menuMergingX1      = _menuX - (lerp(24, 32, _menuScale) * _menu.merging_scale),
+						_menuMergingX2      = _menuX + (_menuX - _menuMergingX1),
+						_menuMergingY1      = _menuY - (52 + (4 * _menuScale)),
+						_menuMergingY2      = _menuMergingY1 + (16 * _menuScale),
+						_menuMergingWepSize = array_length(_menu.merging_wep_index_list);
+						
+					draw_set_color(c_black);
+					draw_set_alpha(2/3);
+					draw_roundrect(_menuMergingX1 - 1, _menuMergingY1 - 1, _menuMergingX2 - 1, _menuMergingY2 - 1, false);
+					draw_set_alpha(1);
+					
+					if(_menuMergingWepSize > 0){
+						var	_menuMergingWepX      = lerp(_menuMergingX1, _menuMergingX2, 0.5),
+							_menuMergingWepY      = lerp(_menuMergingY1, _menuMergingY2, 0.5),
+							_menuMergingWepXScale = power(_menu.merging_scale, 1/5) * (2 - _menuScale),
+							_menuMergingWepYScale = _menuScale * (2 - power(_menu.merging_scale, 1/5)),
+							_menuMergingHPCost    = 2 * (_menuMergingWepSize - 1);
+							
+						 // Draw Merging Weapon Sprite:
+						draw_sprite_ext(
+							_menu.merging_wep_sprite,
+							0,
+							_menuMergingWepX + ((sprite_get_xoffset(_menu.merging_wep_sprite) - floor(lerp(sprite_get_bbox_left(_menu.merging_wep_sprite), sprite_get_bbox_right(_menu.merging_wep_sprite)  + 1, 0.5))) * _menuMergingWepXScale),
+							_menuMergingWepY + ((sprite_get_yoffset(_menu.merging_wep_sprite) - floor(lerp(sprite_get_bbox_top(_menu.merging_wep_sprite),  sprite_get_bbox_bottom(_menu.merging_wep_sprite) + 1, 0.5))) * _menuMergingWepYScale),
+							_menuMergingWepXScale,
+							_menuMergingWepYScale,
+							0,
+							merge_color(c_black, c_white, clamp(_menuMergingWepYScale, 0, 1)),
+							1
+						);
+						
+						 // HP Cost Text:
+						if(_menuMergingHPCost > 0){
+							var _menuMergingHPCostText = "-";
+							
+							 // Amount Text:
+							if(maxhealth <= _menuMergingHPCost){
+								_menuMergingHPCostText += "@d";
+							}
+							_menuMergingHPCostText += `${_menuMergingHPCost} `;
+							
+							 // Name Text:
+							if(maxhealth > _menuMergingHPCost){
+								_menuMergingHPCostText += "@q@r";
+							}
+							_menuMergingHPCostText += "MAX HP" + ((maxhealth > _menuMergingHPCost) ? "@w!" : ".");
+							
+							 // Draw Text:
+							draw_set_font(fntM);
+							draw_set_halign(fa_center);
+							draw_set_valign(fa_bottom);
+							draw_text_nt(
+								lerp(_menuMergingX1, _menuMergingX2, 0.5),
+								_menuMergingY1 - 2,
+								_menuMergingHPCostText
+							);
+						}
+						
+						draw_set_font(fntSmall);
+						
+						 // Draw Merging Weapon Name:
+						draw_set_halign(fa_center);
+						draw_set_valign(fa_bottom);
+						draw_text_nt(
+							lerp(_menuMergingX1, _menuMergingX2, 0.5),
+							_menuMergingY1 - (2 + (10 * (_menuMergingHPCost > 0))),
+							_menu.merging_wep_name
+						);
+						
+						 // Draw Merging Weapon Stats:
+						draw_set_valign(fa_middle);
+						if(_menu.merging_wep_cost != 0){
+							draw_set_halign(fa_right);
+							draw_text_nt(_menuMergingX1 - 2, _menuMergingWepY, `@1(${spr.WhiteAmmoTypeIcon}:${_menu.merging_wep_type}) ${_menu.merging_wep_cost}`);
+						}
+						if(_menu.merging_wep_load > 0){
+							draw_set_halign(fa_left);
+							
+							var	_menuMergingWepLoad     = pround(_menu.merging_wep_load / 30, 0.01),
+								_menuMergingWepLoadText = string_format(
+									_menuMergingWepLoad,
+									0,
+									(
+										(frac(_menuMergingWepLoad) == 0)
+										? 0
+										: ((_menuMergingWepLoad > 0 && _menuMergingWepLoad < 0.1) ? 2 : 1)
+									)
+								);
+								
+							if(string_char_at(_menuMergingWepLoadText, 1) == "0"){
+								_menuMergingWepLoadText = string_delete(_menuMergingWepLoadText, 1, 1);
+							}
+							
+							draw_text_nt(_menuMergingX2 + 2, _menuMergingWepY, `${_menuMergingWepLoadText} @1(${spr.WhiteReloadIcon})`);
+						}
+					}
 				}
 			}
 		}

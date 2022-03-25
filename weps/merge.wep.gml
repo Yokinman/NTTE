@@ -2043,8 +2043,8 @@
 		 // Initialize Sprites:
 		sprt = -1;
 		icon = -1;
-		call(scr.merge_weapon_sprite,         [_stock.sprt, _front.sprt]);
-		call(scr.merge_weapon_loadout_sprite, [_stock.icon, _front.icon]);
+		call(scr.weapon_sprite_list_merge,         [_stock.sprt, _front.sprt]);
+		call(scr.weapon_loadout_sprite_list_merge, [_stock.icon, _front.icon]);
 		
 		 // Flags:
 		flag = call(scr.array_combine, _stock.flag, _front.flag);
@@ -2358,15 +2358,12 @@
 			
 			 // Generate & Store Text:
 			if(array_find_index(_list[0], _wep) < 0){
-				var _spr = mod_script_call("mod", "teassets", "weapon_merge_subtext", _wep.base.stock, _wep.base.front);
-				if(sprite_exists(_spr)){
-					array_push(_list[0], _wep);
-					array_push(_list[1], `#@(${_spr})`);
-					
-					 // Bind PopupText Fix Script:
-					if(is_undefined(lq_get(ntte, "bind_setup_merge_PopupText"))){
-						ntte.bind_setup_merge_PopupText = call(scr.ntte_bind_setup, script_ref_create(ntte_setup_merge_PopupText), PopupText);
-					}
+				array_push(_list[0], _wep);
+				array_push(_list[1], `#@(${call(scr.prompt_subtext_get_sprite, weapon_get_name(_wep.base.stock) + " + " + weapon_get_name(_wep.base.front))})`);
+				
+				 // Bind PopupText Fix Script:
+				if(is_undefined(lq_get(ntte, "bind_setup_merge_PopupText"))){
+					ntte.bind_setup_merge_PopupText = call(scr.ntte_bind_setup, script_ref_create(ntte_setup_merge_PopupText), PopupText);
 				}
 			}
 			
@@ -2402,7 +2399,7 @@
 		var	_stock = weapon_get_sprt(wep_stat(_wep, "stock")),
 			_front = weapon_get_sprt(wep_stat(_wep, "front"));
 			
-		_spr = call(scr.merge_weapon_sprite, [_stock, _front]);
+		_spr = call(scr.weapon_sprite_list_merge, [_stock, _front]);
 	}
 	
 	return (sprite_exists(_spr) ? _spr : mskNone);
@@ -2416,7 +2413,7 @@
 		var	_stock = call(scr.weapon_get, "loadout", wep_stat(_wep, "stock")),
 			_front = call(scr.weapon_get, "loadout", wep_stat(_wep, "front"));
 			
-		_spr = call(scr.merge_weapon_loadout_sprite, [_stock, _front]);
+		_spr = call(scr.weapon_loadout_sprite_list_merge, [_stock, _front]);
 	}
 	
 	return (sprite_exists(_spr) ? _spr : 0);

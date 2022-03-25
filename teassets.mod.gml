@@ -34,7 +34,7 @@
 	
 	 // Script References:
 	scr = {};
-	with([save_get, save_set, option_get, option_set, stat_get, stat_set, unlock_get, unlock_set, surface_setup, shader_setup, shader_add, script_bind, ntte_bind_setup, ntte_unbind, loadout_wep_save, loadout_wep_reset, trace_error, merge_weapon_sprite, merge_weapon_loadout_sprite, weapon_merge_subtext]){
+	with([save_get, save_set, option_get, option_set, stat_get, stat_set, unlock_get, unlock_set, surface_setup, shader_setup, shader_add, script_bind, ntte_bind_setup, ntte_unbind, loadout_wep_save, loadout_wep_reset, trace_error, weapon_sprite_list_merge, weapon_loadout_sprite_list_merge, prompt_subtext_get_sprite]){
 		lq_set(scr, script_get_name(self), script_ref_create(self));
 	}
 	
@@ -52,7 +52,7 @@
 		TopTiny         = ds_map_create();
 		MergeWep        = ds_map_create();
 		MergeWepLoadout = ds_map_create();
-		MergeWepText    = ds_map_create();
+		PromptSubtext   = ds_map_create();
 		
 		 // Shine Overlay:
 		p = "sprites/shine/";
@@ -81,7 +81,11 @@
 				
 				 // Alt Route Area Icons:
 				RouteIcon = sprite(p + "sprRouteIcon", 2, 4, 4);
-			
+				
+				 // White Icons:
+				WhiteAmmoTypeIcon = sprite(p + "sprWhiteAmmoTypeIcon", 6, 8, 4);
+				WhiteReloadIcon   = sprite(p + "sprWhiteReloadIcon",   1, 0, 4);
+				
 				 // Unlock Icons:
 				p = m + "unlocks/";
 				UnlockIcon = {
@@ -2357,6 +2361,7 @@
 			
 		//#endregion
 	}
+	global.sprite_loading_delay_frame = ds_map_create();
 	
 	 // SOUNDS //
 	snd = {};
@@ -4037,7 +4042,7 @@ var _shine = argument_count > 4 ? argument[4] : shnNone;
 		return sprite_add(name + ".png", _sprImg, _sprX, _sprY);
 	}
 	
-#define merge_weapon_sprite(_wepSpriteList)
+#define weapon_sprite_list_merge(_wepSpriteList)
 	/*
 		Returns a sprite of slices from the given weapon sprites combined sequentially
 	*/
@@ -4046,7 +4051,7 @@ var _shine = argument_count > 4 ? argument[4] : shnNone;
 		_mergeWepSprite     = ds_map_find_value(spr.MergeWep, _mergeWepSpriteName);
 		
 	 // Initial Setup:
-	if(_mergeWepSprite == undefined){
+	if(_mergeWepSprite == undefined || !sprite_exists(_mergeWepSprite)){
 		var	_mergeStockSlice        = undefined,
 			_mergeFrontSlice        = undefined,
 			_mergeWepSpriteY1       =  infinity,
@@ -4056,6 +4061,29 @@ var _shine = argument_count > 4 ? argument[4] : shnNone;
 			_mergeWepSpriteList     = ds_map_values(spr.MergeWep),
 			_mergeWepSpriteKeyList  = ds_map_keys(spr.MergeWep);
 			
+		 // Ensure Sprites Are Loaded:
+		with(_wepSpriteList){
+			var _sprite = self;
+			if(
+				   sprite_get_number(_sprite)      == 1
+				&& sprite_get_width(_sprite)       == 16
+				&& sprite_get_height(_sprite)      == 16
+				&& sprite_get_bbox_left(_sprite)   == 15
+				&& sprite_get_bbox_top(_sprite)    == 15
+				&& sprite_get_bbox_right(_sprite)  == 0
+				&& sprite_get_bbox_bottom(_sprite) == 0
+			){
+				var _spriteLoadingDelayFrame = ds_map_find_value(global.sprite_loading_delay_frame, _sprite);
+				if(_spriteLoadingDelayFrame == undefined){
+					_spriteLoadingDelayFrame = current_frame + 30;
+					global.sprite_loading_delay_frame[? _sprite] = _spriteLoadingDelayFrame;
+				}
+				if(_spriteLoadingDelayFrame > current_frame){
+					return mskNone;
+				}
+			}
+		}
+		
 		 // Unmerge Sprites:
 		while(true){
 			var _newWepSpriteList = [];
@@ -4256,17 +4284,16 @@ var _shine = argument_count > 4 ? argument[4] : shnNone;
 	
 	return _mergeWepSprite;
 	
-#define merge_weapon_loadout_sprite(_wepLoadoutSpriteList)
+#define weapon_loadout_sprite_list_merge(_wepLoadoutSpriteList)
 	/*
 		Returns a sprite of slices from the given weapon loadout sprites combined sequentially
-		circular cut offset some amount towards 20 degrees 
 	*/
 	
 	var	_mergeWepLoadoutSpriteName = array_join(_wepLoadoutSpriteList, ":"),
 		_mergeWepLoadoutSprite     = ds_map_find_value(spr.MergeWepLoadout, _mergeWepLoadoutSpriteName);
 		
 	 // Initial Setup:
-	if(_mergeWepLoadoutSprite == undefined){
+	if(_mergeWepLoadoutSprite == undefined || !sprite_exists(_mergeWepLoadoutSprite)){
 		var	_loadoutSpriteAngle            = 15,
 			_loadoutSpriteXFactor          = 1 / dcos(_loadoutSpriteAngle),
 			_mergeStockSlice               = undefined,
@@ -4281,6 +4308,29 @@ var _shine = argument_count > 4 ? argument[4] : shnNone;
 			_mergeWepLoadoutSpriteList     = ds_map_values(spr.MergeWepLoadout),
 			_mergeWepLoadoutSpriteKeyList  = ds_map_keys(spr.MergeWepLoadout);
 			
+		 // Ensure Sprites Are Loaded:
+		with(_wepLoadoutSpriteList){
+			var _sprite = self;
+			if(
+				   sprite_get_number(_sprite)      == 1
+				&& sprite_get_width(_sprite)       == 16
+				&& sprite_get_height(_sprite)      == 16
+				&& sprite_get_bbox_left(_sprite)   == 15
+				&& sprite_get_bbox_top(_sprite)    == 15
+				&& sprite_get_bbox_right(_sprite)  == 0
+				&& sprite_get_bbox_bottom(_sprite) == 0
+			){
+				var _spriteLoadingDelayFrame = ds_map_find_value(global.sprite_loading_delay_frame, _sprite);
+				if(_spriteLoadingDelayFrame == undefined){
+					_spriteLoadingDelayFrame = current_frame + 30;
+					global.sprite_loading_delay_frame[? _sprite] = _spriteLoadingDelayFrame;
+				}
+				if(_spriteLoadingDelayFrame > current_frame){
+					return mskNone;
+				}
+			}
+		}
+		
 		 // Unmerge Sprites:
 		while(true){
 			var _newWepLoadoutSpriteList = [];
@@ -4531,61 +4581,59 @@ var _shine = argument_count > 4 ? argument[4] : shnNone;
 	
 	return _mergeWepLoadoutSprite;
 	
-#define weapon_merge_subtext(_stock, _front)
+#define prompt_subtext_get_sprite(_promptSubtext)
 	/*
-		Used to create merged weapon pickup indicator banner sprites
-		Returns a new sprite of the "Stock Name + Front Name" in fntSmall over a transparent banner
-		Doing this here so that the sprite doesnt get unloaded with ntte.mod
+		Returns a sprite of the given string as a subtext banner for use in prompt names, like weapon pickups
 	*/
 	
-	var _sprName = sprite_get_name(_stock) + "|" + sprite_get_name(_front);
-	
-	if(ds_map_exists(spr.MergeWepText, _sprName)){
-		return spr.MergeWepText[? _sprName];
-	}
+	var _promptSubtextSprite = ds_map_find_value(spr.PromptSubtext, _promptSubtext);
 	
 	 // Initial Setup:
-	else{
+	if(_promptSubtextSprite == undefined || !sprite_exists(_promptSubtextSprite)){
 		draw_set_font(fntSmall);
 		draw_set_halign(fa_center);
 		draw_set_valign(fa_middle);
 		
-		var	_text     = weapon_get_name(_stock) + " + " + weapon_get_name(_front),
-			_topSpace = 2,
-			_surfW    = string_width(_text) + 4,
-			_surfH    = string_height(_text) + 2 + _topSpace;
+		var	_topSpace         = 2,
+			_rawPromptSubtext = call(scr.string_delete_nt, _promptSubtext);
 			
-		with(surface_setup("sprMergeText", _surfW, _surfH, 1)){
+		with(surface_setup(
+			"sprPromptSubtext",
+			string_width(_rawPromptSubtext) + 4,
+			string_height(_rawPromptSubtext) + 2 + _topSpace,
+			1
+		)){
+			free = true;
+			
 			surface_set_target(surf);
 			draw_clear_alpha(c_black, 0);
 			
-			 // Background:
-			var	_x1 = -1,
-				_y1 = -1,
-				_x2 = _x1 + w,
-				_y2 = _y1 + h;
+				 // Background:
+				var	_x1 = -1,
+					_y1 = -1,
+					_x2 = _x1 + w,
+					_y2 = _y1 + h;
+					
+				draw_set_alpha(0.8);
+				draw_set_color(c_black);
+				draw_roundrect_ext(_x1, _y1 + _topSpace, _x2, _y2, 5, 5, false);
+				draw_set_alpha(1);
 				
-			draw_set_alpha(0.8);
-			draw_set_color(c_black);
-			draw_roundrect_ext(_x1, _y1 + _topSpace, _x2, _y2, 5, 5, false);
-			draw_set_alpha(1);
-			
-			 // Text:
-			draw_text_nt(floor(w / 2), floor((h + _topSpace) / 2), _text);
-			
-			 // Done:
+				 // Text:
+				draw_text_nt(floor(w / 2), floor((h + _topSpace) / 2), _promptSubtext);
+				
 			surface_reset_target();
-			free = true;
 			
 			 // Add Sprite:
 			surface_save(surf, name + ".png");
-			spr.MergeWepText[? _sprName] = sprite_add(name + ".png", 1, w / 2, h / 2);
+			_promptSubtextSprite = sprite_add(name + ".png", 1, w / 2, h / 2);
 			
-			return spr.MergeWepText[? _sprName];
+			 // Store Sprite:
+			spr.PromptSubtext[? _promptSubtext] = _promptSubtextSprite;
 		}
 	}
 	
-	return -1;
+	return _promptSubtextSprite;
 	
 #define sprite_add_toptiny(_spr)
 	/*

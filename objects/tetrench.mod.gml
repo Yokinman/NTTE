@@ -1019,6 +1019,7 @@
 	 // Zap Nearby:
 	with(call(scr.projectile_create, x, y, "TeslaCoil")){
 		direction    = random(360);
+		damage       = other.damage;
 		purple       = true;
 		creator      = other;
 		creator_offx = 0;
@@ -4313,7 +4314,7 @@
 		A small lightning ball that follows its creator and arcs lightning to the nearest enemy
 	*/
 	
-	with(instance_create(_x, _y, CustomObject)){
+	with(instance_create(_x, _y, CustomProjectile)){
 		 // Visual:
 		sprite_index = sprLightningBall;
 		image_speed  = 0.4 + orandom(0.1);
@@ -4321,6 +4322,9 @@
 		image_yscale = image_xscale;
 		
 		 // Vars:
+		damage       = 14;
+		force        = 4;
+		typ          = 0;
 		team         = -1;
 		creator      = noone;
 		creator_offx = 17;
@@ -4396,8 +4400,10 @@
 				_ydis = creator_offy * variable_instance_get(creator, "right", 1),
 				_ydir = _xdir - 90;
 				
-			x = creator.x + creator.hspeed_raw + lengthdir_x(_xdis, _xdir) + lengthdir_x(_ydis, _ydir);
-			y = creator.y + creator.vspeed_raw + lengthdir_y(_xdis, _xdir) + lengthdir_y(_ydis, _ydir) + (primary ? 0 : -4);
+			x         = creator.x + creator.hspeed_raw + lengthdir_x(_xdis, _xdir) + lengthdir_x(_ydis, _ydir);
+			y         = creator.y + creator.vspeed_raw + lengthdir_y(_xdis, _xdir) + lengthdir_y(_ydis, _ydir) + (primary ? 0 : -4);
+			xprevious = x;
+			yprevious = y;
 		}
 		
 		 // Targeting:
@@ -4417,37 +4423,34 @@
 			_ty = target_y;
 			
 		if((instance_exists(target) || point_distance(x, y, _tx, _ty) < dist_max + 32) && !collision_line(x, y, _tx, _ty, Wall, false, false)){
-			with(creator){
-				var _inst = lightning_connect(
-					other.x,
-					other.y,
+			var	_wave = (("wave" in creator) ? creator.wave : wave),
+				_inst = lightning_connect(
+					x,
+					y,
 					_tx,
 					_ty,
-					(power(point_distance(other.x, other.y, _tx, _ty), 0.6) * sin((other.wave / 240) * 2 * pi)) + (4 * cos((other.wave / 960) * 2 * pi)),
+					(power(point_distance(x, y, _tx, _ty), 0.6) * sin((_wave / 240) * 2 * pi)) + (4 * cos((_wave / 960) * 2 * pi)),
 					false,
 					self
 				);
 				
-				 // Purpify:
-				if(other.purple){
-					with(_inst){
-						damage       = (instance_is(other, projectile) ? floor(other.damage * 7/3) : damage);
-						sprite_index = spr.ElectroPlasmaTether;
-						//depth        = -3;
-						
-						 // Effects:
-						if(chance_ct(1, 16)){
-							with(instance_create(x, y, PlasmaTrail)){
-								sprite_index = spr.ElectroPlasmaTrail;
-								motion_set(other.direction, 1);
-							}
+			 // Purpify:
+			if(purple){
+				with(_inst){
+					damage       = floor(other.damage * 7/3);
+					sprite_index = spr.ElectroPlasmaTether;
+					depth        = -3;
+					
+					 // Effects:
+					if(chance_ct(1, 16)){
+						with(instance_create(x, y, PlasmaTrail)){
+							sprite_index = spr.ElectroPlasmaTrail;
+							motion_set(other.direction, 1);
 						}
 					}
 				}
-			}
-			
-			 // Hit FX:
-			if(purple){
+				
+				 // Hit FX:
 				if(chance_ct(1, 15)){
 					call(scr.fx, _tx, _ty, 1, PortalL);
 				}
@@ -4455,11 +4458,11 @@
 					instance_create(_tx, _ty, Smoke);
 				}
 			}
-			else{
-				if(!place_meeting(_tx, _ty, LightningHit)){
-					with(instance_create(_tx, _ty, LightningHit)){
-						image_speed = 0.2 + random(0.2);
-					}
+			
+			 // Normal Hit FX:
+			else if(!place_meeting(_tx, _ty, LightningHit)){
+				with(instance_create(_tx, _ty, LightningHit)){
+					image_speed = 0.2 + random(0.2);
 				}
 			}
 		}
@@ -4480,6 +4483,14 @@
 		}
 	}
 	else instance_destroy();
+	
+#define TeslaCoil_wall
+	// ...
+	
+#define TeslaCoil_hit
+	if(projectile_canhit_melee(other)){
+		projectile_hit(other, damage, force);
+	}
 	
 	
 #define TopDecalWaterMine_create(_x, _y)
@@ -4512,6 +4523,7 @@
 		}
 		instance_destroy();
 	}
+	
 	
 #define TrenchFloorChunk_create(_x, _y)
 	/*
@@ -5274,7 +5286,7 @@
 		_proj    = [],
 		_creator = (("creator" in _inst && !instance_is(_inst, hitme)) ? _inst.creator : _inst),
 		_hitid   = (("hitid" in _inst) ? _inst.hitid : -1),
-		_team    = (("team"  in _inst) ? _inst.team  : -1),
+		_team    = (("team" in _inst) ? round(_inst.team) : -1),
 		_imgInd  = -1,
 		_wave    = 0,
 		_off     = 0;

@@ -269,9 +269,13 @@
 		}
 		
 		 // Follow Creator:
-		var	_l = 16 - min(4, variable_instance_get(creator, _b + "wkick", 0)),
+		var	_l = 16 - variable_instance_get(creator, _b + "wkick", 0),
 			_d = image_angle;
 			
+		if(_l >= 0){
+			_l = max(_l, 12);
+		}
+		
 		x         = creator.x + lengthdir_x(_l, _d);
 		y         = creator.y + lengthdir_y(_l, _d);
 		xprevious = x;
@@ -329,7 +333,7 @@
 						sprite_index,
 						i,
 						_x + lengthdir_x(_disOff, _ang),
-						_y + lengthdir_y(_disOff, _ang) - (i * 2/3 * _xsc),
+						_y + lengthdir_y(_disOff, _ang) - (i * _xsc * 2/3),
 						_xsc * 1.5,
 						_ysc,
 						_ang,

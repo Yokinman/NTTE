@@ -2375,9 +2375,9 @@
 				
 				 // Macros:
 				if(_scrName == "cleanup"){
-					_gml += _new + chr(13) + chr(10);
-					_gml += `#macro call script_ref_call`;
-					_gml += `#macro scr  global.scr`;
+					_gml += _new;
+					_gml += chr(13) + chr(10) + `#macro call script_ref_call`;
+					_gml += chr(13) + chr(10) + `#macro scr  global.scr`;
 				}
 				
 				break;
@@ -2389,9 +2389,9 @@
 				_gml += _new + `	_wep = (("wep" in _wep) ? _wep.wep : wep_none);`
 				_gml += _new + `}`
 				_gml += _new + `return _wep;`
-				_gml += _new + chr(13) + chr(10);
-				_gml += `#macro wep_raw  (is_object(wep)  ? ${_scrName}(wep)  : wep)`;
-				_gml += `#macro bwep_raw (is_object(bwep) ? ${_scrName}(bwep) : bwep)`;
+				_gml += _new;
+				_gml += chr(13) + chr(10) + `#macro wep_raw  (is_object(wep)  ? ${_scrName}(wep)  : wep)`;
+				_gml += chr(13) + chr(10) + `#macro bwep_raw (is_object(bwep) ? ${_scrName}(bwep) : bwep)`;
 				
 				break;
 				
@@ -2870,19 +2870,19 @@
 					
 						_gml += _new + `	else{`
 						                		 // Melee:
-						_gml += _new + `		if(weapon_is_melee(_wep)){`
+						_gml += _new + `		if(weapon_is_melee(_wrapWep)){`
 						_gml += _new + `			sound_play(sndMeleeFlip);`
 						_gml += _new + `		}`
 						_gml += _new + `		`
 						                		 // Shell / Bolt:
-						_gml += _new + `		switch(weapon_get_type(_wep)){`
+						_gml += _new + `		switch(weapon_get_type(_wrapWep)){`
 						_gml += _new + `			`
 						_gml += _new + `			case 2:`
 						_gml += _new + `			`
 						_gml += _new + `				sound_play(sndShotReload);`
 						_gml += _new + `				`
 						_gml += _new + `				 // Casings:`
-						_gml += _new + `				var _num = weapon_get_cost(_wep) * (_primary ? interfacepop : binterfacepop);`
+						_gml += _new + `				var _num = weapon_get_cost(_wrapWep) * (_primary ? interfacepop : binterfacepop);`
 						_gml += _new + `				if(_num > 0) repeat(_num){`
 						_gml += _new + `					with(instance_create(x, y, Shell)){`
 						_gml += _new + `						sprite_index = (`
@@ -2934,7 +2934,7 @@
 						_gml += _new + `		}`
 						_gml += _new + `		`
 						                		 // Energy:
-						_gml += _new + `		var _wepName = weapon_get_name(_wep);`
+						_gml += _new + `		var _wepName = weapon_get_name(_wrapWep);`
 						_gml += _new + `		if(string_pos("PLASMA", _wepName) == 1){`
 						_gml += _new + `			sound_play(`
 						_gml += _new + `				(skill_get(mut_laser_brain) > 0)`

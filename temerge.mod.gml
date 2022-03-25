@@ -147,6 +147,7 @@
 #macro _wepXmerge_raw_wep         _wepXmerge.wep
 #macro _wepXmerge_wep             _wepXmerge_raw_wep[@ 0]
 #macro _wepXmerge_wep_fire_frame  _wepXmerge.wep_fire_frame
+#macro _wepXmerge_wep_fire_reload _wepXmerge.wep_fire_reload
 #macro _wepXmerge_fire_frame      _wepXmerge.fire_frame
 #macro _wepXmerge_fire_at         _wepXmerge.fire_at_vars
 #macro _wepXmerge_last_type       _wepXmerge.last_type
@@ -178,6 +179,7 @@
 	_wepXmerge_is_part         = true;
 	_wepXmerge_raw_wep         = [wep_none];
 	_wepXmerge_wep_fire_frame  = 0;
+	_wepXmerge_wep_fire_reload = undefined;
 	_wepXmerge_fire_frame      = 0;
 	_wepXmerge_fire_at         = undefined;
 	_wepXmerge_last_type       = 0;
@@ -827,7 +829,7 @@
 			_mergeStockSprite = weapon_get_sprt_hud(_wep);
 			_wepXmerge_is_active = true;
 		}
-		return call(scr.merge_weapon_sprite, [_mergeStockSprite, weapon_get_sprt(_wepXmerge_wep)]);
+		return call(scr.weapon_sprite_list_merge, [_mergeStockSprite, weapon_get_sprt(_wepXmerge_wep)]);
 	}
 	
 	return _mergeStockSprite;
@@ -843,7 +845,7 @@
 			_mergeStockHUDSprite = weapon_get_sprt(_wep);
 			_wepXmerge_is_active = true;
 		}
-		return call(scr.merge_weapon_sprite, [_mergeStockHUDSprite, weapon_get_sprt_hud(_wepXmerge_wep)]);
+		return call(scr.weapon_sprite_list_merge, [_mergeStockHUDSprite, weapon_get_sprt_hud(_wepXmerge_wep)]);
 	}
 	
 	return _mergeStockHUDSprite;
@@ -858,7 +860,7 @@
 		return (
 			(_mergeFrontLoadoutSprite == 0)
 			? 0
-			: call(scr.merge_weapon_loadout_sprite, [_mergeStockLoadoutSprite, _mergeFrontLoadoutSprite])
+			: call(scr.weapon_loadout_sprite_list_merge, [_mergeStockLoadoutSprite, _mergeFrontLoadoutSprite])
 		);
 	}
 	
@@ -1091,10 +1093,13 @@
 			return -1;
 		}
 		
-		_wep = _wepXmerge_wep;
+		var _mergeFrontIsAuto = weapon_get_auto(_wepXmerge_wep);
 		
-		var _mergeFrontIsAuto = weapon_get_auto(_wep);
-		if(_mergeFrontIsAuto ? (weapon_get_load(_wep) <= 8) : (_mergeFrontIsAuto < 0)){
+		if(
+			_mergeFrontIsAuto
+			? (((_wepXmerge_wep_fire_reload == undefined) ? weapon_get_load(_wepXmerge_wep) : _wepXmerge_wep_fire_reload) <= 8)
+			: (_mergeFrontIsAuto < 0)
+		){
 			return _mergeFrontIsAuto;
 		}
 	}
@@ -1270,15 +1275,15 @@
 	}
 	
 	 // Set Weapon, Call Script, & Capture Instances:
-	if(instance_exists(_creator)){
+	if(instance_exists(_creator) && _wepXhas_merge){
 		var	_minInstanceID  = (_canWrapEvents ? instance_max : undefined),
 			_mergeWep       = _wepXmerge_wep,
 			_creatorHasWep  = (_creator.wep  == _wep),
 			_creatorHasBWep = (_creator.bwep == _wep);
 			
 		 // Set Player Weapon:
-		if(_creatorHasWep ){ _creator.wep  = _mergeWep; }
-		if(_creatorHasBWep){ _creator.bwep = _mergeWep; }
+		if(_creatorHasWep ) _creator.wep  = _mergeWep;
+		if(_creatorHasBWep) _creator.bwep = _mergeWep;
 		
 		 // Call Script Reference:
 		if(fork()){
@@ -1649,7 +1654,7 @@
 				GameCont.rad = _fire.rads;
 			}
 			
-			 // Fix Reload:
+			 // Fix & Store Reload:
 			if(reload <= 0 && _fire.reload > 0){
 				reload = max(reload, (("reloadspeed" in self) ? reloadspeed : 1) * current_time_scale);
 			}
@@ -1711,12 +1716,13 @@
 			
 			 // Replace Projectiles w/ Firing:
 			if("fire_vars" in _lastMerge){
-				var	_lastMergeFire       = _lastMerge.fire_vars,
-					_mainMergeFire       = _lastMerge.fire_vars.main_vars,
-					_rawWep              = undefined,
-					_wepSprite           = undefined,
-					_wepMergeStockSprite = undefined,
-					_instWasIndependent  = false;
+				var	_lastMergeFire           = _lastMerge.fire_vars,
+					_mainMergeFire           = _lastMerge.fire_vars.main_vars,
+					_rawWep                  = undefined,
+					_wepSprite               = undefined,
+					_wepMergeStockSprite     = undefined,
+					_wepMergeFrontFireReload = weapon_get_load(_wep),
+					_instWasIndependent      = false;
 					
 				with(_sortInstanceList){
 					if(instance_exists(self)){
@@ -1937,6 +1943,11 @@
 												}
 											}
 											
+											 // Store Minimum Firing Reload Time:
+											if(reload < _wepMergeFrontFireReload){
+												_wepMergeFrontFireReload = reload;
+											}
+											
 											 // Transfer Variables:
 											if(instance_is(self, FireCont)){
 												call(scr.FireCont_end, self);
@@ -1976,6 +1987,9 @@
 						}
 					}
 				}
+				
+				 // Store Reload Time:
+				_wepXmerge_wep_fire_reload = _wepMergeFrontFireReload;
 			}
 			
 			 // Clamp Player Speed + Manual Push (For Stacking):
@@ -2665,30 +2679,34 @@
 		Merged trail projectiles leave behind a particle streak
 	*/
 	
-	var _areaIsUnderwater = call(scr.area_get_underwater, GameCont.area);
+	var _trailInstanceList = instances_matching_gt(_instanceList, "speed", 0);
 	
-	with(instances_matching_gt(_instanceList, "speed", 0)){
-		if(image_index != 0 || image_speed == 0 || image_number == 1){
-			with(instance_create(xprevious, yprevious, BoltTrail)){
-				image_xscale = point_distance(x, y, other.x, other.y);
-				image_angle  = point_direction(x, y, other.x, other.y);
-				creator      = other.creator;
-				if(other.temerge_trail_is_sprite){
-					sprite_index  = other.sprite_index;
-					image_index   = other.image_index;
-					image_speed   = 0;
-					image_xscale /= 1 + (other.sprite_width / 2);
-					image_yscale  = other.image_yscale / 2;
-					image_blend   = other.image_blend;
+	if(array_length(_trailInstanceList)){
+		var _areaIsUnderwater = call(scr.area_get_underwater, GameCont.area);
+		
+		with(_trailInstanceList){
+			if(image_index != 0 || image_speed == 0 || image_number == 1){
+				with(instance_create(xprevious, yprevious, BoltTrail)){
+					image_xscale = point_distance(x, y, other.x, other.y);
+					image_angle  = point_direction(x, y, other.x, other.y);
+					creator      = other.creator;
+					if(other.temerge_trail_is_sprite){
+						sprite_index  = other.sprite_index;
+						image_index   = other.image_index;
+						image_speed   = 0;
+						image_xscale /= 1 + (other.sprite_width / 2);
+						image_yscale  = other.image_yscale / 2;
+						image_blend   = other.image_blend;
+					}
+					else{
+						image_blend = other.temerge_trail_color;
+					}
 				}
-				else{
-					image_blend = other.temerge_trail_color;
+				
+				 // Bubbles:
+				if(_areaIsUnderwater && chance_ct(1, 4)){
+					instance_create(x, y, Bubble);
 				}
-			}
-			
-			 // Bubbles:
-			if(_areaIsUnderwater && chance_ct(1, 4)){
-				instance_create(x, y, Bubble);
 			}
 		}
 	}
@@ -3394,6 +3412,9 @@
 			lq_set(_explosionInfo, self, false);
 		}
 	}
+	if("is_active" not in _explosionInfo){
+		_explosionInfo.is_active = true;
+	}
 	
 	 // Add Explosion:
 	with(_instanceList){
@@ -3422,106 +3443,108 @@
 			_explosionAngle = random(360);
 			
 		for(var _explosionIndex = 0; _explosionIndex < _explosionCount; _explosionIndex++){
-			var	_explosion          = _explosionList[_explosionIndex],
-				_explosionIsSmall   = (_explosion.is_small || damage < 10),
-				_explosionIsHeavy   = _explosion.is_heavy,
-				_explosionIsBlood   = _explosion.is_blood,
-				_explosionIsCluster = _explosion.is_cluster,
-				_explosionOffsetLen = min(16, 8 * (_explosionCount - 1)),
-				_explosionOffsetDir = _explosionAngle + (360 * (_explosionIndex / _explosionCount)),
-				_explosionX         = x + lengthdir_x(_explosionOffsetLen, _explosionOffsetDir),
-				_explosionY         = y + lengthdir_y(_explosionOffsetLen, _explosionOffsetDir),
-				_explosionSubCount  = ((_explosionIsBlood && !_explosionIsSmall) ? 3 : 1),
-				_explosionSubAngle  = random(360);
-				
-			 // Sound:
-			if(_explosionIsCluster){
-				sound_play_hit(sndClusterOpen, 0.2);
-			}
-			else if(_explosionIsBlood){
-				sound_play_hit_big(sndMeatExplo,          0.2);
-				sound_play_hit_big(sndBloodLauncherExplo, 0.2);
-			}
-			else sound_play_hit_big(
-				(
-					(_explosionCount > 1)
-					? (_explosionIsSmall ? sndExplosion  : sndExplosionL)
-					: (_explosionIsSmall ? sndExplosionS : sndExplosion)
-				),
-				0.2
-			);
-			
-			 // Create Explosion:
-			for(var _explosionSubOffsetDir = _explosionSubAngle; _explosionSubOffsetDir < _explosionSubAngle + 360; _explosionSubOffsetDir += (360 / _explosionSubCount)){
+			var _explosion = _explosionList[_explosionIndex];
+			if(_explosion.is_active){
+				var	_explosionIsSmall   = (_explosion.is_small || damage < 10),
+					_explosionIsHeavy   = _explosion.is_heavy,
+					_explosionIsBlood   = _explosion.is_blood,
+					_explosionIsCluster = _explosion.is_cluster,
+					_explosionOffsetLen = min(16, 8 * (_explosionCount - 1)),
+					_explosionOffsetDir = _explosionAngle + (360 * (_explosionIndex / _explosionCount)),
+					_explosionX         = x + lengthdir_x(_explosionOffsetLen, _explosionOffsetDir),
+					_explosionY         = y + lengthdir_y(_explosionOffsetLen, _explosionOffsetDir),
+					_explosionSubCount  = ((_explosionIsBlood && !_explosionIsSmall) ? 3 : 1),
+					_explosionSubAngle  = random(360);
+					
+				 // Sound:
 				if(_explosionIsCluster){
-					var _clusterNum = min(ceil(damage / 3), 640) + (crown_current == crwn_death);
-					if(_clusterNum > 0){
-						var _clusterMotionLerpAmount = min(abs(speed) / 16, 1) / sqrt(_clusterNum);
-						repeat(_clusterNum){
-							call(scr.projectile_create,
-								x + orandom(2),
-								y + orandom(2),
-								MiniNade,
-								angle_lerp(random(360), direction, _clusterMotionLerpAmount),
-								lerp(random_range(3, 8), speed / 2, _clusterMotionLerpAmount)
-							);
-							
-							 // Smoke:
-							call(scr.fx, x, y, random_range(2, 5), Smoke);
-						}
-					}
+					sound_play_hit(sndClusterOpen, 0.2);
 				}
-				else{
-					var _explosionSubOffsetLen = ((_explosionSubCount > 1) ? 24 : random(1));
-					with(call(scr.projectile_create,
-						_explosionX + lengthdir_x(_explosionSubOffsetLen, _explosionSubOffsetDir),
-						_explosionY + lengthdir_y(_explosionSubOffsetLen, _explosionSubOffsetDir),
-						(
-							_explosionIsBlood
-							? MeatExplosion
-							: (
-								_explosionIsSmall
-								? (_explosionIsHeavy ? "SmallGreenExplosion" : SmallExplosion)
-								: (_explosionIsHeavy ? GreenExplosion        : Explosion)
-							)
-						),
-						direction,
-						speed / 4
-					)){
-						friction    = 0.5;
-						image_angle = 0;
-						
-						 // Damage:
-						damage  = other.damage;
-						damage *= (_explosionIsHeavy ? (4/5) : (1/3));
-						if(_explosionIsBlood){
-							damage *= 0.8;
-						}
-						damage = round(damage);
-						
-						 // Streak Blood:
-						if(_explosionIsBlood){
-							with(instance_create(_explosionX, _explosionY, BloodStreak)){
-								image_angle = _explosionSubOffsetDir;
+				else if(_explosionIsBlood){
+					sound_play_hit_big(sndMeatExplo,          0.2);
+					sound_play_hit_big(sndBloodLauncherExplo, 0.2);
+				}
+				else sound_play_hit_big(
+					(
+						(_explosionCount > 1)
+						? (_explosionIsSmall ? sndExplosion  : sndExplosionL)
+						: (_explosionIsSmall ? sndExplosionS : sndExplosion)
+					),
+					0.2
+				);
+				
+				 // Create Explosion:
+				for(var _explosionSubOffsetDir = _explosionSubAngle; _explosionSubOffsetDir < _explosionSubAngle + 360; _explosionSubOffsetDir += (360 / _explosionSubCount)){
+					if(_explosionIsCluster){
+						var _clusterNum = min(ceil(damage / 3), 640) + (crown_current == crwn_death);
+						if(_clusterNum > 0){
+							var _clusterMotionLerpAmount = min(abs(speed) / 16, 1) / sqrt(_clusterNum);
+							repeat(_clusterNum){
+								call(scr.projectile_create,
+									x + orandom(2),
+									y + orandom(2),
+									MiniNade,
+									angle_lerp(random(360), direction, _clusterMotionLerpAmount),
+									lerp(random_range(3, 8), speed / 2, _clusterMotionLerpAmount)
+								);
+								
+								 // Smoke:
+								call(scr.fx, x, y, random_range(2, 5), Smoke);
 							}
 						}
-						
-						 // Hostile to Player:
-						else{
-							team = -1;
-							if(hitid == -1){
-								switch(object_index){
-									case Explosion      : hitid = 55; break;
-									case SmallExplosion : hitid = 56; break;
-									case GreenExplosion : hitid = 99; break;
+					}
+					else{
+						var _explosionSubOffsetLen = ((_explosionSubCount > 1) ? 24 : random(1));
+						with(call(scr.projectile_create,
+							_explosionX + lengthdir_x(_explosionSubOffsetLen, _explosionSubOffsetDir),
+							_explosionY + lengthdir_y(_explosionSubOffsetLen, _explosionSubOffsetDir),
+							(
+								_explosionIsBlood
+								? MeatExplosion
+								: (
+									_explosionIsSmall
+									? (_explosionIsHeavy ? "SmallGreenExplosion" : SmallExplosion)
+									: (_explosionIsHeavy ? GreenExplosion        : Explosion)
+								)
+							),
+							direction,
+							speed / 4
+						)){
+							friction    = 0.5;
+							image_angle = 0;
+							
+							 // Damage:
+							damage  = other.damage;
+							damage *= (_explosionIsHeavy ? (4/5) : (1/3));
+							if(_explosionIsBlood){
+								damage *= 0.8;
+							}
+							damage = round(damage);
+							
+							 // Streak Blood:
+							if(_explosionIsBlood){
+								with(instance_create(_explosionX, _explosionY, BloodStreak)){
+									image_angle = _explosionSubOffsetDir;
 								}
 							}
 							
-							 // Crown of Death:
-							if(crown_current == crwn_death && _explosionIsSmall && !_explosion.is_small){
-								with(instance_copy(false)){
-									x += orandom(2);
-									y += orandom(2);
+							 // Hostile to Player:
+							else{
+								team = -1;
+								if(hitid == -1){
+									switch(object_index){
+										case Explosion      : hitid = 55; break;
+										case SmallExplosion : hitid = 56; break;
+										case GreenExplosion : hitid = 99; break;
+									}
+								}
+								
+								 // Crown of Death:
+								if(crown_current == crwn_death && _explosionIsSmall && !_explosion.is_small){
+									with(instance_copy(false)){
+										x += orandom(2);
+										y += orandom(2);
+									}
 								}
 							}
 						}
@@ -3858,14 +3881,15 @@
 	}
 	
 	
-#define temerge_rocket_effect_setup // instanceList, maxSpeedFactor=2, addSpeed=1
+#define temerge_rocket_effect_setup // instanceList, maxSpeedFactor=2, addSpeed=1, hitExplosionCount=1
 	/*
 		Merged projectile thruster & impact explosion effect
 	*/
 	
-	var	_instanceList   = argument[0],
-		_maxSpeedFactor = ((argument_count > 1) ? argument[1] : 2),
-		_addSpeed       = ((argument_count > 2) ? argument[2] : 1);
+	var	_instanceList      = argument[0],
+		_maxSpeedFactor    = ((argument_count > 1) ? argument[1] : 2),
+		_addSpeed          = ((argument_count > 2) ? argument[2] : 1),
+		_hitExplosionCount = ((argument_count > 3) ? argument[3] : 1);
 		
 	if("temerge_rocket_frame" not in GameCont){
 		GameCont.temerge_rocket_frame = 0;
@@ -3879,7 +3903,7 @@
 			temerge_rocket_max_speed           = speed;
 			temerge_rocket_max_speed_factor    = 1;
 			temerge_rocket_add_speed           = 0;
-			temerge_rocket_hit_explosion_count = 1;
+			temerge_rocket_hit_explosion_count = 0;
 			temerge_rocket_flame_sprite        = ((damage > 20) ? sprNukeFlame : sprRocketFlame);
 			temerge_rocket_flame_xscale        = 0;
 			temerge_rocket_flame_yscale        = 0;
@@ -3889,8 +3913,9 @@
 			projectile_add_temerge_event(self, "hit",  script_ref_create(temerge_rocket_projectile_hit));
 			projectile_add_temerge_event(self, "wall", script_ref_create(temerge_rocket_projectile_wall));
 		}
-		temerge_rocket_max_speed_factor *= _maxSpeedFactor
-		temerge_rocket_add_speed        += _addSpeed;
+		temerge_rocket_max_speed_factor    *= _maxSpeedFactor
+		temerge_rocket_add_speed           += _addSpeed;
+		temerge_rocket_hit_explosion_count += _hitExplosionCount;
 		
 		 // Max Acceleration Speed:
 		image_angle -= direction;
@@ -4017,16 +4042,19 @@
 	*/
 	
 	if(projectile_can_temerge_hit(other)){
-		temerge_rocket_projectile_wall();
-		
 		 // Activate Explosion:
 		if(temerge_rocket_hit_explosion_count > 0){
-			x -= hspeed_raw;
-			y -= vspeed_raw;
-			projectile_add_temerge_effect(self, "explosion", [{}, temerge_rocket_hit_explosion_count]);
-			temerge_rocket_hit_explosion_count = 0;
-			x += hspeed_raw;
-			y += vspeed_raw;
+			temerge_rocket_hit_explosion_count--;
+			projectile_add_temerge_effect(self, "explosion");
+			temerge_explosion_projectile_destroy();
+			with(temerge_explosion_list){
+				is_active = false;
+			}
+		}
+		
+		 // Stop Thrusting:
+		if(temerge_rocket_hit_explosion_count <= 0){
+			temerge_rocket_projectile_wall();
 		}
 	}
 	
@@ -4157,6 +4185,21 @@
 				_moveDistance -= _moveAddDistance;
 				break;
 			}
+			
+			 // Particles:
+			if(chance(1, 12 * _instanceCount)){
+				with(call(scr.fx,
+					x,
+					y,
+					[direction, _moveAddDistance * lerp(0.5, 0.2, _moveDistance / _moveMaxDistance)],
+					Dust
+				)){
+					sprite_index = spr.AllyLaserCharge;
+					image_index  = random(image_number);
+					image_xscale = 1;
+					image_yscale = image_xscale;
+				}
+			}
 		}
 		if(!_meetingEnemy){
 			_moveDistance -= random(_maxDistance / max(2, _instanceCount));
@@ -4200,6 +4243,21 @@
 			temerge_plasma.extra_amount++;
 		}
 		temerge_plasma.extra_amount += _extraAmount;
+	}
+	
+#define temerge_plasma_effect_step(_instanceList)
+	/*
+		Merged plasma projectiles have a visual plasma trail
+	*/
+	
+	var _trailInstanceList = instances_matching_gt(_instanceList, "speed", 0);
+	
+	if(array_length(_trailInstanceList)){
+		with(_trailInstanceList){
+			if(chance(speed_raw * power(damage, 1/2), 128)){
+				instance_create(random_range(bbox_left, bbox_right + 1), random_range(bbox_top, bbox_bottom + 1), PlasmaTrail);
+			}
+		}
 	}
 	
 #define temerge_plasma_projectile_destroy
@@ -5880,6 +5938,110 @@
 	
 	
 /// GENERAL
+#define ntte_setup_WepPickup(_inst)
+	/*
+		Adds subtext to merged weapon pickup prompts
+	*/
+	
+	if("temerge_weapon_prompt_subtext_string_map" not in GameCont){
+		GameCont.temerge_weapon_prompt_subtext_string_map = {
+			"key_list" : [/* wep */],
+			"list"     : [/* prompt subtext string */]
+		};
+	}
+	
+	var _wepPromptSubtextStringMap = GameCont.temerge_weapon_prompt_subtext_string_map;
+	
+	with(_inst){
+		var _wep = wep;
+		if(_wepXhas_merge){
+			var _wepIndex = array_find_index(_wepPromptSubtextStringMap.key_list, _wep);
+			
+			 // Setup Subtext:
+			if(_wepIndex < 0){
+				var _wepNameList = [];
+				
+				 // Compile List of Weapon Names:
+				do{
+					_wepXmerge_is_active = false;
+					var _wepName = weapon_get_name(_wep);
+					if(_wepName != ""){
+						array_push(_wepNameList, _wepName);
+					}
+					_wepXmerge_is_active = true;
+					_wep = _wepXmerge_wep;
+				}
+				until(!_wepXhas_merge);
+				var _wepName = weapon_get_name(_wep);
+				if(_wepName != ""){
+					array_push(_wepNameList, _wepName);
+				}
+				
+				 // Compile & Store Subtext:
+				if(array_length(_wepNameList)){
+					_wep      = wep;
+					_wepIndex = array_length(_wepPromptSubtextStringMap.key_list);
+					
+					var _wepPromptSubtext = (
+						_wepXmerge_is_part
+						? (
+							(array_length(_wepNameList) == 1)
+							? "WEAPON PART"
+							: `WEAPON PARTS / @s${array_join(_wepNameList, " @s+ ")}`
+						)
+						: array_join(_wepNameList, " + ")
+					);
+					
+					array_push(_wepPromptSubtextStringMap.key_list, _wep);
+					array_push(_wepPromptSubtextStringMap.list,     `#@(${call(scr.prompt_subtext_get_sprite, _wepPromptSubtext)})`);
+				}
+				
+				 // No Subtext:
+				else continue;
+				
+				 // Bind PopupText Fix Script:
+				if(is_undefined(lq_get(ntte, "bind_setup_temerge_PopupText"))){
+					ntte.bind_setup_temerge_PopupText = call(scr.ntte_bind_setup, script_ref_create(ntte_setup_temerge_PopupText), PopupText);
+				}
+			}
+			
+			 // Add Subtext:
+			name += _wepPromptSubtextStringMap.list[_wepIndex];
+		}
+	}
+	
+#define ntte_setup_temerge_PopupText(_inst)
+	/*
+		Deletes merged weapon prompt subtext from new PopupText instances
+	*/
+	
+	if("temerge_weapon_prompt_subtext_string_map" in GameCont && array_length(GameCont.temerge_weapon_prompt_subtext_string_map.key_list)){
+		var _wepPromptSubtextStringMap = GameCont.temerge_weapon_prompt_subtext_string_map;
+		
+		 // Delete Subtext String From PopupText:
+		with(_inst){
+			with(_wepPromptSubtextStringMap.list){
+				other.text = string_replace(other.text, self, "");
+			}
+		}
+		
+		 // Remove Weapon From List:
+		with(_wepPromptSubtextStringMap.key_list){
+			var _wep = self;
+			if(!array_length(instances_matching(WepPickup, "wep", _wep))){
+				var _wepIndex = array_find_index(_wepPromptSubtextStringMap.key_list, _wep);
+				_wepPromptSubtextStringMap.key_list = call(scr.array_delete, _wepPromptSubtextStringMap.key_list, _wepIndex);
+				_wepPromptSubtextStringMap.list     = call(scr.array_delete, _wepPromptSubtextStringMap.list,     _wepIndex);
+			}
+		}
+	}
+	
+	 // Unbind Script:
+	else if(!is_undefined(lq_get(ntte, "bind_setup_temerge_PopupText"))){
+		call(scr.ntte_unbind, ntte.bind_setup_temerge_PopupText);
+		ntte.bind_setup_temerge_PopupText = undefined;
+	}
+	
 #define ntte_step
 	 // Unmuffle Muffled Sounds:
 	with(ds_map_keys(global.sound_muffle_map)){
