@@ -4217,55 +4217,65 @@ var _shine = argument_count > 4 ? argument[4] : shnNone;
 			surface_set_target(surf);
 			draw_clear_alpha(c_black, 0);
 			
-			for(var _outline = 1; _outline >= 0; _outline--){
-				for(var _mergeWepSpriteImage = 0; _mergeWepSpriteImage < _mergeWepSpriteImageNum; _mergeWepSpriteImage++){
-					var	_slice        = _mergeStockSlice,
-						_sliceXOffset = _mergeWepSpriteWidth * _mergeWepSpriteImage,
-						_lastSlice    = undefined;
-						
-					while(_slice != undefined){
-						var	_nextSlice = _slice.next_slice,
-							_isFlash   = (_mergeWepSpriteImage == min(1, _mergeWepSpriteImageNum - 1)),
-							_spr       = _slice.sprite_index,
-							_img       = (_isFlash ? 1 : (_slice.image_number * (_mergeWepSpriteImage / _mergeWepSpriteImageNum))),
-							_l         = _slice.x1,
-							_r         = _slice.x2,
-							_w         = _r - _l,
-							_t         = 0,
-							_h         = _slice.sprite_height,
-							_x         = _sliceXOffset,
-							_y         = _mergeWepSpriteYOffset - _slice.sprite_yoffset;
+				for(var _outline = 1; _outline >= 0; _outline--){
+					for(var _mergeWepSpriteImage = 0; _mergeWepSpriteImage < _mergeWepSpriteImageNum; _mergeWepSpriteImage++){
+						var	_slice        = _mergeStockSlice,
+							_sliceXOffset = _mergeWepSpriteWidth * _mergeWepSpriteImage,
+							_lastSlice    = undefined;
 							
-						with(UberCont){
-							if(_outline == 1){
-								if(!_isFlash){
-									draw_set_fog(true, c_black, 0, 0);
+						while(_slice != undefined){
+							var	_nextSlice = _slice.next_slice,
+								_isFlash   = (_mergeWepSpriteImage == min(1, _mergeWepSpriteImageNum - 1)),
+								_spr       = _slice.sprite_index,
+								_img       = (_isFlash ? 1 : (_slice.image_number * (_mergeWepSpriteImage / _mergeWepSpriteImageNum))),
+								_l         = _slice.x1,
+								_r         = _slice.x2,
+								_w         = _r - _l,
+								_t         = 0,
+								_h         = _slice.sprite_height,
+								_x         = _sliceXOffset,
+								_y         = _mergeWepSpriteYOffset - _slice.sprite_yoffset;
+								
+							with(UberCont){
+								if(_outline == 1){
+									if(!_isFlash){
+										draw_set_fog(true, c_black, 0, 0);
+									}
+									if(_lastSlice != undefined){
+										draw_sprite_part(_spr, _img, _l, _t, 1, ((_slice.sprite_bbox_y2 < _lastSlice.sprite_bbox_y2) ? ceil(_h / 2) : _h), _x - 1, _y);
+									//	if(_slice.sprite_bbox_y1 <= _lastSlice.sprite_bbox_y1) draw_sprite_part(_spr, _img, _l, _t,                1,  ceil(_h / 2), _x - 1, _y);
+									//	if(_slice.sprite_bbox_y2 >= _lastSlice.sprite_bbox_y2) draw_sprite_part(_spr, _img, _l, _t + ceil(_h / 2), 1, floor(_h / 2), _x - 1, _y + ceil(_h / 2));
+									}
+									if(_nextSlice != undefined){
+										draw_sprite_part(_spr, _img, _r - 1, _t, 1, ((_slice.sprite_bbox_y2 <= _nextSlice.sprite_bbox_y2) ? ceil(_h / 2) : _h), _x + _w, _y);
+									//	if(_slice.sprite_bbox_y1 < _nextSlice.sprite_bbox_y1) draw_sprite_part(_spr, _img, _r - 1, _t,                1,  ceil(_h / 2), _x + _w, _y);
+									//	if(_slice.sprite_bbox_y2 > _nextSlice.sprite_bbox_y2) draw_sprite_part(_spr, _img, _r - 1, _t + ceil(_h / 2), 1, floor(_h / 2), _x + _w, _y + ceil(_h / 2));
+									}
+									if(!_isFlash){
+										draw_set_fog(false, 0, 0, 0);
+									}
 								}
-								if(_lastSlice != undefined){
-									draw_sprite_part(_spr, _img, _l, _t, 1, ((_slice.sprite_bbox_y2 < _lastSlice.sprite_bbox_y2) ? ceil(_h / 2) : _h), _x - 1, _y);
-								//	if(_slice.sprite_bbox_y1 <= _lastSlice.sprite_bbox_y1) draw_sprite_part(_spr, _img, _l, _t,                1,  ceil(_h / 2), _x - 1, _y);
-								//	if(_slice.sprite_bbox_y2 >= _lastSlice.sprite_bbox_y2) draw_sprite_part(_spr, _img, _l, _t + ceil(_h / 2), 1, floor(_h / 2), _x - 1, _y + ceil(_h / 2));
-								}
-								if(_nextSlice != undefined){
-									draw_sprite_part(_spr, _img, _r - 1, _t, 1, ((_slice.sprite_bbox_y2 <= _nextSlice.sprite_bbox_y2) ? ceil(_h / 2) : _h), _x + _w, _y);
-								//	if(_slice.sprite_bbox_y1 < _nextSlice.sprite_bbox_y1) draw_sprite_part(_spr, _img, _r - 1, _t,                1,  ceil(_h / 2), _x + _w, _y);
-								//	if(_slice.sprite_bbox_y2 > _nextSlice.sprite_bbox_y2) draw_sprite_part(_spr, _img, _r - 1, _t + ceil(_h / 2), 1, floor(_h / 2), _x + _w, _y + ceil(_h / 2));
-								}
-								if(!_isFlash){
-									draw_set_fog(false, 0, 0, 0);
-								}
+								else draw_sprite_part(_spr, _img, _l, _t, _w, _h, _x, _y);
 							}
-							else draw_sprite_part(_spr, _img, _l, _t, _w, _h, _x, _y);
+							
+							_sliceXOffset += _w;
+							
+							_lastSlice = _slice;
+							_slice     = _nextSlice;
 						}
-						
-						_sliceXOffset += _w;
-						
-						_lastSlice = _slice;
-						_slice     = _nextSlice;
 					}
 				}
-			}
-			
+				
+				 // Compressed Weapon:
+				if(array_length(_wepSpriteList) == 2 && _wepSpriteList[0] == _wepSpriteList[1]){
+					draw_set_color(c_black);
+					draw_set_alpha(0.2);
+					draw_set_color_write_enable(true, true, true, false);
+					draw_rectangle(0, 0, _mergeWepSpriteWidth, _mergeWepSpriteHeight, false);
+					draw_set_color_write_enable(true, true, true, true);
+					draw_set_alpha(1);
+				}
+				
 			surface_reset_target();
 			
 			 // Add Sprite:

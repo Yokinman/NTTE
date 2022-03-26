@@ -8,7 +8,7 @@
 #define race_text              return "PASSIVE#CAN MERGE WEAPONS";
 #define race_lock              return "???";
 #define race_unlock            return "???";
-#define race_tb_text           return "???";
+#define race_tb_text           return "PAST @wMERGED WEAPONS#@sARE @wFREE @sTO MERGE AGAIN";
 #define race_portrait(_p, _b)  return race_sprite_raw("Portrait", _b);
 #define race_mapicon(_p, _b)   return race_sprite_raw("Map",      _b);
 #define race_avail             return true;//call(scr.unlock_get, "race:" + mod_current);
@@ -162,7 +162,7 @@
 #define race_ultra_text(_ultra)
 	switch(_ultra){
 		case ultA : return "???";
-		case ultB : return "???";
+		case ultB : return "NEXT @wMERGED WEAPON @sHAS#HALF @yAMMO COST @sAND @wRELOAD";
 	}
 	return "";
 	
@@ -185,6 +185,18 @@
 			case ultB:
 				break;
 		}
+	}
+	
+	 // Effect:
+	switch(_ultra){
+		case ultA:
+			break;
+			
+		case ultB:
+			with(instances_matching(Player, "race", mod_current)){
+				beetle_menu_vars.merging_wep_upgrade_count++;
+			}
+			break;
 	}
 	
 	
@@ -236,12 +248,14 @@
 		"selection_trail_last_y"     : y,
 		"merging_scale"              : 0,
 		"merging_wep_index_list"     : [],
+		"merging_wep_key"            : "",
 		"merging_wep_name"           : "",
 		"merging_wep_type"           : type_melee,
 		"merging_wep_cost"           : 0,
 		"merging_wep_load"           : 0,
 		"merging_wep_sprite"         : mskNone,
-		"merging_wep_part_num"       : 0
+		"merging_wep_part_num"       : 0,
+		"merging_wep_upgrade_count"  : 0
 	};
 	
 	 // Re-Get Ultras When Revived:
@@ -403,18 +417,24 @@
 						 // Store Merged Weapon's Information:
 						if(array_length(_menu.merging_wep_index_list)){
 							var	_menuMergingWep             = undefined,
+								_menuMergingRawWepList      = [],
 								_menuSelectionWepSpriteList = [];
 								
 							with(_menu.merging_wep_index_list){
 								var	_menuSelectionWep    = _menuSelectionWepList[self],
 									_menuSelectionRawWep = call(scr.wep_raw, _menuSelectionWep);
 									
+								 // Merge Weapon:
 								_menuMergingWep = (
 									(_menuMergingWep == undefined)
 									? _menuSelectionRawWep
 									: call(scr.weapon_add_temerge, _menuMergingWep, _menuSelectionRawWep)
 								);
 								
+								 // Fetch Raw Weapon:
+								array_push(_menuMergingRawWepList, _menuSelectionRawWep);
+								
+								 // Fetch Sprite:
 								if(call(scr.weapon_has_temerge, _menuSelectionWep)){
 									call(scr.weapon_deactivate_temerge, _menuSelectionWep);
 									array_push(_menuSelectionWepSpriteList, weapon_get_sprt(_menuSelectionWep));
@@ -428,6 +448,7 @@
 								}
 							}
 							
+							_menu.merging_wep_key    = array_join(_menuMergingRawWepList, ":");
 							_menu.merging_wep_name   = weapon_get_name(_menuMergingWep);
 							_menu.merging_wep_type   = weapon_get_type(_menuMergingWep);
 							_menu.merging_wep_cost   = weapon_get_cost(_menuMergingWep);
@@ -461,13 +482,31 @@
 			if((_specIsPressed && _menuWasOpen) || (_specIsReleased && _menu.scale > 0.75)){
 				_menu.is_open = false;
 				
-				 // Merge Selected Weapons:
+				 // Merging Selected Weapons:
 				if(array_length(_menu.merging_wep_index_list)){
-					var _menuMergingHPCost = 2 * (array_length(_menu.merging_wep_index_list) - 1);
+					var	_menuMergingHPCost      = 2 * (array_length(_menu.merging_wep_index_list) - 1),
+						_menuMergingWepPartList = [],
+						_menuSelectionWepList   = call(scr.array_combine, _menu.wep_selection_wep_list, _menu.bwep_selection_wep_list);
+						
+					 // Compile List of Selected Weapons:
+					with(_menu.merging_wep_index_list){
+						array_push(_menuMergingWepPartList, _menuSelectionWepList[self]);
+					}
+					
+					 // Throne Butt:
+					if("beetle_menu_merging_wep_key_list" not in GameCont){
+						GameCont.beetle_menu_merging_wep_key_list = [];
+					}
+					if(array_find_index(GameCont.beetle_menu_merging_wep_key_list, _menu.merging_wep_key) >= 0){
+						_menuMergingHPCost *= 1 - skill_get(mut_throne_butt);
+					}
+					else if(maxhealth > _menuMergingHPCost){
+						array_push(GameCont.beetle_menu_merging_wep_key_list, _menu.merging_wep_key);
+					}
+					
+					 // Merge Weapons:
 					if(maxhealth > _menuMergingHPCost){
-						var	_menuSelectionWepList     = call(scr.array_combine, _menu.wep_selection_wep_list, _menu.bwep_selection_wep_list),
-							_menuSelectionWepListSize = array_length(_menuSelectionWepList);
-							
+						var _menuSelectionWepListSize = array_length(_menuSelectionWepList);
 						for(var _menuWepSelectionWepIndex = 0; _menuWepSelectionWepIndex < _menuSelectionWepListSize; _menuWepSelectionWepIndex++){
 							var	_menuSelectionWep          = _menuSelectionWepList[_menuWepSelectionWepIndex],
 								_menuSelectionWepIsPrimary = (_menuWepSelectionWepIndex < array_length(_menu.wep_selection_wep_list));
@@ -502,13 +541,21 @@
 						
 						 // Merge Selected Weapons:
 						wep = wep_none;
-						with(_menu.merging_wep_index_list){
-							var _menuSelectionWep = _menuSelectionWepList[self];
+						with(_menuMergingWepPartList){
 							other.wep = (
 								(other.wep == wep_none)
-								? _menuSelectionWep
-								: call(scr.weapon_add_temerge, other.wep, _menuSelectionWep)
+								? self
+								: call(scr.weapon_add_temerge, other.wep, self)
 							);
+						}
+						
+						 // Ultra B:
+						if(_menu.merging_wep_upgrade_count > 0){
+							_menu.merging_wep_upgrade_count--;
+							wep = call(scr.wep_wrap, wep, "weapon_cost", script_ref_create(beetle_weapon_upgrade_cost));
+							wep = call(scr.wep_wrap, wep, "weapon_load", script_ref_create(beetle_weapon_upgrade_load));
+							wep = call(scr.wep_wrap, wep, "weapon_name", script_ref_create(beetle_weapon_upgrade_name));
+							wep = call(scr.wep_wrap, wep, "step",        script_ref_create(beetle_weapon_upgrade_step));
 						}
 						
 						 // Take Health:
@@ -526,7 +573,11 @@
 							with(call(scr.fx, x, y, 3, BloodStreak)){
 								sprite_index = spr.SquidBloodStreak;
 							}
-							_menu.merging_wep_part_num = array_length(_menu.merging_wep_index_list);
+						}
+						
+						 // Weapon Part Debris:
+						if(array_length(_menuMergingWepPartList) > 1){
+							_menu.merging_wep_part_num = array_length(_menuMergingWepPartList);
 						}
 						
 						 // Sound:
@@ -604,7 +655,7 @@
 						creator = other;
 					}
 					
-					 // Replaced Weapon Parts:
+					 // Replaced Weapon Part Debris:
 					if(_menu.merging_wep_part_num > 0){
 						var	_offsetLen = 8,
 							_offsetDir = gunangle + wepangle,
@@ -646,6 +697,31 @@
 	
 	if(lag) trace_time(mod_current + "_step");
 	
+#define beetle_weapon_upgrade_cost(_wep, _cost)
+	/*
+		
+	*/
+	
+	return _cost - ceil(_cost * 0.5);
+	
+#define beetle_weapon_upgrade_load(_wep, _load)
+	/*
+		
+	*/
+	
+	return _load * 0.5;
+	
+#define beetle_weapon_upgrade_name(_wep, _name)
+	return "SUPAH " + _name;
+	
+#define beetle_weapon_upgrade_step(_isPrimary)
+	if(_isPrimary || race == "steroids"){
+		with(instance_create(x, y, WepSwap)){
+			creator = other;
+			sprite_index = sprCaveSparkle;
+		}
+	}
+	
 #define beetle_menu_revert_last_vars_step(_beetleMenu, _beetleMenuInstance)
 	/*
 		Reverts the given beetle menu's stored variables when closed (player weapon kick, ability to fire, and ability to use a laser sight)
@@ -680,7 +756,7 @@
 	
 #define ntte_draw
 	/*
-		
+		Beetle weapon merging menu HUD
 	*/
 	
 	if(instance_exists(Player)){
@@ -859,11 +935,11 @@
 					}
 					
 					 // Weapon Merging:
-					var	_menuMergingX1      = _menuX - (lerp(24, 32, _menuScale) * _menu.merging_scale),
+					var	_menuMergingWepSize = array_length(_menu.merging_wep_index_list),
+						_menuMergingX1      = _menuX - (lerp(24, 32, _menuScale) * _menu.merging_scale),
 						_menuMergingX2      = _menuX + (_menuX - _menuMergingX1),
-						_menuMergingY1      = _menuY - (52 + (4 * _menuScale)),
-						_menuMergingY2      = _menuMergingY1 + (16 * _menuScale),
-						_menuMergingWepSize = array_length(_menu.merging_wep_index_list);
+						_menuMergingY1      = _menuY - (52 + ((4 + (8 * (_menuMergingWepSize ? -1 : 1) * (1 - power(_menu.merging_scale, 1/2)))))),
+						_menuMergingY2      = _menuMergingY1 + (16 * _menuScale);
 						
 					draw_set_color(c_black);
 					draw_set_alpha(2/3);
@@ -871,12 +947,17 @@
 					draw_set_alpha(1);
 					
 					if(_menuMergingWepSize > 0){
-						var	_menuMergingWepX      = lerp(_menuMergingX1, _menuMergingX2, 0.5),
-							_menuMergingWepY      = lerp(_menuMergingY1, _menuMergingY2, 0.5),
-							_menuMergingWepXScale = power(_menu.merging_scale, 1/5) * (2 - _menuScale),
-							_menuMergingWepYScale = _menuScale * (2 - power(_menu.merging_scale, 1/5)),
+						var	_menuMergingWepX      = pround(lerp(_menuMergingX1, _menuMergingX2, 0.5), 1 / game_scale_nonsync),
+							_menuMergingWepY      = pround(lerp(_menuMergingY1, _menuMergingY2, 0.5), 1 / game_scale_nonsync),
+							_menuMergingWepXScale = power(_menu.merging_scale, 1/3) * lerp(2, 1, _menuScale),
+							_menuMergingWepYScale = _menuScale * lerp(2, 1, power(_menu.merging_scale, 1/5)),
 							_menuMergingHPCost    = 2 * (_menuMergingWepSize - 1);
 							
+						 // Throne Butt:
+						if("beetle_menu_merging_wep_key_list" in GameCont && array_find_index(GameCont.beetle_menu_merging_wep_key_list, _menu.merging_wep_key) >= 0){
+							_menuMergingHPCost *= 1 - skill_get(mut_throne_butt);
+						}
+						
 						 // Draw Merging Weapon Sprite:
 						draw_sprite_ext(
 							_menu.merging_wep_sprite,
@@ -891,14 +972,14 @@
 						);
 						
 						 // HP Cost Text:
-						if(_menuMergingHPCost > 0){
-							var _menuMergingHPCostText = "-";
+						if(_menuMergingHPCost != 0){
+							var _menuMergingHPCostText = ((_menuMergingHPCost > 0) ? "-" : "+");
 							
 							 // Amount Text:
 							if(maxhealth <= _menuMergingHPCost){
 								_menuMergingHPCostText += "@d";
 							}
-							_menuMergingHPCostText += `${_menuMergingHPCost} `;
+							_menuMergingHPCostText += `${abs(_menuMergingHPCost)} `;
 							
 							 // Name Text:
 							if(maxhealth > _menuMergingHPCost){
@@ -917,42 +998,129 @@
 							);
 						}
 						
-						draw_set_font(fntSmall);
-						
 						 // Draw Merging Weapon Name:
+						draw_set_font(fntSmall);
 						draw_set_halign(fa_center);
 						draw_set_valign(fa_bottom);
 						draw_text_nt(
 							lerp(_menuMergingX1, _menuMergingX2, 0.5),
-							_menuMergingY1 - (2 + (10 * (_menuMergingHPCost > 0))),
+							_menuMergingY1 - (2 + (10 * (_menuMergingHPCost != 0))),
 							_menu.merging_wep_name
 						);
 						
 						 // Draw Merging Weapon Stats:
+						var	_menuMergingWepCost = _menu.merging_wep_cost,
+							_menuMergingWepLoad = _menu.merging_wep_load;
+							
 						draw_set_valign(fa_middle);
-						if(_menu.merging_wep_cost != 0){
+						
+						if(_menuMergingWepCost != 0){
 							draw_set_halign(fa_right);
-							draw_text_nt(_menuMergingX1 - 2, _menuMergingWepY, `@1(${spr.WhiteAmmoTypeIcon}:${_menu.merging_wep_type}) ${_menu.merging_wep_cost}`);
+							
+							var _menuMergingWepCostText = string(_menuMergingWepCost);
+							
+							 // Remove Leading Zero:
+							if(string_char_at(_menuMergingWepCostText, 1) == "0"){
+								_menuMergingWepCostText = string_delete(_menuMergingWepCostText, 1, 1);
+							}
+							
+							 // Draw Text:
+							var	_menuMergingWepCostTextX = _menuMergingX1 - 2,
+								_menuMergingWepCostTextY = _menuMergingWepY;
+								
+							draw_text_nt(
+								_menuMergingWepCostTextX,
+								_menuMergingWepCostTextY,
+								`@1(${spr.WhiteAmmoTypeIcon}:${_menu.merging_wep_type}) ${(_menuMergingWepCost > typ_amax[_menu.merging_wep_type]) ? "@r" : ""}${_menuMergingWepCostText}`
+							);
+							
+							if(_menu.merging_wep_upgrade_count > 0){
+								var	_menuMergingWepCostTextW = -(string_width(_menuMergingWepCostText) + 1),
+									_menuMergingWepCostTextH = string_height(_menuMergingWepCostText);
+									
+								 // Cross Out Text:
+								draw_set_color(c_black);
+								draw_line_width(_menuMergingWepCostTextX,     _menuMergingWepCostTextY - 1, _menuMergingWepCostTextX + _menuMergingWepCostTextW,     _menuMergingWepCostTextY - 1, 1);
+								draw_line_width(_menuMergingWepCostTextX - 1, _menuMergingWepCostTextY,     _menuMergingWepCostTextX + _menuMergingWepCostTextW - 1, _menuMergingWepCostTextY,     1);
+								draw_line_width(_menuMergingWepCostTextX,     _menuMergingWepCostTextY,     _menuMergingWepCostTextX + _menuMergingWepCostTextW,     _menuMergingWepCostTextY,     1);
+								draw_set_color(c_red);
+								draw_line_width(_menuMergingWepCostTextX - 1, _menuMergingWepCostTextY - 1, _menuMergingWepCostTextX + _menuMergingWepCostTextW - 1, _menuMergingWepCostTextY - 1, 1);
+								
+								 // Draw Halved Text:
+								_menuMergingWepCost     = _menu.merging_wep_cost - ceil(_menu.merging_wep_cost * 0.5);
+								_menuMergingWepCostText = string(_menuMergingWepCost);
+								if(string_char_at(_menuMergingWepCostText, 1) == "0"){
+									_menuMergingWepCostText = string_delete(_menuMergingWepCostText, 1, 1);
+								}
+								draw_text_nt(
+									_menuMergingWepCostTextX,
+									_menuMergingWepCostTextY + _menuMergingWepCostTextH + 1,
+									((_menuMergingWepCost > typ_amax[_menu.merging_wep_type]) ? "@r" : "") + _menuMergingWepCostText
+								);
+							}
 						}
-						if(_menu.merging_wep_load > 0){
+						if(_menuMergingWepLoad > 0){
 							draw_set_halign(fa_left);
 							
-							var	_menuMergingWepLoad     = pround(_menu.merging_wep_load / 30, 0.01),
-								_menuMergingWepLoadText = string_format(
-									_menuMergingWepLoad,
-									0,
-									(
-										(frac(_menuMergingWepLoad) == 0)
-										? 0
-										: ((_menuMergingWepLoad > 0 && _menuMergingWepLoad < 0.1) ? 2 : 1)
-									)
-								);
-								
+							_menuMergingWepLoad = pround(_menuMergingWepLoad / 30, 0.01);
+							
+							var _menuMergingWepLoadText = string_format(
+								_menuMergingWepLoad,
+								0,
+								(
+									(_menuMergingWepLoad > 0 && _menuMergingWepLoad < 0.1)
+									? 2
+									: ((frac(pround(_menuMergingWepLoad, 0.1)) == 0) ? 0 : 1)
+								)
+							);
+							
+							 // Remove Leading Zero:
 							if(string_char_at(_menuMergingWepLoadText, 1) == "0"){
 								_menuMergingWepLoadText = string_delete(_menuMergingWepLoadText, 1, 1);
 							}
 							
-							draw_text_nt(_menuMergingX2 + 2, _menuMergingWepY, `${_menuMergingWepLoadText} @1(${spr.WhiteReloadIcon})`);
+							 // Draw Text:
+							var	_menuMergingWepLoadTextX = _menuMergingX2 + 2,
+								_menuMergingWepLoadTextY = _menuMergingWepY;
+								
+							draw_text_nt(
+								_menuMergingWepLoadTextX,
+								_menuMergingWepLoadTextY,
+								`${_menuMergingWepLoadText} @1(${spr.WhiteReloadIcon})`
+							);
+							
+							if(_menu.merging_wep_upgrade_count > 0){
+								var	_menuMergingWepLoadTextW = string_width(_menuMergingWepLoadText),
+									_menuMergingWepLoadTextH = string_height(_menuMergingWepLoadText);
+									
+								 // Cross Out Text:
+								draw_set_color(c_black);
+								draw_line_width(_menuMergingWepLoadTextX - 1, _menuMergingWepLoadTextY - 1, _menuMergingWepLoadTextX + _menuMergingWepLoadTextW,     _menuMergingWepLoadTextY - 1, 1);
+								draw_line_width(_menuMergingWepLoadTextX - 2, _menuMergingWepLoadTextY,     _menuMergingWepLoadTextX + _menuMergingWepLoadTextW - 1, _menuMergingWepLoadTextY,     1);
+								draw_line_width(_menuMergingWepLoadTextX - 1, _menuMergingWepLoadTextY,     _menuMergingWepLoadTextX + _menuMergingWepLoadTextW,     _menuMergingWepLoadTextY,     1);
+								draw_set_color(c_red);
+								draw_line_width(_menuMergingWepLoadTextX - 2, _menuMergingWepLoadTextY - 1, _menuMergingWepLoadTextX + _menuMergingWepLoadTextW - 1, _menuMergingWepLoadTextY - 1, 1);
+								
+								 // Draw Halved Text:
+								_menuMergingWepLoad     = pround((_menu.merging_wep_load * 0.5) / 30, 0.01);
+								_menuMergingWepLoadText = string_format(
+									_menuMergingWepLoad,
+									0,
+									(
+										(_menuMergingWepLoad > 0 && _menuMergingWepLoad < 0.1)
+										? 2
+										: ((frac(pround(_menuMergingWepLoad, 0.1)) == 0) ? 0 : 1)
+									)
+								);
+								if(string_char_at(_menuMergingWepLoadText, 1) == "0"){
+									_menuMergingWepLoadText = string_delete(_menuMergingWepLoadText, 1, 1);
+								}
+								draw_text_nt(
+									_menuMergingWepLoadTextX,
+									_menuMergingWepLoadTextY + _menuMergingWepLoadTextH + 1,
+									_menuMergingWepLoadText
+								);
+							}
 						}
 					}
 				}

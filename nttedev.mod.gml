@@ -241,9 +241,11 @@
 		
 		"race:parrot",
 		"race:bee",
+		"race:beetle",
 		
 		"skin:parrot:1",
 		"skin:bee:1",
+		"skin:beetle:1",
 		"skin:angler fish",
 		"skin:cool frog",
 		"skin:orchid plant",

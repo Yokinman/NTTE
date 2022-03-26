@@ -2400,6 +2400,7 @@
 			_front = weapon_get_sprt(wep_stat(_wep, "front"));
 			
 		_spr = call(scr.weapon_sprite_list_merge, [_stock, _front]);
+		return sprErrorGun;
 	}
 	
 	return (sprite_exists(_spr) ? _spr : mskNone);
