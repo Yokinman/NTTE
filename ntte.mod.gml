@@ -455,62 +455,71 @@
 	 // Beetle Chest:
 	for(var _playerIndex = 0; _playerIndex < maxp; _playerIndex++){
 		if(player_get_race(_playerIndex) == "beetle"){
-			var _w			= 2,
-				_h			= 2,
-				_type		= "",
-				_dirStart	= 90,
-				_dirOff 	= 0,
-				_floorDis	= -32,
-				_spawnDis	= 64,
-				_spawnFloor = [];
+			var	_beetleChestX = _spawnX,
+				_beetleChestY = _spawnY;
 				
-			 // Compile List of Central Floors:
-			with(FloorNormal){
-				var _isCentral = true;
-				for(var _x = bbox_left - 8; _x <= bbox_right + 1 + 8; _x += 16){
-					for(var _y = bbox_top - 8; _y <= bbox_bottom + 1 + 8; _y += 16){
-						if(_x < bbox_left || _x > bbox_right + 1 || _y < bbox_top || _y > bbox_bottom + 1){
-							if(!position_meeting(_x, _y, Floor)){
-								_isCentral = false;
-								break;
+			if(_normalArea || GameCont.hard == 1){
+				var _w			= 2,
+					_h			= 2,
+					_type		= "",
+					_dirStart	= random(360),
+					_dirOff 	= 0,
+					_floorDis	= -32,
+					_spawnDis	= 64,
+					_spawnFloor = [];
+					
+				 // Compile List of Central Floors:
+				with(FloorNormal){
+					var _isCentral = true;
+					for(var _x = bbox_left - 8; _x <= bbox_right + 1 + 8; _x += 16){
+						for(var _y = bbox_top - 8; _y <= bbox_bottom + 1 + 8; _y += 16){
+							if(_x < bbox_left || _x > bbox_right + 1 || _y < bbox_top || _y > bbox_bottom + 1){
+								if(!position_meeting(_x, _y, Floor)){
+									_isCentral = false;
+									break;
+								}
 							}
 						}
 					}
+					if(_isCentral){
+						array_push(_spawnFloor, self);
+					}
 				}
-				if(_isCentral){
-					array_push(_spawnFloor, self);
+				if(!array_length(_spawnFloor)){
+					_spawnFloor = FloorNormal;
 				}
-			}
-			if(!array_length(_spawnFloor)){
-				_spawnFloor = FloorNormal;
+				
+				 // Generate Beetle Chest Room:
+				call(scr.floor_set_style, true);
+				with(call(scr.floor_room_start, _spawnX, _spawnY, _spawnDis, _spawnFloor)){
+					with(call(scr.floor_room_create, x, y, _w, _h, _type, _dirStart, _dirOff, _floorDis)){
+						_beetleChestX = x;
+						_beetleChestY = y;
+						
+						//  // Resprite Floors:
+						// var _img = 0;
+						// with(floors){
+						// 	sprite_index = spr.VaultFlowerFloorSmall;
+						// 	image_index  = _img++;
+						// 	depth        = 8;
+						// 	material     = 2;
+						// 	traction     = 0.45;
+						// 	with(instance_create(x, y + 1, SnowFloor)){
+						// 		sprite_index = other.sprite_index;
+						// 		image_index  = other.image_index;
+						// 		image_speed  = other.image_speed;
+						// 	}
+						// }
+					}
+				}
+				call(scr.floor_reset_style);
 			}
 			
-			 // Generate Beetle Chest Room:
-			call(scr.floor_set_style, true);
-			with(call(scr.floor_room_start, _spawnX, _spawnY, _spawnDis, _spawnFloor)){
-				with(call(scr.floor_room_create, x, y, _w, _h, _type, _dirStart, _dirOff, _floorDis)){
-					with(call(scr.obj_create, x, y, "BeetleChest")){
-						ammo     = true;
-						snd_open = sndWeaponChest;
-					}
-					
-					//  // Resprite Floors:
-					// var _img = 0;
-					// with(floors){
-					// 	sprite_index = spr.VaultFlowerFloorSmall;
-					// 	image_index  = _img++;
-					// 	depth        = 8;
-					// 	material     = 2;
-					// 	traction     = 0.45;
-					// 	with(instance_create(x, y + 1, SnowFloor)){
-					// 		sprite_index = other.sprite_index;
-					// 		image_index  = other.image_index;
-					// 		image_speed  = other.image_speed;
-					// 	}
-					// }
-				}
+			 // Beetle Chest:
+			with(call(scr.obj_create, _beetleChestX, _beetleChestY, "BeetleChest")){
+				ammo     = true;
+				snd_open = sndWeaponChest;
 			}
-			call(scr.floor_reset_style);
 			
 			break;
 		}

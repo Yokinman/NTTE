@@ -3044,18 +3044,25 @@
 			var _spawnReached = false;
 			
 			 // Make Sure it Reaches the Spawn Point:
-			var _pathWall = [Wall, InvisiWall];
-			for(var _fx = bbox_left; _fx < bbox_right + 1; _fx += 16){
-				for(var _fy = bbox_top; _fy < bbox_bottom + 1; _fy += 16){
-					if(call(scr.path_reaches, call(scr.path_create, _fx + 8, _fy + 8, _spawnX, _spawnY, _pathWall), _spawnX, _spawnY, _pathWall)){
-						_spawnReached = true;
+			if(
+				position_meeting(_spawnX, _spawnY, Floor)
+				&& !position_meeting(_spawnX, _spawnY, Wall)
+				&& !position_meeting(_spawnX, _spawnY, InvisiWall)
+			){
+				var _pathWall = [Wall, InvisiWall];
+				for(var _fx = bbox_left; _fx < bbox_right + 1; _fx += 16){
+					for(var _fy = bbox_top; _fy < bbox_bottom + 1; _fy += 16){
+						if(call(scr.path_reaches, call(scr.path_create, _fx + 8, _fy + 8, _spawnX, _spawnY, _pathWall), _spawnX, _spawnY, _pathWall)){
+							_spawnReached = true;
+							break;
+						}
+					}
+					if(_spawnReached){
 						break;
 					}
 				}
-				if(_spawnReached){
-					break;
-				}
 			}
+			else _spawnReached = true; // Impossible to reach the spawn
 			
 			 // Success bro!
 			if(_spawnReached){

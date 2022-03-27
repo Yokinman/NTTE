@@ -732,7 +732,7 @@
 						
 						 // Bubble Bomb:
 						with(other){
-							array_push(call(scr.projectile_create, x, y, "BubbleBomb").held, other);
+							array_push(call(scr.projectile_create, other.x, other.y, "BubbleBomb").held, other);
 						}
 						
 						 // Effects:
@@ -754,7 +754,7 @@
 				 // Destroy:
 				else{
 					with(other){
-						call(scr.projectile_create, x, y, ((damage < 6) ? "BubbleExplosionSmall" : "BubbleExplosion"));
+						call(scr.projectile_create, other.x, other.y, ((other.damage < 6) ? "BubbleExplosionSmall" : "BubbleExplosion"));
 					}
 					instance_destroy();
 				}

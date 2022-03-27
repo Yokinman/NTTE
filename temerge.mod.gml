@@ -3147,10 +3147,13 @@
 		
 		with(_hyperInstanceList){
 			if(speed >= temerge_hyper_minspeed){
-				var	_stepNum = 0,
-					_stepMax = 15 * temerge_hyper_speed,
-					_isMelee = (array_find_index(_projectileCollisionObjectList, object_index) >= 0);
+				var	_stepNum  = 0,
+					_stepMax  = 15 * temerge_hyper_speed,
+					_isMelee  = (array_find_index(_projectileCollisionObjectList, object_index) >= 0),
+					_lastTeam = team;
 					
+				team = temerge_event_last_team;
+				
 				with(self){
 					while(_stepNum < _stepMax && speed >= temerge_hyper_minspeed){
 						 // Alarms:
@@ -3270,9 +3273,16 @@
 					}
 				}
 				
-				 // Remove From List:
-				if(instance_exists(self) && speed - friction_raw < temerge_hyper_minspeed){
-					_instanceList = instances_matching_ne(_instanceList, "id", id);
+				if(instance_exists(self)){
+					 // Revert Team:
+					if(team == temerge_event_last_team){
+						team = _lastTeam;
+					}
+					
+					 // Remove From List:
+					if(speed - friction_raw < temerge_hyper_minspeed){
+						_instanceList = instances_matching_ne(_instanceList, "id", id);
+					}
 				}
 			}
 		}
@@ -5494,7 +5504,7 @@
 	projectile_add_temerge_effect(_instanceList, "hyper");
 	
 	 // Grenade:
-	projectile_add_temerge_effect(_instanceList, "grenade", [160]);
+	projectile_add_temerge_effect(_instanceList, "grenade", [160, {}]);
 	
 	
 #define Flare_temerge_setup(_instanceList)
