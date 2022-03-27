@@ -1,11 +1,15 @@
 #define init
 	mod_script_call("mod", "teassets", "ntte_init", script_ref_create(init));
 	
+	 // Setup Objects:
+	call(scr.obj_add, script_ref_create(BeetleChest_create));
+	call(scr.obj_add, script_ref_create(BeetleChestOpen_create));
+	
 #define cleanup
 	mod_script_call("mod", "teassets", "ntte_cleanup", script_ref_create(cleanup));
 	
 #define race_name              return "BEETLE";
-#define race_text              return "PASSIVE#CAN MERGE WEAPONS";
+#define race_text              return "BEETLE CHEST#MERGE WEAPONS";
 #define race_lock              return "???";
 #define race_unlock            return "???";
 #define race_tb_text           return "PAST @wMERGED WEAPONS#@sARE @wFREE @sTO MERGE AGAIN";
@@ -25,9 +29,14 @@
 	
 	 // Normal:
 	return choose(
-		"TIP A",
-		"TIP B",
-		"TIP C"
+		"STICK TO YOUR GUNS",
+		"HEALTH CHESTS RESTORE SPENT MAX HP",
+		"TIP C",
+		"TIP D",
+		"TIP E",
+		"TIP F",
+		"TIP G",
+		"TIP H"
 	);
 	
 #define race_sprite(_sprite)
@@ -134,13 +143,12 @@
 #define race_skin_lock(_skin)
 	switch(_skin){
 		case 0 : return "EDIT THE SAVE FILE LMAO";
-		case 1 : return "???";
+		case 1 : return "HOLD 6 WEAPONS#IN ONE HAND";
 	}
 	
 #define race_skin_unlock(_skin)
 	switch(_skin){
-		case 0 : return "???";
-		case 1 : return "???";
+		case 1 : return "FOR HOLDING 6 WEAPONS IN ONE HAND";
 	}
 	
 #define race_skin_button(_skin)
@@ -421,28 +429,25 @@
 								_menuSelectionWepSpriteList = [];
 								
 							with(_menu.merging_wep_index_list){
-								var	_menuSelectionWep    = _menuSelectionWepList[self],
-									_menuSelectionRawWep = call(scr.wep_raw, _menuSelectionWep);
-									
+								var _menuSelectionWep = call(scr.data_clone, _menuSelectionWepList[self], infinity);
+								
+								 // Unmerge Weapon:
+								if(call(scr.weapon_has_temerge, _menuSelectionWep)){
+									call(scr.weapon_delete_temerge, _menuSelectionWep);
+								}
+								
 								 // Merge Weapon:
 								_menuMergingWep = (
 									(_menuMergingWep == undefined)
-									? _menuSelectionRawWep
-									: call(scr.weapon_add_temerge, _menuMergingWep, _menuSelectionRawWep)
+									? _menuSelectionWep
+									: call(scr.weapon_add_temerge, _menuMergingWep, _menuSelectionWep)
 								);
 								
 								 // Fetch Raw Weapon:
-								array_push(_menuMergingRawWepList, _menuSelectionRawWep);
+								array_push(_menuMergingRawWepList, call(scr.wep_raw, _menuSelectionWep));
 								
 								 // Fetch Sprite:
-								if(call(scr.weapon_has_temerge, _menuSelectionWep)){
-									call(scr.weapon_deactivate_temerge, _menuSelectionWep);
-									array_push(_menuSelectionWepSpriteList, weapon_get_sprt(_menuSelectionWep));
-									call(scr.weapon_activate_temerge, _menuSelectionWep);
-								}
-								else{
-									array_push(_menuSelectionWepSpriteList, weapon_get_sprt(_menuSelectionWep));
-								}
+								array_push(_menuSelectionWepSpriteList, weapon_get_sprt(_menuSelectionWep));
 								if(_menuSelectionWepSpriteList[array_length(_menuSelectionWepSpriteList) - 1] == mskNone){
 									_menuSelectionWepSpriteList[array_length(_menuSelectionWepSpriteList) - 1] = weapon_get_sprt(call(scr.wep_raw, _menuSelectionWep));
 								}
@@ -558,6 +563,11 @@
 							wep = call(scr.wep_wrap, wep, "step",        script_ref_create(beetle_weapon_upgrade_step));
 						}
 						
+						 // B-Skin Unlock:
+						if(array_length(_menuMergingWepPartList) >= 6){
+							call(scr.unlock_set, `skin:${mod_current}:1`, true);
+						}
+						
 						 // Take Health:
 						if(_menuMergingHPCost != 0){
 							chickendeaths += _menuMergingHPCost;
@@ -601,7 +611,7 @@
 			}
 			
 			 // Animation:
-			if(_menu.scale == 0){
+			if(_menu.scale == 0 && (wep != wep_none || bwep != wep_none)){
 				if(call(scr.weapon_has_temerge, wep)){
 					gunshine = 1;
 					sound_play_pitchvol(sndWeaponPickup, 1 + orandom(0.1), 2/3);
@@ -1125,6 +1135,164 @@
 					}
 				}
 			}
+		}
+	}
+	
+	
+/// OBJECTS
+#define BeetleChest_create(_x, _y)
+	/*
+		A chest used for weapon storage between levels, similar to the proto chest
+	*/
+	
+	with(call(scr.obj_create, _x, _y, "CustomChest")){
+		 // Visual:
+		sprite_index = spr.QuestChest;
+		spr_dead	 = spr.QuestChestOpen;
+		spr_shadow   = shd32;
+		
+		 // Sounds:
+		snd_open = sndChest;
+		
+		 // Vars:
+		ammo = false;
+		
+		 // Events:
+		on_open = script_ref_create(BeetleChest_open);
+		
+		return self;
+	}
+	
+#define BeetleChest_open
+	/*
+		Beetle chests drop their stored weapon and become closable
+	*/
+	
+	var _target = other;
+	
+	 // Become Openable:
+	with(call(scr.obj_create, x, y, "BeetleChestOpen")){
+		sprite_index = other.spr_dead;
+		spr_shadow   = other.spr_shadow;
+		spr_shadow_x = other.spr_shadow_x;
+		spr_shadow_y = other.spr_shadow_y;
+		image_xscale = other.image_xscale;
+		image_yscale = other.image_yscale;
+		image_angle  = other.image_angle;
+		image_blend  = other.image_blend;
+		image_alpha  = other.image_alpha;
+		mask_index   = ((other.mask_index < 0) ? other.sprite_index : other.mask_index);
+		target       = _target;
+	}
+	spr_dead = -1;
+	
+	 // Drop Weapon:
+	if("beetle_chest_wep" in GameCont && GameCont.beetle_chest_wep != wep_none){
+		with(instance_create(x, y, WepPickup)){
+			wep  = GameCont.beetle_chest_wep;
+			ammo = other.ammo;
+		}
+		GameCont.beetle_chest_wep = wep_none;
+	}
+	
+	
+#define BeetleChestOpen_create(_x, _y)
+	/*
+		An opened beetle chest, which can close back up to store its weapon
+	*/
+	
+	with(instance_create(_x, _y, CustomObject)){
+		 // Visual:
+		sprite_index = spr.QuestChestOpen;
+		spr_shadow   = shd32;
+		spr_shadow_x = 0;
+		spr_shadow_y = -1;
+		depth        = 1;
+		
+		 // Vars:
+		target = noone;
+		prompt = call(scr.prompt_create, self, loc("NTTE:PetMimic:Prompt", "DROP"));
+		with(prompt){
+			visible = false;
+		}
+		
+		return self;
+	}
+	
+#define BeetleChestOpen_step
+	/*
+		Beetle chests close when they aren't being held open
+	*/
+	
+	var _isOpen = place_meeting(x, y, target);
+	
+	if(_isOpen){
+		var _isEmpty = (
+			("beetle_chest_wep" not in GameCont || GameCont.beetle_chest_wep == wep_none)
+			&& !place_meeting(x, y, WepPickup)
+		);
+		
+		 // Player Dropping Weapon:
+		if(instance_exists(prompt)){
+			prompt.visible = _isEmpty;
+			if(_isEmpty){
+				with(player_find(prompt.pick)){
+					if(canpick && wep != wep_none){
+						if(curse <= 0){
+							with(instance_create(other.x, other.y, WepPickup)){
+								wep = other.wep;
+							}
+							wep   = wep_none;
+							curse = 0;
+							call(scr.player_swap, self);
+							
+							 // Sound:
+							sound_play_hit(sndWeaponPickup, 0.1);
+						}
+						else sound_play_hit(sndCursedReminder, 0.05);
+					}
+				}
+			}
+		}
+	}
+	
+	 // Close:
+	else instance_destroy();
+	
+#define BeetleChestOpen_destroy
+	/*
+		Beetle chest closing back up
+	*/
+	
+	 // Grab Nearby Weapon:
+	if("beetle_chest_wep" not in GameCont || GameCont.beetle_chest_wep == wep_none){
+		if(place_meeting(x, y, WepPickup)){
+			with(instance_nearest(x, y, WepPickup)){
+				GameCont.beetle_chest_wep = wep;
+				instance_destroy();
+			}
+		}
+	}
+	
+	 // Become Chest:
+	with(call(scr.obj_create, x, y, "BeetleChest")){
+		spr_shadow   = other.spr_shadow;
+		spr_shadow_x = other.spr_shadow_x;
+		spr_shadow_y = other.spr_shadow_y;
+		image_xscale = other.image_xscale;
+		image_yscale = other.image_yscale;
+		image_angle  = other.image_angle;
+		image_blend  = other.image_blend;
+		image_alpha  = other.image_alpha;
+	}
+	
+	
+/// GENERAL
+#define ntte_draw_shadows
+	 // Open Beetle Chest:
+	if(array_length(obj.BeetleChestOpen)){
+		with(instances_matching(obj.BeetleChestOpen, "visible", true)){
+			draw_sprite(spr_shadow, 0, x + spr_shadow_x, y + spr_shadow_y);
 		}
 	}
 	

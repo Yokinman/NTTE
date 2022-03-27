@@ -21,7 +21,7 @@
 	
 #macro pet_target_inst instances_matching_ne(instances_matching_ne([enemy, Player, Sapling, Ally, SentryGun, CustomHitme], "team", team, 0), "mask_index", mskNone)
 
-#macro player_moving (canwalk && (button_check(index, "nort") || button_check(index, "sout") || button_check(index, "east") || button_check(index, "west")))
+#macro player_is_moving (canwalk && (button_check(index, "nort") || button_check(index, "sout") || button_check(index, "east") || button_check(index, "west")))
 
 #define Scorpion_create
 	 // Visual:
@@ -1700,7 +1700,7 @@
 				 // Charging Direction:
 				if(instance_is(self, Player)){
 					 // Towards Direction:
-					if(player_moving){
+					if(player_is_moving){
 						other.dash_direction = angle_lerp_ct(other.dash_direction, direction, 0.5);
 					}
 					
@@ -1809,7 +1809,7 @@
 			}
 			
 			 // Hold Frog:
-			if(race == "frog" && !player_moving){
+			if(race == "frog" && !player_is_moving){
 				speed = other.speed;
 			}
 		}
@@ -1831,7 +1831,7 @@
 			 // Push Away:
 			with(leader){
 				var _push = 1.8;
-				if(player_moving){
+				if(player_is_moving){
 					_push /= 3;
 				}
 				vspeed -= _push * sign(_yAdd) * current_time_scale;
@@ -2053,7 +2053,8 @@
 								wep_inst = instance_create(x, y, WepPickup);
 								wep_inst.wep = other.wep;
 							}
-							wep = wep_none;
+							wep   = wep_none;
+							curse = 0;
 							call(scr.player_swap, self);
 							
 							 // Effects:

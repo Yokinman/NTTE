@@ -1151,7 +1151,7 @@
 			VaultFlowerFloorSmall = sprite(p + "sprFloorVaultFlowerSmall", 4, 0, 0);
 			
 			 // Quest Hint Lore Tiles:
-			FloorQuest = sprite(p + "sprFloorQuest", 4, 0, 0);
+			QuestFloor = sprite(p + "sprFloorQuest", 4, 0, 0);
 			
 			//#region PROPS
 			p = m + "Props/";

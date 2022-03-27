@@ -14,7 +14,7 @@
 #define weapon_area  return -1; // Doesn't spawn naturally
 #define weapon_type  return type_bullet;
 #define weapon_cost  return 2;
-#define weapon_load  return 15; // 0.1 Seconds
+#define weapon_load  return 15; // 0.5 Seconds
 //#define weapon_auto  return true;
 
 #define weapon_fire(_wep)
