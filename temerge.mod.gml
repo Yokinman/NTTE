@@ -2374,7 +2374,7 @@
 				 // Apply Motion:
 				call(scr.motion_step, self, 1);
 				
-				 // Search for Nearby Walls:
+				 // Search for Nearby Collision Objects:
 				if(distance_to_object(_collisionObject) <= _collisionDis){
 					var _meetInstanceList = call(scr.instances_meeting_rectangle,
 						bbox_left   - _collisionDis,
