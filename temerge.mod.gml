@@ -13,7 +13,8 @@
 	}
 	
 	 // Object Event Variable Names:
-	global.obj_event_varname_list_map = mod_variable_get("mod", "teassets", "obj_event_varname_list_map");
+	global.object_event_index_list_map = mod_variable_get("mod", "teassets", "object_event_index_list_map");
+	global.event_varname_list          = mod_variable_get("mod", "teassets", "event_varname_list");
 	
 	 // Volume-Muffled Sounds:
 	global.sound_muffle_map = ds_map_create();
@@ -1302,9 +1303,11 @@
 			for(var _instanceID = instance_max - 1; _instanceID >= _minInstanceID; _instanceID--){
 				if("object_index" in _instanceID){
 					var _instObject = _instanceID.object_index;
-					if(ds_map_exists(global.obj_event_varname_list_map, _instObject)){
-						with(global.obj_event_varname_list_map[? _instObject]){
-							var _instEventRef = variable_instance_get(_instanceID, self);
+					if(ds_map_exists(global.object_event_index_list_map, _instObject)){
+						with(global.object_event_index_list_map[? _instObject]){
+							var	_eventVarName = global.event_varname_list[self],
+								_instEventRef = variable_instance_get(_instanceID, _eventVarName);
+								
 							if(array_length(_instEventRef) >= 3){
 								var _instEventWrapRef = script_ref_create(
 									temerge_weapon_wrap_event,
@@ -1312,10 +1315,10 @@
 									_creator,
 									_instEventRef,
 									(instance_is(_instObject, CustomObject) || instance_is(_instObject, CustomScript)), // Causes slight inconsistencies, but significantly reduces lag
-									self
+									_eventVarName
 								);
 								array_push(_instEventWrapRef, _instEventWrapRef);
-								variable_instance_set(_instanceID, self, _instEventWrapRef);
+								variable_instance_set(_instanceID, _eventVarName, _instEventWrapRef);
 							}
 						}
 					}
@@ -4570,8 +4573,8 @@
 			
 			 // Custom Object (Wrap Existing Event):
 			if(
-				ds_map_exists(global.obj_event_varname_list_map, object_index)
-				&& array_find_index(global.obj_event_varname_list_map[? object_index], _eventRefVarName) >= 0
+				ds_map_exists(global.object_event_index_list_map, object_index)
+				&& array_find_index(global.object_event_index_list_map[? object_index], array_find_index(global.event_varname_list, _eventRefVarName)) >= 0
 			){
 				var _lastEventRef = variable_instance_get(self, _eventRefVarName);
 				if(_lastEventRef == undefined){
