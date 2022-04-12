@@ -500,7 +500,7 @@
 			}
 			
 			 // Close Menu & Confirm Selection:
-			if((_specIsPressed && _menuWasOpen) || (_specIsReleased && _menu.scale > 0.75)){
+			if((_specIsPressed && _menuWasOpen) || (_specIsReleased && (_menu.scale > 0.75 || !_menuSelectionWepListSize))){
 				_menu.is_open = false;
 				
 				 // Merging Selected Weapons:
@@ -1165,7 +1165,7 @@
 							draw_text_nt(
 								_menuMergingWepCostTextX,
 								_menuMergingWepCostTextY,
-								`@1(${spr.WhiteAmmoTypeIcon}:${_menuMergingWep.type}) ${(_menuMergingWepCost > typ_amax[_menuMergingWep.type]) ? "@r" : ""}${_menuMergingWepCostText}`
+								`@1(${spr.WhiteAmmoTypeIcon}:${_menuMergingWep.type}) ${(_menu.merging_upgrade_count > 0) ? "@d" : ((_menuMergingWepCost > typ_amax[_menuMergingWep.type]) ? "@r" : "")}${_menuMergingWepCostText}`
 							);
 							
 							if(_menu.merging_upgrade_count > 0){
@@ -1220,7 +1220,7 @@
 							draw_text_nt(
 								_menuMergingWepLoadTextX,
 								_menuMergingWepLoadTextY,
-								`${_menuMergingWepLoadText} @1(${spr.WhiteReloadIcon})`
+								`${(_menu.merging_upgrade_count > 0) ? "@d" : ""}${_menuMergingWepLoadText} @1(${spr.WhiteReloadIcon})`
 							);
 							
 							if(_menu.merging_upgrade_count > 0){

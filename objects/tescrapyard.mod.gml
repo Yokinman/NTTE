@@ -1487,6 +1487,7 @@
 		size       = 3;
 		team       = 1;
 		fire       = false;
+		canrot     = false;
 		
 		 // Alarms:
 		alarm0 = 300;
@@ -1508,6 +1509,7 @@
 #define TrapSpin_step
 	 // Alarms:
 	if(alarm0_run) exit;
+	if(alarm1_run) exit;
 	
 	 // Level Over:
 	if(instance_exists(Portal)){
@@ -1515,12 +1517,23 @@
 		alarm0 = 30;
 	}
 	
-	 // Active:
-	if(fire != false){
-		 // Spin:
+	 // Spin:
+	if(canrot){
+		var _lastImageAngle = image_angle;
 		image_angle += rotspeed * current_time_scale;
-		
-		 // Flames:
+		if(
+			(rotspeed > 0)
+			? (pfloor(image_angle, 90) != pfloor(_lastImageAngle, 90))
+			: (pceil (image_angle, 90) != pceil (_lastImageAngle, 90))
+		){
+			image_angle = ((rotspeed > 0) ? pfloor(image_angle, 90) : pceil(image_angle, 90));
+			canrot      = false;
+			alarm1      = 30;
+		}
+	}
+	
+	 // Flames:
+	if(fire != false){
 		if((current_frame % (1 / fire)) < current_time_scale){
 			repeat(ceil(fire * current_time_scale)){
 				var	_dis = 12,
@@ -1556,10 +1569,17 @@
 	}
 	
 #define TrapSpin_alrm0
-	 // Activate:
+	 // Activate Flames:
 	if(fire <= 0){
-		fire = true;
+		fire   = true;
+		alarm1 = 90;
 		sound_play_hit_big(sndFiretrap, 0.2);
+	}
+	
+#define TrapSpin_alrm1
+	 // Start Spinning:
+	if(!instance_exists(Portal)){
+		canrot = true;
 	}
 	
 #define TrapSpin_destroy

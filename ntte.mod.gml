@@ -489,6 +489,25 @@
 					_spawnFloor = FloorNormal;
 				}
 				
+				 // Prefer Floors by Weapon Chest:
+				if(instance_exists(WeaponChest)){
+					var _weaponChestSpawnFloor = [];
+					with(_spawnFloor){
+						var	_cx = bbox_center_x,
+							_cy = bbox_center_y;
+							
+						with(WeaponChest){
+							if(!collision_line(x, y, _cx, _cy, Wall, false, false)){
+								array_push(_weaponChestSpawnFloor, other);
+								break;
+							}
+						}
+					}
+					if(array_length(_weaponChestSpawnFloor)){
+						_spawnFloor = _weaponChestSpawnFloor;
+					}
+				}
+				
 				 // Generate Beetle Chest Room:
 				call(scr.floor_set_style, true);
 				with(call(scr.floor_room_start, _spawnX, _spawnY, _spawnDis, _spawnFloor)){

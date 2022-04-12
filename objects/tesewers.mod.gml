@@ -1886,6 +1886,9 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 		projectile_hit_push(other, damage, force);
 		has_hit = true;
 		
+		 // Slow Down:
+		speed *= 0.9;
+		
 		 // Effects:
 		var _big = (instance_exists(other) && other.size >= 3 && big);
 		view_shake_max_at(x, y, (_big ? 12 : 6));

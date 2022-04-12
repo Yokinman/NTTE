@@ -5207,6 +5207,18 @@
 						array_push(_instMeet, self);
 					}
 				}
+				var _frogInst = instances_matching(Player, "race", "frog");
+				if(array_length(_frogInst)){
+					with(_frogInst){
+						if(array_find_index(_instMeet, self) < 0){
+							call(scr.motion_step, self, 1);
+							if(place_meeting(x, y, CustomObject) && array_length(call(scr.instances_meeting_instance, self, _instWall))){
+								array_push(_instMeet, self);
+							}
+							call(scr.motion_step, self, -1);
+						}
+					}
+				}
 				
 				 // Disable Collision When Near Dude in a Fake Wall:
 				if(array_length(_instMeet)){

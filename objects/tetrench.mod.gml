@@ -4424,12 +4424,13 @@
 			
 		if((instance_exists(target) || point_distance(x, y, _tx, _ty) < dist_max + 32) && !collision_line(x, y, _tx, _ty, Wall, false, false)){
 			var	_wave = (("wave" in creator) ? creator.wave : wave),
+				_arc  = (power(point_distance(x, y, _tx, _ty), 0.6) * sin((_wave / 240) * 2 * pi)) + (4 * cos((_wave / 960) * 2 * pi)),
 				_inst = lightning_connect(
 					x,
 					y,
 					_tx,
 					_ty,
-					(power(point_distance(x, y, _tx, _ty), 0.6) * sin((_wave / 240) * 2 * pi)) + (4 * cos((_wave / 960) * 2 * pi)),
+					4 * sqrt(abs(_arc)) * sign(_arc),
 					false,
 					self
 				);
