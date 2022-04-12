@@ -5,31 +5,37 @@
 	lag = false;
 	
 	 // Custom Object Related:
-	obj                                = {};
-	global.obj_create_ref_map          = ds_map_create(); // Pairs an NT:TE object's name with a script reference to its create event
-	global.obj_parent_map              = ds_map_create(); // Pairs an NT:TE object's name with the name of its parent NT:TE object
-	global.obj_search_bind_map         = ds_map_create(); // Pairs a "name:objectName" key with a setup script binding for 'instance_copy' searching
-	global.obj_event_varname_list_map  = ds_map_create();
-	global.obj_event_obj_list_map      = ds_map_create();
-	global.obj_draw_depth_instance_map = ds_map_create();
+	obj                                      = {};
+	global.obj_create_event_ref_map          = ds_map_create();
+	global.obj_event_index_list_map          = ds_map_create();
+	global.obj_parent_map                    = ds_map_create();
+	global.obj_search_bind_map               = ds_map_create();
+	global.event_obj_list_map                = ds_map_create();
+	global.depth_obj_draw_event_instance_map = ds_map_create();
+	global.object_event_index_list_map       = ds_map_create();
 	
 	 // Custom Object Event Variable Names:
+	global.event_varname_list = ["script", "on_step", "on_begin_step", "on_end_step", "on_draw", "on_destroy", "on_cleanup", "on_anim", "on_death", "on_hurt", "on_hit", "on_wall", "on_projectile", "on_grenade"];
+	for(var _alarmIndex = 0; _alarmIndex < 10; _alarmIndex++){
+		array_push(global.event_varname_list, `on_alrm${_alarmIndex}`);
+	}
 	with([CustomObject, CustomHitme, CustomProp, CustomProjectile, CustomSlash, CustomEnemy, CustomScript, CustomBeginStep, CustomStep, CustomEndStep, CustomDraw]){
-		var _eventVarNameList = [];
-		with(instance_create(0, 0, self)){
-			with(["on_step", "on_begin_step", "on_end_step", "on_draw", "on_destroy", "on_cleanup", "on_anim", "on_death", "on_hurt", "on_hit", "on_wall", "on_projectile", "on_grenade", "script"]){
-				if(self in other){
-					array_push(_eventVarNameList, self);
+		var	_object         = self,
+			_eventIndexList = [];
+			
+		with(instance_create(0, 0, _object)){
+			var _eventIndex = 0;
+			with(global.event_varname_list){
+				var _eventVarName = self;
+				if(_eventVarName in other || ("on_step" in other && string_pos(_eventVarName, "on_alrm") == 1)){
+					array_push(_eventIndexList, _eventIndex);
 				}
+				_eventIndex++;
 			}
 			instance_delete(self);
 		}
-		if(array_find_index(_eventVarNameList, "on_step") >= 0){
-			for(var i = 0; i < 10; i++){
-				array_push(_eventVarNameList, `on_alrm${i}`);
-			}
-		}
-		global.obj_event_varname_list_map[? self] = _eventVarNameList;
+		
+		global.object_event_index_list_map[? _object] = _eventIndexList;
 	}
 	
 	 // Script References:
@@ -40,10 +46,9 @@
 	
 	 // SPRITES //
 	spr      = {};
+	spr_path = "sprites/";
 	spr_load = [[spr, 0]];
 	with(spr){
-		var m, p;
-		
 		 // Storage:
 		msk             = {};
 		shd             = {};
@@ -55,445 +60,460 @@
 		PromptSubtext   = ds_map_create();
 		
 		 // Shine Overlay:
-		p = "sprites/shine/";
-		Shine8    = sprite_add(p + "sprShine8.png",    7,  4,  4); // Rads
-		Shine10   = sprite_add(p + "sprShine10.png",   7,  5,  5); // Pickups
-		Shine12   = sprite_add(p + "sprShine12.png",   7,  6,  6); // Big Rads
-		Shine16   = sprite_add(p + "sprShine16.png",   7,  8,  8); // Normal Chests
-		Shine20   = sprite_add(p + "sprShine20.png",   7, 10, 10); // Heavy Chests (Steroids)
-		Shine24   = sprite_add(p + "sprShine24.png",   7, 12, 12); // Big Chests
-		Shine64   = sprite_add(p + "sprShine64.png",   7, 32, 32); // Giant Chests (YV)
-		ShineHurt = sprite_add(p + "sprShineHurt.png", 3,  0,  0); // Hurt Flash
-		ShineSnow = sprite_add(p + "sprShineSnow.png", 1,  0,  0); // Snow Floors
+		spr_path_set("shine/");
+		Shine8    = sprite_add(spr_path + "sprShine8.png",    7,  4,  4); // Rads
+		Shine10   = sprite_add(spr_path + "sprShine10.png",   7,  5,  5); // Pickups
+		Shine12   = sprite_add(spr_path + "sprShine12.png",   7,  6,  6); // Big Rads
+		Shine16   = sprite_add(spr_path + "sprShine16.png",   7,  8,  8); // Normal Chests
+		Shine20   = sprite_add(spr_path + "sprShine20.png",   7, 10, 10); // Heavy Chests (Steroids)
+		Shine24   = sprite_add(spr_path + "sprShine24.png",   7, 12, 12); // Big Chests
+		Shine64   = sprite_add(spr_path + "sprShine64.png",   7, 32, 32); // Giant Chests (YV)
+		ShineHurt = sprite_add(spr_path + "sprShineHurt.png", 3,  0,  0); // Hurt Flash
+		ShineSnow = sprite_add(spr_path + "sprShineSnow.png", 1,  0,  0); // Snow Floors
 		
 		//#region MENU / HUD
-			
+		
 			 // Menu:
-			m = "menu/";
-			p = m;
-				
+			spr_path_set("menu/");
+			
 				 // Open Options:
-				OptionNTTE = sprite(p + "sprOptionNTTE", 1, 32, 12);
-				MenuNTTE   = sprite(p + "sprMenuNTTE",   1, 20,  9);
+				OptionNTTE = spr_add("sprOptionNTTE", 1, 32, 12);
+				MenuNTTE   = spr_add("sprMenuNTTE",   1, 20,  9);
 				
 				 // Eyes Maggot Shadow:
-				shd.EyesMenu = sprite(p + "shdEyesMenu", 24, 16, 18);
+				shd.EyesMenu = spr_add("shdEyesMenu", 24, 16, 18);
 				
 				 // Alt Route Area Icons:
-				RouteIcon = sprite(p + "sprRouteIcon", 2, 4, 4);
+				RouteIcon = spr_add("sprRouteIcon", 2, 4, 4);
 				
 				 // White Icons:
-				WhiteAmmoTypeIcon = sprite(p + "sprWhiteAmmoTypeIcon", 6, 8, 4);
-				WhiteReloadIcon   = sprite(p + "sprWhiteReloadIcon",   1, 0, 4);
+				WhiteAmmoTypeIcon = spr_add("sprWhiteAmmoTypeIcon", 6, 8, 4);
+				WhiteReloadIcon   = spr_add("sprWhiteReloadIcon",   1, 0, 4);
 				
 				 // Unlock Icons:
-				p = m + "unlocks/";
+				spr_path_add("unlocks/");
 				UnlockIcon = {
-					"coast"  : sprite(p + "sprUnlockIconBeach",    2, 12, 12),
-					"oasis"  : sprite(p + "sprUnlockIconBubble",   2, 12, 12),
-					"trench" : sprite(p + "sprUnlockIconTech",     2, 12, 12),
-					"lair"   : sprite(p + "sprUnlockIconSawblade", 2, 12, 12),
-					"red"    : sprite(p + "sprUnlockIconRed",      2, 12, 12),
-					"crown"  : sprite(p + "sprUnlockIconCrown",    2, 12, 12)
+					"coast"  : spr_add("sprUnlockIconBeach",    2, 12, 12),
+					"oasis"  : spr_add("sprUnlockIconBubble",   2, 12, 12),
+					"trench" : spr_add("sprUnlockIconTech",     2, 12, 12),
+					"lair"   : spr_add("sprUnlockIconSawblade", 2, 12, 12),
+					"red"    : spr_add("sprUnlockIconRed",      2, 12, 12),
+					"crown"  : spr_add("sprUnlockIconCrown",    2, 12, 12)
 				};
 				
 			 // Loadout Crown System:
-			p = "crowns/";
-			CrownRandomLoadout = sprite(p + "Random/sprCrownRandomLoadout", 2, 16, 16);
-			ClockParts         = sprite(p + "sprClockParts",                2,  1, 1);
+			spr_path_set("crowns/");
+			CrownRandomLoadout = spr_add("Random/sprCrownRandomLoadout", 2, 16, 16);
+			ClockParts         = spr_add("sprClockParts",                2,  1, 1);
 			
 			 // Mutation Reroll Icon:
-			p = "skills/Reroll/";
-			SkillRerollHUDSmall = sprite(p + "sprSkillRerollHUDSmall", 1, 4, 4);
+			spr_path_set("skills/Reroll/");
+			SkillRerollHUDSmall = spr_add("sprSkillRerollHUDSmall", 1, 4, 4);
 			
 		//#endregion
 		
 		//#region WEAPONS
-		p = "weps/";
-			
+		spr_path_set("weps/");
+		
 			 // Bone:
-			Bone      = sprite(p + "sprBone",      1, 6, 6, shnWep);
-			BoneShard = sprite(p + "sprBoneShard", 1, 3, 2, shnWep);
+			Bone      = spr_add("sprBone",      1, 6, 6, shnWep);
+			BoneShard = spr_add("sprBoneShard", 1, 3, 2, shnWep);
 			
 			 // Teleport Gun:
-			TeleportGun            = sprite(p + "sprTeleportGun",            1,  4,  4, shnWep);
-			GoldTeleportGun        = sprite(p + "sprGoldTeleportGun",        1,  4,  4, shnWep);
-			TeleportGunLoadout     = sprite(p + "sprTeleportGunLoadout",     1, 24, 24, shnWep);
-			GoldTeleportGunLoadout = sprite(p + "sprGoldTeleportGunLoadout", 1, 24, 24, shnWep);
+			TeleportGun            = spr_add("sprTeleportGun",            1,  4,  4, shnWep);
+			GoldTeleportGun        = spr_add("sprGoldTeleportGun",        1,  4,  4, shnWep);
+			TeleportGunLoadout     = spr_add("sprTeleportGunLoadout",     1, 24, 24, shnWep);
+			GoldTeleportGunLoadout = spr_add("sprGoldTeleportGunLoadout", 1, 24, 24, shnWep);
 			
 			 // Trident:
-			Trident            = sprite(p + "sprTrident",            1, 11,  6, shnWep);
-			GoldTrident        = sprite(p + "sprGoldTrident",        1, 11,  6, shnWep);
-			TridentLoadout     = sprite(p + "sprTridentLoadout",     1, 24, 24, shnWep);
-			GoldTridentLoadout = sprite(p + "sprGoldTridentLoadout", 1, 24, 24, shnWep);
-			msk.Trident        = sprite(p + "mskTrident",            1, 11,  6);
+			Trident            = spr_add("sprTrident",            1, 11,  6, shnWep);
+			GoldTrident        = spr_add("sprGoldTrident",        1, 11,  6, shnWep);
+			TridentLoadout     = spr_add("sprTridentLoadout",     1, 24, 24, shnWep);
+			GoldTridentLoadout = spr_add("sprGoldTridentLoadout", 1, 24, 24, shnWep);
+			msk.Trident        = spr_add("mskTrident",            1, 11,  6);
 			
 			 // Tunneller:
-			Tunneller            = sprite(p + "sprTunneller",            1, 14,  6, shnWep);
-			GoldTunneller        = sprite(p + "sprGoldTunneller",        1, 14,  6, shnWep);
-			TunnellerLoadout     = sprite(p + "sprTunnellerLoadout",     1, 24, 24, shnWep);
-			GoldTunnellerLoadout = sprite(p + "sprGoldTunnellerLoadout", 1, 24, 24, shnWep);
-			TunnellerHUD         = sprite(p + "sprTunnellerHUD",         1,  0,  3, shnWep);
-			TunnellerHUDRed      = sprite(p + "sprTunnellerHUD",         1,  0,  3);
+			Tunneller            = spr_add("sprTunneller",            1, 14,  6, shnWep);
+			GoldTunneller        = spr_add("sprGoldTunneller",        1, 14,  6, shnWep);
+			TunnellerLoadout     = spr_add("sprTunnellerLoadout",     1, 24, 24, shnWep);
+			GoldTunnellerLoadout = spr_add("sprGoldTunnellerLoadout", 1, 24, 24, shnWep);
+			TunnellerHUD         = spr_add("sprTunnellerHUD",         1,  0,  3, shnWep);
+			TunnellerHUDRed      = spr_add("sprTunnellerHUD",         1,  0,  3);
 			
 			 // Ultra Quasar Blaster:
-			UltraQuasarBlaster    = sprite(p + "sprUltraQuasarBlaster",    1,  20, 12, shnWep);
-			UltraQuasarBlasterEat = sprite(p + "sprUltraQuasarBlasterEat", 12, 24, 24);
+			UltraQuasarBlaster    = spr_add("sprUltraQuasarBlaster",    1,  20, 12, shnWep);
+			UltraQuasarBlasterEat = spr_add("sprUltraQuasarBlasterEat", 12, 24, 24);
 			
 		//#endregion
 		
 		//#region PROJECTILES
-		p = "projectiles/";
-			
+		spr_path_set("projectiles/");
+		
 			 // Albino Gator:
-			AlbinoBolt      = sprite(p + "sprAlbinoBolt",     1,  8, 4);
-			AlbinoGrenade   = sprite(p + "sprAlbinoGrenade",  1,  4, 4);
-			AlbinoSplinter  = sprite(p + "sprAlbinoSplinter", 1, -6, 3);
+			AlbinoBolt      = spr_add("sprAlbinoBolt",     1,  8, 4);
+			AlbinoGrenade   = spr_add("sprAlbinoGrenade",  1,  4, 4);
+			AlbinoSplinter  = spr_add("sprAlbinoSplinter", 1, -6, 3);
 			
 			 // Bat Discs:
-			BatDisc      = sprite(p + "sprBatDisc",      2,  9,  9);
-			BatDiscBig   = sprite(p + "sprBatDiscBig",   2, 14, 14);
-			BigDiscTrail = sprite(p + "sprBigDiscTrail", 3, 12, 12);
+			BatDisc      = spr_add("sprBatDisc",      2,  9,  9);
+			BatDiscBig   = spr_add("sprBatDiscBig",   2, 14, 14);
+			BigDiscTrail = spr_add("sprBigDiscTrail", 3, 12, 12);
 			
 			 // Bat Lightning:
-			BatLightning    = sprite(p + "sprBatLightning",    4,  0,  1);
-			BatLightningHit = sprite(p + "sprBatLightningHit", 4, 12, 12);
+			BatLightning    = spr_add("sprBatLightning",    4,  0,  1);
+			BatLightningHit = spr_add("sprBatLightningHit", 4, 12, 12);
 			
 			 // Bone:
-			BoneSlashLight     = sprite(p + "sprBoneSlashLight", 3, 16, 16);
-			msk.BoneSlashLight = sprite(p + "mskBoneSlashLight", 3, 16, 16);
-			BoneSlashHeavy     = sprite(p + "sprBoneSlashHeavy", 4, 24, 24);
-			msk.BoneSlashHeavy = sprite(p + "mskBoneSlashHeavy", 4, 24, 24);
-			BoneArrow          = sprite(p + "sprBoneArrow",      1, 10,  2);
-			BoneArrowHeavy     = sprite(p + "sprBoneArrowHeavy", 1, 12,  3);
+			BoneSlashLight     = spr_add("sprBoneSlashLight", 3, 16, 16);
+			msk.BoneSlashLight = spr_add("mskBoneSlashLight", 3, 16, 16);
+			BoneSlashHeavy     = spr_add("sprBoneSlashHeavy", 4, 24, 24);
+			msk.BoneSlashHeavy = spr_add("mskBoneSlashHeavy", 4, 24, 24);
+			BoneArrow          = spr_add("sprBoneArrow",      1, 10,  2);
+			BoneArrowHeavy     = spr_add("sprBoneArrowHeavy", 1, 12,  3);
 			with([msk.BoneSlashLight, msk.BoneSlashHeavy]){
 				mask = [true, 0];
 			}
 			
 			 // Bubble Bombs:
-			BubbleBomb           = sprite(p + "sprBubbleBomb",           30, 12, 12);
-			BubbleBombEnemy      = sprite(p + "sprBubbleBombEnemy",      30, 12, 12);
-			BubbleExplosion      = sprite(p + "sprBubbleExplosion",       9, 24, 24);
-			BubbleExplosionSmall = sprite(p + "sprBubbleExplosionSmall",  7, 12, 12);
-			BubbleCharge         = sprite(p + "sprBubbleCharge",         12, 12, 12);
-			BubbleBombBig        = sprite(p + "sprBubbleBombBig",        46, 16, 16);
-			BubbleSlash          = sprite(p + "sprBubbleSlash",           3,  0, 24);
+			BubbleBomb           = spr_add("sprBubbleBomb",           30, 12, 12);
+			BubbleBombEnemy      = spr_add("sprBubbleBombEnemy",      30, 12, 12);
+			BubbleExplosion      = spr_add("sprBubbleExplosion",       9, 24, 24);
+			BubbleExplosionSmall = spr_add("sprBubbleExplosionSmall",  7, 12, 12);
+			BubbleCharge         = spr_add("sprBubbleCharge",         12, 12, 12);
+			BubbleBombBig        = spr_add("sprBubbleBombBig",        46, 16, 16);
+			BubbleSlash          = spr_add("sprBubbleSlash",           3,  0, 24);
 			
 			 // Clam Shield:
-			ClamShield          = sprite(p + "sprClamShield",      14,  0,  7);
-			ClamShieldWep       = sprite(p + "sprClamShieldWep",    1,  8,  8, shn16);
-			ClamShieldSlash     = sprite(p + "sprClamShieldSlash",  4, 12, 12);
-			msk.ClamShieldSlash = sprite(p + "mskClamShieldSlash",  4, 12, 12);
+			ClamShield          = spr_add("sprClamShield",      14,  0,  7);
+			ClamShieldWep       = spr_add("sprClamShieldWep",    1,  8,  8, shn16);
+			ClamShieldSlash     = spr_add("sprClamShieldSlash",  4, 12, 12);
+			msk.ClamShieldSlash = spr_add("mskClamShieldSlash",  4, 12, 12);
 			
 			 // Crystal Heart:
-			CrystalHeartBullet         = sprite(p + "sprCrystalHeartBullet",         2, 10, 10);
-			CrystalHeartBulletHit      = sprite(p + "sprCrystalHeartBulletHit",      8, 16, 16);
-			CrystalHeartBulletRing     = sprite(p + "sprCrystalHeartBulletRing",     2, 10, 10);
-			CrystalHeartBulletTrail    = sprite(p + "sprCrystalHeartBulletTrail",    4, 10, 10);
-			CrystalHeartBulletBig      = sprite(p + "sprCrystalHeartBulletBig",      2, 24, 24);
-			CrystalHeartBulletBigRed   = sprite(p + "sprCrystalHeartBulletBigRed",   2, 24, 24);
-			CrystalHeartBulletBigRing  = sprite(p + "sprCrystalHeartBulletBigRing",  2, 24, 24);
-			CrystalHeartBulletBigTrail = sprite(p + "sprCrystalHeartBulletBigTrail", 4, 24, 24);
+			CrystalHeartBullet         = spr_add("sprCrystalHeartBullet",         2, 10, 10);
+			CrystalHeartBulletHit      = spr_add("sprCrystalHeartBulletHit",      8, 16, 16);
+			CrystalHeartBulletRing     = spr_add("sprCrystalHeartBulletRing",     2, 10, 10);
+			CrystalHeartBulletTrail    = spr_add("sprCrystalHeartBulletTrail",    4, 10, 10);
+			CrystalHeartBulletBig      = spr_add("sprCrystalHeartBulletBig",      2, 24, 24);
+			CrystalHeartBulletBigRed   = spr_add("sprCrystalHeartBulletBigRed",   2, 24, 24);
+			CrystalHeartBulletBigRing  = spr_add("sprCrystalHeartBulletBigRing",  2, 24, 24);
+			CrystalHeartBulletBigTrail = spr_add("sprCrystalHeartBulletBigTrail", 4, 24, 24);
 			
 			 // Electroplasma:
-			ElectroPlasma       = sprite(p + "sprElectroPlasma",       7, 12, 12);
-			ElectroPlasmaBig    = sprite(p + "sprElectroPlasmaBig",    7, 12, 12);
-			ElectroPlasmaTrail  = sprite(p + "sprElectroPlasmaTrail",  3,  4,  4);
-			ElectroPlasmaImpact = sprite(p + "sprElectroPlasmaImpact", 7, 12, 12);
-			ElectroPlasmaTether = sprite(p + "sprElectroPlasmaTether", 4,  0,  1);
+			ElectroPlasma       = spr_add("sprElectroPlasma",       7, 12, 12);
+			ElectroPlasmaBig    = spr_add("sprElectroPlasmaBig",    7, 12, 12);
+			ElectroPlasmaTrail  = spr_add("sprElectroPlasmaTrail",  3,  4,  4);
+			ElectroPlasmaImpact = spr_add("sprElectroPlasmaImpact", 7, 12, 12);
+			ElectroPlasmaTether = spr_add("sprElectroPlasmaTether", 4,  0,  1);
 			
 			 // Harpoon:
-			Harpoon      = sprite(p + "sprHarpoon",      1, 4, 3, shnWep);
-			HarpoonOpen  = sprite(p + "sprHarpoonOpen",  5, 4, 3);
-			HarpoonFade  = sprite(p + "sprHarpoonFade",  5, 7, 3);
-			NetNade      = sprite(p + "sprNetNade",      1, 3, 3);
-			NetNadeBlink = sprite(p + "sprNetNadeBlink", 2, 3, 3);
+			Harpoon      = spr_add("sprHarpoon",      1, 4, 3, shnWep);
+			HarpoonOpen  = spr_add("sprHarpoonOpen",  5, 4, 3);
+			HarpoonFade  = spr_add("sprHarpoonFade",  5, 7, 3);
+			NetNade      = spr_add("sprNetNade",      1, 3, 3);
+			NetNadeBlink = spr_add("sprNetNadeBlink", 2, 3, 3);
 			
 			 // Mortar Plasma:
-			MortarPlasma = sprite(p + "sprMortarPlasma", 8, 8, 8);
+			MortarPlasma = spr_add("sprMortarPlasma", 8, 8, 8);
 			
 			 // Small Plasma Impact:
-			EnemyPlasmaImpactSmall = sprite(p + "sprEnemyPlasmaImpactSmall", 7,  8,  8);
-			PlasmaImpactSmall      = sprite(p + "sprPlasmaImpactSmall",      7,  8,  8);
-			PopoPlasmaImpactSmall  = sprite(p + "sprPopoPlasmaImpactSmall",	 7,  8,  8);
-			msk.PlasmaImpactSmall  = sprite(p + "mskPlasmaImpactSmall",      7, 16, 16);
+			EnemyPlasmaImpactSmall = spr_add("sprEnemyPlasmaImpactSmall", 7,  8,  8);
+			PlasmaImpactSmall      = spr_add("sprPlasmaImpactSmall",      7,  8,  8);
+			PopoPlasmaImpactSmall  = spr_add("sprPopoPlasmaImpactSmall",	 7,  8,  8);
+			msk.PlasmaImpactSmall  = spr_add("mskPlasmaImpactSmall",      7, 16, 16);
 			with(msk.PlasmaImpactSmall){
 				mask = [true, 0];
 			}
 			
 			 // Portal Bullet:
-			PortalBullet          = sprite(p + "sprPortalBullet",          4, 12, 12);
-			PortalBulletHit       = sprite(p + "sprPortalBulletHit",       4, 16, 16);
-			PortalBulletSpawn     = sprite(p + "sprPortalBulletSpawn",     7, 26, 26);
-			PortalBulletLightning = sprite(p + "sprPortalBulletLightning", 4, 0,  1);
+			PortalBullet          = spr_add("sprPortalBullet",          4, 12, 12);
+			PortalBulletHit       = spr_add("sprPortalBulletHit",       4, 16, 16);
+			PortalBulletSpawn     = spr_add("sprPortalBulletSpawn",     7, 26, 26);
+			PortalBulletLightning = spr_add("sprPortalBulletLightning", 4, 0,  1);
 			
 			 // Quasar Beam:
-			QuasarBeam           = sprite(p + "sprQuasarBeam",           2,  0, 16);
-			QuasarBeamStart      = sprite(p + "sprQuasarBeamStart",      2, 32, 16);
-			QuasarBeamEnd        = sprite(p + "sprQuasarBeamEnd",        2,  0, 16);
-			QuasarBeamHit        = sprite(p + "sprQuasarBeamHit",        6, 24, 24);
-			QuasarBeamTrail      = sprite(p + "sprQuasarBeamTrail",      3,  4,  4);
-			UltraQuasarBeam      = sprite(p + "sprUltraQuasarBeam",      2,  0, 32);
-			UltraQuasarBeamStart = sprite(p + "sprUltraQuasarBeamStart", 2, 64, 32);
-			UltraQuasarBeamEnd   = sprite(p + "sprUltraQuasarBeamEnd",   2,  0, 32);
-			UltraQuasarBeamHit   = sprite(p + "sprUltraQuasarBeamHit",   6, 24, 24);
-			UltraQuasarBeamTrail = sprite(p + "sprUltraQuasarBeamTrail", 3,  8,  8);
-			UltraQuasarBeamFlame = sprite(p + "sprUltraQuasarBeamFlame", 3, 64, 32);
-			msk.QuasarBeam       = sprite(p + "mskQuasarBeam",           1, 32, 16);
-			msk.UltraQuasarBeam  = sprite(p + "mskUltraQuasarBeam",      1, 64, 32);
+			QuasarBeam           = spr_add("sprQuasarBeam",           2,  0, 16);
+			QuasarBeamStart      = spr_add("sprQuasarBeamStart",      2, 32, 16);
+			QuasarBeamEnd        = spr_add("sprQuasarBeamEnd",        2,  0, 16);
+			QuasarBeamHit        = spr_add("sprQuasarBeamHit",        6, 24, 24);
+			QuasarBeamTrail      = spr_add("sprQuasarBeamTrail",      3,  4,  4);
+			UltraQuasarBeam      = spr_add("sprUltraQuasarBeam",      2,  0, 32);
+			UltraQuasarBeamStart = spr_add("sprUltraQuasarBeamStart", 2, 64, 32);
+			UltraQuasarBeamEnd   = spr_add("sprUltraQuasarBeamEnd",   2,  0, 32);
+			UltraQuasarBeamHit   = spr_add("sprUltraQuasarBeamHit",   6, 24, 24);
+			UltraQuasarBeamTrail = spr_add("sprUltraQuasarBeamTrail", 3,  8,  8);
+			UltraQuasarBeamFlame = spr_add("sprUltraQuasarBeamFlame", 3, 64, 32);
+			msk.QuasarBeam       = spr_add("mskQuasarBeam",           1, 32, 16);
+			msk.UltraQuasarBeam  = spr_add("mskUltraQuasarBeam",      1, 64, 32);
 			
 			 // Red:
-			RedBullet          = sprite(p + "sprRedBullet",          2,  9,  9);
-			RedBulletDisappear = sprite(p + "sprRedBulletDisappear", 5,  9,  9);
-			RedExplosion       = sprite(p + "sprRedExplosion",       7, 16, 16);
-			RedSlash           = sprite(p + "sprRedSlash",           3,  0, 24);
-			RedHeavySlash      = sprite(p + "sprRedHeavySlash",      3,  0, 24);
-			RedMegaSlash       = sprite(p + "sprRedMegaSlash",       3,  0, 36);
-			RedShank           = sprite(p + "sprRedShank",           2, -5,  8);
-			RedShankGold       = sprite(p + "sprRedShankGold",       2, -5,  8);
-			//EntanglerSlash     = sprite(p + "sprEntanglerSlash", 3, 0, 24);
+			RedBullet          = spr_add("sprRedBullet",          2,  9,  9);
+			RedBulletDisappear = spr_add("sprRedBulletDisappear", 5,  9,  9);
+			RedExplosion       = spr_add("sprRedExplosion",       7, 16, 16);
+			RedSlash           = spr_add("sprRedSlash",           3,  0, 24);
+			RedHeavySlash      = spr_add("sprRedHeavySlash",      3,  0, 24);
+			RedMegaSlash       = spr_add("sprRedMegaSlash",       3,  0, 36);
+			RedShank           = spr_add("sprRedShank",           2, -5,  8);
+			RedShankGold       = spr_add("sprRedShankGold",       2, -5,  8);
+			//EntanglerSlash     = spr_add("sprEntanglerSlash", 3, 0, 24);
 			
 			 // Small Green Explo:
-			SmallGreenExplosion = sprite(p + "sprSmallGreenExplosion", 7, 12, 12);
+			SmallGreenExplosion = spr_add("sprSmallGreenExplosion", 7, 12, 12);
 			
 			 // Energy Bat Slash:
-			EnergyBatSlash     = sprite(p + "sprEnergyBatSlash", 3,  0,  24);
-			//msk.EnergyBatSlash = sprite(p + "mskEnergyBatSlash", 4, 16, 24);
+			EnergyBatSlash     = spr_add("sprEnergyBatSlash", 3,  0,  24);
+			//msk.EnergyBatSlash = spr_add("mskEnergyBatSlash", 4, 16, 24);
 			
 			 // Vector Plasma:
-			EnemyVlasmaBullet = sprite(p + "sprEnemyVlasmaBullet", 5,  8,  8);
-			VlasmaBullet      = sprite(p + "sprVlasmaBullet",      5,  8,  8);
-			PopoVlasmaBullet  = sprite(p + "sprPopoVlasmaBullet",  5,  8,  8);
-			EnemyVlasmaCannon = sprite(p + "sprEnemyVlasmaCannon", 5, 10, 10);
-			VlasmaCannon      = sprite(p + "sprVlasmaCannon",      5, 10, 10);
-			PopoVlasmaCannon  = sprite(p + "sprPopoVlasmaCannon",  5, 10, 10);
+			EnemyVlasmaBullet = spr_add("sprEnemyVlasmaBullet", 5,  8,  8);
+			VlasmaBullet      = spr_add("sprVlasmaBullet",      5,  8,  8);
+			PopoVlasmaBullet  = spr_add("sprPopoVlasmaBullet",  5,  8,  8);
+			EnemyVlasmaCannon = spr_add("sprEnemyVlasmaCannon", 5, 10, 10);
+			VlasmaCannon      = spr_add("sprVlasmaCannon",      5, 10, 10);
+			PopoVlasmaCannon  = spr_add("sprPopoVlasmaCannon",  5, 10, 10);
 			
 			 // Venom Pellets:
-			VenomPelletAppear        = sprite(p + "sprVenomPelletAppear",        1, 8, 8);
-			VenomPellet              = sprite(p + "sprVenomPellet",              2, 8, 8);
-			VenomPelletDisappear     = sprite(p + "sprVenomPelletDisappear",     5, 8, 8);
-			VenomPelletBack          = sprite(p + "sprVenomPelletBack",          2, 8, 8);
-			VenomPelletBackDisappear = sprite(p + "sprVenomPelletBackDisappear", 5, 8, 8);
+			VenomPelletAppear        = spr_add("sprVenomPelletAppear",        1, 8, 8);
+			VenomPellet              = spr_add("sprVenomPellet",              2, 8, 8);
+			VenomPelletDisappear     = spr_add("sprVenomPelletDisappear",     5, 8, 8);
+			VenomPelletBack          = spr_add("sprVenomPelletBack",          2, 8, 8);
+			VenomPelletBackDisappear = spr_add("sprVenomPelletBackDisappear", 5, 8, 8);
 			
 			 // Variants:
-			EnemyBullet             = sprite(p + "sprEnemyBullet",             2,  7,  9);
-			EnemyHeavyBullet        = sprite(p + "sprEnemyHeavyBullet",        2, 12, 12);
-			EnemyHeavyBulletHit     = sprite(p + "sprEnemyHeavyBulletHit",     4, 12, 12);
-			EnemySlug               = sprite(p + "sprEnemySlug",               2, 12, 12);
-			EnemySlugHit            = sprite(p + "sprEnemySlugHit",            4, 16, 16);
-			EnemySlugDisappear      = sprite(p + "sprEnemySlugDisappear",      6, 12, 12);
-			EnemyHeavySlug          = sprite(p + "sprEnemyHeavySlug",          2, 16, 16);
-			EnemyHeavySlugHit       = sprite(p + "sprEnemyHeavySlugHit",       4, 24, 24);
-			EnemyHeavySlugDisappear = sprite(p + "sprEnemyHeavySlugDisappear", 6, 16, 16);
-			EnemySuperFlak          = sprite(p + "sprEnemySuperFlak",          2, 12, 12);
-			EnemySuperFlakHit       = sprite(p + "sprEnemySuperFlakHit",       9, 24, 24);
-			EnemyPlasmaBall         = sprite(p + "sprEnemyPlasmaBall",         2, 12, 12);
-			EnemyPlasmaBig          = sprite(p + "sprEnemyPlasmaBig",          2, 16, 16);
-			EnemyPlasmaHuge         = sprite(p + "sprEnemyPlasmaHuge",         2, 24, 24);
-			EnemyPlasmaImpact       = sprite(p + "sprEnemyPlasmaImpact",       7, 16, 16);
-			EnemyPlasmaTrail        = sprite(p + "sprEnemyPlasmaTrail",        3,  4,  4);
-			AllySniperBullet        = sprite(p + "sprAllySniperBullet",        2,  6,  8);
-			AllyLaserCharge         = sprite(p + "sprAllyLaserCharge",         4,  3,  3);
-			IDPDHeavyBullet         = sprite(p + "sprIDPDHeavyBullet",         2, 12, 12);
-			IDPDHeavyBulletHit      = sprite(p + "sprIDPDHeavyBulletHit",      4, 12, 12);
+			EnemyBullet             = spr_add("sprEnemyBullet",             2,  7,  9);
+			EnemyHeavyBullet        = spr_add("sprEnemyHeavyBullet",        2, 12, 12);
+			EnemyHeavyBulletHit     = spr_add("sprEnemyHeavyBulletHit",     4, 12, 12);
+			EnemySlug               = spr_add("sprEnemySlug",               2, 12, 12);
+			EnemySlugHit            = spr_add("sprEnemySlugHit",            4, 16, 16);
+			EnemySlugDisappear      = spr_add("sprEnemySlugDisappear",      6, 12, 12);
+			EnemyHeavySlug          = spr_add("sprEnemyHeavySlug",          2, 16, 16);
+			EnemyHeavySlugHit       = spr_add("sprEnemyHeavySlugHit",       4, 24, 24);
+			EnemyHeavySlugDisappear = spr_add("sprEnemyHeavySlugDisappear", 6, 16, 16);
+			EnemySuperFlak          = spr_add("sprEnemySuperFlak",          2, 12, 12);
+			EnemySuperFlakHit       = spr_add("sprEnemySuperFlakHit",       9, 24, 24);
+			EnemyPlasmaBall         = spr_add("sprEnemyPlasmaBall",         2, 12, 12);
+			EnemyPlasmaBig          = spr_add("sprEnemyPlasmaBig",          2, 16, 16);
+			EnemyPlasmaHuge         = spr_add("sprEnemyPlasmaHuge",         2, 24, 24);
+			EnemyPlasmaImpact       = spr_add("sprEnemyPlasmaImpact",       7, 16, 16);
+			EnemyPlasmaTrail        = spr_add("sprEnemyPlasmaTrail",        3,  4,  4);
+			AllySniperBullet        = spr_add("sprAllySniperBullet",        2,  6,  8);
+			AllyLaserCharge         = spr_add("sprAllyLaserCharge",         4,  3,  3);
+			IDPDHeavyBullet         = spr_add("sprIDPDHeavyBullet",         2, 12, 12);
+			IDPDHeavyBulletHit      = spr_add("sprIDPDHeavyBulletHit",      4, 12, 12);
 			
 		//#endregion
 		
 		//#region ALERTS
-		p = "alerts/";
-			
+		spr_path_set("alerts/");
+		
 			 // Alert Indicators:
-			AlertIndicator        = sprite(p + "sprAlertIndicator",        1, 1, 6);
-			AlertIndicatorMystery = sprite(p + "sprAlertIndicatorMystery", 1, 2, 6);
-			AlertIndicatorPopo    = sprite(p + "sprAlertIndicatorPopo",    1, 4, 4);
-			AlertIndicatorOrchid  = sprite(p + "sprAlertIndicatorOrchid",  1, 4, 4);
+			AlertIndicator        = spr_add("sprAlertIndicator",        1, 1, 6);
+			AlertIndicatorMystery = spr_add("sprAlertIndicatorMystery", 1, 2, 6);
+			AlertIndicatorPopo    = spr_add("sprAlertIndicatorPopo",    1, 4, 4);
+			AlertIndicatorOrchid  = spr_add("sprAlertIndicatorOrchid",  1, 4, 4);
 			
 			 // Alert Icons:
-			AllyAlert            = sprite(p + "sprAllyAlert",            1, 7,  7);
-			BanditAlert          = sprite(p + "sprBanditAlert",          1, 7,  7);
-			CrimeBountyAlert     = sprite(p + "sprCrimeBountyAlert",     2, 8, 10);
-			CrimeBountyFillAlert = sprite(p + "sprCrimeBountyFillAlert", 4, 5,  0);
-			FlyAlert             = sprite(p + "sprFlyAlert",             1, 7,  7);
-			GatorAlert           = sprite(p + "sprGatorAlert",           1, 7,  7);
-			GatorAlbinoAlert     = sprite(p + "sprGatorAlbinoAlert",     1, 7,  7);
-			GatorPatchAlert      = sprite(p + "sprGatorPatchAlert",      1, 7,  7);
-			PopoAlert            = sprite(p + "sprPopoAlert",            3, 8,  8);
-			PopoEliteAlert       = sprite(p + "sprPopoEliteAlert",       3, 8,  8);
-			PopoFreakAlert       = sprite(p + "sprPopoFreakAlert",       1, 8,  8);
-			SealAlert            = sprite(p + "sprSealAlert",            1, 7,  7);
-			SealArcticAlert      = sprite(p + "sprSealArcticAlert",      1, 7,  7);
-			SkealAlert           = sprite(p + "sprSkealAlert",           1, 7,  7);
-			SludgePoolAlert      = sprite(p + "sprSludgePoolAlert",      1, 7,  7);
-			VanAlert             = sprite(p + "sprVanAlert",             1, 7,  7);
+			AllyAlert            = spr_add("sprAllyAlert",            1, 7,  7);
+			BanditAlert          = spr_add("sprBanditAlert",          1, 7,  7);
+			CrimeBountyAlert     = spr_add("sprCrimeBountyAlert",     2, 8, 10);
+			CrimeBountyFillAlert = spr_add("sprCrimeBountyFillAlert", 4, 5,  0);
+			FlyAlert             = spr_add("sprFlyAlert",             1, 7,  7);
+			GatorAlert           = spr_add("sprGatorAlert",           1, 7,  7);
+			GatorAlbinoAlert     = spr_add("sprGatorAlbinoAlert",     1, 7,  7);
+			GatorPatchAlert      = spr_add("sprGatorPatchAlert",      1, 7,  7);
+			PopoAlert            = spr_add("sprPopoAlert",            3, 8,  8);
+			PopoEliteAlert       = spr_add("sprPopoEliteAlert",       3, 8,  8);
+			PopoFreakAlert       = spr_add("sprPopoFreakAlert",       1, 8,  8);
+			SealAlert            = spr_add("sprSealAlert",            1, 7,  7);
+			SealArcticAlert      = spr_add("sprSealArcticAlert",      1, 7,  7);
+			SkealAlert           = spr_add("sprSkealAlert",           1, 7,  7);
+			SludgePoolAlert      = spr_add("sprSludgePoolAlert",      1, 7,  7);
+			VanAlert             = spr_add("sprVanAlert",             1, 7,  7);
 			
 		//#endregion
 		
 		//#region ENEMIES
-		m = "enemies/";
-			
+		spr_path_set("enemies/");
+		
 			 // Albino Gator:
-			p = m + "AlbinoGator/";
-			AlbinoGatorIdle = sprite(p + "sprAlbinoGatorIdle", 8, 16, 16);
-			AlbinoGatorWalk = sprite(p + "sprAlbinoGatorWalk", 6, 16, 16);
-			AlbinoGatorHurt = sprite(p + "sprAlbinoGatorHurt", 3, 16, 16);
-			AlbinoGatorDead = sprite(p + "sprAlbinoGatorDead", 6, 16, 16);
-			AlbinoGatorWeap = sprite(p + "sprAlbinoGatorWeap", 1,  7,  5, shnWep);
+			spr_path_add("AlbinoGator/");
+			AlbinoGatorIdle = spr_add("sprAlbinoGatorIdle", 8, 16, 16);
+			AlbinoGatorWalk = spr_add("sprAlbinoGatorWalk", 6, 16, 16);
+			AlbinoGatorHurt = spr_add("sprAlbinoGatorHurt", 3, 16, 16);
+			AlbinoGatorDead = spr_add("sprAlbinoGatorDead", 6, 16, 16);
+			AlbinoGatorWeap = spr_add("sprAlbinoGatorWeap", 1,  7,  5, shnWep);
+			spr_path_add("../");
 			
 			 // Angler:
-			p = m + "Angler/";
-			AnglerIdle       = sprite(p + "sprAnglerIdle",    8, 32, 32);
-			AnglerWalk       = sprite(p + "sprAnglerWalk",    8, 32, 32);
-			AnglerHurt       = sprite(p + "sprAnglerHurt",    3, 32, 32);
-			AnglerDead       = sprite(p + "sprAnglerDead",    7, 32, 32);
-			AnglerAppear     = sprite(p + "sprAnglerAppear",  4, 32, 32);
-			AnglerTrail      = sprite(p + "sprAnglerTrail",   8, 32, 32);
-			AnglerLight      = sprite(p + "sprAnglerLight",   4, 80, 80);
-			msk.AnglerHidden =[sprite(p + "mskAnglerHidden1", 1, 32, 32),
-			                   sprite(p + "mskAnglerHidden2", 1, 32, 32)];
+			spr_path_add("Angler/");
+			AnglerIdle       = spr_add("sprAnglerIdle",    8, 32, 32);
+			AnglerWalk       = spr_add("sprAnglerWalk",    8, 32, 32);
+			AnglerHurt       = spr_add("sprAnglerHurt",    3, 32, 32);
+			AnglerDead       = spr_add("sprAnglerDead",    7, 32, 32);
+			AnglerAppear     = spr_add("sprAnglerAppear",  4, 32, 32);
+			AnglerTrail      = spr_add("sprAnglerTrail",   8, 32, 32);
+			AnglerLight      = spr_add("sprAnglerLight",   4, 80, 80);
+			msk.AnglerHidden =[spr_add("mskAnglerHidden1", 1, 32, 32),
+			                   spr_add("mskAnglerHidden2", 1, 32, 32)];
+			spr_path_add("../");
 			
 			 // Angler (Gold):
-			p = m + "GoldAngler/";
-			AnglerGoldIdle    = sprite(p + "sprGoldAnglerIdle",    8, 32, 32);
-			AnglerGoldWalk    = sprite(p + "sprGoldAnglerWalk",    8, 32, 32);
-			AnglerGoldHurt    = sprite(p + "sprGoldAnglerHurt",    3, 32, 32);
-			AnglerGoldDead    = sprite(p + "sprGoldAnglerDead",    7, 32, 32);
-			AnglerGoldAppear  = sprite(p + "sprGoldAnglerAppear",  4, 32, 32);
-			AnglerGoldScreech = sprite(p + "sprGoldAnglerScreech", 8, 48, 48);
+			spr_path_add("GoldAngler/");
+			AnglerGoldIdle    = spr_add("sprGoldAnglerIdle",    8, 32, 32);
+			AnglerGoldWalk    = spr_add("sprGoldAnglerWalk",    8, 32, 32);
+			AnglerGoldHurt    = spr_add("sprGoldAnglerHurt",    3, 32, 32);
+			AnglerGoldDead    = spr_add("sprGoldAnglerDead",    7, 32, 32);
+			AnglerGoldAppear  = spr_add("sprGoldAnglerAppear",  4, 32, 32);
+			AnglerGoldScreech = spr_add("sprGoldAnglerScreech", 8, 48, 48);
+			spr_path_add("../");
 			
 			 // Baby Gator:
-			p = m + "BabyGator/";
-			BabyGatorIdle = sprite(p + "sprBabyGatorIdle", 6, 12, 12);
-			BabyGatorWalk = sprite(p + "sprBabyGatorWalk", 6, 12, 12);
-			BabyGatorHurt = sprite(p + "sprBabyGatorHurt", 3, 12, 12);
-			BabyGatorDead = sprite(p + "sprBabyGatorDead", 7, 12, 12);
-			BabyGatorWeap = sprite(p + "sprBabyGatorWeap", 1,  0,  3, shnWep);
+			spr_path_add("BabyGator/");
+			BabyGatorIdle = spr_add("sprBabyGatorIdle", 6, 12, 12);
+			BabyGatorWalk = spr_add("sprBabyGatorWalk", 6, 12, 12);
+			BabyGatorHurt = spr_add("sprBabyGatorHurt", 3, 12, 12);
+			BabyGatorDead = spr_add("sprBabyGatorDead", 7, 12, 12);
+			BabyGatorWeap = spr_add("sprBabyGatorWeap", 1,  0,  3, shnWep);
+			spr_path_add("../");
 			
 			 // Baby Scorpion:
-			p = m + "BabyScorpion/";
-			BabyScorpionIdle = sprite("enemies/BabyScorpion/sprBabyScorpionIdle", 4, 16, 16);
-			BabyScorpionWalk = sprite("enemies/BabyScorpion/sprBabyScorpionWalk", 6, 16, 16);
-			BabyScorpionHurt = sprite("enemies/BabyScorpion/sprBabyScorpionHurt", 3, 16, 16);
-			BabyScorpionDead = sprite("enemies/BabyScorpion/sprBabyScorpionDead", 6, 16, 16);
-			BabyScorpionFire = sprite("enemies/BabyScorpion/sprBabyScorpionFire", 6, 16, 16);
+			spr_path_add("BabyScorpion/");
+			BabyScorpionIdle = spr_add("sprBabyScorpionIdle", 4, 16, 16);
+			BabyScorpionWalk = spr_add("sprBabyScorpionWalk", 6, 16, 16);
+			BabyScorpionHurt = spr_add("sprBabyScorpionHurt", 3, 16, 16);
+			BabyScorpionDead = spr_add("sprBabyScorpionDead", 6, 16, 16);
+			BabyScorpionFire = spr_add("sprBabyScorpionFire", 6, 16, 16);
+			spr_path_add("../");
 			
 			 // Baby Scorpion (Gold):
-			p = m + "BabyScorpionGold/";
-			BabyScorpionGoldIdle = sprite("enemies/BabyScorpionGold/sprBabyScorpionGoldIdle", 4, 16, 16);
-			BabyScorpionGoldWalk = sprite("enemies/BabyScorpionGold/sprBabyScorpionGoldWalk", 6, 16, 16);
-			BabyScorpionGoldHurt = sprite("enemies/BabyScorpionGold/sprBabyScorpionGoldHurt", 3, 16, 16);
-			BabyScorpionGoldDead = sprite("enemies/BabyScorpionGold/sprBabyScorpionGoldDead", 6, 16, 16);
-			BabyScorpionGoldFire = sprite("enemies/BabyScorpionGold/sprBabyScorpionGoldFire", 6, 16, 16);
+			spr_path_add("BabyScorpionGold/");
+			BabyScorpionGoldIdle = spr_add("sprBabyScorpionGoldIdle", 4, 16, 16);
+			BabyScorpionGoldWalk = spr_add("sprBabyScorpionGoldWalk", 6, 16, 16);
+			BabyScorpionGoldHurt = spr_add("sprBabyScorpionGoldHurt", 3, 16, 16);
+			BabyScorpionGoldDead = spr_add("sprBabyScorpionGoldDead", 6, 16, 16);
+			BabyScorpionGoldFire = spr_add("sprBabyScorpionGoldFire", 6, 16, 16);
+			spr_path_add("../");
 			
 			 // Bandit Campers:
-			p = m + "Camp/";
-			BanditCamperIdle = sprite(p + "sprBanditCamperIdle", 4, 12, 12);
-			BanditCamperWalk = sprite(p + "sprBanditCamperWalk", 6, 12, 12);
-			BanditCamperHurt = sprite(p + "sprBanditCamperHurt", 3, 12, 12);
-			BanditCamperDead = sprite(p + "sprBanditCamperDead", 6, 12, 12);
-			BanditHikerIdle  = sprite(p + "sprBanditHikerIdle",  4, 12, 12);
-			BanditHikerWalk  = sprite(p + "sprBanditHikerWalk",  6, 12, 12);
-			BanditHikerHurt  = sprite(p + "sprBanditHikerHurt",  3, 12, 12);
-			BanditHikerDead  = sprite(p + "sprBanditHikerDead",  6, 12, 12);
+			spr_path_add("Camp/");
+			BanditCamperIdle = spr_add("sprBanditCamperIdle", 4, 12, 12);
+			BanditCamperWalk = spr_add("sprBanditCamperWalk", 6, 12, 12);
+			BanditCamperHurt = spr_add("sprBanditCamperHurt", 3, 12, 12);
+			BanditCamperDead = spr_add("sprBanditCamperDead", 6, 12, 12);
+			BanditHikerIdle  = spr_add("sprBanditHikerIdle",  4, 12, 12);
+			BanditHikerWalk  = spr_add("sprBanditHikerWalk",  6, 12, 12);
+			BanditHikerHurt  = spr_add("sprBanditHikerHurt",  3, 12, 12);
+			BanditHikerDead  = spr_add("sprBanditHikerDead",  6, 12, 12);
+			spr_path_add("../");
 			
 			 // Bat:
-			p = m + "Bat/";
-			BatWeap        = sprite(p + "sprBatWeap",     1,  2,  6, shnWep);
-			BatIdle        = sprite(p + "sprBatIdle",    24, 16, 16);
-			BatWalk        = sprite(p + "sprBatWalk",    12, 16, 16);
-			BatHurt        = sprite(p + "sprBatHurt",     3, 16, 16);
-			BatDead        = sprite(p + "sprBatDead",     6, 16, 16);
-			BatYell        = sprite(p + "sprBatYell",     6, 16, 16);
-			BatScreech     = sprite(p + "sprBatScreech",  8, 48, 48);
-			msk.BatScreech = sprite(p + "mskBatScreech",  8, 48, 48);
+			spr_path_add("Bat/");
+			BatWeap        = spr_add("sprBatWeap",     1,  2,  6, shnWep);
+			BatIdle        = spr_add("sprBatIdle",    24, 16, 16);
+			BatWalk        = spr_add("sprBatWalk",    12, 16, 16);
+			BatHurt        = spr_add("sprBatHurt",     3, 16, 16);
+			BatDead        = spr_add("sprBatDead",     6, 16, 16);
+			BatYell        = spr_add("sprBatYell",     6, 16, 16);
+			BatScreech     = spr_add("sprBatScreech",  8, 48, 48);
+			msk.BatScreech = spr_add("mskBatScreech",  8, 48, 48);
+			spr_path_add("../");
 			
 			 // Bat Boss:
-			p = m + "BatBoss/"
-			BatBossIdle = sprite(p + "sprBigBatIdle",  12, 24, 24);
-			BatBossWalk = sprite(p + "sprBigBatWalk",   8, 24, 24);
-			BatBossHurt = sprite(p + "sprBigBatHurt",   3, 24, 24);
-			BatBossDead = sprite(p + "sprBigBatDead",   6, 24, 24);
-			BatBossYell = sprite(p + "sprBigBatYell",   6, 24, 24);
-			BatBossWeap = sprite(p + "sprBatBossWeap",  1,  4,  8, shnWep);
-			VenomFlak   = sprite(p + "sprVenomFlak",    2, 12, 12);
+			spr_path_add("BatBoss/");
+			BatBossIdle = spr_add("sprBigBatIdle",  12, 24, 24);
+			BatBossWalk = spr_add("sprBigBatWalk",   8, 24, 24);
+			BatBossHurt = spr_add("sprBigBatHurt",   3, 24, 24);
+			BatBossDead = spr_add("sprBigBatDead",   6, 24, 24);
+			BatBossYell = spr_add("sprBigBatYell",   6, 24, 24);
+			BatBossWeap = spr_add("sprBatBossWeap",  1,  4,  8, shnWep);
+			VenomFlak   = spr_add("sprVenomFlak",    2, 12, 12);
+			spr_path_add("../");
 			
 			 // Big Fish:
-			p = m + "CoastBoss/";
-			BigFishBecomeIdle = sprite(p + "sprBigFishBuild",      4, 40, 38);
-			BigFishBecomeHurt = sprite(p + "sprBigFishBuildHurt",  4, 40, 38);
-			BigFishSpwn       = sprite(p + "sprBigFishSpawn",     11, 32, 32);
-			BigFishLeap       = sprite(p + "sprBigFishLeap",      11, 32, 32);
-			BigFishSwim       = sprite(p + "sprBigFishSwim",       8, 24, 24);
-			BigFishRise       = sprite(p + "sprBigFishRise",       5, 32, 32);
-			BigFishSwimFrnt   = sprite(p + "sprBigFishSwimFront",  6,  0,  4);
-			BigFishSwimBack   = sprite(p + "sprBigFishSwimBack",  11,  0,  5);
+			spr_path_add("CoastBoss/");
+			BigFishBecomeIdle = spr_add("sprBigFishBuild",      4, 40, 38);
+			BigFishBecomeHurt = spr_add("sprBigFishBuildHurt",  4, 40, 38);
+			BigFishSpwn       = spr_add("sprBigFishSpawn",     11, 32, 32);
+			BigFishLeap       = spr_add("sprBigFishLeap",      11, 32, 32);
+			BigFishSwim       = spr_add("sprBigFishSwim",       8, 24, 24);
+			BigFishRise       = spr_add("sprBigFishRise",       5, 32, 32);
+			BigFishSwimFrnt   = spr_add("sprBigFishSwimFront",  6,  0,  4);
+			BigFishSwimBack   = spr_add("sprBigFishSwimBack",  11,  0,  5);
+			spr_path_add("../");
 			
 			 // Bone Gator:
-			p = m + "BoneGator/";
-			BoneGatorIdle = sprite(p + "sprBoneGatorIdle", 8, 12, 12);
-			BoneGatorWalk = sprite(p + "sprBoneGatorWalk", 6, 12, 12);
-			BoneGatorHurt = sprite(p + "sprBoneGatorHurt", 3, 12, 12);
-			BoneGatorDead = sprite(p + "sprBoneGatorDead", 6, 12, 12);
-			BoneGatorHeal = sprite(p + "sprBoneGatorHeal", 7,  8,  8);
-			BoneGatorWeap = sprite(p + "sprBoneGatorWeap", 1,  2,  3);
-			FlameSpark    = sprite(p + "sprFlameSpark",    7,  1,  1);
+			spr_path_add("BoneGator/");
+			BoneGatorIdle = spr_add("sprBoneGatorIdle", 8, 12, 12);
+			BoneGatorWalk = spr_add("sprBoneGatorWalk", 6, 12, 12);
+			BoneGatorHurt = spr_add("sprBoneGatorHurt", 3, 12, 12);
+			BoneGatorDead = spr_add("sprBoneGatorDead", 6, 12, 12);
+			BoneGatorHeal = spr_add("sprBoneGatorHeal", 7,  8,  8);
+			BoneGatorWeap = spr_add("sprBoneGatorWeap", 1,  2,  3);
+			FlameSpark    = spr_add("sprFlameSpark",    7,  1,  1);
+			spr_path_add("../");
 			
 			 // Big Maggot Nest:
-			p = m + "BigMaggotNest/";
-			BigMaggotSpawnIdle = sprite(p + "sprBigMaggotNestIdle", 4, 32, 32);
-			BigMaggotSpawnHurt = sprite(p + "sprBigMaggotNestHurt", 3, 32, 32);
-			BigMaggotSpawnDead = sprite(p + "sprBigMaggotNestDead", 3, 32, 32);
-			BigMaggotSpawnChrg = sprite(p + "sprBigMaggotNestChrg", 4, 32, 32);
+			spr_path_add("BigMaggotNest/");
+			BigMaggotSpawnIdle = spr_add("sprBigMaggotNestIdle", 4, 32, 32);
+			BigMaggotSpawnHurt = spr_add("sprBigMaggotNestHurt", 3, 32, 32);
+			BigMaggotSpawnDead = spr_add("sprBigMaggotNestDead", 3, 32, 32);
+			BigMaggotSpawnChrg = spr_add("sprBigMaggotNestChrg", 4, 32, 32);
+			spr_path_add("../");
 			
 			 // Blooming Bush Assassin:
-			p = m + "BloomingAss/";
-			BloomingAssassinHide = sprite(p + "sprBloomingAssassinHide", 41, 16, 16);
-			BloomingAssassinIdle = sprite(p + "sprBloomingAssassinIdle",  6, 16, 16);
-			BloomingAssassinWalk = sprite(p + "sprBloomingAssassinWalk",  6, 16, 16);
-			BloomingAssassinHurt = sprite(p + "sprBloomingAssassinHurt",  3, 16, 16);
-			BloomingAssassinDead = sprite(p + "sprBloomingAssassinDead",  6, 16, 16);
+			spr_path_add("BloomingAss/");
+			BloomingAssassinHide = spr_add("sprBloomingAssassinHide", 41, 16, 16);
+			BloomingAssassinIdle = spr_add("sprBloomingAssassinIdle",  6, 16, 16);
+			BloomingAssassinWalk = spr_add("sprBloomingAssassinWalk",  6, 16, 16);
+			BloomingAssassinHurt = spr_add("sprBloomingAssassinHurt",  3, 16, 16);
+			BloomingAssassinDead = spr_add("sprBloomingAssassinDead",  6, 16, 16);
+			spr_path_add("../");
 			
 			 // Bone Raven:
-			p = m + "BoneRaven/";
-			BoneRavenIdle = sprite(p + "sprBoneRavenIdle", 33, 12, 12);
-			BoneRavenWalk = sprite(p + "sprBoneRavenWalk",  7, 12, 12);
-			BoneRavenHurt = sprite(p + "sprBoneRavenHurt",  3, 12, 12);
-			BoneRavenDead = sprite(p + "sprBoneRavenDead", 11, 12, 12);
-			BoneRavenLift = sprite(p + "sprBoneRavenLift",  5, 32, 32);
-			BoneRavenLand = sprite(p + "sprBoneRavenLand",  4, 32, 32);
-			BoneRavenFly  = sprite(p + "sprBoneRavenFly",   5, 32, 32);
+			spr_path_add("BoneRaven/");
+			BoneRavenIdle = spr_add("sprBoneRavenIdle", 33, 12, 12);
+			BoneRavenWalk = spr_add("sprBoneRavenWalk",  7, 12, 12);
+			BoneRavenHurt = spr_add("sprBoneRavenHurt",  3, 12, 12);
+			BoneRavenDead = spr_add("sprBoneRavenDead", 11, 12, 12);
+			BoneRavenLift = spr_add("sprBoneRavenLift",  5, 32, 32);
+			BoneRavenLand = spr_add("sprBoneRavenLand",  4, 32, 32);
+			BoneRavenFly  = spr_add("sprBoneRavenFly",   5, 32, 32);
+			spr_path_add("../");
 			
 			 // Cat:
-			p = m + "Cat/";
-			CatIdle      = sprite(p + "sprCatIdle",          4, 12, 12);
-			CatWalk      = sprite(p + "sprCatWalk",          6, 12, 12);
-			CatHurt      = sprite(p + "sprCatHurt",          3, 12, 12);
-			CatDead      = sprite(p + "sprCatDead",          6, 12, 12);
-			CatSit1      =[sprite(p + "sprCatGoSit",         3, 12, 12),
-			               sprite(p + "sprCatGoSitSide",     3, 12, 12)];
-			CatSit2      =[sprite(p + "sprCatSit",           6, 12, 12),
-			               sprite(p + "sprCatSitSide",       6, 12, 12)];
-			CatSnowIdle  = sprite(p + "sprCatSnowIdle",      4, 12, 12);
-			CatSnowWalk  = sprite(p + "sprCatSnowWalk",      6, 12, 12);
-			CatSnowHurt  = sprite(p + "sprCatSnowHurt",      3, 12, 12);
-			CatSnowDead  = sprite(p + "sprCatSnowDead",      6, 12, 12);
-			CatSnowSit1  =[sprite(p + "sprCatSnowGoSit",     3, 12, 12),
-			               sprite(p + "sprCatSnowGoSitSide", 3, 12, 12)];
-			CatSnowSit2  =[sprite(p + "sprCatSnowSit",       6, 12, 12),
-			               sprite(p + "sprCatSnowSitSide",   6, 12, 12)];
-			CatWeap  = sprite(p + "sprCatToxer",     1,  3,  4);
-			AcidPuff = sprite(p + "sprAcidPuff",     4, 16, 16);
+			spr_path_add("Cat/");
+			CatIdle      = spr_add("sprCatIdle",          4, 12, 12);
+			CatWalk      = spr_add("sprCatWalk",          6, 12, 12);
+			CatHurt      = spr_add("sprCatHurt",          3, 12, 12);
+			CatDead      = spr_add("sprCatDead",          6, 12, 12);
+			CatSit1      =[spr_add("sprCatGoSit",         3, 12, 12),
+			               spr_add("sprCatGoSitSide",     3, 12, 12)];
+			CatSit2      =[spr_add("sprCatSit",           6, 12, 12),
+			               spr_add("sprCatSitSide",       6, 12, 12)];
+			CatSnowIdle  = spr_add("sprCatSnowIdle",      4, 12, 12);
+			CatSnowWalk  = spr_add("sprCatSnowWalk",      6, 12, 12);
+			CatSnowHurt  = spr_add("sprCatSnowHurt",      3, 12, 12);
+			CatSnowDead  = spr_add("sprCatSnowDead",      6, 12, 12);
+			CatSnowSit1  =[spr_add("sprCatSnowGoSit",     3, 12, 12),
+			               spr_add("sprCatSnowGoSitSide", 3, 12, 12)];
+			CatSnowSit2  =[spr_add("sprCatSnowSit",       6, 12, 12),
+			               spr_add("sprCatSnowSitSide",   6, 12, 12)];
+			CatWeap      = spr_add("sprCatToxer",         1,  3,  4);
+			AcidPuff     = spr_add("sprAcidPuff",         4, 16, 16);
+			spr_path_add("../");
 			
 			 // Cat Boss:
-			p = m + "CatBoss/";
-			CatBossIdle     = sprite(p + "sprBigCatIdle",       12, 24, 24);
-			CatBossWalk     = sprite(p + "sprBigCatWalk",        6, 24, 24);
-			CatBossHurt     = sprite(p + "sprBigCatHurt",        3, 24, 24);
-			CatBossDead     = sprite(p + "sprBigCatDead",        6, 24, 24);
-			CatBossChrg     = sprite(p + "sprBigCatChrg",        2, 24, 24);
-			CatBossFire     = sprite(p + "sprBigCatFire",        2, 24, 24);
-			CatBossWeap     = sprite(p + "sprCatBossToxer",      2,  4,  7);
-			CatBossWeapChrg = sprite(p + "sprCatBossToxerChrg", 12,  1,  7);
-			BossHealFX      = sprite(p + "sprBossHealFX",       10,  9,  9);
+			spr_path_add("CatBoss/");
+			CatBossIdle     = spr_add("sprBigCatIdle",       12, 24, 24);
+			CatBossWalk     = spr_add("sprBigCatWalk",        6, 24, 24);
+			CatBossHurt     = spr_add("sprBigCatHurt",        3, 24, 24);
+			CatBossDead     = spr_add("sprBigCatDead",        6, 24, 24);
+			CatBossChrg     = spr_add("sprBigCatChrg",        2, 24, 24);
+			CatBossFire     = spr_add("sprBigCatFire",        2, 24, 24);
+			CatBossWeap     = spr_add("sprCatBossToxer",      2,  4,  7);
+			CatBossWeapChrg = spr_add("sprCatBossToxerChrg", 12,  1,  7);
+			BossHealFX      = spr_add("sprBossHealFX",       10,  9,  9);
+			spr_path_add("../");
 			
 			 // Crab Tank:
 			CrabTankIdle = sprCrabIdle;
@@ -502,262 +522,287 @@
 			CrabTankDead = sprCrabDead;
 			
 			 // Crystal Bat:
-			p = m + "CrystalBat/";
-			CrystalBatIdle = sprite(p + "sprCrystalBatIdle", 6, 16, 16);
-			CrystalBatHurt = sprite(p + "sprCrystalBatHurt", 3, 16, 16);
-			CrystalBatDead = sprite(p + "sprCrystalBatDead", 8, 16, 16);
-			CrystalBatTell = sprite(p + "sprCrystalBatTell", 2, 16, 16);
-			CrystalBatDash = sprite(p + "sprCrystalBatDash", 4, 16, 16);
+			spr_path_add("CrystalBat/");
+			CrystalBatIdle = spr_add("sprCrystalBatIdle", 6, 16, 16);
+			CrystalBatHurt = spr_add("sprCrystalBatHurt", 3, 16, 16);
+			CrystalBatDead = spr_add("sprCrystalBatDead", 8, 16, 16);
+			CrystalBatTell = spr_add("sprCrystalBatTell", 2, 16, 16);
+			CrystalBatDash = spr_add("sprCrystalBatDash", 4, 16, 16);
+			spr_path_add("../");
 			
 			 // Crystal Bat (Cursed):
-			p = m + "InvCrystalBat/";
-			InvCrystalBatIdle = sprite(p + "sprInvCrystalBatIdle", 6, 16, 16);
-			InvCrystalBatHurt = sprite(p + "sprInvCrystalBatHurt", 3, 16, 16);
-			InvCrystalBatDead = sprite(p + "sprInvCrystalBatDead", 8, 16, 16);
-			InvCrystalBatTell = sprite(p + "sprInvCrystalBatTell", 2, 16, 16);
-			InvCrystalBatDash = sprite(p + "sprInvCrystalBatDash", 4, 16, 16);
+			spr_path_add("InvCrystalBat/");
+			InvCrystalBatIdle = spr_add("sprInvCrystalBatIdle", 6, 16, 16);
+			InvCrystalBatHurt = spr_add("sprInvCrystalBatHurt", 3, 16, 16);
+			InvCrystalBatDead = spr_add("sprInvCrystalBatDead", 8, 16, 16);
+			InvCrystalBatTell = spr_add("sprInvCrystalBatTell", 2, 16, 16);
+			InvCrystalBatDash = spr_add("sprInvCrystalBatDash", 4, 16, 16);
+			spr_path_add("../");
 			
 			 // Crystal Brain:
-			p = m + "CrystalBrain/";
-			CrystalBrainIdle          = sprite(p + "sprCrystalBrainIdle",           6, 24, 24);
-			CrystalBrainHurt          = sprite(p + "sprCrystalBrainHurt",           3, 24, 24);
-			CrystalBrainDead          = sprite(p + "sprCrystalBrainDead",           7, 24, 24);
-			CrystalBrainAppear        = sprite(p + "sprCrystalBrainAppear",         4, 24, 24);
-			CrystalBrainDisappear     = sprite(p + "sprCrystalBrainDisappear",      7, 24, 24);
-			CrystalBrainChunk         = sprite(p + "sprCrystalBrainChunk",          4,  8,  8);
-			CrystalBrainPart          = sprite(p + "sprCrystalBrainPart",           7, 24, 24);
-			CrystalBrainEffect        = sprite(p + "sprCrystalBrainEffect",        10,  8,  8);
-			CrystalBrainEffectAlly    = sprite(p + "sprCrystalBrainEffectAlly",    10,  8,  8);
-			CrystalBrainEffectPopo    = sprite(p + "sprCrystalBrainEffectPopo",    10,  8,  8);
-			CrystalBrainSurfMask      = sprite(p + "sprCrystalBrainSurfMask",       1,  0,  0);
-			CrystalCloneOverlay       = sprite(p + "sprCrystalCloneOverlay",        8,  0,  0);
-			CrystalCloneOverlayAlly   = sprite(p + "sprCrystalCloneOverlayAlly",    8,  0,  0);
-			CrystalCloneOverlayPopo   = sprite(p + "sprCrystalCloneOverlayPopo",    8,  0,  0);
-			CrystalCloneOverlayCorpse = sprite(p + "sprCrystalCloneOverlayCorpse",  8,  0,  0);
+			spr_path_add("CrystalBrain/");
+			CrystalBrainIdle          = spr_add("sprCrystalBrainIdle",           6, 24, 24);
+			CrystalBrainHurt          = spr_add("sprCrystalBrainHurt",           3, 24, 24);
+			CrystalBrainDead          = spr_add("sprCrystalBrainDead",           7, 24, 24);
+			CrystalBrainAppear        = spr_add("sprCrystalBrainAppear",         4, 24, 24);
+			CrystalBrainDisappear     = spr_add("sprCrystalBrainDisappear",      7, 24, 24);
+			CrystalBrainChunk         = spr_add("sprCrystalBrainChunk",          4,  8,  8);
+			CrystalBrainPart          = spr_add("sprCrystalBrainPart",           7, 24, 24);
+			CrystalBrainEffect        = spr_add("sprCrystalBrainEffect",        10,  8,  8);
+			CrystalBrainEffectAlly    = spr_add("sprCrystalBrainEffectAlly",    10,  8,  8);
+			CrystalBrainEffectPopo    = spr_add("sprCrystalBrainEffectPopo",    10,  8,  8);
+			CrystalBrainSurfMask      = spr_add("sprCrystalBrainSurfMask",       1,  0,  0);
+			CrystalCloneOverlay       = spr_add("sprCrystalCloneOverlay",        8,  0,  0);
+			CrystalCloneOverlayAlly   = spr_add("sprCrystalCloneOverlayAlly",    8,  0,  0);
+			CrystalCloneOverlayPopo   = spr_add("sprCrystalCloneOverlayPopo",    8,  0,  0);
+			CrystalCloneOverlayCorpse = spr_add("sprCrystalCloneOverlayCorpse",  8,  0,  0);
 		//	CrystalCloneGun           = sprite_duplicate_ext(sprRevolver,   0, 1);
 		//	CrystalCloneGunTB         = sprite_duplicate_ext(sprMachinegun, 0, 1);
+			spr_path_add("../");
 			
 			 // Crystal Heart:
-			p = m + "CrystalHeart/";
-			CrystalHeartIdle = sprite(p + "sprCrystalHeartIdle", 10, 24, 24);
-			CrystalHeartHurt = sprite(p + "sprCrystalHeartHurt",  3, 24, 24);
-			CrystalHeartDead = sprite(p + "sprCrystalHeartDead", 22, 24, 24);
-			ChaosHeartIdle   = sprite(p + "sprChaosHeartIdle",   10, 24, 24);
-			ChaosHeartHurt   = sprite(p + "sprChaosHeartHurt",    3, 24, 24);
-			ChaosHeartDead   = sprite(p + "sprChaosHeartDead",   22, 24, 24);
+			spr_path_add("CrystalHeart/");
+			CrystalHeartIdle = spr_add("sprCrystalHeartIdle", 10, 24, 24);
+			CrystalHeartHurt = spr_add("sprCrystalHeartHurt",  3, 24, 24);
+			CrystalHeartDead = spr_add("sprCrystalHeartDead", 22, 24, 24);
+			ChaosHeartIdle   = spr_add("sprChaosHeartIdle",   10, 24, 24);
+			ChaosHeartHurt   = spr_add("sprChaosHeartHurt",    3, 24, 24);
+			ChaosHeartDead   = spr_add("sprChaosHeartDead",   22, 24, 24);
+			spr_path_add("../");
 			
 			 // Diver:
-			p = m + "Diver/";
-			DiverIdle  = sprite(p + "sprDiverIdle",       4, 12, 12);
-			DiverWalk  = sprite(p + "sprDiverWalk",       6, 12, 12);
-			DiverHurt  = sprite(p + "sprDiverHurt",       3, 12, 12);
-			DiverDead  = sprite(p + "sprDiverDead",       9, 24, 24);
-			HarpoonGun = sprite(p + "sprDiverHarpoonGun", 1,  8,  8);
+			spr_path_add("Diver/");
+			DiverIdle  = spr_add("sprDiverIdle",       4, 12, 12);
+			DiverWalk  = spr_add("sprDiverWalk",       6, 12, 12);
+			DiverHurt  = spr_add("sprDiverHurt",       3, 12, 12);
+			DiverDead  = spr_add("sprDiverDead",       9, 24, 24);
+			HarpoonGun = spr_add("sprDiverHarpoonGun", 1,  8,  8);
+			spr_path_add("../");
 			
 			 // Eel:
-			p = m + "Eel/";
-			EelIdle    =[sprite(p + "sprEelIdleBlue",    8, 16, 16),
-			             sprite(p + "sprEelIdlePurple",  8, 16, 16),
-			             sprite(p + "sprEelIdleGreen",   8, 16, 16)];
-			EelHurt    =[sprite(p + "sprEelHurtBlue",    3, 16, 16),
-			             sprite(p + "sprEelHurtPurple",  3, 16, 16),
-			             sprite(p + "sprEelHurtGreen",   3, 16, 16)];
-			EelDead    =[sprite(p + "sprEelDeadBlue",    9, 16, 16),
-			             sprite(p + "sprEelDeadPurple",  9, 16, 16),
-			             sprite(p + "sprEelDeadGreen",   9, 16, 16)];
-			EelTell    =[sprite(p + "sprEelTellBlue",    8, 16, 16),
-			             sprite(p + "sprEelTellPurple",  8, 16, 16),
-			             sprite(p + "sprEelTellGreen",   8, 16, 16)];
-			EeliteIdle = sprite(p + "sprEelIdleElite",   8, 16, 16);
-			EeliteHurt = sprite(p + "sprEelHurtElite",   3, 16, 16);
-			EeliteDead = sprite(p + "sprEelDeadElite",   9, 16, 16);
-			WantEel    = sprite(p + "sprWantEel",       16, 16, 16);
+			spr_path_add("Eel/");
+			EelIdle    =[spr_add("sprEelIdleBlue",    8, 16, 16),
+			             spr_add("sprEelIdlePurple",  8, 16, 16),
+			             spr_add("sprEelIdleGreen",   8, 16, 16)];
+			EelHurt    =[spr_add("sprEelHurtBlue",    3, 16, 16),
+			             spr_add("sprEelHurtPurple",  3, 16, 16),
+			             spr_add("sprEelHurtGreen",   3, 16, 16)];
+			EelDead    =[spr_add("sprEelDeadBlue",    9, 16, 16),
+			             spr_add("sprEelDeadPurple",  9, 16, 16),
+			             spr_add("sprEelDeadGreen",   9, 16, 16)];
+			EelTell    =[spr_add("sprEelTellBlue",    8, 16, 16),
+			             spr_add("sprEelTellPurple",  8, 16, 16),
+			             spr_add("sprEelTellGreen",   8, 16, 16)];
+			EeliteIdle = spr_add("sprEelIdleElite",   8, 16, 16);
+			EeliteHurt = spr_add("sprEelHurtElite",   3, 16, 16);
+			EeliteDead = spr_add("sprEelDeadElite",   9, 16, 16);
+			WantEel    = spr_add("sprWantEel",       16, 16, 16);
+			spr_path_add("../");
 			
 			 // Fish Freaks:
-			p = m + "FishFreak/";
-			FishFreakIdle = sprite(p + "sprFishFreakIdle",  6, 12, 12);
-			FishFreakWalk = sprite(p + "sprFishFreakWalk",  6, 12, 12);
-			FishFreakHurt = sprite(p + "sprFishFreakHurt",  3, 12, 12);
-			FishFreakDead = sprite(p + "sprFishFreakDead", 11, 12, 12);
+			spr_path_add("FishFreak/");
+			FishFreakIdle = spr_add("sprFishFreakIdle",  6, 12, 12);
+			FishFreakWalk = spr_add("sprFishFreakWalk",  6, 12, 12);
+			FishFreakHurt = spr_add("sprFishFreakHurt",  3, 12, 12);
+			FishFreakDead = spr_add("sprFishFreakDead", 11, 12, 12);
+			spr_path_add("../");
 			
 			 // Gull:
-			p = m + "Gull/";
-			GullIdle  = sprite(p + "sprGullIdle",  4, 12, 12);
-			GullWalk  = sprite(p + "sprGullWalk",  6, 12, 12);
-			GullHurt  = sprite(p + "sprGullHurt",  3, 12, 12);
-			GullDead  = sprite(p + "sprGullDead",  6, 16, 16);
-			GullSword = sprite(p + "sprGullSword", 1,  6,  8);
+			spr_path_add("Gull/");
+			GullIdle  = spr_add("sprGullIdle",  4, 12, 12);
+			GullWalk  = spr_add("sprGullWalk",  6, 12, 12);
+			GullHurt  = spr_add("sprGullHurt",  3, 12, 12);
+			GullDead  = spr_add("sprGullDead",  6, 16, 16);
+			GullSword = spr_add("sprGullSword", 1,  6,  8);
+			spr_path_add("../");
 			
 			 // Hammerhead Fish:
-			p = m + "Hammer/";
-			HammerSharkIdle = sprite(p + "sprHammerSharkIdle",  6, 24, 24);
-			HammerSharkHurt = sprite(p + "sprHammerSharkHurt",  3, 24, 24);
-			HammerSharkDead = sprite(p + "sprHammerSharkDead", 10, 24, 24);
-			HammerSharkChrg = sprite(p + "sprHammerSharkDash",  2, 24, 24);
+			spr_path_add("Hammer/");
+			HammerSharkIdle = spr_add("sprHammerSharkIdle",  6, 24, 24);
+			HammerSharkHurt = spr_add("sprHammerSharkHurt",  3, 24, 24);
+			HammerSharkDead = spr_add("sprHammerSharkDead", 10, 24, 24);
+			HammerSharkChrg = spr_add("sprHammerSharkDash",  2, 24, 24);
+			spr_path_add("../");
 			
 			 // Jellyfish (0 = blue, 1 = purple, 2 = green, 3 = elite):
-			p = m + "Jellyfish/";
-			JellyFire      = sprite(p + "sprJellyfishFire",        6, 24, 24);
-			JellyEliteFire = sprite(p + "sprJellyfishEliteFire",   6, 24, 24);
-			JellyIdle      =[sprite(p + "sprJellyfishBlueIdle",    8, 24, 24),
-			                 sprite(p + "sprJellyfishPurpleIdle",  8, 24, 24),
-			                 sprite(p + "sprJellyfishGreenIdle",   8, 24, 24),
-			                 sprite(p + "sprJellyfishEliteIdle",   8, 24, 24)];
-			JellyHurt      =[sprite(p + "sprJellyfishBlueHurt",    3, 24, 24),
-			                 sprite(p + "sprJellyfishPurpleHurt",  3, 24, 24),
-			                 sprite(p + "sprJellyfishGreenHurt",   3, 24, 24),
-			                 sprite(p + "sprJellyfishEliteHurt",   3, 24, 24)];
-			JellyDead      =[sprite(p + "sprJellyfishBlueDead",   10, 24, 24),
-			                 sprite(p + "sprJellyfishPurpleDead", 10, 24, 24),
-			                 sprite(p + "sprJellyfishGreenDead",  10, 24, 24),
-			                 sprite(p + "sprJellyfishEliteDead",  10, 24, 24)];
+			spr_path_add("Jellyfish/");
+			JellyFire      = spr_add("sprJellyfishFire",        6, 24, 24);
+			JellyEliteFire = spr_add("sprJellyfishEliteFire",   6, 24, 24);
+			JellyIdle      =[spr_add("sprJellyfishBlueIdle",    8, 24, 24),
+			                 spr_add("sprJellyfishPurpleIdle",  8, 24, 24),
+			                 spr_add("sprJellyfishGreenIdle",   8, 24, 24),
+			                 spr_add("sprJellyfishEliteIdle",   8, 24, 24)];
+			JellyHurt      =[spr_add("sprJellyfishBlueHurt",    3, 24, 24),
+			                 spr_add("sprJellyfishPurpleHurt",  3, 24, 24),
+			                 spr_add("sprJellyfishGreenHurt",   3, 24, 24),
+			                 spr_add("sprJellyfishEliteHurt",   3, 24, 24)];
+			JellyDead      =[spr_add("sprJellyfishBlueDead",   10, 24, 24),
+			                 spr_add("sprJellyfishPurpleDead", 10, 24, 24),
+			                 spr_add("sprJellyfishGreenDead",  10, 24, 24),
+			                 spr_add("sprJellyfishEliteDead",  10, 24, 24)];
+			spr_path_add("../");
 			
 			 // Lair Turret Reskin:
-			p = m + "LairTurret/";
-			LairTurretIdle   = sprite(p + "sprLairTurretIdle",    1, 12, 12);
-			LairTurretHurt   = sprite(p + "sprLairTurretHurt",    3, 12, 12);
-			LairTurretDead   = sprite(p + "sprLairTurretDead",    6, 12, 12);
-			LairTurretFire   = sprite(p + "sprLairTurretFire",    3, 12, 12);
-			LairTurretAppear = sprite(p + "sprLairTurretAppear", 11, 12, 12);
+			spr_path_add("LairTurret/");
+			LairTurretIdle   = spr_add("sprLairTurretIdle",    1, 12, 12);
+			LairTurretHurt   = spr_add("sprLairTurretHurt",    3, 12, 12);
+			LairTurretDead   = spr_add("sprLairTurretDead",    6, 12, 12);
+			LairTurretFire   = spr_add("sprLairTurretFire",    3, 12, 12);
+			LairTurretAppear = spr_add("sprLairTurretAppear", 11, 12, 12);
+			spr_path_add("../");
 			
 			 // Miner Bandit:
-			p = m + "MinerBandit/";
-			MinerBanditIdle = sprite(p + "sprMinerBanditIdle", 4, 12, 12);
-			MinerBanditWalk = sprite(p + "sprMinerBanditWalk", 6, 12, 12);
-			MinerBanditHurt = sprite(p + "sprMinerBanditHurt", 3, 12, 12);
-			MinerBanditDead = sprite(p + "sprMinerBanditDead", 6, 12, 12);
+			spr_path_add("MinerBandit/");
+			MinerBanditIdle = spr_add("sprMinerBanditIdle", 4, 12, 12);
+			MinerBanditWalk = spr_add("sprMinerBanditWalk", 6, 12, 12);
+			MinerBanditHurt = spr_add("sprMinerBanditHurt", 3, 12, 12);
+			MinerBanditDead = spr_add("sprMinerBanditDead", 6, 12, 12);
+			spr_path_add("../");
 			
 			 // Mortar:
-			p = m + "Mortar/";
-			MortarIdle = sprite(p + "sprMortarIdle",  4, 22, 24);
-			MortarWalk = sprite(p + "sprMortarWalk",  8, 22, 24);
-			MortarFire = sprite(p + "sprMortarFire", 16, 22, 24);
-			MortarHurt = sprite(p + "sprMortarHurt",  3, 22, 24);
-			MortarDead = sprite(p + "sprMortarDead", 14, 22, 24);
+			spr_path_add("Mortar/");
+			MortarIdle = spr_add("sprMortarIdle",  4, 22, 24);
+			MortarWalk = spr_add("sprMortarWalk",  8, 22, 24);
+			MortarFire = spr_add("sprMortarFire", 16, 22, 24);
+			MortarHurt = spr_add("sprMortarHurt",  3, 22, 24);
+			MortarDead = spr_add("sprMortarDead", 14, 22, 24);
+			spr_path_add("../");
 			
 			 // Mortar (Cursed):
-			p = m + "InvMortar/";
-			InvMortarIdle = sprite(p + "sprInvMortarIdle",  4, 22, 24);
-			InvMortarWalk = sprite(p + "sprInvMortarWalk",  8, 22, 24);
-			InvMortarFire = sprite(p + "sprInvMortarFire", 16, 22, 24);
-			InvMortarHurt = sprite(p + "sprInvMortarHurt",  3, 22, 24);
-			InvMortarDead = sprite(p + "sprInvMortarDead", 14, 22, 24);
+			spr_path_add("InvMortar/");
+			InvMortarIdle = spr_add("sprInvMortarIdle",  4, 22, 24);
+			InvMortarWalk = spr_add("sprInvMortarWalk",  8, 22, 24);
+			InvMortarFire = spr_add("sprInvMortarFire", 16, 22, 24);
+			InvMortarHurt = spr_add("sprInvMortarHurt",  3, 22, 24);
+			InvMortarDead = spr_add("sprInvMortarDead", 14, 22, 24);
+			spr_path_add("../");
 			
 			 // Palanking:
-			p = m + "Palanking/";
-			PalankingBott  = sprite(p + "sprPalankingBase",   1, 40, 24);
-			PalankingTaunt = sprite(p + "sprPalankingTaunt", 31, 40, 24);
-			PalankingCall  = sprite(p + "sprPalankingCall",   9, 40, 24);
-			PalankingIdle  = sprite(p + "sprPalankingIdle",  16, 40, 24);
-			PalankingWalk  = sprite(p + "sprPalankingWalk",  16, 40, 24);
-			PalankingHurt  = sprite(p + "sprPalankingHurt",   3, 40, 24);
-			PalankingDead  = sprite(p + "sprPalankingDead",  11, 40, 24);
-			PalankingBurp  = sprite(p + "sprPalankingBurp",   5, 40, 24);
-			PalankingFire  = sprite(p + "sprPalankingFire",  11, 40, 24);
-			PalankingFoam  = sprite(p + "sprPalankingFoam",   1, 40, 24);
-			PalankingChunk = sprite(p + "sprPalankingChunk",  5, 16, 16);
-			GroundSlash    = sprite(p + "sprGroundSlash",     3,  0, 21);
-			PalankingSlash = sprite(p + "sprPalankingSlash",  3,  0, 29);
-			msk.Palanking  = sprite(p + "mskPalanking",       1, 40, 24);
+			spr_path_add("Palanking/");
+			PalankingBott  = spr_add("sprPalankingBase",   1, 40, 24);
+			PalankingTaunt = spr_add("sprPalankingTaunt", 31, 40, 24);
+			PalankingCall  = spr_add("sprPalankingCall",   9, 40, 24);
+			PalankingIdle  = spr_add("sprPalankingIdle",  16, 40, 24);
+			PalankingWalk  = spr_add("sprPalankingWalk",  16, 40, 24);
+			PalankingHurt  = spr_add("sprPalankingHurt",   3, 40, 24);
+			PalankingDead  = spr_add("sprPalankingDead",  11, 40, 24);
+			PalankingBurp  = spr_add("sprPalankingBurp",   5, 40, 24);
+			PalankingFire  = spr_add("sprPalankingFire",  11, 40, 24);
+			PalankingFoam  = spr_add("sprPalankingFoam",   1, 40, 24);
+			PalankingChunk = spr_add("sprPalankingChunk",  5, 16, 16);
+			GroundSlash    = spr_add("sprGroundSlash",     3,  0, 21);
+			PalankingSlash = spr_add("sprPalankingSlash",  3,  0, 29);
+			msk.Palanking  = spr_add("mskPalanking",       1, 40, 24);
 			with(msk.Palanking){
 				mask = [false, 0];
 			}
+			spr_path_add("../");
 			
 			 // Patch Gator (Eyepatch Reskin):
-			p = m + "PatchGator/";
-			PatchGatorIdle = sprite(p + "sprPatchGatorIdle", 8, 12, 12);
-			PatchGatorWalk = sprite(p + "sprPatchGatorWalk", 6, 12, 12);
-			PatchGatorHurt = sprite(p + "sprPatchGatorHurt", 3, 12, 12);
-			PatchGatorDead = sprite(p + "sprPatchGatorDead", 6, 12, 12);
+			spr_path_add("PatchGator/");
+			PatchGatorIdle = spr_add("sprPatchGatorIdle", 8, 12, 12);
+			PatchGatorWalk = spr_add("sprPatchGatorWalk", 6, 12, 12);
+			PatchGatorHurt = spr_add("sprPatchGatorHurt", 3, 12, 12);
+			PatchGatorDead = spr_add("sprPatchGatorDead", 6, 12, 12);
+			spr_path_add("../");
 			
 			 // Pelican:
-			p = m + "Pelican/";
-			PelicanIdle   = sprite(p + "sprPelicanIdle",   6, 24, 24);
-			PelicanWalk   = sprite(p + "sprPelicanWalk",   6, 24, 24);
-			PelicanHurt   = sprite(p + "sprPelicanHurt",   3, 24, 24);
-			PelicanDead   = sprite(p + "sprPelicanDead",   6, 24, 24);
-			PelicanHammer = sprite(p + "sprPelicanHammer", 1,  6,  8, shnWep);
+			spr_path_add("Pelican/");
+			PelicanIdle   = spr_add("sprPelicanIdle",   6, 24, 24);
+			PelicanWalk   = spr_add("sprPelicanWalk",   6, 24, 24);
+			PelicanHurt   = spr_add("sprPelicanHurt",   3, 24, 24);
+			PelicanDead   = spr_add("sprPelicanDead",   6, 24, 24);
+			PelicanHammer = spr_add("sprPelicanHammer", 1,  6,  8, shnWep);
+			spr_path_add("../");
 			
 			 // Pit Squid:
-			p = m + "Pitsquid/";
-				
+			spr_path_add("Pitsquid/");
+			
 				 // Eyes:
-				PitSquidCornea  = sprite(p + "sprPitsquidCornea", 1, 19, 19);
-				PitSquidPupil   = sprite(p + "sprPitsquidPupil",  1, 19, 19);
-				PitSquidEyelid  = sprite(p + "sprPitsquidEyelid", 3, 19, 19);
+				PitSquidCornea  = spr_add("sprPitsquidCornea", 1, 19, 19);
+				PitSquidPupil   = spr_add("sprPitsquidPupil",  1, 19, 19);
+				PitSquidEyelid  = spr_add("sprPitsquidEyelid", 3, 19, 19);
 				
 				 // Tentacles:
-				TentacleIdle = sprite(p + "sprTentacleIdle", 8, 20, 28);
-				TentacleHurt = sprite(p + "sprTentacleHurt", 3, 20, 28);
-				TentacleDead = sprite(p + "sprTentacleDead", 4, 20, 28);
-				TentacleSpwn = sprite(p + "sprTentacleSpwn", 6, 20, 28);
-				TentacleTele = sprite(p + "sprTentacleTele", 6, 20, 28);
+				TentacleIdle = spr_add("sprTentacleIdle", 8, 20, 28);
+				TentacleHurt = spr_add("sprTentacleHurt", 3, 20, 28);
+				TentacleDead = spr_add("sprTentacleDead", 4, 20, 28);
+				TentacleSpwn = spr_add("sprTentacleSpwn", 6, 20, 28);
+				TentacleTele = spr_add("sprTentacleTele", 6, 20, 28);
 				
 				 // Maw:
-				PitSquidMawBite = sprite(p + "sprPitsquidMawBite", 14, 19, 19);
-				PitSquidMawSpit = sprite(p + "sprPitsquidMawSpit", 10, 19, 19);
+				PitSquidMawBite = spr_add("sprPitsquidMawBite", 14, 19, 19);
+				PitSquidMawSpit = spr_add("sprPitsquidMawSpit", 10, 19, 19);
 				
 				 // Particles:
-				p += "Particles/";
+				spr_path_add("Particles/");
 				PitSpark = [
-					sprite(p + "sprPitSpark1", 5, 16, 16),
-					sprite(p + "sprPitSpark2", 5, 16, 16),
-					sprite(p + "sprPitSpark3", 5, 16, 16),
-					sprite(p + "sprPitSpark4", 5, 16, 16),
-					sprite(p + "sprPitSpark5", 5, 16, 16),
+					spr_add("sprPitSpark1", 5, 16, 16),
+					spr_add("sprPitSpark2", 5, 16, 16),
+					spr_add("sprPitSpark3", 5, 16, 16),
+					spr_add("sprPitSpark4", 5, 16, 16),
+					spr_add("sprPitSpark5", 5, 16, 16),
 				];
-				TentacleWheel    = sprite(p + "sprTentacleWheel",    2, 40, 40);
-				SquidCharge      = sprite(p + "sprSquidCharge",      5, 24, 24);
-				SquidBloodStreak = sprite(p + "sprSquidBloodStreak", 7,  0,  8);
+				TentacleWheel    = spr_add("sprTentacleWheel",    2, 40, 40);
+				SquidCharge      = spr_add("sprSquidCharge",      5, 24, 24);
+				SquidBloodStreak = spr_add("sprSquidBloodStreak", 7,  0,  8);
+				spr_path_add("../");
 				
+			spr_path_add("../");
+			
 			 // Popo Security:
-			p = m + "PopoSecurity/";
-			PopoSecurityIdle    = sprite(p + "sprPopoSecurityIdle",    11, 16, 16);
-			PopoSecurityWalk    = sprite(p + "sprPopoSecurityWalk",    6,  16, 16);
-			PopoSecurityHurt    = sprite(p + "sprPopoSecurityHurt",    3,  16, 16);
-			PopoSecurityDead    = sprite(p + "sprPopoSecurityDead",    7,  16, 16);
-			PopoSecurityCannon  = sprite(p + "sprPopoSecurityCannon",  1,  7,  8);
-			PopoSecurityMinigun = sprite(p + "sprPopoSecurityMinigun", 1,  7,  8);
+			spr_path_add("PopoSecurity/");
+			PopoSecurityIdle    = spr_add("sprPopoSecurityIdle",    11, 16, 16);
+			PopoSecurityWalk    = spr_add("sprPopoSecurityWalk",    6,  16, 16);
+			PopoSecurityHurt    = spr_add("sprPopoSecurityHurt",    3,  16, 16);
+			PopoSecurityDead    = spr_add("sprPopoSecurityDead",    7,  16, 16);
+			PopoSecurityCannon  = spr_add("sprPopoSecurityCannon",  1,  7,  8);
+			PopoSecurityMinigun = spr_add("sprPopoSecurityMinigun", 1,  7,  8);
+			spr_path_add("../");
 			
 			 // Portal Guardian:
-			p = m + "PortalGuardian/";
-			PortalGuardianIdle      = sprite(p + "sprPortalGuardianIdle",       4, 16, 16);
-			PortalGuardianHurt      = sprite(p + "sprPortalGuardianHurt",       3, 16, 16);
-			PortalGuardianDead      = sprite(p + "sprPortalGuardianDead",       9, 32, 32);
-			PortalGuardianAppear    = sprite(p + "sprPortalGuardianAppear",     5, 32, 32);
-			PortalGuardianDisappear = sprite(p + "sprPortalGuardianDisappear",  4, 32, 32);
-			PortalGuardianImplode   = sprite(p + "sprPortalGuardianImplode",   17, 32, 32);
+			spr_path_add("PortalGuardian/");
+			PortalGuardianIdle      = spr_add("sprPortalGuardianIdle",       4, 16, 16);
+			PortalGuardianHurt      = spr_add("sprPortalGuardianHurt",       3, 16, 16);
+			PortalGuardianDead      = spr_add("sprPortalGuardianDead",       9, 32, 32);
+			PortalGuardianAppear    = spr_add("sprPortalGuardianAppear",     5, 32, 32);
+			PortalGuardianDisappear = spr_add("sprPortalGuardianDisappear",  4, 32, 32);
+			PortalGuardianImplode   = spr_add("sprPortalGuardianImplode",   17, 32, 32);
+			spr_path_add("../");
 			
 			 // Puffer:
-			p = m + "Puffer/";
-			PufferIdle       = sprite(p + "sprPufferIdle",    6, 15, 16);
-			PufferHurt       = sprite(p + "sprPufferHurt",    3, 15, 16);
-			PufferDead       = sprite(p + "sprPufferDead",   11, 15, 16);
-			PufferChrg       = sprite(p + "sprPufferChrg",    9, 15, 16);
-			PufferFire[0, 0] = sprite(p + "sprPufferBlow0",   2, 15, 16);
-			PufferFire[0, 1] = sprite(p + "sprPufferBlowB0",  2, 15, 16);
-			PufferFire[1, 0] = sprite(p + "sprPufferBlow1",   2, 15, 16);
-			PufferFire[1, 1] = sprite(p + "sprPufferBlowB1",  2, 15, 16);
-			PufferFire[2, 0] = sprite(p + "sprPufferBlow2",   2, 15, 16);
-			PufferFire[2, 1] = sprite(p + "sprPufferBlowB2",  2, 15, 16);
-			PufferFire[3, 0] = sprite(p + "sprPufferBlow3",   2, 15, 16);
-			PufferFire[3, 1] = sprite(p + "sprPufferBlowB3",  2, 15, 16);
+			spr_path_add("Puffer/");
+			PufferIdle       = spr_add("sprPufferIdle",    6, 15, 16);
+			PufferHurt       = spr_add("sprPufferHurt",    3, 15, 16);
+			PufferDead       = spr_add("sprPufferDead",   11, 15, 16);
+			PufferChrg       = spr_add("sprPufferChrg",    9, 15, 16);
+			PufferFire[0, 0] = spr_add("sprPufferBlow0",   2, 15, 16);
+			PufferFire[0, 1] = spr_add("sprPufferBlowB0",  2, 15, 16);
+			PufferFire[1, 0] = spr_add("sprPufferBlow1",   2, 15, 16);
+			PufferFire[1, 1] = spr_add("sprPufferBlowB1",  2, 15, 16);
+			PufferFire[2, 0] = spr_add("sprPufferBlow2",   2, 15, 16);
+			PufferFire[2, 1] = spr_add("sprPufferBlowB2",  2, 15, 16);
+			PufferFire[3, 0] = spr_add("sprPufferBlow3",   2, 15, 16);
+			PufferFire[3, 1] = spr_add("sprPufferBlowB3",  2, 15, 16);
+			spr_path_add("../");
 			
 			 // Red Crystal Spider:
-			p = m + "RedSpider/";
-			RedSpiderIdle = sprite(p + "sprRedSpiderIdle", 8, 12, 12);
-			RedSpiderWalk = sprite(p + "sprRedSpiderWalk", 6, 12, 12);
-			RedSpiderHurt = sprite(p + "sprRedSpiderHurt", 3, 12, 12);
-			RedSpiderDead = sprite(p + "sprRedSpiderDead", 7, 12, 12);
+			spr_path_add("RedSpider/");
+			RedSpiderIdle = spr_add("sprRedSpiderIdle", 8, 12, 12);
+			RedSpiderWalk = spr_add("sprRedSpiderWalk", 6, 12, 12);
+			RedSpiderHurt = spr_add("sprRedSpiderHurt", 3, 12, 12);
+			RedSpiderDead = spr_add("sprRedSpiderDead", 7, 12, 12);
+			spr_path_add("../");
 			
 			 // Saw Trap:
-			p = m + "SawTrap/";
-			SawTrap       = sprite(p + "sprSawTrap",       1, 20, 20);
-			SawTrapHurt   = sprite(p + "sprSawTrapHurt",   3, 20, 20);
-			SawTrapDebris = sprite(p + "sprSawTrapDebris", 4,  8,  8);
+			spr_path_add("SawTrap/");
+			SawTrap       = spr_add("sprSawTrap",       1, 20, 20);
+			SawTrapHurt   = spr_add("sprSawTrapHurt",   3, 20, 20);
+			SawTrapDebris = spr_add("sprSawTrapDebris", 4,  8,  8);
+			spr_path_add("../");
 			
 			 // Seal:
-			p = m + "Seal/";
+			spr_path_add("Seal/");
 			SealIdle = [];
 			SealWalk = [];
 			SealHurt = [];
@@ -765,418 +810,423 @@
 			SealSpwn = [];
 			SealWeap = [];
 			for(var i = 0; i <= 6; i++){
-				var n = ((i <= 0) ? "" : string(i));
-				SealIdle[i] = sprite(p + "sprSealIdle" + n, 6, 12, 12);
-				SealWalk[i] = sprite(p + "sprSealWalk" + n, 6, 12, 12);
-				SealHurt[i] = sprite(p + "sprSealHurt" + n, 3, 12, 12);
-				SealDead[i] = sprite(p + "sprSealDead" + n, 6, 12, 12);
-				SealSpwn[i] = sprite(p + "sprSealSpwn" + n, 6, 12, 12);
+				var _num = ((i == 0) ? "" : i);
+				SealIdle[i] = spr_add(`sprSealIdle${_num}`, 6, 12, 12);
+				SealWalk[i] = spr_add(`sprSealWalk${_num}`, 6, 12, 12);
+				SealHurt[i] = spr_add(`sprSealHurt${_num}`, 3, 12, 12);
+				SealDead[i] = spr_add(`sprSealDead${_num}`, 6, 12, 12);
+				SealSpwn[i] = spr_add(`sprSealSpwn${_num}`, 6, 12, 12);
 				SealWeap[i] = mskNone;
 			}
-			SealWeap[1] = sprite(p + "sprHookPole",    1, 18,  2);
-			SealWeap[2] = sprite(p + "sprSabre",       1, -2,  1);
-			SealWeap[3] = sprite(p + "sprBlunderbuss", 1,  7,  1);
-			SealWeap[4] = sprite(p + "sprRepeater",    1,  6,  2);
+			SealWeap[1] = spr_add("sprHookPole",    1, 18,  2);
+			SealWeap[2] = spr_add("sprSabre",       1, -2,  1);
+			SealWeap[3] = spr_add("sprBlunderbuss", 1,  7,  1);
+			SealWeap[4] = spr_add("sprRepeater",    1,  6,  2);
 			SealWeap[6] = sprBanditGun;
-			SealDisc    = sprite(p + "sprSealDisc",    2,  7,  7);
-			SkealIdle   = sprite(p + "sprSkealIdle",   6, 12, 12);
-			SkealWalk   = sprite(p + "sprSkealWalk",   7, 12, 12);
-			SkealHurt   = sprite(p + "sprSkealHurt",   3, 12, 12);
-			SkealDead   = sprite(p + "sprSkealDead",  10, 16, 16);
-			SkealSpwn   = sprite(p + "sprSkealSpwn",   8, 16, 16);
+			SealDisc    = spr_add("sprSealDisc",    2,  7,  7);
+			SkealIdle   = spr_add("sprSkealIdle",   6, 12, 12);
+			SkealWalk   = spr_add("sprSkealWalk",   7, 12, 12);
+			SkealHurt   = spr_add("sprSkealHurt",   3, 12, 12);
+			SkealDead   = spr_add("sprSkealDead",  10, 16, 16);
+			SkealSpwn   = spr_add("sprSkealSpwn",   8, 16, 16);
+			spr_path_add("../");
 			
 			 // Seal (Heavy):
-			p = m + "SealHeavy/";
-			SealHeavySpwn = sprite(p + "sprHeavySealSpwn",    6, 16, 17);
-			SealHeavyIdle = sprite(p + "sprHeavySealIdle",   10, 16, 17);
-			SealHeavyWalk = sprite(p + "sprHeavySealWalk",    8, 16, 17);
-			SealHeavyHurt = sprite(p + "sprHeavySealHurt",    3, 16, 17);
-			SealHeavyDead = sprite(p + "sprHeavySealDead",    7, 16, 17);
-			SealHeavyTell = sprite(p + "sprHeavySealTell",    2, 16, 17);
-			SealAnchor    = sprite(p + "sprHeavySealAnchor",  1,  0, 12);
-			SealChain     = sprite(p + "sprChainSegment",     1,  0,  0);
+			spr_path_add("SealHeavy/");
+			SealHeavySpwn = spr_add("sprHeavySealSpwn",    6, 16, 17);
+			SealHeavyIdle = spr_add("sprHeavySealIdle",   10, 16, 17);
+			SealHeavyWalk = spr_add("sprHeavySealWalk",    8, 16, 17);
+			SealHeavyHurt = spr_add("sprHeavySealHurt",    3, 16, 17);
+			SealHeavyDead = spr_add("sprHeavySealDead",    7, 16, 17);
+			SealHeavyTell = spr_add("sprHeavySealTell",    2, 16, 17);
+			SealAnchor    = spr_add("sprHeavySealAnchor",  1,  0, 12);
+			SealChain     = spr_add("sprChainSegment",     1,  0,  0);
+			spr_path_add("../");
 			
 			 // Silver Scorpion:
-			p = m + "SilverScorpion/";
-			SilverScorpionIdle = sprite(p + "sprSilverScorpionIdle", 14, 24, 24);
-			SilverScorpionWalk = sprite(p + "sprSilverScorpionWalk", 6,  24, 24);
-			SilverScorpionHurt = sprite(p + "sprSilverScorpionHurt", 3,  24, 24);
-			SilverScorpionDead = sprite(p + "sprSilverScorpionDead", 6,  24, 24);
-			SilverScorpionFire = sprite(p + "sprSilverScorpionFire", 2,  24, 24);
-			SilverScorpionFlak = sprite(p + "sprSilverScorpionFlak", 4,  10, 10);
+			spr_path_add("SilverScorpion/");
+			SilverScorpionIdle = spr_add("sprSilverScorpionIdle", 14, 24, 24);
+			SilverScorpionWalk = spr_add("sprSilverScorpionWalk", 6,  24, 24);
+			SilverScorpionHurt = spr_add("sprSilverScorpionHurt", 3,  24, 24);
+			SilverScorpionDead = spr_add("sprSilverScorpionDead", 6,  24, 24);
+			SilverScorpionFire = spr_add("sprSilverScorpionFire", 2,  24, 24);
+			SilverScorpionFlak = spr_add("sprSilverScorpionFlak", 4,  10, 10);
+			spr_path_add("../");
 			
 			 // Spiderling:
-			p = m + "Spiderling/";
-			SpiderlingIdle     = sprite(p + "sprSpiderlingIdle",     4, 8, 8);
-			SpiderlingWalk     = sprite(p + "sprSpiderlingWalk",     4, 8, 8);
-			SpiderlingHurt     = sprite(p + "sprSpiderlingHurt",     3, 8, 8);
-			SpiderlingDead     = sprite(p + "sprSpiderlingDead",     7, 8, 8);
-			SpiderlingHatch    = sprite(p + "sprSpiderlingHatch",    5, 8, 8);
-			InvSpiderlingIdle  = sprite(p + "sprInvSpiderlingIdle",  4, 8, 8);
-			InvSpiderlingWalk  = sprite(p + "sprInvSpiderlingWalk",  4, 8, 8);
-			InvSpiderlingHurt  = sprite(p + "sprInvSpiderlingHurt",  3, 8, 8);
-			InvSpiderlingDead  = sprite(p + "sprInvSpiderlingDead",  7, 8, 8);
-			InvSpiderlingHatch = sprite(p + "sprInvSpiderlingHatch", 5, 8, 8);
+			spr_path_add("Spiderling/");
+			SpiderlingIdle     = spr_add("sprSpiderlingIdle",     4, 8, 8);
+			SpiderlingWalk     = spr_add("sprSpiderlingWalk",     4, 8, 8);
+			SpiderlingHurt     = spr_add("sprSpiderlingHurt",     3, 8, 8);
+			SpiderlingDead     = spr_add("sprSpiderlingDead",     7, 8, 8);
+			SpiderlingHatch    = spr_add("sprSpiderlingHatch",    5, 8, 8);
+			InvSpiderlingIdle  = spr_add("sprInvSpiderlingIdle",  4, 8, 8);
+			InvSpiderlingWalk  = spr_add("sprInvSpiderlingWalk",  4, 8, 8);
+			InvSpiderlingHurt  = spr_add("sprInvSpiderlingHurt",  3, 8, 8);
+			InvSpiderlingDead  = spr_add("sprInvSpiderlingDead",  7, 8, 8);
+			InvSpiderlingHatch = spr_add("sprInvSpiderlingHatch", 5, 8, 8);
+			spr_path_add("../");
 			
 			 // Tesseract:
-			p = m + "Tesseract/";
-			TesseractIdle           = sprite(p + "sprTesseractEyeIdle",           8,  8,  8);
-			TesseractHurt           = sprite(p + "sprTesseractEyeHurt",           3,  8,  8);
-			TesseractFire           = sprite(p + "sprTesseractEyeFire",           4,  8,  8);
-			TesseractTell           = sprite(p + "sprTesseractEyeTell",           6,  8,  8);
-			TesseractLayer          =[sprite(p + "sprTesseractLayerBottom",       2, 48, 48),
-			                          sprite(p + "sprTesseractLayerMiddle",       2, 48, 48),
-			                          sprite(p + "sprTesseractLayerTop",          2, 48, 48)];
-			TesseractDeathLayer     =[sprite(p + "sprTesseractDeathLayerBottom",  3, 48, 48),
-			                          sprite(p + "sprTesseractDeathLayerMiddle",  6, 48, 48),
-			                          sprite(p + "sprTesseractDeathLayerTop",    11, 48, 48)];
-			TesseractDeathCause     = sprite(p + "sprTesseractDeathCause",        8, 48, 48);
-			TesseractDeathCauseText = sprite(p + "sprTesseractDeathCauseText",   12, 36,  4);
-			TesseractWeapon         = sprite(p + "sprTesseractWeapon",            1, 24, 24);
-			TesseractStrike         = sprite(p + "sprTesseractStrike",            4, 26, 12);
+			spr_path_add("Tesseract/");
+			TesseractIdle           = spr_add("sprTesseractEyeIdle",           8,  8,  8);
+			TesseractHurt           = spr_add("sprTesseractEyeHurt",           3,  8,  8);
+			TesseractFire           = spr_add("sprTesseractEyeFire",           4,  8,  8);
+			TesseractTell           = spr_add("sprTesseractEyeTell",           6,  8,  8);
+			TesseractLayer          =[spr_add("sprTesseractLayerBottom",       2, 48, 48),
+			                          spr_add("sprTesseractLayerMiddle",       2, 48, 48),
+			                          spr_add("sprTesseractLayerTop",          2, 48, 48)];
+			TesseractDeathLayer     =[spr_add("sprTesseractDeathLayerBottom",  3, 48, 48),
+			                          spr_add("sprTesseractDeathLayerMiddle",  6, 48, 48),
+			                          spr_add("sprTesseractDeathLayerTop",    11, 48, 48)];
+			TesseractDeathCause     = spr_add("sprTesseractDeathCause",        8, 48, 48);
+			TesseractDeathCauseText = spr_add("sprTesseractDeathCauseText",   12, 36,  4);
+			TesseractWeapon         = spr_add("sprTesseractWeapon",            1, 24, 24);
+			TesseractStrike         = spr_add("sprTesseractStrike",            4, 26, 12);
 			with(TesseractDeathLayer){
 				mask = [true, 0];
 			}
+			spr_path_add("../");
 			
 			 // Traffic Crab:
-			p = m + "Crab/";
-			CrabIdle = sprite(p + "sprTrafficCrabIdle", 5, 24, 24);
-			CrabWalk = sprite(p + "sprTrafficCrabWalk", 6, 24, 24);
-			CrabHurt = sprite(p + "sprTrafficCrabHurt", 3, 24, 24);
-			CrabDead = sprite(p + "sprTrafficCrabDead", 9, 24, 24);
-			CrabFire = sprite(p + "sprTrafficCrabFire", 2, 24, 24);
-			CrabHide = sprite(p + "sprTrafficCrabHide", 5, 24, 24);
+			spr_path_add("Crab/");
+			CrabIdle = spr_add("sprTrafficCrabIdle", 5, 24, 24);
+			CrabWalk = spr_add("sprTrafficCrabWalk", 6, 24, 24);
+			CrabHurt = spr_add("sprTrafficCrabHurt", 3, 24, 24);
+			CrabDead = spr_add("sprTrafficCrabDead", 9, 24, 24);
+			CrabFire = spr_add("sprTrafficCrabFire", 2, 24, 24);
+			CrabHide = spr_add("sprTrafficCrabHide", 5, 24, 24);
+			spr_path_add("../");
 			
 			 // Yeti Crab:
-			p = m + "YetiCrab/";
-			YetiCrabIdle = sprite(p + "sprYetiCrab", 1, 12, 12);
-			KingCrabIdle = sprite(p + "sprKingCrab", 1, 12, 12);
+			spr_path_add("YetiCrab/");
+			YetiCrabIdle = spr_add("sprYetiCrab", 1, 12, 12);
+			KingCrabIdle = spr_add("sprKingCrab", 1, 12, 12);
+			spr_path_add("../");
 			
 		//#endregion
 		
 		//#region CAMPFIRE
-		m = "areas/Campfire/";
-		p = m;
-			
+		spr_path_set("areas/Campfire/");
+		
 			 // Loading Screen:
-			SpiralDebrisNothing = sprite(p + "sprSpiralDebrisNothing", 5, 24, 24);
+			SpiralDebrisNothing = spr_add("sprSpiralDebrisNothing", 5, 24, 24);
 			
 			//#region PROPS
-			p = m + "Props/";
-				
+			spr_path_add("Props/");
+			
 				 // Big Cactus:
-				BigNightCactusIdle = sprite(p + "sprBigNightCactus",     1, 16, 16);
-				BigNightCactusHurt = sprite(p + "sprBigNightCactus",     1, 16, 16, shnHurt);
-				BigNightCactusDead = sprite(p + "sprBigNightCactusDead", 4, 16, 16);
+				BigNightCactusIdle = spr_add("sprBigNightCactus",     1, 16, 16);
+				BigNightCactusHurt = spr_add("sprBigNightCactus",     1, 16, 16, shnHurt);
+				BigNightCactusDead = spr_add("sprBigNightCactusDead", 4, 16, 16);
 				
+			spr_path_add("../");
 			//#endregion
 			
 		//#endregion
 		
 		//#region DESERT
-		m = "areas/Desert/";
-		p = m;
-			
+		spr_path_set("areas/Desert/");
+		
 			 // Big Decal:
-			BigTopDecal[?     area_desert] = sprite(p + "sprBigTopDecalDesert",         1, 32, 56);
-			msk.BigTopDecal[? area_desert] = sprite(p + "../mskBigTopDecal",            1, 32, 12);
-			BigTopDecalScorpion            = sprite(p + "sprBigTopDecalScorpion",       1, 32, 52);
-			BigTopDecalScorpionDebris      = sprite(p + "sprBigTopDecalScorpionDebris", 8, 10, 10);
+			BigTopDecal[?     area_desert] = spr_add("sprBigTopDecalDesert",         1, 32, 56);
+			msk.BigTopDecal[? area_desert] = spr_add("../mskBigTopDecal",            1, 32, 12);
+			BigTopDecalScorpion            = spr_add("sprBigTopDecalScorpion",       1, 32, 52);
+			BigTopDecalScorpionDebris      = spr_add("sprBigTopDecalScorpionDebris", 8, 10, 10);
 			
 			 // Fly:
-			FlySpin = sprite(p + "sprFlySpin", 16, 4, 4);
+			FlySpin = spr_add("sprFlySpin", 16, 4, 4);
 			
 			 // Wall Rubble:
-			Wall1BotRubble = sprite(p + "sprWall1BotRubble", 4, 0,  0);
-			Wall1TopRubble = sprite(p + "sprWall1TopRubble", 4, 0,  0);
-			Wall1OutRubble = sprite(p + "sprWall1OutRubble", 4, 4, 12);
+			Wall1BotRubble = spr_add("sprWall1BotRubble", 4, 0,  0);
+			Wall1TopRubble = spr_add("sprWall1TopRubble", 4, 0,  0);
+			Wall1OutRubble = spr_add("sprWall1OutRubble", 4, 4, 12);
 			
 			 // Wall Bro:
-			WallBandit = sprite(p + "sprWallBandit", 9, 8, 8);
+			WallBandit = spr_add("sprWallBandit", 9, 8, 8);
 			
 			 // Scorpion Floor:
-			FloorScorpion     = sprite(p + "sprFloorScorpion",     2, 8, 8);
-			SnowFloorScorpion = sprite(p + "sprSnowFloorScorpion", 1, 8, 8);
+			FloorScorpion     = spr_add("sprFloorScorpion",     2, 8, 8);
+			SnowFloorScorpion = spr_add("sprSnowFloorScorpion", 1, 8, 8);
 			
 			//#region PROPS
-			p = m + "Props/";
-				
+			spr_path_add("Props/");
+			
 				 // Camp:
-				BanditCampfire     = sprite(p + "sprBanditCampfire",     1, 26, 26);
-				BanditTentIdle     = sprite(p + "sprBanditTent",         1, 24, 24);
-				BanditTentHurt     = sprite(p + "sprBanditTentHurt",     3, 24, 24);
-				BanditTentDead     = sprite(p + "sprBanditTentDead",     3, 24, 24);
-				BanditTentWallIdle = sprite(p + "sprBanditTentWall",     1, 24, 24);
-				BanditTentWallHurt = sprite(p + "sprBanditTentWallHurt", 3, 24, 24);
-				BanditTentWallDead = sprite(p + "sprBanditTentWallDead", 3, 24, 24);
-				shd.BanditTent     = sprite(p + "shdBanditTent",         1, 24, 24);
+				BanditCampfire     = spr_add("sprBanditCampfire",     1, 26, 26);
+				BanditTentIdle     = spr_add("sprBanditTent",         1, 24, 24);
+				BanditTentHurt     = spr_add("sprBanditTentHurt",     3, 24, 24);
+				BanditTentDead     = spr_add("sprBanditTentDead",     3, 24, 24);
+				BanditTentWallIdle = spr_add("sprBanditTentWall",     1, 24, 24);
+				BanditTentWallHurt = spr_add("sprBanditTentWallHurt", 3, 24, 24);
+				BanditTentWallDead = spr_add("sprBanditTentWallDead", 3, 24, 24);
+				shd.BanditTent     = spr_add("shdBanditTent",         1, 24, 24);
 				
 				 // Big Cactus:
-				BigCactusIdle = sprite(p + "sprBigCactus",     1, 16, 16);
-				BigCactusHurt = sprite(p + "sprBigCactus",     1, 16, 16, shnHurt);
-				BigCactusDead = sprite(p + "sprBigCactusDead", 4, 16, 16);
+				BigCactusIdle = spr_add("sprBigCactus",     1, 16, 16);
+				BigCactusHurt = spr_add("sprBigCactus",     1, 16, 16, shnHurt);
+				BigCactusDead = spr_add("sprBigCactusDead", 4, 16, 16);
 				
 				 // Return of a Legend:
-				CowSkullIdle = sprite(p + "sprCowSkull",     1, 24, 24);
-				CowSkullHurt = sprite(p + "sprCowSkull",     1, 24, 24, shnHurt);
-				CowSkullDead = sprite(p + "sprCowSkullDead", 3, 24, 24);
+				CowSkullIdle = spr_add("sprCowSkull",     1, 24, 24);
+				CowSkullHurt = spr_add("sprCowSkull",     1, 24, 24, shnHurt);
+				CowSkullDead = spr_add("sprCowSkullDead", 3, 24, 24);
 				
 				 // Scorpion Rock:
-				ScorpionRock         = sprite(p + "sprScorpionRock",     6, 16, 16);
-				ScorpionRockAlly     = sprite(p + "sprScorpionRockAlly", 6, 16, 16);
-				ScorpionRockHurt     = sprite(p + "sprScorpionRock",     6, 16, 16, shnHurt);
-				ScorpionRockAllyHurt = sprite(p + "sprScorpionRockAlly", 6, 16, 16, shnHurt);
-				ScorpionRockDead     = sprite(p + "sprScorpionRockDead", 3, 16, 16);
+				ScorpionRock         = spr_add("sprScorpionRock",     6, 16, 16);
+				ScorpionRockAlly     = spr_add("sprScorpionRockAlly", 6, 16, 16);
+				ScorpionRockHurt     = spr_add("sprScorpionRock",     6, 16, 16, shnHurt);
+				ScorpionRockAllyHurt = spr_add("sprScorpionRockAlly", 6, 16, 16, shnHurt);
+				ScorpionRockDead     = spr_add("sprScorpionRockDead", 3, 16, 16);
 				
+			spr_path_add("../");
 			//#endregion
 			
 		//#endregion
 		
 		//#region SCRAPYARD
-		m = "areas/Scrapyard/";
-		p = m;
-			
+		spr_path_set("areas/Scrapyard/");
+		
 			 // Decals:
-			BigTopDecal[? area_scrapyards] = sprite(p + "sprBigTopDecalScrapyard",  1, 32, 48);
-			TopDecalScrapyardAlt           = sprite(p + "sprTopDecalScrapyardAlt",  1, 16, 16);
-			NestDebris                     = sprite(p + "sprNestDebris",           16,  4,  4);
+			BigTopDecal[? area_scrapyards] = spr_add("sprBigTopDecalScrapyard",  1, 32, 48);
+			TopDecalScrapyardAlt           = spr_add("sprTopDecalScrapyardAlt",  1, 16, 16);
+			NestDebris                     = spr_add("sprNestDebris",           16,  4,  4);
 			
 			 // Sludge Pool:
-			SludgePool          = sprite(p + "sprSludgePool",      4,  0,  0);
-			msk.SludgePool      = sprite(p + "mskSludgePool",      1, 32, 32);
-			msk.SludgePoolSmall = sprite(p + "mskSludgePoolSmall", 1, 16, 16);
+			SludgePool          = spr_add("sprSludgePool",      4,  0,  0);
+			msk.SludgePool      = spr_add("mskSludgePool",      1, 32, 32);
+			msk.SludgePoolSmall = spr_add("mskSludgePoolSmall", 1, 16, 16);
 			
 			 // Fire Pit Event:
-			FirePitScorch = sprite(p + "sprFirePitScorch", 3, 16, 16);
-			TrapSpin      = sprite(p + "sprTrapSpin",      8, 12, 12);
+			FirePitScorch = spr_add("sprFirePitScorch", 3, 16, 16);
+			TrapSpin      = spr_add("sprTrapSpin",      8, 12, 12);
 			
 		//#endregion
 		
 		//#region CRYSTAL CAVES
-		m = "areas/Caves/";
-		p = m;
-			
+		spr_path_set("areas/Caves/");
+		
 			 // Decals:
-			BigTopDecal[?     area_caves       ] = sprite(p + "sprBigTopDecalCaves",       1, 32, 56);
-			BigTopDecal[?     area_cursed_caves] = sprite(p + "sprBigTopDecalCursedCaves", 1, 32, 56);
-			msk.BigTopDecal[? area_caves       ] = sprite(p + "../mskBigTopDecal",         1, 32, 16);
+			BigTopDecal[?     area_caves       ] = spr_add("sprBigTopDecalCaves",       1, 32, 56);
+			BigTopDecal[?     area_cursed_caves] = spr_add("sprBigTopDecalCursedCaves", 1, 32, 56);
+			msk.BigTopDecal[? area_caves       ] = spr_add("../mskBigTopDecal",         1, 32, 16);
 			msk.BigTopDecal[? area_cursed_caves] = msk.BigTopDecal[? area_caves];
 			
 			 // Wall Spiders:
-			WallSpider          = sprite(p + "sprWallSpider",          2, 8, 8);
-			WallSpiderBot       = sprite(p + "sprWallSpiderBot",       2, 0, 0);
-			WallSpiderling      = sprite(p + "sprWallSpiderling",      4, 8, 8);
-			WallSpiderlingTrans = sprite(p + "sprWallSpiderlingTrans", 4, 8, 8);
+			WallSpider          = spr_add("sprWallSpider",          2, 8, 8);
+			WallSpiderBot       = spr_add("sprWallSpiderBot",       2, 0, 0);
+			WallSpiderling      = spr_add("sprWallSpiderling",      4, 8, 8);
+			WallSpiderlingTrans = spr_add("sprWallSpiderlingTrans", 4, 8, 8);
 			
 			 // Cave Hole:
-			CaveHole	   = sprite(p + "sprCaveHole",		 1, 64, 64);
-			CaveHoleCursed = sprite(p + "sprCaveHoleCursed", 1, 64, 64);
-			msk.CaveHole   = sprite(p + "mskCaveHole",		 1, 64, 64);
+			CaveHole	   = spr_add("sprCaveHole",		 1, 64, 64);
+			CaveHoleCursed = spr_add("sprCaveHoleCursed", 1, 64, 64);
+			msk.CaveHole   = spr_add("mskCaveHole",		 1, 64, 64);
 			with(msk.CaveHole){
 				mask = [false, 0];
 			}
 			
 			//#region PROPS
-			p = m + "Props/";
-				
+			spr_path_add("Props/");
+			
 				 // Big Crystal Prop:
-				BigCrystalPropIdle = sprite(p + "sprBigCrystalPropIdle", 1, 16, 16);
-				BigCrystalPropHurt = sprite(p + "sprBigCrystalPropIdle", 1, 16, 16, shnHurt);
-				BigCrystalPropDead = sprite(p + "sprBigCrystalPropDead", 4, 16, 16);
+				BigCrystalPropIdle = spr_add("sprBigCrystalPropIdle", 1, 16, 16);
+				BigCrystalPropHurt = spr_add("sprBigCrystalPropIdle", 1, 16, 16, shnHurt);
+				BigCrystalPropDead = spr_add("sprBigCrystalPropDead", 4, 16, 16);
 				
 				 // Cursed Big Crystal Prop:
-				InvBigCrystalPropIdle = sprite(p + "sprInvBigCrystalPropIdle", 1, 16, 16);
-				InvBigCrystalPropHurt = sprite(p + "sprInvBigCrystalPropIdle", 1, 16, 16, shnHurt);
-				InvBigCrystalPropDead = sprite(p + "sprInvBigCrystalPropDead", 4, 16, 16);
-			
+				InvBigCrystalPropIdle = spr_add("sprInvBigCrystalPropIdle", 1, 16, 16);
+				InvBigCrystalPropHurt = spr_add("sprInvBigCrystalPropIdle", 1, 16, 16, shnHurt);
+				InvBigCrystalPropDead = spr_add("sprInvBigCrystalPropDead", 4, 16, 16);
+				
+			spr_path_add("../");
 			//#endregion
 			
 		//#endregion
 		
 		//#region FROZEN CITY
-		m = "areas/City/";
-		p = m;
-			
+		spr_path_set("areas/City/");
+		
 			 // FIX CRAP:
-			sprite_replace(sprWall5Bot, "sprites/" + p + "sprWall5BotFix.png", 3);
+			sprite_replace(sprWall5Bot, spr_path + "sprWall5BotFix.png", 3);
 			
 			 // Seal Plaza:
-			FloorSeal            = sprite(p + "sprFloorSeal",         4, 16, 16);
-			SnowFloorSeal        = sprite(p + "sprFloorSeal",         4, 16, 16, shnSnow);
-			FloorSealRoom        = sprite(p + "sprFloorSealRoom",     9, 16, 16);
-			SnowFloorSealRoom    = sprite(p + "sprFloorSealRoom",     9, 16, 16, shnSnow);
-			FloorSealRoomBig     = sprite(p + "sprFloorSealRoomBig", 25, 16, 16);
-			SnowFloorSealRoomBig = sprite(p + "sprFloorSealRoomBig", 25, 16, 16, shnSnow);
+			FloorSeal            = spr_add("sprFloorSeal",         4, 16, 16);
+			SnowFloorSeal        = spr_add("sprFloorSeal",         4, 16, 16, shnSnow);
+			FloorSealRoom        = spr_add("sprFloorSealRoom",     9, 16, 16);
+			SnowFloorSealRoom    = spr_add("sprFloorSealRoom",     9, 16, 16, shnSnow);
+			FloorSealRoomBig     = spr_add("sprFloorSealRoomBig", 25, 16, 16);
+			SnowFloorSealRoomBig = spr_add("sprFloorSealRoomBig", 25, 16, 16, shnSnow);
 			
 			//#region PROPS
-			p = m + "Props/";
-				
+			spr_path_add("Props/");
+			
 				 // Igloos:
-				IglooFrontIdle = sprite(p + "sprIglooFront",     1, 24, 24);
-				IglooFrontHurt = sprite(p + "sprIglooFrontHurt", 3, 24, 24);
-				IglooFrontDead = sprite(p + "sprIglooFrontDead", 3, 24, 24);
-				IglooSideIdle  = sprite(p + "sprIglooSide",      1, 24, 24);
-				IglooSideHurt  = sprite(p + "sprIglooSideHurt",  3, 24, 24);
-				IglooSideDead  = sprite(p + "sprIglooSideDead",  3, 24, 24);
+				IglooFrontIdle = spr_add("sprIglooFront",     1, 24, 24);
+				IglooFrontHurt = spr_add("sprIglooFrontHurt", 3, 24, 24);
+				IglooFrontDead = spr_add("sprIglooFrontDead", 3, 24, 24);
+				IglooSideIdle  = spr_add("sprIglooSide",      1, 24, 24);
+				IglooSideHurt  = spr_add("sprIglooSideHurt",  3, 24, 24);
+				IglooSideDead  = spr_add("sprIglooSideDead",  3, 24, 24);
 				
 				 // Palanking Statue:
-				PalankingStatueIdle  =[sprite(p + "sprPalankingStatue1",     1, 32, 32),
-				                       sprite(p + "sprPalankingStatue2",     1, 32, 32),
-				                       sprite(p + "sprPalankingStatue3",     1, 32, 32),
-				                       sprite(p + "sprPalankingStatue4",     1, 32, 32)];
-				PalankingStatueHurt  =[sprite(p + "sprPalankingStatue1",     1, 32, 32, shnHurt),
-				                       sprite(p + "sprPalankingStatue2",     1, 32, 32, shnHurt),
-				                       sprite(p + "sprPalankingStatue3",     1, 32, 32, shnHurt),
-				                       sprite(p + "sprPalankingStatue4",     1, 32, 32, shnHurt)];
-				PalankingStatueDead  = sprite(p + "sprPalankingStatueDead",  3, 32, 32);
-				PalankingStatueChunk = sprite(p + "sprPalankingStatueChunk", 5, 16, 16);
+				PalankingStatueIdle  =[spr_add("sprPalankingStatue1",     1, 32, 32),
+				                       spr_add("sprPalankingStatue2",     1, 32, 32),
+				                       spr_add("sprPalankingStatue3",     1, 32, 32),
+				                       spr_add("sprPalankingStatue4",     1, 32, 32)];
+				PalankingStatueHurt  =[spr_add("sprPalankingStatue1",     1, 32, 32, shnHurt),
+				                       spr_add("sprPalankingStatue2",     1, 32, 32, shnHurt),
+				                       spr_add("sprPalankingStatue3",     1, 32, 32, shnHurt),
+				                       spr_add("sprPalankingStatue4",     1, 32, 32, shnHurt)];
+				PalankingStatueDead  = spr_add("sprPalankingStatueDead",  3, 32, 32);
+				PalankingStatueChunk = spr_add("sprPalankingStatueChunk", 5, 16, 16);
 				
+			spr_path_add("../");
 			//#endregion
 			
 		//#endregion
 		
 		//#region LABS
-		m = "areas/Labs/";
-		p = m;
-			
+		spr_path_set("areas/Labs/");
+		
 			 // Freak Chamber:
-			Wall6BotTrans     = sprite(p + "sprWall6BotTrans",     4,  0,  0);
-			FreakChamberAlarm = sprite(p + "sprFreakChamberAlarm", 4, 12, 12);
+			Wall6BotTrans     = spr_add("sprWall6BotTrans",     4,  0,  0);
+			FreakChamberAlarm = spr_add("sprFreakChamberAlarm", 4, 12, 12);
 			
 			//#region PROPS
-			p = m + "Props/";
-				
+			spr_path_add("Props/");
+			
 				 // Mutant Vat:
-				MutantVatIdle  = sprite(p + "sprMutantVat",      1, 32, 32);
-				MutantVatHurt  = sprite(p + "sprMutantVatHurt",  3, 32, 32);
-				MutantVatDead  = sprite(p + "sprMutantVatDead",  3, 32, 32);
-				MutantVatBack  = sprite(p + "sprMutantVatBack",  6, 32, 32);
-				MutantVatLid   = sprite(p + "sprMutantVatLid",   8, 24, 24);
-				MutantVatGlass = sprite(p + "sprMutantVatGlass", 4, 6,  6);
+				MutantVatIdle  = spr_add("sprMutantVat",      1, 32, 32);
+				MutantVatHurt  = spr_add("sprMutantVatHurt",  3, 32, 32);
+				MutantVatDead  = spr_add("sprMutantVatDead",  3, 32, 32);
+				MutantVatBack  = spr_add("sprMutantVatBack",  6, 32, 32);
+				MutantVatLid   = spr_add("sprMutantVatLid",   8, 24, 24);
+				MutantVatGlass = spr_add("sprMutantVatGlass", 4, 6,  6);
 				
 				 // Button:
-				ButtonIdle        = sprite(p + "sprButtonIdle",         1, 16, 16);
-				ButtonHurt        = sprite(p + "sprButtonHurt",         3, 16, 16);
-				ButtonPressedIdle = sprite(p + "sprButtonPressedIdle",  1, 16, 16);
-				ButtonPressedHurt = sprite(p + "sprButtonPressedHurt",  3, 16, 16);
-				ButtonDead        = sprite(p + "sprButtonDead",         4, 16, 16);
-				ButtonDebris      = sprite(p + "sprButtonDebris",       1, 12, 12);
-				ButtonRevive      = sprite(p + "sprButtonRevive",      12, 24, 48);
-				ButtonReviveArea  = sprite(p + "sprButtonReviveArea",   8, 20, 20);
-				PickupRevive      = sprite(p + "sprPickupRevive",      12, 24, 48);
-				PickupReviveArea  = sprite(p + "sprPickupReviveArea",   8, 20, 20);
+				ButtonIdle        = spr_add("sprButtonIdle",         1, 16, 16);
+				ButtonHurt        = spr_add("sprButtonHurt",         3, 16, 16);
+				ButtonPressedIdle = spr_add("sprButtonPressedIdle",  1, 16, 16);
+				ButtonPressedHurt = spr_add("sprButtonPressedHurt",  3, 16, 16);
+				ButtonDead        = spr_add("sprButtonDead",         4, 16, 16);
+				ButtonDebris      = spr_add("sprButtonDebris",       1, 12, 12);
+				ButtonRevive      = spr_add("sprButtonRevive",      12, 24, 48);
+				ButtonReviveArea  = spr_add("sprButtonReviveArea",   8, 20, 20);
+				PickupRevive      = spr_add("sprPickupRevive",      12, 24, 48);
+				PickupReviveArea  = spr_add("sprPickupReviveArea",   8, 20, 20);
 				
+			spr_path_add("../");
 			//#endregion
 			
 		//#endregion
 		
 		//#region PALACE
-		m = "areas/Palace/";
-		p = m;
-			
+		spr_path_set("areas/Palace/");
+		
 			 // Decals:
-			BigTopDecal[?     area_palace] = sprite(p + "sprBigTopDecalPalace", 1, 32, 56);
-			msk.BigTopDecal[? area_palace] = sprite(p + "../mskBigTopDecal",    1, 32, 16);
+			BigTopDecal[?     area_palace] = spr_add("sprBigTopDecalPalace", 1, 32, 56);
+			msk.BigTopDecal[? area_palace] = spr_add("../mskBigTopDecal",    1, 32, 16);
 			
 			 // Generator Shadows Woooo:
-			shd.BigGenerator  = sprite(p + "shdBigGenerator",  1, 48-16, 32);
-			shd.BigGeneratorR = sprite(p + "shdBigGeneratorR", 1, 48+16, 32);
+			shd.BigGenerator  = spr_add("shdBigGenerator",  1, 48-16, 32);
+			shd.BigGeneratorR = spr_add("shdBigGeneratorR", 1, 48+16, 32);
 			
 			 // Inactive Throne Hitbox (Can walk on top, so cool broo):
-			msk.NothingInactiveCool = sprite(p + "mskNothingInactiveCool", 1, 150, 100);
+			msk.NothingInactiveCool = spr_add("mskNothingInactiveCool", 1, 150, 100);
 			with(msk.NothingInactiveCool){
 				mask = [false, 0];
 			}
 			
-			 // Better Game Over Sprite (Big sprite so that the on-hover text is more mandatory):
-			NothingDeathCause = sprite(p + "sprNothingDeathCause", 1, 80, 80);
+			 // Better Game Over Sprite (Big spr_add so that the on-hover text is more mandatory):
+			NothingDeathCause = spr_add("sprNothingDeathCause", 1, 80, 80);
 			
 			 // Throne Shadow:
-			shd.Nothing = sprite(p + "shdNothing", 1, 128, 100);
+			shd.Nothing = spr_add("shdNothing", 1, 128, 100);
 			
 			 // Stairs:
-			FloorPalaceStairs       = sprite(p + "sprFloorPalaceStairs",       3, 0, 0);
-			FloorPalaceStairsCarpet = sprite(p + "sprFloorPalaceStairsCarpet", 6, 0, 0);
+			FloorPalaceStairs       = spr_add("sprFloorPalaceStairs",       3, 0, 0);
+			FloorPalaceStairsCarpet = spr_add("sprFloorPalaceStairsCarpet", 6, 0, 0);
 			
 			 // Shrine Floors:
-			FloorPalaceShrine          = sprite(p + "sprFloorPalaceShrine",          10, 2, 2);
-			FloorPalaceShrineRoomSmall = sprite(p + "sprFloorPalaceShrineRoomSmall",  4, 0, 0);
-			FloorPalaceShrineRoomLarge = sprite(p + "sprFloorPalaceShrineRoomLarge",  9, 0, 0);
+			FloorPalaceShrine          = spr_add("sprFloorPalaceShrine",          10, 2, 2);
+			FloorPalaceShrineRoomSmall = spr_add("sprFloorPalaceShrineRoomSmall",  4, 0, 0);
+			FloorPalaceShrineRoomLarge = spr_add("sprFloorPalaceShrineRoomLarge",  9, 0, 0);
 			
 			 // Tiny TopSmalls:
 			TopTiny[? sprWall7Trans] = [
-				[sprite(p + "sprTopTinyPalace", 8,  0,  0),
-				 sprite(p + "sprTopTinyPalace", 8,  0, -8)],
-				[sprite(p + "sprTopTinyPalace", 8, -8,  0),
-				 sprite(p + "sprTopTinyPalace", 8, -8, -8)]
+				[spr_add("sprTopTinyPalace", 8,  0,  0),
+				 spr_add("sprTopTinyPalace", 8,  0, -8)],
+				[spr_add("sprTopTinyPalace", 8, -8,  0),
+				 spr_add("sprTopTinyPalace", 8, -8, -8)]
 			];
 			
 			//#region PROPS
-			p = m + "Props/";
-				
+			spr_path_add("Props/");
+			
 				 // Palace Altar:
-				PalaceAltarIdle   = sprite(p + "sprPalaceAltar",       1, 24, 24);
-				PalaceAltarHurt   = sprite(p + "sprPalaceAltarHurt",   3, 24, 24);
-				PalaceAltarDead   = sprite(p + "sprPalaceAltarDead",   4, 24, 24);
-				PalaceAltarDebris = sprite(p + "sprPalaceAltarDebris", 5,  8,  8);
+				PalaceAltarIdle   = spr_add("sprPalaceAltar",       1, 24, 24);
+				PalaceAltarHurt   = spr_add("sprPalaceAltarHurt",   3, 24, 24);
+				PalaceAltarDead   = spr_add("sprPalaceAltarDead",   4, 24, 24);
+				PalaceAltarDebris = spr_add("sprPalaceAltarDebris", 5,  8,  8);
 				
-				GroundFlameGreen             = sprite(p + "sprGroundFlameGreen",             8, 4, 6);
-				GroundFlameGreenBig          = sprite(p + "sprGroundFlameGreenBig",          8, 6, 8);
-				GroundFlameGreenDisappear    = sprite(p + "sprGroundFlameGreenDisappear",    4, 4, 6);
-				GroundFlameGreenBigDisappear = sprite(p + "sprGroundFlameGreenBigDisappear", 4, 6, 8);
+				GroundFlameGreen             = spr_add("sprGroundFlameGreen",             8, 4, 6);
+				GroundFlameGreenBig          = spr_add("sprGroundFlameGreenBig",          8, 6, 8);
+				GroundFlameGreenDisappear    = spr_add("sprGroundFlameGreenDisappear",    4, 4, 6);
+				GroundFlameGreenBigDisappear = spr_add("sprGroundFlameGreenBigDisappear", 4, 6, 8);
 				
 				 // Pillar (Connects to the ground better):
-				sprite_replace(sprNuclearPillar,     "sprites/" + p + "sprNuclearPillar.png",     11, 24, 32);
-				sprite_replace(sprNuclearPillarHurt, "sprites/" + p + "sprNuclearPillarHurt.png",  3, 24, 32);
-				sprite_replace(sprNuclearPillarDead, "sprites/" + p + "sprNuclearPillarDead.png",  3, 24, 32);
+				sprite_replace(sprNuclearPillar,     spr_path + "sprNuclearPillar.png",     11, 24, 32);
+				sprite_replace(sprNuclearPillarHurt, spr_path + "sprNuclearPillarHurt.png",  3, 24, 32);
+				sprite_replace(sprNuclearPillarDead, spr_path + "sprNuclearPillarDead.png",  3, 24, 32);
 				
+			spr_path_add("../");
 			//#endregion
 			
 		//#endregion
 		
 		//#region VAULT
-		m = "areas/Vault/";
-		p = m;
-			
+		spr_path_set("areas/Vault/");
+		
 			 // Tiny TopSmalls:
 			TopTiny[? sprWall100Trans] = [
-				[sprite(p + "sprTopTinyVault", 12,  0,  0),
-				 sprite(p + "sprTopTinyVault", 12,  0, -8)],
-				[sprite(p + "sprTopTinyVault", 12, -8,  0),
-				 sprite(p + "sprTopTinyVault", 12, -8, -8)]
+				[spr_add("sprTopTinyVault", 12,  0,  0),
+				 spr_add("sprTopTinyVault", 12,  0, -8)],
+				[spr_add("sprTopTinyVault", 12, -8,  0),
+				 spr_add("sprTopTinyVault", 12, -8, -8)]
 			];
 			
 			 // Vault Flower Room:
-			VaultFlowerFloor	  = sprite(p + "sprFloorVaultFlower",	   9, 0, 0);
-			VaultFlowerFloorSmall = sprite(p + "sprFloorVaultFlowerSmall", 4, 0, 0);
+			VaultFlowerFloor	  = spr_add("sprFloorVaultFlower",	   9, 0, 0);
+			VaultFlowerFloorSmall = spr_add("sprFloorVaultFlowerSmall", 4, 0, 0);
 			
 			 // Quest Hint Lore Tiles:
-			QuestFloor = sprite(p + "sprFloorQuest", 4, 0, 0);
+			QuestFloor = spr_add("sprFloorQuest", 4, 0, 0);
 			
 			//#region PROPS
-			p = m + "Props/";
-				
+			spr_path_add("Props/");
+			
 				 // Vault Flower:
-				VaultFlowerIdle         = sprite(p + "sprVaultFlower",              4, 24, 24);
-				VaultFlowerHurt         = sprite(p + "sprVaultFlowerHurt",          3, 24, 24);
-				VaultFlowerDead         = sprite(p + "sprVaultFlowerDead",          3, 24, 24);
-				VaultFlowerWiltedIdle   = sprite(p + "sprVaultFlowerWilted",        1, 24, 24);
-				VaultFlowerWiltedHurt   = sprite(p + "sprVaultFlowerWiltedHurt",    3, 24, 24);
-				VaultFlowerWiltedDead   = sprite(p + "sprVaultFlowerWiltedDead",    3, 24, 24);
-				VaultFlowerDebris       = sprite(p + "sprVaultFlowerDebris",       10,  4,  4);
-				VaultFlowerWiltedDebris = sprite(p + "sprVaultFlowerWiltedDebris", 10,  4,  4);
-				VaultFlowerSparkle      = sprite(p + "sprVaultFlowerSparkle",       4,  3,  3);
+				VaultFlowerIdle         = spr_add("sprVaultFlower",              4, 24, 24);
+				VaultFlowerHurt         = spr_add("sprVaultFlowerHurt",          3, 24, 24);
+				VaultFlowerDead         = spr_add("sprVaultFlowerDead",          3, 24, 24);
+				VaultFlowerWiltedIdle   = spr_add("sprVaultFlowerWilted",        1, 24, 24);
+				VaultFlowerWiltedHurt   = spr_add("sprVaultFlowerWiltedHurt",    3, 24, 24);
+				VaultFlowerWiltedDead   = spr_add("sprVaultFlowerWiltedDead",    3, 24, 24);
+				VaultFlowerDebris       = spr_add("sprVaultFlowerDebris",       10,  4,  4);
+				VaultFlowerWiltedDebris = spr_add("sprVaultFlowerWiltedDebris", 10,  4,  4);
+				VaultFlowerSparkle      = spr_add("sprVaultFlowerSparkle",       4,  3,  3);
 				
 				 // Quest Props:
-				QuestProp1Idle = sprite(p + "sprQuestProp1Idle", 1, 16, 16);
-				QuestProp1Hurt = sprite(p + "sprQuestProp1Hurt", 3, 16, 16);
-				QuestProp1Dead = sprite(p + "sprQuestProp1Dead", 3, 16, 16);
-				QuestProp2Idle = sprite(p + "sprQuestProp2Idle", 1, 16, 16);
-				QuestProp2Hurt = sprite(p + "sprQuestProp2Hurt", 3, 16, 16);
-				QuestProp2Dead = sprite(p + "sprQuestProp2Dead", 3, 16, 16);
-				QuestProp3Idle = sprite(p + "sprQuestProp3Idle", 1, 16, 16);
-				QuestProp3Hurt = sprite(p + "sprQuestProp3Hurt", 3, 16, 16);
-				QuestProp3Dead = sprite(p + "sprQuestProp3Dead", 3, 16, 16);
+				QuestProp1Idle = spr_add("sprQuestProp1Idle", 1, 16, 16);
+				QuestProp1Hurt = spr_add("sprQuestProp1Hurt", 3, 16, 16);
+				QuestProp1Dead = spr_add("sprQuestProp1Dead", 3, 16, 16);
+				QuestProp2Idle = spr_add("sprQuestProp2Idle", 1, 16, 16);
+				QuestProp2Hurt = spr_add("sprQuestProp2Hurt", 3, 16, 16);
+				QuestProp2Dead = spr_add("sprQuestProp2Dead", 3, 16, 16);
+				QuestProp3Idle = spr_add("sprQuestProp3Idle", 1, 16, 16);
+				QuestProp3Hurt = spr_add("sprQuestProp3Hurt", 3, 16, 16);
+				QuestProp3Dead = spr_add("sprQuestProp3Dead", 3, 16, 16);
 				
 				 // Ghost Statue:
 				GhostStatueIdle   = sprite_add_base64("iVBORw0KGgoAAAANSUhEUgAAADAAAAAwCAMAAABg3Am1AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAASUExURQAAAH9kQ1RCLDInGq+PagAAAHxMDEMAAAAGdFJOU///////ALO/pL8AAAAJcEhZcwAADsMAAA7DAcdvqGQAAAEnSURBVEhL7ZPREoUgCEQF7f9/+e4STSlkNnMf22nSkCMgWbaX+oAVpUCBfBqUAyJ6R+T2UuUuRh6hKJQjmbFIU2ktTysHDiWrmUm1IYRYWm47lViYkOBp6VllAPe+zSlacKbV3VcBbo8gteoqQOcXEYww96wRGYBOVyptdbDxT+XmigrwQ8V1Hw+Vim5ZOqyiaA0OPrrgYX4iBEHWsY7xky0GwIwsUjjZEIGZw58AifA79Z+4OEgJpfopISUZqrh+4d4YgIIpawYM/U3q5qzRW3zIDBNALYJrj8Ci3IHq5opVFnzVFOChYN38znf/S40AU0K555vIHLAWnM9jSiPAvKYRgh5qwI7WtuMNwzQCryY9r8M/AWSwH/0wzACfXjQBlvQBz9q2H25QJL3vdkDHAAAAAElFTkSuQmCC",
@@ -1204,82 +1254,83 @@
 				3,  24, 24);
 				*/
 				
+			spr_path_add("../");
 			//#endregion
 			
 		//#endregion
 		
 		//#region COAST
-		m = "areas/Coast/";
-		p = m;
-			
+		spr_path_set("areas/Coast/");
+		
 			 // Floors:
-			FloorCoast  = sprite(p + "sprFloorCoast",  4, 2, 2);
-			FloorCoastB = sprite(p + "sprFloorCoastB", 3, 2, 2);
-			DetailCoast = sprite(p + "sprDetailCoast", 6, 4, 4);
+			FloorCoast  = spr_add("sprFloorCoast",  4, 2, 2);
+			FloorCoastB = spr_add("sprFloorCoastB", 3, 2, 2);
+			DetailCoast = spr_add("sprDetailCoast", 6, 4, 4);
 			
 			 // Sea:
-			CoastTrans    = sprite(p + "sprCoastTrans",    1,   0, 0);
-			WaterGradient = sprite(p + "sprWaterGradient", 1, 128, 0);
-			WaterStreak   = sprite(p + "sprWaterStreak",   7,   8, 8);
+			CoastTrans    = spr_add("sprCoastTrans",    1,   0, 0);
+			WaterGradient = spr_add("sprWaterGradient", 1, 128, 0);
+			WaterStreak   = spr_add("sprWaterStreak",   7,   8, 8);
 			
 			//#region PROPS
-			p = m + "Props/";
-				
+			spr_path_add("Props/");
+			
 				 // Blooming Cactus:
-				BloomingCactusIdle =[sprite(p + "sprBloomingCactus",      1, 12, 12),
-				                     sprite(p + "sprBloomingCactus2",     1, 12, 12),
-				                     sprite(p + "sprBloomingCactus3",     1, 12, 12)];
-				BloomingCactusHurt =[sprite(p + "sprBloomingCactus",      1, 12, 12, shnHurt),
-				                     sprite(p + "sprBloomingCactus2",     1, 12, 12, shnHurt),
-				                     sprite(p + "sprBloomingCactus3",     1, 12, 12, shnHurt)];
-				BloomingCactusDead =[sprite(p + "sprBloomingCactusDead",  4, 12, 12),
-				                     sprite(p + "sprBloomingCactus2Dead", 4, 12, 12),
-				                     sprite(p + "sprBloomingCactus3Dead", 4, 12, 12)];
+				BloomingCactusIdle =[spr_add("sprBloomingCactus",      1, 12, 12),
+				                     spr_add("sprBloomingCactus2",     1, 12, 12),
+				                     spr_add("sprBloomingCactus3",     1, 12, 12)];
+				BloomingCactusHurt =[spr_add("sprBloomingCactus",      1, 12, 12, shnHurt),
+				                     spr_add("sprBloomingCactus2",     1, 12, 12, shnHurt),
+				                     spr_add("sprBloomingCactus3",     1, 12, 12, shnHurt)];
+				BloomingCactusDead =[spr_add("sprBloomingCactusDead",  4, 12, 12),
+				                     spr_add("sprBloomingCactus2Dead", 4, 12, 12),
+				                     spr_add("sprBloomingCactus3Dead", 4, 12, 12)];
 				
 				 // Big Blooming Cactus:
-				BigBloomingCactusIdle = sprite(p + "sprBigBloomingCactus",     1, 16, 16);
-				BigBloomingCactusHurt = sprite(p + "sprBigBloomingCactus",     1, 16, 16, shnHurt);
-				BigBloomingCactusDead = sprite(p + "sprBigBloomingCactusDead", 4, 16, 16);
+				BigBloomingCactusIdle = spr_add("sprBigBloomingCactus",     1, 16, 16);
+				BigBloomingCactusHurt = spr_add("sprBigBloomingCactus",     1, 16, 16, shnHurt);
+				BigBloomingCactusDead = spr_add("sprBigBloomingCactusDead", 4, 16, 16);
 				
 				 // Buried Car:
-				BuriedCarIdle = sprite(p + "sprBuriedCar",     1, 16, 16);
-				BuriedCarHurt = sprite(p + "sprBuriedCarHurt", 3, 16, 16);
+				BuriedCarIdle = spr_add("sprBuriedCar",     1, 16, 16);
+				BuriedCarHurt = spr_add("sprBuriedCarHurt", 3, 16, 16);
 				
 				 // Bush:
-				BloomingBushIdle = sprite(p + "sprBloomingBush",     1, 12, 12);
-				BloomingBushHurt = sprite(p + "sprBloomingBushHurt", 3, 12, 12);
-				BloomingBushDead = sprite(p + "sprBloomingBushDead", 3, 12, 12);
+				BloomingBushIdle = spr_add("sprBloomingBush",     1, 12, 12);
+				BloomingBushHurt = spr_add("sprBloomingBushHurt", 3, 12, 12);
+				BloomingBushDead = spr_add("sprBloomingBushDead", 3, 12, 12);
 				
 				 // Palm:
-				PalmIdle     = sprite(p + "sprPalm",         1, 24, 40);
-				PalmHurt     = sprite(p + "sprPalmHurt",     3, 24, 40);
-				PalmDead     = sprite(p + "sprPalmDead",     4, 24, 40);
-				PalmFortIdle = sprite(p + "sprPalmFort",     1, 32, 56);
-				PalmFortHurt = sprite(p + "sprPalmFortHurt", 3, 32, 56);
+				PalmIdle     = spr_add("sprPalm",         1, 24, 40);
+				PalmHurt     = spr_add("sprPalmHurt",     3, 24, 40);
+				PalmDead     = spr_add("sprPalmDead",     4, 24, 40);
+				PalmFortIdle = spr_add("sprPalmFort",     1, 32, 56);
+				PalmFortHurt = spr_add("sprPalmFortHurt", 3, 32, 56);
 				
 				 // Sea/Seal Mine:
-				SealMine     = sprite(p + "sprSeaMine", 1, 12, 12);
-				SealMineHurt = sprite(p + "sprSeaMine", 1, 12, 12, shnHurt);
+				SealMine     = spr_add("sprSeaMine", 1, 12, 12);
+				SealMineHurt = spr_add("sprSeaMine", 1, 12, 12, shnHurt);
 				
-			p = m + "Decals/";
-				
+			spr_path_add("../Decals/");
+			
 				 // Decal Water Rock Props:
-				RockIdle  =[sprite(p + "sprRock1Idle", 1, 16, 16),
-				            sprite(p + "sprRock2Idle", 1, 16, 16)];
-				RockHurt  =[sprite(p + "sprRock1Idle", 1, 16, 16, shnHurt),
-				            sprite(p + "sprRock2Idle", 1, 16, 16, shnHurt)];
-				RockDead  =[sprite(p + "sprRock1Dead", 1, 16, 16),
-				            sprite(p + "sprRock2Dead", 1, 16, 16)];
-				RockBott  =[sprite(p + "sprRock1Bott", 1, 16, 16),
-				            sprite(p + "sprRock2Bott", 1, 16, 16)];
-				RockFoam  =[sprite(p + "sprRock1Foam", 1, 16, 16),
-				            sprite(p + "sprRock2Foam", 1, 16, 16)];
-				ShellIdle = sprite(p + "sprShellIdle", 1, 32, 32);
-				ShellHurt = sprite(p + "sprShellIdle", 1, 32, 32, shnHurt);
-				ShellDead = sprite(p + "sprShellDead", 6, 32, 32);
-				ShellBott = sprite(p + "sprShellBott", 1, 32, 32);
-				ShellFoam = sprite(p + "sprShellFoam", 1, 32, 32);
+				RockIdle  =[spr_add("sprRock1Idle", 1, 16, 16),
+				            spr_add("sprRock2Idle", 1, 16, 16)];
+				RockHurt  =[spr_add("sprRock1Idle", 1, 16, 16, shnHurt),
+				            spr_add("sprRock2Idle", 1, 16, 16, shnHurt)];
+				RockDead  =[spr_add("sprRock1Dead", 1, 16, 16),
+				            spr_add("sprRock2Dead", 1, 16, 16)];
+				RockBott  =[spr_add("sprRock1Bott", 1, 16, 16),
+				            spr_add("sprRock2Bott", 1, 16, 16)];
+				RockFoam  =[spr_add("sprRock1Foam", 1, 16, 16),
+				            spr_add("sprRock2Foam", 1, 16, 16)];
+				ShellIdle = spr_add("sprShellIdle", 1, 32, 32);
+				ShellHurt = spr_add("sprShellIdle", 1, 32, 32, shnHurt);
+				ShellDead = spr_add("sprShellDead", 6, 32, 32);
+				ShellBott = spr_add("sprShellBott", 1, 32, 32);
+				ShellFoam = spr_add("sprShellFoam", 1, 32, 32);
 				
+			spr_path_add("../");
 			//#endregion
 			
 			 // Strange Creature:
@@ -1295,15 +1346,14 @@
 		//#endregion
 		
 		//#region OASIS
-		m = "areas/Oasis/";
-		p = m;
-			
+		spr_path_set("areas/Oasis/");
+		
 			 // Big Bubble:
-			BigBubble    = sprite(p + "sprBigBubble",    1, 24, 24);
-			BigBubblePop = sprite(p + "sprBigBubblePop", 4, 24, 24);
+			BigBubble    = spr_add("sprBigBubble",    1, 24, 24);
+			BigBubblePop = spr_add("sprBigBubblePop", 4, 24, 24);
 			
 			 // Decals:
-			BigTopDecal[? area_oasis] = sprite(p + "sprBigTopDecalOasis", 1, 32, 52);
+			BigTopDecal[? area_oasis] = spr_add("sprBigTopDecalOasis", 1, 32, 52);
 			BigTopDecal[? "oasis"] = BigTopDecal[? area_oasis];
 			
 			 // Ground Crack Effect:
@@ -1313,326 +1363,323 @@
 		//#endregion
 		
 		//#region TRENCH
-		m = "areas/Trench/";
-		p = m;
-			
+		spr_path_set("areas/Trench/");
+		
 			 // Decals:
-			BigTopDecal[?     "trench"] = sprite(p + "sprBigTopDecalTrench", 1, 32, 52);
-			msk.BigTopDecal[? "trench"] = sprite(p + "../mskBigTopDecal",    1, 32, 16);
+			BigTopDecal[?     "trench"] = spr_add("sprBigTopDecalTrench", 1, 32, 52);
+			msk.BigTopDecal[? "trench"] = spr_add("../mskBigTopDecal",    1, 32, 16);
 			
 			 // Floors:
-			FloorTrench      = sprite(p + "sprFloorTrench",      4, 0, 0);
-			FloorTrenchB     = sprite(p + "sprFloorTrenchB",     4, 2, 2);
-			FloorTrenchExplo = sprite(p + "sprFloorTrenchExplo", 5, 1, 1);
-			FloorTrenchBreak = sprite(p + "sprFloorTrenchBreak", 3, 8, 8);
-			DetailTrench     = sprite(p + "sprDetailTrench",     6, 4, 4);
+			FloorTrench      = spr_add("sprFloorTrench",      4, 0, 0);
+			FloorTrenchB     = spr_add("sprFloorTrenchB",     4, 2, 2);
+			FloorTrenchExplo = spr_add("sprFloorTrenchExplo", 5, 1, 1);
+			FloorTrenchBreak = spr_add("sprFloorTrenchBreak", 3, 8, 8);
+			DetailTrench     = spr_add("sprDetailTrench",     6, 4, 4);
 			
 			 // Walls:
-			WallTrenchBot   = sprite(p + "sprWallTrenchBot",   4,  0,  0);
-			WallTrenchTop   = sprite(p + "sprWallTrenchTop",   8,  0,  0);
-			WallTrenchOut   = sprite(p + "sprWallTrenchOut",   1,  4, 12);
-			WallTrenchTrans = sprite(p + "sprWallTrenchTrans", 8,  0,  0);
-			DebrisTrench    = sprite(p + "sprDebrisTrench",    4,  4,  4);
+			WallTrenchBot   = spr_add("sprWallTrenchBot",   4,  0,  0);
+			WallTrenchTop   = spr_add("sprWallTrenchTop",   8,  0,  0);
+			WallTrenchOut   = spr_add("sprWallTrenchOut",   1,  4, 12);
+			WallTrenchTrans = spr_add("sprWallTrenchTrans", 8,  0,  0);
+			DebrisTrench    = spr_add("sprDebrisTrench",    4,  4,  4);
 			
 			 // Decals:
-			TopDecalTrench     = sprite(p + "sprTopDecalTrench",      2, 19, 24);
-			TopDecalTrenchMine = sprite(p + "sprTopDecalTrenchMine",  1, 16, 24);
-			TrenchMineDead     = sprite(p + "sprTrenchMineDead",     12, 12, 36);
+			TopDecalTrench     = spr_add("sprTopDecalTrench",      2, 19, 24);
+			TopDecalTrenchMine = spr_add("sprTopDecalTrenchMine",  1, 16, 24);
+			TrenchMineDead     = spr_add("sprTrenchMineDead",     12, 12, 36);
 			
 			 // Proto Statue:
-			PStatTrenchIdle   = sprite(p + "sprPStatTrenchIdle",    1, 40, 40);
-			PStatTrenchHurt   = sprite(p + "sprPStatTrenchHurt",    3, 40, 40);
-			PStatTrenchLights = sprite(p + "sprPStatTrenchLights", 40, 40, 40);
+			PStatTrenchIdle   = spr_add("sprPStatTrenchIdle",    1, 40, 40);
+			PStatTrenchHurt   = spr_add("sprPStatTrenchHurt",    3, 40, 40);
+			PStatTrenchLights = spr_add("sprPStatTrenchLights", 40, 40, 40);
 			
 			//#region PITS
-			p = m + "Pit/";
-				
+			spr_path_add("Pit/");
+			
 				 // Normal:
-				Pit    = sprite(p + "sprPit",    1, 2, 2);
-				PitTop = sprite(p + "sprPitTop", 1, 2, 2);
-				PitBot = sprite(p + "sprPitBot", 1, 2, 2);
+				Pit    = spr_add("sprPit",    1, 2, 2);
+				PitTop = spr_add("sprPitTop", 1, 2, 2);
+				PitBot = spr_add("sprPitBot", 1, 2, 2);
 				
 				 // Small:
-				PitSmall    = sprite(p + "sprPitSmall",    1, 3, 3);
-				PitSmallTop = sprite(p + "sprPitSmallTop", 1, 3, 3);
-				PitSmallBot = sprite(p + "sprPitSmallBot", 1, 3, 3);
+				PitSmall    = spr_add("sprPitSmall",    1, 3, 3);
+				PitSmallTop = spr_add("sprPitSmallTop", 1, 3, 3);
+				PitSmallBot = spr_add("sprPitSmallBot", 1, 3, 3);
 				
+			spr_path_add("../");
 			//#endregion
 			
 			//#region PROPS
-			p = m + "Props/";
+			spr_path_add("Props/");
 				
 				 // Eel Skeleton (big fat eel edition):
-				EelSkullIdle = sprite(p + "sprEelSkeleton",     1, 24, 24);
-				EelSkullHurt = sprite(p + "sprEelSkeletonHurt", 3, 24, 24);
-				EelSkullDead = sprite(p + "sprEelSkeletonDead", 3, 24, 24);
+				EelSkullIdle = spr_add("sprEelSkeleton",     1, 24, 24);
+				EelSkullHurt = spr_add("sprEelSkeletonHurt", 3, 24, 24);
+				EelSkullDead = spr_add("sprEelSkeletonDead", 3, 24, 24);
 				
 				 // Kelp:
-				KelpIdle = sprite(p + "sprKelp",     6, 16, 22);
-				KelpHurt = sprite(p + "sprKelpHurt", 3, 16, 22);
-				KelpDead = sprite(p + "sprKelpDead", 8, 16, 22);
+				KelpIdle = spr_add("sprKelp",     6, 16, 22);
+				KelpHurt = spr_add("sprKelpHurt", 3, 16, 22);
+				KelpDead = spr_add("sprKelpDead", 8, 16, 22);
 				
 				 // Vent:
-				VentIdle = sprite(p + "sprVent",     1, 12, 14);
-				VentHurt = sprite(p + "sprVentHurt", 3, 12, 14);
-				VentDead = sprite(p + "sprVentDead", 3, 12, 14);
+				VentIdle = spr_add("sprVent",     1, 12, 14);
+				VentHurt = spr_add("sprVentHurt", 3, 12, 14);
+				VentDead = spr_add("sprVentDead", 3, 12, 14);
 				
+			spr_path_add("../");
 			//#endregion
 			
 		//#endregion
 		
 		//#region SEWERS
-		m = "areas/Sewers/";
-		p = m;
-			
+		spr_path_set("areas/Sewers/");
+		
 			 // Decals:
-			BigTopDecal[? area_sewers] = sprite(p + "sprBigTopDecalSewers", 8, 32, 56);
+			BigTopDecal[? area_sewers] = spr_add("sprBigTopDecalSewers", 8, 32, 56);
 			
 			 // Fix Decal Not Fully Covering Wall:
-			sprite_replace(sprSewerDecal, "sprites/" + p + "sprWallDecalSewer.png", 1, 16, 24);
+			sprite_replace(sprSewerDecal, spr_path + "sprWallDecalSewer.png", 1, 16, 24);
 			
 			 // Floors:
-			FloorSewerDirt      = sprite(p + "sprFloorSewerDirt",      4, 16, 16);
-			FloorSewerLightDirt = sprite(p + "sprFloorSewerLightDirt", 4, 16, 16);
-			FloorSewerDrain     = sprite(p + "sprFloorSewerDrain",     1,  0,  0);
-			FloorSewerGrate     = sprite(p + "sprFloorSewerGrate",     8,  2,  2);
-			FloorSewerWeb       = sprite(p + "sprFloorSewerWeb",       1,  0,  0);
+			FloorSewerDirt      = spr_add("sprFloorSewerDirt",      4, 16, 16);
+			FloorSewerLightDirt = spr_add("sprFloorSewerLightDirt", 4, 16, 16);
+			FloorSewerDrain     = spr_add("sprFloorSewerDrain",     1,  0,  0);
+			FloorSewerGrate     = spr_add("sprFloorSewerGrate",     8,  2,  2);
+			FloorSewerWeb       = spr_add("sprFloorSewerWeb",       1,  0,  0);
 			
 			 // Manhole:
 			PizzaManhole = [
-				sprite(p + "sprPizzaManhole0", 2, 16, 16),
-				sprite(p + "sprPizzaManhole1", 2, 16, 16),
-				sprite(p + "sprPizzaManhole2", 2, 16, 16)
+				spr_add("sprPizzaManhole0", 2, 16, 16),
+				spr_add("sprPizzaManhole1", 2, 16, 16),
+				spr_add("sprPizzaManhole2", 2, 16, 16)
 			];
 			
 			 // Sewer Pool:
-			SewerPool        = sprite(p + "sprSewerPool",     8,  0,  0);
-			msk.SewerPool    = sprite(p + "mskSewerPool",     1, 32, 64);
-			SewerPoolBig     = sprite(p + "sprSewerPoolBig", 25,  0,  0);
-			msk.SewerPoolBig = sprite(p + "mskSewerPoolBig",  1, 80, 80);
+			SewerPool        = spr_add("sprSewerPool",     8,  0,  0);
+			msk.SewerPool    = spr_add("mskSewerPool",     1, 32, 64);
+			SewerPoolBig     = spr_add("sprSewerPoolBig", 25,  0,  0);
+			msk.SewerPoolBig = spr_add("mskSewerPoolBig",  1, 80, 80);
 			
 			//#region PROPS
-			p = m + "Props/"
-				
+			spr_path_add("Props/");
+			
 				 // Big Pipe:
-				BigPipeBottom     = sprite(p + "sprBigPipeBottom", 1, 24, 32);
-				BigPipeBottomHurt = sprite(p + "sprBigPipeBottom", 1, 24, 32, shnHurt);
-				BigPipeTop        = sprite(p + "sprBigPipeTop",    1, 24, 32);
-				BigPipeTopHurt    = sprite(p + "sprBigPipeTop",    1, 24, 32, shnHurt);
-				BigPipeHole       = sprite(p + "sprBigPipeHole",   1, 24, 32);
-				msk.BigPipe       = sprite(p + "sprBigPipeTop",    1, 24, 24);
+				BigPipeBottom     = spr_add("sprBigPipeBottom", 1, 24, 32);
+				BigPipeBottomHurt = spr_add("sprBigPipeBottom", 1, 24, 32, shnHurt);
+				BigPipeTop        = spr_add("sprBigPipeTop",    1, 24, 32);
+				BigPipeTopHurt    = spr_add("sprBigPipeTop",    1, 24, 32, shnHurt);
+				BigPipeHole       = spr_add("sprBigPipeHole",   1, 24, 32);
+				msk.BigPipe       = spr_add("sprBigPipeTop",    1, 24, 24);
 				with([BigPipeHole, msk.BigPipe]){
 					mask = [false, 0];
 				}
 				
 				 // Sewer Drain:
-				SewerDrainIdle = sprite(p + "sprSewerDrain",     8, 32, 38);
-				SewerDrainHurt = sprite(p + "sprSewerDrainHurt", 3, 32, 38);
-				SewerDrainDead = sprite(p + "sprSewerDrainDead", 5, 32, 38);
-				msk.SewerDrain = sprite(p + "mskSewerDrain",     1, 32, 38);
+				SewerDrainIdle = spr_add("sprSewerDrain",     8, 32, 38);
+				SewerDrainHurt = spr_add("sprSewerDrainHurt", 3, 32, 38);
+				SewerDrainDead = spr_add("sprSewerDrainDead", 5, 32, 38);
+				msk.SewerDrain = spr_add("mskSewerDrain",     1, 32, 38);
 				
 				 // Homage:
-				GatorStatueIdle = sprite(p + "sprGatorStatue",     1, 16, 16);
-				GatorStatueHurt = sprite(p + "sprGatorStatue",     1, 16, 16, shnHurt);
-				GatorStatueDead = sprite(p + "sprGatorStatueDead", 4, 16, 16);
+				GatorStatueIdle = spr_add("sprGatorStatue",     1, 16, 16);
+				GatorStatueHurt = spr_add("sprGatorStatue",     1, 16, 16, shnHurt);
+				GatorStatueDead = spr_add("sprGatorStatueDead", 4, 16, 16);
 				
+			spr_path_add("../");
 			//#endregion
 			
 		//#endregion
 		
 		//#region PIZZA SEWERS
-		m = "areas/Pizza/";
-		p = m;
-			
+		spr_path_set("areas/Pizza/");
+		
 			 // Decals:
-			BigTopDecal[? area_pizza_sewers] = sprite(p + "sprBigTopDecalPizza", 1, 32, 56);
+			BigTopDecal[? area_pizza_sewers] = spr_add("sprBigTopDecalPizza", 1, 32, 56);
 			BigTopDecal[? "pizza"] = BigTopDecal[? area_pizza_sewers];
 			
 			 // Fix Decal Not Fully Covering Wall:
-			sprite_replace(sprPizzaSewerDecal, "sprites/" + p + "sprWallDecalPizza.png", 1, 16, 24);
+			sprite_replace(sprPizzaSewerDecal, spr_path + "sprWallDecalPizza.png", 1, 16, 24);
 			
 			//#region PROPS
-			p = m + "Props/";
-				
+			spr_path_add("Props/");
+			
 				 // Door:
-				PizzaDoor       = sprite(p + "sprPizzaDoor",       10, 2, 0);
-				PizzaDoorDebris = sprite(p + "sprPizzaDoorDebris",  4, 4, 4);
+				PizzaDoor       = spr_add("sprPizzaDoor",       10, 2, 0);
+				PizzaDoorDebris = spr_add("sprPizzaDoorDebris",  4, 4, 4);
 				
 				 // Drain:
-				PizzaDrainIdle = sprite(p + "sprPizzaDrain",     8, 32, 38);
-				PizzaDrainHurt = sprite(p + "sprPizzaDrainHurt", 3, 32, 38);
-				PizzaDrainDead = sprite(p + "sprPizzaDrainDead", 5, 32, 38);
+				PizzaDrainIdle = spr_add("sprPizzaDrain",     8, 32, 38);
+				PizzaDrainHurt = spr_add("sprPizzaDrainHurt", 3, 32, 38);
+				PizzaDrainDead = spr_add("sprPizzaDrainDead", 5, 32, 38);
 				
 				 // Rubble:
-				PizzaRubbleIdle = sprite(p + "sprPizzaRubble",     1, 16, 0);
-				PizzaRubbleHurt = sprite(p + "sprPizzaRubbleHurt", 3, 16, 0);
-				msk.PizzaRubble = sprite(p + "mskPizzaRubble",     1, 16, 0);
+				PizzaRubbleIdle = spr_add("sprPizzaRubble",     1, 16, 0);
+				PizzaRubbleHurt = spr_add("sprPizzaRubbleHurt", 3, 16, 0);
+				msk.PizzaRubble = spr_add("mskPizzaRubble",     1, 16, 0);
 				
 				 // TV:
-				TVHurt = sprite(p + "sprTVHurt", 3, 24, 16);
+				TVHurt = spr_add("sprTVHurt", 3, 24, 16);
 				
+			spr_path_add("../");
 			//#endregion
 			
 		//#endregion
 		
 		//#region LAIR
-		m = "areas/Lair/";
-		p = m;
-			
+		spr_path_set("areas/Lair/");
+		
 			 // Floors:
-			FloorLair      = sprite(p + "sprFloorLair",      4, 0, 0);
-			FloorLairB     = sprite(p + "sprFloorLairB",     8, 0, 0);
-			FloorLairExplo = sprite(p + "sprFloorLairExplo", 4, 1, 1);
-			DetailLair     = sprite(p + "sprDetailLair",     6, 4, 4);
+			FloorLair      = spr_add("sprFloorLair",      4, 0, 0);
+			FloorLairB     = spr_add("sprFloorLairB",     8, 0, 0);
+			FloorLairExplo = spr_add("sprFloorLairExplo", 4, 1, 1);
+			DetailLair     = spr_add("sprDetailLair",     6, 4, 4);
 			
 			 // Walls:
-			WallLairBot   = sprite(p + "sprWallLairBot",   4,  0,  0);
-			WallLairTop   = sprite(p + "sprWallLairTop",   4,  0,  0);
-			WallLairOut   = sprite(p + "sprWallLairOut",   5,  4, 12);
-			WallLairTrans = sprite(p + "sprWallLairTrans", 1,  0,  0);
-			DebrisLair    = sprite(p + "sprDebrisLair",    4,  4,  4);
+			WallLairBot   = spr_add("sprWallLairBot",   4,  0,  0);
+			WallLairTop   = spr_add("sprWallLairTop",   4,  0,  0);
+			WallLairOut   = spr_add("sprWallLairOut",   5,  4, 12);
+			WallLairTrans = spr_add("sprWallLairTrans", 1,  0,  0);
+			DebrisLair    = spr_add("sprDebrisLair",    4,  4,  4);
 			
 			 // Decals:
-			TopDecalLair  = sprite(p + "sprTopDecalLair",  2, 16, 16);
-			WallDecalLair = sprite(p + "sprWallDecalLair", 1, 16, 24);
+			TopDecalLair  = spr_add("sprTopDecalLair",  2, 16, 16);
+			WallDecalLair = spr_add("sprWallDecalLair", 1, 16, 24);
 			
 			 // Manholes:
-			Manhole               = sprite(p + "sprManhole",               12, 16, 48);
-			ManholeOpen           = sprite(p + "sprManholeOpen",            1, 16, 16);
-			BigManhole            = sprite(p + "sprBigManhole",             6, 32, 32);
-			BigManholeOpen        = sprite(p + "sprBigManholeOpen",         1, 32, 32);
-			BigManholeFloor       = sprite(p + "sprBigManholeFloor",        4,  0,  0);
-			BigManholeDebris      = sprite(p + "sprBigManholeDebris",       4,  4,  4);
-			BigManholeDebrisChunk = sprite(p + "sprBigManholeDebrisChunk",  3, 12, 12);
+			Manhole               = spr_add("sprManhole",               12, 16, 48);
+			ManholeOpen           = spr_add("sprManholeOpen",            1, 16, 16);
+			BigManhole            = spr_add("sprBigManhole",             6, 32, 32);
+			BigManholeOpen        = spr_add("sprBigManholeOpen",         1, 32, 32);
+			BigManholeFloor       = spr_add("sprBigManholeFloor",        4,  0,  0);
+			BigManholeDebris      = spr_add("sprBigManholeDebris",       4,  4,  4);
+			BigManholeDebrisChunk = spr_add("sprBigManholeDebrisChunk",  3, 12, 12);
 			with([ManholeOpen, BigManholeOpen]){
 				mask = [false, 0];
 			}
 			
 			//#region PROPS
-			p = m + "Props/";
-				
+			spr_path_add("Props/");
+			
 				 // Cabinet:
-				CabinetIdle = sprite(p + "sprCabinet",     1, 12, 12);
-				CabinetHurt = sprite(p + "sprCabinet",     1, 12, 12, shnHurt);
-				CabinetDead = sprite(p + "sprCabinetDead", 3, 12, 12);
-				Paper       = sprite(p + "sprPaper",       3,  5,  6);
+				CabinetIdle = spr_add("sprCabinet",     1, 12, 12);
+				CabinetHurt = spr_add("sprCabinet",     1, 12, 12, shnHurt);
+				CabinetDead = spr_add("sprCabinetDead", 3, 12, 12);
+				Paper       = spr_add("sprPaper",       3,  5,  6);
 				
 				/// Chairs:
 					
 					 // Side:
-					ChairSideIdle  = sprite(p + "sprChairSide",     1, 12, 12);
-					ChairSideHurt  = sprite(p + "sprChairSide",     1, 12, 12, shnHurt);
-					ChairSideDead  = sprite(p + "sprChairSideDead", 3, 12, 12);
+					ChairSideIdle  = spr_add("sprChairSide",     1, 12, 12);
+					ChairSideHurt  = spr_add("sprChairSide",     1, 12, 12, shnHurt);
+					ChairSideDead  = spr_add("sprChairSideDead", 3, 12, 12);
 					
 					 // Front:
-					ChairFrontIdle = sprite(p + "sprChairFront",     1, 12, 12);
-					ChairFrontHurt = sprite(p + "sprChairFront",     1, 12, 12, shnHurt);
-					ChairFrontDead = sprite(p + "sprChairFrontDead", 3, 12, 12);
+					ChairFrontIdle = spr_add("sprChairFront",     1, 12, 12);
+					ChairFrontHurt = spr_add("sprChairFront",     1, 12, 12, shnHurt);
+					ChairFrontDead = spr_add("sprChairFrontDead", 3, 12, 12);
 					
 				 // Couch:
-				CouchIdle = sprite(p + "sprCouch",     1, 32, 32);
-				CouchHurt = sprite(p + "sprCouch",     1, 32, 32, shnHurt);
-				CouchDead = sprite(p + "sprCouchDead", 3, 32, 32);
+				CouchIdle = spr_add("sprCouch",     1, 32, 32);
+				CouchHurt = spr_add("sprCouch",     1, 32, 32, shnHurt);
+				CouchDead = spr_add("sprCouchDead", 3, 32, 32);
 				
 				 // Door:
-				CatDoor       = sprite(p + "sprCatDoor",       10, 2, 0);
-				CatDoorDebris = sprite(p + "sprCatDoorDebris",  4, 4, 4);
-				msk.CatDoor   = sprite(p + "mskCatDoor",        1, 4, 0);
+				CatDoor       = spr_add("sprCatDoor",       10, 2, 0);
+				CatDoorDebris = spr_add("sprCatDoorDebris",  4, 4, 4);
+				msk.CatDoor   = spr_add("mskCatDoor",        1, 4, 0);
 				
 				 // Rug:
-				Rug = sprite(p + "sprRug", 2, 26, 26);
+				Rug = spr_add("sprRug", 2, 26, 26);
 				
 				 // Soda Machine:
-				SodaMachineIdle = sprite(p + "sprSodaMachine",     1, 16, 16);
-				SodaMachineHurt = sprite(p + "sprSodaMachine",     1, 16, 16, shnHurt);
-				SodaMachineDead = sprite(p + "sprSodaMachineDead", 3, 16, 16);
+				SodaMachineIdle = spr_add("sprSodaMachine",     1, 16, 16);
+				SodaMachineHurt = spr_add("sprSodaMachine",     1, 16, 16, shnHurt);
+				SodaMachineDead = spr_add("sprSodaMachineDead", 3, 16, 16);
 				
 				 // Table:
-				TableIdle = sprite(p + "sprTable",     1, 16, 16);
-				TableHurt = sprite(p + "sprTable",     1, 16, 16, shnHurt);
-				TableDead = sprite(p + "sprTableDead", 3, 16, 16);
+				TableIdle = spr_add("sprTable",     1, 16, 16);
+				TableHurt = spr_add("sprTable",     1, 16, 16, shnHurt);
+				TableDead = spr_add("sprTableDead", 3, 16, 16);
 				
+			spr_path_add("../");
 			//#endregion
 			
-			//#region LIGHTS
-			p = m + "Lights/";
-				
-				 // Ceiling Lights:
-				CatLight     = sprite(p + "sprCatLight",     1,  96, 16);
-				CatLightBig  = sprite(p + "sprCatLightBig",  1, 128, 16);
-				CatLightThin = sprite(p + "sprCatLightThin", 1,  72, 16);
-				
-			//#endregion
+			 // Ceiling Lights:
+			spr_path_add("Lights/");
+			CatLight     = spr_add("sprCatLight",     1,  96, 16);
+			CatLightBig  = spr_add("sprCatLightBig",  1, 128, 16);
+			CatLightThin = spr_add("sprCatLightThin", 1,  72, 16);
+			spr_path_add("../");
 			
 		//#endregion
 		
 		//#region RED
-		m = "areas/Crystal/";
-		p = m;
-			
+		spr_path_set("areas/Crystal/");
+		
 			 // Floors:
-			FloorRed      = sprite(p + "sprFloorCrystal",      1, 2, 2);
-			FloorRedB     = sprite(p + "sprFloorCrystalB",     1, 2, 2);
-			FloorRedExplo = sprite(p + "sprFloorCrystalExplo", 4, 1, 1);
-			FloorRedRoom  = sprite(p + "sprFloorCrystalRoom",  4, 2, 2);
-			DetailRed     = sprite(p + "sprDetailCrystal",     5, 4, 4);
+			FloorRed      = spr_add("sprFloorCrystal",      1, 2, 2);
+			FloorRedB     = spr_add("sprFloorCrystalB",     1, 2, 2);
+			FloorRedExplo = spr_add("sprFloorCrystalExplo", 4, 1, 1);
+			FloorRedRoom  = spr_add("sprFloorCrystalRoom",  4, 2, 2);
+			DetailRed     = spr_add("sprDetailCrystal",     5, 4, 4);
 			
 			 // Walls:
-			WallRedBot   = sprite(p + "sprWallCrystalBot",    2, 0,  0);
-			WallRedTop   = sprite(p + "sprWallCrystalTop",    4, 0,  0);
-			WallRedOut   = sprite(p + "sprWallCrystalOut",    1, 4, 12);
-			WallRedTrans = sprite(p + "sprWallCrystalTrans",  4, 1,  1);
-			WallRedFake  =[sprite(p + "sprWallCrystalFake1", 16, 0,  0),
-			               sprite(p + "sprWallCrystalFake2", 16, 0,  0)];
-			DebrisRed    = sprite(p + "sprDebrisCrystal",     4, 4,  4);
+			WallRedBot   = spr_add("sprWallCrystalBot",    2, 0,  0);
+			WallRedTop   = spr_add("sprWallCrystalTop",    4, 0,  0);
+			WallRedOut   = spr_add("sprWallCrystalOut",    1, 4, 12);
+			WallRedTrans = spr_add("sprWallCrystalTrans",  4, 1,  1);
+			WallRedFake  =[spr_add("sprWallCrystalFake1", 16, 0,  0),
+			               spr_add("sprWallCrystalFake2", 16, 0,  0)];
+			DebrisRed    = spr_add("sprDebrisCrystal",     4, 4,  4);
 			with(WallRedTrans){
 				mask = [false, 2, x, y, x + 15, y + 15, 1];
 			}
 			
 			 // Fake Walls:
-			WallFakeBot = sprite(p + "sprWallFakeBot", 16, 0, 0);
-			WallFakeTop = sprite(p + "sprWallFakeTop",  1, 0, 8);
-			WallFakeOut = sprite(p + "sprWallFakeOut",  1, 1, 9);
+			WallFakeBot = spr_add("sprWallFakeBot", 16, 0, 0);
+			WallFakeTop = spr_add("sprWallFakeTop",  1, 0, 8);
+			WallFakeOut = spr_add("sprWallFakeOut",  1, 1, 9);
 			
 			 // Decals:
-			WallDecalRed = sprite(p + "sprWallDecalCrystal", 1, 16, 24);
+			WallDecalRed = spr_add("sprWallDecalCrystal", 1, 16, 24);
 			
 			 // Warp:
-			Warp        = sprite(p + "sprWarp",        2, 16, 16);
-			WarpOpen    = sprite(p + "sprWarpOpen",    2, 32, 32);
-			WarpOpenOut = sprite(p + "sprWarpOpenOut", 4, 32, 32);
+			Warp        = spr_add("sprWarp",        2, 16, 16);
+			WarpOpen    = spr_add("sprWarpOpen",    2, 32, 32);
+			WarpOpenOut = spr_add("sprWarpOpenOut", 4, 32, 32);
 			
 			 // Misc:
-			RedDot          = sprite(p + "sprRedDot",           9,   7,   7);
-			RedText         = sprite(p + "sprRedText",         12,  12,   4);
-			Starfield       = sprite(p + "sprStarfield",        2, 256, 256);
-			SpiralStarfield = sprite(p + "sprSpiralStarfield",  2,  32,  32);
+			RedDot          = spr_add("sprRedDot",           9,   7,   7);
+			RedText         = spr_add("sprRedText",         12,  12,   4);
+			Starfield       = spr_add("sprStarfield",        2, 256, 256);
+			SpiralStarfield = spr_add("sprSpiralStarfield",  2,  32,  32);
 			
 			//#region PROPS
-			p = m + "Props/";
-				
+			spr_path_add("Props/");
+			
 				 // Red Crystals:
-				CrystalPropRedIdle = sprite(p + "sprCrystalPropRed",     1, 12, 12);
-				CrystalPropRedHurt = sprite(p + "sprCrystalPropRed",     1, 12, 12, shnHurt);
-				CrystalPropRedDead = sprite(p + "sprCrystalPropRedDead", 4, 12, 12);
+				CrystalPropRedIdle = spr_add("sprCrystalPropRed",     1, 12, 12);
+				CrystalPropRedHurt = spr_add("sprCrystalPropRed",     1, 12, 12, shnHurt);
+				CrystalPropRedDead = spr_add("sprCrystalPropRedDead", 4, 12, 12);
 				
 				 // White Crystals:
-				CrystalPropWhiteIdle = sprite(p + "sprCrystalPropWhite",     1, 12, 12);
-				CrystalPropWhiteHurt = sprite(p + "sprCrystalPropWhiteHurt", 3, 12, 12);
-				CrystalPropWhiteDead = sprite(p + "sprCrystalPropWhiteDead", 4, 12, 12);
+				CrystalPropWhiteIdle = spr_add("sprCrystalPropWhite",     1, 12, 12);
+				CrystalPropWhiteHurt = spr_add("sprCrystalPropWhiteHurt", 3, 12, 12);
+				CrystalPropWhiteDead = spr_add("sprCrystalPropWhiteDead", 4, 12, 12);
 				
+			spr_path_add("../");
 			//#endregion
 			
 		//#endregion
 		
 		//#region IDPD HQ
-		m = "areas/HQ/";
-		p = m;
-			
+		spr_path_set("areas/HQ/");
+		
 			 // Floors:
-			Floor106Small        = sprite(p + "sprFloor106Small",    4,  0,  0);
-			FloorMiddleSmall     = sprite(p + "sprFloorMiddleSmall", 1, 32, 32);
-			msk.FloorMiddleSmall = sprite(p + "mskFloorMiddleSmall", 1, 32, 32);
+			Floor106Small        = spr_add("sprFloor106Small",    4,  0,  0);
+			FloorMiddleSmall     = spr_add("sprFloorMiddleSmall", 1, 32, 32);
+			msk.FloorMiddleSmall = spr_add("mskFloorMiddleSmall", 1, 32, 32);
 			with(msk.FloorMiddleSmall){
 				mask = [false, 0];
 			}
@@ -1640,198 +1687,196 @@
 		//#endregion
 		
 		//#region CRIB
-		m = "areas/Crib/";
-		p = m;
-			
+		spr_path_set("areas/Crib/");
+		
 			 // TV Shadow:
-			shd.VenuzTV = sprite(p + "shdVenuzTV", 1, 129, 96);
+			shd.VenuzTV = spr_add("shdVenuzTV", 1, 129, 96);
 			
 		//#endregion
 		
 		//#region CHESTS/PICKUPS
-		m = "chests/";
-		p = m;
-			
+		spr_path_set("chests/");
+		
 			 // Ally Backpack:
-			AllyBackpack     = sprite(p + "sprAllyBackpack",     1, 8, 8, shn16);
-			AllyBackpackOpen = sprite(p + "sprAllyBackpackOpen", 1, 8, 8);
+			AllyBackpack     = spr_add("sprAllyBackpack",     1, 8, 8, shn16);
+			AllyBackpackOpen = spr_add("sprAllyBackpackOpen", 1, 8, 8);
 			
 			 // Backpack:
-			Backpack           = sprite(p + "sprBackpack",            1, 8, 8, shn16);
-			BackpackCursed     = sprite(p + "sprBackpackCursed",      1, 8, 8, shn16);
-			BackpackOpen       = sprite(p + "sprBackpackOpen",        1, 8, 8);
-			BackpackCursedOpen = sprite(p + "sprBackpackCursedOpen",  1, 8, 8);
-			BackpackDebris     = sprite(p + "sprBackpackDebris",     30, 6, 6);
+			Backpack           = spr_add("sprBackpack",            1, 8, 8, shn16);
+			BackpackCursed     = spr_add("sprBackpackCursed",      1, 8, 8, shn16);
+			BackpackOpen       = spr_add("sprBackpackOpen",        1, 8, 8);
+			BackpackCursedOpen = spr_add("sprBackpackCursedOpen",  1, 8, 8);
+			BackpackDebris     = spr_add("sprBackpackDebris",     30, 6, 6);
 			
 			 // Backpacker (Deceased):
-			BackpackerIdle = [sprite(p + "sprBackpacker0", 1, 12, 12),
-			                  sprite(p + "sprBackpacker1", 1, 12, 12),
-			                  sprite(p + "sprBackpacker2", 1, 12, 12)];
-			BackpackerHurt = [sprite(p + "sprBackpacker0", 1, 12, 12, shnHurt),
-			                  sprite(p + "sprBackpacker1", 1, 12, 12, shnHurt),
-			                  sprite(p + "sprBackpacker2", 1, 12, 12, shnHurt)];
+			BackpackerIdle = [spr_add("sprBackpacker0", 1, 12, 12),
+			                  spr_add("sprBackpacker1", 1, 12, 12),
+			                  spr_add("sprBackpacker2", 1, 12, 12)];
+			BackpackerHurt = [spr_add("sprBackpacker0", 1, 12, 12, shnHurt),
+			                  spr_add("sprBackpacker1", 1, 12, 12, shnHurt),
+			                  spr_add("sprBackpacker2", 1, 12, 12, shnHurt)];
 			
 			 // Bat Chests:
-			BatChest              = sprite(p + "sprBatChest",              1, 10, 10, shn20);
-			BatChestCursed        = sprite(p + "sprBatChestCursed",        1, 10, 10, shn20);
-			BatChestBig           = sprite(p + "sprBatChestBig",           1, 12, 12, shn24);
-			BatChestBigCursed     = sprite(p + "sprBatChestBigCursed",     1, 12, 12, shn24);
-			BatChestOpen          = sprite(p + "sprBatChestOpen",          1, 10, 10);
-			BatChestCursedOpen    = sprite(p + "sprBatChestCursedOpen",    1, 10, 10);
-			BatChestBigOpen       = sprite(p + "sprBatChestBigOpen",       1, 12, 12);
-			BatChestBigCursedOpen = sprite(p + "sprBatChestBigCursedOpen", 1, 12, 12);
+			BatChest              = spr_add("sprBatChest",              1, 10, 10, shn20);
+			BatChestCursed        = spr_add("sprBatChestCursed",        1, 10, 10, shn20);
+			BatChestBig           = spr_add("sprBatChestBig",           1, 12, 12, shn24);
+			BatChestBigCursed     = spr_add("sprBatChestBigCursed",     1, 12, 12, shn24);
+			BatChestOpen          = spr_add("sprBatChestOpen",          1, 10, 10);
+			BatChestCursedOpen    = spr_add("sprBatChestCursedOpen",    1, 10, 10);
+			BatChestBigOpen       = spr_add("sprBatChestBigOpen",       1, 12, 12);
+			BatChestBigCursedOpen = spr_add("sprBatChestBigCursedOpen", 1, 12, 12);
 			
 			 // Biggest Weapon Chest:
-			BiggestWeaponChest     = sprite(p + "sprBiggestWeaponChest",     1, 32, 32, shn64);
-			BiggestWeaponChestOpen = sprite(p + "sprBiggestWeaponChestOpen", 1, 32, 32);
+			BiggestWeaponChest     = spr_add("sprBiggestWeaponChest",     1, 32, 32, shn64);
+			BiggestWeaponChestOpen = spr_add("sprBiggestWeaponChestOpen", 1, 32, 32);
 			
 			 // Bone:
 			BonePickup    = array_create(4, -1);
 			BonePickupBig = array_create(2, -1);
 			for(var i = 0; i < array_length(BonePickup); i++){
-				BonePickup[i] = sprite(p + `sprBonePickup${i}`, 1, 4, 4, shn8);
+				BonePickup[i] = spr_add(`sprBonePickup${i}`, 1, 4, 4, shn8);
 			}
 			for(var i = 0; i < array_length(BonePickupBig); i++){
-				BonePickupBig[i] = sprite(p + `sprBoneBigPickup${i}`, 1, 8, 8, shn16);
+				BonePickupBig[i] = spr_add(`sprBoneBigPickup${i}`, 1, 8, 8, shn16);
 			}
 			
 			 // Bonus Pickups:
-			BonusFX                    = sprite(p + "sprBonusFX",                    13,  4, 12);
-			BonusFXPickupOpen          = sprite(p + "sprBonusFXPickupOpen",           6,  8,  8);
-			BonusFXPickupFade          = sprite(p + "sprBonusFXPickupFade",           5,  8,  8);
-			BonusFXChestOpen           = sprite(p + "sprBonusFXChestOpen",            8, 16, 16);
-			BonusHealFX                = sprite(p + "sprBonusHealFX",                 7,  8, 10);
-			BonusHealBigFX             = sprite(p + "sprBonusHealBigFX",              8, 12, 24);
-			BonusShell                 = sprite(p + "sprBonusShell",                  1,  1,  2);
-			BonusShellHeavy            = sprite(p + "sprBonusShellHeavy",             1,  2,  3);
-			BonusText                  = sprite(p + "sprBonusText",                  12,  0,  0);
-			BonusHUDText               = sprite(p + "sprBonusHUDText",                1,  7,  3);
-			BonusAmmoHUD               = sprite(p + "sprBonusAmmoHUD",                1,  2,  3);
-			BonusAmmoHUDFill           = sprite(p + "sprBonusAmmoHUDFill",            7,  0,  0);
-			BonusAmmoHUDFillDrain      = sprite(p + "sprBonusAmmoHUDFillDrain",       7,  0,  0);
-			BonusHealthHUDFill         = sprite(p + "sprBonusHealthHUDFill",          7,  0,  0);
-			BonusHealthHUDFillDrain    = sprite(p + "sprBonusHealthHUDFillDrain",     7,  0,  0);
-			BonusAmmoPickup            = sprite(p + "sprBonusAmmoPickup",             1,  5,  5, shn10);
-			BonusHealthPickup          = sprite(p + "sprBonusHealthPickup",           1,  5,  5, shn10);
-			BonusAmmoChest             = sprite(p + "sprBonusAmmoChest",             15,  8,  8);
-			BonusAmmoChestOpen         = sprite(p + "sprBonusAmmoChestOpen",          1,  8,  8);
-			BonusAmmoChestSteroids     = sprite(p + "sprBonusAmmoChestSteroids",     15, 12, 12);
-			BonusAmmoChestSteroidsOpen = sprite(p + "sprBonusAmmoChestSteroidsOpen",  1, 12, 12);
-			BonusHealthChest           = sprite(p + "sprBonusHealthChest",           15,  8,  8);
-			BonusHealthChestOpen       = sprite(p + "sprBonusHealthChestOpen",        1,  8,  8);
-			BonusAmmoMimicIdle         = sprite(p + "sprBonusAmmoMimicIdle",          1, 16, 16);
-			BonusAmmoMimicTell         = sprite(p + "sprBonusAmmoMimicTell",         12, 16, 16);
-			BonusAmmoMimicHurt         = sprite(p + "sprBonusAmmoMimicHurt",          3, 16, 16);
-			BonusAmmoMimicDead         = sprite(p + "sprBonusAmmoMimicDead",          6, 16, 16);
-			BonusAmmoMimicFire         = sprite(p + "sprBonusAmmoMimicFire",          4, 16, 16);
-			BonusHealthMimicIdle       = sprite(p + "sprBonusHealthMimicIdle",        1, 16, 16);
-			BonusHealthMimicTell       = sprite(p + "sprBonusHealthMimicTell",       10, 16, 16);
-			BonusHealthMimicHurt       = sprite(p + "sprBonusHealthMimicHurt",        3, 16, 16);
-			BonusHealthMimicDead       = sprite(p + "sprBonusHealthMimicDead",        6, 16, 16);
-			BonusHealthMimicFire       = sprite(p + "sprBonusHealthMimicFire",        4, 16, 16);
+			BonusFX                    = spr_add("sprBonusFX",                    13,  4, 12);
+			BonusFXPickupOpen          = spr_add("sprBonusFXPickupOpen",           6,  8,  8);
+			BonusFXPickupFade          = spr_add("sprBonusFXPickupFade",           5,  8,  8);
+			BonusFXChestOpen           = spr_add("sprBonusFXChestOpen",            8, 16, 16);
+			BonusHealFX                = spr_add("sprBonusHealFX",                 7,  8, 10);
+			BonusHealBigFX             = spr_add("sprBonusHealBigFX",              8, 12, 24);
+			BonusShell                 = spr_add("sprBonusShell",                  1,  1,  2);
+			BonusShellHeavy            = spr_add("sprBonusShellHeavy",             1,  2,  3);
+			BonusText                  = spr_add("sprBonusText",                  12,  0,  0);
+			BonusHUDText               = spr_add("sprBonusHUDText",                1,  7,  3);
+			BonusAmmoHUD               = spr_add("sprBonusAmmoHUD",                1,  2,  3);
+			BonusAmmoHUDFill           = spr_add("sprBonusAmmoHUDFill",            7,  0,  0);
+			BonusAmmoHUDFillDrain      = spr_add("sprBonusAmmoHUDFillDrain",       7,  0,  0);
+			BonusHealthHUDFill         = spr_add("sprBonusHealthHUDFill",          7,  0,  0);
+			BonusHealthHUDFillDrain    = spr_add("sprBonusHealthHUDFillDrain",     7,  0,  0);
+			BonusAmmoPickup            = spr_add("sprBonusAmmoPickup",             1,  5,  5, shn10);
+			BonusHealthPickup          = spr_add("sprBonusHealthPickup",           1,  5,  5, shn10);
+			BonusAmmoChest             = spr_add("sprBonusAmmoChest",             15,  8,  8);
+			BonusAmmoChestOpen         = spr_add("sprBonusAmmoChestOpen",          1,  8,  8);
+			BonusAmmoChestSteroids     = spr_add("sprBonusAmmoChestSteroids",     15, 12, 12);
+			BonusAmmoChestSteroidsOpen = spr_add("sprBonusAmmoChestSteroidsOpen",  1, 12, 12);
+			BonusHealthChest           = spr_add("sprBonusHealthChest",           15,  8,  8);
+			BonusHealthChestOpen       = spr_add("sprBonusHealthChestOpen",        1,  8,  8);
+			BonusAmmoMimicIdle         = spr_add("sprBonusAmmoMimicIdle",          1, 16, 16);
+			BonusAmmoMimicTell         = spr_add("sprBonusAmmoMimicTell",         12, 16, 16);
+			BonusAmmoMimicHurt         = spr_add("sprBonusAmmoMimicHurt",          3, 16, 16);
+			BonusAmmoMimicDead         = spr_add("sprBonusAmmoMimicDead",          6, 16, 16);
+			BonusAmmoMimicFire         = spr_add("sprBonusAmmoMimicFire",          4, 16, 16);
+			BonusHealthMimicIdle       = spr_add("sprBonusHealthMimicIdle",        1, 16, 16);
+			BonusHealthMimicTell       = spr_add("sprBonusHealthMimicTell",       10, 16, 16);
+			BonusHealthMimicHurt       = spr_add("sprBonusHealthMimicHurt",        3, 16, 16);
+			BonusHealthMimicDead       = spr_add("sprBonusHealthMimicDead",        6, 16, 16);
+			BonusHealthMimicFire       = spr_add("sprBonusHealthMimicFire",        4, 16, 16);
 			
 			 // Buried Vault:
-			BuriedVaultChest       = sprite(p + "sprVaultChest",       1, 12, 12, shn24);
-			BuriedVaultChestOpen   = sprite(p + "sprVaultChestOpen",   1, 12, 12);
-			BuriedVaultChestDebris = sprite(p + "sprVaultChestDebris", 8, 12, 12);
-			BuriedVaultChestBase   = sprite(p + "sprVaultChestBase",   3, 16, 12);
-			ProtoChestMerge        = sprite(p + "sprProtoChestMerge",  6, 12, 12);
+			BuriedVaultChest       = spr_add("sprVaultChest",       1, 12, 12, shn24);
+			BuriedVaultChestOpen   = spr_add("sprVaultChestOpen",   1, 12, 12);
+			BuriedVaultChestDebris = spr_add("sprVaultChestDebris", 8, 12, 12);
+			BuriedVaultChestBase   = spr_add("sprVaultChestBase",   3, 16, 12);
+			ProtoChestMerge        = spr_add("sprProtoChestMerge",  6, 12, 12);
 			
 			 // Button Chests:
-			ButtonChest        = sprite(p + "sprButtonChest",        1, 9, 9, shn20);
-			ButtonChestDebris  = sprite(p + "sprButtonChestDebris",  2, 9, 9);
-			ButtonPickup       = sprite(p + "sprButtonPickup",       1, 6, 6, shn12);
-			ButtonPickupDebris = sprite(p + "sprButtonPickupDebris", 2, 6, 6);
+			ButtonChest        = spr_add("sprButtonChest",        1, 9, 9, shn20);
+			ButtonChestDebris  = spr_add("sprButtonChestDebris",  2, 9, 9);
+			ButtonPickup       = spr_add("sprButtonPickup",       1, 6, 6, shn12);
+			ButtonPickupDebris = spr_add("sprButtonPickupDebris", 2, 6, 6);
 			
 			 // Cat Chest:
-			CatChest     = sprite(p + "sprCatChest",     1, 10, 10, shn20);
-			CatChestOpen = sprite(p + "sprCatChestOpen", 1, 10, 10);
+			CatChest     = spr_add("sprCatChest",     1, 10, 10, shn20);
+			CatChestOpen = spr_add("sprCatChestOpen", 1, 10, 10);
 			
 			 // Cat Crates:
-			WallCrateBot = sprite(p + "sprWallCrateBot", 2,  2,  2);
-			WallCrateTop = sprite(p + "sprWallCrateTop", 4,  4,  4);
-			WallCrateOut = sprite(p + "sprWallCrateTop", 4,  4, 12);
-			FloorCrate   = sprite(p + "sprFloorCrate",   1, 18, 18);
+			WallCrateBot = spr_add("sprWallCrateBot", 2,  2,  2);
+			WallCrateTop = spr_add("sprWallCrateTop", 4,  4,  4);
+			WallCrateOut = spr_add("sprWallCrateTop", 4,  4, 12);
+			FloorCrate   = spr_add("sprFloorCrate",   1, 18, 18);
 			
 			 // Cursed Ammo Chests:
-			CursedAmmoChest             = sprite(p + "sprCursedAmmoChest",              1,  8,  8, shn16);
-			CursedAmmoChestOpen         = sprite(p + "sprCursedAmmoChestOpen",          1,  8,  8);
-			CursedAmmoChestSteroids     = sprite(p + "sprCursedAmmoChestSteroids",      1, 12, 12, shn20);
-			CursedAmmoChestSteroidsOpen = sprite(p + "sprCursedAmmoChestSteroidsOpen",  1, 12, 12);
-			CursedMimicIdle             = sprite(p + "sprCursedMimicIdle",              1, 16, 16);
-			CursedMimicFire             = sprite(p + "sprCursedMimicFire",              4, 16, 16);
-			CursedMimicHurt             = sprite(p + "sprCursedMimicHurt",              3, 16, 16);
-			CursedMimicDead             = sprite(p + "sprCursedMimicDead",              6, 16, 16);
-			CursedMimicTell             = sprite(p + "sprCursedMimicTell",             12, 16, 16);
+			CursedAmmoChest             = spr_add("sprCursedAmmoChest",              1,  8,  8, shn16);
+			CursedAmmoChestOpen         = spr_add("sprCursedAmmoChestOpen",          1,  8,  8);
+			CursedAmmoChestSteroids     = spr_add("sprCursedAmmoChestSteroids",      1, 12, 12, shn20);
+			CursedAmmoChestSteroidsOpen = spr_add("sprCursedAmmoChestSteroidsOpen",  1, 12, 12);
+			CursedMimicIdle             = spr_add("sprCursedMimicIdle",              1, 16, 16);
+			CursedMimicFire             = spr_add("sprCursedMimicFire",              4, 16, 16);
+			CursedMimicHurt             = spr_add("sprCursedMimicHurt",              3, 16, 16);
+			CursedMimicDead             = spr_add("sprCursedMimicDead",              6, 16, 16);
+			CursedMimicTell             = spr_add("sprCursedMimicTell",             12, 16, 16);
 			
 			 // Orchid Chest:
-			OrchidChest       = sprite(p + "sprOrchidChest",       1, 12, 8, shn24);
-			OrchidChestWilted = sprite(p + "sprOrchidChestWilted", 1, 12, 8, shn24);
-			OrchidChestOpen   = sprite(p + "sprOrchidChestOpen",   1, 12, 8);
+			OrchidChest       = spr_add("sprOrchidChest",       1, 12, 8, shn24);
+			OrchidChestWilted = spr_add("sprOrchidChestWilted", 1, 12, 8, shn24);
+			OrchidChestOpen   = spr_add("sprOrchidChestOpen",   1, 12, 8);
 			
 			 // Rat Chest:
-			RatChest      = sprite(p + "sprRatChest",      1, 10, 10, shn20);
-			RatChestOpen  = sprite(p + "sprRatChestOpen",  1, 10, 10);
-			RadSkillBall  = sprite(p + "sprRadSkillBall",  6, 16, 16);
-			RadSkillTrail = sprite(p + "sprRadSkillTrail", 8, 16, 16);
+			RatChest      = spr_add("sprRatChest",      1, 10, 10, shn20);
+			RatChestOpen  = spr_add("sprRatChestOpen",  1, 10, 10);
+			RadSkillBall  = spr_add("sprRadSkillBall",  6, 16, 16);
+			RadSkillTrail = spr_add("sprRadSkillTrail", 8, 16, 16);
 			
 			 // Red Ammo:
-			RedAmmoChest       = sprite(p + "sprRedAmmoChest",       1, 8, 8, shn16);
-			RedAmmoChestOpen   = sprite(p + "sprRedAmmoChestOpen",   1, 8, 8);
-			RedAmmoPickup      = sprite(p + "sprRedAmmoPickup",      1, 5, 5, shn10);
-			RedAmmoHUD         = sprite(p + "sprRedAmmoHUD",         2, 1, 1);
-			RedAmmoHUDAmmo     = sprite(p + "sprRedAmmoHUDAmmo",     2, 1, 2);
-			RedAmmoHUDFill     = sprite(p + "sprRedAmmoHUDFill",     2, 0, 0);
-			RedAmmoHUDCost     = sprite(p + "sprRedAmmoHUDCost",     2, 2, 2);
-			RedAmmoHUDGold     = sprite(p + "sprRedAmmoHUDGold",     2, 1, 1);
-			RedAmmoHUDCostGold = sprite(p + "sprRedAmmoHUDCostGold", 2, 2, 2);
+			RedAmmoChest       = spr_add("sprRedAmmoChest",       1, 8, 8, shn16);
+			RedAmmoChestOpen   = spr_add("sprRedAmmoChestOpen",   1, 8, 8);
+			RedAmmoPickup      = spr_add("sprRedAmmoPickup",      1, 5, 5, shn10);
+			RedAmmoHUD         = spr_add("sprRedAmmoHUD",         2, 1, 1);
+			RedAmmoHUDAmmo     = spr_add("sprRedAmmoHUDAmmo",     2, 1, 2);
+			RedAmmoHUDFill     = spr_add("sprRedAmmoHUDFill",     2, 0, 0);
+			RedAmmoHUDCost     = spr_add("sprRedAmmoHUDCost",     2, 2, 2);
+			RedAmmoHUDGold     = spr_add("sprRedAmmoHUDGold",     2, 1, 1);
+			RedAmmoHUDCostGold = spr_add("sprRedAmmoHUDCostGold", 2, 2, 2);
 			
 			 // Red Crystal Chest:
-			RedChest           = sprite(p + "sprRedChest",           1,  8,  8, shn16);
-			RedChestOpen       = sprite(p + "sprRedChestOpen",       1,  8,  8);
-			RedSkillBall       = sprite(p + "sprRedSkillBall",       6, 16, 16);
-			RedSkillBallTether = sprite(p + "sprRedSkillBallTether", 4,  0,  1);
+			RedChest           = spr_add("sprRedChest",           1,  8,  8, shn16);
+			RedChestOpen       = spr_add("sprRedChestOpen",       1,  8,  8);
+			RedSkillBall       = spr_add("sprRedSkillBall",       6, 16, 16);
+			RedSkillBallTether = spr_add("sprRedSkillBallTether", 4,  0,  1);
 			
 			 // Rogue Backpack:
-			RogueBackpack     = sprite(p + "sprRogueBackpack",     1, 8, 8, shn16);
-			RogueBackpackOpen = sprite(p + "sprRogueBackpackOpen", 1, 8, 8);
+			RogueBackpack     = spr_add("sprRogueBackpack",     1, 8, 8, shn16);
+			RogueBackpackOpen = spr_add("sprRogueBackpackOpen", 1, 8, 8);
 			
 			 // Spirit Pickup:
-			SpiritPickup    = sprite(p + "sprSpiritPickup",    1, 5, 5, shn10);
-			SpiritChest     = sprite(p + "sprSpiritChest",     1, 8, 8, shn16);
-			SpiritChestOpen = sprite(p + "sprSpiritChestOpen", 1, 8, 8);
+			SpiritPickup    = spr_add("sprSpiritPickup",    1, 5, 5, shn10);
+			SpiritChest     = spr_add("sprSpiritChest",     1, 8, 8, shn16);
+			SpiritChestOpen = spr_add("sprSpiritChestOpen", 1, 8, 8);
 			
 			 // Sunken Chest:
-			SunkenChest     = sprite(p + "sprSunkenChest",     1, 12, 12, shn24);
-			SunkenChestOpen = sprite(p + "sprSunkenChestOpen", 1, 12, 12);
-			SunkenCoin      = sprite(p + "sprCoin",            1,  3,  3, shn8);
-			SunkenCoinBig   = sprite(p + "sprCoinBig",         1,  3,  3, shn8);
+			SunkenChest     = spr_add("sprSunkenChest",     1, 12, 12, shn24);
+			SunkenChestOpen = spr_add("sprSunkenChestOpen", 1, 12, 12);
+			SunkenCoin      = spr_add("sprCoin",            1,  3,  3, shn8);
+			SunkenCoinBig   = spr_add("sprCoinBig",         1,  3,  3, shn8);
 			
 			 // Hammerhead Pickup:
-			HammerHeadPickup            = sprite(p + "sprHammerHeadPickup",            1,  5,  5, shn10);
-			HammerHeadPickupEffect      = sprite(p + "sprHammerHeadPickupEffect",      3, 16,  8);
-			HammerHeadPickupEffectSpawn = sprite(p + "sprHammerHeadPickupEffectSpawn", 9, 16,  8);
-			HammerHeadChest             = sprite(p + "sprHammerHeadChest",             1,  8,  8, shn16);
-			HammerHeadChestOpen         = sprite(p + "sprHammerHeadChestOpen",         1,  8,  8);
-			HammerHeadChestEffect       = sprite(p + "sprHammerHeadChestEffect",       3, 16,  8);
-			HammerHeadChestEffectSpawn  = sprite(p + "sprHammerHeadChestEffectSpawn",  9, 16,  8);
+			HammerHeadPickup            = spr_add("sprHammerHeadPickup",            1,  5,  5, shn10);
+			HammerHeadPickupEffect      = spr_add("sprHammerHeadPickupEffect",      3, 16,  8);
+			HammerHeadPickupEffectSpawn = spr_add("sprHammerHeadPickupEffectSpawn", 9, 16,  8);
+			HammerHeadChest             = spr_add("sprHammerHeadChest",             1,  8,  8, shn16);
+			HammerHeadChestOpen         = spr_add("sprHammerHeadChestOpen",         1,  8,  8);
+			HammerHeadChestEffect       = spr_add("sprHammerHeadChestEffect",       3, 16,  8);
+			HammerHeadChestEffectSpawn  = spr_add("sprHammerHeadChestEffectSpawn",  9, 16,  8);
 			
 			 // Lead Ribs Upgraded Rads:
-			RadUpg    = sprite(p + "sprRadUpg",    1, 5, 5, shn10);
-			BigRadUpg = sprite(p + "sprBigRadUpg", 1, 8, 8, shn16);
+			RadUpg    = spr_add("sprRadUpg",    1, 5, 5, shn10);
+			BigRadUpg = spr_add("sprBigRadUpg", 1, 8, 8, shn16);
 			
 			 // Quest Chest:
-			QuestChest		  = sprite(p + "sprQuestChest", 	   1,  12, 12, shn24);
-			QuestChestOpen    = sprite(p + "sprQuestChestOpen",    1,  12, 12);
-			QuestChestBig	  = sprite(p + "sprQuestChestBig",	   1,  32, 32, shn64);
-			QuestChestBigOpen = sprite(p + "sprQuestChestBigOpen", 1,  32, 32);
-			QuestSparkle	  = sprite(p + "sprQuestSparkle",	   4,  6,  6);
+			QuestChest		  = spr_add("sprQuestChest", 	   1,  12, 12, shn24);
+			QuestChestOpen    = spr_add("sprQuestChestOpen",    1,  12, 12);
+			QuestChestBig	  = spr_add("sprQuestChestBig",	   1,  32, 32, shn64);
+			QuestChestBigOpen = spr_add("sprQuestChestBigOpen", 1,  32, 32);
+			QuestSparkle	  = spr_add("sprQuestSparkle",	   4,  6,  6);
 			
 		//#endregion
 		
 		//#region RACES
-		m = "races/";
-			
+		spr_path_set("races/");
+		
 			var _list = {
 				// [Name, Frames, X, Y, Has B Variant]
 				
@@ -1903,462 +1948,492 @@
 			
 			Race = {};
 			
-			for(var i = 0; i < lq_size(_list); i++){
-				var	_race = lq_get_key(_list, i),
-					_info = lq_get_value(_list, i);
+			for(var _raceIndex = 0; _raceIndex < lq_size(_list); _raceIndex++){
+				var	_race               = lq_get_key(_list, _raceIndex),
+					_raceInfo           = lq_get_value(_list, _raceIndex),
+					_raceName           = string_upper(string_char_at(_race, 0)) + string_delete(_race, 1, 1),
+					_raceSkinSprMapList = [];
 					
-				lq_set(Race, _race, []);
+				spr_path_add(_raceName + "/");
 				
-				for(var b = 0; b < _info.skin; b++){
-					var	_sprt = {},
-						n = string_upper(string_char_at(_race, 0)) + string_delete(_race, 1, 1);
+				for(var _skinIndex = 0; _skinIndex < _raceInfo.skin; _skinIndex++){
+					var	_skinName   = ((_skinIndex == 0) ? "" : chr(ord("A") + _skinIndex)),
+						_skinSprMap = {};
 						
-					p = m + n + "/spr" + n;
-					
-					with(lq_get_value(_list, i).sprt){
+					with(_raceInfo.sprt){
 						var	_name = self[0],
 							_img  = self[1],
 							_x    = self[2],
 							_y    = self[3],
 							_hasB = self[4];
 							
-						lq_set(_sprt, _name, sprite(p + ((_hasB && b > 0) ? chr(ord("A") + b) : "") + _name, _img, _x, _y));
+						lq_set(_skinSprMap, _name, spr_add("spr" + _raceName + (_hasB ? _skinName : "") + _name, _img, _x, _y));
 					}
 					
-					array_push(lq_get(Race, _race), _sprt);
+					array_push(_raceSkinSprMapList, _skinSprMap);
 				}
+				
+				spr_path_add("../");
+				
+				lq_set(Race, _race, _raceSkinSprMapList);
 			}
 			
 			 // Parrot Charm:
-			p = m + "Parrot/";
-			AllyReviveArea      = sprite(p + "sprAllyReviveArea",      4, 35, 45);
-			AllyNecroReviveArea = sprite(p + "sprAllyNecroReviveArea", 4, 17, 20);
+			spr_path_add("Parrot/");
+			AllyReviveArea      = spr_add("sprAllyReviveArea",      4, 35, 45);
+			AllyNecroReviveArea = spr_add("sprAllyNecroReviveArea", 4, 17, 20);
+			spr_path_add("../");
 			
 		//#endregion
 		
 		//#region SKINS
-		m = "skins/";
-			
+		spr_path_set("skins/");
+		
 			 // Frog Icon ENHANCED:
-			p = "sprites/" + m;
-			sprite_replace_image(sprLoadoutSkin, p + "sprFrogLoadout.png", 28);
+			sprite_replace_image(sprLoadoutSkin, spr_path + "sprFrogLoadout.png", 28);
 			
 			//#region ANGLER FISH
-			var p = m + "FishAngler/";
-				
+			spr_path_add("FishAngler/");
+			
 				 // Player:
-				FishAnglerIdle  = sprite(p + "sprFishAnglerIdle",  4, 12, 12);
-				FishAnglerWalk  = sprite(p + "sprFishAnglerWalk",  6, 12, 12);
-				FishAnglerHurt  = sprite(p + "sprFishAnglerHurt",  3, 12, 12);
-				FishAnglerDead  = sprite(p + "sprFishAnglerDead",  6, 12, 12);
-				FishAnglerGoSit = sprite(p + "sprFishAnglerGoSit", 3, 12, 12);
-				FishAnglerSit   = sprite(p + "sprFishAnglerSit",   1, 12, 12);
+				FishAnglerIdle  = spr_add("sprFishAnglerIdle",  4, 12, 12);
+				FishAnglerWalk  = spr_add("sprFishAnglerWalk",  6, 12, 12);
+				FishAnglerHurt  = spr_add("sprFishAnglerHurt",  3, 12, 12);
+				FishAnglerDead  = spr_add("sprFishAnglerDead",  6, 12, 12);
+				FishAnglerGoSit = spr_add("sprFishAnglerGoSit", 3, 12, 12);
+				FishAnglerSit   = spr_add("sprFishAnglerSit",   1, 12, 12);
 				
 				 // Menu:
-				FishAnglerPortrait = sprite(p + "sprFishAnglerPortrait", 1, 40, 243);
-				FishAnglerLoadout  = sprite(p + "sprFishAnglerLoadout",  2, 16,  16);
-				FishAnglerMapIcon  = sprite(p + "sprFishAnglerMapIcon",  1, 10,  10);
+				FishAnglerPortrait = spr_add("sprFishAnglerPortrait", 1, 40, 243);
+				FishAnglerLoadout  = spr_add("sprFishAnglerLoadout",  2, 16,  16);
+				FishAnglerMapIcon  = spr_add("sprFishAnglerMapIcon",  1, 10,  10);
 				
 				 // Eye Trail:
-				FishAnglerTrail = sprite(p + "sprFishAnglerTrail", 6, 12, 12);
+				FishAnglerTrail = spr_add("sprFishAnglerTrail", 6, 12, 12);
 				
+			spr_path_add("../");
 			//#endregion
 			
 			////#region BAT EYES
-			//var p = m + "EyesBat/";
-			//	
+			//spr_path_add("EyesBat/");
+			//
 			//	 // Player:
-			//	EyesBatIdle  = sprite(p + "sprEyesBatIdle",  4, 12, 12);
-			//	EyesBatWalk  = sprite(p + "sprEyesBatWalk",  6, 12, 16);
-			//	EyesBatHurt  = sprite(p + "sprEyesBatHurt",  3, 12, 12);
-			//	EyesBatDead  = sprite(p + "sprEyesBatDead",  6, 12, 12);
-			//	EyesBatGoSit = sprite(p + "sprEyesBatGoSit", 3, 12, 12);
-			//	EyesBatSit   = sprite(p + "sprEyesBatSit",   1, 12, 12);
+			//	EyesBatIdle  = spr_add("sprEyesBatIdle",  4, 12, 12);
+			//	EyesBatWalk  = spr_add("sprEyesBatWalk",  6, 12, 16);
+			//	EyesBatHurt  = spr_add("sprEyesBatHurt",  3, 12, 12);
+			//	EyesBatDead  = spr_add("sprEyesBatDead",  6, 12, 12);
+			//	EyesBatGoSit = spr_add("sprEyesBatGoSit", 3, 12, 12);
+			//	EyesBatSit   = spr_add("sprEyesBatSit",   1, 12, 12);
 			//	
 			//	 // Menu:
-			//	EyesBatPortrait = sprite(p + "sprEyesBatPortrait", 1, 40, 243);
-			//	EyesBatLoadout  = sprite(p + "sprEyesBatLoadout",  2, 16,  16);
-			//	EyesBatMapIcon  = sprite(p + "sprEyesBatMapIcon",  1, 10,  10);
+			//	EyesBatPortrait = spr_add("sprEyesBatPortrait", 1, 40, 243);
+			//	EyesBatLoadout  = spr_add("sprEyesBatLoadout",  2, 16,  16);
+			//	EyesBatMapIcon  = spr_add("sprEyesBatMapIcon",  1, 10,  10);
 			//	
+			//spr_path_add("../");
 			////#endregion
 			//
 			////#region BONUS ROBOT
-			//var p = m + "RobotBonus/";
-			//	
+			//spr_path_add("RobotBonus/");
+			//
 			//	 // Player:
-			//	RobotBonusIdle  = sprite(p + "sprRobotBonusIdle",  15, 12, 12);
-			//	RobotBonusWalk  = sprite(p + "sprRobotBonusWalk",   6, 12, 12);
-			//	RobotBonusHurt  = sprite(p + "sprRobotBonusHurt",   3, 12, 12);
-			//	RobotBonusDead  = sprite(p + "sprRobotBonusDead",   6, 12, 12);
-			//	RobotBonusGoSit = sprite(p + "sprRobotBonusGoSit",  3, 12, 12);
-			//	RobotBonusSit   = sprite(p + "sprRobotBonusSit",    1, 12, 12);
+			//	RobotBonusIdle  = spr_add("sprRobotBonusIdle",  15, 12, 12);
+			//	RobotBonusWalk  = spr_add("sprRobotBonusWalk",   6, 12, 12);
+			//	RobotBonusHurt  = spr_add("sprRobotBonusHurt",   3, 12, 12);
+			//	RobotBonusDead  = spr_add("sprRobotBonusDead",   6, 12, 12);
+			//	RobotBonusGoSit = spr_add("sprRobotBonusGoSit",  3, 12, 12);
+			//	RobotBonusSit   = spr_add("sprRobotBonusSit",    1, 12, 12);
 			//	
 			//	 // Menu:
-			//	RobotBonusPortrait = sprite(p + "sprRobotBonusPortrait", 1, 40, 243);
-			//	RobotBonusLoadout  = sprite(p + "sprRobotBonusLoadout",  2, 16,  16);
-			//	RobotBonusMapIcon  = sprite(p + "sprRobotBonusMapIcon",  1, 10,  10);
+			//	RobotBonusPortrait = spr_add("sprRobotBonusPortrait", 1, 40, 243);
+			//	RobotBonusLoadout  = spr_add("sprRobotBonusLoadout",  2, 16,  16);
+			//	RobotBonusMapIcon  = spr_add("sprRobotBonusMapIcon",  1, 10,  10);
 			//	
+			//spr_path_add("../");
 			////#endregion
 			//
 			////#region COAT Y.V.
-			//var p = m + "YVCoat/";
-			//	
+			//spr_path_add("YVCoat/");
+			//
 			//	 // Player:
-			//	YVCoatIdle  = sprite(p + "sprYVCoatIdle",  14, 12, 12);
-			//	YVCoatWalk  = sprite(p + "sprYVCoatWalk",   6, 12, 12);
-			//	YVCoatHurt  = sprite(p + "sprYVCoatHurt",   3, 12, 12);
-			//	YVCoatDead  = sprite(p + "sprYVCoatDead",  19, 24, 24);
-			//	YVCoatGoSit = sprite(p + "sprYVCoatGoSit",  3, 12, 12);
-			//	YVCoatSit   = sprite(p + "sprYVCoatSit",    1, 12, 12);
+			//	YVCoatIdle  = spr_add("sprYVCoatIdle",  14, 12, 12);
+			//	YVCoatWalk  = spr_add("sprYVCoatWalk",   6, 12, 12);
+			//	YVCoatHurt  = spr_add("sprYVCoatHurt",   3, 12, 12);
+			//	YVCoatDead  = spr_add("sprYVCoatDead",  19, 24, 24);
+			//	YVCoatGoSit = spr_add("sprYVCoatGoSit",  3, 12, 12);
+			//	YVCoatSit   = spr_add("sprYVCoatSit",    1, 12, 12);
 			//	
 			//	 // Menu:
-			//	YVCoatPortrait = sprite(p + "sprYVCoatPortrait", 1, 40, 243);
-			//	YVCoatLoadout  = sprite(p + "sprYVCoatLoadout",  2, 16,  16);
-			//	YVCoatMapIcon  = sprite(p + "sprYVCoatMapIcon",  1, 10,  10);
+			//	YVCoatPortrait = spr_add("sprYVCoatPortrait", 1, 40, 243);
+			//	YVCoatLoadout  = spr_add("sprYVCoatLoadout",  2, 16,  16);
+			//	YVCoatMapIcon  = spr_add("sprYVCoatMapIcon",  1, 10,  10);
 			//	
+			//spr_path_add("../");
 			////#endregion
 			
 			//#region COOL FROG
-			var p = m + "FrogCool/";
-				
+			spr_path_add("FrogCool/");
+			
 				 // Player:
-				FrogCoolIdle  = sprite(p + "sprFrogCoolIdle",  6, 12, 12);
-				FrogCoolWalk  = sprite(p + "sprFrogCoolWalk",  6, 12, 12);
-				FrogCoolHurt  = sprite(p + "sprFrogCoolHurt",  3, 12, 12);
-				FrogCoolDead  = sprite(p + "sprFrogCoolDead",  6, 24, 24);
-				FrogCoolGoSit = sprite(p + "sprFrogCoolGoSit", 3, 12, 12);
-				FrogCoolSit   = sprite(p + "sprFrogCoolSit",   6, 12, 12);
+				FrogCoolIdle  = spr_add("sprFrogCoolIdle",  6, 12, 12);
+				FrogCoolWalk  = spr_add("sprFrogCoolWalk",  6, 12, 12);
+				FrogCoolHurt  = spr_add("sprFrogCoolHurt",  3, 12, 12);
+				FrogCoolDead  = spr_add("sprFrogCoolDead",  6, 24, 24);
+				FrogCoolGoSit = spr_add("sprFrogCoolGoSit", 3, 12, 12);
+				FrogCoolSit   = spr_add("sprFrogCoolSit",   6, 12, 12);
 				
 				 // Menu:
-				FrogCoolPortrait = sprite(p + "sprFrogCoolPortrait", 1, 40, 243);
-				FrogCoolLoadout  = sprite(p + "sprFrogCoolLoadout",  2, 16,  16);
-				FrogCoolMapIcon  = sprite(p + "sprFrogCoolMapIcon",  1, 10,  10);
+				FrogCoolPortrait = spr_add("sprFrogCoolPortrait", 1, 40, 243);
+				FrogCoolLoadout  = spr_add("sprFrogCoolLoadout",  2, 16,  16);
+				FrogCoolMapIcon  = spr_add("sprFrogCoolMapIcon",  1, 10,  10);
 				
+			spr_path_add("../");
 			//#endregion
 			
 			//#region ORCHID PLANT
-			var p = m + "PlantOrchid/";
-				
+			spr_path_add("PlantOrchid/");
+			
 				 // Player:
-				PlantOrchidIdle  = sprite(p + "sprPlantOrchidIdle",  4, 16, 16);
-				PlantOrchidWalk  = sprite(p + "sprPlantOrchidWalk",  4, 16, 16);
-				PlantOrchidHurt  = sprite(p + "sprPlantOrchidHurt",  3, 16, 16);
-				PlantOrchidDead  = sprite(p + "sprPlantOrchidDead",  9, 16, 16);
-				PlantOrchidGoSit = sprite(p + "sprPlantOrchidGoSit", 3, 16, 16);
-				PlantOrchidSit   = sprite(p + "sprPlantOrchidSit",   1, 16, 16);
+				PlantOrchidIdle  = spr_add("sprPlantOrchidIdle",  4, 16, 16);
+				PlantOrchidWalk  = spr_add("sprPlantOrchidWalk",  4, 16, 16);
+				PlantOrchidHurt  = spr_add("sprPlantOrchidHurt",  3, 16, 16);
+				PlantOrchidDead  = spr_add("sprPlantOrchidDead",  9, 16, 16);
+				PlantOrchidGoSit = spr_add("sprPlantOrchidGoSit", 3, 16, 16);
+				PlantOrchidSit   = spr_add("sprPlantOrchidSit",   1, 16, 16);
 				
 				 // Menu:
-				PlantOrchidPortrait = sprite(p + "sprPlantOrchidPortrait", 1, 40, 243);
-				PlantOrchidLoadout  = sprite(p + "sprPlantOrchidLoadout",  2, 16,  16);
-				PlantOrchidMapIcon  = sprite(p + "sprPlantOrchidMapIcon",  1, 10,  10);
+				PlantOrchidPortrait = spr_add("sprPlantOrchidPortrait", 1, 40, 243);
+				PlantOrchidLoadout  = spr_add("sprPlantOrchidLoadout",  2, 16,  16);
+				PlantOrchidMapIcon  = spr_add("sprPlantOrchidMapIcon",  1, 10,  10);
 				
 				 // Snare:
-				PlantOrchidTangle     = sprite(p + "sprPlantOrchidTangle",     6, 24, 24);
-				PlantOrchidTangleSeed = sprite(p + "sprPlantOrchidTangleSeed", 2,  4,  4);
+				PlantOrchidTangle     = spr_add("sprPlantOrchidTangle",     6, 24, 24);
+				PlantOrchidTangleSeed = spr_add("sprPlantOrchidTangleSeed", 2,  4,  4);
 				
+			spr_path_add("../");
 			//#endregion
 			
 			//#region RED CRYSTAL
-			p = m + "CrystalRed/";
-				
+			spr_path_add("CrystalRed/");
+			
 				 // Player:
-				CrystalRedIdle  = sprite(p + "sprCrystalRedIdle",  4, 12, 12);
-				CrystalRedWalk  = sprite(p + "sprCrystalRedWalk",  6, 12, 12);
-				CrystalRedHurt  = sprite(p + "sprCrystalRedHurt",  3, 12, 12);
-				CrystalRedDead  = sprite(p + "sprCrystalRedDead",  6, 12, 12);
-				CrystalRedGoSit = sprite(p + "sprCrystalRedGoSit", 3, 12, 12);
-				CrystalRedSit   = sprite(p + "sprCrystalRedSit",   1, 12, 12);
+				CrystalRedIdle  = spr_add("sprCrystalRedIdle",  4, 12, 12);
+				CrystalRedWalk  = spr_add("sprCrystalRedWalk",  6, 12, 12);
+				CrystalRedHurt  = spr_add("sprCrystalRedHurt",  3, 12, 12);
+				CrystalRedDead  = spr_add("sprCrystalRedDead",  6, 12, 12);
+				CrystalRedGoSit = spr_add("sprCrystalRedGoSit", 3, 12, 12);
+				CrystalRedSit   = spr_add("sprCrystalRedSit",   1, 12, 12);
 				
 				 // Menu:
-				CrystalRedPortrait = sprite(p + "sprCrystalRedPortrait", 1, 40, 243);
-				CrystalRedLoadout  = sprite(p + "sprCrystalRedLoadout",  2, 16,  16);
-				CrystalRedMapIcon  = sprite(p + "sprCrystalRedMapIcon",  1, 10,  10);
+				CrystalRedPortrait = spr_add("sprCrystalRedPortrait", 1, 40, 243);
+				CrystalRedLoadout  = spr_add("sprCrystalRedLoadout",  2, 16,  16);
+				CrystalRedMapIcon  = spr_add("sprCrystalRedMapIcon",  1, 10,  10);
 				
 				 // Shield:
-				CrystalRedShield          = sprite(p + "sprCrystalRedShield",          4, 32, 42);
-				CrystalRedShieldDisappear = sprite(p + "sprCrystalRedShieldDisappear", 6, 32, 42);
-				CrystalRedShieldIdleFront = sprite(p + "sprCrystalRedShieldIdleFront", 1, 32, 42);
-				CrystalRedShieldWalkFront = sprite(p + "sprCrystalRedShieldWalkFront", 8, 32, 42);
-				CrystalRedShieldIdleBack  = sprite(p + "sprCrystalRedShieldIdleBack",  1, 32, 42);
-				CrystalRedShieldWalkBack  = sprite(p + "sprCrystalRedShieldWalkBack",  8, 32, 42);
-				CrystalRedTrail           = sprite(p + "sprCrystalRedTrail",           5,  8,  8);
+				CrystalRedShield          = spr_add("sprCrystalRedShield",          4, 32, 42);
+				CrystalRedShieldDisappear = spr_add("sprCrystalRedShieldDisappear", 6, 32, 42);
+				CrystalRedShieldIdleFront = spr_add("sprCrystalRedShieldIdleFront", 1, 32, 42);
+				CrystalRedShieldWalkFront = spr_add("sprCrystalRedShieldWalkFront", 8, 32, 42);
+				CrystalRedShieldIdleBack  = spr_add("sprCrystalRedShieldIdleBack",  1, 32, 42);
+				CrystalRedShieldWalkBack  = spr_add("sprCrystalRedShieldWalkBack",  8, 32, 42);
+				CrystalRedTrail           = spr_add("sprCrystalRedTrail",           5,  8,  8);
 				
+			spr_path_add("../");
 			//#endregion
 			
 			//#region WEAPONS
-			m += "Weapons/";
-				
+			spr_path_add("Weapons/");
+			
 				 // Angler:
-				p = m + "Angler/";
-				AnglerAssaultRifle    = sprite(p + "sprAnglerAssaultRifle",    1,  4,  3, shnWep);
-				AnglerBazooka         = sprite(p + "sprAnglerBazooka",         1, 10,  7, shnWep);
-				AnglerCrossbow        = sprite(p + "sprAnglerCrossbow",        1,  2,  3, shnWep);
-				AnglerDiscGun         = sprite(p + "sprAnglerDiscGun",         1, -2,  3, shnWep);
-				AnglerGrenadeLauncher = sprite(p + "sprAnglerGrenadeLauncher", 1,  2,  3, shnWep);
-				AnglerGuitar          = sprite(p + "sprAnglerGuitar",          1,  2,  7, shnWep);
-				AnglerLaserPistol     = sprite(p + "sprAnglerLaserPistol",     1, -3,  3, shnWep);
-				AnglerMachinegun      = sprite(p + "sprAnglerMachinegun",      1,  0,  2, shnWep);
-				AnglerNukeLauncher    = sprite(p + "sprAnglerNukeLauncher",    1,  9, 10, shnWep);
-				AnglerPlasmaGun       = sprite(p + "sprAnglerPlasmaGun",       1,  1,  4, shnWep);
-				AnglerRevolver        = sprite(p + "sprAnglerRevolver",        1, -3,  2, shnWep);
-				AnglerScrewdriver     = sprite(p + "sprAnglerScrewdriver",     1, -2,  3, shnWep);
-				AnglerShotgun         = sprite(p + "sprAnglerShotgun",         1,  3,  3, shnWep);
-				AnglerSlugger         = sprite(p + "sprAnglerSlugger",         1,  1,  3, shnWep);
-				AnglerSplinterGun     = sprite(p + "sprAnglerSplinterGun",     1,  2,  3, shnWep);
-				AnglerTeleportGun     = sprite(p + "sprAnglerTeleportGun",     1,  6,  6, shnWep);
-				AnglerTrident         = sprite(p + "sprAnglerTrident",         1, 12,  7, shnWep);
-				AnglerTunneller       = sprite(p + "sprAnglerTunneller",       1, 13,  6, shnWep);
-				AnglerTunnellerHUD    = sprite(p + "sprAnglerTunneller",       1, 16,  6, shnWep);
-				AnglerWrench          = sprite(p + "sprAnglerWrench",          1,  1,  4, shnWep);
-				AnglerBolt            = sprite(p + "sprAnglerBolt",            2,  4,  8);
-				AnglerDisc            = sprite(p + "sprAnglerDisc",            2,  7,  7);
-				AnglerGrenade         = sprite(p + "sprAnglerGrenade",         1,  3,  3);
-				AnglerNuke            = sprite(p + "sprAnglerNuke",            1,  8,  8);
-				AnglerRocket          = sprite(p + "sprAnglerRocket",          1,  4,  4);
+				spr_path_add("Angler/");
+				AnglerAssaultRifle    = spr_add("sprAnglerAssaultRifle",    1,  4,  3, shnWep);
+				AnglerBazooka         = spr_add("sprAnglerBazooka",         1, 10,  7, shnWep);
+				AnglerCrossbow        = spr_add("sprAnglerCrossbow",        1,  2,  3, shnWep);
+				AnglerDiscGun         = spr_add("sprAnglerDiscGun",         1, -2,  3, shnWep);
+				AnglerGrenadeLauncher = spr_add("sprAnglerGrenadeLauncher", 1,  2,  3, shnWep);
+				AnglerGuitar          = spr_add("sprAnglerGuitar",          1,  2,  7, shnWep);
+				AnglerLaserPistol     = spr_add("sprAnglerLaserPistol",     1, -3,  3, shnWep);
+				AnglerMachinegun      = spr_add("sprAnglerMachinegun",      1,  0,  2, shnWep);
+				AnglerNukeLauncher    = spr_add("sprAnglerNukeLauncher",    1,  9, 10, shnWep);
+				AnglerPlasmaGun       = spr_add("sprAnglerPlasmaGun",       1,  1,  4, shnWep);
+				AnglerRevolver        = spr_add("sprAnglerRevolver",        1, -3,  2, shnWep);
+				AnglerScrewdriver     = spr_add("sprAnglerScrewdriver",     1, -2,  3, shnWep);
+				AnglerShotgun         = spr_add("sprAnglerShotgun",         1,  3,  3, shnWep);
+				AnglerSlugger         = spr_add("sprAnglerSlugger",         1,  1,  3, shnWep);
+				AnglerSplinterGun     = spr_add("sprAnglerSplinterGun",     1,  2,  3, shnWep);
+				AnglerTeleportGun     = spr_add("sprAnglerTeleportGun",     1,  6,  6, shnWep);
+				AnglerTrident         = spr_add("sprAnglerTrident",         1, 12,  7, shnWep);
+				AnglerTunneller       = spr_add("sprAnglerTunneller",       1, 13,  6, shnWep);
+				AnglerTunnellerHUD    = spr_add("sprAnglerTunneller",       1, 16,  6, shnWep);
+				AnglerWrench          = spr_add("sprAnglerWrench",          1,  1,  4, shnWep);
+				AnglerBolt            = spr_add("sprAnglerBolt",            2,  4,  8);
+				AnglerDisc            = spr_add("sprAnglerDisc",            2,  7,  7);
+				AnglerGrenade         = spr_add("sprAnglerGrenade",         1,  3,  3);
+				AnglerNuke            = spr_add("sprAnglerNuke",            1,  8,  8);
+				AnglerRocket          = spr_add("sprAnglerRocket",          1,  4,  4);
+				spr_path_add("../");
 				
 				 // Cool:
-				p = m + "Cool/";
-				CoolAssaultRifle    = sprite(p + "sprCoolAssaultRifle",    1,  2, 3, shnWep);
-				CoolBazooka         = sprite(p + "sprCoolBazooka",         1, 11, 4, shnWep);
-				CoolCrossbow        = sprite(p + "sprCoolCrossbow",        1,  2, 3, shnWep);
-				CoolDiscGun         = sprite(p + "sprCoolDiscGun",         1, -4, 3, shnWep);
-				CoolFrogPistol      = sprite(p + "sprCoolFrogPistol",      1, -3, 4, shnWep);
-				CoolGrenadeLauncher = sprite(p + "sprCoolGrenadeLauncher", 1,  2, 2, shnWep);
-				CoolLaserPistol     = sprite(p + "sprCoolLaserPistol",     1, -3, 3, shnWep);
-				CoolMachinegun      = sprite(p + "sprCoolMachinegun",      1, -1, 1, shnWep);
-				CoolNukeLauncher    = sprite(p + "sprCoolNukeLauncher",    1,  8, 6, shnWep);
-				CoolPlasmaGun       = sprite(p + "sprCoolPlasmaGun",       1,  1, 4, shnWep);
-				CoolRevolver        = sprite(p + "sprCoolRevolver",        1, -3, 2, shnWep);
-				CoolScrewdriver     = sprite(p + "sprCoolScrewdriver",     1, -2, 2, shnWep);
-				CoolShotgun         = sprite(p + "sprCoolShotgun",         1,  2, 2, shnWep);
-				CoolSlugger         = sprite(p + "sprCoolSlugger",         1,  2, 2, shnWep);
-				CoolSplinterGun     = sprite(p + "sprCoolSplinterGun",     1,  2, 3, shnWep);
-				CoolTeleportGun     = sprite(p + "sprCoolTeleportGun",     1,  6, 6, shnWep);
-				CoolTrident         = sprite(p + "sprCoolTrident",         1, 12, 8, shnWep);
-				CoolTunneller       = sprite(p + "sprCoolTunneller",       1, 13, 4, shnWep);
-				CoolTunnellerHUD    = sprite(p + "sprCoolTunneller",       1, 16, 4, shnWep);
-				CoolWrench          = sprite(p + "sprCoolWrench",          1, -1, 3, shnWep);
-				CoolBolt            = sprite(p + "sprCoolBolt",            2,  4, 8);
-				CoolDisc            = sprite(p + "sprCoolDisc",            2,  7, 7);
-				CoolGrenade         = sprite(p + "sprCoolGrenade",         1,  3, 3);
-				CoolNuke            = sprite(p + "sprCoolNuke",            1,  8, 8);
-				CoolRocket          = sprite(p + "sprCoolRocket",          1,  4, 4);
+				spr_path_add("Cool/");
+				CoolAssaultRifle    = spr_add("sprCoolAssaultRifle",    1,  2, 3, shnWep);
+				CoolBazooka         = spr_add("sprCoolBazooka",         1, 11, 4, shnWep);
+				CoolCrossbow        = spr_add("sprCoolCrossbow",        1,  2, 3, shnWep);
+				CoolDiscGun         = spr_add("sprCoolDiscGun",         1, -4, 3, shnWep);
+				CoolFrogPistol      = spr_add("sprCoolFrogPistol",      1, -3, 4, shnWep);
+				CoolGrenadeLauncher = spr_add("sprCoolGrenadeLauncher", 1,  2, 2, shnWep);
+				CoolLaserPistol     = spr_add("sprCoolLaserPistol",     1, -3, 3, shnWep);
+				CoolMachinegun      = spr_add("sprCoolMachinegun",      1, -1, 1, shnWep);
+				CoolNukeLauncher    = spr_add("sprCoolNukeLauncher",    1,  8, 6, shnWep);
+				CoolPlasmaGun       = spr_add("sprCoolPlasmaGun",       1,  1, 4, shnWep);
+				CoolRevolver        = spr_add("sprCoolRevolver",        1, -3, 2, shnWep);
+				CoolScrewdriver     = spr_add("sprCoolScrewdriver",     1, -2, 2, shnWep);
+				CoolShotgun         = spr_add("sprCoolShotgun",         1,  2, 2, shnWep);
+				CoolSlugger         = spr_add("sprCoolSlugger",         1,  2, 2, shnWep);
+				CoolSplinterGun     = spr_add("sprCoolSplinterGun",     1,  2, 3, shnWep);
+				CoolTeleportGun     = spr_add("sprCoolTeleportGun",     1,  6, 6, shnWep);
+				CoolTrident         = spr_add("sprCoolTrident",         1, 12, 8, shnWep);
+				CoolTunneller       = spr_add("sprCoolTunneller",       1, 13, 4, shnWep);
+				CoolTunnellerHUD    = spr_add("sprCoolTunneller",       1, 16, 4, shnWep);
+				CoolWrench          = spr_add("sprCoolWrench",          1, -1, 3, shnWep);
+				CoolBolt            = spr_add("sprCoolBolt",            2,  4, 8);
+				CoolDisc            = spr_add("sprCoolDisc",            2,  7, 7);
+				CoolGrenade         = spr_add("sprCoolGrenade",         1,  3, 3);
+				CoolNuke            = spr_add("sprCoolNuke",            1,  8, 8);
+				CoolRocket          = spr_add("sprCoolRocket",          1,  4, 4);
+				spr_path_add("../");
 				
 				 // Orchid:
-				p = m + "Orchid/";
-				OrchidAssaultRifle    = sprite(p + "sprOrchidAssaultRifle",    1,  5, 4, shnWep);
-				OrchidBazooka         = sprite(p + "sprOrchidBazooka",         1, 12, 5, shnWep);
-				OrchidCrossbow        = sprite(p + "sprOrchidCrossbow",        1,  4, 4, shnWep);
-				OrchidDiscGun         = sprite(p + "sprOrchidDiscGun",         1, -3, 4, shnWep);
-				OrchidFrogPistol      = sprite(p + "sprOrchidFrogPistol",      1, -4, 4, shnWep);
-				OrchidFrogPistolRusty = sprite(p + "sprOrchidFrogPistolRusty", 1, -4, 4, shnWep);
-				OrchidGrenadeLauncher = sprite(p + "sprOrchidGrenadeLauncher", 1,  5, 5, shnWep);
-				OrchidLaserPistol     = sprite(p + "sprOrchidLaserPistol",     1, -2, 2, shnWep);
-				OrchidMachinegun      = sprite(p + "sprOrchidMachinegun",      1,  3, 3, shnWep);
-				OrchidNukeLauncher    = sprite(p + "sprOrchidNukeLauncher",    1,  8, 8, shnWep);
-				OrchidPlasmaGun       = sprite(p + "sprOrchidPlasmaGun",       1,  3, 4, shnWep);
-				OrchidRevolver        = sprite(p + "sprOrchidRevolver",        1, -3, 2, shnWep);
-				OrchidScrewdriver     = sprite(p + "sprOrchidScrewdriver",     1, -1, 3, shnWep);
-				OrchidShotgun         = sprite(p + "sprOrchidShotgun",         1,  5, 3, shnWep);
-				OrchidSlugger         = sprite(p + "sprOrchidSlugger",         1,  4, 4, shnWep);
-				OrchidSplinterGun     = sprite(p + "sprOrchidSplinterGun",     1,  3, 4, shnWep);
-				OrchidTeleportGun     = sprite(p + "sprOrchidTeleportGun",     1,  5, 6, shnWep);
-				OrchidTrident         = sprite(p + "sprOrchidTrident",         1, 12, 7, shnWep);
-				OrchidTunneller       = sprite(p + "sprOrchidTunneller",       1, 14, 9, shnWep);
-				OrchidTunnellerHUD    = sprite(p + "sprOrchidTunneller",       1, 20, 9, shnWep);
-				OrchidWrench          = sprite(p + "sprOrchidWrench",          1,  1, 4, shnWep);
-				OrchidBolt            = sprite(p + "sprOrchidBolt",            2,  4, 8);
-				OrchidDisc            = sprite(p + "sprOrchidDisc",            2,  6, 6);
-				OrchidGrenade         = sprite(p + "sprOrchidGrenade",         1,  3, 3);
-				OrchidNuke            = sprite(p + "sprOrchidNuke",            1,  8, 8);
-				OrchidRocket          = sprite(p + "sprOrchidRocket",          1,  4, 4);
+				spr_path_add("Orchid/");
+				OrchidAssaultRifle    = spr_add("sprOrchidAssaultRifle",    1,  5, 4, shnWep);
+				OrchidBazooka         = spr_add("sprOrchidBazooka",         1, 12, 5, shnWep);
+				OrchidCrossbow        = spr_add("sprOrchidCrossbow",        1,  4, 4, shnWep);
+				OrchidDiscGun         = spr_add("sprOrchidDiscGun",         1, -3, 4, shnWep);
+				OrchidFrogPistol      = spr_add("sprOrchidFrogPistol",      1, -4, 4, shnWep);
+				OrchidFrogPistolRusty = spr_add("sprOrchidFrogPistolRusty", 1, -4, 4, shnWep);
+				OrchidGrenadeLauncher = spr_add("sprOrchidGrenadeLauncher", 1,  5, 5, shnWep);
+				OrchidLaserPistol     = spr_add("sprOrchidLaserPistol",     1, -2, 2, shnWep);
+				OrchidMachinegun      = spr_add("sprOrchidMachinegun",      1,  3, 3, shnWep);
+				OrchidNukeLauncher    = spr_add("sprOrchidNukeLauncher",    1,  8, 8, shnWep);
+				OrchidPlasmaGun       = spr_add("sprOrchidPlasmaGun",       1,  3, 4, shnWep);
+				OrchidRevolver        = spr_add("sprOrchidRevolver",        1, -3, 2, shnWep);
+				OrchidScrewdriver     = spr_add("sprOrchidScrewdriver",     1, -1, 3, shnWep);
+				OrchidShotgun         = spr_add("sprOrchidShotgun",         1,  5, 3, shnWep);
+				OrchidSlugger         = spr_add("sprOrchidSlugger",         1,  4, 4, shnWep);
+				OrchidSplinterGun     = spr_add("sprOrchidSplinterGun",     1,  3, 4, shnWep);
+				OrchidTeleportGun     = spr_add("sprOrchidTeleportGun",     1,  5, 6, shnWep);
+				OrchidTrident         = spr_add("sprOrchidTrident",         1, 12, 7, shnWep);
+				OrchidTunneller       = spr_add("sprOrchidTunneller",       1, 14, 9, shnWep);
+				OrchidTunnellerHUD    = spr_add("sprOrchidTunneller",       1, 20, 9, shnWep);
+				OrchidWrench          = spr_add("sprOrchidWrench",          1,  1, 4, shnWep);
+				OrchidBolt            = spr_add("sprOrchidBolt",            2,  4, 8);
+				OrchidDisc            = spr_add("sprOrchidDisc",            2,  6, 6);
+				OrchidGrenade         = spr_add("sprOrchidGrenade",         1,  3, 3);
+				OrchidNuke            = spr_add("sprOrchidNuke",            1,  8, 8);
+				OrchidRocket          = spr_add("sprOrchidRocket",          1,  4, 4);
+				spr_path_add("../");
 				
 				 // Red:
-				p = m + "Red/";
-				RedAssaultRifle    = sprite(p + "sprRedAssaultRifle",    1,  4, 3, shnWep);
-				RedBazooka         = sprite(p + "sprRedBazooka",         1, 11, 2, shnWep);
-				RedCrossbow        = sprite(p + "sprRedCrossbow",        1,  2, 5, shnWep);
-				RedDiscGun         = sprite(p + "sprRedDiscGun",         1, -3, 4, shnWep);
-				RedGrenadeLauncher = sprite(p + "sprRedGrenadeLauncher", 1,  1, 2, shnWep);
-				RedLaserPistol     = sprite(p + "sprRedLaserPistol",     1, -2, 2, shnWep);
-				RedMachinegun      = sprite(p + "sprRedMachinegun",      1,  1, 0, shnWep);
-				RedNukeLauncher    = sprite(p + "sprRedNukeLauncher",    1,  7, 6, shnWep);
-				RedPlasmaGun       = sprite(p + "sprRedPlasmaGun",       1,  3, 3, shnWep);
-				RedRevolver        = sprite(p + "sprRedRevolver",        1, -2, 2, shnWep);
-				RedScrewdriver     = sprite(p + "sprRedScrewdriver",     1, -2, 3, shnWep);
-				RedShotgun         = sprite(p + "sprRedShotgun",         1,  4, 2, shnWep);
-				RedSlugger         = sprite(p + "sprRedSlugger",         1,  2, 2, shnWep);
-				RedSplinterGun     = sprite(p + "sprRedSplinterGun",     1,  2, 4, shnWep);
-				RedTeleportGun     = sprite(p + "sprRedTeleportGun",     1,  6, 5, shnWep);
-				RedTrident         = sprite(p + "sprRedTrident",         1, 12, 7, shnWep);
-				RedTunneller       = sprite(p + "sprRedTunneller",       1, 14, 7, shnWep);
-				RedTunnellerHUD    = sprite(p + "sprRedTunneller",       1, 18, 8, shnWep);
-				RedWrench          = sprite(p + "sprRedWrench",          1,  1, 3, shnWep);
-				RedBolt            = sprite(p + "sprRedBolt",            2,  4, 8);
-				RedDisc            = sprite(p + "sprRedDisc",            2,  6, 6);
-				RedGrenade         = sprite(p + "sprRedGrenade",         1,  3, 3);
-				RedNuke            = sprite(p + "sprRedNuke",            1,  8, 8);
-				RedRocket          = sprite(p + "sprRedRocket",          1,  4, 4);
+				spr_path_add("Red/");
+				RedAssaultRifle    = spr_add("sprRedAssaultRifle",    1,  4, 3, shnWep);
+				RedBazooka         = spr_add("sprRedBazooka",         1, 11, 2, shnWep);
+				RedCrossbow        = spr_add("sprRedCrossbow",        1,  2, 5, shnWep);
+				RedDiscGun         = spr_add("sprRedDiscGun",         1, -3, 4, shnWep);
+				RedGrenadeLauncher = spr_add("sprRedGrenadeLauncher", 1,  1, 2, shnWep);
+				RedLaserPistol     = spr_add("sprRedLaserPistol",     1, -2, 2, shnWep);
+				RedMachinegun      = spr_add("sprRedMachinegun",      1,  1, 0, shnWep);
+				RedNukeLauncher    = spr_add("sprRedNukeLauncher",    1,  7, 6, shnWep);
+				RedPlasmaGun       = spr_add("sprRedPlasmaGun",       1,  3, 3, shnWep);
+				RedRevolver        = spr_add("sprRedRevolver",        1, -2, 2, shnWep);
+				RedScrewdriver     = spr_add("sprRedScrewdriver",     1, -2, 3, shnWep);
+				RedShotgun         = spr_add("sprRedShotgun",         1,  4, 2, shnWep);
+				RedSlugger         = spr_add("sprRedSlugger",         1,  2, 2, shnWep);
+				RedSplinterGun     = spr_add("sprRedSplinterGun",     1,  2, 4, shnWep);
+				RedTeleportGun     = spr_add("sprRedTeleportGun",     1,  6, 5, shnWep);
+				RedTrident         = spr_add("sprRedTrident",         1, 12, 7, shnWep);
+				RedTunneller       = spr_add("sprRedTunneller",       1, 14, 7, shnWep);
+				RedTunnellerHUD    = spr_add("sprRedTunneller",       1, 18, 8, shnWep);
+				RedWrench          = spr_add("sprRedWrench",          1,  1, 3, shnWep);
+				RedBolt            = spr_add("sprRedBolt",            2,  4, 8);
+				RedDisc            = spr_add("sprRedDisc",            2,  6, 6);
+				RedGrenade         = spr_add("sprRedGrenade",         1,  3, 3);
+				RedNuke            = spr_add("sprRedNuke",            1,  8, 8);
+				RedRocket          = spr_add("sprRedRocket",          1,  4, 4);
+				spr_path_add("../");
 				
+			spr_path_add("../");
 			//#endregion
 			
 		//#endregion
 		
 		//#region PETS
-		m = "pets/";
-			
+		spr_path_set("pets/");
+		
 			 // General:
-			PetArrow = sprite(m + "sprPetArrow", 1, 3,  0);
-			PetLost  = sprite(m + "sprPetLost",  7, 8, 16);
+			PetArrow = spr_add("sprPetArrow", 1, 3,  0);
+			PetLost  = spr_add("sprPetLost",  7, 8, 16);
 			
 			 // Scorpion:
-			p = m + "Desert/";
-			PetScorpionIcon   = sprite(p + "sprPetScorpionIcon",   1,  6,  6);
-			PetScorpionIdle   = sprite(p + "sprPetScorpionIdle",   4, 16, 16);
-			PetScorpionWalk   = sprite(p + "sprPetScorpionWalk",   6, 16, 16);
-			PetScorpionHurt   = sprite(p + "sprPetScorpionHurt",   3, 16, 16);
-			PetScorpionDead   = sprite(p + "sprPetScorpionDead",   6, 16, 16);
-			PetScorpionFire   = sprite(p + "sprPetScorpionFire",   6, 16, 16);
-			PetScorpionShield = sprite(p + "sprPetScorpionShield", 6, 16, 16);
+			spr_path_add("Desert/");
+			PetScorpionIcon   = spr_add("sprPetScorpionIcon",   1,  6,  6);
+			PetScorpionIdle   = spr_add("sprPetScorpionIdle",   4, 16, 16);
+			PetScorpionWalk   = spr_add("sprPetScorpionWalk",   6, 16, 16);
+			PetScorpionHurt   = spr_add("sprPetScorpionHurt",   3, 16, 16);
+			PetScorpionDead   = spr_add("sprPetScorpionDead",   6, 16, 16);
+			PetScorpionFire   = spr_add("sprPetScorpionFire",   6, 16, 16);
+			PetScorpionShield = spr_add("sprPetScorpionShield", 6, 16, 16);
+			spr_path_add("../");
 			
 			 // Parrot:
-			p = m + "Coast/";
-			PetParrotNote  = sprite(p + "sprPetParrotNote",   5,  4,  4);
-			PetParrotIcon  = sprite(p + "sprPetParrotIcon",   1,  6,  6);
-			PetParrotIdle  = sprite(p + "sprPetParrotIdle",   6, 12, 12);
-			PetParrotWalk  = sprite(p + "sprPetParrotWalk",   6, 12, 14);
-			PetParrotHurt  = sprite(p + "sprPetParrotDodge",  3, 12, 12);
-			PetParrotBIcon = sprite(p + "sprPetParrotBIcon",  1,  6,  6);
-			PetParrotBIdle = sprite(p + "sprPetParrotBIdle",  6, 12, 12);
-			PetParrotBWalk = sprite(p + "sprPetParrotBWalk",  6, 12, 14);
-			PetParrotBHurt = sprite(p + "sprPetParrotBDodge", 3, 12, 12);
+			spr_path_add("Coast/");
+			PetParrotNote  = spr_add("sprPetParrotNote",   5,  4,  4);
+			PetParrotIcon  = spr_add("sprPetParrotIcon",   1,  6,  6);
+			PetParrotIdle  = spr_add("sprPetParrotIdle",   6, 12, 12);
+			PetParrotWalk  = spr_add("sprPetParrotWalk",   6, 12, 14);
+			PetParrotHurt  = spr_add("sprPetParrotDodge",  3, 12, 12);
+			PetParrotBIcon = spr_add("sprPetParrotBIcon",  1,  6,  6);
+			PetParrotBIdle = spr_add("sprPetParrotBIdle",  6, 12, 12);
+			PetParrotBWalk = spr_add("sprPetParrotBWalk",  6, 12, 14);
+			PetParrotBHurt = spr_add("sprPetParrotBDodge", 3, 12, 12);
+			spr_path_add("../");
 			
 			 // CoolGuy:
-			p = m + "Pizza/";
-			PetCoolGuyIcon = sprite(p + "sprPetCoolGuyIcon",  1,  6,  6);
-			PetCoolGuyIdle = sprite(p + "sprPetCoolGuyIdle",  4, 12, 12);
-			PetCoolGuyWalk = sprite(p + "sprPetCoolGuyWalk",  6, 12, 12);
-			PetCoolGuyHurt = sprite(p + "sprPetCoolGuyDodge", 3, 12, 12);
-			PetPeasIcon    = sprite(p + "sprPetPeasIcon",     1,  6,  6);
-			PetPeasIdle    = sprite(p + "sprPetPeasIdle",     4, 12, 12);
-			PetPeasWalk    = sprite(p + "sprPetPeasWalk",     6, 12, 12);
-			PetPeasHurt    = sprite(p + "sprPetPeasDodge",    3, 12, 12);
+			spr_path_add("Pizza/");
+			PetCoolGuyIcon = spr_add("sprPetCoolGuyIcon",  1,  6,  6);
+			PetCoolGuyIdle = spr_add("sprPetCoolGuyIdle",  4, 12, 12);
+			PetCoolGuyWalk = spr_add("sprPetCoolGuyWalk",  6, 12, 12);
+			PetCoolGuyHurt = spr_add("sprPetCoolGuyDodge", 3, 12, 12);
+			PetPeasIcon    = spr_add("sprPetPeasIcon",     1,  6,  6);
+			PetPeasIdle    = spr_add("sprPetPeasIdle",     4, 12, 12);
+			PetPeasWalk    = spr_add("sprPetPeasWalk",     6, 12, 12);
+			PetPeasHurt    = spr_add("sprPetPeasDodge",    3, 12, 12);
+			spr_path_add("../");
 			
 			 // BabyShark:
-			p = m + "Oasis/";
-			PetSlaughterIcon  = sprite(p + "sprPetSlaughterIcon",   1,  6,  6);
-			PetSlaughterIdle  = sprite(p + "sprPetSlaughterIdle",   4, 12, 12);
-			PetSlaughterWalk  = sprite(p + "sprPetSlaughterWalk",   6, 12, 12);
-			PetSlaughterHurt  = sprite(p + "sprPetSlaughterHurt",   3, 12, 12);
-			PetSlaughterDead  = sprite(p + "sprPetSlaughterDead",  10, 24, 24);
-			PetSlaughterSpwn  = sprite(p + "sprPetSlaughterSpwn",   7, 24, 24);
-			PetSlaughterBite  = sprite(p + "sprPetSlaughterBite",   6, 12, 12);
-			SlaughterBite     = sprite(p + "sprSlaughterBite",      6,  8, 12);
-			SlaughterPropIdle = sprite(p + "sprSlaughterPropIdle",  1, 12, 12);
-			SlaughterPropHurt = sprite(p + "sprSlaughterPropHurt",  3, 12, 12);
-			SlaughterPropDead = sprite(p + "sprSlaughterPropDead",  3, 12, 12);
+			spr_path_add("Oasis/");
+			PetSlaughterIcon  = spr_add("sprPetSlaughterIcon",   1,  6,  6);
+			PetSlaughterIdle  = spr_add("sprPetSlaughterIdle",   4, 12, 12);
+			PetSlaughterWalk  = spr_add("sprPetSlaughterWalk",   6, 12, 12);
+			PetSlaughterHurt  = spr_add("sprPetSlaughterHurt",   3, 12, 12);
+			PetSlaughterDead  = spr_add("sprPetSlaughterDead",  10, 24, 24);
+			PetSlaughterSpwn  = spr_add("sprPetSlaughterSpwn",   7, 24, 24);
+			PetSlaughterBite  = spr_add("sprPetSlaughterBite",   6, 12, 12);
+			SlaughterBite     = spr_add("sprSlaughterBite",      6,  8, 12);
+			SlaughterPropIdle = spr_add("sprSlaughterPropIdle",  1, 12, 12);
+			SlaughterPropHurt = spr_add("sprSlaughterPropHurt",  3, 12, 12);
+			SlaughterPropDead = spr_add("sprSlaughterPropDead",  3, 12, 12);
+			spr_path_add("../");
 			
 			 // Octopus:
-			p = m + "Trench/";
-			PetOctoIcon     = sprite(p + "sprPetOctoIcon",      1,  7,  7);
-			PetOctoIdle     = sprite(p + "sprPetOctoIdle",     16, 12, 12);
-			PetOctoHurt     = sprite(p + "sprPetOctoDodge",     3, 12, 12);
-			PetOctoHide     = sprite(p + "sprPetOctoHide",     30, 12, 12);
-			PetOctoHideIcon = sprite(p + "sprPetOctoHideIcon",  1,  7,  6);
+			spr_path_add("Trench/");
+			PetOctoIcon     = spr_add("sprPetOctoIcon",      1,  7,  7);
+			PetOctoIdle     = spr_add("sprPetOctoIdle",     16, 12, 12);
+			PetOctoHurt     = spr_add("sprPetOctoDodge",     3, 12, 12);
+			PetOctoHide     = spr_add("sprPetOctoHide",     30, 12, 12);
+			PetOctoHideIcon = spr_add("sprPetOctoHideIcon",  1,  7,  6);
+			spr_path_add("../");
 			
 			 // Salamander:
-			p = m + "Scrapyards/";
-			PetSalamanderIcon = sprite(p + "sprPetSalamanderIcon", 1,  6,  6);
-			PetSalamanderIdle = sprite(p + "sprPetSalamanderIdle", 6, 16, 16);
-			PetSalamanderWalk = sprite(p + "sprPetSalamanderWalk", 8, 16, 16);
-			PetSalamanderHurt = sprite(p + "sprPetSalamanderHurt", 3, 16, 16);
-			PetSalamanderChrg = sprite(p + "sprPetSalamanderChrg", 3, 16, 16);
+			spr_path_add("Scrapyards/");
+			PetSalamanderIcon = spr_add("sprPetSalamanderIcon", 1,  6,  6);
+			PetSalamanderIdle = spr_add("sprPetSalamanderIdle", 6, 16, 16);
+			PetSalamanderWalk = spr_add("sprPetSalamanderWalk", 8, 16, 16);
+			PetSalamanderHurt = spr_add("sprPetSalamanderHurt", 3, 16, 16);
+			PetSalamanderChrg = spr_add("sprPetSalamanderChrg", 3, 16, 16);
+			spr_path_add("../");
 			
 			 // Golden Chest Mimic:
-			p = m + "Mansion/";
-			PetMimicIcon = sprite(p + "sprPetMimicIcon",   1,  6,  6);
-			PetMimicIdle = sprite(p + "sprPetMimicIdle",  16, 16, 16);
-			PetMimicWalk = sprite(p + "sprPetMimicWalk",   6, 16, 16);
-			PetMimicHurt = sprite(p + "sprPetMimicDodge",  3, 16, 16);
-			PetMimicOpen = sprite(p + "sprPetMimicOpen",   1, 16, 16);
-			PetMimicHide = sprite(p + "sprPetMimicHide",   1, 16, 16);
+			spr_path_add("Mansion/");
+			PetMimicIcon = spr_add("sprPetMimicIcon",   1,  6,  6);
+			PetMimicIdle = spr_add("sprPetMimicIdle",  16, 16, 16);
+			PetMimicWalk = spr_add("sprPetMimicWalk",   6, 16, 16);
+			PetMimicHurt = spr_add("sprPetMimicDodge",  3, 16, 16);
+			PetMimicOpen = spr_add("sprPetMimicOpen",   1, 16, 16);
+			PetMimicHide = spr_add("sprPetMimicHide",   1, 16, 16);
+			spr_path_add("../");
 			
 			 // Spider
-			p = m + "Caves/";
-			PetSpiderIcon       = sprite(p + "sprPetSpiderIcon",        1,  6,  6);
-			PetSpiderIdle       = sprite(p + "sprPetSpiderIdle",        8, 16, 16);
-			PetSpiderWalk       = sprite(p + "sprPetSpiderWalk",        6, 16, 16);
-			PetSpiderHurt       = sprite(p + "sprPetSpiderDodge",       3, 16, 16);
-			PetSpiderWeb        = sprite(p + "sprPetSpiderWeb",         1,  0,  0);
-			PetSpiderWebBits    = sprite(p + "sprWebBits",              5,  4,  4);
-			PetSparkle          = sprite(p + "sprPetSparkle",           5,  8,  8);
-			PetSpiderCursedIcon = sprite(p + "sprPetSpiderCursedIcon",  1,  6,  6);
-			PetSpiderCursedIdle = sprite(p + "sprPetSpiderCursedIdle",  8, 16, 16);
-			PetSpiderCursedWalk = sprite(p + "sprPetSpiderCursedWalk",  6, 16, 16);
-			PetSpiderCursedHurt = sprite(p + "sprPetSpiderCursedDodge", 3, 16, 16);
-			PetSpiderCursedKill = sprite(p + "sprPetSpiderCursedKill",  6, 16, 16);
+			spr_path_add("Caves/");
+			PetSpiderIcon       = spr_add("sprPetSpiderIcon",        1,  6,  6);
+			PetSpiderIdle       = spr_add("sprPetSpiderIdle",        8, 16, 16);
+			PetSpiderWalk       = spr_add("sprPetSpiderWalk",        6, 16, 16);
+			PetSpiderHurt       = spr_add("sprPetSpiderDodge",       3, 16, 16);
+			PetSpiderWeb        = spr_add("sprPetSpiderWeb",         1,  0,  0);
+			PetSpiderWebBits    = spr_add("sprWebBits",              5,  4,  4);
+			PetSparkle          = spr_add("sprPetSparkle",           5,  8,  8);
+			PetSpiderCursedIcon = spr_add("sprPetSpiderCursedIcon",  1,  6,  6);
+			PetSpiderCursedIdle = spr_add("sprPetSpiderCursedIdle",  8, 16, 16);
+			PetSpiderCursedWalk = spr_add("sprPetSpiderCursedWalk",  6, 16, 16);
+			PetSpiderCursedHurt = spr_add("sprPetSpiderCursedDodge", 3, 16, 16);
+			PetSpiderCursedKill = spr_add("sprPetSpiderCursedKill",  6, 16, 16);
+			spr_path_add("../");
 			
 			 // Prism:
-			p = m + "Cursed Caves/";
-			PetPrismIcon = sprite(p + "sprPetPrismIcon", 1,  6,  6);
-			PetPrismIdle = sprite(p + "sprPetPrismIdle", 6, 12, 12);
+			spr_path_add("Cursed Caves/");
+			PetPrismIcon = spr_add("sprPetPrismIcon", 1,  6,  6);
+			PetPrismIdle = spr_add("sprPetPrismIdle", 6, 12, 12);
+			spr_path_add("../");
 			
 			 // Mantis:
-			p = m + "Vault/";
-			PetOrchidIcon = sprite(p + "sprPetOrchidIcon",  1,  6,  6);
-			PetOrchidIdle = sprite(p + "sprPetOrchidIdle", 28, 12, 12);
-			PetOrchidWalk = sprite(p + "sprPetOrchidWalk",  6, 12, 12);
-			PetOrchidHurt = sprite(p + "sprPetOrchidHurt",  3, 12, 12);
-			PetOrchidBall = sprite(p + "sprPetOrchidBall",  2, 12, 12);
+			spr_path_add("Vault/");
+			PetOrchidIcon = spr_add("sprPetOrchidIcon",  1,  6,  6);
+			PetOrchidIdle = spr_add("sprPetOrchidIdle", 28, 12, 12);
+			PetOrchidWalk = spr_add("sprPetOrchidWalk",  6, 12, 12);
+			PetOrchidHurt = spr_add("sprPetOrchidHurt",  3, 12, 12);
+			PetOrchidBall = spr_add("sprPetOrchidBall",  2, 12, 12);
+			spr_path_add("../");
 			
 			 // Weapon Chest Mimic:
-			p = m + "Weapon/";
-			PetWeaponIcon       = sprite(p + "sprPetWeaponIcon",        1,  6,  6);
-			PetWeaponChst       = sprite(p + "sprPetWeaponChst",        1,  8,  8);
-			PetWeaponHide       = sprite(p + "sprPetWeaponHide",        8, 12, 12);
-			PetWeaponSpwn       = sprite(p + "sprPetWeaponSpwn",       16, 12, 12);
-			PetWeaponIdle       = sprite(p + "sprPetWeaponIdle",        8, 12, 12);
-			PetWeaponWalk       = sprite(p + "sprPetWeaponWalk",        8, 12, 12);
-			PetWeaponHurt       = sprite(p + "sprPetWeaponHurt",        3, 12, 12);
-			PetWeaponDead       = sprite(p + "sprPetWeaponDead",        6, 12, 12);
-			PetWeaponStat       = sprite(p + "sprPetWeaponStat",        1, 20,  5);
-			PetWeaponCursedIcon = sprite(p + "sprPetWeaponIconCursed",  1,  6,  6);
-			PetWeaponCursedChst = sprite(p + "sprPetWeaponChstCursed",  1,  8,  8);
-			PetWeaponCursedHide = sprite(p + "sprPetWeaponHideCursed",  8, 12, 12);
-			PetWeaponCursedSpwn = sprite(p + "sprPetWeaponSpwnCursed", 16, 12, 12);
-			PetWeaponCursedIdle = sprite(p + "sprPetWeaponIdleCursed",  8, 12, 12);
-			PetWeaponCursedWalk = sprite(p + "sprPetWeaponWalkCursed",  8, 12, 12);
-			PetWeaponCursedHurt = sprite(p + "sprPetWeaponHurtCursed",  3, 12, 12);
-			PetWeaponCursedDead = sprite(p + "sprPetWeaponDeadCursed",  6, 12, 12);
+			spr_path_add("Weapon/");
+			PetWeaponIcon       = spr_add("sprPetWeaponIcon",        1,  6,  6);
+			PetWeaponChst       = spr_add("sprPetWeaponChst",        1,  8,  8);
+			PetWeaponHide       = spr_add("sprPetWeaponHide",        8, 12, 12);
+			PetWeaponSpwn       = spr_add("sprPetWeaponSpwn",       16, 12, 12);
+			PetWeaponIdle       = spr_add("sprPetWeaponIdle",        8, 12, 12);
+			PetWeaponWalk       = spr_add("sprPetWeaponWalk",        8, 12, 12);
+			PetWeaponHurt       = spr_add("sprPetWeaponHurt",        3, 12, 12);
+			PetWeaponDead       = spr_add("sprPetWeaponDead",        6, 12, 12);
+			PetWeaponStat       = spr_add("sprPetWeaponStat",        1, 20,  5);
+			PetWeaponCursedIcon = spr_add("sprPetWeaponIconCursed",  1,  6,  6);
+			PetWeaponCursedChst = spr_add("sprPetWeaponChstCursed",  1,  8,  8);
+			PetWeaponCursedHide = spr_add("sprPetWeaponHideCursed",  8, 12, 12);
+			PetWeaponCursedSpwn = spr_add("sprPetWeaponSpwnCursed", 16, 12, 12);
+			PetWeaponCursedIdle = spr_add("sprPetWeaponIdleCursed",  8, 12, 12);
+			PetWeaponCursedWalk = spr_add("sprPetWeaponWalkCursed",  8, 12, 12);
+			PetWeaponCursedHurt = spr_add("sprPetWeaponHurtCursed",  3, 12, 12);
+			PetWeaponCursedDead = spr_add("sprPetWeaponDeadCursed",  6, 12, 12);
+			spr_path_add("../");
 			
 			 // Twins:
-			p = m + "Red/";
-			PetTwinsIcon        = sprite(p + "sprPetTwinsIcon",        1,  6,  6);
-			PetTwinsStat        = sprite(p + "sprPetTwinsStat",        6, 12, 12);
-			PetTwinsRedIcon     = sprite(p + "sprPetTwinsRedIcon",     1,  6,  6);
-			PetTwinsRed         = sprite(p + "sprPetTwinsRed",         6, 12, 12);
-			PetTwinsRedEffect   = sprite(p + "sprPetTwinsRedEffect",   6,  8,  8);
-			PetTwinsWhiteIcon   = sprite(p + "sprPetTwinsWhiteIcon",   1,  6,  6);
-			PetTwinsWhite       = sprite(p + "sprPetTwinsWhite",       6, 12, 12);
-			PetTwinsWhiteEffect = sprite(p + "sprPetTwinsWhiteEffect", 6,  8,  8);
-			CrystalWhiteTrail   = sprite(p + "sprCrystalWhiteTrail",   5,  8,  8);
+			spr_path_add("Red/");
+			PetTwinsIcon        = spr_add("sprPetTwinsIcon",        1,  6,  6);
+			PetTwinsStat        = spr_add("sprPetTwinsStat",        6, 12, 12);
+			PetTwinsRedIcon     = spr_add("sprPetTwinsRedIcon",     1,  6,  6);
+			PetTwinsRed         = spr_add("sprPetTwinsRed",         6, 12, 12);
+			PetTwinsRedEffect   = spr_add("sprPetTwinsRedEffect",   6,  8,  8);
+			PetTwinsWhiteIcon   = spr_add("sprPetTwinsWhiteIcon",   1,  6,  6);
+			PetTwinsWhite       = spr_add("sprPetTwinsWhite",       6, 12, 12);
+			PetTwinsWhiteEffect = spr_add("sprPetTwinsWhiteEffect", 6,  8,  8);
+			CrystalWhiteTrail   = spr_add("sprCrystalWhiteTrail",   5,  8,  8);
+			spr_path_add("../");
 			
 			 // Cuz:
-			p = m + "Crib/";
-			PetCuzIcon = sprite(p + "sprPetCuzIcon", 1, 6, 6);
+			spr_path_add("Crib/");
+			PetCuzIcon = spr_add("sprPetCuzIcon", 1, 6, 6);
+			spr_path_add("../");
 			
 			 // Guardian:
-			p = m + "HQ/";
-			PetGuardianIcon 		   = sprite(p + "sprPetGuardianIcon", 			 1,  6,  7);
-			PetGuardianIdle 		   = sprite(p + "sprPetGuardianIdle", 			 4,  16, 16);
-			PetGuardianHurt			   = sprite(p + "sprPetGuardianHurt",			 3,	 16, 16);
-			PetGuardianDashStart	   = sprite(p + "sprPetGuardianDashStart",		 2,  16, 16);
-			PetGuardianDash			   = sprite(p + "sprPetGuardianDash",			 2,  16, 16);
-			PetGuardianDashEnd		   = sprite(p + "sprPetGuardianDashEnd",		 3,  16, 16);
-			PetGuardianAppear		   = sprite(p + "sprPetGuardianAppear",			 6,  16, 16);
-			PetGuardianDisappear	   = sprite(p + "sprPetGuardianDisappear",		 6,  16, 16);
-			PetGuardianShield		   = sprite(p + "sprPetGuardianShield",			 6,  16, 16);
-			PetGuardianShieldDisappear = sprite(p + "sprPetGuardianShieldDisappear", 6,  16, 16);
+			spr_path_add("HQ/");
+			PetGuardianIcon 		   = spr_add("sprPetGuardianIcon", 			 1,  6,  7);
+			PetGuardianIdle 		   = spr_add("sprPetGuardianIdle", 			 4,  16, 16);
+			PetGuardianHurt			   = spr_add("sprPetGuardianHurt",			 3,	 16, 16);
+			PetGuardianDashStart	   = spr_add("sprPetGuardianDashStart",		 2,  16, 16);
+			PetGuardianDash			   = spr_add("sprPetGuardianDash",			 2,  16, 16);
+			PetGuardianDashEnd		   = spr_add("sprPetGuardianDashEnd",		 3,  16, 16);
+			PetGuardianAppear		   = spr_add("sprPetGuardianAppear",			 6,  16, 16);
+			PetGuardianDisappear	   = spr_add("sprPetGuardianDisappear",		 6,  16, 16);
+			PetGuardianShield		   = spr_add("sprPetGuardianShield",			 6,  16, 16);
+			PetGuardianShieldDisappear = spr_add("sprPetGuardianShieldDisappear", 6,  16, 16);
+			spr_path_add("../");
 			
 		//#endregion
 	}
@@ -2729,6 +2804,7 @@
 #macro ntte_mods_call global.mods_call
 #macro ntte_version   global.version
 
+#macro spr_path     global.spr_path
 #macro spr_load     global.spr_load
 #macro spr_load_num 20 // How many sprites to load per frame
 
@@ -3731,20 +3807,44 @@
 		_objectIndex++;
 	}
 	
-#define sprite /// sprite(_path, _img, _x, _y, _shine = shnNone)
+#define spr_path_set(_path)
+	spr_path = "sprites/";
+	spr_path_add(_path);
+	
+#define spr_path_add(_path)
+	var	_pathSplit    = string_split(_path, "/"),
+		_sprPathSplit = string_split(spr_path, "/");
+		
+	for(var _pathIndex = 0; _pathIndex < array_length(_pathSplit); _pathIndex++){
+		var _pathItem = _pathSplit[_pathIndex];
+		if(_pathItem == ".."){
+			_sprPathSplit = array_slice(_sprPathSplit, 0, array_length(_sprPathSplit) - 1);
+			_sprPathSplit[array_length(_sprPathSplit) - 1] = "";
+		}
+		else{
+			_sprPathSplit[array_length(_sprPathSplit) - 1] += _pathItem;
+			if(_pathIndex < array_length(_pathSplit) - 1){
+				array_push(_sprPathSplit, "");
+			}
+		}
+	}
+	
+	spr_path = array_join(_sprPathSplit, "/");
+	
+#define spr_add /// spr_add(_path, _img, _x, _y, _shine = shnNone)
 	var _path = argument[0], _img = argument[1], _x = argument[2], _y = argument[3];
 var _shine = argument_count > 4 ? argument[4] : shnNone;
 	
 	spr_load = [[spr, 0]];
 	
 	return {
-		path  : "sprites/" + _path,
-		img   : _img,
-		x     : _x,
-		y     : _y,
-		ext   : "png",
-		mask  : [],
-		shine : _shine
+		"path"  : spr_path + _path,
+		"img"   : _img,
+		"x"     : _x,
+		"y"     : _y,
+		"ext"   : "png",
+		"mask"  : [],
+		"shine" : _shine
 	};
 	
 #define trace_error(_error)

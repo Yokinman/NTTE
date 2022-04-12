@@ -37,12 +37,14 @@
 	global.floor_reveal_bind = script_bind(CustomDraw,    floor_reveal_draw, -8, false);
 	
 	 // Custom Object Related:
-	obj_create_ref_map          = mod_variable_get("mod", "teassets", "obj_create_ref_map");
-	obj_parent_map              = mod_variable_get("mod", "teassets", "obj_parent_map");
-	obj_search_bind_map         = mod_variable_get("mod", "teassets", "obj_search_bind_map");
-	obj_event_varname_list_map  = mod_variable_get("mod", "teassets", "obj_event_varname_list_map");
-	obj_event_obj_list_map      = mod_variable_get("mod", "teassets", "obj_event_obj_list_map");
-	obj_draw_depth_instance_map = mod_variable_get("mod", "teassets", "obj_draw_depth_instance_map");
+	obj_create_event_ref_map          = mod_variable_get("mod", "teassets", "obj_create_event_ref_map");
+	obj_event_index_list_map          = mod_variable_get("mod", "teassets", "obj_event_index_list_map");
+	obj_parent_map                    = mod_variable_get("mod", "teassets", "obj_parent_map");
+	obj_search_bind_map               = mod_variable_get("mod", "teassets", "obj_search_bind_map");
+	event_obj_list_map                = mod_variable_get("mod", "teassets", "event_obj_list_map");
+	depth_obj_draw_event_instance_map = mod_variable_get("mod", "teassets", "depth_obj_draw_event_instance_map");
+	object_event_index_list_map       = mod_variable_get("mod", "teassets", "object_event_index_list_map");
+	event_varname_list                = mod_variable_get("mod", "teassets", "event_varname_list");
 	
 	 // Lag Debugging:
 	lag_bind = ds_map_create();
@@ -133,12 +135,14 @@
 	
 #macro lag_bind global.debug_lag_bind
 
-#macro obj_create_ref_map          global.obj_create_ref_map
+#macro obj_create_event_ref_map    global.obj_create_event_ref_map
+#macro obj_event_index_list_map    global.obj_event_index_list_map
 #macro obj_parent_map              global.obj_parent_map
 #macro obj_search_bind_map         global.obj_search_bind_map
-#macro obj_event_varname_list_map  global.obj_event_varname_list_map
-#macro obj_event_obj_list_map      global.obj_event_obj_list_map
-#macro obj_draw_depth_instance_map global.obj_draw_depth_instance_map
+#macro event_obj_list_map          global.event_obj_list_map
+#macro depth_obj_draw_event_instance_map global.depth_obj_draw_event_instance_map
+#macro object_event_index_list_map global.object_event_index_list_map
+#macro event_varname_list          global.event_varname_list
 
 #macro sprite_start_team              1
 #macro sprite_team_map                global.sprite_team_map
@@ -197,17 +201,31 @@
 	 // Call Script:
 	return script_ref_call(_ref);
 	
-#define obj_add(_ref)
+#define obj_add(_createEventRef)
 	/*
 		Adds an object to NT:TE's stored objects
 		Accepts a script reference to the given object's create event
 	*/
 	
-	var _name = string_copy(_ref[2], 1, string_length(_ref[2]) - 7);
-	
-	if(string_delete(_ref[2], 1, string_length(_name)) == "_create"){
-		 // Store Create Event:
-		obj_create_ref_map[? _name] = _ref;
+	var	_modType     = _createEventRef[0],
+		_modName     = _createEventRef[1],
+		_modScrtName = _createEventRef[2],
+		_name        = string_copy(_modScrtName, 1, string_length(_modScrtName) - 7);
+		
+	if(string_delete(_modScrtName, 1, string_length(_name)) == "_create"){
+		var	_eventIndex     = 0,
+			_eventIndexList = [];
+			
+		 // Store Events:
+		with(event_varname_list){
+			var _eventName = ((self == "script") ? self : string_delete(self, 1, 3));
+			if(mod_script_exists(_modType, _modName, _name + "_" + _eventName)){
+				array_push(_eventIndexList, _eventIndex);
+			}
+			_eventIndex++;
+		}
+		obj_create_event_ref_map[? _name] = _createEventRef;
+		obj_event_index_list_map[? _name] = _eventIndexList;
 		
 		 // Instance List:
 		if(_name not in obj){
@@ -230,9 +248,9 @@
 	}
 	
 	 // NT:TE Object:
-	if(ds_map_exists(obj_create_ref_map, _name)){
-		var	_scrt = array_combine(obj_create_ref_map[? _name], [_x, _y]),
-			_inst = script_ref_call(_scrt);
+	if(ds_map_exists(obj_create_event_ref_map, _name)){
+		var	_scrt = obj_create_event_ref_map[? _name],
+			_inst = script_ref_call(_scrt, _x, _y);
 			
 		 // No Return Value:
 		if(_inst == undefined || _inst == 0){
@@ -242,7 +260,7 @@
 		 // Auto Assign Things:
 		if(is_real(_inst) && instance_exists(_inst)){
 			with(_inst){
-				var	_isCustom = ds_map_exists(obj_event_varname_list_map, object_index),
+				var	_isCustom = ds_map_exists(object_event_index_list_map, object_index),
 					_modType  = _scrt[0],
 					_modName  = _scrt[1];
 					
@@ -261,84 +279,75 @@
 				}
 				ntte_name = _name;
 				
-				 // Bind Events:
-				with(
-					_isCustom
-					? obj_event_varname_list_map[? object_index]
-					: ["on_begin_step", "on_step", "on_end_step", "on_draw"]
-				){
-					var _varName = self;
-					if(_varName not in _inst || variable_instance_get(_inst, _varName) == undefined){
-						var	_event   = ((string_pos("on_", _varName) == 1) ? string_delete(_varName, 1, 3) : _varName),
-							_modScrt = _name + "_" + _event;
-							
-						if(mod_script_exists(_modType, _modName, _modScrt)){
-							 // Normal:
-							if(_isCustom){
-								variable_instance_set(_inst, _varName, script_ref_create_ext(_modType, _modName, _modScrt));
+				 // Custom Objects:
+				if(_isCustom){
+					 // Bind Events:
+					with(obj_event_index_list_map[? _name]){
+						var _eventVarName = event_varname_list[self];
+						if(variable_instance_get(other, _eventVarName) == undefined){
+							variable_instance_set(
+								other,
+								_eventVarName,
+								script_ref_create_ext(
+									_modType,
+									_modName,
+									_name + "_" + ((_eventVarName == "script") ? _eventVarName : string_delete(_eventVarName, 1, 3))
+								)
+							);
+						}
+					}
+					
+					 // Automatic Hittable Stuff:
+					if(instance_is(self, hitme)){
+						 // Default Events:
+						if(instance_is(self, CustomHitme) || instance_is(self, CustomEnemy)){
+							if(on_hurt == undefined){
+								on_hurt = enemy_hurt; // Default doesn't set 'image_index = 0'
 							}
-							
-							 // Auto Script Binding:
-							else{
-								 // Bind Draw Event:
-								if(_event == "draw"){
-									_inst.depth = floor(_inst.depth);
-									if(!ds_map_exists(obj_draw_depth_instance_map, _inst.depth - 1)){
-										with(script_bind_draw(obj_draw, _inst.depth - 1)){
-											obj_draw_depth_instance_map[? depth] = self;
-											persistent = true;
-										}
-									}
-								}
-								
-								 // Add to Object List:
-								if(!ds_map_exists(obj_event_obj_list_map, _event)){
-									obj_event_obj_list_map[? _event] = [];
-								}
-								var _nameList = obj_event_obj_list_map[? _event];
-								if(array_find_index(_nameList, _name) < 0){
-									array_push(_nameList, _name);
-								}
+							if(on_draw == undefined && instance_is(self, CustomEnemy)){
+								on_draw = draw_self_enemy; // Default doesn't face 'right'
 							}
 						}
 						
-						 // Override Defaults:
-						else if(_isCustom){
-							with(_inst){
-								switch(_event){
-								
-									case "hurt": // Default doesn't set 'image_index = 0'
-									
-										on_hurt = enemy_hurt;
-										
-										break;
-										
-									case "draw": // Default doesn't face 'right'
-									
-										if(instance_is(self, CustomEnemy)){
-											on_draw = draw_self_enemy;
-										}
-										
-										break;
-										
-								}
+						 // Fill HP:
+						if(my_health == 1){
+							if(instance_is(self, CustomHitme) || instance_is(self, CustomProp)){
+								my_health = maxhealth;
 							}
+						}
+						
+						 // Set Sprite:
+						if(sprite_index == -1 && "spr_idle" in self){
+							sprite_index = spr_idle;
 						}
 					}
 				}
 				
-				 // Automatic Hittable Stuff:
-				if(_isCustom && instance_is(self, hitme)){
-					 // Fill HP:
-					if(my_health == 1){
-						if(instance_is(self, CustomHitme) || instance_is(self, CustomProp)){
-							my_health = maxhealth;
+				 // Bind Non-Custom Events:
+				else with(["begin_step", "step", "end_step", "draw"]){
+					var _eventName = self;
+					if(mod_script_exists(_modType, _modName, _name + "_" + _eventName)){
+						if(("on_" + _eventName) not in other || variable_instance_get(other, "on_" + _eventName) == undefined){
+							 // Bind Draw Event:
+							if(_eventName == "draw"){
+								other.depth = floor(other.depth);
+								if(!ds_map_exists(depth_obj_draw_event_instance_map, other.depth - 1)){
+									with(script_bind_draw(obj_draw, other.depth - 1)){
+										depth_obj_draw_event_instance_map[? depth] = self;
+										persistent = true;
+									}
+								}
+							}
+							
+							 // Add to Object List:
+							if(!ds_map_exists(event_obj_list_map, _eventName)){
+								event_obj_list_map[? _eventName] = [];
+							}
+							var _nameList = event_obj_list_map[? _eventName];
+							if(array_find_index(_nameList, _name) < 0){
+								array_push(_nameList, _name);
+							}
 						}
-					}
-					
-					 // Set Sprite:
-					if(sprite_index == -1 && "spr_idle" in self){
-						sprite_index = spr_idle;
 					}
 				}
 				
@@ -407,7 +416,7 @@
 	
 	 // Bound Begin Step Events:
 	if(!obj_event_call("begin_step")){
-		ds_map_delete(obj_event_obj_list_map, "begin_step");
+		ds_map_delete(event_obj_list_map, "begin_step");
 	}
 	
 	 // Lag Debugging:
@@ -440,7 +449,7 @@
 #define ntte_step
 	 // Bound Step Events:
 	if(!obj_event_call("step")){
-		ds_map_delete(obj_event_obj_list_map, "step");
+		ds_map_delete(event_obj_list_map, "step");
 	}
 	
 	 // Lag Debugging:
@@ -537,7 +546,7 @@
 #define ntte_end_step
 	 // Bound End Step Events:
 	if(!obj_event_call("end_step")){
-		ds_map_delete(obj_event_obj_list_map, "end_step");
+		ds_map_delete(event_obj_list_map, "end_step");
 	}
 	
 	 // Lag Debugging:
@@ -548,9 +557,9 @@
 	
 	 // Bound Draw Events:
 	if(!obj_event_call("draw")){
-		ds_map_delete(obj_draw_depth_instance_map, depth);
-		if(!ds_map_size(obj_draw_depth_instance_map)){
-			ds_map_delete(obj_event_obj_list_map, "draw");
+		ds_map_delete(depth_obj_draw_event_instance_map, depth);
+		if(!ds_map_size(depth_obj_draw_event_instance_map)){
+			ds_map_delete(event_obj_list_map, "draw");
 		}
 		instance_destroy();
 		exit;
@@ -565,10 +574,10 @@
 	
 	var _active = false;
 	
-	if(ds_map_exists(obj_event_obj_list_map, _event)){
-		with(obj_event_obj_list_map[? _event]){
+	if(ds_map_exists(event_obj_list_map, _event)){
+		with(event_obj_list_map[? _event]){
 			var	_objName    = self,
-				_objModRef  = obj_create_ref_map[? _objName],
+				_objModRef  = obj_create_event_ref_map[? _objName],
 				_objModType = _objModRef[0],
 				_objModName = _objModRef[1],
 				_objModScrt = _objName + "_" + _event;
@@ -590,9 +599,9 @@
 								if(depth == _objDepth){
 									array_push(_objDepthList, self);
 								}
-								else if(!ds_map_exists(obj_draw_depth_instance_map, depth - 1)){
+								else if(!ds_map_exists(depth_obj_draw_event_instance_map, depth - 1)){
 									with(script_bind_draw(obj_draw, depth - 1)){
-										obj_draw_depth_instance_map[? depth] = self;
+										depth_obj_draw_event_instance_map[? depth] = self;
 										persistent = true;
 									}
 								}
@@ -4992,19 +5001,21 @@
 					var _instObject = _inst.object_index;
 					
 					 // Wrap Event Scripts:
-					if(ds_map_exists(obj_event_varname_list_map, _instObject)){
-						with(obj_event_varname_list_map[? _instObject]){
-							var _instEventRef = variable_instance_get(_inst, self);
+					if(ds_map_exists(object_event_index_list_map, _instObject)){
+						with(object_event_index_list_map[? _instObject]){
+							var	_eventVarName = event_varname_list[self],
+								_instEventRef = variable_instance_get(_inst, _eventVarName);
+								
 							if(array_length(_instEventRef) >= 3){
 								var _instEventWrapRef = script_ref_create(
 									player_fire_at_call,
 									_at,
 									_instEventRef,
 									(instance_is(_instObject, CustomObject) || instance_is(_instObject, CustomScript)), // Causes slight inconsistencies, but significantly reduces lag
-									self
+									_eventVarName
 								);
 								array_push(_instEventWrapRef, _instEventWrapRef);
-								variable_instance_set(_inst, self, _instEventWrapRef);
+								variable_instance_set(_inst, _eventVarName, _instEventWrapRef);
 							}
 						}
 					}
