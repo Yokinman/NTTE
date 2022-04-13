@@ -260,9 +260,10 @@
 		 // Auto Assign Things:
 		if(is_real(_inst) && instance_exists(_inst)){
 			with(_inst){
-				var	_isCustom = ds_map_exists(object_event_index_list_map, object_index),
-					_modType  = _scrt[0],
-					_modName  = _scrt[1];
+				var	_modType        = _scrt[0],
+					_modName        = _scrt[1],
+					_isCustom       = ds_map_exists(object_event_index_list_map, object_index),
+					_eventIndexList = obj_event_index_list_map[? _name];
 					
 				 // Set Name:
 				if(
@@ -282,7 +283,7 @@
 				 // Custom Objects:
 				if(_isCustom){
 					 // Bind Events:
-					with(obj_event_index_list_map[? _name]){
+					with(_eventIndexList){
 						var _eventVarName = event_varname_list[self];
 						if(variable_instance_get(other, _eventVarName) == undefined){
 							variable_instance_set(
@@ -325,9 +326,11 @@
 				
 				 // Bind Non-Custom Events:
 				else with(["begin_step", "step", "end_step", "draw"]){
-					var _eventName = self;
-					if(mod_script_exists(_modType, _modName, _name + "_" + _eventName)){
-						if(("on_" + _eventName) not in other || variable_instance_get(other, "on_" + _eventName) == undefined){
+					var	_eventName    = self,
+						_eventVarName = "on_" + _eventName;
+						
+					if(array_find_index(_eventIndexList, array_find_index(event_varname_list, _eventVarName)) >= 0){
+						if(_eventVarName not in other || variable_instance_get(other, _eventVarName) == undefined){
 							 // Bind Draw Event:
 							if(_eventName == "draw"){
 								other.depth = floor(other.depth);
