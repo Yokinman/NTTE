@@ -558,21 +558,24 @@
 						GameCont.beetle_menu_merging_wep_key_map = {};
 					}
 					var _menuMergingWepKeyMap = GameCont.beetle_menu_merging_wep_key_map;
-					with(_menuMergingWep.key_list){
-						if(self not in _menuMergingWepKeyMap){
+					with(call(scr.array_combine, _menuMergingWep.key_list, ["?"])){
+						if(self not in _menuMergingWepKeyMap || (self == "?" && !lq_get(_menuMergingWepKeyMap, self))){
 							_menuMergingWepWasMerged = false;
 							if(other.maxhealth > _menuMergingHPCost){
-								lq_set(_menuMergingWepKeyMap, self, {});
+								lq_set(_menuMergingWepKeyMap, self, ((self == "?") ? true : {}));
 							}
 							else break;
 						}
 						_menuMergingWepKeyMap = lq_get(_menuMergingWepKeyMap, self);
 					}
-					
-					 // Throne Butt:
 					if(_menuMergingWepWasMerged){
-						_menuMergingHPCost *= 1 - skill_get(mut_throne_butt);
+						_menuMergingHPCost = 0;
 					}
+					
+					//  // Throne Butt:
+					// if(_menuMergingWepWasMerged){
+					// 	_menuMergingHPCost *= 1 - skill_get(mut_throne_butt);
+					// }
 					
 					 // Merge Weapons:
 					if(maxhealth > _menuMergingHPCost){
@@ -935,9 +938,10 @@
 					
 					 // Radial Weapon Selection:
 					for(var _menuSelectionWepIndex = 0; _menuSelectionWepIndex < _menuSelectionWepListSize; _menuSelectionWepIndex++){
-						var	_wep       = _menuSelectionWepList[_menuSelectionWepIndex],
-							_wepSpr    = -1,
-							_isPrimary = (_menuSelectionWepIndex < _menuSelectionWep.primary_count);
+						var	_wep        = _menuSelectionWepList[_menuSelectionWepIndex],
+							_wepSpr     = -1,
+							_wepKeyList = [string(call(scr.wep_raw, _wep))],
+							_isPrimary  = (_menuSelectionWepIndex < _menuSelectionWep.primary_count);
 							
 						 // Fetch Weapon Sprite:
 						if(
@@ -950,6 +954,14 @@
 						}
 						else{
 							_wepSpr = weapon_get_sprt(_wep);
+							
+							 // Cursed Weapon Keys:
+							var _lastWep = _wep;
+							while(call(scr.weapon_has_temerge, _wep)){
+								_wep = call(scr.weapon_get_temerge_weapon, _wep);
+								array_push(_wepKeyList, string(call(scr.wep_raw, _wep)));
+							}
+							_wep = _lastWep;
 						}
 						if(_wepSpr == mskNone){
 							_wepSpr = weapon_get_sprt(call(scr.wep_raw, _wep));
@@ -995,6 +1007,108 @@
 							}
 						}
 						
+						 // Path to Free Merge Indicators:
+						var _menuMergingWepKeyMap = undefined;
+						if("beetle_menu_merging_wep_key_map" in GameCont){
+							_menuMergingWepKeyMap = GameCont.beetle_menu_merging_wep_key_map;
+							
+							 // Check if Weapon Was Merged Before:
+							with(call(scr.array_combine, _menuMergingWep.key_list, _wepKeyList)){
+								if(self not in _menuMergingWepKeyMap){
+									_menuMergingWepKeyMap = undefined;
+									break;
+								}
+								_menuMergingWepKeyMap = lq_get(_menuMergingWepKeyMap, self);
+							}
+							
+							 // Weapon Was Merged:
+							if(_menuMergingWepKeyMap != undefined){
+								var	_circleAngle            = _wepOffsetDir - (360 * (0.5 / _menuSelectionWepListSize) * (1 - _menuScale)),
+									_circleRadius           = (3 + (0.25 * dcos((wave / 60) * 360))) * (max(0, power(_menuScale, 0.5) - 5/6) * 6),
+									_circleCenterX          = _menuX + lengthdir_x(_wepOffsetLen - (_circleRadius * 2), _circleAngle),
+									_circleCenterY          = _menuY + lengthdir_y(_wepOffsetLen - (_circleRadius * 2), _circleAngle),
+									_selectableWepIndexList = [],
+									_selectableWepCount     = 0,
+									_selectableWepInfoList  = [{ "index": -1, "map": _menuMergingWepKeyMap }],
+									_selectableWepInfoCount = 1;
+									
+								 // Compile List of Selectable Weapon Indices:
+								for(var _index = 0; _index < _menuSelectionWepListSize; _index++){
+									if(
+										_index != _menuSelectionWepIndex
+										&& array_find_index(_menuMergingWep.index_list, _index) < 0
+									){
+										array_push(_selectableWepIndexList, _index);
+										_selectableWepCount++;
+									}
+								}
+								
+								 // Search for Past Merged Combinations:
+								while(_selectableWepInfoCount){
+									var _selectableWepInfo = _selectableWepInfoList[_selectableWepInfoCount - 1];
+									_selectableWepInfo.index++;
+									if(_selectableWepInfo.index < _selectableWepCount){
+										var	_selectableWepIndex  = _selectableWepIndexList[_selectableWepInfo.index],
+											_selectableWep       = _menuSelectionWepList[_selectableWepIndex],
+											_selectableWepKeyMap = lq_get(_selectableWepInfo.map, string(call(scr.wep_raw, _selectableWep)));
+											
+										 // Cursed Weapon:
+										if((_selectableWepIndex < _menuSelectionWep.primary_count) ? (curse > 0) : (bcurse > 0)){
+											while(_selectableWepKeyMap != undefined && call(scr.weapon_has_temerge, _selectableWep)){
+												_selectableWep = call(scr.weapon_get_temerge_weapon, _selectableWep);
+												_selectableWepKeyMap = lq_get(_selectableWepKeyMap, string(call(scr.wep_raw, _selectableWep)));
+											}
+										}
+										
+										 // Found Previously Merged Combination:
+										if(_selectableWepKeyMap != undefined){
+											var _selectableWepInfoIsUnique = true;
+											with(_selectableWepInfoList){
+												if(self != _selectableWepInfo && index == _selectableWepInfo.index){
+													_selectableWepInfoIsUnique = false;
+													break;
+												}
+											}
+											if(_selectableWepInfoIsUnique){
+												if(lq_defget(_selectableWepKeyMap, "?", false)){
+													 // Draw Indicator:
+													var	_circleRot = 360 * ((_selectableWepIndexList[_selectableWepInfoList[0].index] - _menuSelectionWepIndex) / _menuSelectionWepListSize),
+														_circleX   = _circleCenterX + lengthdir_x(_circleRadius * 2, _circleAngle + _circleRot),
+														_circleY   = _circleCenterY + lengthdir_y(_circleRadius * 2, _circleAngle + _circleRot);
+														
+													draw_set_color(c_black);
+													draw_circle(_circleX,     _circleY - 1, _circleRadius, false);
+													draw_circle(_circleX - 1, _circleY,     _circleRadius, false);
+													draw_circle(_circleX,     _circleY,     _circleRadius, false);
+													draw_set_color(c_white);
+													draw_circle(_circleX - 1, _circleY - 1, _circleRadius, false);
+													
+													 // Return to First Layer:
+													_selectableWepInfoCount = 1;
+													_selectableWepInfoList  = array_slice(_selectableWepInfoList, 0, _selectableWepInfoCount);
+												}
+												
+												 // Keep Searching:
+												else{
+													array_push(_selectableWepInfoList, {
+														"index" : -1,
+														"map"   : _selectableWepKeyMap
+													});
+													_selectableWepInfoCount++;
+												}
+											}
+										}
+									}
+									
+									 // Up a Layer:
+									else{
+										_selectableWepInfoCount--;
+										_selectableWepInfoList = array_slice(_selectableWepInfoList, 0, _selectableWepInfoCount);
+									}
+								}
+							}
+						}
+						
 						 // Menu Opening Animation:
 						if(_menuScale < 1){
 							var	_startKick      = (_isPrimary ? _menu.last_wkick : 0),
@@ -1018,52 +1132,52 @@
 							_wepOffsetLen = lerp       (_startOffsetLen, _wepOffsetLen, _menuScale);
 						}
 						
-						var	_wepX          = _menuX + lengthdir_x(_wepOffsetLen, _wepOffsetDir),
-							_wepY          = _menuY + lengthdir_y(_wepOffsetLen, _wepOffsetDir),
-							_canDrawTBIcon = false;
+						var	_wepX = _menuX + lengthdir_x(_wepOffsetLen, _wepOffsetDir),
+							_wepY = _menuY + lengthdir_y(_wepOffsetLen, _wepOffsetDir);
 							
-						 // Throne Butt Indicator:
-						if(skill_get(mut_throne_butt) != 0 && "beetle_menu_merging_wep_key_map" in GameCont){
-							var	_menuMergingWepKeyMap    = GameCont.beetle_menu_merging_wep_key_map,
-								_menuMergingWepWasMerged = true;
-								
-							 // Check if Weapon Was Merged Before:
-							with(call(scr.array_combine, _menuMergingWep.key_list, [string(call(scr.wep_raw, _wep))])){
-								if(self not in _menuMergingWepKeyMap){
-									_menuMergingWepWasMerged = false;
-									break;
-								}
-								_menuMergingWepKeyMap = lq_get(_menuMergingWepKeyMap, self);
-							}
-							
-							 // Weapon Was Merged:
-							if(_menuMergingWepWasMerged){
-								_canDrawTBIcon = true;
-								
-								 // Avoid Non-Merged Weapons:
-								if(_menuMergingWepSize <= 0){
-									_canDrawTBIcon = false;
-									for(var _index = 0; _index < _menuSelectionWepListSize; _index++){
-										if(
-											_index != _menuSelectionWepIndex
-											&& array_find_index(_menuMergingWep.index_list, _index) < 0
-											&& string(call(scr.wep_raw, _menuSelectionWepList[_index])) in _menuMergingWepKeyMap
-										){
-											_canDrawTBIcon = true;
-											break;
-										}
-									}
-								}
-								
-								 // Draw the Icon:
-								if(_canDrawTBIcon){
-									var _TBIconOffsetLen = 18 * lerp(1.2, _menuScale, max(0, _menuScale - 2/3) * 3);
-									var _TBIconOffsetDir = _wepOffsetDir;
-									var _TBIconX         = _menuX + lengthdir_x(_TBIconOffsetLen, _TBIconOffsetDir);
-									var _TBIconY         = _menuY + lengthdir_y(_TBIconOffsetLen, _TBIconOffsetDir);
-								}
-							}
-						}
+						//  // Throne Butt Indicator:
+						// var _canDrawTBIcon = false;
+						// if(skill_get(mut_throne_butt) != 0 && "beetle_menu_merging_wep_key_map" in GameCont){
+						// 	var	_menuMergingWepKeyMap    = GameCont.beetle_menu_merging_wep_key_map,
+						// 		_menuMergingWepWasMerged = true;
+						//		
+						// 	 // Check if Weapon Was Merged Before:
+						// 	with(call(scr.array_combine, _menuMergingWep.key_list, [string(call(scr.wep_raw, _wep))])){
+						// 		if(self not in _menuMergingWepKeyMap){
+						// 			_menuMergingWepWasMerged = false;
+						// 			break;
+						// 		}
+						// 		_menuMergingWepKeyMap = lq_get(_menuMergingWepKeyMap, self);
+						// 	}
+						//	
+						// 	 // Weapon Was Merged:
+						// 	if(_menuMergingWepWasMerged){
+						// 		_canDrawTBIcon = true;
+						//		
+						// 		 // Avoid Non-Merged Weapons:
+						// 		if(_menuMergingWepSize <= 0){
+						// 			_canDrawTBIcon = false;
+						// 			for(var _index = 0; _index < _menuSelectionWepListSize; _index++){
+						// 				if(
+						// 					_index != _menuSelectionWepIndex
+						// 					&& array_find_index(_menuMergingWep.index_list, _index) < 0
+						// 					&& string(call(scr.wep_raw, _menuSelectionWepList[_index])) in _menuMergingWepKeyMap
+						// 				){
+						// 					_canDrawTBIcon = true;
+						// 					break;
+						// 				}
+						// 			}
+						// 		}
+						//		
+						// 		 // Draw the Icon:
+						// 		if(_canDrawTBIcon){
+						// 			var _TBIconOffsetLen = 18 * lerp(1.2, _menuScale, max(0, _menuScale - 2/3) * 3);
+						// 			var _TBIconOffsetDir = _wepOffsetDir;
+						// 			var _TBIconX         = _menuX + lengthdir_x(_TBIconOffsetLen, _TBIconOffsetDir);
+						// 			var _TBIconY         = _menuY + lengthdir_y(_TBIconOffsetLen, _TBIconOffsetDir);
+						// 		}
+						// 	}
+						// }
 						
 						 // Draw Selection Highlight Outline:
 						if(_menuSelectionWepIndex == _menuSelectionWep.index){
@@ -1085,10 +1199,10 @@
 									_wepAlp * _outlineAlpha
 								);
 								
-								 // Draw TB Indicator Icon:
-								if(_canDrawTBIcon){
-									draw_sprite_ext(_TBIconSprite, 0, _TBIconX + dcos(_dir), _TBIconY - dsin(_dir), _TBIconXScale * ((dcos(_TBIconOffsetDir) < 0) ? -1 : 1), _TBIconYScale, 0, c_white, _outlineAlpha);
-								}
+								//  // Draw TB Indicator Icon:
+								// if(_canDrawTBIcon){
+								// 	draw_sprite_ext(_TBIconSprite, 0, _TBIconX + dcos(_dir), _TBIconY - dsin(_dir), _TBIconXScale * ((dcos(_TBIconOffsetDir) < 0) ? -1 : 1), _TBIconYScale, 0, c_white, _outlineAlpha);
+								// }
 							}
 							
 							draw_set_fog(false, 0, 0, 0);
@@ -1108,10 +1222,20 @@
 							_wepAlp
 						);
 						
-						 // Draw TB Indicator Icon:
-						if(_canDrawTBIcon){
-							draw_sprite_ext(_TBIconSprite, 0, _TBIconX, _TBIconY, _TBIconXScale * ((dcos(_TBIconOffsetDir) < 0) ? -1 : 1), _TBIconYScale, 0, c_white, 1);
+						 // Free Merge Indicator:
+						if(array_length(_menuMergingWep.key_list) && _menuMergingWepKeyMap != undefined && lq_defget(_menuMergingWepKeyMap, "?", false)){
+							draw_set_color(c_black);
+							draw_circle(_circleCenterX,     _circleCenterY - 1, _circleRadius / 2, false);
+							draw_circle(_circleCenterX - 1, _circleCenterY,     _circleRadius / 2, false);
+							draw_circle(_circleCenterX,     _circleCenterY,     _circleRadius / 2, false);
+							draw_set_color(c_lime);
+							draw_circle(_circleCenterX - 1, _circleCenterY - 1, _circleRadius / 2, false);
 						}
+						
+						//  // Draw TB Indicator Icon:
+						// if(_canDrawTBIcon){
+						// 	draw_sprite_ext(_TBIconSprite, 0, _TBIconX, _TBIconY, _TBIconXScale * ((dcos(_TBIconOffsetDir) < 0) ? -1 : 1), _TBIconYScale, 0, c_white, 1);
+						// }
 						
 						//  // Draw Selected Weapon Button Prompt:
 						// if(_menuSelectionWepIndex == _menuSelectionWep.index && _menuScale > 0.75){
@@ -1146,28 +1270,43 @@
 							_menuMergingWepYScale = _menuScale * lerp(2, 1, power(_menu.merging_scale, 1/5)),
 							_menuMergingHPCost    = _menuMergingWep.health_cost;
 							
-						 // Throne Butt:
-						var _menuMergingWepWasMerged = false;
-						if(
-							_menuMergingHPCost != 0
-							&& skill_get(mut_throne_butt) != 0
-							&& "beetle_menu_merging_wep_key_map" in GameCont
-						){
-							var	_menuMergingWepKeyMap    = GameCont.beetle_menu_merging_wep_key_map,
-								_menuMergingWepWasMerged = true;
-								
+						 // Remember Past Merges:
+						if(_menuMergingHPCost != 0 && "beetle_menu_merging_wep_key_map" in GameCont){
+							var _menuMergingWepKeyMap = GameCont.beetle_menu_merging_wep_key_map;
 							with(_menuMergingWep.key_list){
 								if(self not in _menuMergingWepKeyMap){
-									_menuMergingWepWasMerged = false;
+									_menuMergingWepKeyMap = undefined;
 									break;
 								}
 								_menuMergingWepKeyMap = lq_get(_menuMergingWepKeyMap, self);
 							}
-							
-							if(_menuMergingWepWasMerged){
-								//_menuMergingHPCost *= 1 - skill_get(mut_throne_butt);
+							if(_menuMergingWepKeyMap != undefined && lq_defget(_menuMergingWepKeyMap, "?", false)){
+								_menuMergingHPCost = 0;
 							}
 						}
+						
+						// // Throne Butt:
+						// var _menuMergingWepWasMerged = false;
+						// if(
+						// 	_menuMergingHPCost != 0
+						// 	&& skill_get(mut_throne_butt) != 0
+						// 	&& "beetle_menu_merging_wep_key_map" in GameCont
+						// ){
+						// 	var	_menuMergingWepKeyMap    = GameCont.beetle_menu_merging_wep_key_map,
+						// 		_menuMergingWepWasMerged = true;
+						//		
+						// 	with(_menuMergingWep.key_list){
+						// 		if(self not in _menuMergingWepKeyMap){
+						// 			_menuMergingWepWasMerged = false;
+						// 			break;
+						// 		}
+						// 		_menuMergingWepKeyMap = lq_get(_menuMergingWepKeyMap, self);
+						// 	}
+						//	
+						// 	if(_menuMergingWepWasMerged){
+						// 		//_menuMergingHPCost *= 1 - skill_get(mut_throne_butt);
+						// 	}
+						// }
 						
 						 // Draw Merging Weapon Sprite:
 						draw_sprite_ext(
@@ -1187,7 +1326,7 @@
 							var	_menuMergingHPCostX        = lerp(_menuMergingX1, _menuMergingX2, 0.5),
 								_menuMergingHPCostY        = _menuMergingY1 - 2,
 								_menuMergingHPCostText     = ((_menuMergingHPCost > 0) ? "-" : "+"),
-								_menuMergingHPCostIsActive = (maxhealth > _menuMergingHPCost && !_menuMergingWepWasMerged);
+								_menuMergingHPCostIsActive = (maxhealth > _menuMergingHPCost/* && !_menuMergingWepWasMerged*/);
 								
 							draw_set_font(fntM);
 							draw_set_halign(fa_center);
@@ -1208,22 +1347,22 @@
 							 // Draw Text:
 							draw_text_nt(_menuMergingHPCostX, _menuMergingHPCostY, _menuMergingHPCostText);
 							
-							 // Throne Butt:
-							if(_menuMergingWepWasMerged){
-								var	_menuMergingHPCostW = string_width(call(scr.string_delete_nt, _menuMergingHPCostText)),
-									_menuMergingHPCostH = string_height(call(scr.string_delete_nt, _menuMergingHPCostText));
-									
-								 // Cross Out Text:
-								draw_set_color(c_black);
-								draw_line_width(_menuMergingHPCostX - (_menuMergingHPCostW / 2),     _menuMergingHPCostY - (_menuMergingHPCostH / 2) - 1, _menuMergingHPCostX + (_menuMergingHPCostW / 2),     _menuMergingHPCostY - (_menuMergingHPCostH / 2) - 1, 1);
-								draw_line_width(_menuMergingHPCostX - (_menuMergingHPCostW / 2) - 1, _menuMergingHPCostY - (_menuMergingHPCostH / 2),     _menuMergingHPCostX + (_menuMergingHPCostW / 2) - 1, _menuMergingHPCostY - (_menuMergingHPCostH / 2),     1);
-								draw_line_width(_menuMergingHPCostX - (_menuMergingHPCostW / 2),     _menuMergingHPCostY - (_menuMergingHPCostH / 2),     _menuMergingHPCostX + (_menuMergingHPCostW / 2),     _menuMergingHPCostY - (_menuMergingHPCostH / 2),     1);
-								draw_set_color(make_color_rgb(252, 56, 0));
-								draw_line_width(_menuMergingHPCostX - (_menuMergingHPCostW / 2) - 1, _menuMergingHPCostY - (_menuMergingHPCostH / 2) - 1, _menuMergingHPCostX + (_menuMergingHPCostW / 2) - 1, _menuMergingHPCostY - (_menuMergingHPCostH / 2) - 1, 1);
-								
-								 // Icon:
-								draw_sprite_ext(_TBIconSprite, 0, _menuMergingHPCostX, _menuMergingHPCostY - (_menuMergingHPCostH / 2), _TBIconXScale, _TBIconYScale, 0, c_white, 1);
-							}
+							//  // Throne Butt:
+							// if(_menuMergingWepWasMerged){
+							// 	var	_menuMergingHPCostW = string_width(call(scr.string_delete_nt, _menuMergingHPCostText)),
+							// 		_menuMergingHPCostH = string_height(call(scr.string_delete_nt, _menuMergingHPCostText));
+							//		
+							// 	 // Cross Out Text:
+							// 	draw_set_color(c_black);
+							// 	draw_line_width(_menuMergingHPCostX - (_menuMergingHPCostW / 2),     _menuMergingHPCostY - (_menuMergingHPCostH / 2) - 1, _menuMergingHPCostX + (_menuMergingHPCostW / 2),     _menuMergingHPCostY - (_menuMergingHPCostH / 2) - 1, 1);
+							// 	draw_line_width(_menuMergingHPCostX - (_menuMergingHPCostW / 2) - 1, _menuMergingHPCostY - (_menuMergingHPCostH / 2),     _menuMergingHPCostX + (_menuMergingHPCostW / 2) - 1, _menuMergingHPCostY - (_menuMergingHPCostH / 2),     1);
+							// 	draw_line_width(_menuMergingHPCostX - (_menuMergingHPCostW / 2),     _menuMergingHPCostY - (_menuMergingHPCostH / 2),     _menuMergingHPCostX + (_menuMergingHPCostW / 2),     _menuMergingHPCostY - (_menuMergingHPCostH / 2),     1);
+							// 	draw_set_color(make_color_rgb(252, 56, 0));
+							// 	draw_line_width(_menuMergingHPCostX - (_menuMergingHPCostW / 2) - 1, _menuMergingHPCostY - (_menuMergingHPCostH / 2) - 1, _menuMergingHPCostX + (_menuMergingHPCostW / 2) - 1, _menuMergingHPCostY - (_menuMergingHPCostH / 2) - 1, 1);
+							//	
+							// 	 // Icon:
+							// 	draw_sprite_ext(_TBIconSprite, 0, _menuMergingHPCostX, _menuMergingHPCostY - (_menuMergingHPCostH / 2), _TBIconXScale, _TBIconYScale, 0, c_white, 1);
+							// }
 						}
 						
 						 // Draw Merging Weapon Name:
