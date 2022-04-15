@@ -32,9 +32,10 @@
 		with(call(scr.projectile_create, x + lengthdir_x(_l, _d), y + lengthdir_y(_l, _d), "VenomPellet", _dir, 16)){
 			sprite_index = spr_spwn;
 			image_speed  = 1;
-			if(place_meeting(x, y, Wall)){
-				x = other.x;
-				y = other.y;
+			while(position_meeting(x, y, Wall) && _l > 0){
+				_l--;
+				x -= lengthdir_x(1, _d);
+				y -= lengthdir_y(1, _d);
 				xstart = x;
 				ystart = y;
 			}
