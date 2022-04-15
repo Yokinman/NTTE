@@ -1513,10 +1513,17 @@
 	
 	 // Drop Weapon:
 	if("beetle_chest_wep" in GameCont && GameCont.beetle_chest_wep != wep_none){
-		with(instance_create(x, y, WepPickup)){
-			wep  = GameCont.beetle_chest_wep;
-			ammo = other.ammo;
+		var	_wep  = GameCont.beetle_chest_wep,
+			_ammo = ammo;
+			
+		with(call(scr.obj_create, x, y, "WepPickupGrounded")){
+			target = instance_create(x, y, WepPickup);
+			with(target){
+				ammo = _ammo;
+				wep  = _wep;
+			}
 		}
+		
 		GameCont.beetle_chest_wep = wep_none;
 	}
 	
@@ -1549,14 +1556,16 @@
 		Beetle chests close when they aren't being held open
 	*/
 	
-	var _isOpen = (place_meeting(x, y, target) || !place_meeting(x, y, WepPickup));
-	
-	if(_isOpen){
-		var _isEmpty = (
+	var	_isEmpty = (
 			("beetle_chest_wep" not in GameCont || GameCont.beetle_chest_wep == wep_none)
-			&& !place_meeting(x, y, WepPickup)
-		);
+			&& (
+				!place_meeting(x, y, WepPickup)
+				|| !array_length(call(scr.instances_meeting_instance, self, instances_matching(WepPickup, "visible", true)))
+			)
+		),
+		_isOpen = (_isEmpty || place_meeting(x, y, target));
 		
+	if(_isOpen){
 		 // Player Dropping Weapon:
 		if(instance_exists(prompt)){
 			prompt.visible = _isEmpty;
@@ -1592,9 +1601,11 @@
 	 // Grab Nearby Weapon:
 	if("beetle_chest_wep" not in GameCont || GameCont.beetle_chest_wep == wep_none){
 		if(place_meeting(x, y, WepPickup)){
-			with(instance_nearest(x, y, WepPickup)){
-				GameCont.beetle_chest_wep = wep;
-				instance_destroy();
+			with(call(scr.instance_nearest_array, x, y, instances_matching(WepPickup, "visible", true))){
+				if(place_meeting(x, y, other)){
+					GameCont.beetle_chest_wep = wep;
+					instance_destroy();
+				}
 			}
 		}
 	}
