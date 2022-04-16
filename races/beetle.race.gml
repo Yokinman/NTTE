@@ -918,6 +918,166 @@
 	}
 	else instance_destroy();
 	
+#define ntte_begin_step
+	/*
+		Beetle ultra A, beetle chest swapping code
+	*/
+	
+	if("player_beetle_chest_info" in GameCont && ultra_get(mod_current, ultA)){
+		for(var _index = 0; _index < maxp; _index++){
+			if(button_pressed(_index, "fire")){
+				var	_beetleChest    = GameCont.player_beetle_chest_info[_index],
+					_beetleChestWep = _beetleChest.wep;
+					
+				if(_beetleChest.can_rescue && _beetleChestWep != wep_none){
+					with(instances_matching(Player, "index", _index)){
+						if(canfire && curse <= 0 && player_active){
+							if(
+								wep == wep_none
+								|| (
+									infammo == 0
+									&& (
+										ammo[weapon_get_type(wep)] < weapon_get_cost(wep)
+										|| GameCont.rad < weapon_get_rads(wep)
+									)
+								)
+							){
+								_beetleChest.can_rescue = false;
+								
+								// // Fetch Ammo Supply:
+								// if(_beetleChest.has_ammo){
+								// 	_beetleChest.has_ammo = false;
+								//	
+								// 	var _beetleChestWepType = weapon_get_type(_beetleChestWep);
+								// 	if(
+								// 		ammo[_beetleChestWepType] < typ_amax[_beetleChestWepType]
+								// 		&& crown_current != crwn_protection
+								// 	){
+								// 		ammo[_beetleChestWepType] = min(
+								// 			ammo[_beetleChestWepType] + (typ_ammo[_beetleChestWepType] * 2),
+								// 			typ_amax[_beetleChestWepType]
+								// 		);
+								// 	}
+								// }
+								
+								 // :
+								with(call(scr.instance_nearest_array, x, y, instances_matching_ne(obj.BeetleChest, "id"))){
+									// var _maxDis = 64;
+									// if(
+									// 	distance_to_object(other) > _maxDis
+									// 	|| collision_line(x, y, other.x, other.y, Wall, false, false)
+									// ){
+										// var	_dir = point_direction(other.x, other.y, x, y),
+										// 	_x   = other.x + lengthdir_x(_maxDis, _dir),
+										// 	_y   = other.y + lengthdir_y(_maxDis, _dir);
+											
+										 // Disappear Effects:
+										for(var _dir = 0; _dir < 360; _dir += (360 / 6)){
+											call(scr.fx, x, y, [_dir, 3], Dust);
+										}
+										
+										 // Move:
+										x           = other.x;
+										y           = other.y;
+										xprevious   = x;
+										yprevious   = y;
+										call(scr.instance_budge, self, Wall);
+										// if(x != _x || y != _y){
+										// 	move_contact_solid(point_direction(x, y, _x, _y), point_distance(x, y, _x, _y));
+										// }
+										
+										//  // Appear Effects:
+										// image_index = 1;
+										// for(var _dir = 0; _dir < 360; _dir += (360 / 8)){
+										// 	call(scr.fx, x, y, [_dir, 3], Dust);
+										// }
+									// }
+									
+									 // Weapon Part Effects:
+									with(other){
+										var	_target = self,
+											_wepSpr = weapon_get_sprt(wep),
+											_num    = round(((sprite_get_bbox_right(_wepSpr) + 1) - sprite_get_bbox_left(_wepSpr)) / 3) - array_length(instances_matching(obj.BoneFX, "creator", _target)),
+											_l      = 12,
+											_d      = gunangle + wepangle;
+											
+										if(_num > 0) repeat(_num){
+											with(call(scr.fx, x + lengthdir_x(_l, _d), y + lengthdir_y(_l, _d), [_d, 1], "BoneFX")){
+												sprite_index = spr.BackpackDebris;
+												image_index  = random(image_number);
+												creator      = _target;
+											}
+										}
+										
+										_l = 8;
+										
+										repeat(6){
+											with(call(scr.fx, x + lengthdir_x(_l, _d), y + lengthdir_y(_l, _d), [_d + orandom(60), 1 + random(5)], Dust)){
+												depth = -3;
+											}
+										}
+									}
+								}
+								
+								 // Swap Weapons:
+								// if(wep != wep_none){
+								// 	if(bwep == wep_none){
+								// 		call(scr.player_swap, self);
+								// 	}
+								// 	else with(call(scr.pass, self, scr.projectile_create, x, y, ThrownWep, gunangle, 16)){
+								// 		wep          = other.wep;
+								// 		sprite_index = weapon_get_sprt(wep);
+								// 	}
+								// }
+								_beetleChest.wep = wep;
+								wep              = _beetleChestWep;
+								reload           = 1;
+								can_shoot        = false;
+								clicked          = false;
+								if(infammo >= 0){
+									infammo = max(infammo, 30);
+								}
+								
+								 // Refill Ammo:
+								var _wepType = weapon_get_type(wep);
+								if(_wepType != type_melee && ammo[_wepType] < typ_amax[_wepType]){
+									var _addAmmo = typ_ammo[_wepType] * (_beetleChest.has_ammo ? 6 : 4);
+									ammo[_wepType] = min(ammo[_wepType] + _addAmmo, typ_amax[_wepType]);
+									
+									call(scr.pickup_text,
+										typ_name[_wepType],
+										((ammo[_wepType] < typ_amax[_wepType]) ? "add" : "max"),
+										_addAmmo
+									);
+								}
+								_beetleChest.has_ammo = false;
+								
+								 // Swap Effects:
+								swapmove = 1;
+								gunshine = 2;
+								with(instance_create(x, y, WepSwap)){
+									creator = other;
+								}
+								call(scr.pickup_text, weapon_get_name(wep), "got");
+								
+								 // Sound:
+								sound_play(weapon_get_swap(wep));
+								if(weapon_get_gold(wep) != 0){
+									sound_play(sndSwapGold);
+								}
+								if(curse > 0){
+									sound_play(sndSwapCursed);
+								}
+								sound_play_pitchvol(sndMimicMelee, 1 + orandom(0.1), 2/3);
+								//sound_play(sndChickenThrow);
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+	
 #define ntte_draw
 	/*
 		Beetle weapon merging menu HUD
@@ -1507,24 +1667,29 @@
 		image_blend  = other.image_blend;
 		image_alpha  = other.image_alpha;
 		mask_index   = ((other.mask_index < 0) ? other.sprite_index : other.mask_index);
-		target       = _target;
+		if(instance_is(_target, Player)){
+			index = _target.index;
+		}
 	}
 	spr_dead = -1;
 	
 	 // Drop Weapon:
-	if("beetle_chest_wep" in GameCont && GameCont.beetle_chest_wep != wep_none){
-		var	_wep  = GameCont.beetle_chest_wep,
-			_ammo = ammo;
-			
-		with(call(scr.obj_create, x, y, "WepPickupGrounded")){
-			target = instance_create(x, y, WepPickup);
-			with(target){
-				ammo = _ammo;
-				wep  = _wep;
+	if(instance_is(_target, Player) && "player_beetle_chest_info" in GameCont){
+		var _beetleChest = GameCont.player_beetle_chest_info[_target.index];
+		if(_beetleChest.wep != wep_none){
+			with(call(scr.obj_create, x, y, "WepPickupGrounded")){
+				target = instance_create(x, y, WepPickup);
+				with(target){
+					ammo = _beetleChest.has_ammo;
+					wep  = _beetleChest.wep;
+				}
 			}
+			_beetleChest.wep = wep_none;
 		}
-		
-		GameCont.beetle_chest_wep = wep_none;
+		if(_beetleChest.has_ammo){
+			_beetleChest.has_ammo = false;
+			snd_open = sndWeaponChest;
+		}
 	}
 	
 	
@@ -1542,6 +1707,7 @@
 		depth        = 1;
 		
 		 // Vars:
+		index  = -1;
 		target = noone;
 		prompt = call(scr.prompt_create, self, loc("NTTE:PetMimic:Prompt", "DROP"));
 		with(prompt){
@@ -1557,13 +1723,15 @@
 	*/
 	
 	var	_isEmpty = (
-			("beetle_chest_wep" not in GameCont || GameCont.beetle_chest_wep == wep_none)
-			&& (
-				!place_meeting(x, y, WepPickup)
-				|| !array_length(call(scr.instances_meeting_instance, self, instances_matching(WepPickup, "visible", true)))
-			)
+			player_is_active(index)
+			&& ("player_beetle_chest_info" not in GameCont || GameCont.player_beetle_chest_info[index].wep == wep_none)
+			&& (!place_meeting(x, y, WepPickup) || !array_length(call(scr.instances_meeting_instance, self, instances_matching_le(instances_matching(WepPickup, "visible", true), "curse", 0))))
 		),
-		_isOpen = (_isEmpty || place_meeting(x, y, target));
+		_isOpen = (
+			(_isEmpty && array_length(instances_matching(Player, "visible", true)) == 1)
+			|| place_meeting(x, y, Player)
+			|| place_meeting(x, y, PortalShock)
+		);
 		
 	if(_isOpen){
 		 // Player Dropping Weapon:
@@ -1575,13 +1743,16 @@
 						if(curse <= 0){
 							with(instance_create(other.x, other.y, WepPickup)){
 								wep = other.wep;
+								
+								 // Sound:
+								sound_play_hit(
+									((wep == wep_guitar) ? sndGuitarPickup : sndWeaponPickup),
+									0.1
+								);
 							}
 							wep   = wep_none;
 							curse = 0;
 							call(scr.player_swap, self);
-							
-							 // Sound:
-							sound_play_hit(sndWeaponPickup, 0.1);
 						}
 						else sound_play_hit(sndCursedReminder, 0.05);
 					}
@@ -1599,11 +1770,23 @@
 	*/
 	
 	 // Grab Nearby Weapon:
-	if("beetle_chest_wep" not in GameCont || GameCont.beetle_chest_wep == wep_none){
-		if(place_meeting(x, y, WepPickup)){
-			with(call(scr.instance_nearest_array, x, y, instances_matching(WepPickup, "visible", true))){
-				if(place_meeting(x, y, other)){
-					GameCont.beetle_chest_wep = wep;
+	if(player_is_active(index)){
+		if("player_beetle_chest_info" not in GameCont){
+			GameCont.player_beetle_chest_info = [];
+			repeat(maxp){
+				array_push(GameCont.player_beetle_chest_info, {
+					"wep"        : wep_none,
+					"has_ammo"   : true,
+					"can_rescue" : false
+				});
+			}
+		}
+		var _beetleChest = GameCont.player_beetle_chest_info[index];
+		if(_beetleChest.wep == wep_none){
+			if(place_meeting(x, y, WepPickup)){
+				with(call(scr.instance_nearest_array, x, y, call(scr.instances_meeting_instance, self, instances_matching_le(instances_matching(WepPickup, "visible", true), "curse", 0)))){
+					_beetleChest.wep      = wep;
+					_beetleChest.has_ammo = ammo;
 					instance_destroy();
 				}
 			}

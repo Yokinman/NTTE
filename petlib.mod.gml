@@ -2052,17 +2052,20 @@
 							with(other){
 								wep_inst = instance_create(x, y, WepPickup);
 								wep_inst.wep = other.wep;
+								
+								 // Effects:
+								sound_play_hit(sndSwapGold, 0.1);
+								sound_play_hit(
+									((wep_inst.wep == wep_guitar) ? sndGuitarPickup : sndWeaponPickup),
+									0.1
+								);
+								with(instance_create(x + orandom(4), y + orandom(4), CaveSparkle)){
+									depth = other.depth - 1;
+								}
 							}
 							wep   = wep_none;
 							curse = 0;
 							call(scr.player_swap, self);
-							
-							 // Effects:
-							sound_play_hit(sndSwapGold,     0.1);
-							sound_play_hit(sndWeaponPickup, 0.1);
-							with(other) with(instance_create(x + orandom(4), y + orandom(4), CaveSparkle)){
-								depth = other.depth - 1;
-							}
 							
 							break;
 						}

@@ -5696,6 +5696,7 @@
 #define LightningSlash_temerge_fire(_instanceList)    temerge_can_delete = false;
 #define BloodSlash_temerge_fire(_instanceList)        temerge_can_delete = false;
 #define GuitarSlash_temerge_fire(_instanceList)       temerge_can_delete = false;
+#define CustomSlash_temerge_fire(_instanceList)       temerge_can_delete = false;
 
 
 #define ThrownWep_temerge_fire(_at)
