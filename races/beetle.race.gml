@@ -1580,7 +1580,10 @@
 							call(scr.motion_step, self, 1);
 							repeat(2){
 								event_perform(ev_collision, WepPickup);
-								other.ammo = _beetleChest.has_ammo;
+								if(instance_exists(other)){
+									other.ammo = _beetleChest.has_ammo;
+								}
+								else break;
 							}
 							call(scr.motion_step, self, -1);
 						}
@@ -1628,6 +1631,9 @@
 					 // Character Sound:
 					sound_play(snd_chst);
 				}
+				
+				 // Clear Walls:
+				instance_create(x, y, PortalClear);
 				
 				 // Sound:
 				snd_open = sndBigWeaponChest;
@@ -1712,33 +1718,9 @@
 	
 #define BeetleChestOpen_destroy
 	/*
-		Beetle chest closing back up
+		Open beetle chests become closed beetle chests when destroyed
 	*/
 	
-	 // Grab Nearby Weapon:
-	if(player_is_active(index)){
-		if("player_beetle_chest_info" not in GameCont){
-			GameCont.player_beetle_chest_info = [];
-			repeat(maxp){
-				array_push(GameCont.player_beetle_chest_info, {
-					"wep"      : wep_none,
-					"has_ammo" : true
-				});
-			}
-		}
-		var _beetleChest = GameCont.player_beetle_chest_info[index];
-		if(_beetleChest.wep == wep_none){
-			if(place_meeting(x, y, WepPickup)){
-				with(call(scr.instance_nearest_array, x, y, call(scr.instances_meeting_instance, self, instances_matching_le(instances_matching(WepPickup, "visible", true), "curse", 0)))){
-					_beetleChest.wep      = wep;
-					_beetleChest.has_ammo = ammo;
-					instance_destroy();
-				}
-			}
-		}
-	}
-	
-	 // Become Chest:
 	with(call(scr.obj_create, x, y, "BeetleChest")){
 		spr_shadow   = other.spr_shadow;
 		spr_shadow_x = other.spr_shadow_x;
@@ -1756,6 +1738,31 @@
 			}
 		}
 		call(scr.sound_play_at, x, y, sndMimicMelee, 1 + orandom(0.1), 2/3);
+	}
+	
+#define BeetleChestOpen_cleanup
+	/*
+		Open beetle chests store the nearest available weapon pickup when they stop existing
+	*/
+	
+	if(player_is_active(index)){
+		if("player_beetle_chest_info" not in GameCont){
+			GameCont.player_beetle_chest_info = [];
+			repeat(maxp){
+				array_push(GameCont.player_beetle_chest_info, {
+					"wep"      : wep_none,
+					"has_ammo" : true
+				});
+			}
+		}
+		var _beetleChest = GameCont.player_beetle_chest_info[index];
+		if(_beetleChest.wep == wep_none){
+			with(call(scr.instance_nearest_array, x, y, instances_matching_le(instances_matching(WepPickup, "visible", true), "curse", 0))){
+				_beetleChest.wep      = wep;
+				_beetleChest.has_ammo = ammo;
+				instance_destroy();
+			}
+		}
 	}
 	
 	
