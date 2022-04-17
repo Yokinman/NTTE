@@ -169,7 +169,7 @@
 	
 #define race_ultra_text(_ultra)
 	switch(_ultra){
-		case ultA : return "???";
+		case ultA : return "THE @yBEETLE CHEST @sOPENS WITH A @wBLAST#@sAND @wAPPEARS @sWHEN NEEDED";
 		case ultB : return "NEXT @wMERGED WEAPON @sHAS#HALF @yAMMO COST @sAND @wRELOAD";
 	}
 	return "";
@@ -859,6 +859,40 @@
 		}
 	}
 	
+	 // Chest Retrieval Ultra:
+	if(
+		ultra_get(mod_current, ultA)
+		&& button_pressed(index, "fire")
+		&& canfire
+		&& player_active
+	){
+		if(wep == wep_none || (infammo == 0 && (ammo[weapon_get_type(wep)] < weapon_get_cost(wep) || GameCont.rad < weapon_get_rads(wep)))){
+			with(call(scr.instance_nearest_array, x, y, instances_matching_ne(obj.BeetleChest, "id"))){
+				if(point_distance(x, y, other.x, other.y) > 64){
+					 // Disappear Effects:
+					for(var _dir = 0; _dir < 360; _dir += (360 / 6)){
+						call(scr.fx, x, y, [_dir, 3], Dust);
+					}
+					
+					 // Move to Player:
+					x         = other.x;
+					y         = other.y;
+					xprevious = x;
+					yprevious = y;
+					call(scr.instance_budge, self, Wall);
+					
+					 // Appear Effects:
+					for(var _dir = 0; _dir < 360; _dir += (360 / 6)){
+						call(scr.fx, x, y, [_dir, 3], Dust);
+					}
+					
+					 // Sound:
+					sound_play_pitchvol(sndChickenReturn, 1.2 + orandom(0.1), 1.5);
+				}
+			}
+		}
+	}
+	
 	if(lag) trace_time(mod_current + "_step");
 	
 #define beetle_weapon_upgrade_cost(_wep, _cost)
@@ -917,166 +951,6 @@
 		}
 	}
 	else instance_destroy();
-	
-#define ntte_begin_step
-	/*
-		Beetle ultra A, beetle chest swapping code
-	*/
-	
-	if("player_beetle_chest_info" in GameCont && ultra_get(mod_current, ultA)){
-		for(var _index = 0; _index < maxp; _index++){
-			if(button_pressed(_index, "fire")){
-				var	_beetleChest    = GameCont.player_beetle_chest_info[_index],
-					_beetleChestWep = _beetleChest.wep;
-					
-				if(_beetleChest.can_rescue && _beetleChestWep != wep_none){
-					with(instances_matching(Player, "index", _index)){
-						if(canfire && curse <= 0 && player_active){
-							if(
-								wep == wep_none
-								|| (
-									infammo == 0
-									&& (
-										ammo[weapon_get_type(wep)] < weapon_get_cost(wep)
-										|| GameCont.rad < weapon_get_rads(wep)
-									)
-								)
-							){
-								_beetleChest.can_rescue = false;
-								
-								// // Fetch Ammo Supply:
-								// if(_beetleChest.has_ammo){
-								// 	_beetleChest.has_ammo = false;
-								//	
-								// 	var _beetleChestWepType = weapon_get_type(_beetleChestWep);
-								// 	if(
-								// 		ammo[_beetleChestWepType] < typ_amax[_beetleChestWepType]
-								// 		&& crown_current != crwn_protection
-								// 	){
-								// 		ammo[_beetleChestWepType] = min(
-								// 			ammo[_beetleChestWepType] + (typ_ammo[_beetleChestWepType] * 2),
-								// 			typ_amax[_beetleChestWepType]
-								// 		);
-								// 	}
-								// }
-								
-								 // :
-								with(call(scr.instance_nearest_array, x, y, instances_matching_ne(obj.BeetleChest, "id"))){
-									// var _maxDis = 64;
-									// if(
-									// 	distance_to_object(other) > _maxDis
-									// 	|| collision_line(x, y, other.x, other.y, Wall, false, false)
-									// ){
-										// var	_dir = point_direction(other.x, other.y, x, y),
-										// 	_x   = other.x + lengthdir_x(_maxDis, _dir),
-										// 	_y   = other.y + lengthdir_y(_maxDis, _dir);
-											
-										 // Disappear Effects:
-										for(var _dir = 0; _dir < 360; _dir += (360 / 6)){
-											call(scr.fx, x, y, [_dir, 3], Dust);
-										}
-										
-										 // Move:
-										x           = other.x;
-										y           = other.y;
-										xprevious   = x;
-										yprevious   = y;
-										call(scr.instance_budge, self, Wall);
-										// if(x != _x || y != _y){
-										// 	move_contact_solid(point_direction(x, y, _x, _y), point_distance(x, y, _x, _y));
-										// }
-										
-										//  // Appear Effects:
-										// image_index = 1;
-										// for(var _dir = 0; _dir < 360; _dir += (360 / 8)){
-										// 	call(scr.fx, x, y, [_dir, 3], Dust);
-										// }
-									// }
-									
-									 // Weapon Part Effects:
-									with(other){
-										var	_target = self,
-											_wepSpr = weapon_get_sprt(wep),
-											_num    = round(((sprite_get_bbox_right(_wepSpr) + 1) - sprite_get_bbox_left(_wepSpr)) / 3) - array_length(instances_matching(obj.BoneFX, "creator", _target)),
-											_l      = 12,
-											_d      = gunangle + wepangle;
-											
-										if(_num > 0) repeat(_num){
-											with(call(scr.fx, x + lengthdir_x(_l, _d), y + lengthdir_y(_l, _d), [_d, 1], "BoneFX")){
-												sprite_index = spr.BackpackDebris;
-												image_index  = random(image_number);
-												creator      = _target;
-											}
-										}
-										
-										_l = 8;
-										
-										repeat(6){
-											with(call(scr.fx, x + lengthdir_x(_l, _d), y + lengthdir_y(_l, _d), [_d + orandom(60), 1 + random(5)], Dust)){
-												depth = -3;
-											}
-										}
-									}
-								}
-								
-								 // Swap Weapons:
-								// if(wep != wep_none){
-								// 	if(bwep == wep_none){
-								// 		call(scr.player_swap, self);
-								// 	}
-								// 	else with(call(scr.pass, self, scr.projectile_create, x, y, ThrownWep, gunangle, 16)){
-								// 		wep          = other.wep;
-								// 		sprite_index = weapon_get_sprt(wep);
-								// 	}
-								// }
-								_beetleChest.wep = wep;
-								wep              = _beetleChestWep;
-								reload           = 1;
-								can_shoot        = false;
-								clicked          = false;
-								if(infammo >= 0){
-									infammo = max(infammo, 30);
-								}
-								
-								 // Refill Ammo:
-								var _wepType = weapon_get_type(wep);
-								if(_wepType != type_melee && ammo[_wepType] < typ_amax[_wepType]){
-									var _addAmmo = typ_ammo[_wepType] * (_beetleChest.has_ammo ? 6 : 4);
-									ammo[_wepType] = min(ammo[_wepType] + _addAmmo, typ_amax[_wepType]);
-									
-									call(scr.pickup_text,
-										typ_name[_wepType],
-										((ammo[_wepType] < typ_amax[_wepType]) ? "add" : "max"),
-										_addAmmo
-									);
-								}
-								_beetleChest.has_ammo = false;
-								
-								 // Swap Effects:
-								swapmove = 1;
-								gunshine = 2;
-								with(instance_create(x, y, WepSwap)){
-									creator = other;
-								}
-								call(scr.pickup_text, weapon_get_name(wep), "got");
-								
-								 // Sound:
-								sound_play(weapon_get_swap(wep));
-								if(weapon_get_gold(wep) != 0){
-									sound_play(sndSwapGold);
-								}
-								if(curse > 0){
-									sound_play(sndSwapCursed);
-								}
-								sound_play_pitchvol(sndMimicMelee, 1 + orandom(0.1), 2/3);
-								//sound_play(sndChickenThrow);
-							}
-						}
-					}
-				}
-			}
-		}
-	}
 	
 #define ntte_draw
 	/*
@@ -1648,15 +1522,30 @@
 		return self;
 	}
 	
+#define BeetleChest_draw
+	/*
+		Beetle chests have a visual effect when Beetle's ultra A is active and they have an ammo supply
+	*/
+	
+	if(ultra_get(mod_current, ultA) && "player_beetle_chest_info" in GameCont){
+		for(var _playerIndex = 0; _playerIndex < maxp; _playerIndex++){
+			if(player_is_active(_playerIndex) && GameCont.player_beetle_chest_info[_playerIndex].has_ammo){
+				draw_sprite(sprGunWarrant, current_frame * 0.4, x, y);
+				break;
+			}
+		}
+	}
+	
 #define BeetleChest_open
 	/*
 		Beetle chests drop their stored weapon and become closable
 	*/
 	
-	var _target = other;
-	
+	var	_target    = other,
+		_chestOpen = call(scr.obj_create, x, y, "BeetleChestOpen");
+		
 	 // Become Openable:
-	with(call(scr.obj_create, x, y, "BeetleChestOpen")){
+	with(_chestOpen){
 		sprite_index = other.spr_dead;
 		spr_shadow   = other.spr_shadow;
 		spr_shadow_x = other.spr_shadow_x;
@@ -1675,20 +1564,77 @@
 	
 	 // Drop Weapon:
 	if(instance_is(_target, Player) && "player_beetle_chest_info" in GameCont){
-		var _beetleChest = GameCont.player_beetle_chest_info[_target.index];
-		if(_beetleChest.wep != wep_none){
+		var	_beetleChest    = GameCont.player_beetle_chest_info[_target.index],
+			_beetleChestWep = _beetleChest.wep;
+			
+		if(_beetleChestWep != wep_none){
 			with(call(scr.obj_create, x, y, "WepPickupGrounded")){
 				target = instance_create(x, y, WepPickup);
 				with(target){
 					ammo = _beetleChest.has_ammo;
-					wep  = _beetleChest.wep;
+					wep  = _beetleChestWep;
+					
+					 // Ammo Supply:
+					if(ammo > 0 && ultra_get(mod_current, ultA)){
+						with(_target){
+							call(scr.motion_step, self, 1);
+							repeat(2){
+								event_perform(ev_collision, WepPickup);
+								other.ammo = _beetleChest.has_ammo;
+							}
+							call(scr.motion_step, self, -1);
+						}
+					}
 				}
 			}
 			_beetleChest.wep = wep_none;
 		}
+		
+		 // Ammo Supply:
 		if(_beetleChest.has_ammo){
 			_beetleChest.has_ammo = false;
-			snd_open = sndWeaponChest;
+			
+			 // Ultra:
+			if(ultra_get(mod_current, ultA)){
+				with(_target){
+					if(_beetleChestWep != wep_none){
+						var _beetleChestWepType = weapon_get_type(_beetleChestWep);
+						
+						 // Fire Shots:
+						for(var _fireRotation = 360 / 3; _fireRotation <= 360; _fireRotation += 360 / 3){
+							call(scr.player_fire_at,
+								{ "x": other.x, "y": other.y },
+								{ "rotation": _fireRotation },
+								undefined,
+								_beetleChestWep,
+								undefined,
+								self,
+								true
+							);
+							
+							 // Weapon Part Effects:
+							with(_chestOpen){
+								repeat(3){
+									with(call(scr.fx, x, y, [other.gunangle + _fireRotation, 3], "BoneFX")){
+										sprite_index = spr.BackpackDebris;
+										image_index  = random(image_number);
+										creator      = other;
+									}
+								}
+							}
+						}
+					}
+					
+					 // Character Sound:
+					sound_play(snd_chst);
+				}
+				
+				 // Sound:
+				snd_open = sndBigWeaponChest;
+			}
+			
+			 // Normal Sound:
+			else snd_open = sndWeaponChest;
 		}
 	}
 	
@@ -1775,9 +1721,8 @@
 			GameCont.player_beetle_chest_info = [];
 			repeat(maxp){
 				array_push(GameCont.player_beetle_chest_info, {
-					"wep"        : wep_none,
-					"has_ammo"   : true,
-					"can_rescue" : false
+					"wep"      : wep_none,
+					"has_ammo" : true
 				});
 			}
 		}

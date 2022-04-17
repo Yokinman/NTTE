@@ -534,21 +534,14 @@
 				call(scr.floor_reset_style);
 			}
 			
-			 // Beetle Chest:
+			 // Refresh Beetle Chest's Ammo Supply:
 			if("player_beetle_chest_info" in GameCont){
-				// var _playerIndex = 0;
 				with(GameCont.player_beetle_chest_info){
-					has_ammo   = true;
-					can_rescue = true;
-					// if(wep != wep_none && ultra_get(mod_current, 1)){
-					// 	var _wepType = weapon_get_type(wep);
-					// 	with(player_find(_playerIndex)){
-					// 		ammo[_wepType] = max(ammo[_wepType], typ_amax[_wepType];
-					// 	}
-					// }
-					// _playerIndex++;
+					has_ammo = true;
 				}
 			}
+			
+			 // Beetle Chest:
 			call(scr.obj_create, _beetleChestX, _beetleChestY, "BeetleChest");
 			
 			break;

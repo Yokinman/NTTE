@@ -2842,7 +2842,7 @@
 	
 	 // Open Chest:
 	var _meet = [Player, PortalShock];
-	for(var i = 0; i < array_length(_meet); i++){
+	for(var i = 0; i < 2; i++){
 		if(place_meeting(x, y, _meet[i])){
 			with(instance_nearest(x, y, _meet[i])) with(other){
 				 // Hatred:
