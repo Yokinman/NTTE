@@ -1056,6 +1056,12 @@
 			bonus_health       = (("bonus_health" in self) ? bonus_health : 0) + (_num * 30);
 			bonus_health_flash = 1;
 			
+			 // Chicken:
+			if(chickendeaths > 0){
+				chickendeaths--;
+				maxhealth++;
+			}
+			
 			 // Text:
 			pickup_text(BonusHealth_text, "add", _num);
 			

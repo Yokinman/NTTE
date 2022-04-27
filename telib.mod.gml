@@ -1356,7 +1356,7 @@
 		 // Only Ammo Chests:
 		if(crown_current == crwn_love){
 			if(!is_real(_obj) || !object_is(_obj, AmmoChest)){
-				if(array_find_index([ProtoChest, RogueChest, "Backpack", "BonusAmmoChest", "BonusAmmoMimic", "BuriedVaultChest", "CatChest", "CursedAmmoChest", "CursedMimic", "SunkenChest"], _obj) < 0){
+				if(array_find_index([ProtoChest, RogueChest, "Backpack", "BeetleChest", "BonusAmmoChest", "BonusAmmoMimic", "BuriedVaultChest", "CatChest", "CursedAmmoChest", "CursedMimic", "SunkenChest"], _obj) < 0){
 					var _name = (is_real(_obj) ? object_get_name(_obj) : _obj);
 					if(string_pos("Mimic", _name) > 0){
 						_obj = Mimic;
@@ -2101,6 +2101,9 @@
 		if(_name == ""){
 			if("name" in _inst && string_pos("Custom", object_get_name(variable_instance_get(_inst, "object_index", -1))) == 1){
 				_name = string(_inst.name);
+				if(string_pos("NTTE", _name) == 1){
+					_name = string_delete(_name, 1, 4);
+				}
 				if(string_pos(" ", _name) <= 0){
 					_name = string_space(_name);
 				}

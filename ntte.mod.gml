@@ -529,6 +529,23 @@
 						// 		image_speed  = other.image_speed;
 						// 	}
 						// }
+						
+						 // Health Chest:
+						var _beetleList = instances_matching_gt(instances_matching(Player, "race", "beetle"), "chickendeaths", 0);
+						if(array_length(_beetleList)){
+							var _floorIndex = irandom(array_length(floors) - 1);
+							with(call(scr.array_shuffle, _beetleList)){
+								if(instance_number(HealthChest) < array_length(_beetleList)){
+									if(chance(1, 2) && !chance(maxhealth, 8)){
+										with(other.floors[_floorIndex % array_length(other.floors)]){
+											call(scr.chest_create, bbox_center_x, bbox_center_y, HealthChest, true);
+										}
+										_floorIndex++;
+									}
+								}
+								else break;
+							}
+						}
 					}
 				}
 				call(scr.floor_reset_style);
@@ -537,12 +554,13 @@
 			 // Refresh Beetle Chest's Ammo Supply:
 			if("player_beetle_chest_info" in GameCont){
 				with(GameCont.player_beetle_chest_info){
-					has_ammo = true;
+					has_ammo  = true;
+					has_blast = true;
 				}
 			}
 			
 			 // Beetle Chest:
-			call(scr.obj_create, _beetleChestX, _beetleChestY, "BeetleChest");
+			call(scr.chest_create, _beetleChestX, _beetleChestY, "BeetleChest", true);
 			
 			break;
 		}

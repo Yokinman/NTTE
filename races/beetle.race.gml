@@ -12,7 +12,7 @@
 #define race_text              return "BEETLE CHEST#MERGE WEAPONS";
 #define race_lock              return "???";
 #define race_unlock            return "???";
-#define race_tb_text           return "MERGING COSTS @gRADS#@sINSTEAD OF @rMAX HP";
+#define race_tb_text           return "HOLDING MORE WEAPONS INCREASES AMMO";//"MERGING COSTS @gRADS#@sINSTEAD OF @rMAX HP";
 #define race_portrait(_p, _b)  return race_sprite_raw("Portrait", _b);
 #define race_mapicon(_p, _b)   return race_sprite_raw("Map",      _b);
 #define race_avail             return true;//call(scr.unlock_get, "race:" + mod_current);
@@ -236,30 +236,43 @@
 	footkind = 4; // Metal
 	
 	 // Character-Specific Vars:
-	beetle_last_usespec = 0;
-	beetle_menu_info    = {
-		"is_open"                    : false,
-		"scale"                      : 0,
-		"last_wkick"                 : undefined,
-		"last_bwkick"                : undefined,
-		"last_canfire"               : undefined,
-		"last_canscope"              : undefined,
-		"revert_last_info_step_bind" : noone,
-		"wep"                        : wep_none,
-		"bwep"                       : wep_none,
-		"curse"                      : 0,
-		"bcurse"                     : 0,
-		"selection_wep_info"         : beetle_menu_selection_wep_default_info,
-		"selection_angle"            : 0,
-		"selection_state"            : undefined,
-		"selection_trail_last_x"     : x,
-		"selection_trail_last_y"     : y,
-		"selection_icon_scale"       : 0,
-		"merging_wep_info"           : beetle_menu_merging_wep_default_info,
-		"merging_scale"              : 0,
-		"merging_upgrade_count"      : 0,
-		"merging_part_num"           : 0
-	};
+	if("beetle_last_usespec" not in self){
+		beetle_last_usespec = 0;
+	}
+	if("beetle_menu_info" not in self){
+		beetle_menu_info = {
+			"is_open"                    : false,
+			"scale"                      : 0,
+			"last_wkick"                 : undefined,
+			"last_bwkick"                : undefined,
+			"last_canfire"               : undefined,
+			"last_canscope"              : undefined,
+			"revert_last_info_step_bind" : noone,
+			"wep"                        : wep_none,
+			"bwep"                       : wep_none,
+			"curse"                      : 0,
+			"bcurse"                     : 0,
+			"selection_wep_info"         : beetle_menu_selection_wep_default_info,
+			"selection_angle"            : 0,
+			"selection_state"            : undefined,
+			"selection_trail_last_x"     : x,
+			"selection_trail_last_y"     : y,
+			"selection_icon_scale"       : 0,
+			"merging_wep_info"           : beetle_menu_merging_wep_default_info,
+			"merging_scale"              : 0,
+			"merging_upgrade_count"      : 0,
+			"merging_part_num"           : 0
+		};
+	}
+	if("beetle_tb_info" not in self){
+		beetle_tb_info = {
+			"value"        : 0,
+			"wep_count"    : 0,
+			"wep"          : wep_none,
+			"bwep"         : wep_none,
+			"muscle_value" : 0
+		};
+	}
 	
 	 // Re-Get Ultras When Revived:
 	/*for(var i = 0; i < ultra_count(mod_current); i++){
@@ -544,11 +557,11 @@
 				
 				 // Merging Selected Weapons:
 				if(array_length(_menuMergingWep.index_list)){
-					var	_menuMergingHPCost       = _menuMergingWep.health_cost * ((skill_get(mut_throne_butt) > 0) ? 60 : 1),
+					var	_menuMergingHPCost       = _menuMergingWep.health_cost * ((false && skill_get(mut_throne_butt) > 0) ? 60 : 1),
 						_menuMergingWepPartList  = [],
 						_menuMergingWepWasMerged = true,
 						_menuMergingWepCanMerge  = (
-							(skill_get(mut_throne_butt) > 0)
+							(false && skill_get(mut_throne_butt) > 0)
 							? (GameCont.rad >= _menuMergingHPCost) // (my_health > _menuMergingHPCost)
 							: (maxhealth > _menuMergingHPCost)
 						);
@@ -652,6 +665,7 @@
 						 // Swap to Secondary Weapon:
 						if(_mergeHasSecondaryWep && !_mergeHasPrimaryWep){
 							call(scr.player_swap, self);
+							clicked = false;
 							
 							 // HUD Visual Swap:
 							var _menuSelectionWepSecondaryCount = _menuSelectionWepListSize - _menuSelectionWepPrimaryCount;
@@ -673,6 +687,7 @@
 								: call(scr.weapon_add_temerge, other.wep, self)
 							);
 						}
+						beetle_tb_info.wep = wep_none;
 						
 						 // Ultra B:
 						if(_menu.merging_upgrade_count > 0){
@@ -692,7 +707,7 @@
 						if(_menuMergingHPCost != 0){
 							var _text = "";
 							
-							if(skill_get(mut_throne_butt) > 0){
+							if(false && skill_get(mut_throne_butt) > 0){
 								_text = "RADS";
 								GameCont.rad -= _menuMergingHPCost;
 								//projectile_hit_raw(self, _menuMergingHPCost, 2);
@@ -724,7 +739,7 @@
 						sound_play_pitchvol(
 							sndPlantTBKill,
 							lerp(0.75, 0.25, _menuMergingHPCost / (
-								(skill_get(mut_throne_butt) > 0)
+								(false && skill_get(mut_throne_butt) > 0)
 								? (600 + GameCont.radmaxextra)
 								: (maxhealth + chickendeaths)
 							)),
@@ -861,7 +876,7 @@
 	
 	 // Chest Retrieval Ultra:
 	if(
-		ultra_get(mod_current, ultA)
+		ultra_get(mod_current, ultA) > 0
 		&& button_pressed(index, "fire")
 		&& canfire
 		&& player_active
@@ -951,6 +966,100 @@
 		}
 	}
 	else instance_destroy();
+	
+#define ntte_end_step
+	/*
+		Beetle's Throne Butt increases their max ammo based on the number of weapons they're holding
+	*/
+	
+	if(!instance_exists(GenCont) && !instance_exists(LevCont)){
+		var _beetleInst = instances_matching(instances_matching(Player, "race", mod_current), "visible", true);
+		
+		if(array_length(_beetleInst)){
+			with(_beetleInst){
+				var	_beetleTB        = beetle_tb_info,
+					_TBAmmoAddMult   = 0.05,
+					_canUpdateTB     = false,
+					_canMakeAmmoText = false;
+					
+				 // Check for Updated Values:
+				if(_beetleTB.value != skill_get(mut_throne_butt)){
+					_beetleTB.value  = skill_get(mut_throne_butt);
+					_canUpdateTB     = true;
+					_canMakeAmmoText = true;
+				}
+				if(_beetleTB.wep != wep || _beetleTB.bwep != bwep){
+					_beetleTB.wep  = wep;
+					_beetleTB.bwep = bwep;
+					_canUpdateTB   = true;
+				}
+				if(_beetleTB.muscle_value != skill_get(mut_back_muscle)){
+					_beetleTB.muscle_value = skill_get(mut_back_muscle);
+					_canUpdateTB           = true;
+					
+					 // Fix Max Ammo Override:
+					if(_beetleTB.wep_count > 0){
+						repeat(_beetleTB.wep_count){
+							for(var _ammoIndex = array_length(ammo) - 1; _ammoIndex >= 1; _ammoIndex--){
+								var _maxAmmoAdd = typ_amax[_ammoIndex] * _ammoAddMult;
+								typ_amax[_ammoIndex] += ceil(abs(_maxAmmoAdd)) * sign(_maxAmmoAdd);
+							}
+						}
+					}
+				}
+				
+				 // Update TB:
+				if(_canUpdateTB){
+					var _lastWepCount = _beetleTB.wep_count;
+					
+					 // Count Up Weapons:
+					_beetleTB.wep_count = 0;
+					if(_beetleTB.value != 0){
+						for(var _wepIndex = 0; _wepIndex < 2; _wepIndex++){
+							var _wep = ((_wepIndex == 0) ? _beetleTB.wep : _beetleTB.bwep);
+							while(true){
+								if(call(scr.wep_raw, _wep) != wep_none){
+									_beetleTB.wep_count += _beetleTB.value;
+								}
+								if(call(scr.weapon_has_temerge, _wep)){
+									_wep = call(scr.weapon_get_temerge_weapon, _wep)
+								}
+								else break;
+							}
+						}
+						_beetleTB.wep_count -= min(_beetleTB.wep_count, 2 * _beetleTB.value);
+					}
+					
+					 // Adjust Ammo:
+					if(_beetleTB.wep_count != _lastWepCount){
+						var _ammoAddMult = (
+							(_beetleTB.wep_count > _lastWepCount)
+							? _TBAmmoAddMult
+							: ((1 / (1 + _TBAmmoAddMult)) - 1)
+						);
+						repeat(round(abs(_lastWepCount - _beetleTB.wep_count))){
+							for(var _ammoIndex = array_length(ammo) - 1; _ammoIndex >= 1; _ammoIndex--){
+								var _ammoAdd    = ammo[_ammoIndex]     * _ammoAddMult; ammo[_ammoIndex]     += ceil(abs(_ammoAdd))    * sign(_ammoAdd);
+								var _maxAmmoAdd = typ_amax[_ammoIndex] * _ammoAddMult; typ_amax[_ammoIndex] += ceil(abs(_maxAmmoAdd)) * sign(_maxAmmoAdd);
+								var _typAmmoAdd = typ_ammo[_ammoIndex] * _ammoAddMult; typ_ammo[_ammoIndex] += ceil(abs(_typAmmoAdd)) * sign(_typAmmoAdd);
+							}
+						}
+						_canMakeAmmoText = true;
+					}
+				}
+				
+				 // % Indicator:
+				if(_canMakeAmmoText){
+					var	_ammoMult    = 1 + (_TBAmmoAddMult * ceil(_beetleTB.wep_count)),
+						_ammoTagList = ["@s", "@w", "@y", "@q@y"],
+						_ammoTag     = _ammoTagList[clamp(ceil(((_ammoMult - 1) / 0.1) - epsilon), 0, array_length(_ammoTagList) - 1)];
+						
+					call(scr.pickup_text, `${_ammoTag}${round(100 * _ammoMult)}% AMMO`);
+					sound_play_pitchvol(sndLuckyShotProc, _ammoMult, 2);
+				}
+			}
+		}
+	}
 	
 #define ntte_draw
 	/*
@@ -1069,7 +1178,10 @@
 						
 						 // Path to Free Merge Indicators:
 						var _menuMergingWepKeyMap = undefined;
-						if("beetle_menu_merging_wep_key_map" in GameCont){
+						if(
+							array_find_index(_menuMergingWep.index_list, _menuSelectionWepIndex) < 0
+							&& "beetle_menu_merging_wep_key_map" in GameCont
+						){
 							_menuMergingWepKeyMap = GameCont.beetle_menu_merging_wep_key_map;
 							
 							 // Check if Weapon Was Merged Before:
@@ -1116,7 +1228,7 @@
 										 // Cursed Weapon:
 										if((_selectableWepIndex < _menuSelectionWep.primary_count) ? (curse > 0) : (bcurse > 0)){
 											while(_selectableWepKeyMap != undefined && call(scr.weapon_has_temerge, _selectableWep)){
-												_selectableWep = call(scr.weapon_get_temerge_weapon, _selectableWep);
+												_selectableWep       = call(scr.weapon_get_temerge_weapon, _selectableWep);
 												_selectableWepKeyMap = lq_get(_selectableWepKeyMap, string(call(scr.wep_raw, _selectableWep)));
 											}
 										}
@@ -1247,7 +1359,11 @@
 						}
 						
 						 // Free Merge Indicator:
-						if(array_length(_menuMergingWep.key_list) && _menuMergingWepKeyMap != undefined && lq_defget(_menuMergingWepKeyMap, "?", false)){
+						if(
+							array_length(_menuMergingWep.key_list)
+							&& _menuMergingWepKeyMap != undefined
+							&& lq_defget(_menuMergingWepKeyMap, "?", false)
+						){
 							var _circleColor = (
 								(bskin == 0)
 								? make_color_rgb(24, 165, 132)
@@ -1301,7 +1417,7 @@
 							_menuMergingWepY      = pround(lerp(_menuMergingY1, _menuMergingY2, 0.5), 1 / game_scale_nonsync),
 							_menuMergingWepXScale = power(_menu.merging_scale, 1/3) * lerp(2, 1, _menuScale),
 							_menuMergingWepYScale = _menuScale * lerp(2, 1, power(_menu.merging_scale, 1/5)),
-							_menuMergingHPCost    = _menuMergingWep.health_cost * ((skill_get(mut_throne_butt) > 0) ? 60 : 1);
+							_menuMergingHPCost    = _menuMergingWep.health_cost * ((false && skill_get(mut_throne_butt) > 0) ? 60 : 1);
 							
 						 // Remember Past Merges:
 						if(_menuMergingHPCost != 0 && "beetle_menu_merging_wep_key_map" in GameCont){
@@ -1337,7 +1453,7 @@
 								_menuMergingHPCostY        = _menuMergingY1 - 2,
 								_menuMergingHPCostText     = ((_menuMergingHPCost > 0) ? "-" : "+"),
 								_menuMergingHPCostIsActive = (
-									(skill_get(mut_throne_butt) > 0)
+									(false && skill_get(mut_throne_butt) > 0)
 									? (GameCont.rad >= _menuMergingHPCost)
 									: (maxhealth > _menuMergingHPCost) // && !_menuMergingWepWasMerged
 								);
@@ -1354,10 +1470,10 @@
 							
 							 // Name Text:
 							if(_menuMergingHPCostIsActive){
-								_menuMergingHPCostText += "@q" + ((skill_get(mut_throne_butt) > 0) ? "@g" : "@r");
+								_menuMergingHPCostText += "@q" + ((false && skill_get(mut_throne_butt) > 0) ? "@g" : "@r");
 							}
 							_menuMergingHPCostText += (
-								(skill_get(mut_throne_butt) > 0)
+								(false && skill_get(mut_throne_butt) > 0)
 								? "RADS"
 								: "MAX HP"
 							)
@@ -1527,9 +1643,9 @@
 		Beetle chests have a visual effect when Beetle's ultra A is active and they have an ammo supply
 	*/
 	
-	if(ultra_get(mod_current, ultA) && "player_beetle_chest_info" in GameCont){
+	if(ultra_get(mod_current, ultA) > 0 && "player_beetle_chest_info" in GameCont){
 		for(var _playerIndex = 0; _playerIndex < maxp; _playerIndex++){
-			if(player_is_active(_playerIndex) && GameCont.player_beetle_chest_info[_playerIndex].has_ammo){
+			if(player_is_active(_playerIndex) && GameCont.player_beetle_chest_info[_playerIndex].has_blast){
 				draw_sprite(sprGunWarrant, current_frame * 0.4, x, y);
 				break;
 			}
@@ -1574,8 +1690,8 @@
 					ammo = _beetleChest.has_ammo;
 					wep  = _beetleChestWep;
 					
-					 // Ammo Supply:
-					if(ammo > 0 && ultra_get(mod_current, ultA)){
+					 // Ultra Ammo Supply:
+					if(ammo > 0 && ultra_get(mod_current, ultA) > 0){
 						with(_target){
 							call(scr.motion_step, self, 1);
 							repeat(2){
@@ -1593,54 +1709,49 @@
 			_beetleChest.wep = wep_none;
 		}
 		
-		 // Ammo Supply:
-		if(_beetleChest.has_ammo){
-			_beetleChest.has_ammo = false;
+		 // Ultra Blast:
+		if(_beetleChest.has_blast && ultra_get(mod_current, ultA) > 0){
+			_beetleChest.has_blast = false;
 			
-			 // Ultra:
-			if(ultra_get(mod_current, ultA)){
-				with(_target){
-					if(_beetleChestWep != wep_none){
-						var _beetleChestWepType = weapon_get_type(_beetleChestWep);
-						
-						 // Fire Shots:
-						for(var _fireRotation = 360 / 3; _fireRotation <= 360; _fireRotation += 360 / 3){
-							call(scr.player_fire_at,
-								{ "x": other.x, "y": other.y },
-								{ "rotation": _fireRotation },
-								undefined,
-								_beetleChestWep,
-								undefined,
-								self,
-								true
-							);
-							
-							 // Weapon Part Effects:
-							with(_chestOpen){
-								repeat(3){
-									with(call(scr.fx, x, y, [other.gunangle + _fireRotation, 3], "BoneFX")){
-										sprite_index = spr.BackpackDebris;
-										image_index  = random(image_number);
-										creator      = other;
-									}
-								}
-							}
+			 // Clear Walls:
+			instance_create(x, y, PortalClear);
+			
+			 // Fire Shots:
+			for(var _fireRotation = 360 / 3; _fireRotation <= 360; _fireRotation += 360 / 3){
+				call(scr.player_fire_at,
+					{ "x": x, "y": y },
+					{ "rotation": _fireRotation },
+					undefined,
+					_beetleChestWep,
+					undefined,
+					_target,
+					true
+				);
+				
+				 // Weapon Part Effects:
+				with(_chestOpen){
+					repeat(3){
+						with(call(scr.fx, x, y, [_target.gunangle + _fireRotation, 3], "BoneFX")){
+							sprite_index = spr.BackpackDebris;
+							image_index  = random(image_number);
+							creator      = other;
 						}
 					}
-					
-					 // Character Sound:
-					sound_play(snd_chst);
 				}
-				
-				 // Clear Walls:
-				instance_create(x, y, PortalClear);
-				
-				 // Sound:
-				snd_open = sndBigWeaponChest;
 			}
 			
-			 // Normal Sound:
-			else snd_open = sndWeaponChest;
+			 // Character Sound:
+			sound_play(_target.snd_chst);
+		}
+		
+		 // Ammo Supply Sound:
+		if(_beetleChest.has_ammo){
+			_beetleChest.has_ammo = false;
+			snd_open = (
+				(ultra_get(mod_current, ultA) > 0)
+				? sndBigWeaponChest
+				: sndWeaponChest
+			);
 		}
 	}
 	
@@ -1705,6 +1816,7 @@
 							wep   = wep_none;
 							curse = 0;
 							call(scr.player_swap, self);
+							clicked = false;
 						}
 						else sound_play_hit(sndCursedReminder, 0.05);
 					}
@@ -1732,9 +1844,9 @@
 		image_alpha  = other.image_alpha;
 		
 		 // Effects:
-		for(var _dir = 0; _dir < 360; _dir += (360 / 8)){
+		for(var _dir = 202.5; _dir < 360; _dir += 45){
 			with(call(scr.fx, x, y, [_dir, 3], Dust)){
-				depth = other.depth - (dsin(_dir) < 0);
+				depth = other.depth - 1;
 			}
 		}
 		call(scr.sound_play_at, x, y, sndMimicMelee, 1 + orandom(0.1), 2/3);
@@ -1750,8 +1862,9 @@
 			GameCont.player_beetle_chest_info = [];
 			repeat(maxp){
 				array_push(GameCont.player_beetle_chest_info, {
-					"wep"      : wep_none,
-					"has_ammo" : true
+					"wep"       : wep_none,
+					"has_ammo"  : true,
+					"has_blast" : true
 				});
 			}
 		}
@@ -1760,6 +1873,14 @@
 			with(call(scr.instance_nearest_array, x, y, instances_matching_le(instances_matching(WepPickup, "visible", true), "curse", 0))){
 				_beetleChest.wep      = wep;
 				_beetleChest.has_ammo = ammo;
+				
+				 // Effects:
+				for(var _dir = 22.5; _dir < 180; _dir += 45){
+					with(call(scr.fx, x, y, [_dir, 3], Dust)){
+						depth = 0;
+					}
+				}
+				
 				instance_destroy();
 			}
 		}

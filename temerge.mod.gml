@@ -572,15 +572,10 @@
 					case "GUN":
 					case "PISTOL":
 					case "LAUNCHER":
+					case "REVOLVER":
+					case "BLASTER":
 					
 						 // SMART MACHINEGUN > SMART MACHINEGUN GUN:
-						_mergeStockNameSuffixText = "";
-						
-						break;
-						
-					case "REVOLVER":
-					
-						 // ULTRA POP GUN > ULTRA POP GUN REVOLVER:
 						if(array_length(_mergeStockNamePrefixList)){
 							_mergeStockNameSuffixText = "";
 						}

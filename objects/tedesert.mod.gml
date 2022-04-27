@@ -2423,6 +2423,7 @@
 		typ        = 2;
 		minspeed   = 4;
 		hit_list   = [];
+		wallbounce = 0;
 		
 		return self;
 	}
@@ -2470,9 +2471,23 @@
 	}
 	
 #define VenomPellet_wall
+	 // Dust:
 	instance_create(x, y, Dust);
-	sound_play_hit(sndHitWall, 0.2);
-	instance_destroy()
+	
+	 // Bounce:
+	if(wallbounce > 0 && speed >= minspeed){
+		sound_play_hit(sndShotgunHitWall, 0.2);
+		move_bounce_solid(true);
+		image_angle = direction;
+		speed       = (speed * 0.8) + wallbounce;
+		wallbounce *= 0.95;
+	}
+	
+	 // Break:
+	else{
+		sound_play_hit(sndHitWall, 0.2);
+		instance_destroy()
+	}
 	
 #define VenomPellet_destroy
 	if(sprite_index != spr_fade){
