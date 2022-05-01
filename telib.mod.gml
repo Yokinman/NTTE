@@ -135,14 +135,14 @@
 	
 #macro lag_bind global.debug_lag_bind
 
-#macro obj_create_event_ref_map    global.obj_create_event_ref_map
-#macro obj_event_index_list_map    global.obj_event_index_list_map
-#macro obj_parent_map              global.obj_parent_map
-#macro obj_search_bind_map         global.obj_search_bind_map
-#macro event_obj_list_map          global.event_obj_list_map
+#macro obj_create_event_ref_map          global.obj_create_event_ref_map
+#macro obj_event_index_list_map          global.obj_event_index_list_map
+#macro obj_parent_map                    global.obj_parent_map
+#macro obj_search_bind_map               global.obj_search_bind_map
+#macro event_obj_list_map                global.event_obj_list_map
 #macro depth_obj_draw_event_instance_map global.depth_obj_draw_event_instance_map
-#macro object_event_index_list_map global.object_event_index_list_map
-#macro event_varname_list          global.event_varname_list
+#macro object_event_index_list_map       global.object_event_index_list_map
+#macro event_varname_list                global.event_varname_list
 
 #macro sprite_start_team              1
 #macro sprite_team_map                global.sprite_team_map
@@ -334,7 +334,8 @@
 							 // Bind Draw Event:
 							if(_eventName == "draw"){
 								other.depth = floor(other.depth);
-								if(!ds_map_exists(depth_obj_draw_event_instance_map, other.depth - 1)){
+								var _objDrawEventInstance = ds_map_find_value(depth_obj_draw_event_instance_map, other.depth - 1);
+								if(is_undefined(_objDrawEventInstance) || !instance_exists(_objDrawEventInstance)){
 									with(script_bind_draw(obj_draw, other.depth - 1)){
 										depth_obj_draw_event_instance_map[? depth] = self;
 										persistent = true;
@@ -602,10 +603,13 @@
 								if(depth == _objDepth){
 									array_push(_objDepthList, self);
 								}
-								else if(!ds_map_exists(depth_obj_draw_event_instance_map, depth - 1)){
-									with(script_bind_draw(obj_draw, depth - 1)){
-										depth_obj_draw_event_instance_map[? depth] = self;
-										persistent = true;
+								else{
+									var _objDrawEventInstance = ds_map_find_value(depth_obj_draw_event_instance_map, depth - 1);
+									if(is_undefined(_objDrawEventInstance) || !instance_exists(_objDrawEventInstance)){
+										with(script_bind_draw(obj_draw, depth - 1)){
+											depth_obj_draw_event_instance_map[? depth] = self;
+											persistent = true;
+										}
 									}
 								}
 							}
@@ -1189,12 +1193,14 @@
 	if(projectile_tag_data_is_setup && array_length(projectile_tag_list)){
 		var	_tagData    = projectile_tag_data,
 			_tagFrame   = projectile_tag_frame,
-			_tagKeyList = _tagData.key_list,
-			_tagList    = _tagData.list,
 			_tagInstMap = ds_map_create();
 			
 		 // Collect Tagged Instances:
+		var	_tagKeyList = _tagData.key_list,
+			_tagList    = _tagData.list;
+			
 		array_sort(_inst, true);
+		
 		with(_inst){
 			var	_rawTeam  = round(team),
 				_tagKey   = `${floor(1 / (team - _rawTeam))}:${creator}:${_rawTeam}`,
@@ -1227,12 +1233,14 @@
 				if(_tag.end_frame != _tagEndFrame){
 					_tag.end_frame = _tagEndFrame;
 					
-					var	_tagIndex = array_find_index(_tagData.list, _tag),
-						_tagKey   = _tagKeyList[_tagIndex];
+					var	_tagKeyList = _tagData.key_list,
+						_tagList    = _tagData.list,
+						_tagIndex   = array_find_index(_tagList, _tag),
+						_tagKey     = _tagKeyList[_tagIndex];
 						
 					 // Remove Tag From Lists:
-					_tagKeyList       = array_delete(_tagData.key_list, _tagIndex);
-					_tagList          = array_delete(_tagData.list,     _tagIndex);
+					_tagKeyList       = array_delete(_tagKeyList, _tagIndex);
+					_tagList          = array_delete(_tagList,    _tagIndex);
 					_tagData.key_list = _tagKeyList;
 					_tagData.list     = _tagList;
 					

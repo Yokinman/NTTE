@@ -69,9 +69,9 @@
 #define orandom(_num)                                                                   return  random_range(-_num, _num);
 #define chance(_numer, _denom)                                                          return  random(_denom) < _numer;
 #define chance_ct(_numer, _denom)                                                       return  random(_denom) < _numer * current_time_scale;
-#define pround(_num, _precision)                                                        return  (_precision == 0) ? _num : round(_num / _precision) * _precision;
-#define pfloor(_num, _precision)                                                        return  (_precision == 0) ? _num : floor(_num / _precision) * _precision;
-#define pceil(_num, _precision)                                                         return  (_precision == 0) ? _num :  ceil(_num / _precision) * _precision;
+#define pround(_num, _precision)                                                        return  (_precision == 0) ? _num : (round(_num / _precision) * _precision);
+#define pfloor(_num, _precision)                                                        return  (_precision == 0) ? _num : (floor(_num / _precision) * _precision);
+#define pceil(_num, _precision)                                                         return  (_precision == 0) ? _num : ( ceil(_num / _precision) * _precision);
 #define frame_active(_interval)                                                         return  ((current_frame + epsilon) % _interval) < current_time_scale;
 #define lerp_ct(_val1, _val2, _amount)                                                  return  lerp(_val2, _val1, power(1 - _amount, current_time_scale));
 #define angle_lerp(_ang1, _ang2, _num)                                                  return  _ang1 + (angle_difference(_ang2, _ang1) * _num);

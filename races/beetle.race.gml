@@ -170,7 +170,7 @@
 #define race_ultra_text(_ultra)
 	switch(_ultra){
 		case ultA : return "THE @yBEETLE CHEST @sOPENS WITH A @wBLAST#@sAND @wAPPEARS @sWHEN NEEDED";
-		case ultB : return "NEXT @wMERGED WEAPON @sHAS#HALF @yAMMO COST @sAND @wRELOAD";
+		case ultB : return "@wMERGED WEAPONS @sHAVE#@rTRIGGER@s-HAPPY STOCKS"; //"NEXT @wMERGED WEAPON @sHAS#HALF @yAMMO COST @sAND @wRELOAD";
 	}
 	return "";
 	
@@ -201,9 +201,9 @@
 			break;
 			
 		case ultB:
-			with(instances_matching(Player, "race", mod_current)){
-				beetle_menu_info.merging_upgrade_count++;
-			}
+			// with(instances_matching(Player, "race", mod_current)){
+			// 	beetle_menu_info.merging_upgrade_count++;
+			// }
 			break;
 	}
 	
@@ -260,7 +260,7 @@
 			"selection_icon_scale"       : 0,
 			"merging_wep_info"           : beetle_menu_merging_wep_default_info,
 			"merging_scale"              : 0,
-			"merging_upgrade_count"      : 0,
+		//	"merging_upgrade_count"      : 0,
 			"merging_part_num"           : 0
 		};
 	}
@@ -270,7 +270,8 @@
 			"wep_count"    : 0,
 			"wep"          : wep_none,
 			"bwep"         : wep_none,
-			"muscle_value" : 0
+			"race"         : mod_current,
+			"muscle_value" : skill_get(mut_back_muscle)
 		};
 	}
 	
@@ -689,14 +690,14 @@
 						}
 						beetle_tb_info.wep = wep_none;
 						
-						 // Ultra B:
-						if(_menu.merging_upgrade_count > 0){
-							_menu.merging_upgrade_count--;
-							wep = call(scr.wep_wrap, wep, "weapon_cost", script_ref_create(beetle_weapon_upgrade_cost));
-							wep = call(scr.wep_wrap, wep, "weapon_load", script_ref_create(beetle_weapon_upgrade_load));
-							wep = call(scr.wep_wrap, wep, "weapon_name", script_ref_create(beetle_weapon_upgrade_name));
-							wep = call(scr.wep_wrap, wep, "step",        script_ref_create(beetle_weapon_upgrade_step));
-						}
+						//  // Ultra B:
+						// if(_menu.merging_upgrade_count > 0){
+						// 	_menu.merging_upgrade_count--;
+						// 	wep = call(scr.wep_wrap, wep, "weapon_cost", script_ref_create(beetle_weapon_upgrade_cost));
+						// 	wep = call(scr.wep_wrap, wep, "weapon_load", script_ref_create(beetle_weapon_upgrade_load));
+						// 	wep = call(scr.wep_wrap, wep, "weapon_name", script_ref_create(beetle_weapon_upgrade_name));
+						// 	wep = call(scr.wep_wrap, wep, "step",        script_ref_create(beetle_weapon_upgrade_step));
+						// }
 						
 						 // B-Skin Unlock:
 						if(array_length(_menuMergingWepPartList) >= 6){
@@ -973,7 +974,7 @@
 	*/
 	
 	if(!instance_exists(GenCont) && !instance_exists(LevCont)){
-		var _beetleInst = instances_matching(instances_matching(Player, "race", mod_current), "visible", true);
+		var _beetleInst = instances_matching(instances_matching_ne(Player, "beetle_tb_info", null), "visible", true);
 		
 		if(array_length(_beetleInst)){
 			with(_beetleInst){
@@ -983,25 +984,39 @@
 					_canMakeAmmoText = false;
 					
 				 // Check for Updated Values:
-				if(_beetleTB.value != skill_get(mut_throne_butt)){
-					_beetleTB.value  = skill_get(mut_throne_butt);
-					_canUpdateTB     = true;
-					_canMakeAmmoText = true;
+				if(race == mod_current){
+					if(_beetleTB.value != skill_get(mut_throne_butt)){
+						_beetleTB.value  = skill_get(mut_throne_butt);
+						_canUpdateTB     = true;
+						_canMakeAmmoText = true;
+					}
+					if(_beetleTB.wep != wep || _beetleTB.bwep != bwep){
+						_beetleTB.wep  = wep;
+						_beetleTB.bwep = bwep;
+						_canUpdateTB   = true;
+					}
 				}
-				if(_beetleTB.wep != wep || _beetleTB.bwep != bwep){
-					_beetleTB.wep  = wep;
-					_beetleTB.bwep = bwep;
-					_canUpdateTB   = true;
+				
+				 // Fix Character-Changing Resetting Pickup Ammo:
+				if(_beetleTB.race != race){
+					_beetleTB.race = race;
+					if(_beetleTB.wep_count > 0){
+						repeat(ceil(_beetleTB.wep_count)){
+							for(var _ammoIndex = array_length(ammo) - 1; _ammoIndex >= 1; _ammoIndex--){
+								var _typAmmoAdd = typ_ammo[_ammoIndex] * _TBAmmoAddMult;
+								typ_ammo[_ammoIndex] += ceil(abs(_typAmmoAdd)) * sign(_typAmmoAdd);
+							}
+						}
+					}
 				}
+				
+				 // Fix Back Muscle Overriding Max Ammo:
 				if(_beetleTB.muscle_value != skill_get(mut_back_muscle)){
 					_beetleTB.muscle_value = skill_get(mut_back_muscle);
-					_canUpdateTB           = true;
-					
-					 // Fix Max Ammo Override:
 					if(_beetleTB.wep_count > 0){
-						repeat(_beetleTB.wep_count){
+						repeat(ceil(_beetleTB.wep_count)){
 							for(var _ammoIndex = array_length(ammo) - 1; _ammoIndex >= 1; _ammoIndex--){
-								var _maxAmmoAdd = typ_amax[_ammoIndex] * _ammoAddMult;
+								var _maxAmmoAdd = typ_amax[_ammoIndex] * _TBAmmoAddMult;
 								typ_amax[_ammoIndex] += ceil(abs(_maxAmmoAdd)) * sign(_maxAmmoAdd);
 							}
 						}
@@ -1037,11 +1052,15 @@
 							? _TBAmmoAddMult
 							: ((1 / (1 + _TBAmmoAddMult)) - 1)
 						);
-						repeat(round(abs(_lastWepCount - _beetleTB.wep_count))){
+						repeat(ceil(abs(_beetleTB.wep_count - _lastWepCount))){
 							for(var _ammoIndex = array_length(ammo) - 1; _ammoIndex >= 1; _ammoIndex--){
-								var _ammoAdd    = ammo[_ammoIndex]     * _ammoAddMult; ammo[_ammoIndex]     += ceil(abs(_ammoAdd))    * sign(_ammoAdd);
-								var _maxAmmoAdd = typ_amax[_ammoIndex] * _ammoAddMult; typ_amax[_ammoIndex] += ceil(abs(_maxAmmoAdd)) * sign(_maxAmmoAdd);
-								var _typAmmoAdd = typ_ammo[_ammoIndex] * _ammoAddMult; typ_ammo[_ammoIndex] += ceil(abs(_typAmmoAdd)) * sign(_typAmmoAdd);
+								var	_ammoAdd    = ammo[_ammoIndex]     * _ammoAddMult,
+									_maxAmmoAdd = typ_amax[_ammoIndex] * _ammoAddMult,
+									_typAmmoAdd = typ_ammo[_ammoIndex] * _ammoAddMult;
+									
+								ammo[_ammoIndex]     += ceil(abs(_ammoAdd))    * sign(_ammoAdd);
+								typ_amax[_ammoIndex] += ceil(abs(_maxAmmoAdd)) * sign(_maxAmmoAdd);
+								typ_ammo[_ammoIndex] += ceil(abs(_typAmmoAdd)) * sign(_typAmmoAdd);
 							}
 						}
 						_canMakeAmmoText = true;
@@ -1516,33 +1535,33 @@
 							draw_text_nt(
 								_menuMergingWepCostTextX,
 								_menuMergingWepCostTextY,
-								`@1(${spr.WhiteAmmoTypeIcon}:${_menuMergingWep.type}) ${(_menu.merging_upgrade_count > 0) ? "@d" : ((_menuMergingWepCost > typ_amax[_menuMergingWep.type]) ? "@r" : "")}${_menuMergingWepCostText}`
+								`@1(${spr.WhiteAmmoTypeIcon}:${_menuMergingWep.type}) ${/*(_menu.merging_upgrade_count > 0) ? "@d" : */((_menuMergingWepCost > typ_amax[_menuMergingWep.type]) ? "@r" : "")}${_menuMergingWepCostText}`
 							);
 							
-							if(_menu.merging_upgrade_count > 0){
-								var	_menuMergingWepCostTextW = -(string_width(_menuMergingWepCostText) + 1),
-									_menuMergingWepCostTextH = string_height(_menuMergingWepCostText);
-									
-								 // Cross Out Text:
-								draw_set_color(c_black);
-								draw_line_width(_menuMergingWepCostTextX,     _menuMergingWepCostTextY - 1, _menuMergingWepCostTextX + _menuMergingWepCostTextW,     _menuMergingWepCostTextY - 1, 1);
-								draw_line_width(_menuMergingWepCostTextX - 1, _menuMergingWepCostTextY,     _menuMergingWepCostTextX + _menuMergingWepCostTextW - 1, _menuMergingWepCostTextY,     1);
-								draw_line_width(_menuMergingWepCostTextX,     _menuMergingWepCostTextY,     _menuMergingWepCostTextX + _menuMergingWepCostTextW,     _menuMergingWepCostTextY,     1);
-								draw_set_color(make_color_rgb(252, 56, 0));
-								draw_line_width(_menuMergingWepCostTextX - 1, _menuMergingWepCostTextY - 1, _menuMergingWepCostTextX + _menuMergingWepCostTextW - 1, _menuMergingWepCostTextY - 1, 1);
-								
-								 // Draw Halved Text:
-								_menuMergingWepCost     = _menuMergingWep.cost - ceil(_menuMergingWep.cost * 0.5);
-								_menuMergingWepCostText = string(_menuMergingWepCost);
-								if(string_char_at(_menuMergingWepCostText, 1) == "0"){
-									_menuMergingWepCostText = string_delete(_menuMergingWepCostText, 1, 1);
-								}
-								draw_text_nt(
-									_menuMergingWepCostTextX,
-									_menuMergingWepCostTextY + _menuMergingWepCostTextH + 1,
-									((_menuMergingWepCost > typ_amax[_menuMergingWep.type]) ? "@r" : "") + _menuMergingWepCostText
-								);
-							}
+							// if(_menu.merging_upgrade_count > 0){
+							// 	var	_menuMergingWepCostTextW = -(string_width(_menuMergingWepCostText) + 1),
+							// 		_menuMergingWepCostTextH = string_height(_menuMergingWepCostText);
+							//		
+							// 	 // Cross Out Text:
+							// 	draw_set_color(c_black);
+							// 	draw_line_width(_menuMergingWepCostTextX,     _menuMergingWepCostTextY - 1, _menuMergingWepCostTextX + _menuMergingWepCostTextW,     _menuMergingWepCostTextY - 1, 1);
+							// 	draw_line_width(_menuMergingWepCostTextX - 1, _menuMergingWepCostTextY,     _menuMergingWepCostTextX + _menuMergingWepCostTextW - 1, _menuMergingWepCostTextY,     1);
+							// 	draw_line_width(_menuMergingWepCostTextX,     _menuMergingWepCostTextY,     _menuMergingWepCostTextX + _menuMergingWepCostTextW,     _menuMergingWepCostTextY,     1);
+							// 	draw_set_color(make_color_rgb(252, 56, 0));
+							// 	draw_line_width(_menuMergingWepCostTextX - 1, _menuMergingWepCostTextY - 1, _menuMergingWepCostTextX + _menuMergingWepCostTextW - 1, _menuMergingWepCostTextY - 1, 1);
+							//	
+							// 	 // Draw Halved Text:
+							// 	_menuMergingWepCost     = _menuMergingWep.cost - ceil(_menuMergingWep.cost * 0.5);
+							// 	_menuMergingWepCostText = string(_menuMergingWepCost);
+							// 	if(string_char_at(_menuMergingWepCostText, 1) == "0"){
+							// 		_menuMergingWepCostText = string_delete(_menuMergingWepCostText, 1, 1);
+							// 	}
+							// 	draw_text_nt(
+							// 		_menuMergingWepCostTextX,
+							// 		_menuMergingWepCostTextY + _menuMergingWepCostTextH + 1,
+							// 		((_menuMergingWepCost > typ_amax[_menuMergingWep.type]) ? "@r" : "") + _menuMergingWepCostText
+							// 	);
+							// }
 						}
 						if(_menuMergingWepLoad > 0){
 							draw_set_halign(fa_left);
@@ -1571,41 +1590,41 @@
 							draw_text_nt(
 								_menuMergingWepLoadTextX,
 								_menuMergingWepLoadTextY,
-								`${(_menu.merging_upgrade_count > 0) ? "@d" : ""}${_menuMergingWepLoadText} @1(${spr.WhiteReloadIcon})`
+								`${/*(_menu.merging_upgrade_count > 0) ? "@d" : */""}${_menuMergingWepLoadText} @1(${spr.WhiteReloadIcon})`
 							);
 							
-							if(_menu.merging_upgrade_count > 0){
-								var	_menuMergingWepLoadTextW = string_width(_menuMergingWepLoadText),
-									_menuMergingWepLoadTextH = string_height(_menuMergingWepLoadText);
-									
-								 // Cross Out Text:
-								draw_set_color(c_black);
-								draw_line_width(_menuMergingWepLoadTextX - 1, _menuMergingWepLoadTextY - 1, _menuMergingWepLoadTextX + _menuMergingWepLoadTextW,     _menuMergingWepLoadTextY - 1, 1);
-								draw_line_width(_menuMergingWepLoadTextX - 2, _menuMergingWepLoadTextY,     _menuMergingWepLoadTextX + _menuMergingWepLoadTextW - 1, _menuMergingWepLoadTextY,     1);
-								draw_line_width(_menuMergingWepLoadTextX - 1, _menuMergingWepLoadTextY,     _menuMergingWepLoadTextX + _menuMergingWepLoadTextW,     _menuMergingWepLoadTextY,     1);
-								draw_set_color(make_color_rgb(252, 56, 0));
-								draw_line_width(_menuMergingWepLoadTextX - 2, _menuMergingWepLoadTextY - 1, _menuMergingWepLoadTextX + _menuMergingWepLoadTextW - 1, _menuMergingWepLoadTextY - 1, 1);
-								
-								 // Draw Halved Text:
-								_menuMergingWepLoad     = pround((_menuMergingWep.load * 0.5) / 30, 0.01);
-								_menuMergingWepLoadText = string_format(
-									_menuMergingWepLoad,
-									0,
-									(
-										(_menuMergingWepLoad > 0 && _menuMergingWepLoad < 0.1)
-										? 2
-										: ((frac(pround(_menuMergingWepLoad, 0.1)) == 0) ? 0 : 1)
-									)
-								);
-								if(string_char_at(_menuMergingWepLoadText, 1) == "0"){
-									_menuMergingWepLoadText = string_delete(_menuMergingWepLoadText, 1, 1);
-								}
-								draw_text_nt(
-									_menuMergingWepLoadTextX,
-									_menuMergingWepLoadTextY + _menuMergingWepLoadTextH + 1,
-									_menuMergingWepLoadText
-								);
-							}
+							// if(_menu.merging_upgrade_count > 0){
+							// 	var	_menuMergingWepLoadTextW = string_width(_menuMergingWepLoadText),
+							// 		_menuMergingWepLoadTextH = string_height(_menuMergingWepLoadText);
+							//		
+							// 	 // Cross Out Text:
+							// 	draw_set_color(c_black);
+							// 	draw_line_width(_menuMergingWepLoadTextX - 1, _menuMergingWepLoadTextY - 1, _menuMergingWepLoadTextX + _menuMergingWepLoadTextW,     _menuMergingWepLoadTextY - 1, 1);
+							// 	draw_line_width(_menuMergingWepLoadTextX - 2, _menuMergingWepLoadTextY,     _menuMergingWepLoadTextX + _menuMergingWepLoadTextW - 1, _menuMergingWepLoadTextY,     1);
+							// 	draw_line_width(_menuMergingWepLoadTextX - 1, _menuMergingWepLoadTextY,     _menuMergingWepLoadTextX + _menuMergingWepLoadTextW,     _menuMergingWepLoadTextY,     1);
+							// 	draw_set_color(make_color_rgb(252, 56, 0));
+							// 	draw_line_width(_menuMergingWepLoadTextX - 2, _menuMergingWepLoadTextY - 1, _menuMergingWepLoadTextX + _menuMergingWepLoadTextW - 1, _menuMergingWepLoadTextY - 1, 1);
+							//	
+							// 	 // Draw Halved Text:
+							// 	_menuMergingWepLoad     = pround((_menuMergingWep.load * 0.5) / 30, 0.01);
+							// 	_menuMergingWepLoadText = string_format(
+							// 		_menuMergingWepLoad,
+							// 		0,
+							// 		(
+							// 			(_menuMergingWepLoad > 0 && _menuMergingWepLoad < 0.1)
+							// 			? 2
+							// 			: ((frac(pround(_menuMergingWepLoad, 0.1)) == 0) ? 0 : 1)
+							// 		)
+							// 	);
+							// 	if(string_char_at(_menuMergingWepLoadText, 1) == "0"){
+							// 		_menuMergingWepLoadText = string_delete(_menuMergingWepLoadText, 1, 1);
+							// 	}
+							// 	draw_text_nt(
+							// 		_menuMergingWepLoadTextX,
+							// 		_menuMergingWepLoadTextY + _menuMergingWepLoadTextH + 1,
+							// 		_menuMergingWepLoadText
+							// 	);
+							// }
 						}
 					}
 				}
@@ -1722,7 +1741,7 @@
 					{ "x": x, "y": y },
 					{ "rotation": _fireRotation },
 					undefined,
-					_beetleChestWep,
+					call(scr.data_clone, _beetleChestWep, infinity),
 					undefined,
 					_target,
 					true

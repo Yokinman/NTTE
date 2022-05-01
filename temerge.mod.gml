@@ -1141,8 +1141,8 @@
 	if(
 		_wepXhas_merge
 		&& (
-			(_wepXmerge_fire_frame < current_frame)
-			? (_mergeStockRed == 0 || (((current_frame - _wepXmerge_fire_frame) % 60) < 30 && !_wepXmerge_is_part))
+			(current_frame > _wepXmerge_fire_frame)
+			? (((current_frame - _wepXmerge_fire_frame) % 60) < 30 && !_wepXmerge_is_part)
 			: (_wepXmerge_wep_fire_frame >= _wepXmerge_fire_frame)
 		)
 	){
@@ -1971,17 +1971,66 @@
 						
 						 // Delete Projectile:
 						if(instance_exists(self) && ("temerge_can_delete" not in self || temerge_can_delete)){
-							switch(object_index){
-								case LightningBall:
-								case FlameBall:
-								case BloodBall:
-									var _snd = variable_instance_get(self, "snd");
-									if(instance_number(object_index) <= 1 || _snd != asset_get_index(audio_get_name(_snd))){
-										sound_stop(_snd);
-									}
-									break;
+							var _canUltra = false;
+							
+							 // Beetle Ultra B:
+							if(ultra_get("beetle", 2)){
+								_wepXmerge_is_active = false;
+								
+								var	_wepCost = weapon_get_cost(_wep),
+									_wepType = weapon_get_type(_wep);
+									
+								if(chance(
+									((_lastMergeFire.ammo_cost == 0) ? 1 : _lastMergeFire.ammo_cost) * ((_lastMergeFire.ammo_type == type_bullet) ? (1/3) : 1),
+									((_wepCost == 0) ? 1 : _wepCost) * ((_wepType == type_bullet) ? (1/3) : 1)
+								)){
+									_canUltra = true;
+								}
+								
+								_wepXmerge_is_active = true;
 							}
-							instance_delete(self);
+							if(_canUltra){
+								 // Disable Merged Projectile Effects:
+								team              = round(team);
+								temerge_can_setup = false;
+								
+								 // Offset Direction:
+								var _directionOffset = choose(-90, 90);
+								if(object_index == Laser || object_index == EnemyLaser){
+									x            = xstart;
+									y            = ystart;
+									image_xscale = 1;
+									image_angle += _directionOffset;
+									direction   += _directionOffset;
+									with(self){
+										event_perform(ev_alarm, 0);
+									}
+								}
+								else if(speed != 0){
+									if(direction == image_angle){
+										image_angle += _directionOffset;
+									}
+									direction += _directionOffset;
+								}
+								with(instance_create(x, y, Dust)){
+									motion_add(other.direction, 3);
+								}
+							}
+							
+							 // Really Delete Projectile:
+							else{
+								switch(object_index){
+									case LightningBall:
+									case FlameBall:
+									case BloodBall:
+										var _snd = variable_instance_get(self, "snd");
+										if(instance_number(object_index) <= 1 || _snd != asset_get_index(audio_get_name(_snd))){
+											sound_stop(_snd);
+										}
+										break;
+								}
+								instance_delete(self);
+							}
 						}
 					}
 				}
@@ -2022,7 +2071,7 @@
 				if("temerge_vars_list" not in self){
 					temerge_vars_list = [];
 				}
-				if(array_find_index(temerge_vars_list, _lastMerge) < 0){
+				if(array_find_index(temerge_vars_list, _lastMerge) < 0 && ("temerge_can_setup" not in self || temerge_can_setup)){
 					array_push(temerge_vars_list, _lastMerge);
 				}
 				else _instanceList = instances_matching_ne(_instanceList, "id", id);
@@ -2636,8 +2685,10 @@
 	
 	with(instances_matching(_instanceList, "temerge_trail_color", null)){
 		temerge_trail_color     = c_white;
+		temerge_trail_delay     = 2;
 		temerge_trail_is_sprite = !(
 			   instance_is(self, Grenade)
+			|| instance_is(self, HyperGrenade)
 			|| instance_is(self, Rocket)
 			|| instance_is(self, Nuke)
 			|| instance_is(self, Bolt)
@@ -2683,7 +2734,10 @@
 		var _areaIsUnderwater = call(scr.area_get_underwater, GameCont.area);
 		
 		with(_trailInstanceList){
-			if(image_index != 0 || image_speed == 0 || image_number == 1){
+			if(temerge_trail_delay > 0){
+				temerge_trail_delay -= current_time_scale;
+			}
+			else{
 				with(instance_create(xprevious, yprevious, BoltTrail)){
 					image_xscale = point_distance(x, y, other.x, other.y);
 					image_angle  = point_direction(x, y, other.x, other.y);

@@ -66,6 +66,11 @@
 	global.pet_max      = variable_instance_get(GameCont, "ntte_pet_max", 1);
 	global.pet_max_last = global.pet_max;
 	
+	 // HUD:
+	global.hud_skill_update_frame = 0;
+	global.hud_last_endpoints     = 0;
+	global.hud_ultra_count        = 0;
+	
 	 // Wait Until Mod Fully Loaded:
 	ntte_active = false;
 	if(fork()){
@@ -4229,17 +4234,24 @@
 					
 					 // Mutation Drawing:
 					if(array_length(_skillList)){
-						var	_sx   = _gw - 11,
-							_sy   = 12,
-							_addx = -16,
-							_addy = 16,
-							_minx = 110 - (17 * (_players > 1));
+						var	_sx        = _gw - 11,
+							_sy        = 12,
+							_addx      = -16,
+							_addy      = 16,
+							_minx      = 110 - (17 * (_players > 1)),
+							_canUpdate = false;
 							
+						 // Update Mutation Info:
+						if(current_frame >= global.hud_skill_update_frame){
+							_canUpdate = true;
+							global.hud_skill_update_frame = current_frame + 30;
+						}
+						
 						 // Patience Fix:
-						var _m = array_length(_skillList);
-						for(var i = 0; i < _m; i++){
-							if(_skillList[i] == mut_patience && skill_get(GameCont.hud_patience) != 0){
-								array_push(_skillType, _skillType[i]);
+						var _skillCount = array_length(_skillList);
+						for(var _skillIndex = 0; _skillIndex < _skillCount; _skillIndex++){
+							if(_skillList[_skillIndex] == mut_patience && skill_get(GameCont.hud_patience) != 0){
+								array_push(_skillType, _skillType[_skillIndex]);
 								array_push(_skillList, GameCont.hud_patience);
 							}
 						}
@@ -4264,16 +4276,31 @@
 							_y = _sy;
 							
 						 // Ultras Offset:
-						var _raceMods = mod_get_names("race");
-						for(var i = 0; i < 17 + array_length(_raceMods); i++){
-							var _race = ((i < 17) ? i : _raceMods[i - 17]);
-							for(var j = 1; j <= ultra_count(_race); j++){
-								if(ultra_get(_race, j) != 0){
-									_x += _addx;
-									if(_x < _minx){
-										_x = _sx;
-										_y += _addy;
+						if(_canUpdate || global.hud_last_endpoints != GameCont.endpoints){
+							global.hud_last_endpoints = GameCont.endpoints;
+							global.hud_ultra_count    = 0;
+							
+							var _raceMods = mod_get_names("race");
+							
+							for(var _raceIndex = 17 + array_length(_raceMods) - 1; _raceIndex >= 0; _raceIndex--){
+								var _race = (
+									(_raceIndex < 17)
+									? _raceIndex
+									: _raceMods[_raceIndex - 17]
+								);
+								for(var _raceUltraIndex = ultra_count(_race); _raceUltraIndex >= 1; _raceUltraIndex--){
+									if(ultra_get(_race, _raceUltraIndex) != 0){
+										global.hud_ultra_count++;
 									}
+								}
+							}
+						}
+						if(global.hud_ultra_count > 0){
+							repeat(global.hud_ultra_count){
+								_x += _addx;
+								if(_x < _minx){
+									_x = _sx;
+									_y += _addy;
 								}
 							}
 						}
@@ -4284,7 +4311,7 @@
 							if(_skill == undefined){
 								break;
 							}
-							if(_skill != mut_patience || real(string(GameCont.hud_patience)) == mut_none){ // yes the game does real(string())
+							if(_skill != mut_patience || real(string(GameCont.hud_patience)) == mut_none){ // yes as far as i can tell the game does real(string())
 								var _skillIndex = array_find_index(_skillList, _skill);
 								if(_skillIndex >= 0){
 									while(_skillIndex >= 0){

@@ -2066,6 +2066,7 @@
 							wep   = wep_none;
 							curse = 0;
 							call(scr.player_swap, self);
+							clicked = false;
 							
 							break;
 						}
