@@ -475,7 +475,9 @@
 			
 			var _add = irandom_range(2, 6) * num;
 			
-			object        = Freak;
+			if(object == -1){
+				object = Freak;
+			}
 			num          *= (1 + GameCont.loops) * 2;
 			image_xscale *= 1 + ceil(num / 8);
 			num          += _add;
@@ -484,7 +486,9 @@
 			
 		case "Explo":
 			
-			object        = ExploFreak;
+			if(object == -1){
+				object = ExploFreak;
+			}
 			num          *= 1 + ceil(GameCont.loops / 2);
 			image_xscale *= 1 + ceil((num - 4) / 12);
 			image_yscale *= 1 + ceil((num - 4) / 12);
@@ -493,7 +497,9 @@
 			
 		case "Rhino":
 			
-			object        = RhinoFreak;
+			if(object == -1){
+				object = RhinoFreak;
+			}
 			num          *= 1 + ceil(GameCont.loops / 2);
 			image_xscale *= 1 + floor(num * 2/3);
 			
@@ -501,7 +507,9 @@
 			
 		case "Vat":
 			
-			object        = Necromancer;
+			if(object == -1){
+				object = Necromancer;
+			}
 			image_xscale *= 3;
 			image_yscale *= 3;
 			hallway_size *= irandom_range(1, 3);
@@ -510,17 +518,19 @@
 			
 		case "Popo":
 			
-			object        = choose(Grunt, Grunt, Shielder, Inspector);
-			num           = ((object == Grunt) ? irandom_range(2, 3) : 1) + GameCont.loops;
+			if(object == -1){
+				object = choose(Grunt, Grunt, Shielder, Inspector);
+				num    = ((object == Grunt) ? irandom_range(2, 3) : 1) + GameCont.loops;
+				
+				 // Freak:
+				if(GameCont.loops > 2){
+					object = PopoFreak;
+				}
+			}
 			image_xscale *= 2;
 			image_yscale *= 2;
 			hallway_size *= 0.5;
 			styleb        = false;
-			
-			 // Freak:
-			if(GameCont.loops > 2){
-				object = PopoFreak;
-			}
 			
 			 // Sliding Door:
 			slide_path = [
@@ -551,7 +561,9 @@
 	else if(alarm0 < 0){
 		var _target = instance_nearest(x, y, Player);
 		if(open || (instance_exists(_target) && point_distance(x, y, _target.x, _target.y) < 96 && !collision_line(x, y, _target.x, _target.y, Wall, false, false))){
-			alarm0 = 60;
+			if(!instance_exists(LastFire)){
+				alarm0 = 60;
+			}
 		}
 	}
 	
@@ -586,9 +598,13 @@
 					if(!collision_rectangle(_fx, _fy, _fx + _fw - 1, _fy + _fh - 1, Wall, false, false)){
 						if(other.open || !collision_line(_cx, _cy, _target.x, _target.y, Wall, false, false)){
 							array_push(_spawnFloor, [
-								random(32) + max(
-									64 * (1 + instance_is(self, FloorExplo)),
-									point_distance(_cx, _cy, _target.x, _target.y)
+								(
+									(other.type == "Popo")
+									? point_distance(_cx, _cy, other.x, other.y)
+									: (random(32) + max(
+										64 * (1 + instance_is(self, FloorExplo)),
+										point_distance(_cx, _cy, _target.x, _target.y)
+									))
 								),
 								{
 									x : _cx,
@@ -772,7 +788,15 @@
 												case Inspector : if(chance(1, 3)) _obj = EliteInspector; break;
 											}
 											
-											with(call(scr.obj_create, bbox_center_x + orandom(4), bbox_center_y + orandom(4), _obj)){
+											if(_obj == Player){
+												with(Player){
+													x         = _x;
+													y         = _y;
+													xprevious = x;
+													yprevious = y;
+												}
+											}
+											else with(call(scr.obj_create, bbox_center_x + orandom(4), bbox_center_y + orandom(4), _obj)){
 												if(instance_is(self, enemy)){
 													walk = true;
 													direction = random(360);
@@ -787,6 +811,18 @@
 														roll = false;
 													}
 												}
+												
+												 // Center:
+												else if(instance_is(self, chestprop)){
+													x         = _x;
+													y         = _y;
+													xprevious = x;
+													yprevious = y;
+													xstart    = x;
+													ystart    = y;
+												}
+												
+												 // No Wall Clearing:
 												with(instances_matching_gt(PortalClear, "id", id)){
 													instance_destroy();
 												}

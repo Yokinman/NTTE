@@ -5560,7 +5560,7 @@
 			}
 			
 			 // Determination:
-			if(instance_exists(other.creator) && ultra_get(char_chicken, 2) && variable_instance_get(other.creator, "race") == "chicken"){
+			if(ultra_get("chicken", 2) && instance_is(other.creator, Player) && other.creator.race == "chicken"){
 				creator = other.creator;
 				alarm0 = 30;
 			}

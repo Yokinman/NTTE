@@ -342,17 +342,22 @@
 	
 #define BanditTent_step
 	 // Holding Chest:
-	with(target){
-		x         = other.x;
-		y         = other.y + 4;
-		xprevious = x;
-		yprevious = y;
-		
-		 // Disable Hitbox:
-		if(mask_index != mskNone){
-			other.target_mask = mask_index;
-			mask_index        = mskNone;
+	if(instance_exists(target)){
+		with(target){
+			x         = other.x;
+			y         = other.y + 4;
+			xprevious = x;
+			yprevious = y;
+			
+			 // Disable Hitbox:
+			// if(mask_index != mskNone){
+			// 	other.target_mask = mask_index;
+			// 	mask_index        = mskNone;
+			// }
 		}
+	}
+	else if(target != noone){
+		my_health = 0;
 	}
 	
 	 // Propped Up:
@@ -364,11 +369,11 @@
 	
 #define BanditTent_death
 	 // Release Chest:
-	if(target_mask != mskNone){
-		with(target){
-			mask_index = other.target_mask;
-		}
-	}
+	// if(target_mask != mskNone){
+	// 	with(target){
+	// 		mask_index = other.target_mask;
+	// 	}
+	// }
 	
 	 // FX:
 	var _ang = random(360);
@@ -724,23 +729,30 @@
 	
 	 // Damage:
 	else{
-		projectile_hit(other, damage, speed * force);
-		
-		if(instance_exists(self)){
-			 // Sound:
-			call(scr.sound_play_at, x, y, sndBloodGamble, 1.2 + random(0.2), 3);
-			
-			 // Break:
-			var _disSkull = infinity;
-			with(instances_matching_ne(obj.CoastBossBecome, "id")){
-				var _dis = point_distance(x, y, other.x, other.y);
-				if(_dis < _disSkull){
-					_disSkull = _dis;
-				}
+		if("race" in creator && creator.race == "chicken" && skill_get(mut_throne_butt) > 0){
+			if(projectile_canhit_melee(other)){
+				projectile_hit(other, damage, speed * force);
 			}
-			if(_disSkull > 32){
-				broken = true;
-				instance_destroy();
+		}
+		else{
+			projectile_hit(other, damage, speed * force);
+			
+			if(instance_exists(self)){
+				 // Sound:
+				call(scr.sound_play_at, x, y, sndBloodGamble, 1.2 + random(0.2), 3);
+				
+				 // Break:
+				var _disSkull = infinity;
+				with(instances_matching_ne(obj.CoastBossBecome, "id")){
+					var _dis = point_distance(x, y, other.x, other.y);
+					if(_dis < _disSkull){
+						_disSkull = _dis;
+					}
+				}
+				if(_disSkull > 32){
+					broken = true;
+					instance_destroy();
+				}
 			}
 		}
 	}
@@ -774,6 +786,10 @@
 		rotation = other.image_angle;
 		curse    = other.curse;
 		wep      = other.wep;
+		creator  = other.creator;
+		if(ultra_get("chicken", 2) && instance_is(creator, Player) && creator.race == "chicken"){
+			alarm0 = 30;
+		}
 	}
 	
 	

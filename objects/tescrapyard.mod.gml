@@ -648,6 +648,10 @@
 	
 	
 #define QuestChest_create(_x, _y)
+	/*
+		Used for the ultimate quest
+	*/
+	
 	with(call(scr.obj_create, _x, _y, "CustomChest")){
 		 // Visual:
 		sprite_index = spr.QuestChest;
@@ -659,23 +663,88 @@
 		
 		 // Events:
 		on_step = script_ref_create(QuestChest_step);
+		on_open = script_ref_create(QuestChest_open);
 		
 		return self;
 	}
 	
 #define QuestChest_step
+	/*
+		Quest chests sparkle
+	*/
+	
 	if(chance_ct(1, 60)){
-		with(call(scr.obj_create, random_range(bbox_left, bbox_right), random_range(bbox_top, bbox_bottom), "VaultFlowerSparkle")){
+		with(call(scr.obj_create,
+			random_range(bbox_left, bbox_right  + 1),
+			random_range(bbox_top,  bbox_bottom + 1),
+			"VaultFlowerSparkle"
+		)){
 			sprite_index = spr.QuestSparkle;
 			depth		 = other.depth - 1;
 		}
 	}
 	
-#define QuestChestBig_create(_x, _y)
+#define QuestChest_open
+	/*
+		
+	*/
+	
+	with(instance_create(x, y, WepPickup)){
+		ammo = true;
+		wep  = "crabbone";
+	}
+	
+	
+#define LockedBigQuestChest_create(_x, _y)
+	/*
+		Used for the ultimate quest
+	*/
+	
+	with(call(scr.obj_create, _x, _y, chestprop)){
+		 // Visual:
+		sprite_index = spr.BigQuestChest;
+		spr_shadow   = shd32;
+		spr_shadow_y = 8;
+		
+		return self;
+	}
+	
+#define LockedBigQuestChest_step
+	/*
+		Big quest chests sparkle & push players away
+	*/
+	
+	 // Sparkles:
+	if(chance_ct(1, 30)){
+		with(call(scr.obj_create,
+			random_range(bbox_left, bbox_right  + 1),
+			random_range(bbox_top,  bbox_bottom + 1),
+			"VaultFlowerSparkle"
+		)){
+			sprite_index = spr.QuestSparkle;
+			depth		 = other.depth - 1;
+		}
+	}
+	
+	 // Push:
+	if(place_meeting(x, y, Player)){
+		with(call(scr.instances_meeting_instance, self, Player)){
+			if(place_meeting(x, y, other)){
+				motion_add(point_direction(other.x, other.y, x, y), 1);
+			}
+		}
+	}
+	
+	
+#define BigQuestChest_create(_x, _y)
+	/*
+		Used for the ultimate quest
+	*/
+	
 	with(call(scr.obj_create, _x, _y, "CustomChest")){
 		 // Visual:
-		sprite_index = spr.QuestChestBig;
-		spr_dead	 = spr.QuestChestBigOpen;
+		sprite_index = spr.BigQuestChest;
+		spr_dead	 = spr.BigQuestChestOpen;
 		spr_shadow   = shd32;
 		spr_shadow_y = 8;
 		
@@ -683,17 +752,9 @@
 		snd_open = sndBigWeaponChest;
 		
 		 // Events:
-		on_step = script_ref_create(QuestChestBig_step);
+		on_step = script_ref_create(LockedBigQuestChest_step);
 		
 		return self;
-	}
-	
-#define QuestChestBig_step
-	if(chance_ct(1, 30)){
-		with(call(scr.obj_create, random_range(bbox_left, bbox_right), random_range(bbox_top, bbox_bottom), "VaultFlowerSparkle")){
-			sprite_index = spr.QuestSparkle;
-			depth		 = other.depth - 1;
-		}
 	}
 	
 	

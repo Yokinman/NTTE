@@ -1866,11 +1866,11 @@
 			BigRadUpg = spr_add("sprBigRadUpg", 1, 8, 8, shn16);
 			
 			 // Quest Chest:
-			QuestChest		  = spr_add("sprQuestChest", 	   1,  12, 12, shn24);
-			QuestChestOpen    = spr_add("sprQuestChestOpen",    1,  12, 12);
-			QuestChestBig	  = spr_add("sprQuestChestBig",	   1,  32, 32, shn64);
-			QuestChestBigOpen = spr_add("sprQuestChestBigOpen", 1,  32, 32);
-			QuestSparkle	  = spr_add("sprQuestSparkle",	   4,  6,  6);
+			QuestChest		  = spr_add("sprQuestChest",        1, 12, 12, shn24);
+			QuestChestOpen    = spr_add("sprQuestChestOpen",    1, 12, 12);
+			BigQuestChest	  = spr_add("sprBigQuestChest",     1, 32, 32, shn64);
+			BigQuestChestOpen = spr_add("sprBigQuestChestOpen", 1, 32, 32);
+			QuestSparkle	  = spr_add("sprQuestSparkle",      4,  6,  6);
 			
 		//#endregion
 		

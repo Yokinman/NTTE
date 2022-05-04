@@ -1720,7 +1720,8 @@
 					_wepSprite               = undefined,
 					_wepMergeStockSprite     = undefined,
 					_wepMergeFrontFireReload = weapon_get_load(_wep),
-					_instWasIndependent      = false;
+					_instWasIndependent      = false,
+					_ultraDirectionOffset    = choose(-90, 90);
 					
 				with(_sortInstanceList){
 					if(instance_exists(self)){
@@ -1995,26 +1996,26 @@
 								temerge_can_setup = false;
 								
 								 // Offset Direction:
-								var _directionOffset = choose(-90, 90);
 								if(object_index == Laser || object_index == EnemyLaser){
 									x            = xstart;
 									y            = ystart;
 									image_xscale = 1;
-									image_angle += _directionOffset;
-									direction   += _directionOffset;
+									image_angle += _ultraDirectionOffset;
+									direction   += _ultraDirectionOffset;
 									with(self){
 										event_perform(ev_alarm, 0);
 									}
 								}
 								else if(speed != 0){
 									if(direction == image_angle){
-										image_angle += _directionOffset;
+										image_angle += _ultraDirectionOffset;
 									}
-									direction += _directionOffset;
+									direction += _ultraDirectionOffset;
 								}
 								with(instance_create(x, y, Dust)){
 									motion_add(other.direction, 3);
 								}
+								_ultraDirectionOffset *= -1;
 							}
 							
 							 // Really Delete Projectile:

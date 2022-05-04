@@ -557,10 +557,14 @@
 			}
 			
 			 // Refresh Beetle Chest's Ammo Supply:
-			if("player_beetle_chest_info" in GameCont){
-				with(GameCont.player_beetle_chest_info){
-					has_ammo  = true;
-					has_blast = true;
+			if("player_beetle_chest_info_list" in GameCont){
+				for(var _playerIndex = 0; _playerIndex < maxp; _playerIndex++){
+					if(player_get_race(_playerIndex) == "beetle"){
+						with(GameCont.player_beetle_chest_info_list[_playerIndex]){
+							has_ammo  = true;
+							has_blast = true;
+						}
+					}
 				}
 			}
 			
@@ -1280,7 +1284,6 @@
 					depth = 9;
 				}
 				
-				/*
 				 // Quest Room:
 				var _w		  = 4,
 					_h		  = 4,
@@ -1336,7 +1339,6 @@
 					 // Chest:
 					call(scr.obj_create, x, y, "QuestChest");
 				}
-				*/
 				
 				call(scr.floor_reset_align);
 			}
@@ -1426,6 +1428,7 @@
 						}
 					}
 				}
+				
 				else{
 					var _w			= 5,
 						_h			= 5,
@@ -1485,7 +1488,7 @@
 								}
 							}
 							
-							call(scr.obj_create, x, y - 96, "QuestChestBig");
+							call(scr.obj_create, x, y - 96, "LockedBigQuestChest");
 						}
 					}
 					
@@ -1536,7 +1539,7 @@
 			}
 			with(instances_matching_ne([EliteGrunt, EliteShielder, EliteInspector], "id")){
 				if(chance(1, 2)){
-					call(scr.obj_create, _x, _y, "FreakChamber");
+					call(scr.obj_create, x, y, "FreakChamber");
 					instance_delete(self);
 					with(VanSpawn){
 						enemies--;
@@ -1544,6 +1547,34 @@
 					with(instances_matching_ne(obj.FreakChamber, "id")){
 						enemies--;
 					}
+				}
+			}
+			if(GameCont.subarea == 3){
+				with(FloorMiddle){
+					var	_offsetLen  = 208,
+						_offsetSide = choose(-1, 1);
+						
+					with(call(scr.obj_create, x, y + _offsetLen, "FreakChamber")){
+						object = Player;
+						alarm0 = 1;
+						open   = true;
+					}
+					with(call(scr.obj_create, x + (_offsetLen * _offsetSide), y, "FreakChamber")){
+						enemies     = 1;
+						spawnmoment = -1;
+					}
+					with(call(scr.obj_create, x - (_offsetLen * _offsetSide), y, "FreakChamber")){
+						object      = "QuestChest";
+						enemies     = 1;
+						spawnmoment = -1;
+					}
+					with(instances_matching_le(instances_matching_ge(TopPot, "bbox_right", x - 32), "bbox_left", x + 32)){
+						instance_delete(self);
+					}
+					with(instances_matching_le(instances_matching_ge(TopPot, "bbox_bottom", y - 32), "bbox_top", y + 32)){
+						instance_delete(self);
+					}
+					break;
 				}
 			}
 			
