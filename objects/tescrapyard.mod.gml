@@ -661,6 +661,9 @@
 		 // Sounds:
 		snd_open = sndWeaponChest;
 		
+		 // Vars:
+		wep = { wep: "crabbone", ammo: 1 };
+		
 		 // Events:
 		on_step = script_ref_create(QuestChest_step);
 		on_open = script_ref_create(QuestChest_open);
@@ -686,13 +689,155 @@
 	
 #define QuestChest_open
 	/*
-		
+		Quest chests drop their stored weapon when opened
 	*/
 	
 	with(instance_create(x, y, WepPickup)){
 		ammo = true;
-		wep  = "crabbone";
+		wep  = other.wep;
 	}
+	
+	
+#define QuestFloorCont_create(_x, _y)
+	/*
+		The controller object for quest floor tiles
+	*/
+	
+	with(instance_create(_x, _y, CustomObject)){
+		 // Visual:
+		depth = 5;
+		
+		 // Vars:
+		part_index = -1;
+		target     = noone;
+		prompt     = call(scr.prompt_create, self, loc("NTTE:PetMimic:Prompt", "DROP"), mskWepPickup, 0, 0);
+		with(prompt){
+			on_meet = script_ref_create(QuestFloorCont_prompt_meet);
+		}
+		
+		return self;
+	}
+	
+#define QuestFloorCont_step
+	/*
+		Quest floor tiles have a sparkly hint when players stand on them and accept player artifacts
+	*/
+	
+	if(instance_exists(target)){
+		var _partIndex = part_index;
+		
+		 // Sparkle:
+		if((current_frame % 10) < current_time_scale){
+			with(target){
+				var _canSparkle = place_meeting(x, y, Player);
+				with(Player){
+					if(
+						(call(scr.wep_raw, wep)  == "crabbone" && array_find_index(lq_defget(wep,  "quest_part_index_list", []), _partIndex) >= 0) ||
+						(call(scr.wep_raw, bwep) == "crabbone" && array_find_index(lq_defget(bwep, "quest_part_index_list", []), _partIndex) >= 0)
+					){
+						_canSparkle = true;
+						break;
+					}
+				}
+				if(_canSparkle){
+					with(call(scr.obj_create,
+						random_range(bbox_left, bbox_right  + 1),
+						random_range(bbox_top,  bbox_bottom + 1),
+						"VaultFlowerSparkle"
+					)){
+						sprite_index = spr.QuestSparkle;
+						depth		 = 1;
+						switch(_partIndex){
+							case 0 : sprite_index = spr.AllyLaserCharge;    break;
+							case 1 : sprite_index = spr.ElectroPlasmaTrail; break;
+							case 2 : sprite_index = spr.PopoLaserCharge;    break;
+							case 3 : sprite_index = sprLaserCharge;         break;
+						}
+					}
+				}
+			}
+		}
+		
+		 // Drop Artifact:
+		if(instance_exists(prompt) && player_is_active(prompt.pick)){
+			with(player_find(prompt.pick)){
+				with(other.prompt){
+					if(QuestFloorCont_prompt_meet()){
+						with(other){
+							 // Cursed:
+							if(curse > 0){
+								sound_play_hit(sndCursedReminder, 0.05);
+							}
+							
+							 // Drop:
+							else{
+								with(instance_create(other.creator.x, other.creator.y, WepPickup)){
+									var _wep = lq_clone(other.wep);
+									_wep.ammo                  = 1;
+									_wep.quest_part_index_list = [_partIndex];
+									wep                        = _wep;
+									with(other.wep){
+										ammo--;
+										quest_part_index_list = call(scr.array_delete,
+											quest_part_index_list,
+											array_find_index(quest_part_index_list, _partIndex)
+										);
+									}
+									
+									 // Sound:
+									sound_play_hit(sndWeaponPickup, 0.1);
+								}
+								call(scr.unlock_set, `quest:part:${_partIndex}`, true);
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+	else instance_destroy();
+	
+#define QuestFloorCont_draw
+	/*
+		...
+	*/
+	
+	// draw_set_blend_mode(bm_add);
+	
+	// with(target){
+	// 	draw_sprite_ext(sprite_index, image_index, x, y, image_xscale, image_yscale, image_angle, image_blend, image_alpha * place_meeting(x, y, WepPickup));
+	// }
+	
+	// draw_set_blend_mode(bm_normal);
+	
+#define QuestFloorCont_cleanup
+	/*
+		Quest floor tiles permanently store artifacts for future vault visits
+	*/
+	
+	var _partState = false;
+	
+	with(instances_matching(WepPickup, "visible", true)){
+		if(
+			call(scr.wep_raw, wep) == "crabbone"
+			&& array_find_index(lq_defget(wep, "quest_part_index_list", []), other.part_index) >= 0
+		){
+			_partState = true;
+			break;
+		}
+	}
+	
+	call(scr.unlock_set, `quest:part:${part_index}`, _partState);
+	
+#define QuestFloorCont_prompt_meet
+	/*
+		Quest floor tiles allow players holding an artifact to drop it on them
+	*/
+	
+	return (
+		call(scr.wep_raw, other.wep) == "crabbone"
+		&& array_find_index(lq_defget(other.wep, "quest_part_index_list", []), creator.part_index) >= 0
+	);
 	
 	
 #define LockedBigQuestChest_create(_x, _y)

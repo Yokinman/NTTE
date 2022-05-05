@@ -4,6 +4,14 @@
 	 // Sprites:
 	global.sprWep = spr.Bone;
 	
+	 // Quest:
+	global.quest_part_info_list = [
+		{ "name": "ANCIENT ARTIFACT", "text": "?", "sprt": sprite_add_weapon("../sprites/weps/sprArtifact0.png", 3, 5) },
+		{ "name": "GUARDED ARTIFACT", "text": "?", "sprt": sprite_add_weapon("../sprites/weps/sprArtifact1.png", 3, 5) },
+		{ "name": "STOLEN ARTIFACT",  "text": "?", "sprt": sprite_add_weapon("../sprites/weps/sprArtifact2.png", 3, 5) },
+		{ "name": "MISSING ARTIFACT", "text": "?", "sprt": sprite_add_weapon("../sprites/weps/sprArtifact3.png", 3, 5) }
+	];
+	
 	 // LWO:
 	global.lwoWep = {
 		"wep"   : mod_current,
@@ -16,11 +24,16 @@
 	
 #macro spr global.spr
 
-#define weapon_name  return "BONE";
-#define weapon_text  return "BONE THE FISH"; // yokin no
-#define weapon_swap  return sndBloodGamble;
-#define weapon_sprt  return global.sprWep;
-#define weapon_load  return ((wep_get(true, "curse", 0) > 0) ? 30 : 6); // 0.2 Seconds (Cursed ~ 1 Second)
+#macro _wepXis_quest_part   ("quest_part_index_list" in _wep && array_length(_wep.quest_part_index_list))
+#macro _wepXquest_last_part global.quest_part_info_list[_wep.quest_part_index_list[array_length(_wep.quest_part_index_list) - 1]]
+
+// for(var i = 0; i < 4; i++) w cm(WepPickup) wep = { wep:"crabbone", quest_part_index_list:[i] }
+
+#define weapon_name(_wep)  return (_wepXis_quest_part ? _wepXquest_last_part.name : loc("NTTE:Bone", "BONE"));
+#define weapon_text(_wep)  return (_wepXis_quest_part ? _wepXquest_last_part.text : "BONE THE FISH"); // yokin no
+#define weapon_sprt(_wep)  return (_wepXis_quest_part ? _wepXquest_last_part.sprt : ((lq_defget(_wep, "ammo", 1) > 0) ? global.sprWep : mskNone));
+#define weapon_swap(_wep)  return (_wepXis_quest_part ? sndSwapHammer             : sndBloodGamble);
+#define weapon_load        return ((wep_get(true, "curse", 0) > 0) ? 30 : 6); // 0.2 Seconds (Cursed ~ 1 Second)
 
 #define weapon_area
 	 // Drops naturally if a player is already carrying bones:
@@ -29,7 +42,9 @@
 			call(scr.wep_raw, wep)  == mod_current ||
 			call(scr.wep_raw, bwep) == mod_current
 		){
-			return 4; // 1-3
+			if(!_wepXis_quest_part){
+				return 4; // 1-3
+			}
 		}
 	}
 	
@@ -90,6 +105,8 @@
 	var _fire = call(scr.weapon_fire_init, _wep);
 	_wep = _fire.wep;
 	
+	var _wepIsPart = _wepXis_quest_part;
+	
 	 // Cursed:
 	var _curse = 0;
 	with(_fire.creator){
@@ -103,22 +120,24 @@
 		
 		 // Slash:
 		var	_skill = skill_get(mut_long_arms),
-			_heavy = ((++_wep.combo % 2) == 0),
+			_heavy = ((++_wep.combo % 2) == 0 && !_wepIsPart),
 			_flip  = sign(wepangle),
-			_dis   = lerp(10, 20, _skill),
+			_dis   = lerp(10, 20, _skill) + (_wepIsPart ? -20 : 0),
 			_dir   = gunangle;
 			
 		with(call(scr.projectile_create,
 			x + hspeed + lengthdir_x(_dis, _dir),
 			y + vspeed + lengthdir_y(_dis, _dir),
-			"BoneSlash",
+			(_wepIsPart ? "EnergyBatSlash" : "BoneSlash"),
 			_dir + orandom(5 * accuracy),
 			lerp(2, 4, _skill)
 		)){
 			image_xscale *= 3/4;
 			image_yscale *= 3/4 * _flip;
 			rotspeed      = 2 * _flip;
-			heavy         = _heavy;
+			if(_heavy){
+				heavy = _heavy;
+			}
 		}
 		
 		 // Sounds:
@@ -140,9 +159,13 @@
 	else if(call(scr.weapon_ammo_fire, _wep)){
 		 // Throw Bone:
 		with(call(scr.projectile_create, x, y, "Bone", gunangle, lerp(16, 20, skill_get(mut_long_arms)))){
-			wep          = lq_clone(_wep);
-			wep.ammo     = 1;
-			curse        = _curse;
+			wep      = lq_clone(_wep);
+			wep.ammo = 1;
+			curse    = _curse;
+			if(_wepIsPart && other.infammo == 0){
+				_wep.quest_part_index_list = array_slice(wep.quest_part_index_list, 0, array_length(wep.quest_part_index_list) - 1);
+				wep.quest_part_index_list  = array_slice(wep.quest_part_index_list, array_length(wep.quest_part_index_list) - 1, 1);
+			}
 			sprite_index = weapon_get_sprt(wep);
 			
 			 // Death to Free Bones:
@@ -153,7 +176,12 @@
 		
 		 // Sound:
 		sound_play(sndChickenThrow);
-		sound_play_pitch(sndBloodGamble, 0.7 + random(0.2));
+		if(_wepIsPart){
+			sound_play_pitch(sndPlasmaReload, 2 + orandom(0.1));
+		}
+		else{
+			sound_play_pitch(sndBloodGamble, 0.7 + random(0.2));
+		}
 		
 		 // Effects:
 		weapon_post(-10, -4, 4);
@@ -196,42 +224,67 @@
 			if(array_length(_inst)) with(_inst){
 				if(place_meeting(x, y, other)){
 					if(call(scr.wep_raw, wep) == mod_current){
-						var _num = lq_defget(wep, "ammo", 1);
-						_wep.ammo += _num;
-						
-						 // Pickuped:
-						with(other){
-							if(_primary || race == "steroids"){
-								wep_set(_primary, "wkick", 0);
+						var	_partIndexListA = lq_defget(_wep, "quest_part_index_list", []),
+							_partIndexListB = lq_defget(wep,  "quest_part_index_list", []);
+							
+						if(
+							(array_length(_partIndexListA) > 0) == (array_length(_partIndexListB) > 0)
+							&& (!array_length(_partIndexListA) || !array_length(call(scr.instances_meeting_instance, self, obj.QuestFloorCont)))
+						){
+							var _num = lq_defget(wep, "ammo", 1);
+							_wep.ammo += _num;
+							
+							 // Part:
+							if(array_length(_partIndexListA) || array_length(_partIndexListB)){
+								_wep.quest_part_index_list = call(scr.array_combine, _partIndexListA, _partIndexListB);
+								
+								 // Pickuped:
+								with(other){
+									if(_primary || race == "steroids"){
+										wep_set(_primary, "wkick", 0);
+										gunshine = max(gunshine, 2);
+									}
+									call(scr.pickup_text, weapon_get_name(other.wep), "got", _num);
+								}
 							}
+							
+							 // Bone:
 							else{
-								call(scr.pickup_text, loc("NTTE:Bone", "BONE"), "add", _num);
+								 // Pickuped:
+								with(other){
+									if(_primary || race == "steroids"){
+										wep_set(_primary, "wkick", 0);
+									}
+									else{
+										call(scr.pickup_text, weapon_get_name(other.wep), "add", _num);
+									}
+								}
+								
+								 // Epic Time:
+								if(_wep.ammo > call(scr.stat_get, "bone")){
+									call(scr.stat_set, "bone", _wep.ammo);
+								}
 							}
+							
+							 // Effects:
+							with(instance_create(x, y, DiscDisappear)){
+								image_angle = other.rotation;
+							}
+							with(other){
+								sound_play_pitch(sndHPPickup, 4);
+								sound_play_pitch(sndPickupDisappear, 1.2);
+								sound_play_pitchvol(sndBloodGamble, 0.4 + random(0.2), 0.9);
+							}
+							
+							instance_destroy();
 						}
-						
-						 // Epic Time:
-						if(_wep.ammo > call(scr.stat_get, "bone")){
-							call(scr.stat_set, "bone", _wep.ammo);
-						}
-						
-						 // Effects:
-						with(instance_create(x, y, DiscDisappear)){
-							image_angle = other.rotation;
-						}
-						with(other){
-							sound_play_pitch(sndHPPickup, 4);
-							sound_play_pitch(sndPickupDisappear, 1.2);
-							sound_play_pitchvol(sndBloodGamble, 0.4 + random(0.2), 0.9);
-						}
-						
-						instance_destroy();
 					}
 				}
 			}
 		}
 		
 		 // Bro don't look here:
-		if(_wep.ammo >= 10){
+		if(_wep.ammo >= 10 && !_wepXis_quest_part){
 			 // E Indicator:
 			if(!instance_exists(variable_instance_get(self, "prompt_scythe", noone))){
 				prompt_scythe = call(scr.prompt_create, self, loc("NTTE:Bone:Prompt", "SCYTHE"));
@@ -273,12 +326,13 @@
 	
 	 // No Bones Left:
 	else{
-		wep_set(_primary, "wep", wep_none);
+		wep_set(_primary, "wep",   wep_none);
 		wep_set(_primary, "wkick", 0);
 		
 		 // Auto Swap to Secondary:
 		if(_primary && instance_is(self, Player)){
 			call(scr.player_swap, self);
+			clicked   = false;
 			swapmove  = true;
 			drawempty = 30;
 			

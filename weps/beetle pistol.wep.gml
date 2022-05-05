@@ -17,7 +17,7 @@
 #define weapon_cost   return 1;
 #define weapon_load   return 13; // 0.43 Seconds
 //#define weapon_auto  return true;
-#define weapon_avail  return true;//return call(scr.unlock_get, "race:beetle");
+#define weapon_avail  return call(scr.unlock_get, "race:beetle");
 
 #define weapon_fire(_wep)
 	var _fire = call(scr.weapon_fire_init, _wep);

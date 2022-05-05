@@ -1285,62 +1285,74 @@
 				}
 				
 				 // Quest Room:
-				var _w		  = 4,
-					_h		  = 4,
-					_type	  = "",
-					_dirStart = 90,
-					_dirOff   = 0,
-					_floorDis = 256,
-					_minID	  = instance_max;
-					
-				call(scr.floor_set_align, 32, 32);
-					
-				with(call(scr.floor_room_create, _spawnX, _spawnY, _w, _h, _type, _dirStart, _dirOff, _floorDis)){
-					
-					 // Hallway:
-					with(call(scr.instance_random, floors)){
-						var	_x       = bbox_center_x,
-							_y       = bbox_center_y,
-							_moveDis = 32;
+				var _partIndex = 1;
+				if(!call(scr.unlock_get, `quest:part:${_partIndex}`)){
+					if("ntte_quest_spawned_part_index_list" not in GameCont){
+						GameCont.ntte_quest_spawned_part_index_list = [];
+					}
+					if(array_find_index(GameCont.ntte_quest_spawned_part_index_list, _partIndex) < 0){
+						array_push(GameCont.ntte_quest_spawned_part_index_list, _partIndex);
+						
+						var _w		  = 4,
+							_h		  = 4,
+							_type	  = "",
+							_dirStart = 90,
+							_dirOff   = 0,
+							_floorDis = 256,
+							_minID	  = instance_max;
 							
-						while(
-							point_distance(_x, _y, other.xstart, other.ystart) > _moveDis / 2
-							&& (
-								!position_meeting(_x, _y, Floor)
-								|| !array_length(call(scr.instances_meeting_point, _x, _y, _spawnFloor))
-							)
-						){
-							 // Floor & Fake Walls:
-							if(!position_meeting(_x, _y, Floor) || !array_length(call(scr.instances_meeting_point, _x, _y, FloorNormal))){
-								call(scr.floor_set, _x - 16, _y - 16, true);
+						call(scr.floor_set_align, 32, 32);
+							
+						with(call(scr.floor_room_create, _spawnX, _spawnY, _w, _h, _type, _dirStart, _dirOff, _floorDis)){
+							
+							 // Hallway:
+							with(call(scr.instance_random, floors)){
+								var	_x       = bbox_center_x,
+									_y       = bbox_center_y,
+									_moveDis = 32;
+									
+								while(
+									point_distance(_x, _y, other.xstart, other.ystart) > _moveDis / 2
+									&& (
+										!position_meeting(_x, _y, Floor)
+										|| !array_length(call(scr.instances_meeting_point, _x, _y, _spawnFloor))
+									)
+								){
+									 // Floor & Fake Walls:
+									if(!position_meeting(_x, _y, Floor) || !array_length(call(scr.instances_meeting_point, _x, _y, FloorNormal))){
+										call(scr.floor_set, _x - 16, _y - 16, true);
+									}
+									
+									 // Move:
+									var _moveDir = pround(point_direction(_x, _y, other.xstart, other.ystart) + orandom(60), 90);
+									_x += lengthdir_x(_moveDis, _moveDir);
+									_y += lengthdir_y(_moveDis, _moveDir);
+									
+									_x = clamp(_x, _spawnX - 96, _spawnX + 64);
+								}
 							}
 							
-							 // Move:
-							var _moveDir = pround(point_direction(_x, _y, other.xstart, other.ystart) + orandom(60), 90);
-							_x += lengthdir_x(_moveDis, _moveDir);
-							_y += lengthdir_y(_moveDis, _moveDir);
+							 // Floor Sprites:
+							with(instances_matching_gt(FloorNormal, "id", _minID)){
+								sprite_index = spr.FloorPalaceShrine;
+							}
 							
-							_x = clamp(_x, _spawnX - 96, _spawnX + 64);
+							 // Center Floor:
+							var _img = 0;
+							with(call(scr.floor_fill, x - 16, y - 16, 2, 2)){
+								sprite_index = spr.FloorPalaceShrineRoomSmall;
+								image_index  = _img++;
+							}
+							
+							 // Guarded Artifact:
+							with(call(scr.chest_create, x, y, "QuestChest", true)){
+								wep.quest_part_index_list = [_partIndex];
+							}
 						}
+						
+						call(scr.floor_reset_align);
 					}
-					
-					 // Floor Sprites:
-					with(instances_matching_gt(FloorNormal, "id", _minID)){
-						sprite_index = spr.FloorPalaceShrine;
-					}
-					
-					 // Center Floor:
-					var _img = 0;
-					with(call(scr.floor_fill, x - 16, y - 16, 2, 2)){
-						sprite_index = spr.FloorPalaceShrineRoomSmall;
-						image_index  = _img++;
-					}
-					
-					 // Chest:
-					call(scr.obj_create, x, y, "QuestChest");
 				}
-				
-				call(scr.floor_reset_align);
 			}
 			
 			 // Cool Dudes:
@@ -1409,26 +1421,42 @@
 			with(CrownPed){
 				call(scr.floor_set_align, 32, 32);
 				
+				 // Artifact:
 				if(GameCont.proto){
-					var _w		  = 2,
-						_h		  = 2,
-						_type	  = "",
-						_dirStart = random(360),
-						_dirOff   = 90,
-						_floorDis = 0;
-						
-					with(call(scr.floor_room_create, x, y, _w, _h, _type, _dirStart, _dirOff, _floorDis)){
-						call(scr.obj_create, x, y, "QuestChest");
-						
-						var _img = 0;
-						with(floors){
-							sprite_index = spr.VaultFlowerFloorSmall;
-							image_index  = _img++;
-							depth		 = 7;
+					var _partIndex = 0;
+					if(!call(scr.unlock_get, `quest:part:${_partIndex}`)){
+						if("ntte_quest_spawned_part_index_list" not in GameCont){
+							GameCont.ntte_quest_spawned_part_index_list = [];
+						}
+						if(array_find_index(GameCont.ntte_quest_spawned_part_index_list, _partIndex) < 0){
+							array_push(GameCont.ntte_quest_spawned_part_index_list, _partIndex);
+							
+							var _w		  = 2,
+								_h		  = 2,
+								_type	  = "",
+								_dirStart = random(360),
+								_dirOff   = 90,
+								_floorDis = 0;
+								
+							with(call(scr.floor_room_create, x, y, _w, _h, _type, _dirStart, _dirOff, _floorDis)){
+								 // Ancient Artifact:
+								with(call(scr.chest_create, x, y, "QuestChest", true)){
+									wep.quest_part_index_list = [_partIndex];
+								}
+								
+								 // Floor Tiles:
+								var _img = 0;
+								with(floors){
+									sprite_index = spr.VaultFlowerFloorSmall;
+									image_index  = _img++;
+									depth		 = 7;
+								}
+							}
 						}
 					}
 				}
 				
+				 // Quest Hub:
 				else{
 					var _w			= 5,
 						_h			= 5,
@@ -1444,7 +1472,7 @@
 						with(call(scr.floor_room_create, x, y, _w, _h, _type, _dirStart, _dirOff, _floorDis)){
 							
 							 // Hallway:
-							with(call(scr.instance_random, floors)){
+							with(call(scr.instance_nearest_bbox, x, y2, floors)){
 								var	_x       = bbox_center_x,
 									_y       = bbox_center_y,
 									_moveDis = 32;
@@ -1462,7 +1490,7 @@
 									}
 									
 									 // Move:
-									var _moveDir = pround(point_direction(_x, _y, other.xstart, other.ystart) + orandom(60), 90);
+									var _moveDir = pround(point_direction(_x, _y, other.xstart, other.ystart), 90);
 									_x += lengthdir_x(_moveDis, _moveDir);
 									_y += lengthdir_y(_moveDis, _moveDir);
 								}
@@ -1480,14 +1508,44 @@
 							}
 							
 							 // Hint Lore Tiles:
-							var _img = 0;
+							var _partIndex = 0;
 							for(var i = -3; i <= 3; i += 2){
-								with(call(scr.floor_set, x - 16 + (32 * i), y - 16, true)){
+								with(call(scr.floor_set, (x - 16) + (32 * i), y - 16, true)){
 									sprite_index = spr.QuestFloor;
-									image_index  = _img++;
+									image_index  = _partIndex;
+									with(call(scr.obj_create, bbox_center_x, bbox_center_y, "QuestFloorCont")){
+										part_index = _partIndex;
+										target     = other;
+										
+										 // Spawn Previously Placed Artifact:
+										if(call(scr.unlock_get, `quest:part:${_partIndex}`)){
+											if("ntte_quest_spawned_part_index_list" not in GameCont){
+												GameCont.ntte_quest_spawned_part_index_list = [];
+											}
+											array_push(GameCont.ntte_quest_spawned_part_index_list, _partIndex);
+											with(instance_create(x, y, WepPickup)){
+												wep = {
+													"wep"                   : "crabbone",
+													"quest_part_index_list" : [_partIndex]
+												};
+											}
+										}
+									}
+									_partIndex++;
 								}
 							}
 							
+							 // Corner Props:
+							var _propPool = [
+								["QuestProp", 3],
+								[Torch,       1]
+							];
+							call(scr.obj_create, x1 + 16, y1 + 16, call(scr.pool, _propPool));
+							call(scr.obj_create, x2 - 16, y1 + 16, call(scr.pool, _propPool));
+							instance_create(x1 + 16, y2 - 32, Wall);
+							instance_create(x2 - 32, y2 - 32, Wall);
+							
+							 // Chest:
 							call(scr.obj_create, x, y - 96, "LockedBigQuestChest");
 						}
 					}
@@ -1564,9 +1622,20 @@
 						spawnmoment = -1;
 					}
 					with(call(scr.obj_create, x - (_offsetLen * _offsetSide), y, "FreakChamber")){
-						object      = "QuestChest";
 						enemies     = 1;
 						spawnmoment = -1;
+						
+						 // Stolen Artifact:
+						var _partIndex = 2;
+						if(!call(scr.unlock_get, `quest:part:${_partIndex}`)){
+							if("ntte_quest_spawned_part_index_list" not in GameCont){
+								GameCont.ntte_quest_spawned_part_index_list = [];
+							}
+							if(array_find_index(GameCont.ntte_quest_spawned_part_index_list, _partIndex) < 0){
+								array_push(GameCont.ntte_quest_spawned_part_index_list, _partIndex);
+								object = "QuestChest";
+							}
+						}
 					}
 					with(instances_matching_le(instances_matching_ge(TopPot, "bbox_right", x - 32), "bbox_left", x + 32)){
 						instance_delete(self);

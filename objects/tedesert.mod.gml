@@ -738,20 +738,34 @@
 			projectile_hit(other, damage, speed * force);
 			
 			if(instance_exists(self)){
-				 // Sound:
-				call(scr.sound_play_at, x, y, sndBloodGamble, 1.2 + random(0.2), 3);
-				
-				 // Break:
-				var _disSkull = infinity;
-				with(instances_matching_ne(obj.CoastBossBecome, "id")){
-					var _dis = point_distance(x, y, other.x, other.y);
-					if(_dis < _disSkull){
-						_disSkull = _dis;
+				 // Part:
+				if(array_length(lq_defget(wep, "quest_part_index_list", []))){
+					switch(wep.quest_part_index_list[array_length(wep.quest_part_index_list) - 1]){
+						case 0: player_fire_ext(image_angle, wep_plasma_gun,         x, y, team, creator, 1); break;
+						case 1: player_fire_ext(image_angle, wep_lightning_pistol,   x, y, team, creator, 1); break;
+						case 2: player_fire_ext(image_angle, wep_energy_screwdriver, x, y, team, creator, 1); break;
+						case 3: player_fire_ext(image_angle, wep_laser_pistol,       x, y, team, creator, 1); break;
 					}
-				}
-				if(_disSkull > 32){
-					broken = true;
 					instance_destroy();
+				}
+				
+				 // Bone:
+				else{
+					 // Sound:
+					call(scr.sound_play_at, x, y, sndBloodGamble, 1.2 + random(0.2), 3);
+					
+					 // Break:
+					var _disSkull = infinity;
+					with(instances_matching_ne(obj.CoastBossBecome, "id")){
+						var _dis = point_distance(x, y, other.x, other.y);
+						if(_dis < _disSkull){
+							_disSkull = _dis;
+						}
+					}
+					if(_disSkull > 32){
+						broken = true;
+						instance_destroy();
+					}
 				}
 			}
 		}
@@ -772,12 +786,23 @@
 	
 	 // Darn:
 	if(broken){
-		call(scr.sound_play_at, x, y, sndHitRock, 1.4 + random(0.2), 2.5);
-		
-		 // for u yokin:
-		repeat(2) with(call(scr.obj_create, x, y, "BonePickup")){
-			sprite_index = spr.BoneShard;
-			motion_add(random(360), 2);
+		if(array_length(lq_defget(wep, "quest_part_index_list", []))){
+			instance_create(x, y, ChickenB);
+			sound_play(sndPlasmaReloadUpg);
+			if(instance_is(creator, Player)){
+				creator.gunshine = max(creator.gunshine, 7);
+			}
+		}
+		else{
+			call(scr.sound_play_at, x, y, sndHitRock, 1.4 + random(0.2), 2.5);
+			
+			 // for u yokin:
+			repeat(2){
+				with(call(scr.obj_create, x, y, "BonePickup")){
+					sprite_index = spr.BoneShard;
+					motion_add(random(360), 2);
+				}
+			}
 		}
 	}
 	
@@ -892,8 +917,11 @@
 	 // Secret:
 	with(other){
 		if(
-			(instance_is(self, ThrownWep) && call(scr.wep_raw, wep) == "crabbone")
-			|| array_find_index(obj.Bone,      self) >= 0
+			(
+				(instance_is(self, ThrownWep) || array_find_index(obj.Bone, self) >= 0)
+				&& call(scr.wep_raw, wep) == "crabbone"
+				&& !array_length(lq_defget(wep, "quest_part_index_list", []))
+			)
 			|| array_find_index(obj.BoneArrow, self) >= 0
 		){
 			var _add = lq_defget(variable_instance_get(self, "wep"), "ammo", 1) + variable_instance_get(self, "big", 0);
@@ -2587,8 +2615,13 @@
 		){
 			wep.ammo--;
 			with(instance_create(x, y, WepPickup)){
-				wep = lq_clone(other.wep);
+				wep      = lq_clone(other.wep);
 				wep.ammo = 1;
+				curse    = other.curse;
+				if("quest_part_index_list" in wep && array_length(wep.quest_part_index_list)){
+					other.wep.quest_part_index_list = array_slice(wep.quest_part_index_list, 0, array_length(wep.quest_part_index_list) - 1);
+					wep.quest_part_index_list       = array_slice(wep.quest_part_index_list, array_length(wep.quest_part_index_list) - 1, 1);
+				}
 			}
 		}
 	}

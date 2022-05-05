@@ -820,6 +820,9 @@
 													yprevious = y;
 													xstart    = x;
 													ystart    = y;
+													if(_obj == "QuestChest"){
+														wep.quest_part_index_list = [2];
+													}
 												}
 												
 												 // No Wall Clearing:

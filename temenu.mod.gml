@@ -264,6 +264,10 @@
 				case "parrot":
 					array_push(_stat[0].list, ["Charmed", _path + "spec", stat_base]);
 					break;
+					
+				case "beetle":
+					array_push(_stat[0].list, ["Spent", _path + "spec", stat_base]);
+					break;
 			}
 			
 			lq_set(MenuList.stats.list.mutants.list, _race, _stat);
@@ -2019,6 +2023,46 @@
 										if(_pop >= 4){
 											_x += 40;
 											_y += 10;
+											
+											 // Arrow Key Selection:
+											var _swaph = (button_pressed(_index, "east") - button_pressed(_index, "west"));
+											if(_swaph != 0){
+												var _slct = _raceSlct[_index];
+												if(_slct >= 0) while(true){
+													var _max = pceil(lq_size(_raceList), _col);
+													_slct = (_slct + _swaph + _max) % _max;
+													
+													var _race = lq_get_key(_raceList, _slct);
+													
+													 // Back at Start:
+													if(_slct == _raceSlct[_index]){
+														break;
+													}
+													
+													 // New Selection:
+													if(mod_exists("race", _race)){
+														var _avail = true;
+														
+														 // Locked:
+														if(mod_script_exists("race", _race, "race_avail")){
+															_avail = mod_script_call("race", _race, "race_avail");
+															if(!is_real(_avail)) _avail = true;
+														}
+														
+														 // Select:
+														if(_avail){
+															_raceSlct[_index] = _slct;
+															
+															_pop = 4;
+															MenuPop[_index] = _pop;
+															sound_play((_slct & 1) ? sndMenuBSkin : sndMenuASkin);
+															
+															break;
+														}
+													}
+												}
+											}
+											
 											for(var i = 0; i < lq_size(_raceList); i++){
 												var	_race  = lq_get_key(_raceList, i),
 													_avail = true;
@@ -2078,22 +2122,22 @@
 											//  // Temporary:
 											// if(instance_exists(Menu) && call(scr.unlock_get, "race:parrot")){
 											// 	_y -= 2;
-												
+											//	
 											// 	var _hover = point_in_rectangle(_mx, _my, _x - 12, _y - 8, _x + 12, _y + 8);
-												
+											//	
 											// 	if(_hover && button_pressed(_index, "fire")){
 											// 		sound_play(sndNoSelect);
 											// 		_y += choose(-1, 1);
 											// 	}
-												
+											//	
 											// 	draw_set_fog(true, make_color_hsv(0, 0, (_hover ? 50 : 30)), 0, 0);
 											// 	draw_sprite(sprMapIcon, 4, _x, _y - _hover)
 											// 	draw_set_fog(false, 0, 0, 0);
-												
+											//	
 											// 	//draw_set_halign(fa_center);
 											// 	//draw_set_valign(fa_middle);
 											// 	//draw_text_nt(_x, _y + (_hover * sin(current_frame / 10)), (_hover ? "@s" : "@d") + "COMING#SOON")
-												
+											//	
 											// 	if(_hover) _tooltip = "@sCOMING#SOON@w?";
 											// }
 										}

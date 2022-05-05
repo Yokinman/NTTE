@@ -461,17 +461,29 @@
 					}
 					
 					 // Secrets Upon Secrets Upon Secres:
-					with(call(scr.instance_random, floors)){
-						with(call(scr.floor_room_create, bbox_center_x, bbox_center_y, 1, 3, "", 90, 0, 0)){
-							 // Fake Walls:
-							for(var _wx = x1; _wx < x2; _wx += 16){
-								for(var _wy = y1; _wy < y2; _wy += 16){
-									call(scr.obj_create, _wx, _wy, "WallFake");
+					var _partIndex = 3;
+					if(!call(scr.unlock_get, `quest:part:${_partIndex}`)){
+						if("ntte_quest_spawned_part_index_list" not in GameCont){
+							GameCont.ntte_quest_spawned_part_index_list = [];
+						}
+						if(array_find_index(GameCont.ntte_quest_spawned_part_index_list, _partIndex) < 0){
+							array_push(GameCont.ntte_quest_spawned_part_index_list, _partIndex);
+							
+							with(call(scr.instance_random, floors)){
+								with(call(scr.floor_room_create, bbox_center_x, bbox_center_y, 1, 3, "", 90, 0, 0)){
+									 // Fake Walls:
+									for(var _wx = x1; _wx < x2; _wx += 16){
+										for(var _wy = y1; _wy < y2; _wy += 16){
+											call(scr.obj_create, _wx, _wy, "WallFake");
+										}
+									}
+									
+									 // Missing Artifact:
+									with(call(scr.chest_create, x, y1 + 16, "QuestChest", true)){
+										wep.quest_part_index_list = [_partIndex];
+									}
 								}
 							}
-							
-							 // Chest:
-							call(scr.chest_create, x, y1 + 16, "QuestChest", true);
 						}
 					}
 					

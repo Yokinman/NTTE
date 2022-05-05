@@ -300,6 +300,7 @@
 			AllyLaserCharge         = spr_add("sprAllyLaserCharge",         4,  3,  3);
 			IDPDHeavyBullet         = spr_add("sprIDPDHeavyBullet",         2, 12, 12);
 			IDPDHeavyBulletHit      = spr_add("sprIDPDHeavyBulletHit",      4, 12, 12);
+			PopoLaserCharge         = spr_add("sprPopoLaserCharge",         4,  3,  3);
 			
 		//#endregion
 		
@@ -2632,7 +2633,7 @@
 		[[sprEnemyLaser,               EnemyLaser    ], [sprLaser,              Laser          ], [                                       ]], // Laser
 		[[sprEnemyLaserStart                         ], [sprLaserStart                         ], [                                       ]], // Laser Start
 		[[sprEnemyLaserEnd                           ], [sprLaserEnd                           ], [                                       ]], // Laser End
-		[[sprLaserCharge                             ], ["AllyLaserCharge"                     ], [                                       ]], // Laser Particle
+		[[sprLaserCharge                             ], ["AllyLaserCharge"                     ], ["PopoLaserCharge"                      ]], // Laser Particle
 		[[sprEnemyLightning,           EnemyLightning], [sprLightning,          Lightning      ], [                                       ]], // Lightning
 	//	[[sprLightningHit                            ], [sprLightningHit                       ], [                                       ]], // Lightning Hit
 	//	[[sprLightningSpawn                          ], [sprLightningSpawn                     ], [                                       ]], // Lightning Particle

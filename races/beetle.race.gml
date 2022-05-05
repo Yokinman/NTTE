@@ -10,12 +10,12 @@
 	
 #define race_name              return "BEETLE";
 #define race_text              return "BEETLE CHEST#MERGE WEAPONS";
-#define race_lock              return "???";
-#define race_unlock            return "???";
+#define race_lock              return "OPEN THE CHEST";
+#define race_unlock            return "FOR OPENING THE CHEST";
 #define race_tb_text           return "@wMERGED WEAPON @sPARTS CAN BE#REPLACED BY @ySAME-TYPE @sWEAPONS";//"HOLDING MORE WEAPONS INCREASES AMMO";//"MERGING COSTS @gRADS#@sINSTEAD OF @rMAX HP";
 #define race_portrait(_p, _b)  return race_sprite_raw("Portrait", _b);
 #define race_mapicon(_p, _b)   return race_sprite_raw("Map",      _b);
-#define race_avail             return true;//call(scr.unlock_get, "race:" + mod_current);
+#define race_avail             return call(scr.unlock_get, "race:" + mod_current);
 
 #define race_ttip
 	 // Ultra:
@@ -735,6 +735,10 @@
 								lsthealth      = min(lsthealth, maxhealth);
 								projectile_hit_raw(self, max(0, my_health - maxhealth), 2);
 							// }
+							
+							 // Stat:
+							var _statPath = "race:beetle:spec";
+							call(scr.stat_set, _statPath, call(scr.stat_get, _statPath) + _menuMergingHPCost);
 							
 							 // Effects:
 							with(call(scr.pickup_text, _text + " ", "add", -_menuMergingHPCost)){
