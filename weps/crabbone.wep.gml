@@ -6,10 +6,10 @@
 	
 	 // Quest:
 	global.quest_part_info_list = [
-		{ "name": "ANCIENT ARTIFACT", "text": "?", "sprt": sprite_add_weapon("../sprites/weps/sprArtifact0.png", 3, 5) },
-		{ "name": "GUARDED ARTIFACT", "text": "?", "sprt": sprite_add_weapon("../sprites/weps/sprArtifact1.png", 3, 5) },
-		{ "name": "STOLEN ARTIFACT",  "text": "?", "sprt": sprite_add_weapon("../sprites/weps/sprArtifact2.png", 3, 5) },
-		{ "name": "MISSING ARTIFACT", "text": "?", "sprt": sprite_add_weapon("../sprites/weps/sprArtifact3.png", 3, 5) }
+		{ "name": "ANCIENT ARTIFACT", "text": "SECRETS LIE WITHIN",        "sprt": sprite_add_weapon("../sprites/weps/sprArtifact0.png", 3, 5) },
+		{ "name": "GUARDED ARTIFACT", "text": "UNCONVENTIONAL WEAPONRY",   "sprt": sprite_add_weapon("../sprites/weps/sprArtifact1.png", 3, 5) },
+		{ "name": "STOLEN ARTIFACT",  "text": "BRING IT BACK",             "sprt": sprite_add_weapon("../sprites/weps/sprArtifact2.png", 3, 5) },
+		{ "name": "MISSING ARTIFACT", "text": "HARDLY FOUND, EASILY LOST", "sprt": sprite_add_weapon("../sprites/weps/sprArtifact3.png", 3, 5) }
 	];
 	
 	 // LWO:
@@ -29,11 +29,12 @@
 
 // for(var i = 0; i < 4; i++) w cm(WepPickup) wep = { wep:"crabbone", quest_part_index_list:[i] }
 
-#define weapon_name(_wep)  return (_wepXis_quest_part ? _wepXquest_last_part.name : loc("NTTE:Bone", "BONE"));
-#define weapon_text(_wep)  return (_wepXis_quest_part ? _wepXquest_last_part.text : "BONE THE FISH"); // yokin no
-#define weapon_sprt(_wep)  return (_wepXis_quest_part ? _wepXquest_last_part.sprt : ((lq_defget(_wep, "ammo", 1) > 0) ? global.sprWep : mskNone));
-#define weapon_swap(_wep)  return (_wepXis_quest_part ? sndSwapHammer             : sndBloodGamble);
-#define weapon_load        return ((wep_get(true, "curse", 0) > 0) ? 30 : 6); // 0.2 Seconds (Cursed ~ 1 Second)
+#define weapon_name(_wep)    return (_wepXis_quest_part ? _wepXquest_last_part.name        : ((lq_defget(_wep, "ammo", 1) > 0) ? loc("NTTE:Bone", "BONE") : "DROP"));
+#define weapon_text(_wep)    return (_wepXis_quest_part ? _wepXquest_last_part.text        : "BONE THE FISH"); // yokin no
+#define weapon_sprt(_wep)    return (_wepXis_quest_part ? _wepXquest_last_part.sprt        : ((lq_defget(_wep, "ammo", 1) > 0) ? global.sprWep : mskNone));
+#define weapon_swap(_wep)    return (_wepXis_quest_part ? sndSwapHammer                    : sndBloodGamble);
+#define weapon_shrine(_wep)  return (_wepXis_quest_part ? [mut_long_arms, mut_laser_brain] : mut_long_arms);
+#define weapon_load          return ((wep_get(true, "curse", 0) > 0) ? 30 : 6); // 0.2 Seconds (Cursed ~ 1 Second)
 
 #define weapon_area
 	 // Drops naturally if a player is already carrying bones:
@@ -42,6 +43,7 @@
 			call(scr.wep_raw, wep)  == mod_current ||
 			call(scr.wep_raw, bwep) == mod_current
 		){
+			var _wep = wep;
 			if(!_wepXis_quest_part){
 				return 4; // 1-3
 			}
@@ -141,11 +143,23 @@
 		}
 		
 		 // Sounds:
-		sound_play_gun(sndWrench, 0.3, 0.5);
-		sound_play_hit(sndCursedReminder, 0.1);
-		sound_play_pitchvol(sndBloodGamble, (_heavy ? 0.5 : 0.7) + random(0.2), (_heavy ? 0.7 : 0.5));
-		if(_heavy){
-			sound_play_pitch(sndHammer, 1 + random(0.2));
+		if(_wepIsPart){
+			if(skill_get(mut_laser_brain) > 0){
+				sound_play_pitchvol(sndEnergyHammerUpg, random_range(1.2, 1.5), 0.8);
+				sound_play_pitchvol(sndBlackSword,      random_range(0.5, 0.7), 0.3);
+			}
+			else{
+				sound_play_pitchvol(sndEnergyHammer, random_range(1.2, 1.5), 0.9);
+				sound_play_pitchvol(sndBlackSword,   random_range(0.5, 0.7), 0.2);
+			}
+		}
+		else{
+			sound_play_gun(sndWrench, 0.3, 0.5);
+			sound_play_hit(sndCursedReminder, 0.1);
+			sound_play_pitchvol(sndBloodGamble, (_heavy ? 0.5 : 0.7) + random(0.2), (_heavy ? 0.7 : 0.5));
+			if(_heavy){
+				sound_play_pitch(sndHammer, 1 + random(0.2));
+			}
 		}
 		
 		 // Effects:
@@ -156,38 +170,47 @@
 	}
 	
 	 // Fire:
-	else if(call(scr.weapon_ammo_fire, _wep)){
-		 // Throw Bone:
-		with(call(scr.projectile_create, x, y, "Bone", gunangle, lerp(16, 20, skill_get(mut_long_arms)))){
-			wep      = lq_clone(_wep);
-			wep.ammo = 1;
-			curse    = _curse;
-			if(_wepIsPart && other.infammo == 0){
-				_wep.quest_part_index_list = array_slice(wep.quest_part_index_list, 0, array_length(wep.quest_part_index_list) - 1);
-				wep.quest_part_index_list  = array_slice(wep.quest_part_index_list, array_length(wep.quest_part_index_list) - 1, 1);
-			}
-			sprite_index = weapon_get_sprt(wep);
-			
-			 // Death to Free Bones:
-			if(other.infammo != 0){
-				broken = true;
-			}
-		}
-		
-		 // Sound:
-		sound_play(sndChickenThrow);
+	else{
+		var _lastInfAmmo = infammo;
 		if(_wepIsPart){
-			sound_play_pitch(sndPlasmaReload, 2 + orandom(0.1));
+			infammo = 0;
 		}
-		else{
-			sound_play_pitch(sndBloodGamble, 0.7 + random(0.2));
+		if(call(scr.weapon_ammo_fire, _wep)){
+			 // Throw Bone:
+			with(call(scr.projectile_create, x, y, "Bone", gunangle, lerp(16, 20, skill_get(mut_long_arms)))){
+				wep      = lq_clone(_wep);
+				wep.ammo = 1;
+				curse    = _curse;
+				if(_wepIsPart && other.infammo == 0){
+					_wep.quest_part_index_list = array_slice(wep.quest_part_index_list, 0, array_length(wep.quest_part_index_list) - 1);
+					wep.quest_part_index_list  = array_slice(wep.quest_part_index_list, array_length(wep.quest_part_index_list) - 1, 1);
+				}
+				sprite_index = weapon_get_sprt(wep);
+				
+				 // Death to Free Bones:
+				if(other.infammo != 0){
+					broken = true;
+				}
+			}
+			
+			 // Sound:
+			sound_play(sndChickenThrow);
+			if(_wepIsPart){
+				sound_play_pitch(sndPlasmaReload, 2 + orandom(0.1));
+			}
+			else{
+				sound_play_pitch(sndBloodGamble, 0.7 + random(0.2));
+			}
+			
+			 // Effects:
+			weapon_post(-10, -4, 4);
+			with(instance_create(x, y, MeleeHitWall)){
+				motion_add(other.gunangle, 1);
+				image_angle = direction + 180;
+			}
 		}
-		
-		 // Effects:
-		weapon_post(-10, -4, 4);
-		with(instance_create(x, y, MeleeHitWall)){
-			motion_add(other.gunangle, 1);
-			image_angle = direction + 180;
+		if(_wepIsPart){
+			infammo = _lastInfAmmo;
 		}
 	}
 	
@@ -283,8 +306,31 @@
 			}
 		}
 		
+		 // Sparkly:
+		if(_wepXis_quest_part){
+			if(_primary && chance_ct(1, 20)){
+				var	_len = random_range(4, 12) - _kick,
+					_dir = gunangle + ((_primary ? wepangle : bwepangle) * (1 - (_kick / 20)));
+					
+				with(call(scr.obj_create,
+					x + lengthdir_x(_len, _dir) + orandom(4),
+					y + lengthdir_y(_len, _dir) + orandom(4),
+					"VaultFlowerSparkle"
+				)){
+					sprite_index = spr.QuestSparkle;
+					depth		 = other.depth + (_primary ? -1 : 1);
+					switch(_wep.quest_part_index_list[array_length(_wep.quest_part_index_list) - 1]){
+						case 0 : sprite_index = spr.AllyLaserCharge;    break;
+						case 1 : sprite_index = spr.ElectroPlasmaTrail; break;
+						case 2 : sprite_index = sprIDPDPortalCharge;    break;
+						case 3 : sprite_index = sprLaserCharge;         break;
+					}
+				}
+			}
+		}
+		
 		 // Bro don't look here:
-		if(_wep.ammo >= 10 && !_wepXis_quest_part){
+		else if(_wep.ammo >= 10){
 			 // E Indicator:
 			if(!instance_exists(variable_instance_get(self, "prompt_scythe", noone))){
 				prompt_scythe = call(scr.prompt_create, self, loc("NTTE:Bone:Prompt", "SCYTHE"));

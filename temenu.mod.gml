@@ -167,9 +167,9 @@
 						role : [[cred_artist, "Weapon Sprites"], [cred_coder, "Weapon Programming"]],
 						link : [[cred_twitter, "karmelyth"], [cred_discord, "Karmelyth\#7168"]]
 						},
-					{	name : "Mista Jub",
+					{	name : "RENREN",
 						role : [[cred_music, "Music"]],
-						link : [[cred_twitter, "JDubbsishere"], [cred_soundcloud, "jdubmmusic"], [cred_discord, "Mista Jub\#8521"]]
+						link : [[cred_twitter, "MistaJub"], [cred_bandcamp, "mistajub"], [cred_discord, "RENREN\#8521"]]
 						},
 					{	name : "Wildebee", // formerly BioOnPc
 						role : [[cred_music, "Sound Design"], [cred_coder, "Programmer"], "Trailers"],
@@ -347,14 +347,14 @@
 #macro stat_area    2
 #macro stat_display 3
 
-#macro cred_artist     `@(color:${make_color_rgb(30, 160, 240)})`
-#macro cred_coder      `@(color:${make_color_rgb(250, 170, 0)})`
-#macro cred_music      `@(color:${make_color_rgb(255, 60, 0)})`
-#macro cred_twitter    cred_artist + "Twitter: @w"
-#macro cred_itchio     cred_coder  + "Itch.io: @w"
-#macro cred_soundcloud cred_music  + "Soundcloud: @w"
-#macro cred_discord    `@(color:${make_color_rgb(160, 70, 200)})Discord: @w`
-#macro cred_yellow     "@y"
+#macro cred_artist   `@(color:${make_color_rgb(30, 160, 240)})`
+#macro cred_coder    `@(color:${make_color_rgb(250, 170, 0)})`
+#macro cred_music    `@(color:${make_color_rgb(255, 60, 0)})`
+#macro cred_twitter  cred_artist + "Twitter: @w"
+#macro cred_itchio   cred_coder  + "Itch.io: @w"
+#macro cred_bandcamp cred_music  + "Bandcamp: @w"
+#macro cred_discord  `@(color:${make_color_rgb(160, 70, 200)})Discord: @w`
+#macro cred_yellow   "@y"
 
 #macro loadoutPlayer (player_is_active(player_find_local_nonsync()) ? player_find_local_nonsync() : 0)
 

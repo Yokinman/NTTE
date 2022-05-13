@@ -18,11 +18,12 @@
 	if("bind_setup_depth_list" not in ntte){
 		ntte.bind_setup_depth_list = [];
 		with([
-			[-3, -5, VenuzTV],                    // Appear Above Explosions
-			[-2, -3, Breath],                     // Appear Above Players
-			[ 1,  7, [MeltSplat, Scorchmark]],    // Appear Below Shadows
-			[ 7,  8, [VenuzCarpet, FloorMiddle]], // Appear Below Scorch Bottoms
-			[ 8,  9, TrapScorchMark]              // Appear Below FloorExplo
+			[-3,   -5, VenuzTV],                    // Appear Above Explosions
+			[-2,   -3, Breath],                     // Appear Above Players
+			[ 0.1,  1, ProtoChest],                 // Appear Below WepPickups
+			[ 1,    7, [MeltSplat, Scorchmark]],    // Appear Below Shadows
+			[ 7,    8, [VenuzCarpet, FloorMiddle]], // Appear Below Scorch Bottoms
+			[ 8,    9, TrapScorchMark]              // Appear Below FloorExplo
 		]){
 			var	_ref = script_ref_create(ntte_setup_depth, self[0], self[1]),
 				_obj = self[2];
@@ -1285,73 +1286,78 @@
 				}
 				
 				 // Quest Room:
-				var _partIndex = 1;
-				if(!call(scr.unlock_get, `quest:part:${_partIndex}`)){
-					if("ntte_quest_spawned_part_index_list" not in GameCont){
-						GameCont.ntte_quest_spawned_part_index_list = [];
-					}
-					if(array_find_index(GameCont.ntte_quest_spawned_part_index_list, _partIndex) < 0){
-						array_push(GameCont.ntte_quest_spawned_part_index_list, _partIndex);
-						
-						var _w		  = 4,
-							_h		  = 4,
-							_type	  = "",
-							_dirStart = 90,
-							_dirOff   = 0,
-							_floorDis = 256,
-							_minID	  = instance_max;
+				with(NothingInactive){
+					var _partIndex = 1;
+					if(!call(scr.unlock_get, `quest:part:${_partIndex}`)){
+						if("ntte_quest_spawned_part_index_list" not in GameCont){
+							GameCont.ntte_quest_spawned_part_index_list = [];
+						}
+						if(array_find_index(GameCont.ntte_quest_spawned_part_index_list, _partIndex) < 0){
+							array_push(GameCont.ntte_quest_spawned_part_index_list, _partIndex);
 							
-						call(scr.floor_set_align, 32, 32);
+							var _w		    = 4,
+								_h		    = 4,
+								_type	    = "",
+								_dirStart   = 90,
+								_dirOff     = 0,
+								_floorDis   = 256,
+								_spawnFloor = FloorNormal;
+								
+							call(scr.floor_set_align, 32, 32);
 							
-						with(call(scr.floor_room_create, _spawnX, _spawnY, _w, _h, _type, _dirStart, _dirOff, _floorDis)){
-							
-							 // Hallway:
-							with(call(scr.instance_random, floors)){
-								var	_x       = bbox_center_x,
-									_y       = bbox_center_y,
+							with(call(scr.floor_room_create, x, y, _w, _h, _type, _dirStart, _dirOff, _floorDis)){
+								 // Floor Sprites:
+								with(floors){
+									sprite_index = spr.FloorPalaceShrine;
+								}
+								
+								 // Hallway:
+								var	_x       = x + choose(-16, 16),
+									_y       = y2 - 16,
 									_moveDis = 32;
 									
 								while(
-									point_distance(_x, _y, other.xstart, other.ystart) > _moveDis / 2
-									&& (
-										!position_meeting(_x, _y, Floor)
-										|| !array_length(call(scr.instances_meeting_point, _x, _y, _spawnFloor))
-									)
+									(ystart - _y) > _moveDis / 2
+									&& !array_length(call(scr.instances_meeting_point, _x, _y, _spawnFloor))
 								){
-									 // Floor & Fake Walls:
-									if(!position_meeting(_x, _y, Floor) || !array_length(call(scr.instances_meeting_point, _x, _y, FloorNormal))){
-										call(scr.floor_set, _x - 16, _y - 16, true);
+									 // Floor:
+									if(!array_length(call(scr.instances_meeting_point, _x, _y, FloorNormal))){
+										with(call(scr.floor_set, _x - 16, _y - 16, true)){
+											sprite_index = spr.FloorPalaceStairs;
+											image_index  = 1;
+											depth        = 8;
+											with(instance_create(x, y - 5, CustomObject)){
+												mask_index    = mskFloor;
+												on_begin_step = PalaceStairs_begin_step;
+											}
+										}
 									}
 									
 									 // Move:
-									var _moveDir = pround(point_direction(_x, _y, other.xstart, other.ystart) + orandom(60), 90);
-									_x += lengthdir_x(_moveDis, _moveDir);
-									_y += lengthdir_y(_moveDis, _moveDir);
-									
-									_x = clamp(_x, _spawnX - 96, _spawnX + 64);
+									_y += 32;
+								}
+								
+								 // Center Floor:
+								var _img = 0;
+								with(call(scr.floor_fill, x, y, 2, 2)){
+									sprite_index = spr.FloorPalaceShrineRoomSmall;
+									image_index  = _img++;
+								}
+								
+								 // Props:
+								call(scr.obj_create, x1 + 16, choose(y1 + 16, y2 - 16), "QuestProp");
+								call(scr.obj_create, x2 - 16, choose(y1 + 16, y2 - 16), "QuestProp");
+								
+								 // Guarded Artifact:
+								with(call(scr.chest_create, x, y, "QuestChest", true)){
+									wep.quest_part_index_list = [_partIndex];
 								}
 							}
 							
-							 // Floor Sprites:
-							with(instances_matching_gt(FloorNormal, "id", _minID)){
-								sprite_index = spr.FloorPalaceShrine;
-							}
-							
-							 // Center Floor:
-							var _img = 0;
-							with(call(scr.floor_fill, x - 16, y - 16, 2, 2)){
-								sprite_index = spr.FloorPalaceShrineRoomSmall;
-								image_index  = _img++;
-							}
-							
-							 // Guarded Artifact:
-							with(call(scr.chest_create, x, y, "QuestChest", true)){
-								wep.quest_part_index_list = [_partIndex];
-							}
+							call(scr.floor_reset_align);
 						}
-						
-						call(scr.floor_reset_align);
 					}
+					break;
 				}
 			}
 			
@@ -1458,99 +1464,260 @@
 				
 				 // Quest Hub:
 				else{
-					var _w			= 5,
-						_h			= 5,
-						_type		= "",
-						_dirStart	= 90,
-						_dirOff 	= 0,
-						_floorDis	= 64,
-						_spawnDis	= 256,
-						_spawnFloor = FloorNormal,
-						_minID		= instance_max;
-						
-					with(call(scr.floor_room_start, _spawnX, _spawnY, _spawnDis, _spawnFloor)){
-						with(call(scr.floor_room_create, x, y, _w, _h, _type, _dirStart, _dirOff, _floorDis)){
+					with(call(scr.floor_room, _spawnX, _spawnY, 96, FloorNormal, 1, 1, "", 0, 0)){
+						var	_roomX        = x,
+							_roomY        = y,
+							_roomDirOff   = 30,
+							_roomFloorDis = 224,
+							_roomList     = [
+								{ "width": irandom_range(1, 3), "height": irandom_range(1, 3), "direction": point_direction(xstart, ystart, x, y) },
+								{ "width": irandom_range(1, 3), "height": irandom_range(1, 3), "direction": undefined                             },
+								{ "width": 3,                   "height": 12,                  "direction": 90                                    }
+							],
+							_roomCount            = array_length(_roomList),
+							_closetRoomFloorsList = [];
 							
-							 // Hallway:
-							with(call(scr.instance_nearest_bbox, x, y2, floors)){
-								var	_x       = bbox_center_x,
-									_y       = bbox_center_y,
-									_moveDis = 32;
+						for(var _roomIndex = 0; _roomIndex < _roomCount; _roomIndex++){
+							var _room = _roomList[_roomIndex];
+							
+							 // Determine Room's Spawn Direction:
+							if(_room.direction == undefined){
+								var	_dirList     = [],
+									_lastRoomDir = _roomList[_roomIndex - 1].direction,
+									_nextRoomDir = _roomList[_roomIndex + 1].direction;
 									
-								while(
-									point_distance(_x, _y, other.xstart, other.ystart) > _moveDis / 2
-									&& (
-										!position_meeting(_x, _y, Floor)
-										|| !array_length(call(scr.instances_meeting_point, _x, _y, _spawnFloor))
-									)
-								){
-									 // Floor & Fake Walls:
-									if(!position_meeting(_x, _y, Floor) || !array_length(call(scr.instances_meeting_point, _x, _y, FloorNormal))){
-										call(scr.floor_set, _x - 16, _y - 16, true);
+								for(var _dirOffset = -90; _dirOffset <= 90; _dirOffset += 90){
+									_dir = _lastRoomDir + _dirOffset;
+									if(angle_difference(_dir, _nextRoomDir + 180) != 0){
+										array_push(_dirList, _dir);
 									}
-									
-									 // Move:
-									var _moveDir = pround(point_direction(_x, _y, other.xstart, other.ystart), 90);
-									_x += lengthdir_x(_moveDis, _moveDir);
-									_y += lengthdir_y(_moveDis, _moveDir);
 								}
+								
+								_room.direction = _dirList[irandom(array_length(_dirList) - 1)];
 							}
 							
-							 // Room Shape:
-							call(scr.floor_fill, x - 16, y - 16, 9, 3);
-							
-							 // Floor Pattern:
-							var _img = 0;
-							with(call(scr.floor_fill, x - 16, y - 112, 3, 3)){
-								sprite_index = spr.VaultFlowerFloor;
-								image_index  = _img++;
-								depth		 = 7;
-							}
-							
-							 // Hint Lore Tiles:
-							var _partIndex = 0;
-							for(var i = -3; i <= 3; i += 2){
-								with(call(scr.floor_set, (x - 16) + (32 * i), y - 16, true)){
-									sprite_index = spr.QuestFloor;
-									image_index  = _partIndex;
-									with(call(scr.obj_create, bbox_center_x, bbox_center_y, "QuestFloorCont")){
-										part_index = _partIndex;
-										target     = other;
-										
-										 // Spawn Previously Placed Artifact:
-										if(call(scr.unlock_get, `quest:part:${_partIndex}`)){
-											if("ntte_quest_spawned_part_index_list" not in GameCont){
-												GameCont.ntte_quest_spawned_part_index_list = [];
-											}
-											array_push(GameCont.ntte_quest_spawned_part_index_list, _partIndex);
-											with(instance_create(x, y, WepPickup)){
-												wep = {
-													"wep"                   : "crabbone",
-													"quest_part_index_list" : [_partIndex]
-												};
+							 // Create Room:
+							with(call(scr.floor_room_create, _roomX, _roomY, _room.width, _room.height, "", _room.direction, _roomDirOff, _roomFloorDis)){
+								var	_toTeleporterX        = _roomX,
+									_toTeleporterY        = _roomY,
+									_toTeleporterTarget   = noone,
+									_fromTeleporterX      = x,
+									_fromTeleporterY      = y2 - 16,
+									_fromTeleporterTarget = noone;
+									
+								 // Teleporters:
+								if(_roomIndex != 0){
+									_toTeleporterX = _roomX;
+									_toTeleporterY = _roomY;
+									do{
+										_toTeleporterX += lengthdir_x(32, _room.direction);
+										_toTeleporterY += lengthdir_y(32, _room.direction);
+									}
+									until(!array_length(call(scr.instances_meeting_rectangle,
+										_toTeleporterX - 16,
+										_toTeleporterY - 16,
+										_toTeleporterX + 16,
+										_toTeleporterY + 16,
+										obj.QuestTeleporterFloorCont
+									)));
+								}
+								if(_roomIndex != _roomCount - 1){
+									_fromTeleporterX = x;
+									_fromTeleporterY = y;
+									do{
+										_fromTeleporterX -= lengthdir_x(32, _room.direction);
+										_fromTeleporterY -= lengthdir_y(32, _room.direction);
+									}
+									until(!array_length(call(scr.instances_meeting_rectangle,
+										_fromTeleporterX - 16,
+										_fromTeleporterY - 16,
+										_fromTeleporterX + 16,
+										_fromTeleporterY + 16,
+										obj.QuestTeleporterFloorCont
+									)));
+								}
+								with(call(scr.floor_set, _toTeleporterX - 16, _toTeleporterY - 16, true)){
+									sprite_index        = spr.QuestTeleporterFloor;
+									_toTeleporterX      = bbox_center_x;
+									_toTeleporterY      = bbox_center_y;
+									_toTeleporterTarget = self;
+								}
+								with(call(scr.floor_set, _fromTeleporterX - 16, _fromTeleporterY - 16, true)){
+									sprite_index          = spr.QuestTeleporterFloor;
+									_fromTeleporterX      = bbox_center_x;
+									_fromTeleporterY      = bbox_center_y;
+									_fromTeleporterTarget = self;
+								}
+								with(call(scr.obj_create, _toTeleporterX, _toTeleporterY, "QuestTeleporterFloorCont")){
+									target     = _toTeleporterTarget;
+									teleport_x = _fromTeleporterX;
+									teleport_y = _fromTeleporterY;
+								}
+								with(call(scr.obj_create, _fromTeleporterX, _fromTeleporterY, "QuestTeleporterFloorCont")){
+									target     = _fromTeleporterTarget;
+									teleport_x = _toTeleporterX;
+									teleport_y = _toTeleporterY;
+								}
+								
+								 // Closet Rooms:
+								if(_roomIndex < _roomCount - 1){
+									array_push(_closetRoomFloorsList, floors);
+									
+									 // Expand Floor Space:
+									with(instances_matching_ne(floors, "id")){
+										if(chance(1, 4)){
+											var	_floorDir = pround(random(360), 90),
+												_floorX   = x + lengthdir_x(32, _floorDir),
+												_floorY   = y + lengthdir_y(32, _floorDir);
+												
+											if(!position_meeting(_floorX, _floorY, Floor)){
+												array_push(
+													_closetRoomFloorsList[array_length(_closetRoomFloorsList) - 1],
+													call(scr.floor_set, _floorX, _floorY, true)
+												);
 											}
 										}
 									}
-									_partIndex++;
+								}
+								
+								 // Main Hub Room:
+								else{
+									var	_mainFillW   = 5,
+										_mainFillH   = 5,
+										_mainFillX   = x,
+										_mainFillY   = y1 + (32 * (_mainFillH / 2)),
+										_loreFillW   = 9,
+										_loreFillH   = 3,
+										_loreFillX   = _mainFillX,
+										_loreFillY   = _mainFillY,
+										_propFillW   = 5,
+										_propFillH   = 3,
+										_propFillX   = x,
+										_propFillY   = _mainFillY + (32 * ((_mainFillH / 2) + 1 + (_propFillH / 2))),
+										_chestFillW  = 3,
+										_chestFillH  = 3,
+										_chestFillX  = x,
+										_chestFillY  = y1 - 16;
+										
+									 // Hallway Props:
+									var	_propXOffset      = 32 * ((_propFillW / 2) - 0.5),
+										_propYOffset      = 32 * ((_propFillH / 2) - 0.5),
+										_westPropGapIndex = irandom_range(0, 5),
+										_eastPropGapIndex = irandom_range(0, 5);
+										
+									call(scr.floor_fill, _propFillX, _propFillY, _propFillW, _propFillH);
+									for(var _propIndex = 0; _propIndex < 4; _propIndex++){
+										var _propY = round(_propFillY + orandom(2) + (_propYOffset * lerp(1, -1, _propIndex / 3)));
+										with([
+											call(scr.obj_create, round(_propFillX - (_propXOffset - random_range(-2, 4))), _propY, "QuestProp"),
+											call(scr.obj_create, round(_propFillX + (_propXOffset - random_range(-2, 4))), _propY, "QuestProp")
+										]){
+											with(call(scr.instances_meeting_point, x, y, FloorNormal)){
+												sprite_index = spr.VaultFlowerFloor;
+												image_index  = choose(0, 2, 4, 6, 8);
+												image_blend  = c_ltgray;
+											}
+										}
+									}
+									
+									 // Main Area:
+									call(scr.floor_fill, _mainFillX, _mainFillY, _mainFillW, _mainFillH);
+									for(var _roomSide = -1; _roomSide <= 1; _roomSide += 2){
+										var	_xOffset = 32 * ((_mainFillW / 2) - 0.5) * _roomSide,
+											_yOffset = 32 * ((_mainFillH / 2) - 0.5);
+											
+										 // Prop:
+										with(call(scr.obj_create,
+											_mainFillX + _xOffset,
+											_mainFillY - _yOffset,
+											"QuestProp"
+										)){
+											with(call(scr.instances_meeting_point, x, y, FloorNormal)){
+												image_blend = c_ltgray;
+											}
+										}
+										
+										 // Wall:
+										instance_create(
+											_mainFillX + _xOffset + ((_roomSide > 0) ? -16 : 0),
+											_mainFillY + _yOffset - 16,
+											Wall
+										);
+										
+										 // Tint Floors:
+										with(call(scr.instances_meeting_point, _mainFillX + _xOffset, _mainFillY - _yOffset, FloorNormal)) image_blend = c_ltgray;
+										with(call(scr.instances_meeting_point, _mainFillX + _xOffset, _mainFillY + _yOffset, FloorNormal)) image_blend = c_ltgray;
+									}
+									
+									 // Hint Lore Tiles:
+									call(scr.floor_fill, _loreFillX, _loreFillY, _loreFillW, _loreFillH);
+									for(var _partIndex = 0; _partIndex < 4; _partIndex++){
+										with(call(scr.floor_set,
+											_loreFillX + (32 * ((_loreFillW / 2) - 1.5) * lerp(-1, 1, _partIndex / 3)) - 16,
+											_loreFillY - 16,
+											true
+										)){
+											sprite_index = spr.QuestFloor;
+											image_index  = _partIndex;
+											with(call(scr.obj_create, bbox_center_x, bbox_center_y, "QuestFloorCont")){
+												part_index = _partIndex;
+												target     = other;
+												
+												 // Spawn Previously Placed Artifact:
+												if(call(scr.unlock_get, `quest:part:${_partIndex}`)){
+													if("ntte_quest_spawned_part_index_list" not in GameCont){
+														GameCont.ntte_quest_spawned_part_index_list = [];
+													}
+													array_push(GameCont.ntte_quest_spawned_part_index_list, _partIndex);
+													with(instance_create(x, y, WepPickup)){
+														wep = {
+															"wep"                   : "crabbone",
+															"quest_part_index_list" : [_partIndex]
+														};
+													}
+												}
+											}
+										}
+									}
+									
+									 // Chest:
+									var _floorIndex = 0;
+									with(call(scr.floor_fill, _chestFillX, _chestFillY, _chestFillW, _chestFillH)){
+										sprite_index = spr.VaultFlowerFloor;
+										image_index  = _floorIndex++;
+										depth        = 7;
+									}
+									call(scr.obj_create, _chestFillX, _chestFillY, "LockedBigQuestChest");
+								}
+								
+								 // Remember Last Position:
+								_roomX = x;
+								_roomY = y;
+							}
+						}
+						
+						 // Closet Room Props:
+						with(_closetRoomFloorsList){
+							var	_floors  = instances_matching_ne(self, "id"),
+								_propNum = irandom_range(1, array_length(_floors) - 2);
+								
+							if(_propNum > 0){
+								with(call(scr.array_shuffle, _floors)){
+									call(scr.obj_create,
+										round(bbox_center_x + orandom(2)),
+										round(bbox_center_y + orandom(2)),
+										"QuestProp"
+									);
+									//image_blend = c_ltgray;
+									if(--_propNum <= 0){
+										break;
+									}
 								}
 							}
-							
-							 // Corner Props:
-							var _propPool = [
-								["QuestProp", 3],
-								[Torch,       1]
-							];
-							call(scr.obj_create, x1 + 16, y1 + 16, call(scr.pool, _propPool));
-							call(scr.obj_create, x2 - 16, y1 + 16, call(scr.pool, _propPool));
-							instance_create(x1 + 16, y2 - 32, Wall);
-							instance_create(x2 - 32, y2 - 32, Wall);
-							
-							 // Chest:
-							call(scr.obj_create, x, y - 96, "LockedBigQuestChest");
 						}
 					}
-					
 				}
+				
 				call(scr.floor_reset_align);
 			}
 			

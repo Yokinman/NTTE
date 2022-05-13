@@ -1566,6 +1566,38 @@
 	instance_destroy();
 	
 	
+#define PopoLaser_create(_x, _y)
+	/*
+		IDPD variant of enemy lasers
+	*/
+	
+	with(instance_create(_x, _y, Laser)){
+		 // Visual:
+		sprite_index        = spr.PopoLaser;
+		image_yscale        = 1.4;
+		ntte_popo_laser_img = img;
+		img                 = 7;
+		
+		return self;
+	}
+	
+#define PopoLaser_step
+	/*
+		Popo lasers hide their laser start & end sprites by overriding 'img'
+	*/
+	
+	ntte_popo_laser_img += img - 7;
+	img                  = 7;
+	
+#define PopoLaser_draw
+	/*
+		Popo lasers manually draw their own start & end sprites
+	*/
+	
+	draw_sprite_ext(spr.PopoLaserStart, ntte_popo_laser_img, xstart, ystart, 1, 1, image_angle, image_blend, image_alpha);
+	draw_sprite_ext(spr.PopoLaserEnd,   ntte_popo_laser_img, x,      y,      1, 1, image_angle, image_blend, image_alpha);
+	
+	
 #define PopoSecurity_create(_x, _y)
 	with(instance_create(_x, _y, CustomEnemy)){
 		var	_wepList  = [spr.PopoSecurityMinigun, spr.PopoSecurityCannon],
@@ -2781,6 +2813,18 @@
 					}
 				}
 			}
+		}
+	}
+	
+#define ntte_draw_bloom
+	 // Popo Lasers:
+	if(array_length(obj.PopoLaser)){
+		var	_sprStart = spr.PopoLaserStart,
+			_sprEnd   = spr.PopoLaserEnd;
+			
+		with(instances_matching_ne(obj.PopoLaser, "id")){
+			draw_sprite_ext(_sprStart, ntte_popo_laser_img, xstart, ystart, 2, 2, image_angle, image_blend, 0.1 * image_alpha);
+			draw_sprite_ext(_sprEnd,   ntte_popo_laser_img, x,      y,      2, 2, image_angle, image_blend, 0.1 * image_alpha);
 		}
 	}
 	

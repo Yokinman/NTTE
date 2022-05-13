@@ -300,7 +300,9 @@
 			AllyLaserCharge         = spr_add("sprAllyLaserCharge",         4,  3,  3);
 			IDPDHeavyBullet         = spr_add("sprIDPDHeavyBullet",         2, 12, 12);
 			IDPDHeavyBulletHit      = spr_add("sprIDPDHeavyBulletHit",      4, 12, 12);
-			PopoLaserCharge         = spr_add("sprPopoLaserCharge",         4,  3,  3);
+			PopoLaser               = spr_add("sprPopoLaser",               1,  2,  3);
+			PopoLaserStart          = spr_add("sprPopoLaserStart",          8,  8,  6);
+			PopoLaserEnd            = spr_add("sprPopoLaserEnd",            8, 10,  8);
 			
 		//#endregion
 		
@@ -1198,11 +1200,12 @@
 			];
 			
 			 // Vault Flower Room:
-			VaultFlowerFloor	  = spr_add("sprFloorVaultFlower",	   9, 0, 0);
+			VaultFlowerFloor      = spr_add("sprFloorVaultFlower",      9, 0, 0);
 			VaultFlowerFloorSmall = spr_add("sprFloorVaultFlowerSmall", 4, 0, 0);
 			
-			 // Quest Hint Lore Tiles:
-			QuestFloor = spr_add("sprFloorQuest", 4, 0, 0);
+			 // Quest Room Tiles:
+			QuestFloor           = spr_add("sprFloorQuest",           4, 0, 0);
+			QuestTeleporterFloor = spr_add("sprFloorQuestTeleporter", 1, 0, 0);
 			
 			//#region PROPS
 			spr_path_add("Props/");
@@ -1872,6 +1875,7 @@
 			BigQuestChest	  = spr_add("sprBigQuestChest",     1, 32, 32, shn64);
 			BigQuestChestOpen = spr_add("sprBigQuestChestOpen", 1, 32, 32);
 			QuestSparkle	  = spr_add("sprQuestSparkle",      4,  6,  6);
+			ProtoChestFire    = spr_add("sprProtoChestFire",    8, 12, 12);
 			
 		//#endregion
 		
@@ -2630,10 +2634,10 @@
 		[[sprTrapFire                                ], [sprCannonFire                         ], [sprFireLilHunter                       ]], // Fire 3
 	//	[[sprFireBall                                ], [sprFireBall                           ], [                                       ]], // Fire Ball
 	//	[[sprFireShell                               ], [sprFireShell                          ], [                                       ]], // Fire Shell
-		[[sprEnemyLaser,               EnemyLaser    ], [sprLaser,              Laser          ], [                                       ]], // Laser
-		[[sprEnemyLaserStart                         ], [sprLaserStart                         ], [                                       ]], // Laser Start
-		[[sprEnemyLaserEnd                           ], [sprLaserEnd                           ], [                                       ]], // Laser End
-		[[sprLaserCharge                             ], ["AllyLaserCharge"                     ], ["PopoLaserCharge"                      ]], // Laser Particle
+		[[sprEnemyLaser,               EnemyLaser    ], [sprLaser,              Laser          ], ["PopoLaser",             "PopoLaser"   ]], // Laser
+		[[sprEnemyLaserStart                         ], [sprLaserStart                         ], ["PopoLaserStart"                       ]], // Laser Start
+		[[sprEnemyLaserEnd                           ], [sprLaserEnd                           ], ["PopoLaserEnd"                         ]], // Laser End
+		[[sprLaserCharge                             ], ["AllyLaserCharge"                     ], [sprIDPDPortalCharge                    ]], // Laser Particle
 		[[sprEnemyLightning,           EnemyLightning], [sprLightning,          Lightning      ], [                                       ]], // Lightning
 	//	[[sprLightningHit                            ], [sprLightningHit                       ], [                                       ]], // Lightning Hit
 	//	[[sprLightningSpawn                          ], [sprLightningSpawn                     ], [                                       ]], // Lightning Particle

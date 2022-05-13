@@ -2,22 +2,24 @@
 	mod_script_call("mod", "teassets", "ntte_init", script_ref_create(init));
 	
 	 // Sprites:
-	global.sprWep       = sprite_add_weapon("../sprites/weps/sprBeetlePistol.png", 3, 2);
-	global.sprWepLocked = sprTemp;
+	global.sprWep        = sprite_add_weapon("../sprites/weps/sprBeetlePistol.png",         3,  2);
+	global.sprWepLoadout = sprite_add_weapon("../sprites/weps/sprBeetlePistolLoadout.png", 24, 24);
+	global.sprWepLocked  = sprTemp;
 	
 #define cleanup
 	mod_script_call("mod", "teassets", "ntte_cleanup", script_ref_create(cleanup));
 	
-#define weapon_name   return (weapon_avail() ? "BEETLE BLASTER" : "LOCKED");
-#define weapon_text   return "A PIERCING STING";
-#define weapon_swap   return sndSwapPistol;
-#define weapon_sprt   return (weapon_avail() ? global.sprWep : global.sprWepLocked);
-#define weapon_area   return -1; // Doesn't spawn naturally
-#define weapon_type   return type_bullet;
-#define weapon_cost   return 1;
-#define weapon_load   return 13; // 0.43 Seconds
-//#define weapon_auto  return true;
-#define weapon_avail  return call(scr.unlock_get, "race:beetle");
+#define weapon_name     return (weapon_avail() ? "BEETLE BLASTER" : "LOCKED");
+#define weapon_text     return "A PIERCING STING";
+#define weapon_swap     return sndSwapPistol;
+#define weapon_sprt     return (weapon_avail() ? global.sprWep : global.sprWepLocked);
+#define weapon_loadout  return global.sprWepLoadout;
+#define weapon_area     return -1; // Doesn't spawn naturally
+#define weapon_type     return type_bullet;
+#define weapon_cost     return 1;
+#define weapon_load     return 13; // 0.43 Seconds
+//#define weapon_auto    return true;
+#define weapon_avail    return call(scr.unlock_get, "race:beetle");
 
 #define weapon_fire(_wep)
 	var _fire = call(scr.weapon_fire_init, _wep);

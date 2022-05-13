@@ -750,7 +750,7 @@
 						switch(_partIndex){
 							case 0 : sprite_index = spr.AllyLaserCharge;    break;
 							case 1 : sprite_index = spr.ElectroPlasmaTrail; break;
-							case 2 : sprite_index = spr.PopoLaserCharge;    break;
+							case 2 : sprite_index = sprIDPDPortalCharge;    break;
 							case 3 : sprite_index = sprLaserCharge;         break;
 						}
 					}
@@ -840,6 +840,100 @@
 	);
 	
 	
+#define QuestTeleporterFloorCont_create(_x, _y)
+	/*
+		The controller object for quest teleporter floor tiles
+	*/
+	
+	with(instance_create(_x, _y, CustomObject)){
+		 // Vars:
+		mask_index                  = mskBandit;
+		target                      = noone;
+		teleport_x                  = x;
+		teleport_y                  = y;
+		teleport_instance_delay_map = { "key_list":[], "list":[] };
+		
+		return self;
+	}
+	
+#define QuestTeleporterFloorCont_begin_step
+	/*
+		Quest teleporter floor tiles teleport players after a short delay
+	*/
+	
+	var	_teleportInstanceDelayMap  = teleport_instance_delay_map,
+		_teleportInstanceList      = _teleportInstanceDelayMap.key_list;
+		
+	if(array_length(_teleportInstanceList)){
+		var	_teleportInstanceDelayList = _teleportInstanceDelayMap.list,
+			_teleportInstanceIndex     = 0;
+			
+		with(_teleportInstanceList){
+			if(place_meeting(x, y, other.target)){
+				if(_teleportInstanceDelayList[_teleportInstanceIndex] > 0){
+					_teleportInstanceDelayList[_teleportInstanceIndex] -= current_time_scale;
+				}
+				else{
+					 // Move Camera:
+					call(scr.view_shift,
+						index,
+						point_direction(x, y, other.teleport_x, other.teleport_y),
+						point_distance(x, y, other.teleport_x, other.teleport_y)
+					);
+					
+					 // Effects:
+					with(instance_create(other.teleport_x, other.teleport_y, Wind)){
+						sprite_index = sprOldGuardianDeflect;
+						depth        = other.depth - 1;
+					}
+					with(instance_create(x, y, Wind)){
+						sprite_index = sprOldGuardianDeflect;
+						depth        = other.depth - 1;
+					}
+					
+					 // Move:
+					x         = other.teleport_x;
+					y         = other.teleport_y;
+					xprevious = x;
+					yprevious = y;
+					
+					 // Clear Walls:
+					call(scr.wall_clear, self);
+				}
+				_teleportInstanceIndex++;
+			}
+			else{
+				var _teleportInstancePos = array_find_index(_teleportInstanceDelayMap.key_list, self);
+				_teleportInstanceDelayMap.key_list = call(scr.array_delete, _teleportInstanceDelayMap.key_list, _teleportInstancePos);
+				_teleportInstanceDelayMap.list     = call(scr.array_delete, _teleportInstanceDelayMap.list,     _teleportInstancePos);
+			}
+		}
+	}
+	
+#define QuestTeleporterFloorCont_end_step
+	/*
+		Quest teleporter floor tiles teleport players that walk over them
+	*/
+	
+	if(instance_exists(target)){
+		if(place_meeting(x, y, Player)){
+			var	_teleportInstanceDelayMap  = teleport_instance_delay_map,
+				_teleportInstanceList      = _teleportInstanceDelayMap.key_list,
+				_teleportInstanceDelayList = _teleportInstanceDelayMap.list;
+				
+			with(call(scr.instances_meeting_instance, self, Player)){
+				if(array_find_index(_teleportInstanceList, self) < 0){
+					if(place_meeting(x, y, other) && !place_meeting(xprevious, yprevious, other)){
+						array_push(_teleportInstanceList,      self);
+						array_push(_teleportInstanceDelayList, 10);
+					}
+				}
+			}
+		}
+	}
+	else instance_destroy();
+	
+	
 #define LockedBigQuestChest_create(_x, _y)
 	/*
 		Used for the ultimate quest
@@ -850,6 +944,7 @@
 		sprite_index = spr.BigQuestChest;
 		spr_shadow   = shd32;
 		spr_shadow_y = 8;
+		depth        = -1;
 		
 		return self;
 	}
@@ -910,7 +1005,8 @@
 		spr_idle	 = lq_get(spr, `QuestProp${_num}Idle`);
 		spr_hurt	 = lq_get(spr, `QuestProp${_num}Hurt`);
 		spr_dead	 = lq_get(spr, `QuestProp${_num}Dead`);
-		spr_shadow   = mskNone;
+		spr_shadow   = shd24;
+		spr_shadow_y = -2;
 		sprite_index = spr_idle;
 		
 		 // Sounds:
