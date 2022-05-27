@@ -724,7 +724,8 @@
 	
 	 // The Definitive Gun:
 		with(instance_create(x, y, WepPickup)){
-			wep = "ultra quasar rifle";
+			ammo = true;
+			wep  = "ultra quasar rifle";
 		}
 	
 	/*

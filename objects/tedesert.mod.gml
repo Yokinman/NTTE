@@ -695,7 +695,7 @@
 	if(instance_exists(Portal) && place_meeting(x, y, Portal)){
 		if(speed > 0){
 			sound_play_pitchvol(
-				(array_length(lq_defget(wep, "quest_part_index_list", [])) ? sndPlasmaReload : sndMutant14Turn),
+				((lq_defget(wep, "type_index", 0) == 0) ? sndMutant14Turn : sndPlasmaReload),
 				0.6 + random(0.2),
 				0.8
 			);
@@ -717,7 +717,7 @@
 	}
 	
 #define Bone_hit
-	var _wepIsPart = (array_length(lq_defget(wep, "quest_part_index_list", [])) > 0);
+	var _wepIsPart = (lq_defget(wep, "type_index", 0) > 0);
 	
 	 // Secret:
 	if(instance_is(other, ScrapBoss) && !_wepIsPart){
@@ -731,124 +731,125 @@
 	
 	 // Damage:
 	else{
-		if("race" in creator && creator.race == "chicken" && skill_get(mut_throne_butt) > 0 && !_wepIsPart){
-			if(projectile_canhit_melee(other)){
-				projectile_hit(other, damage, speed * force);
-			}
-		}
-		else{
-			var _size = other.size;
+		var _canPierce = (
+			"race" in creator
+			&& creator.race == "chicken"
+			&& skill_get(mut_throne_butt) > 0
+		);
+		if(_canPierce ? projectile_canhit_melee(other) : true){
+			var _enemySize = other.size;
 			
 			projectile_hit(other, damage, speed * force);
 			
 			if(instance_exists(self)){
 				 // Part:
 				if(_wepIsPart){
-					var	_len = 8,
-						_dir = image_angle,
-						_x   = x + lengthdir_x(_len, _dir),
-						_y   = y + lengthdir_y(_len, _dir);
-						
-					switch(wep.quest_part_index_list[array_length(wep.quest_part_index_list) - 1]){
-						
-						case 0:
-						
-							var _protoWep = wep_rusty_revolver;
+					var _wep = wep;
+					while(true){
+						var	_len = 8,
+							_dir = image_angle,
+							_x   = x + lengthdir_x(_len, _dir),
+							_y   = y + lengthdir_y(_len, _dir);
 							
-							 // Fetch Proto Weapon:
-							if(instance_exists(ProtoChest)){
-								with(ProtoChest){
+						switch(lq_defget(_wep, "type_index", 0) - 1){
+							
+							case 0:
+							
+								var _protoWep = wep_rusty_revolver;
+								
+								 // Fetch Proto Weapon:
+								if(instance_exists(ProtoChest)){
+									with(ProtoChest){
+										_protoWep = wep;
+									}
+								}
+								else with(instance_create(0, 0, ProtoChest)){
 									_protoWep = wep;
+									instance_delete(self);
 								}
-							}
-							else with(instance_create(0, 0, ProtoChest)){
-								_protoWep = wep;
-								instance_delete(self);
-							}
-							
-							 // Effects:
-							with(instance_create(_x, _y, GunGun)){
-								sprite_index = spr.ProtoChestFire;
-							}
-							sound_play_pitch(sndGunGun, 1.5 + orandom(0.1));
-							sound_play_gun(sndStatueXP, 0.3, 0.3);
-							
-							 // Fire Proto Weapon:
-							call(scr.player_fire_at,
-								[_x, _y],
-								_dir,
-								1,
-								_protoWep,
-								undefined,
-								creator,
-								true
-							);
-							
-							break;
-							
-						case 1:
-						
-							 // Projectiles:
-							var _tetherInst = noone;
-							for(var _num = -2; _num <= 2; _num++){
-								with(call(scr.projectile_create, _x, _y, "ElectroPlasma", _dir + (60 * _num), 1.5)){
-									tether_inst = _tetherInst;
-									_tetherInst = self;
-									friction    = speed / 90;
-								}
-							}
-							
-							 // Plasma Impact:
-							call(scr.projectile_create, _x, _y, "ElectroPlasmaImpact", _dir);
-							
-							 // Safety Zone:
-							with(call(scr.projectile_create, _x, _y, "BatScreech")){
-								image_speed *= 2/3;
-								image_blend  = make_color_rgb(186, 62, 198);
-							}
-							
-							 // Sound:
-							if(skill_get(mut_laser_brain) > 0){
-								sound_play_gun(sndLightningShotgunUpg, 0.4, 0.6);
-							}
-							else{
-								sound_play_gun(sndLightningShotgun, 0.3, 0.3);
-							}
-							sound_play_pitchvol(sndHammer, 0.3, 2);
-							
-							break;
-							
-						case 2:
-						
-							var _stickTarget = other;
-							if(instance_exists(_stickTarget)){
-								_dir += 180;
-								_x    = x + lengthdir_x(_len, _dir);
-								_y    = y + lengthdir_y(_len, _dir);
 								
+								 // Effects:
+								with(instance_create(_x, _y, GunGun)){
+									sprite_index = spr.ProtoChestFire;
+								}
+								sound_play_pitch(sndGunGun, 1.5 + orandom(0.1));
+								sound_play_gun(sndStatueXP, 0.3, 0.3);
+								
+								 // Fire Proto Weapon:
+								call(scr.player_fire_at,
+									[_x, _y],
+									_dir,
+									1,
+									_protoWep,
+									team,
+									creator,
+									true
+								);
+								
+								break;
+								
+							case 1:
+							
 								 // Projectiles:
-								var _laserCannon = call(scr.projectile_create, _x, _y, "BoneArtifactLaserCannon", _dir);
-								with(_laserCannon){
-									var _ammoAdd = _size * 2;
-									target = other;
-									delay += 3 * _ammoAdd;
-									ammo  += _ammoAdd;
+								var _tetherInst = noone;
+								for(var _num = -2; _num <= 2; _num++){
+									with(call(scr.projectile_create, _x, _y, "ElectroPlasma", _dir + (60 * _num), 1.5)){
+										tether_inst = _tetherInst;
+										_tetherInst = self;
+										friction    = speed / 90;
+									}
 								}
-								sound_play_gun(sndLaserCannonCharge, 0.3, 0.3);
 								
-								 // Stick in Enemy:
-								if(!broken){
-									with(call(scr.obj_create, x, y, ((_stickTarget.my_health > 0) ? "WepPickupStick" : WepPickup))){
-										rotation     = other.image_angle;
-										curse        = other.curse;
-										wep          = other.wep;
-										creator      = other.creator;
-										if(ultra_get("chicken", 2) && instance_is(creator, Player) && creator.race == "chicken"){
-											alarm0 = 30;
-										}
-										
-										 // Sticking:
-										if(_stickTarget.my_health > 0){
+								 // Plasma Impact:
+								call(scr.projectile_create, _x, _y, "ElectroPlasmaImpact", _dir);
+								
+								 // Safety Zone:
+								with(call(scr.projectile_create, _x, _y, "BatScreech")){
+									image_speed *= 2/3;
+									image_blend  = make_color_rgb(186, 62, 198);
+								}
+								
+								 // Sound:
+								if(skill_get(mut_laser_brain) > 0){
+									sound_play_gun(sndLightningShotgunUpg, 0.4, 0.6);
+								}
+								else{
+									sound_play_gun(sndLightningShotgun, 0.3, 0.3);
+								}
+								sound_play_pitchvol(sndHammer, 0.3, 2);
+								
+								break;
+								
+							case 2:
+							
+								var _stickTarget = other;
+								if(instance_exists(_stickTarget)){
+									_dir += 180;
+									_x    = x + lengthdir_x(_len, _dir);
+									_y    = y + lengthdir_y(_len, _dir);
+									
+									 // Projectiles:
+									var _laserCannon = call(scr.projectile_create, _x, _y, "BoneArtifactLaserCannon", _dir);
+									with(_laserCannon){
+										var _ammoAdd = _enemySize * 2;
+										target = other;
+										delay += 3 * _ammoAdd;
+										ammo  += _ammoAdd;
+									}
+									sound_play_gun(sndLaserCannonCharge, 0.3, 0.3);
+									
+									 // Stick in Enemy:
+									if(_stickTarget.my_health > 0 && !broken){
+										with(call(scr.obj_create, x, y, "WepPickupStick")){
+											rotation     = other.image_angle;
+											curse        = other.curse;
+											wep          = other.wep;
+											creator      = other.creator;
+											if(ultra_get("chicken", 2) && instance_is(creator, Player) && creator.race == "chicken"){
+												alarm0 = 30;
+											}
+											
+											 // Sticking:
 											stick_target = _stickTarget;
 											with(stick_target){
 												var	_len = 20,
@@ -865,89 +866,96 @@
 											}
 											stick_x = x - _stickTarget.x;
 											stick_y = y - _stickTarget.y;
+											
+											 // Reorient Laser Cannon:
+											with(_laserCannon){
+												target      = other;
+												direction   = other.rotation + 180;
+												image_angle = direction;
+											}
 										}
-										
-										 // Reorient Laser Cannon:
-										with(_laserCannon){
-											target      = other;
-											direction   = other.rotation + 180;
-											image_angle = direction;
-										}
-									}
-									broken = true;
-									instance_delete(self);
-									exit;
-								}
-							}
-							
-							break;
-							
-						case 3:
-						
-							 // Projectiles:
-							with(call(scr.projectile_create, _x, _y, PlasmaBig, _dir, 1.5)){
-								var	_num = 4,
-									_len = 64,
-									_ang = direction + ((360 / _num) / 2);
-									
-								for(var _dir = _ang; _dir < _ang + 360; _dir += (360 / 4)){
-									with(call(scr.projectile_create, x, y, "VlasmaBullet", _dir + 180)){
-										x += lengthdir_x(_len, _dir);
-										y += lengthdir_y(_len, _dir);
-										target = other;
-										call(scr.team_instance_sprite, 1, self);
+										broken = true;
+										instance_delete(self);
+										exit;
 									}
 								}
 								
-								call(scr.team_instance_sprite, 1, self);
-							}
+								break;
+								
+							case 3:
 							
-							 // Teleport:
-							if(!broken){
-								with(call(scr.array_shuffle, instances_matching_ne(Floor, "id"))){
-									if(
-										place_free(x, y)
-										&& !place_meeting(x, y, hitme)
-										&& !place_meeting(x, y, chestprop)
-										&& !place_meeting(x, y, other)
-									){
-										var	_cx = bbox_center_x,
-											_cy = bbox_center_y;
-											
-										if(point_distance(_cx, _cy, other.x, other.y) < 192){
-											with(other){
-												instance_create(x, y, ChickenB);
-												x = _cx;
-												y = _cy;
-												image_index = 1;
-												instance_create(x, y, ChickenB);
+								 // Projectiles:
+								with(call(scr.projectile_create, _x, _y, PlasmaBig, _dir, 1.5)){
+									var	_num    = 4,
+										_len    = 64,
+										_ang    = direction + ((360 / _num) / 2),
+										_target = other;
+										
+									for(var _dir = _ang; _dir < _ang + 360; _dir += (360 / 4)){
+										with(call(scr.projectile_create, x, y, "VlasmaBullet", _dir + 180)){
+											x += lengthdir_x(_len, _dir);
+											y += lengthdir_y(_len, _dir);
+											target = _target;
+											call(scr.team_instance_sprite, 1, self);
+										}
+									}
+									
+									call(scr.team_instance_sprite, 1, self);
+								}
+								
+								 // Teleport:
+								if(!broken){
+									with(call(scr.array_shuffle, instances_matching_ne(Floor, "id"))){
+										if(
+											place_free(x, y)
+											&& !place_meeting(x, y, hitme)
+											&& !place_meeting(x, y, chestprop)
+											&& !place_meeting(x, y, other)
+										){
+											var	_cx = bbox_center_x,
+												_cy = bbox_center_y;
 												
-												 // Sound:
-												sound_play_pitchvol(sndPlasma, 0.6 + orandom(0.1), 1.5);
-												sound_play_pitch(sndEliteShielderTeleport, 1.6 + orandom(0.1));
+											if(point_distance(_cx, _cy, other.x, other.y) < 192){
+												with(other){
+													instance_create(x, y, ChickenB);
+													x = _cx;
+													y = _cy;
+													image_index = 1;
+													instance_create(x, y, ChickenB);
+													
+													 // Sound:
+													sound_play_pitchvol(sndPlasma, 0.6 + orandom(0.1), 1.5);
+													sound_play_pitch(sndEliteShielderTeleport, 1.6 + orandom(0.1));
+												}
+												break;
 											}
-											break;
 										}
 									}
 								}
-							}
-							
-							 // Sound:
-							if(skill_get(mut_laser_brain) > 0){
-								sound_play_gun(sndPlasmaBigUpg, 0.3, -0.5);
-							}
-							else{
-								sound_play_gun(sndPlasmaBig, 0.3, -0.5);
-							}
-							
-							break;
-							
+								
+								 // Sound:
+								if(skill_get(mut_laser_brain) > 0){
+									sound_play_gun(sndPlasmaBigUpg, 0.3, -0.5);
+								}
+								else{
+									sound_play_gun(sndPlasmaBig, 0.3, -0.5);
+								}
+								
+								break;
+								
+						}
+						if(call(scr.weapon_has_temerge, _wep)){
+							_wep = call(scr.weapon_get_temerge_weapon, _wep);
+						}
+						else break;
 					}
-					instance_destroy();
+					if(!_canPierce){
+						instance_destroy();
+					}
 				}
 				
 				 // Bone:
-				else{
+				else if(!_canPierce){
 					 // Sound:
 					call(scr.sound_play_at, x, y, sndBloodGamble, 1.2 + random(0.2), 3);
 					
@@ -983,14 +991,7 @@
 	
 	 // Darn:
 	if(broken){
-		if(array_length(lq_defget(wep, "quest_part_index_list", []))){
-			instance_create(x, y, ChickenB);
-			sound_play(sndPlasmaReloadUpg);
-			if(instance_is(creator, Player)){
-				creator.gunshine = max(creator.gunshine, 7);
-			}
-		}
-		else{
+		if(lq_defget(wep, "type_index", 0) == 0){
 			call(scr.sound_play_at, x, y, sndHitRock, 1.4 + random(0.2), 2.5);
 			
 			 // for u yokin:
@@ -999,6 +1000,13 @@
 					sprite_index = spr.BoneShard;
 					motion_add(random(360), 2);
 				}
+			}
+		}
+		else{
+			instance_create(x, y, ChickenB);
+			sound_play(sndPlasmaReloadUpg);
+			if(instance_is(creator, Player)){
+				creator.gunshine = max(creator.gunshine, 7);
 			}
 		}
 	}
@@ -1013,6 +1021,11 @@
 			creator  = other.creator;
 			if(ultra_get("chicken", 2) && instance_is(creator, Player) && creator.race == "chicken"){
 				alarm0 = 30;
+			}
+			
+			 // Grab Projectiles:
+			with(instances_matching(projectile, "target", other)){
+				target = other;
 			}
 		}
 	}
@@ -1262,7 +1275,7 @@
 			(
 				(instance_is(self, ThrownWep) || array_find_index(obj.Bone, self) >= 0)
 				&& call(scr.wep_raw, wep) == "crabbone"
-				&& !array_length(lq_defget(wep, "quest_part_index_list", []))
+				&& lq_defget(wep, "type_index", 0) == 0
 			)
 			|| array_find_index(obj.BoneArrow, self) >= 0
 		){
@@ -2959,14 +2972,13 @@
 			&& lq_defget(wep, "ammo", 1) > 1
 		){
 			wep.ammo--;
-			with(instance_create(x, y, WepPickup)){
-				wep      = lq_clone(other.wep);
-				wep.ammo = 1;
-				curse    = other.curse;
-				if("quest_part_index_list" in wep && array_length(wep.quest_part_index_list)){
-					other.wep.quest_part_index_list = array_slice(wep.quest_part_index_list, 0, array_length(wep.quest_part_index_list) - 1);
-					wep.quest_part_index_list       = array_slice(wep.quest_part_index_list, array_length(wep.quest_part_index_list) - 1, 1);
+			var _ammoWep = lq_defget(wep, "ammo_wep", wep_none);
+			if(_ammoWep != wep_none){
+				with(instance_create(x, y, WepPickup)){
+					wep   = _ammoWep;
+					curse = other.curse;
 				}
+				wep.ammo_wep = wep_none;
 			}
 		}
 	}

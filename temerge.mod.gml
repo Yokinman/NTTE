@@ -877,7 +877,6 @@
 #define temerge_weapon_area(_wep, _mergeStockArea)
 	/*
 		Merged weapons use the spawn difficulty of ...
-		***Do later when merged weapon spawning is rebalanced
 	*/
 	
 	return _mergeStockArea;

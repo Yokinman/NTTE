@@ -2010,17 +2010,19 @@
 		var _beetleChest = GameCont.player_beetle_chest_info_list[index];
 		if(_beetleChest.wep == wep_none){
 			with(call(scr.instance_nearest_array, x, y, instances_matching_le(instances_matching(WepPickup, "visible", true), "curse", 0))){
-				_beetleChest.wep      = wep;
-				_beetleChest.has_ammo = ammo;
-				
-				 // Effects:
-				for(var _dir = 22.5; _dir < 180; _dir += 45){
-					with(call(scr.fx, x, y, [_dir, 3], Dust)){
-						depth = 0;
+				if(place_meeting(x, y, other) || !collision_line(x, y, other.x, other.y, Wall, false, false)){
+					_beetleChest.wep      = wep;
+					_beetleChest.has_ammo = ammo;
+					
+					 // Effects:
+					for(var _dir = 22.5; _dir < 180; _dir += 45){
+						with(call(scr.fx, x, y, [_dir, 3], Dust)){
+							depth = 0;
+						}
 					}
+					
+					instance_destroy();
 				}
-				
-				instance_destroy();
 			}
 		}
 	}

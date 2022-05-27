@@ -2971,7 +2971,12 @@
 			}
 			
 			 // Safe Spawns & Misc:
+			var _lastVaults = GameCont.vaults;
+			if(GameCont.area == area_vault){
+				GameCont.vaults = min(_subarea - 1, 2);
+			}
 			event_perform(ev_alarm, 2);
+			GameCont.vaults = _lastVaults;
 			
 			 // Remove Overlapping Floors:
 			with(_overlapFloorBBox){
@@ -3005,6 +3010,22 @@
 			}
 			var _clearID = instance_max;
 			event_perform(ev_alarm, 1);
+			var _maxClearID = instance_max;
+			for(var _id = _clearID; _id < _maxClearID; _id++){
+				if("object_index" in _id){
+					if(instance_is(_id, PortalClear)){
+						instance_delete(_id);
+						break;
+					}
+					else if(instance_is(_id, Wall)){
+						with(_id){
+							if(place_meeting(x, y, hitme) && place_meeting(x, y, Floor)){
+								instance_destroy();
+							}
+						}
+					}
+				}
+			}
 			
 			 // Player Reset:
 			if(game_letterbox == false){
@@ -3035,9 +3056,6 @@
 					instance_delete(self);
 					break;
 				}
-			}
-			with(instances_matching_gt(PortalClear, "id", _clearID)){
-				instance_destroy();
 			}
 			
 			 // Move Objects:

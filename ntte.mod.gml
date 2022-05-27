@@ -1345,12 +1345,19 @@
 								}
 								
 								 // Props:
-								call(scr.obj_create, x1 + 16, choose(y1 + 16, y2 - 16), "QuestProp");
-								call(scr.obj_create, x2 - 16, choose(y1 + 16, y2 - 16), "QuestProp");
+								for(var _index = 0; _index < 4; _index++){
+									if(chance(3, 4)){
+										call(scr.obj_create,
+											lerp(x1 + 16, x2 - 16, _index div 2),
+											lerp(y1 + 16, y2 - 16, _index mod 2),
+											"QuestPillar"
+										);
+									}
+								}
 								
 								 // Guarded Artifact:
 								with(call(scr.chest_create, x, y, "QuestChest", true)){
-									wep.quest_part_index_list = [_partIndex];
+									wep.type_index = _partIndex + 1;
 								}
 							}
 							
@@ -1447,7 +1454,7 @@
 							with(call(scr.floor_room_create, x, y, _w, _h, _type, _dirStart, _dirOff, _floorDis)){
 								 // Ancient Artifact:
 								with(call(scr.chest_create, x, y, "QuestChest", true)){
-									wep.quest_part_index_list = [_partIndex];
+									wep.type_index = _partIndex + 1;
 								}
 								
 								 // Floor Tiles:
@@ -1472,7 +1479,7 @@
 							_roomList     = [
 								{ "width": irandom_range(1, 3), "height": irandom_range(1, 3), "direction": point_direction(xstart, ystart, x, y) },
 								{ "width": irandom_range(1, 3), "height": irandom_range(1, 3), "direction": undefined                             },
-								{ "width": 3,                   "height": 12,                  "direction": 90                                    }
+								{ "width": 3,                   "height": 14,                  "direction": 90                                    }
 							],
 							_roomCount            = array_length(_roomList),
 							_closetRoomFloorsList = [];
@@ -1518,7 +1525,7 @@
 										_toTeleporterY - 16,
 										_toTeleporterX + 16,
 										_toTeleporterY + 16,
-										obj.QuestTeleporterFloorCont
+										obj.QuestTeleporterPad
 									)));
 								}
 								if(_roomIndex != _roomCount - 1){
@@ -1533,7 +1540,7 @@
 										_fromTeleporterY - 16,
 										_fromTeleporterX + 16,
 										_fromTeleporterY + 16,
-										obj.QuestTeleporterFloorCont
+										obj.QuestTeleporterPad
 									)));
 								}
 								with(call(scr.floor_set, _toTeleporterX - 16, _toTeleporterY - 16, true)){
@@ -1548,12 +1555,12 @@
 									_fromTeleporterY      = bbox_center_y;
 									_fromTeleporterTarget = self;
 								}
-								with(call(scr.obj_create, _toTeleporterX, _toTeleporterY, "QuestTeleporterFloorCont")){
+								with(call(scr.obj_create, _toTeleporterX, _toTeleporterY, "QuestTeleporterPad")){
 									target     = _toTeleporterTarget;
 									teleport_x = _fromTeleporterX;
 									teleport_y = _fromTeleporterY;
 								}
-								with(call(scr.obj_create, _fromTeleporterX, _fromTeleporterY, "QuestTeleporterFloorCont")){
+								with(call(scr.obj_create, _fromTeleporterX, _fromTeleporterY, "QuestTeleporterPad")){
 									target     = _fromTeleporterTarget;
 									teleport_x = _toTeleporterX;
 									teleport_y = _toTeleporterY;
@@ -1591,7 +1598,7 @@
 										_loreFillX   = _mainFillX,
 										_loreFillY   = _mainFillY,
 										_propFillW   = 5,
-										_propFillH   = 3,
+										_propFillH   = 5,
 										_propFillX   = x,
 										_propFillY   = _mainFillY + (32 * ((_mainFillH / 2) + 1 + (_propFillH / 2))),
 										_chestFillW  = 3,
@@ -1600,42 +1607,48 @@
 										_chestFillY  = y1 - 16;
 										
 									 // Hallway Props:
-									var	_propXOffset      = 32 * ((_propFillW / 2) - 0.5),
-										_propYOffset      = 32 * ((_propFillH / 2) - 0.5),
-										_westPropGapIndex = irandom_range(0, 5),
-										_eastPropGapIndex = irandom_range(0, 5);
+									var	_propXOffset    = 32 * ((_propFillW / 2) - 0.5),
+										_propYOffset    = 32 * ((_propFillH / 2) - 0.5),
+										_propSide       = choose(-1, 1),
+										_propCount      = 5,
+										_propFillFloors = call(scr.floor_fill, _propFillX, _propFillY, _propFillW, _propFillH);
 										
-									call(scr.floor_fill, _propFillX, _propFillY, _propFillW, _propFillH);
-									for(var _propIndex = 0; _propIndex < 4; _propIndex++){
-										var _propY = round(_propFillY + orandom(2) + (_propYOffset * lerp(1, -1, _propIndex / 3)));
-										with([
-											call(scr.obj_create, round(_propFillX - (_propXOffset - random_range(-2, 4))), _propY, "QuestProp"),
-											call(scr.obj_create, round(_propFillX + (_propXOffset - random_range(-2, 4))), _propY, "QuestProp")
-										]){
-											with(call(scr.instances_meeting_point, x, y, FloorNormal)){
-												sprite_index = spr.VaultFlowerFloor;
-												image_index  = choose(0, 2, 4, 6, 8);
-												image_blend  = c_ltgray;
+									for(var _propIndex = 0; _propIndex < _propCount; _propIndex++){
+										repeat(2){
+											var _propY = round(_propFillY + orandom(2) + (_propYOffset * lerp(1, -1, clamp((_propIndex + orandom(0.05)) / (_propCount - 1), 0, 1))));
+											if(_propIndex != floor(_propCount / 2)){
+												call(scr.obj_create, round(_propFillX + ((_propXOffset + random_range(-1, 1)) * _propSide)), _propY, "QuestPillar");
 											}
+											else{
+												instance_create(_propFillX + ((_propXOffset + 8) * _propSide) - 8, pround(_propY, 16) - 8, Wall);
+											}
+											_propSide *= -1;
 										}
 									}
+									with(_propFillFloors){
+										if(place_meeting(x, y, prop) && !place_meeting(x, y, Wall)){
+											sprite_index = spr.VaultFlowerFloor;
+											image_index  = choose(0, 2, 4, 6, 8);
+											image_blend  = make_color_hsv(0, 0, 192 + orandom(8));
+										}
+									}
+									call(scr.obj_create, _propFillX + (_propXOffset - 16), _propFillY, "QuestTorch");
+									call(scr.obj_create, _propFillX - (_propXOffset - 16), _propFillY, "QuestTorch");
+									call(scr.obj_create, x1 + 16,                          y2 - 16,    "QuestTorch");
+									call(scr.obj_create, x2 - 16,                          y2 - 16,    "QuestTorch");
 									
 									 // Main Area:
-									call(scr.floor_fill, _mainFillX, _mainFillY, _mainFillW, _mainFillH);
+									var _mainFillFloors = call(scr.floor_fill, _mainFillX, _mainFillY, _mainFillW, _mainFillH);
 									for(var _roomSide = -1; _roomSide <= 1; _roomSide += 2){
 										var	_xOffset = 32 * ((_mainFillW / 2) - 0.5) * _roomSide,
 											_yOffset = 32 * ((_mainFillH / 2) - 0.5);
 											
 										 // Prop:
-										with(call(scr.obj_create,
+										call(scr.obj_create,
 											_mainFillX + _xOffset,
 											_mainFillY - _yOffset,
-											"QuestProp"
-										)){
-											with(call(scr.instances_meeting_point, x, y, FloorNormal)){
-												image_blend = c_ltgray;
-											}
-										}
+											"QuestTorch"
+										);
 										
 										 // Wall:
 										instance_create(
@@ -1643,10 +1656,11 @@
 											_mainFillY + _yOffset - 16,
 											Wall
 										);
-										
-										 // Tint Floors:
-										with(call(scr.instances_meeting_point, _mainFillX + _xOffset, _mainFillY - _yOffset, FloorNormal)) image_blend = c_ltgray;
-										with(call(scr.instances_meeting_point, _mainFillX + _xOffset, _mainFillY + _yOffset, FloorNormal)) image_blend = c_ltgray;
+									}
+									with(_mainFillFloors){
+										if(place_meeting(x, y, prop) || place_meeting(x, y, Wall)){
+											image_blend = make_color_hsv(0, 0, 192 + orandom(8));
+										}
 									}
 									
 									 // Hint Lore Tiles:
@@ -1671,8 +1685,8 @@
 													array_push(GameCont.ntte_quest_spawned_part_index_list, _partIndex);
 													with(instance_create(x, y, WepPickup)){
 														wep = {
-															"wep"                   : "crabbone",
-															"quest_part_index_list" : [_partIndex]
+															"wep"        : "crabbone",
+															"type_index" : _partIndex + 1
 														};
 													}
 												}
@@ -1706,7 +1720,7 @@
 									call(scr.obj_create,
 										round(bbox_center_x + orandom(2)),
 										round(bbox_center_y + orandom(2)),
-										"QuestProp"
+										(chance(1, 4) ? "QuestTorch" : "QuestPillar")
 									);
 									//image_blend = c_ltgray;
 									if(--_propNum <= 0){

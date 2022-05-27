@@ -1736,7 +1736,7 @@
 		
 	if(is_real(_genID)){
 		 // Delete Chests:
-		with(instances_matching_gt([RadChest, chestprop], "id", _genID)){
+		with(instances_matching_gt([RadChest, chestprop, Mimic, SuperMimic], "id", _genID)){
 			instance_delete(self);
 		}
 		
@@ -1833,7 +1833,7 @@
 		}
 		
 		 // TopTinys:
-		var _areaCurrent = GameCont.area;
+		var _currentArea = GameCont.area;
 		GameCont.area = area;
 		with(instances_matching_ne(_tileNew, "id")){
 			var	_ox = pfloor(random_range(bbox_left, bbox_right  + 1 + 8), 8),
@@ -1847,7 +1847,7 @@
 				}
 			}
 		}
-		GameCont.area = _areaCurrent;
+		GameCont.area = _currentArea;
 		
 		 // Extra TopSmalls:
 		with(instances_matching_ne(_tileNew, "id")){
@@ -1866,9 +1866,32 @@
 		}
 		
 		 // Red Crown Quality Assurance:
-		if(subarea == 0 && instance_exists(PizzaEntrance)){
-			with(instances_matching_gt(PizzaEntrance, "id", _genID)){
-				instance_delete(self);
+		var _currentArea = GameCont.area;
+		GameCont.area = area;
+		if(subarea == 0){
+			if(instance_exists(PizzaEntrance)){
+				with(instances_matching_gt(PizzaEntrance, "id", _genID)){
+					instance_delete(self);
+				}
+			}
+			if(instance_exists(CrownPickup)){
+				with(instances_matching_gt(CrownPickup, "id", _genID)){
+					var _crownGuardianNum = 2;
+					with(call(scr.array_shuffle, instances_matching_gt(FloorNormal, "id", _genID))){
+						if(point_distance(bbox_center_x, bbox_center_y, other.x, other.y) < 96 && place_free(x, y)){
+							instance_create(bbox_center_x, bbox_center_y, CrownGuardian);
+							if(--_crownGuardianNum <= 0){
+								break;
+							}
+						}
+					}
+					instance_delete(self);
+				}
+			}
+			if(instance_exists(CrownPed)){
+				with(instances_matching_gt(CrownPed, "id", _genID)){
+					instance_delete(self);
+				}
 			}
 		}
 		if(loops <= 0 || GameCont.subarea != 3 || !instance_exists(enemy)){
@@ -1879,7 +1902,7 @@
 		switch(area){
 			
 			case area_labs: // TECHNOMANCER FIX
-				
+			
 				if(loops > 0 && !array_length(instances_matching_gt(TechnoMancer, "id", _genID))){
 					with(call(scr.array_shuffle, instances_matching_gt(FloorNormal, "id", _genID))){
 						if(point_distance(bbox_center_x, bbox_center_y, other.x, other.y) > 64){
@@ -1896,7 +1919,7 @@
 				break;
 				
 			case area_hq: // WHERE THE HELL THOSE ENEMIES AT
-				
+			
 				if(subarea != 3){
 					var	_guardNum  = big,
 						_portalNum = 2;
@@ -1921,6 +1944,7 @@
 				break;
 				
 		}
+		GameCont.area = _currentArea;
 		
 		 // Goodbye:
 		if(instance_exists(enemy)){
@@ -2006,7 +2030,7 @@
 		
 		 // Vars:
 		mask_index = mskSlash;
-		damage     = 18; 
+		damage     = 18;
 		force      = 12;
 		walled     = false;
 		

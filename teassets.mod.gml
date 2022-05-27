@@ -48,6 +48,7 @@
 	spr      = {};
 	spr_path = "sprites/";
 	spr_load = [[spr, 0]];
+	global.sprite_loading_delay_frame = ds_map_create();
 	with(spr){
 		 // Storage:
 		msk             = {};
@@ -143,6 +144,16 @@
 			 // Ultra Quasar Blaster:
 			UltraQuasarBlaster    = spr_add("sprUltraQuasarBlaster",    1,  20, 12, shnWep);
 			UltraQuasarBlasterEat = spr_add("sprUltraQuasarBlasterEat", 12, 24, 24);
+			
+			 // Artifacts:
+			var _artifactCount = 4;
+			QuestArtifact = array_create(_artifactCount, -1);
+			for(var _artifactIndex = 0; _artifactIndex < _artifactCount; _artifactIndex++){
+				QuestArtifact[_artifactIndex] = sprite_add_weapon(spr_path + `sprArtifact${_artifactIndex}.png`, 3, 5);
+			}
+			MergeWep[? `${QuestArtifact[0]}:${QuestArtifact[1]}`] = sprite_add_weapon(spr_path + "sprArtifactSubMerge0.png", 3, 5);
+			MergeWep[? `${QuestArtifact[2]}:${QuestArtifact[3]}`] = sprite_add_weapon(spr_path + "sprArtifactSubMerge1.png", 3, 5);
+			MergeWep[? array_join(QuestArtifact, ":")           ] = sprite_add_weapon(spr_path + "sprArtifactMerge.png",     3, 5);
 			
 		//#endregion
 		
@@ -255,14 +266,17 @@
 			RedMegaSlash       = spr_add("sprRedMegaSlash",       3,  0, 36);
 			RedShank           = spr_add("sprRedShank",           2, -5,  8);
 			RedShankGold       = spr_add("sprRedShankGold",       2, -5,  8);
-			//EntanglerSlash     = spr_add("sprEntanglerSlash", 3, 0, 24);
+		//	EntanglerSlash     = spr_add("sprEntanglerSlash",     3,  0, 24);
 			
 			 // Small Green Explo:
 			SmallGreenExplosion = spr_add("sprSmallGreenExplosion", 7, 12, 12);
 			
 			 // Energy Bat Slash:
-			EnergyBatSlash     = spr_add("sprEnergyBatSlash", 3,  0,  24);
-			//msk.EnergyBatSlash = spr_add("mskEnergyBatSlash", 4, 16, 24);
+			EnergyBatSlash       = spr_add("sprEnergyBatSlash",       3,  0, 24);
+			EnemyEnergyBatSlash  = spr_add("sprEnemyEnergyBatSlash",  3,  0, 24);
+			PopoEnergyBatSlash   = spr_add("sprPopoEnergyBatSlash",   3,  0, 24);
+			PurpleEnergyBatSlash = spr_add("sprPurpleEnergyBatSlash", 3,  0, 24);
+		//	msk.EnergyBatSlash   = spr_add("mskEnergyBatSlash",       4, 16, 24);
 			
 			 // Vector Plasma:
 			EnemyVlasmaBullet = spr_add("sprEnemyVlasmaBullet", 5,  8,  8);
@@ -1204,8 +1218,10 @@
 			VaultFlowerFloorSmall = spr_add("sprFloorVaultFlowerSmall", 4, 0, 0);
 			
 			 // Quest Room Tiles:
-			QuestFloor           = spr_add("sprFloorQuest",           4, 0, 0);
-			QuestTeleporterFloor = spr_add("sprFloorQuestTeleporter", 1, 0, 0);
+			QuestFloor             = spr_add("sprFloorQuest",             4,  0,  0);
+			QuestTeleporterFloor   = spr_add("sprQuestTeleporterFloor",   1,  0,  0);
+			QuestTeleporterPad     = spr_add("sprQuestTeleporterPad",     4, 10, 10);
+			QuestTeleporterSparkle = spr_add("sprQuestTeleporterSparkle", 5,  8,  8);
 			
 			//#region PROPS
 			spr_path_add("Props/");
@@ -1222,15 +1238,24 @@
 				VaultFlowerSparkle      = spr_add("sprVaultFlowerSparkle",       4,  3,  3);
 				
 				 // Quest Props:
-				QuestProp1Idle = spr_add("sprQuestProp1Idle", 1, 16, 16);
-				QuestProp1Hurt = spr_add("sprQuestProp1Hurt", 3, 16, 16);
-				QuestProp1Dead = spr_add("sprQuestProp1Dead", 3, 16, 16);
-				QuestProp2Idle = spr_add("sprQuestProp2Idle", 1, 16, 16);
-				QuestProp2Hurt = spr_add("sprQuestProp2Hurt", 3, 16, 16);
-				QuestProp2Dead = spr_add("sprQuestProp2Dead", 3, 16, 16);
-				QuestProp3Idle = spr_add("sprQuestProp3Idle", 1, 16, 16);
-				QuestProp3Hurt = spr_add("sprQuestProp3Hurt", 3, 16, 16);
-				QuestProp3Dead = spr_add("sprQuestProp3Dead", 3, 16, 16);
+				// QuestProp1Idle = spr_add("sprQuestProp1Idle", 1, 16, 16);
+				// QuestProp1Hurt = spr_add("sprQuestProp1Idle", 1, 16, 16, shnHurt);
+				// QuestProp1Dead = spr_add("sprQuestProp1Dead", 3, 16, 16);
+				// QuestProp2Idle = spr_add("sprQuestProp2Idle", 1, 16, 16);
+				// QuestProp2Hurt = spr_add("sprQuestProp2Hurt", 3, 16, 16);
+				// QuestProp2Dead = spr_add("sprQuestProp2Dead", 3, 16, 16);
+				// QuestProp3Idle = spr_add("sprQuestProp3Idle", 1, 16, 16);
+				// QuestProp3Hurt = spr_add("sprQuestProp3Hurt", 1, 16, 16, shnHurt);
+				// QuestProp3Dead = spr_add("sprQuestProp3Dead", 3, 16, 16);
+				QuestPillar1Idle = spr_add("sprQuestPillar1Idle", 1, 16, 20);
+				QuestPillar1Hurt = spr_add("sprQuestPillar1Idle", 1, 16, 20, shnHurt);
+				QuestPillar1Dead = spr_add("sprQuestPillar1Dead", 4, 16, 20);
+				QuestPillar2Idle = spr_add("sprQuestPillar2Idle", 1, 20, 24);
+				QuestPillar2Hurt = spr_add("sprQuestPillar2Idle", 1, 20, 24, shnHurt);
+				QuestPillar2Dead = spr_add("sprQuestPillar2Dead", 4, 20, 24);
+				QuestTorchIdle   = spr_add("sprQuestTorchIdle",   5, 20, 28);
+				QuestTorchHurt   = spr_add("sprQuestTorchHurt",   3, 20, 28);
+				QuestTorchDead   = spr_add("sprQuestTorchDead",   6, 20, 28);
 				
 				 // Ghost Statue:
 				GhostStatueIdle   = sprite_add_base64("iVBORw0KGgoAAAANSUhEUgAAADAAAAAwCAMAAABg3Am1AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAASUExURQAAAH9kQ1RCLDInGq+PagAAAHxMDEMAAAAGdFJOU///////ALO/pL8AAAAJcEhZcwAADsMAAA7DAcdvqGQAAAEnSURBVEhL7ZPREoUgCEQF7f9/+e4STSlkNnMf22nSkCMgWbaX+oAVpUCBfBqUAyJ6R+T2UuUuRh6hKJQjmbFIU2ktTysHDiWrmUm1IYRYWm47lViYkOBp6VllAPe+zSlacKbV3VcBbo8gteoqQOcXEYww96wRGYBOVyptdbDxT+XmigrwQ8V1Hw+Vim5ZOqyiaA0OPrrgYX4iBEHWsY7xky0GwIwsUjjZEIGZw58AifA79Z+4OEgJpfopISUZqrh+4d4YgIIpawYM/U3q5qzRW3zIDBNALYJrj8Ci3IHq5opVFnzVFOChYN38znf/S40AU0K555vIHLAWnM9jSiPAvKYRgh5qwI7WtuMNwzQCryY9r8M/AWSwH/0wzACfXjQBlvQBz9q2H25QJL3vdkDHAAAAAElFTkSuQmCC",
@@ -2428,21 +2453,20 @@
 			
 			 // Guardian:
 			spr_path_add("HQ/");
-			PetGuardianIcon 		   = spr_add("sprPetGuardianIcon", 			 1,  6,  7);
-			PetGuardianIdle 		   = spr_add("sprPetGuardianIdle", 			 4,  16, 16);
-			PetGuardianHurt			   = spr_add("sprPetGuardianHurt",			 3,	 16, 16);
-			PetGuardianDashStart	   = spr_add("sprPetGuardianDashStart",		 2,  16, 16);
-			PetGuardianDash			   = spr_add("sprPetGuardianDash",			 2,  16, 16);
-			PetGuardianDashEnd		   = spr_add("sprPetGuardianDashEnd",		 3,  16, 16);
-			PetGuardianAppear		   = spr_add("sprPetGuardianAppear",			 6,  16, 16);
-			PetGuardianDisappear	   = spr_add("sprPetGuardianDisappear",		 6,  16, 16);
-			PetGuardianShield		   = spr_add("sprPetGuardianShield",			 6,  16, 16);
-			PetGuardianShieldDisappear = spr_add("sprPetGuardianShieldDisappear", 6,  16, 16);
+			PetGuardianIcon            = spr_add("sprPetGuardianIcon",            1,  6,  7);
+			PetGuardianIdle            = spr_add("sprPetGuardianIdle",            4, 16, 16);
+			PetGuardianHurt            = spr_add("sprPetGuardianHurt",            3, 16, 16);
+			PetGuardianDashStart       = spr_add("sprPetGuardianDashStart",       2, 16, 16);
+			PetGuardianDash            = spr_add("sprPetGuardianDash",            2, 16, 16);
+			PetGuardianDashEnd         = spr_add("sprPetGuardianDashEnd",         3, 16, 16);
+			PetGuardianAppear          = spr_add("sprPetGuardianAppear",          6, 16, 16);
+			PetGuardianDisappear       = spr_add("sprPetGuardianDisappear",       6, 16, 16);
+			PetGuardianShield          = spr_add("sprPetGuardianShield",          6, 16, 16);
+			PetGuardianShieldDisappear = spr_add("sprPetGuardianShieldDisappear", 6, 16, 16);
 			spr_path_add("../");
 			
 		//#endregion
 	}
-	global.sprite_loading_delay_frame = ds_map_create();
 	
 	 // SOUNDS //
 	snd = {};
@@ -2929,7 +2953,7 @@
 	switch(_type){
 		
 		case "race":
-			
+		
 			 // Loadout Fix:
 			with(Loadout){
 				instance_destroy();
@@ -2941,7 +2965,7 @@
 			break;
 			
 		case "weapon":
-			
+		
 			 // Weapon Sprite Setup:
 			if(fork()){
 				wait 0;
@@ -4158,6 +4182,10 @@ var _shine = argument_count > 4 ? argument[4] : shnNone;
 		
 	 // Initial Setup:
 	if(_mergeWepSprite == undefined || !sprite_exists(_mergeWepSprite)){
+		if(array_length(_wepSpriteList) == 1){
+			return _wepSpriteList[0];
+		}
+		
 		var	_mergeStockSlice        = undefined,
 			_mergeFrontSlice        = undefined,
 			_mergeWepSpriteY1       =  infinity,
@@ -4190,7 +4218,7 @@ var _shine = argument_count > 4 ? argument[4] : shnNone;
 			}
 		}
 		
-		 // Unmerge Sprites:
+		 // Unmerge Merged Sprites:
 		while(true){
 			var _newWepSpriteList = [];
 			with(_wepSpriteList){
@@ -4209,193 +4237,198 @@ var _shine = argument_count > 4 ? argument[4] : shnNone;
 				_wepSpriteList = _newWepSpriteList;
 			}
 		}
+		_mergeWepSprite = ds_map_find_value(spr.MergeWep, array_join(_wepSpriteList, ":"));
 		
-		 // Setup Sprite Slices:
-		var	_wepSpriteNum   = 0,
-			_wepSpriteCount = array_length(_wepSpriteList);
-			
-		with(_wepSpriteList){
-			var	_wepSprite  = self,
-				_mergeSlice = {
-					"sprite_index"   : _wepSprite,
-					"sprite_width"   : sprite_get_width(_wepSprite),
-					"sprite_height"  : sprite_get_height(_wepSprite),
-					"sprite_xoffset" : sprite_get_xoffset(_wepSprite),
-					"sprite_yoffset" : sprite_get_yoffset(_wepSprite),
-					"sprite_bbox_y1" : sprite_get_bbox_top(_wepSprite)        - sprite_get_yoffset(_wepSprite),
-					"sprite_bbox_y2" : sprite_get_bbox_bottom(_wepSprite) + 1 - sprite_get_yoffset(_wepSprite),
-					"image_number"   : sprite_get_number(_wepSprite),
-					"x1"             : 0,
-					"x2"             : 0,
-					"next_slice"     : undefined
-				};
+		 // Generate Sprite:
+		if(_mergeWepSprite == undefined || !sprite_exists(_mergeWepSprite)){
+			 // Setup Sprite Slices:
+			var	_wepSpriteNum   = 0,
+				_wepSpriteCount = array_length(_wepSpriteList);
 				
-			 // Manual Adjustments:
-			switch(_wepSprite){
-				case sprToxicBow:
-					_mergeSlice.sprite_yoffset += 2;
-					break;
+			with(_wepSpriteList){
+				var	_wepSprite  = self,
+					_mergeSlice = {
+						"sprite_index"   : _wepSprite,
+						"sprite_width"   : sprite_get_width(_wepSprite),
+						"sprite_height"  : sprite_get_height(_wepSprite),
+						"sprite_xoffset" : sprite_get_xoffset(_wepSprite),
+						"sprite_yoffset" : sprite_get_yoffset(_wepSprite),
+						"sprite_bbox_y1" : sprite_get_bbox_top(_wepSprite)        - sprite_get_yoffset(_wepSprite),
+						"sprite_bbox_y2" : sprite_get_bbox_bottom(_wepSprite) + 1 - sprite_get_yoffset(_wepSprite),
+						"image_number"   : sprite_get_number(_wepSprite),
+						"x1"             : 0,
+						"x2"             : 0,
+						"next_slice"     : undefined
+					};
 					
-				case sprSuperCrossbow:
-				case sprGatlingSlugger:
-					_mergeSlice.sprite_yoffset += 1;
-					break;
-					
-				case sprAutoShotgun:
-				case sprPartyGun:
-					_mergeSlice.sprite_yoffset -= 1;
-					break;
-					
-				case mskNone:
-					_mergeSlice.sprite_height  = 1;
-					_mergeSlice.sprite_yoffset = 0;
-					_mergeSlice.sprite_bbox_y1 = infinity;
-					_mergeSlice.sprite_bbox_y2 = infinity * ((_wepSpriteNum > 0) ? 1 : -1);
-					_mergeSlice.x2             = 3;
-					break;
-			}
-			
-			 // Determine Slice Dimensions:
-			if(_wepSprite != mskNone){
-				var	_sliceX1 = sprite_get_bbox_left(_wepSprite) + 1,
-					_sliceX3 = sprite_get_bbox_right(_wepSprite),
-					_sliceX2 = round(lerp(_sliceX1, _sliceX3, 0.4));
-					
-				for(var _sliceSide = 0; _sliceSide <= 1; _sliceSide++){
-					var _sliceX = 0;
-					if(_wepSpriteNum == (_wepSpriteCount - 1) * _sliceSide){
-						_sliceX = _mergeSlice.sprite_width * _sliceSide;
-					}
-					else{
-						var _sliceAmount = (_wepSpriteNum / _wepSpriteCount) + (_sliceSide / min(2, _wepSpriteCount));
-						_sliceX = ceil(lerp(
-							lerp(
-								_sliceX1,
-								_sliceX2,
-								clamp(2 * _sliceAmount, 0, 1)
-							),
-							_sliceX3,
-							clamp(2 * (_sliceAmount - 0.5), 0, 1)
-						));
-					}
-					lq_set(_mergeSlice, `x${_sliceSide + 1}`, _sliceX);
+				 // Manual Adjustments:
+				switch(_wepSprite){
+					case sprToxicBow:
+						_mergeSlice.sprite_yoffset += 2;
+						break;
+						
+					case sprSuperCrossbow:
+					case sprGatlingSlugger:
+						_mergeSlice.sprite_yoffset += 1;
+						break;
+						
+					case sprAutoShotgun:
+					case sprPartyGun:
+						_mergeSlice.sprite_yoffset -= 1;
+						break;
+						
+					case mskNone:
+						_mergeSlice.sprite_height  = 1;
+						_mergeSlice.sprite_yoffset = 0;
+						_mergeSlice.sprite_bbox_y1 = infinity;
+						_mergeSlice.sprite_bbox_y2 = infinity * ((_wepSpriteNum > 0) ? 1 : -1);
+						_mergeSlice.x2             = 3;
+						break;
 				}
-			}
-			
-			 // Merged Sprite Dimensions:
-			var _mergeSliceSpriteY1 = -_mergeSlice.sprite_yoffset,
-				_mergeSliceSpriteY2 = _mergeSliceSpriteY1 + _mergeSlice.sprite_height;
 				
-			if(_mergeSliceSpriteY1 < _mergeWepSpriteY1) _mergeWepSpriteY1 = _mergeSliceSpriteY1;
-			if(_mergeSliceSpriteY2 > _mergeWepSpriteY2) _mergeWepSpriteY2 = _mergeSliceSpriteY2;
-			
-			_mergeWepSpriteWidth += _mergeSlice.x2 - _mergeSlice.x1;
-			
-			 // Merged Sprite Frame Count:
-			if(_mergeSlice.image_number > _mergeWepSpriteImageNum){
-				_mergeWepSpriteImageNum = _mergeSlice.image_number;
+				 // Determine Slice Dimensions:
+				if(_wepSprite != mskNone){
+					var	_sliceX1 = sprite_get_bbox_left(_wepSprite) + 1,
+						_sliceX3 = sprite_get_bbox_right(_wepSprite),
+						_sliceX2 = round(lerp(_sliceX1, _sliceX3, 0.4));
+						
+					for(var _sliceSide = 0; _sliceSide <= 1; _sliceSide++){
+						var _sliceX = 0;
+						if(_wepSpriteNum == (_wepSpriteCount - 1) * _sliceSide){
+							_sliceX = _mergeSlice.sprite_width * _sliceSide;
+						}
+						else{
+							var _sliceAmount = (_wepSpriteNum / _wepSpriteCount) + (_sliceSide / min(2, _wepSpriteCount));
+							_sliceX = ceil(lerp(
+								lerp(
+									_sliceX1,
+									_sliceX2,
+									clamp(2 * _sliceAmount, 0, 1)
+								),
+								_sliceX3,
+								clamp(2 * (_sliceAmount - 0.5), 0, 1)
+							));
+						}
+						lq_set(_mergeSlice, `x${_sliceSide + 1}`, _sliceX);
+					}
+				}
+				
+				 // Merged Sprite Dimensions:
+				var _mergeSliceSpriteY1 = -_mergeSlice.sprite_yoffset,
+					_mergeSliceSpriteY2 = _mergeSliceSpriteY1 + _mergeSlice.sprite_height;
+					
+				if(_mergeSliceSpriteY1 < _mergeWepSpriteY1) _mergeWepSpriteY1 = _mergeSliceSpriteY1;
+				if(_mergeSliceSpriteY2 > _mergeWepSpriteY2) _mergeWepSpriteY2 = _mergeSliceSpriteY2;
+				
+				_mergeWepSpriteWidth += _mergeSlice.x2 - _mergeSlice.x1;
+				
+				 // Merged Sprite Frame Count:
+				if(_mergeSlice.image_number > _mergeWepSpriteImageNum){
+					_mergeWepSpriteImageNum = _mergeSlice.image_number;
+				}
+				
+				 // Add to List:
+				if(_mergeFrontSlice == undefined){
+					_mergeStockSlice = _mergeSlice;
+				}
+				else{
+					_mergeFrontSlice.next_slice = _mergeSlice;
+				}
+				_mergeFrontSlice = _mergeSlice;
+				_wepSpriteNum++;
 			}
 			
-			 // Add to List:
-			if(_mergeFrontSlice == undefined){
-				_mergeStockSlice = _mergeSlice;
-			}
-			else{
-				_mergeFrontSlice.next_slice = _mergeSlice;
-			}
-			_mergeFrontSlice = _mergeSlice;
-			_wepSpriteNum++;
-		}
-		
-		 // Create Merged Sprite:
-		var	_mergeWepSpriteHeight  = _mergeWepSpriteY2 - _mergeWepSpriteY1,
-			_mergeWepSpriteXOffset = _mergeStockSlice.sprite_xoffset,
-			_mergeWepSpriteYOffset = -_mergeWepSpriteY1;
-			
-		with(surface_setup(
-			"sprMerge",
-			_mergeWepSpriteWidth * _mergeWepSpriteImageNum,
-			_mergeWepSpriteHeight,
-			1
-		)){
-			free = true;
-			
-			surface_set_target(surf);
-			draw_clear_alpha(c_black, 0);
-			
-				for(var _outline = 1; _outline >= 0; _outline--){
-					for(var _mergeWepSpriteImage = 0; _mergeWepSpriteImage < _mergeWepSpriteImageNum; _mergeWepSpriteImage++){
-						var	_slice        = _mergeStockSlice,
-							_sliceXOffset = _mergeWepSpriteWidth * _mergeWepSpriteImage,
-							_lastSlice    = undefined;
-							
-						while(_slice != undefined){
-							var	_nextSlice = _slice.next_slice,
-								_isFlash   = (_mergeWepSpriteImage == min(1, _mergeWepSpriteImageNum - 1)),
-								_spr       = _slice.sprite_index,
-								_img       = (_isFlash ? 1 : (_slice.image_number * (_mergeWepSpriteImage / _mergeWepSpriteImageNum))),
-								_l         = _slice.x1,
-								_r         = _slice.x2,
-								_w         = _r - _l,
-								_t         = 0,
-								_h         = _slice.sprite_height,
-								_x         = _sliceXOffset,
-								_y         = _mergeWepSpriteYOffset - _slice.sprite_yoffset;
+			 // Create Merged Sprite:
+			var	_mergeWepSpriteHeight  = _mergeWepSpriteY2 - _mergeWepSpriteY1,
+				_mergeWepSpriteXOffset = _mergeStockSlice.sprite_xoffset,
+				_mergeWepSpriteYOffset = -_mergeWepSpriteY1;
+				
+			with(surface_setup(
+				"sprMerge",
+				_mergeWepSpriteWidth * _mergeWepSpriteImageNum,
+				_mergeWepSpriteHeight,
+				1
+			)){
+				free = true;
+				
+				surface_set_target(surf);
+				draw_clear_alpha(c_black, 0);
+				
+					for(var _outline = 1; _outline >= 0; _outline--){
+						for(var _mergeWepSpriteImage = 0; _mergeWepSpriteImage < _mergeWepSpriteImageNum; _mergeWepSpriteImage++){
+							var	_slice        = _mergeStockSlice,
+								_sliceXOffset = _mergeWepSpriteWidth * _mergeWepSpriteImage,
+								_lastSlice    = undefined;
 								
-							with(UberCont){
-								if(_outline == 1){
-									if(!_isFlash){
-										draw_set_fog(true, c_black, 0, 0);
+							while(_slice != undefined){
+								var	_nextSlice = _slice.next_slice,
+									_isFlash   = (_mergeWepSpriteImage == min(1, _mergeWepSpriteImageNum - 1)),
+									_spr       = _slice.sprite_index,
+									_img       = (_isFlash ? 1 : (_slice.image_number * (_mergeWepSpriteImage / _mergeWepSpriteImageNum))),
+									_l         = _slice.x1,
+									_r         = _slice.x2,
+									_w         = _r - _l,
+									_t         = 0,
+									_h         = _slice.sprite_height,
+									_x         = _sliceXOffset,
+									_y         = _mergeWepSpriteYOffset - _slice.sprite_yoffset;
+									
+								with(UberCont){
+									if(_outline == 1){
+										if(!_isFlash){
+											draw_set_fog(true, c_black, 0, 0);
+										}
+										if(_lastSlice != undefined){
+											draw_sprite_part(_spr, _img, _l, _t, 1, ((_slice.sprite_bbox_y2 < _lastSlice.sprite_bbox_y2) ? ceil(_h / 2) : _h), _x - 1, _y);
+										//	if(_slice.sprite_bbox_y1 <= _lastSlice.sprite_bbox_y1) draw_sprite_part(_spr, _img, _l, _t,                1,  ceil(_h / 2), _x - 1, _y);
+										//	if(_slice.sprite_bbox_y2 >= _lastSlice.sprite_bbox_y2) draw_sprite_part(_spr, _img, _l, _t + ceil(_h / 2), 1, floor(_h / 2), _x - 1, _y + ceil(_h / 2));
+										}
+										if(_nextSlice != undefined){
+											draw_sprite_part(_spr, _img, _r - 1, _t, 1, ((_slice.sprite_bbox_y2 <= _nextSlice.sprite_bbox_y2) ? ceil(_h / 2) : _h), _x + _w, _y);
+										//	if(_slice.sprite_bbox_y1 < _nextSlice.sprite_bbox_y1) draw_sprite_part(_spr, _img, _r - 1, _t,                1,  ceil(_h / 2), _x + _w, _y);
+										//	if(_slice.sprite_bbox_y2 > _nextSlice.sprite_bbox_y2) draw_sprite_part(_spr, _img, _r - 1, _t + ceil(_h / 2), 1, floor(_h / 2), _x + _w, _y + ceil(_h / 2));
+										}
+										if(!_isFlash){
+											draw_set_fog(false, 0, 0, 0);
+										}
 									}
-									if(_lastSlice != undefined){
-										draw_sprite_part(_spr, _img, _l, _t, 1, ((_slice.sprite_bbox_y2 < _lastSlice.sprite_bbox_y2) ? ceil(_h / 2) : _h), _x - 1, _y);
-									//	if(_slice.sprite_bbox_y1 <= _lastSlice.sprite_bbox_y1) draw_sprite_part(_spr, _img, _l, _t,                1,  ceil(_h / 2), _x - 1, _y);
-									//	if(_slice.sprite_bbox_y2 >= _lastSlice.sprite_bbox_y2) draw_sprite_part(_spr, _img, _l, _t + ceil(_h / 2), 1, floor(_h / 2), _x - 1, _y + ceil(_h / 2));
-									}
-									if(_nextSlice != undefined){
-										draw_sprite_part(_spr, _img, _r - 1, _t, 1, ((_slice.sprite_bbox_y2 <= _nextSlice.sprite_bbox_y2) ? ceil(_h / 2) : _h), _x + _w, _y);
-									//	if(_slice.sprite_bbox_y1 < _nextSlice.sprite_bbox_y1) draw_sprite_part(_spr, _img, _r - 1, _t,                1,  ceil(_h / 2), _x + _w, _y);
-									//	if(_slice.sprite_bbox_y2 > _nextSlice.sprite_bbox_y2) draw_sprite_part(_spr, _img, _r - 1, _t + ceil(_h / 2), 1, floor(_h / 2), _x + _w, _y + ceil(_h / 2));
-									}
-									if(!_isFlash){
-										draw_set_fog(false, 0, 0, 0);
-									}
+									else draw_sprite_part(_spr, _img, _l, _t, _w, _h, _x, _y);
 								}
-								else draw_sprite_part(_spr, _img, _l, _t, _w, _h, _x, _y);
+								
+								_sliceXOffset += _w;
+								
+								_lastSlice = _slice;
+								_slice     = _nextSlice;
 							}
-							
-							_sliceXOffset += _w;
-							
-							_lastSlice = _slice;
-							_slice     = _nextSlice;
 						}
 					}
-				}
+					
+					 // Compressed Weapon:
+					if(array_length(_wepSpriteList) == 2 && _wepSpriteList[0] == _wepSpriteList[1]){
+						draw_set_color(c_black);
+						draw_set_alpha(0.2);
+						draw_set_color_write_enable(true, true, true, false);
+						draw_rectangle(0, 0, _mergeWepSpriteWidth, _mergeWepSpriteHeight, false);
+						draw_set_color_write_enable(true, true, true, true);
+						draw_set_alpha(1);
+					}
+					
+				surface_reset_target();
 				
-				 // Compressed Weapon:
-				if(array_length(_wepSpriteList) == 2 && _wepSpriteList[0] == _wepSpriteList[1]){
-					draw_set_color(c_black);
-					draw_set_alpha(0.2);
-					draw_set_color_write_enable(true, true, true, false);
-					draw_rectangle(0, 0, _mergeWepSpriteWidth, _mergeWepSpriteHeight, false);
-					draw_set_color_write_enable(true, true, true, true);
-					draw_set_alpha(1);
-				}
-				
-			surface_reset_target();
-			
-			 // Add Sprite:
-			surface_save(surf, name + ".png");
-			_mergeWepSprite = sprite_add(
-				name + ".png",
-				_mergeWepSpriteImageNum,
-				_mergeWepSpriteXOffset,
-				_mergeWepSpriteYOffset
-			);
-			
-			 // Store Sprite:
-			spr.MergeWep[? _mergeWepSpriteName] = _mergeWepSprite;
+				 // Add Sprite:
+				surface_save(surf, name + ".png");
+				_mergeWepSprite = sprite_add(
+					name + ".png",
+					_mergeWepSpriteImageNum,
+					_mergeWepSpriteXOffset,
+					_mergeWepSpriteYOffset
+				);
+			}
 		}
+		
+		 // Store Sprite:
+		spr.MergeWep[? _mergeWepSpriteName            ] = _mergeWepSprite;
+		spr.MergeWep[? array_join(_wepSpriteList, ":")] = _mergeWepSprite;
 	}
 	
 	return _mergeWepSprite;
@@ -4466,233 +4499,238 @@ var _shine = argument_count > 4 ? argument[4] : shnNone;
 				_wepLoadoutSpriteList = _newWepLoadoutSpriteList;
 			}
 		}
+		_mergeWepLoadoutSprite = ds_map_find_value(spr.MergeWepLoadout, array_join(_wepLoadoutSpriteList, ":"));
 		
-		 // Setup Sprite Slices:
-		var	_wepLoadoutSpriteNum   = 0,
-			_wepLoadoutSpriteCount = array_length(_wepLoadoutSpriteList);
-			
-		with(_wepLoadoutSpriteList){
-			var	_wepLoadoutSprite = self,
-				_mergeSlice       = {
-					"sprite_index"   : _wepLoadoutSprite,
-					"sprite_width"   : sprite_get_width(_wepLoadoutSprite),
-					"sprite_height"  : sprite_get_height(_wepLoadoutSprite),
-					"sprite_xoffset" : sprite_get_xoffset(_wepLoadoutSprite),
-					"sprite_yoffset" : sprite_get_yoffset(_wepLoadoutSprite),
-					"image_number"   : sprite_get_number(_wepLoadoutSprite),
-					"sprite_length1" : 0,
-					"sprite_length2" : 0,
-					"length1"        : 0,
-					"length2"        : 0,
-					"next_slice"     : undefined
-				};
+		 // Generate Sprite:
+		if(_mergeWepLoadoutSprite == undefined || !sprite_exists(_mergeWepLoadoutSprite)){
+			 // Setup Sprite Slices:
+			var	_wepLoadoutSpriteNum   = 0,
+				_wepLoadoutSpriteCount = array_length(_wepLoadoutSpriteList);
 				
-			 // Determine Slice Dimensions:
-			if(_wepLoadoutSprite != mskNone){
-				var	_sliceDis1 = floor(((sprite_get_bbox_left(_mergeSlice.sprite_index)  + 2) - _mergeSlice.sprite_xoffset) * _loadoutSpriteXFactor) - 4,
-					_sliceDis3 =  ceil(((sprite_get_bbox_right(_mergeSlice.sprite_index) - 1) - _mergeSlice.sprite_xoffset) * _loadoutSpriteXFactor) - 4,
-					_sliceDis2 = /*round*/(lerp(_sliceDis1, _sliceDis3, 0.4));
+			with(_wepLoadoutSpriteList){
+				var	_wepLoadoutSprite = self,
+					_mergeSlice       = {
+						"sprite_index"   : _wepLoadoutSprite,
+						"sprite_width"   : sprite_get_width(_wepLoadoutSprite),
+						"sprite_height"  : sprite_get_height(_wepLoadoutSprite),
+						"sprite_xoffset" : sprite_get_xoffset(_wepLoadoutSprite),
+						"sprite_yoffset" : sprite_get_yoffset(_wepLoadoutSprite),
+						"image_number"   : sprite_get_number(_wepLoadoutSprite),
+						"sprite_length1" : 0,
+						"sprite_length2" : 0,
+						"length1"        : 0,
+						"length2"        : 0,
+						"next_slice"     : undefined
+					};
 					
-				_mergeSlice.sprite_length1 = _sliceDis1;
-				_mergeSlice.sprite_length2 = _sliceDis3;
-				
-				for(var _sliceSide = 0; _sliceSide <= 1; _sliceSide++){
-					var _sliceDis = 0;
-					if(_wepLoadoutSpriteNum == (_wepLoadoutSpriteCount - 1) * _sliceSide){
-						_sliceDis = (
-							(_sliceSide == 0)
-							? _sliceDis1
-							: _sliceDis3
-						);
-					}
-					else{
-						var _sliceAmount = (_wepLoadoutSpriteNum / _wepLoadoutSpriteCount) + (_sliceSide / min(2, _wepLoadoutSpriteCount));
-						_sliceDis = /*ceil*/(lerp(
-							lerp(
-								_sliceDis1,
-								_sliceDis2,
-								clamp(2 * _sliceAmount, 0, 1)
-							),
-							_sliceDis3,
-							clamp(2 * (_sliceAmount - 0.5), 0, 1)
-						));
-					}
-					lq_set(_mergeSlice, `length${_sliceSide + 1}`, _sliceDis);
-				}
-			}
-			else{
-				_mergeSlice.sprite_width   = 1;
-				_mergeSlice.sprite_height  = 1;
-				_mergeSlice.sprite_xoffset = 0;
-				_mergeSlice.sprite_yoffset = 0;
-				_mergeSlice.length1        = -11;
-				_mergeSlice.length2        = -5;
-				_mergeSlice.sprite_length1 = _mergeSlice.length1;
-				_mergeSlice.sprite_length2 = _mergeSlice.length2;
-			}
-			
-			 // Merged Sprite Dimensions:
-			var	_mergeSliceSpriteX1 =  ceil(_mergeSliceXOffset) - _mergeSlice.sprite_xoffset,
-				_mergeSliceSpriteY1 = floor(_mergeSliceYOffset) - _mergeSlice.sprite_yoffset,
-				_mergeSliceSpriteX2 = _mergeSliceSpriteX1 + _mergeSlice.sprite_width,
-				_mergeSliceSpriteY2 = _mergeSliceSpriteY1 + _mergeSlice.sprite_height;
-				
-			if(_mergeSliceSpriteX1 < _mergeWepLoadoutSpriteX1) _mergeWepLoadoutSpriteX1 = _mergeSliceSpriteX1;
-			if(_mergeSliceSpriteY1 < _mergeWepLoadoutSpriteY1) _mergeWepLoadoutSpriteY1 = _mergeSliceSpriteY1;
-			if(_mergeSliceSpriteX2 > _mergeWepLoadoutSpriteX2) _mergeWepLoadoutSpriteX2 = _mergeSliceSpriteX2;
-			if(_mergeSliceSpriteY2 > _mergeWepLoadoutSpriteY2) _mergeWepLoadoutSpriteY2 = _mergeSliceSpriteY2;
-			
-			_mergeSliceXOffset += lengthdir_x(_mergeSlice.length2 - _mergeSlice.length1, _loadoutSpriteAngle);
-			_mergeSliceYOffset += lengthdir_y(_mergeSlice.length2 - _mergeSlice.length1, _loadoutSpriteAngle);
-			
-			 // Merged Sprite Frame Count:
-			if(_mergeSlice.image_number > _mergeWepLoadoutSpriteImageNum){
-				_mergeWepLoadoutSpriteImageNum = _mergeSlice.image_number;
-			}
-			
-			 // Add to List:
-			if(_mergeFrontSlice == undefined){
-				_mergeStockSlice = _mergeSlice;
-			}
-			else{
-				_mergeFrontSlice.next_slice = _mergeSlice;
-			}
-			_mergeFrontSlice = _mergeSlice;
-			_wepLoadoutSpriteNum++;
-		}
-		
-		 // Create Merged Sprite:
-		var	_mergeWepLoadoutSpriteWidth   = _mergeWepLoadoutSpriteX2 - _mergeWepLoadoutSpriteX1,
-			_mergeWepLoadoutSpriteHeight  = _mergeWepLoadoutSpriteY2 - _mergeWepLoadoutSpriteY1,
-			_mergeWepLoadoutSpriteXOffset = -_mergeWepLoadoutSpriteX1,
-			_mergeWepLoadoutSpriteYOffset = -_mergeWepLoadoutSpriteY1;
-		
-		with(surface_setup(
-			"sprMergeLoadout",
-			_mergeWepLoadoutSpriteWidth * _mergeWepLoadoutSpriteImageNum,
-			_mergeWepLoadoutSpriteHeight,
-			1
-		)){
-			free = true;
-			
-			surface_set_target(surf);
-			draw_clear_alpha(c_black, 0);
-			surface_reset_target();
-			
-			for(var _mergeWepLoadoutSpriteImage = 0; _mergeWepLoadoutSpriteImage < _mergeWepLoadoutSpriteImageNum; _mergeWepLoadoutSpriteImage++){
-				var	_slice        = _mergeStockSlice,
-					_sliceXOffset = _mergeWepLoadoutSpriteXOffset + lengthdir_x(_slice.length1, _loadoutSpriteAngle) + (_mergeWepLoadoutSpriteWidth * _mergeWepLoadoutSpriteImage),
-					_sliceYOffset = _mergeWepLoadoutSpriteYOffset + lengthdir_y(_slice.length1, _loadoutSpriteAngle);
-					
-				while(_slice != undefined){
-					var	_nextSlice = _slice.next_slice,
-						_spr       = _slice.sprite_index,
-						_sprImg    = _slice.image_number * (_mergeWepLoadoutSpriteImage / _mergeWepLoadoutSpriteImageNum),
-						_sprX      = _slice.sprite_xoffset,
-						_sprY      = _slice.sprite_yoffset;
+				 // Determine Slice Dimensions:
+				if(_wepLoadoutSprite != mskNone){
+					var	_sliceDis1 = floor(((sprite_get_bbox_left(_mergeSlice.sprite_index)  + 2) - _mergeSlice.sprite_xoffset) * _loadoutSpriteXFactor) - 4,
+						_sliceDis3 =  ceil(((sprite_get_bbox_right(_mergeSlice.sprite_index) - 1) - _mergeSlice.sprite_xoffset) * _loadoutSpriteXFactor) - 4,
+						_sliceDis2 = /*round*/(lerp(_sliceDis1, _sliceDis3, 0.4));
 						
-					with(UberCont){
-						var	_maskSurface  = surface_create(_slice.sprite_width, _slice.sprite_height),
-							_sliceSurface = surface_create(_slice.sprite_width, _slice.sprite_height);
+					_mergeSlice.sprite_length1 = _sliceDis1;
+					_mergeSlice.sprite_length2 = _sliceDis3;
+					
+					for(var _sliceSide = 0; _sliceSide <= 1; _sliceSide++){
+						var _sliceDis = 0;
+						if(_wepLoadoutSpriteNum == (_wepLoadoutSpriteCount - 1) * _sliceSide){
+							_sliceDis = (
+								(_sliceSide == 0)
+								? _sliceDis1
+								: _sliceDis3
+							);
+						}
+						else{
+							var _sliceAmount = (_wepLoadoutSpriteNum / _wepLoadoutSpriteCount) + (_sliceSide / min(2, _wepLoadoutSpriteCount));
+							_sliceDis = /*ceil*/(lerp(
+								lerp(
+									_sliceDis1,
+									_sliceDis2,
+									clamp(2 * _sliceAmount, 0, 1)
+								),
+								_sliceDis3,
+								clamp(2 * (_sliceAmount - 0.5), 0, 1)
+							));
+						}
+						lq_set(_mergeSlice, `length${_sliceSide + 1}`, _sliceDis);
+					}
+				}
+				else{
+					_mergeSlice.sprite_width   = 1;
+					_mergeSlice.sprite_height  = 1;
+					_mergeSlice.sprite_xoffset = 0;
+					_mergeSlice.sprite_yoffset = 0;
+					_mergeSlice.length1        = -11;
+					_mergeSlice.length2        = -5;
+					_mergeSlice.sprite_length1 = _mergeSlice.length1;
+					_mergeSlice.sprite_length2 = _mergeSlice.length2;
+				}
+				
+				 // Merged Sprite Dimensions:
+				var	_mergeSliceSpriteX1 =  ceil(_mergeSliceXOffset) - _mergeSlice.sprite_xoffset,
+					_mergeSliceSpriteY1 = floor(_mergeSliceYOffset) - _mergeSlice.sprite_yoffset,
+					_mergeSliceSpriteX2 = _mergeSliceSpriteX1 + _mergeSlice.sprite_width,
+					_mergeSliceSpriteY2 = _mergeSliceSpriteY1 + _mergeSlice.sprite_height;
+					
+				if(_mergeSliceSpriteX1 < _mergeWepLoadoutSpriteX1) _mergeWepLoadoutSpriteX1 = _mergeSliceSpriteX1;
+				if(_mergeSliceSpriteY1 < _mergeWepLoadoutSpriteY1) _mergeWepLoadoutSpriteY1 = _mergeSliceSpriteY1;
+				if(_mergeSliceSpriteX2 > _mergeWepLoadoutSpriteX2) _mergeWepLoadoutSpriteX2 = _mergeSliceSpriteX2;
+				if(_mergeSliceSpriteY2 > _mergeWepLoadoutSpriteY2) _mergeWepLoadoutSpriteY2 = _mergeSliceSpriteY2;
+				
+				_mergeSliceXOffset += lengthdir_x(_mergeSlice.length2 - _mergeSlice.length1, _loadoutSpriteAngle);
+				_mergeSliceYOffset += lengthdir_y(_mergeSlice.length2 - _mergeSlice.length1, _loadoutSpriteAngle);
+				
+				 // Merged Sprite Frame Count:
+				if(_mergeSlice.image_number > _mergeWepLoadoutSpriteImageNum){
+					_mergeWepLoadoutSpriteImageNum = _mergeSlice.image_number;
+				}
+				
+				 // Add to List:
+				if(_mergeFrontSlice == undefined){
+					_mergeStockSlice = _mergeSlice;
+				}
+				else{
+					_mergeFrontSlice.next_slice = _mergeSlice;
+				}
+				_mergeFrontSlice = _mergeSlice;
+				_wepLoadoutSpriteNum++;
+			}
+			
+			 // Create Merged Sprite:
+			var	_mergeWepLoadoutSpriteWidth   = _mergeWepLoadoutSpriteX2 - _mergeWepLoadoutSpriteX1,
+				_mergeWepLoadoutSpriteHeight  = _mergeWepLoadoutSpriteY2 - _mergeWepLoadoutSpriteY1,
+				_mergeWepLoadoutSpriteXOffset = -_mergeWepLoadoutSpriteX1,
+				_mergeWepLoadoutSpriteYOffset = -_mergeWepLoadoutSpriteY1;
+			
+			with(surface_setup(
+				"sprMergeLoadout",
+				_mergeWepLoadoutSpriteWidth * _mergeWepLoadoutSpriteImageNum,
+				_mergeWepLoadoutSpriteHeight,
+				1
+			)){
+				free = true;
+				
+				surface_set_target(surf);
+				draw_clear_alpha(c_black, 0);
+				surface_reset_target();
+				
+				for(var _mergeWepLoadoutSpriteImage = 0; _mergeWepLoadoutSpriteImage < _mergeWepLoadoutSpriteImageNum; _mergeWepLoadoutSpriteImage++){
+					var	_slice        = _mergeStockSlice,
+						_sliceXOffset = _mergeWepLoadoutSpriteXOffset + lengthdir_x(_slice.length1, _loadoutSpriteAngle) + (_mergeWepLoadoutSpriteWidth * _mergeWepLoadoutSpriteImage),
+						_sliceYOffset = _mergeWepLoadoutSpriteYOffset + lengthdir_y(_slice.length1, _loadoutSpriteAngle);
+						
+					while(_slice != undefined){
+						var	_nextSlice = _slice.next_slice,
+							_spr       = _slice.sprite_index,
+							_sprImg    = _slice.image_number * (_mergeWepLoadoutSpriteImage / _mergeWepLoadoutSpriteImageNum),
+							_sprX      = _slice.sprite_xoffset,
+							_sprY      = _slice.sprite_yoffset;
 							
-						 // Draw Sprite to Surface:
-						surface_set_target(_sliceSurface);
-						draw_clear_alpha(c_black, 0);
-						switch(_spr){
-							case sprGoldScrewdriverLoadout:
-								draw_sprite_ext(_spr, _sprImg, _sprX, _sprY, 1, 1, _loadoutSpriteAngle - 45, c_white, 1);
-								break;
+						with(UberCont){
+							var	_maskSurface  = surface_create(_slice.sprite_width, _slice.sprite_height),
+								_sliceSurface = surface_create(_slice.sprite_width, _slice.sprite_height);
 								
-							default:
-								draw_sprite(_spr, _sprImg, _sprX, _sprY);
-						}
-						surface_reset_target();
-						
-						 // Trim Sprite's Head:
-						if(_slice.length2 < _slice.sprite_length2){
-							 // Create Trim Mask:
-							surface_set_target(_maskSurface);
+							 // Draw Sprite to Surface:
+							surface_set_target(_sliceSurface);
 							draw_clear_alpha(c_black, 0);
-							draw_circle(
-								_sprX +  ceil(lengthdir_x(_slice.sprite_length2, _loadoutSpriteAngle)),
-								_sprY + floor(lengthdir_y(_slice.sprite_length2, _loadoutSpriteAngle)),
-								ceil(_slice.length2 - _slice.sprite_length2),
-								false
-							);
-							draw_set_blend_mode_ext(bm_zero, bm_inv_src_alpha);
-							draw_set_alpha(0.5);
-							draw_circle(
-								_sprX +  ceil(lengthdir_x(_slice.length2 - 10, _loadoutSpriteAngle)),
-								_sprY + floor(lengthdir_y(_slice.length2 - 10, _loadoutSpriteAngle)),
-								6 + 10,
-								false
-							);
-							draw_set_alpha(1);
-							draw_set_blend_mode(bm_normal);
+							switch(_spr){
+								case sprGoldScrewdriverLoadout:
+									draw_sprite_ext(_spr, _sprImg, _sprX, _sprY, 1, 1, _loadoutSpriteAngle - 45, c_white, 1);
+									break;
+									
+								default:
+									draw_sprite(_spr, _sprImg, _sprX, _sprY);
+							}
 							surface_reset_target();
 							
-							 // Trim:
-							surface_set_target(_sliceSurface);
-							draw_set_blend_mode_ext(bm_zero, bm_inv_src_alpha);
-							draw_surface(_maskSurface, 0, 0);
-							draw_set_blend_mode(bm_normal);
-							surface_reset_target();
-						}
-						
-						 // Trim Sprite's Back:
-						if(_slice.length1 > _slice.sprite_length1){
-							 // Create Trim Mask:
-							surface_set_target(_maskSurface);
-							draw_clear_alpha(c_black, 0);
-							draw_circle(
-								_sprX +  ceil(lengthdir_x(_slice.length2, _loadoutSpriteAngle)),
-								_sprY + floor(lengthdir_y(_slice.length2, _loadoutSpriteAngle)),
-								ceil(_slice.length2 - _slice.length1),
-								false
+							 // Trim Sprite's Head:
+							if(_slice.length2 < _slice.sprite_length2){
+								 // Create Trim Mask:
+								surface_set_target(_maskSurface);
+								draw_clear_alpha(c_black, 0);
+								draw_circle(
+									_sprX +  ceil(lengthdir_x(_slice.sprite_length2, _loadoutSpriteAngle)),
+									_sprY + floor(lengthdir_y(_slice.sprite_length2, _loadoutSpriteAngle)),
+									ceil(_slice.length2 - _slice.sprite_length2),
+									false
+								);
+								draw_set_blend_mode_ext(bm_zero, bm_inv_src_alpha);
+								draw_set_alpha(0.5);
+								draw_circle(
+									_sprX +  ceil(lengthdir_x(_slice.length2 - 10, _loadoutSpriteAngle)),
+									_sprY + floor(lengthdir_y(_slice.length2 - 10, _loadoutSpriteAngle)),
+									6 + 10,
+									false
+								);
+								draw_set_alpha(1);
+								draw_set_blend_mode(bm_normal);
+								surface_reset_target();
+								
+								 // Trim:
+								surface_set_target(_sliceSurface);
+								draw_set_blend_mode_ext(bm_zero, bm_inv_src_alpha);
+								draw_surface(_maskSurface, 0, 0);
+								draw_set_blend_mode(bm_normal);
+								surface_reset_target();
+							}
+							
+							 // Trim Sprite's Back:
+							if(_slice.length1 > _slice.sprite_length1){
+								 // Create Trim Mask:
+								surface_set_target(_maskSurface);
+								draw_clear_alpha(c_black, 0);
+								draw_circle(
+									_sprX +  ceil(lengthdir_x(_slice.length2, _loadoutSpriteAngle)),
+									_sprY + floor(lengthdir_y(_slice.length2, _loadoutSpriteAngle)),
+									ceil(_slice.length2 - _slice.length1),
+									false
+								);
+								surface_reset_target();
+								
+								 // Trim:
+								surface_set_target(_sliceSurface);
+								draw_set_blend_mode_ext(bm_zero, bm_src_alpha);
+								draw_surface(_maskSurface, 0, 0);
+								draw_set_blend_mode(bm_normal);
+								surface_reset_target();
+							}
+							
+							 // Draw Sliced Sprite:
+							surface_set_target(other.surf);
+							draw_surface(
+								_sliceSurface,
+								 ceil(_sliceXOffset - lengthdir_x(_slice.length1, _loadoutSpriteAngle)) - _sprX,
+								floor(_sliceYOffset - lengthdir_y(_slice.length1, _loadoutSpriteAngle)) - _sprY
 							);
 							surface_reset_target();
 							
-							 // Trim:
-							surface_set_target(_sliceSurface);
-							draw_set_blend_mode_ext(bm_zero, bm_src_alpha);
-							draw_surface(_maskSurface, 0, 0);
-							draw_set_blend_mode(bm_normal);
-							surface_reset_target();
+							 // Destroy Surfaces:
+							surface_destroy(_maskSurface);
+							surface_destroy(_sliceSurface);
 						}
 						
-						 // Draw Sliced Sprite:
-						surface_set_target(other.surf);
-						draw_surface(
-							_sliceSurface,
-							 ceil(_sliceXOffset - lengthdir_x(_slice.length1, _loadoutSpriteAngle)) - _sprX,
-							floor(_sliceYOffset - lengthdir_y(_slice.length1, _loadoutSpriteAngle)) - _sprY
-						);
-						surface_reset_target();
-						
-						 // Destroy Surfaces:
-						surface_destroy(_maskSurface);
-						surface_destroy(_sliceSurface);
+						 // Next Slice:
+						_sliceXOffset += lengthdir_x(_slice.length2 - _slice.length1, _loadoutSpriteAngle);
+						_sliceYOffset += lengthdir_y(_slice.length2 - _slice.length1, _loadoutSpriteAngle);
+						_slice = _nextSlice;
 					}
-					
-					 // Next Slice:
-					_sliceXOffset += lengthdir_x(_slice.length2 - _slice.length1, _loadoutSpriteAngle);
-					_sliceYOffset += lengthdir_y(_slice.length2 - _slice.length1, _loadoutSpriteAngle);
-					_slice = _nextSlice;
 				}
+				
+				 // Add Sprite:
+				surface_save(surf, name + ".png");
+				_mergeWepLoadoutSprite = sprite_add(
+					name + ".png",
+					_mergeWepLoadoutSpriteImageNum,
+					_mergeWepLoadoutSpriteXOffset,
+					_mergeWepLoadoutSpriteYOffset
+				);
 			}
-			
-			 // Add Sprite:
-			surface_save(surf, name + ".png");
-			_mergeWepLoadoutSprite = sprite_add(
-				name + ".png",
-				_mergeWepLoadoutSpriteImageNum,
-				_mergeWepLoadoutSpriteXOffset,
-				_mergeWepLoadoutSpriteYOffset
-			);
-			
-			 // Store Sprite:
-			spr.MergeWepLoadout[? _mergeWepLoadoutSpriteName] = _mergeWepLoadoutSprite;
 		}
+		
+		 // Store Sprite:
+		spr.MergeWepLoadout[? _mergeWepLoadoutSpriteName            ] = _mergeWepLoadoutSprite;
+		spr.MergeWepLoadout[? array_join(_wepLoadoutSpriteList, ":")] = _mergeWepLoadoutSprite;
 	}
 	
 	return _mergeWepLoadoutSprite;

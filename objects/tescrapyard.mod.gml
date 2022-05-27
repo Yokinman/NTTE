@@ -704,13 +704,12 @@
 	*/
 	
 	with(instance_create(_x, _y, CustomObject)){
-		 // Visual:
-		depth = 5;
-		
 		 // Vars:
-		part_index = -1;
-		target     = noone;
-		prompt     = call(scr.prompt_create, self, loc("NTTE:PetMimic:Prompt", "DROP"), mskWepPickup, 0, 0);
+		part_index             = -1;
+		last_weapon_pickup_num = -1;
+		last_weapon_pickup_id  = noone;
+		target                 = noone;
+		prompt                 = call(scr.prompt_create, self, loc("NTTE:PetMimic:Prompt", "DROP"), mskWepPickup, 0, 0);
 		with(prompt){
 			on_meet = script_ref_create(QuestFloorCont_prompt_meet);
 		}
@@ -727,31 +726,46 @@
 		var _partIndex = part_index;
 		
 		 // Sparkle:
-		if((current_frame % 10) < current_time_scale){
+		if((current_frame % 10) < current_time_scale && !instance_exists(enemy)){
 			with(target){
 				var _canSparkle = place_meeting(x, y, Player);
 				with(Player){
-					if(
-						(call(scr.wep_raw, wep)  == "crabbone" && array_find_index(lq_defget(wep,  "quest_part_index_list", []), _partIndex) >= 0) ||
-						(call(scr.wep_raw, bwep) == "crabbone" && array_find_index(lq_defget(bwep, "quest_part_index_list", []), _partIndex) >= 0)
-					){
-						_canSparkle = true;
-						break;
+					for(var _wepIndex = 0; _wepIndex < 2; _wepIndex++){
+						var _wep = ((_wepIndex == 0) ? wep : bwep);
+						while(true){
+							if(
+								call(scr.wep_raw, _wep) == "crabbone"
+								&& lq_defget(_wep, "type_index", 0) == _partIndex + 1
+							){
+								_canSparkle = true;
+								break;
+							}
+							if(call(scr.weapon_has_temerge, _wep)){
+								_wep = call(scr.weapon_get_temerge_weapon, _wep);
+							}
+							else break;
+						}
+						if(_canSparkle){
+							break;
+						}
 					}
 				}
 				if(_canSparkle){
-					with(call(scr.obj_create,
-						random_range(bbox_left, bbox_right  + 1),
-						random_range(bbox_top,  bbox_bottom + 1),
-						"VaultFlowerSparkle"
-					)){
-						sprite_index = spr.QuestSparkle;
-						depth		 = 1;
-						switch(_partIndex){
-							case 0 : sprite_index = spr.AllyLaserCharge;    break;
-							case 1 : sprite_index = spr.ElectroPlasmaTrail; break;
-							case 2 : sprite_index = sprIDPDPortalCharge;    break;
-							case 3 : sprite_index = sprLaserCharge;         break;
+					var _chestInst = instances_matching(obj.LockedBigQuestChest, "is_unlockable", true);
+					with(array_length(_chestInst) ? _chestInst : self){
+						with(call(scr.obj_create,
+							random_range(bbox_left, bbox_right  + 1),
+							random_range(bbox_top,  bbox_bottom + 1),
+							"VaultFlowerSparkle"
+						)){
+							sprite_index = spr.QuestSparkle;
+							depth		 = min(other.depth - 1, 1);
+							switch(_partIndex){
+								case 0 : sprite_index = spr.AllyLaserCharge;    break;
+								case 1 : sprite_index = spr.ElectroPlasmaTrail; break;
+								case 2 : sprite_index = sprIDPDPortalCharge;    break;
+								case 3 : sprite_index = sprLaserCharge;         break;
+							}
 						}
 					}
 				}
@@ -771,22 +785,28 @@
 							
 							 // Drop:
 							else{
+								var _wep = wep;
+								
+								wep = lq_defget(_wep, "ammo_wep", wep_none);
+								if(wep == wep_none){
+									call(scr.player_swap, self);
+									clicked   = false;
+									swapmove  = true;
+									drawempty = 30;
+								}
+								
+								_wep.ammo     = 1;
+								_wep.ammo_wep = wep_none;
+								
 								with(instance_create(other.creator.x, other.creator.y, WepPickup)){
-									var _wep = lq_clone(other.wep);
-									_wep.ammo                  = 1;
-									_wep.quest_part_index_list = [_partIndex];
-									wep                        = _wep;
-									with(other.wep){
-										ammo--;
-										quest_part_index_list = call(scr.array_delete,
-											quest_part_index_list,
-											array_find_index(quest_part_index_list, _partIndex)
-										);
-									}
+									wep         = _wep;
+									image_index = 1;
 									
 									 // Sound:
 									sound_play_hit(sndWeaponPickup, 0.1);
+									sound_play_pitchvol(sndStatueXP, 0.6 + random(0.2), 0.8);
 								}
+								
 								call(scr.unlock_set, `quest:part:${_partIndex}`, true);
 							}
 						}
@@ -794,84 +814,100 @@
 				}
 			}
 		}
-	}
-	else instance_destroy();
-	
-#define QuestFloorCont_draw
-	/*
-		...
-	*/
-	
-	// draw_set_blend_mode(bm_add);
-	
-	// with(target){
-	// 	draw_sprite_ext(sprite_index, image_index, x, y, image_xscale, image_yscale, image_angle, image_blend, image_alpha * place_meeting(x, y, WepPickup));
-	// }
-	
-	// draw_set_blend_mode(bm_normal);
-	
-#define QuestFloorCont_cleanup
-	/*
-		Quest floor tiles permanently store artifacts for future vault visits
-	*/
-	
-	var _partState = false;
-	
-	with(instances_matching(WepPickup, "visible", true)){
-		if(
-			call(scr.wep_raw, wep) == "crabbone"
-			&& array_find_index(lq_defget(wep, "quest_part_index_list", []), other.part_index) >= 0
-		){
-			_partState = true;
-			break;
+		
+		 // Remember Weapon (Cleanup event doesn't work cause the weapons can be deleted at the same time noo):
+		var	_weaponNum = instance_number(WepPickup),
+			_weaponID  = (instance_exists(WepPickup) ? WepPickup.id : noone);
+			
+		if(last_weapon_pickup_num != _weaponNum || last_weapon_pickup_id != _weaponID || array_length(instances_matching(WepPickup, "persistent", true))){
+			last_weapon_pickup_num = _weaponNum;
+			last_weapon_pickup_id  = _weaponID;
+			
+			var _partState = false;
+			
+			with(instances_matching(WepPickup, "visible", true)){
+				var _wep = wep;
+				while(true){
+					if(call(scr.wep_raw, _wep) == "crabbone" && lq_defget(_wep, "type_index", 0) == other.part_index + 1){
+						_partState = true;
+						break;
+					}
+					if(call(scr.weapon_has_temerge, _wep)){
+						_wep = call(scr.weapon_get_temerge_weapon, _wep);
+					}
+					else break;
+				}
+			}
+			
+			call(scr.unlock_set, `quest:part:${part_index}`, _partState);
 		}
 	}
-	
-	call(scr.unlock_set, `quest:part:${part_index}`, _partState);
+	else instance_destroy();
 	
 #define QuestFloorCont_prompt_meet
 	/*
 		Quest floor tiles allow players holding an artifact to drop it on them
 	*/
 	
-	return (
-		call(scr.wep_raw, other.wep) == "crabbone"
-		&& array_find_index(lq_defget(other.wep, "quest_part_index_list", []), creator.part_index) >= 0
-	);
+	if(instance_exists(creator) && !instance_exists(enemy)){
+		var _wep = other.wep;
+		while(true){
+			if(
+				call(scr.wep_raw, _wep) == "crabbone"
+				&& lq_defget(_wep, "type_index", 0) == creator.part_index + 1
+			){
+				return true;
+			}
+			if(call(scr.weapon_has_temerge, _wep)){
+				_wep = call(scr.weapon_get_temerge_weapon, _wep);
+			}
+			else break;
+		}
+	}
+	
+	return false;
 	
 	
-#define QuestTeleporterFloorCont_create(_x, _y)
+#define QuestTeleporterPad_create(_x, _y)
 	/*
 		The controller object for quest teleporter floor tiles
 	*/
 	
 	with(instance_create(_x, _y, CustomObject)){
+		 // Visual:
+		sprite_index = spr.QuestTeleporterPad;
+		image_speed  = 0;
+		depth        = 5;
+		
 		 // Vars:
-		mask_index                  = mskBandit;
+		mask_index                  = mskSuperFlakBullet;
 		target                      = noone;
 		teleport_x                  = x;
 		teleport_y                  = y;
 		teleport_instance_delay_map = { "key_list":[], "list":[] };
+		teleport_charge_sound       = -1;
 		
 		return self;
 	}
 	
-#define QuestTeleporterFloorCont_begin_step
+#define QuestTeleporterPad_begin_step
 	/*
 		Quest teleporter floor tiles teleport players after a short delay
 	*/
 	
-	var	_teleportInstanceDelayMap  = teleport_instance_delay_map,
-		_teleportInstanceList      = _teleportInstanceDelayMap.key_list;
+	var	_teleportInstanceDelayMap = teleport_instance_delay_map,
+		_teleportInstanceList     = _teleportInstanceDelayMap.key_list;
 		
 	if(array_length(_teleportInstanceList)){
 		var	_teleportInstanceDelayList = _teleportInstanceDelayMap.list,
 			_teleportInstanceIndex     = 0;
 			
+		y -= 4;
+		
 		with(_teleportInstanceList){
-			if(place_meeting(x, y, other.target)){
+			if(place_meeting(x, y, other)){
 				if(_teleportInstanceDelayList[_teleportInstanceIndex] > 0){
-					_teleportInstanceDelayList[_teleportInstanceIndex] -= current_time_scale;
+					_teleportInstanceDelayList[_teleportInstanceIndex] -= ((speed == 0) ? 2 : 1) * current_time_scale;
 				}
 				else{
 					 // Move Camera:
@@ -881,57 +917,147 @@
 						point_distance(x, y, other.teleport_x, other.teleport_y)
 					);
 					
-					 // Effects:
-					with(instance_create(other.teleport_x, other.teleport_y, Wind)){
-						sprite_index = sprOldGuardianDeflect;
-						depth        = other.depth - 1;
-					}
+					 // Disappear Effects:
 					with(instance_create(x, y, Wind)){
 						sprite_index = sprOldGuardianDeflect;
 						depth        = other.depth - 1;
 					}
 					
 					 // Move:
-					x         = other.teleport_x;
-					y         = other.teleport_y;
+					x         = other.teleport_x + orandom(1);
+					y         = other.teleport_y + orandom(1) - 8;
 					xprevious = x;
 					yprevious = y;
 					
+					 // Appear Effects:
+					sprite_index = spr_hurt;
+					image_index  = 0;
+					with(instance_create(x, y, Wind)){
+						sprite_index = sprOldGuardianDeflect;
+						depth        = other.depth - 1;
+						var _ang = random(360);
+						for(var _dir = _ang; _dir < _ang + 360; _dir += 90){
+							var _len = random_range(20, 40);
+							with(instance_create(x + lengthdir_x(_len, _dir), y + lengthdir_y(_len, _dir), Wind)){
+								sprite_index = spr.QuestTeleporterSparkle;
+								image_speed  = 0.4 + orandom(0.2);
+								image_angle  = 0;
+								depth        = -8;
+							}
+						}
+					}
+					
+					 // Sound:
+					sound_play_pitchvol(sndPortalAppear, 4 + orandom(0.4), 0.4);
+					sound_play_pitch(sndCrownGuardianHurt, 0.5 + orandom(0.2));
+					
 					 // Clear Walls:
 					call(scr.wall_clear, self);
+					
+					 // Teleportation Delay:
+					with(call(scr.instances_meeting_instance, self, obj.QuestTeleporterPad)){
+						if(array_find_index(teleport_instance_delay_map.key_list, other) < 0){
+							array_push(teleport_instance_delay_map.key_list, other);
+							array_push(teleport_instance_delay_map.list,     90);
+						}
+					}
 				}
-				_teleportInstanceIndex++;
 			}
 			else{
 				var _teleportInstancePos = array_find_index(_teleportInstanceDelayMap.key_list, self);
 				_teleportInstanceDelayMap.key_list = call(scr.array_delete, _teleportInstanceDelayMap.key_list, _teleportInstancePos);
 				_teleportInstanceDelayMap.list     = call(scr.array_delete, _teleportInstanceDelayMap.list,     _teleportInstancePos);
+				
+				 // Sound:
+				if(!array_length(_teleportInstanceDelayMap.key_list)){
+					sound_play_pitchvol(sndClickBack, 0.5, 0.5);
+					if(sound_exists(teleport_charge_sound)){
+						sound_stop(teleport_charge_sound);
+					}
+				}
 			}
+			_teleportInstanceIndex++;
+		}
+		
+		y += 4;
+	}
+	
+	 // Sparkles:
+	if(frame_active(array_length(_teleportInstanceList) ? 2 : 20)){
+		var	_len = random_range(4, 8),
+			_dir = random(360);
+			
+		with(instance_create(x + lengthdir_x(_len, _dir), y + lengthdir_y(_len, _dir), Wind)){
+			sprite_index = spr.QuestTeleporterSparkle;
+			image_speed  = 0.4;
+			image_angle  = random(360);
+			depth        = 6;
+			motion_add(_dir, random(0.1));
 		}
 	}
 	
-#define QuestTeleporterFloorCont_end_step
+#define QuestTeleporterPad_end_step
 	/*
 		Quest teleporter floor tiles teleport players that walk over them
 	*/
 	
 	if(instance_exists(target)){
+		var	_teleportInstanceDelayMap  = teleport_instance_delay_map,
+			_teleportInstanceList      = _teleportInstanceDelayMap.key_list,
+			_teleportInstanceDelayList = _teleportInstanceDelayMap.list,
+			_turnSpeed                 = 2 * current_time_scale;
+			
+		 // Queue Teleportation:
+		y -= 4;
 		if(place_meeting(x, y, Player)){
-			var	_teleportInstanceDelayMap  = teleport_instance_delay_map,
-				_teleportInstanceList      = _teleportInstanceDelayMap.key_list,
-				_teleportInstanceDelayList = _teleportInstanceDelayMap.list;
-				
 			with(call(scr.instances_meeting_instance, self, Player)){
 				if(array_find_index(_teleportInstanceList, self) < 0){
-					if(place_meeting(x, y, other) && !place_meeting(xprevious, yprevious, other)){
+					if(place_meeting(x, y, other)){
+						 // Sound:
+						if(!array_length(_teleportInstanceList)){
+							sound_play_pitchvol(sndAppear, 0.4, 0.8);
+							teleport_charge_sound = sound_play_pitch(sndRocketFly, 1.5 + orandom(0.1));
+						}
+						
+						 // Queue:
 						array_push(_teleportInstanceList,      self);
-						array_push(_teleportInstanceDelayList, 10);
+						array_push(_teleportInstanceDelayList, 20);
 					}
 				}
 			}
+			_turnSpeed *= 2;
+		}
+		y += 4;
+		
+		 // Rotate:
+		if(
+			abs(angle_difference(image_angle, pround(image_angle, 360 / 6))) > (_turnSpeed / 2)
+			|| chance_ct(1, 30)
+			|| array_length(_teleportInstanceList)
+		){
+			image_angle += _turnSpeed;
 		}
 	}
 	else instance_destroy();
+	
+#define QuestTeleporterPad_draw
+	/*
+		...
+	*/
+	
+	var _y = y;
+	
+	for(image_index = 0; image_index < image_number; image_index++){
+		y = _y;
+		if(image_index == 0 || image_index == image_number - 1){
+			if(array_length(teleport_instance_delay_map.key_list) == 0){
+				y--;
+			}
+		}
+		draw_self();
+	}
+	
+	y = _y;
 	
 	
 #define LockedBigQuestChest_create(_x, _y)
@@ -942,9 +1068,19 @@
 	with(call(scr.obj_create, _x, _y, chestprop)){
 		 // Visual:
 		sprite_index = spr.BigQuestChest;
-		spr_shadow   = shd32;
-		spr_shadow_y = 8;
+		spr_shadow   = shd64;//shd32;
+		spr_shadow_y = 6;//8;
 		depth        = -1;
+		
+		 // Vars:
+		max_merge_delay  = 120;
+		merge_delay      = max_merge_delay;
+		is_unlockable    = false;
+		is_playing_music = false;
+		prompt           = call(scr.prompt_create, self, "UNLOCK", mskShield, 0, 0);
+		with(prompt){
+			on_meet = script_ref_create(LockedBigQuestChest_prompt_meet);
+		}
 		
 		return self;
 	}
@@ -953,6 +1089,8 @@
 	/*
 		Big quest chests sparkle & push players away
 	*/
+	
+	if(fork()){
 	
 	 // Sparkles:
 	if(chance_ct(1, 30)){
@@ -975,6 +1113,461 @@
 		}
 	}
 	
+	 // Combining Artifacts:
+	if(instance_exists(enemy) || array_length(instances_matching_ne(obj.CrystalHeartBullet, "id"))){
+		 // Disable Boss Win Music:
+		if(is_playing_music){
+			with(MusCont){
+				if(alarm_get(1) > 0){
+					alarm_set(1, -1);
+				}
+			}
+		}
+	}
+	else{
+		 // Stop Playing Music:
+		if(is_playing_music){
+			is_playing_music = false;
+			with(MusCont){
+				alarm_set(1, 1);
+			}
+		}
+		
+		 // Combining Artifacts:
+		if(distance_to_object(Player) < 128 || merge_delay < max_merge_delay){
+			var	_questFloorContInst       = instances_matching_ne(obj.QuestFloorCont, "id"),
+				_partWeaponPickupListList = [];
+				
+			 // Collect Artifacts:
+			with(instances_matching(WepPickup, "visible", true)){
+				var _wep = wep;
+				while(true){
+					if(call(scr.wep_raw, _wep) == "crabbone"){
+						var _partIndex = lq_defget(_wep, "type_index", 0) - 1;
+						if(_partIndex >= 0 && array_length(instances_matching(_questFloorContInst, "part_index", _partIndex))){
+							while(array_length(_partWeaponPickupListList) <= _partIndex){
+								array_push(_partWeaponPickupListList, []);
+							}
+							array_push(_partWeaponPickupListList[_partIndex], self);
+						}
+					}
+					if(call(scr.weapon_has_temerge, _wep)){
+						_wep = call(scr.weapon_get_temerge_weapon, _wep);
+					}
+					else break;
+				}
+			}
+			
+			 // Move Artifacts to Tiles:
+			var	_partIndex                      = 0,
+				_questFloorContWeaponPickupList = array_create(array_length(_questFloorContInst), noone);
+				
+			with(_partWeaponPickupListList){
+				var _partWeaponPickupList = self;
+				if(array_length(_partWeaponPickupList)){
+					with(instances_matching(_questFloorContInst, "part_index", _partIndex)){
+						var	_questFloorContIndex    = array_find_index(_questFloorContInst, self),
+							_targetPartWeaponPickup = noone;
+							
+						 // Check for Artifact Over Tile:
+						var _maxDis = 8;
+						with(_partWeaponPickupList){
+							var _dis = point_distance(x, y, other.x, other.y);
+							if(_dis < _maxDis){
+								_maxDis                 = _dis;
+								_targetPartWeaponPickup = self;
+							}
+						}
+						if(instance_exists(_targetPartWeaponPickup)){
+							var _partInd = 0;
+							with(_partWeaponPickupListList){
+								if(array_find_index(self, _targetPartWeaponPickup) >= 0){
+									with(instances_matching(_questFloorContInst, "part_index", _partInd)){
+										_questFloorContWeaponPickupList[array_find_index(_questFloorContInst, self)] = _targetPartWeaponPickup;
+									}
+								}
+								_partInd++;
+							}
+						}
+						
+						 // Move Artifacts to Tile:
+						else with(_partWeaponPickupList){
+							if(!collision_line(x, y, other.x, other.y, Wall, false, false)){
+								var _canMove = true;
+								
+								 // Move Merged Artifacts to Middlest Tile:
+								var	_partInd  = 0,
+									_midIndex = (4 - 1) / 2;
+									
+								with(_partWeaponPickupListList){
+									if(array_find_index(self, other) >= 0){
+										if(_partInd != _partIndex && abs(_partInd - _midIndex) <= abs(_partIndex - _midIndex)){
+											_canMove = false;
+											break;
+										}
+									}
+									_partInd++;
+								}
+								
+								 // Move:
+								if(_canMove){
+									var	_moveLen       = random_range(2, 3),
+										_moveDirOffset = 20 * sin(((current_frame + (_questFloorContIndex * 75)) / 300) * 2 * pi),
+										_moveDir       = point_direction(x, y, other.x, other.y) + _moveDirOffset,
+										_moveHSpeed    = lengthdir_x(_moveLen, _moveDir),
+										_moveVSpeed    = lengthdir_y(_moveLen, _moveDir);
+										
+									if(place_free(x + _moveHSpeed, y)) hspeed = _moveHSpeed;
+									if(place_free(x, y + _moveVSpeed)) vspeed = _moveVSpeed;
+									
+									 // Rotate:
+									rotation += _moveDirOffset / 10;
+									
+									 // Dust:
+									if(frame_active(2) && chance(1, 5)){
+										with(instance_create(x, y, Dust)){
+											depth = other.depth + 1;
+										}
+									}
+								}
+							}
+						}
+					}
+				}
+				_partIndex++;
+			}
+			
+			 // Merge Artifacts:
+			if(array_find_index(_questFloorContWeaponPickupList, noone) < 0){
+				var	_isUnlockable = false,
+					_canPlayMusic = false;
+					
+				if(merge_delay > 0){
+					merge_delay -= current_time_scale;
+				}
+				with([
+					[0, 1],
+					[2, 3],
+					[1, 2]
+				]){
+					var	_mergeIndex1 = self[0],
+						_mergeIndex2 = self[1];
+						
+					if(_questFloorContWeaponPickupList[_mergeIndex1] != _questFloorContWeaponPickupList[_mergeIndex2]){
+						 // Charge Effects:
+						var	_min   = other.max_merge_delay * 1/3,
+							_max   = 3,
+							_scale = 1 - clamp((other.merge_delay - _max) / (other.max_merge_delay - (_max + _min)), 0, 1);
+							
+						if(_scale > 0){
+							script_bind_draw(
+								LockedBigQuestChest_merging_draw,
+								-3,
+								[_questFloorContInst[_mergeIndex1], _questFloorContInst[_mergeIndex2]],
+								_scale
+							);
+							if(_scale < 1){
+								audio_sound_set_track_position(
+									sound_play_pitchvol(sndCrownGuardianAppear, lerp(0.8, 1.8, _scale), 1),
+									0.2 * _scale
+								);
+								audio_sound_set_track_position(
+									sound_play_pitchvol(sndHover, lerp(2, 1.2, _scale), 0.5),
+									0.15 * _scale
+								);
+							}
+						}
+						
+						 // Merge Weapons:
+						if(other.merge_delay <= 0){
+							other.merge_delay = other.max_merge_delay;
+							
+							var	_x = other.x,
+								_y = other.y;
+								
+							 // Disappear Effects:
+							with([
+								_questFloorContWeaponPickupList[_mergeIndex2],
+								_questFloorContWeaponPickupList[_mergeIndex1]
+							]){
+								instance_create(x, y, ChickenB);
+								with(instance_create(x, y, BoltTrail)){
+									sprite_index = other.sprite_index;
+									image_index  = 1;
+									image_speed  = 0;
+									image_angle  = other.rotation;
+								}
+							}
+							
+							 // Merged Weapon:
+							with(_questFloorContWeaponPickupList[_mergeIndex2]){
+								with(_questFloorContWeaponPickupList[_mergeIndex1]){
+									var	_ammo     = max(ammo,  other.ammo),
+										_curse    = max(curse, other.curse),
+										_stockWep = wep,
+										_frontWep = other.wep;
+										
+									with(instance_create(
+										lerp(x, other.x, 0.5),
+										lerp(y, other.y, 0.5),
+										WepPickup
+									)){
+										ammo     = _ammo;
+										curse    = _curse;
+										wep      = call(scr.weapon_add_temerge, _stockWep, _frontWep);
+										rotation = point_direction(x, y, _x, _y + 32) + orandom(5);
+										
+										 // Shine:
+										image_index = 1;
+										with(instance_create(x, y, BoltTrail)){
+											sprite_index = other.sprite_index;
+											image_index  = 1;
+											image_speed  = 0;
+											image_angle  = other.rotation;
+										}
+										
+										 // Sound:
+										sound_play_pitchvol(sndCrystalRicochet,     1.5, 1.5);
+										sound_play_pitchvol(sndCrownGuardianAppear, 0.8, 1.5);
+										_canPlayMusic = true;
+										
+										 // Area Balls:
+										var	_wep           = wep,
+											_partIndexList = [];
+											
+										while(true){
+											if(call(scr.wep_raw, _wep) == "crabbone"){
+												var _partInd = lq_defget(_wep, "type_index", 0) - 1;
+												if(_partInd >= 0 && array_find_index(_partIndexList, _partInd) < 0){
+													array_push(_partIndexList, _partInd);
+												}
+											}
+											if(call(scr.weapon_has_temerge, _wep)){
+												_wep = call(scr.weapon_get_temerge_weapon, _wep);
+											}
+											else break;
+										}
+										for(var _partIndexIndex = 0; _partIndexIndex < array_length(_partIndexList); _partIndexIndex++){
+											var _dir = rotation + 180 + (360 * (_partIndexIndex / array_length(_partIndexList)));
+											with(call(scr.obj_create, x, y, "CrystalHeartBullet")){
+												direction = _dir;
+												depth     = -3;
+												switch(_partIndexList[_partIndexIndex]){
+													case 0 : area = area_vault;  area_goal = 2;  area_chest = [RadChest];    break;
+													case 1 : area = area_palace; area_goal = 12; area_chest = [AmmoChest];   break;
+													case 2 : area = area_hq;     area_goal = 8;  area_chest = [IDPDChest];   break;
+													case 3 : area = "red";       area_goal = 10; area_chest = [HealthChest]; break;
+												}
+											}
+											repeat(4){
+												with(call(scr.fx, x, y, [_dir, 3], Smoke)){
+													depth = -4;
+												}
+												with(call(scr.obj_create, x + orandom(6), y + orandom(6), "VaultFlowerSparkle")){
+													sprite_index = spr.QuestSparkle;
+													depth        = -3;
+													motion_add(_dir + orandom(5), random_range(2, 3));
+													switch(_partIndexList[_partIndexIndex]){
+														case 0 : sprite_index = spr.AllyLaserCharge;    break;
+														case 1 : sprite_index = spr.ElectroPlasmaTrail; break;
+														case 2 : sprite_index = sprIDPDPortalCharge;    break;
+														case 3 : sprite_index = sprLaserCharge;         break;
+													}
+												}
+											}
+										}
+										if(array_length(_partIndexList) >= 4){
+											_isUnlockable = true;
+										}
+									}
+									
+									instance_destroy();
+								}
+								instance_destroy();
+							}
+						}
+						
+						break;
+					}
+				}
+				
+				 // Play Music:
+				if(_canPlayMusic && !is_playing_music){
+					is_playing_music = true;
+					with(MusCont){
+						alarm_set(4, 1);
+						alarm_set(3, -1);
+					}
+				}
+				
+				 // Become Unlockable:
+				if(_isUnlockable){
+					is_unlockable = true;
+				}
+			}
+			else merge_delay = max_merge_delay;
+		}
+	}
+	
+	 // Unlock Chest:
+	if(instance_exists(prompt)){
+		prompt.visible = is_unlockable;
+		with(player_find(prompt.pick)){
+			with(other.prompt){
+				if(LockedBigQuestChest_prompt_meet()){
+					with(creator){
+						call(scr.obj_create, x, y, "BigQuestChest");
+						
+						 // Sound:
+						sound_play_pitch(sndHammerHeadEnd, 0.7);
+						sound_play_pitch(sndStatueCharge,  0.7);
+						
+						 // Effects:
+						for(var _dir = 0; _dir < 360; _dir += (360 / 16)){
+							with(call(scr.fx,
+								clamp(x + lengthdir_x(bbox_width,  _dir), bbox_left, bbox_right  + 1),
+								clamp(y + lengthdir_y(bbox_height, _dir), bbox_top,  bbox_bottom + 1),
+								[_dir, 1],
+								Dust
+							)){
+								depth = other.depth - sign(y - other.y);
+							}
+						}
+						
+						 // Bye:
+						instance_delete(self);
+					}
+					
+					 // Explode Artifact:
+					with(other){
+						var	_ang     = random(360),
+							_wep     = wep,
+							_wepList = [_wep];
+							
+						 // Deconstruct Merged Weapon:
+						while(call(scr.weapon_has_temerge, _wep)){
+							var _frontWep = call(scr.weapon_get_temerge_weapon, _wep);
+							call(scr.weapon_delete_temerge, _wep);
+							array_push(_wepList, _frontWep);
+							_wep = _frontWep;
+						}
+						
+						 // Fire Off Weapon Parts:
+						for(var _wepIndex = array_length(_wepList) - 1; _wepIndex >= 0; _wepIndex--){
+							var _dir = _ang + (360 * (_wepIndex / array_length(_wepList)));
+							with(call(scr.projectile_create, x, y, "Bone", _dir, 16)){
+								wep          = _wepList[_wepIndex];
+								curse        = other.curse;
+								broken       = true;
+								sprite_index = weapon_get_sprt(wep);
+								
+								 // Effects:
+								view_shake_at(x, y, 4);
+								with(instance_create(x, y, MeleeHitWall)){
+									motion_add(other.direction, 1);
+									image_angle = direction + 180;
+								}
+							}
+						}
+						wep = wep_none;
+						call(scr.player_swap, self);
+						clicked   = false;
+						swapmove  = true;
+						drawempty = 30;
+					}
+				}
+			}
+		}
+	}
+	
+	exit;
+	}
+	
+#define LockedBigQuestChest_merging_draw(_inst, _alpha)
+	/*
+		Animation for the artifact merging event
+	*/
+	
+	if(_alpha != 0){
+		var	_x = 0,
+			_y = 0,
+			_n = 0;
+			
+		 // Glow:
+		draw_set_blend_mode(bm_add);
+		with(instances_matching_ne(_inst, "id")){
+			with(target){
+				image_alpha *= _alpha;
+				draw_self();
+				image_alpha /= _alpha;
+			}
+			_x += x;
+			_y += y;
+			_n++;
+		}
+		draw_set_blend_mode(bm_normal);
+		
+		 // Orb:
+		if(_n > 0){
+			_x /= _n;
+			_y /= _n;
+			
+			var _sparkleDepth = depth + 1;
+			with(instances_matching_ne(_inst, "id")){
+				if(chance_ct(1, 3)){
+					with(call(scr.obj_create, x + orandom(16), y + orandom(16), "VaultFlowerSparkle")){
+						sprite_index = spr.QuestSparkle;
+						depth		 = _sparkleDepth;
+						motion_add(point_direction(x, y, _x, _y), random_range(0.5, 1));
+						switch(other.part_index){
+							case 0 : sprite_index = spr.AllyLaserCharge;    break;
+							case 1 : sprite_index = spr.ElectroPlasmaTrail; break;
+							case 2 : sprite_index = sprIDPDPortalCharge;    break;
+							case 3 : sprite_index = sprLaserCharge;         break;
+						}
+					}
+				}
+			}
+			
+			var _scale = (1 + random(0.2)) * _alpha;
+			draw_sprite_ext(spr.CrystalHeartBullet, 0, _x, _y, _scale, _scale, current_frame, c_white, 1);
+			draw_set_blend_mode(bm_add);
+			draw_sprite_ext(spr.CrystalHeartBullet, 0, _x, _y, _scale * 2, _scale * 2, current_frame, c_white, 0.1 * _alpha);
+			draw_set_blend_mode(bm_normal);
+		}
+	}
+	
+	instance_destroy();
+	
+#define LockedBigQuestChest_prompt_meet
+	/*
+		The big quest chest is unlockable using the fully merged artifact
+	*/
+	
+	if(instance_exists(creator) && creator.is_unlockable && !instance_exists(enemy)){
+		var	_wep           = other.wep,
+			_partIndexList = [];
+			
+		while(true){
+			if(call(scr.wep_raw, _wep) == "crabbone"){
+				var _partIndex = lq_defget(_wep, "type_index", 0) - 1;
+				if(_partIndex >= 0 && array_find_index(_partIndexList, _partIndex) < 0){
+					array_push(_partIndexList, _partIndex);
+				}
+			}
+			if(call(scr.weapon_has_temerge, _wep)){
+				_wep = call(scr.weapon_get_temerge_weapon, _wep);
+			}
+			else break;
+		}
+		
+		if(array_length(_partIndexList) >= 4){
+			return true;
+		}
+	}
+	
+	return false;
+	
 	
 #define BigQuestChest_create(_x, _y)
 	/*
@@ -985,36 +1578,76 @@
 		 // Visual:
 		sprite_index = spr.BigQuestChest;
 		spr_dead	 = spr.BigQuestChestOpen;
-		spr_shadow   = shd32;
-		spr_shadow_y = 8;
+		spr_shadow   = shd64;//shd32;
+		spr_shadow_y = 6;//8;
 		
 		 // Sounds:
 		snd_open = sndBigWeaponChest;
 		
 		 // Events:
-		on_step = script_ref_create(LockedBigQuestChest_step);
+		on_open = script_ref_create(BigQuestChest_open);
 		
 		return self;
 	}
 	
+#define BigQuestChest_open
+	/*
+		...
+	*/
 	
-#define QuestProp_create(_x, _y)
+	with(instance_create(x, y, WepPickup)){
+		ammo = true;
+		wep  = "ultra quasar rifle";
+	}
+	
+	 // Dusty Filthy Chest:
+	call(scr.unlock_set, "race:beetle", true);
+	
+	
+#define QuestPillar_create(_x, _y)
 	with(instance_create(_x, _y, CustomProp)){
 		 // Visual:
-		var _num	 = irandom_range(1, 3);
-		spr_idle	 = lq_get(spr, `QuestProp${_num}Idle`);
-		spr_hurt	 = lq_get(spr, `QuestProp${_num}Hurt`);
-		spr_dead	 = lq_get(spr, `QuestProp${_num}Dead`);
+		var _num	 = irandom_range(1, 2);
+		spr_idle	 = lq_get(spr, `QuestPillar${_num}Idle`);
+		spr_hurt	 = lq_get(spr, `QuestPillar${_num}Hurt`);
+		spr_dead	 = lq_get(spr, `QuestPillar${_num}Dead`);
 		spr_shadow   = shd24;
-		spr_shadow_y = -2;
 		sprite_index = spr_idle;
+		depth        = -1;
 		
 		 // Sounds:
 		snd_hurt = sndNothingHurtHigh;
 		snd_dead = sndNothingHurtLow;
 		
 		 // Vars:
-		maxhealth = 90;
+		mask_index = mskBandit;
+		maxhealth  = 80;
+		my_health  = maxhealth;
+		size       = 3;
+		
+		return self;
+	}
+	
+	
+#define QuestTorch_create(_x, _y)
+	with(instance_create(_x, _y, Torch)){
+		 // Visual:
+		spr_idle	 = spr.QuestTorchIdle;
+		spr_hurt	 = spr.QuestTorchHurt;
+		spr_dead	 = spr.QuestTorchDead;
+		spr_shadow   = shd24;
+		spr_shadow_y = -5;
+		sprite_index = spr_idle;
+		depth        = -1;
+		
+		 // Sounds:
+		snd_hurt = sndNothingHurtHigh;
+		snd_dead = sndNothingHurtLow;
+		
+		 // Vars:
+		mask_index = mskBandit;
+		maxhealth  = 40;
+		my_health  = maxhealth;
 		
 		return self;
 	}
