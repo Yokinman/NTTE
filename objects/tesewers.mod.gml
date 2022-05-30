@@ -1634,6 +1634,9 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 		walled     = false;
 		speed      = maxspeed;
 		
+		 // Merged Weapons Support:
+		temerge_on_fire = script_ref_create(BatDisc_temerge_fire);
+		
 		return self;
 	}
 	
@@ -1970,6 +1973,9 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 			sprite_index = weapon_get_sprt(wep);
 		}
 	}
+	
+#define BatDisc_temerge_fire
+	temerge_can_delete = false;
 	
 	
 #define BatScreech_create(_x, _y)

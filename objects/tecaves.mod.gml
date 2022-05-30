@@ -1534,6 +1534,9 @@
 		 // Alarms:
 		alarm0 = 12;
 		
+		 // Merged Weapon Support:
+		temerge_on_fire = script_ref_create(CrystalHeartBullet_temerge_fire);
+		
 		return self;
 	}
 	
@@ -1963,6 +1966,9 @@
 		direction = pround(_direction, 90);
 	}
 	random_set_seed(_seed);
+	
+#define CrystalHeartBullet_temerge_fire
+	temerge_can_delete = false;
 	
 	
 #define CrystalPropRed_create(_x, _y)
@@ -2648,8 +2654,12 @@
 		on_hit = RedBullet_hit;
 		
 		 // Merged Weapons Support:
-		temerge_on_setup = script_ref_create(RedBullet_temerge_setup);
-		temerge_on_hit   = script_ref_create(RedBullet_temerge_hit, [true]);
+		var _info = {
+			"annihilate_instance_list" : [],
+			"can_annihilate"           : true
+		};
+		temerge_on_setup = script_ref_create(RedBullet_temerge_setup, _info);
+		temerge_on_hit   = script_ref_create(RedBullet_temerge_hit,   _info);
 		
 		return self;
 	}
@@ -2680,20 +2690,35 @@
 		sleep(150);
 	}
 	
-#define RedBullet_temerge_setup(_instanceList)
-	 // Color Red:
-	var _color = call(scr.area_get_back_color, "red");
-	with(_instanceList){
-		image_blend = _color;
+#define RedBullet_temerge_setup(_info, _instanceList)
+	 // Tint Red:
+	if(_info.can_annihilate){
+		var _color = call(scr.area_get_back_color, "red");
+		with(_instanceList){
+			image_blend = _color;
+			array_push(_info.annihilate_instance_list, self);
+		}
 	}
 	
-#define RedBullet_temerge_hit(_canAnnihilate)
+#define RedBullet_temerge_hit(_info)
 	 // Annihilate:
-	if(_canAnnihilate[0]){
+	if(_info.can_annihilate){
 		if(projectile_canhit(other) && other.my_health > 0){
-			_canAnnihilate[@ 0] = false;
+			_info.can_annihilate = false;
 			RedBullet_annihilate();
 			instance_destroy();
+			
+			 // Remove Tints:
+			with(instances_matching_ne(_info.annihilate_instance_list, "id")){
+				if(self != other){
+					with(instance_create(x + hspeed_raw, y + vspeed_raw, BulletHit)){
+						sprite_index = sprThrowHit;
+						image_blend  = other.image_blend;
+						depth        = other.depth + 1;
+					}
+				}
+				image_blend = c_white;
+			}
 			
 			 // Disable Event:
 			return true;

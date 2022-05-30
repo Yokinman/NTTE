@@ -1148,6 +1148,9 @@
 		ammo_type  = type_bolt;
 		setup      = true;
 		
+		 // Merged Weapons Support:
+		temerge_on_hit = script_ref_create(Harpoon_temerge_hit);
+		
 		return self;
 	}
 	
@@ -1459,6 +1462,42 @@
 						target       = other.target;
 					}
 					instance_destroy();
+				}
+			}
+		}
+	}
+	
+#define Harpoon_temerge_hit
+	if(call(scr.projectile_can_temerge_hit, other) && other.my_health > damage){
+		with(other){
+			var	_maxDis = 96,
+				_target = noone;
+				
+			 // Find Nearest Enemy in Line of Sight:
+			with(instances_matching_ne(instances_matching_ne([hitme, chestprop], "team", other.team), "id", id)){
+				var _dis = point_distance(x, y, other.x, other.y);
+				if(_dis < _maxDis){
+					if(!collision_line(x, y, other.x, other.y, Wall, false, false)){
+						_maxDis = _dis;
+						_target = self;
+					}
+				}
+			}
+			
+			 // Rope Enemies Together:
+			if(_target != noone){
+				if("ntte_harpoon_rope" in GameCont){
+					with(GameCont.ntte_harpoon_rope){
+						if((link1 == other && link2 == _target) || (link1 == _target && link2 == other)){
+							_target = noone;
+							break;
+						}
+					}
+				}
+				if(_target != noone){
+					with(Harpoon_rope(self, _target)){
+						length = _maxDis;
+					}
 				}
 			}
 		}

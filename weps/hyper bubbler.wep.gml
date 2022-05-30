@@ -24,10 +24,11 @@
 	_wep = _fire.wep;
 	
 	 // Hyper Bubble:
-	var	_l = 20,
-		_d = gunangle + orandom(3 * accuracy);
-		
-	call(scr.projectile_create, x + lengthdir_x(_l, _d), y + lengthdir_y(_l, _d), "HyperBubble", _d);
+	with(call(scr.projectile_create, x, y, "HyperBubble", gunangle + orandom(3 * accuracy))){
+		var _l = 20;
+		x += lengthdir_x(_l, direction);
+		y += lengthdir_y(_l, direction);
+	}
 	
 	 // Sounds:
 	sound_play_pitchvol(sndPlasmaRifle,  0.9 + random(0.3), 1.0);
@@ -35,7 +36,7 @@
 	
 	 // Effects:
 	weapon_post(10, 20, 5);
-	motion_add(_d + 180, 4);
+	motion_add(gunangle + 180, 4);
 	sleep(35);
 	
 	

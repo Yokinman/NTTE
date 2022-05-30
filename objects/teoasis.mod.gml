@@ -345,6 +345,10 @@
 		held       = [];
 		setup      = true;
 		
+		 // Merged Weapon Support:
+		temerge_on_fire  = script_ref_create(BubbleBomb_temerge_fire);
+		temerge_on_setup = script_ref_create(BubbleBomb_temerge_setup);
+		
 		return self;
 	}
 	
@@ -629,6 +633,13 @@
 		image_xscale = 0.5 + (0.01 * other.image_index);
 		image_yscale = image_xscale;
 	}
+	
+#define BubbleBomb_temerge_fire(_at, _setupInfo)
+	_setupInfo.is_big = big;
+	
+#define BubbleBomb_temerge_setup(_instanceList, _setupInfo)
+	 // Bubble Explosion:
+	call(scr.projectile_add_temerge_effect, _instanceList, "explosion", [{ "is_bubble" : true }, (_setupInfo.is_big ? 3 : 1)]);
 	
 	
 #define BubbleExplosion_create(_x, _y)
@@ -1081,6 +1092,9 @@
 		damage     = 12;
 		force      = 12;
 		
+		 // Merged Weapon Support:
+		temerge_on_setup = script_ref_create(HyperBubble_temerge_setup);
+		
 		return self;
 	}
 	
@@ -1144,6 +1158,13 @@
 	
 	 // Goodbye:
 	instance_destroy();
+	
+#define HyperBubble_temerge_setup(_instanceList)
+	 // Hyper:
+	call(scr.projectile_add_temerge_effect, _instanceList, "hyper");
+	
+	 // Bubble Explosion:
+	call(scr.projectile_add_temerge_effect, _instanceList, "explosion", [{ "is_bubble" : true }]);
 	
 	
 #define OasisPetBecome_create(_x, _y)

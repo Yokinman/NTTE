@@ -870,6 +870,10 @@
 		alarm0 = -1;
 		alarm1 = -1;
 		
+		 // Merged Weapon Support:
+		temerge_on_fire  = script_ref_create(ElectroPlasma_temerge_fire);
+		temerge_on_setup = script_ref_create(ElectroPlasma_temerge_setup);
+		
 		return self;
 	}
 	
@@ -994,13 +998,11 @@
 	
 	 // Trail:
 	if(chance_ct(1, 8)){
-		with(
-			instance_create(
-				random_range(bbox_left, bbox_right), 
-				random_range(bbox_top, bbox_bottom), 
-				PlasmaTrail
-			)
-		){
+		with(instance_create(
+			random_range(bbox_left, bbox_right), 
+			random_range(bbox_top, bbox_bottom), 
+			PlasmaTrail
+		)){
 			sprite_index = spr.ElectroPlasmaTrail;
 		}
 	}
@@ -1149,6 +1151,37 @@
 			sprite_index = spr.ElectroPlasmaTether;
 			depth        = -3;
 		}
+	}
+	
+#define ElectroPlasma_temerge_fire(_at, _setupInfo)
+	_setupInfo.is_big = big;
+	
+#define ElectroPlasma_temerge_setup(_instanceList, _setupInfo)
+	with(_instanceList){
+		var _lastInstance = (
+			("temerge_electroplasma_last" in creator)
+			? creator.temerge_electroplasma_last
+			: noone
+		);
+		if(
+			(instance_exists(_lastInstance) && point_distance(x, y, _lastInstance.x, _lastInstance.y) < 64)
+			|| _setupInfo.is_big
+		){
+			with(call(scr.projectile_create, x, y, "TeslaCoil", random(360))){
+				damage       = other.damage;
+				purple       = true;
+				creator      = other;
+				creator_offx = 0;
+				creator_offy = 0;
+				dist_max     = 64;
+				time        *= 2;
+				if(instance_exists(_lastInstance) && point_distance(x, y, _lastInstance.x, _lastInstance.y) < 64){
+					alarm0 = -1;
+					target = _lastInstance;
+				}
+			}
+		}
+		creator.temerge_electroplasma_last = self;
 	}
 	
 	
@@ -1445,6 +1478,11 @@
 		primary        = true;
 		setup          = true;
 		
+		 // Merged Weapons Support:
+		temerge_on_fire  = script_ref_create(LightningDisc_temerge_fire);
+		temerge_on_setup = script_ref_create(LightningDisc_temerge_setup);
+		temerge_on_hit   = script_ref_create(LightningDisc_temerge_hit);
+		
 		return self;
 	}
 	
@@ -1664,7 +1702,7 @@
 			_y  = y + lengthdir_y(_r * image_yscale, _d);
 			
 		with(call(scr.projectile_create, _x, _y, (is_enemy ? EnemyLightning : Lightning), point_direction(_x, _y, _tx, _ty) + orandom(12))){
-			ammo = min(30, ceil(other.image_xscale + random(other.image_xscale * 2)));
+			ammo = min(28, ceil(other.image_xscale + random(other.image_xscale * 2)));
 			with(self){
 				event_perform(ev_alarm, 0);
 			}
@@ -1753,6 +1791,56 @@
 			_ang = point_direction(_x1, _y1, _x2, _y2);
 			
 		draw_sprite_ext(_spr, _img, _x1, _y1, _xsc, _ysc, _ang, _blend, _alpha);
+	}
+	
+#define LightningDisc_temerge_fire(_at, _setupInfo)
+	_setupInfo.super = super;
+	
+#define LightningDisc_temerge_setup(_instanceList, _setupInfo)
+	if(_setupInfo.super >= 0){
+		with(_instanceList){
+			if("temerge_lightning_disc" not in self){
+				temerge_lightning_disc = { "super_count": 0 };
+				call(scr.projectile_add_temerge_event, self, "destroy", script_ref_create(LightningDisc_temerge_destroy));
+			}
+			temerge_lightning_disc.super_count++;
+		}
+	}
+	
+#define LightningDisc_temerge_hit
+	if(call(scr.projectile_can_temerge_hit, other)){
+		var	_dir     = random(360),
+			_xOffset =  dcos(_dir),
+			_yOffset = -dsin(_dir);
+			
+		_xOffset = clamp(((_xOffset < 0) ? bbox_left : (bbox_right  + 1)) - x, -32, 32) * abs(_xOffset);
+		_yOffset = clamp(((_yOffset < 0) ? bbox_top  : (bbox_bottom + 1)) - y, -32, 32) * abs(_yOffset);
+		
+		with(call(scr.projectile_create,
+			x + _xOffset,
+			y + _yOffset,
+			Lightning,
+			point_direction(x + _xOffset, y + _yOffset, other.x, other.y) + orandom(12)
+		)){
+			ammo = min(28, irandom_range(floor(other.damage * 0.5), ceil(other.damage)));
+			with(self){
+				event_perform(ev_alarm, 0);
+			}
+		}
+	}
+	
+#define LightningDisc_temerge_destroy
+	if(temerge_lightning_disc.super_count > 0){
+		repeat(temerge_lightning_disc.super_count){
+			with(call(scr.projectile_create, x, y, "LightningDisc", direction, 10)){
+				charge = lerp(other.damage / 10, 1, 0.5);
+				creator_follow = false;
+				
+				 // Insta-Charge:
+				image_xscale = charge * 0.9;
+				image_yscale = charge * 0.9;
+			}
+		}
 	}
 	
 	
@@ -3609,6 +3697,10 @@
 		
 		on_end_step = QuasarBeam_quick_fix;
 		
+		 // Merged Weapon Support:
+		temerge_on_fire  = script_ref_create(QuasarBeam_temerge_fire);
+		temerge_on_setup = script_ref_create(QuasarBeam_temerge_setup);
+		
 		return self;
 	}
 	
@@ -4282,6 +4374,46 @@
 	}
 	else instance_destroy();
 	
+#define QuasarBeam_temerge_fire(_at, _setupInfo)
+	_setupInfo.spr_hit      = spr_hit;
+	_setupInfo.spr_trail    = spr_trail;
+	_setupInfo.line_dis_max = line_dis_max;
+	_setupInfo.scale_goal   = scale_goal;
+	_setupInfo.is_ring      = ring;
+	
+#define QuasarBeam_temerge_setup(_instanceList, _setupInfo)
+	 // Big:
+	call(scr.projectile_add_temerge_scale,  _instanceList, 0.25 * _setupInfo.scale_goal);
+	
+	 // Hits Hard:
+	call(scr.projectile_add_temerge_damage, _instanceList, 3 * _setupInfo.scale_goal);
+	call(scr.projectile_add_temerge_force,  _instanceList, 2 * _setupInfo.scale_goal);
+	
+	 // Pierces Enemies:
+	call(scr.projectile_add_temerge_effect, _instanceList, "piercing", [1]);
+	
+	 // Break Walls:
+	if(_setupInfo.is_ring){
+		with(_instanceList){
+			call(scr.projectile_add_temerge_effect, self, "wall_piercing", [sqrt(damage)]);
+		}
+	}
+	
+	 // Beamular:
+	else{
+		var _minID = instance_max;
+		call(scr.projectile_add_temerge_effect,
+			call(scr.array_shuffle, instances_matching_ne(_instanceList, "speed", 0)),
+			"laser",
+			[_setupInfo.line_dis_max]
+		);
+		var _effectInst = instances_matching_gt(Effect, "id", _minID);
+		if(array_length(_effectInst)){
+			with(instances_matching(_effectInst, "sprite_index", sprPlasmaTrail     )) sprite_index = _setupInfo.spr_hit;
+			with(instances_matching(_effectInst, "sprite_index", spr.AllyLaserCharge)) sprite_index = _setupInfo.spr_trail;
+		}
+	}
+	
 	
 #define QuasarRing_create(_x, _y)
 	/*
@@ -4341,6 +4473,9 @@
 		
 		 // Alarms:
 		alarm0 = 1;
+		
+		 // Merged Weapon Support:
+		temerge_on_setup = script_ref_create(TeslaCoil_temerge_setup);
 		
 		return self;
 	}
@@ -4491,6 +4626,16 @@
 #define TeslaCoil_hit
 	if(projectile_canhit_melee(other)){
 		projectile_hit(other, damage, force);
+	}
+	
+#define TeslaCoil_temerge_setup(_instanceList)
+	 // Zap Nearby:
+	with(_instanceList){
+		with(call(scr.projectile_create, x, y, "TeslaCoil", random(360))){
+			creator      = other;
+			creator_offx = 0;
+			creator_offy = 0;
+		}
 	}
 	
 	

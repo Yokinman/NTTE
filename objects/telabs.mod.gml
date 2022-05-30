@@ -1980,6 +1980,15 @@
 		spec       = false;
 		primary    = true;
 		
+		 // Merged Weapons Support:
+		var _info = {
+			"teleport_instance_list" : [],
+			"can_teleport"           : true
+		};
+		temerge_on_setup = script_ref_create(PortalBullet_temerge_setup, _info);
+		temerge_on_hit   = script_ref_create(PortalBullet_temerge_hit,   _info);
+	//	script_bind_draw(PortalBullet_temerge_draw, -6, _info);
+		
 		return self;
 	}
 	
@@ -2278,6 +2287,122 @@
 		sprite_index = sprPortalDisappear;
 		image_xscale = 0.7;
 		image_yscale = image_xscale;
+	}
+	
+#define PortalBullet_temerge_setup(_info, _instanceList)
+	with(_instanceList){
+		 // Tint Purple:
+		if(_info.can_teleport){
+			image_blend = make_color_rgb(136, 0, 255);
+			array_push(_info.teleport_instance_list, self);
+		}
+		
+		 // Spark:
+		with(instance_create(x, y, WepSwap)){
+			sprite_index = asset_get_index(`sprPortalL${irandom_range(1, 5)}`);
+			if(instance_is(other.creator, Player)){
+				creator = other.creator;
+			}
+		}
+	}
+	
+#define PortalBullet_temerge_hit(_info)
+	 // Swap Positions:
+	if(
+		instance_exists(creator)
+		&& (creator.visible || ("wading" in creator && creator.wading > 0))
+		&& call(scr.projectile_can_temerge_hit, other)
+	){
+		if(_info.can_teleport){
+			_info.can_teleport = false;
+			
+			 // Swap Places:
+			var	_hitX = x,
+				_hitY = y;
+				
+			with(other){
+				if(size < 6){
+					_hitX = x;
+					_hitY = y;
+					if(
+						(!instance_is(self, prop) && team != 0)
+						|| instance_is(self, RadChest)
+						|| instance_is(self, Car)
+						|| instance_is(self, CarVenus)
+						|| instance_is(self, CarVenusFixed)
+						|| instance_is(self, CarThrow)
+						|| instance_is(self, MeleeFake)
+						|| instance_is(self, JungleAssassinHide)
+					){
+						if(instance_exists(other.creator)){
+							x = other.creator.x;
+							y = other.creator.y;
+						}
+						else{
+							x = other.xstart;
+							y = other.ystart;
+						}
+						xprevious = x;
+						yprevious = y;
+						
+						 // Flip:
+						if(instance_is(self, Player) && other.creator == self){
+							angle += 180 + orandom(10);
+						}
+						
+						 // Effects:
+						repeat(3) call(scr.fx, x, y, 2, Smoke);
+						call(scr.sound_play_at, x, y, sndPortalAppear, 2.5, 2);
+						
+						 // Just in Case:
+						call(scr.wall_clear, self);
+					}
+				}
+				
+				 // Avoid Walls:
+				if(!call(scr.instance_budge, self, Wall, 40)){
+					call(scr.wall_clear, self);
+				}
+			}
+			with(creator){
+				 // Disappear Effects:
+				with(instance_create(x, y, BulletHit)){
+					sprite_index = sprPortalDisappear;
+					image_angle  = 0;
+				}
+				
+				 // Move:
+				x         = _hitX;
+				y         = _hitY;
+				xprevious = x;
+				yprevious = y;
+				
+				 // Appear Effects:
+				with(instance_create(x, y, BulletHit)){
+					sprite_index = spr.PortalBulletHit;
+					image_angle  = 0;
+				}
+				call(scr.sound_play_at, x, y, sndPortalAppear, 3, (instance_is(self, Player) ? 0.5 : 1.5));
+				
+				 // Invincibility:
+				nexthurt = max(nexthurt, current_frame + 10);
+			}
+			
+			 // Remove Tints:
+			with(instances_matching_ne(_info.teleport_instance_list, "id")){
+				if(self != other){
+					with(instance_create(x + hspeed_raw, y + vspeed_raw, BulletHit)){
+						sprite_index = sprThrowHit;
+						image_blend  = other.image_blend;
+						depth        = other.depth + 1;
+					}
+				}
+				image_blend = c_white;
+			}
+			
+			 // Manual Hit:
+			event_perform(ev_collision, hitme);
+		}
 	}
 	
 	

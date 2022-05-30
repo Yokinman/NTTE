@@ -909,6 +909,9 @@
 		 // Alarms:
 		alarm2 = 2;
 		
+		 // Merged Weapon Support:
+		temerge_on_fire = script_ref_create(BoneArrow_temerge_fire);
+		
 		return self;
 	}
 
@@ -1067,6 +1070,9 @@
 		projectile_hit(other, damage + (bonus_damage * bonus), force);
 	}
 	
+#define BoneArrow_temerge_fire
+	temerge_can_delete = false;
+	
 #define scrBoneDust(_x, _y)
 	 // Create the guy aready:
 	with(instance_create(_x, _y, Sweat)){
@@ -1078,8 +1084,8 @@
 		return self;
 	}
 	return noone;
-
-
+	
+	
 #define BoneFX_create(_x, _y)
 	/*
 		An effect used when swapping the bone scythe's mode
