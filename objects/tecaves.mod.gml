@@ -5127,16 +5127,10 @@
 	 // Scramble Cursed Caves Weapons:
 	if(GameCont.area == area_cursed_caves){
 		with(_inst){
-			if(roll && call(scr.wep_raw, wep) != "merge"){
+			if(roll && !call(scr.weapon_has_temerge, wep)){
 				if(chance(1, 3) || !position_meeting(xstart, ystart, ChestOpen)){
-					 // Curse:
 					curse = max(1, curse);
-					
-					 // Scramble:
-					var _part = call(scr.weapon_merge_decide, 0, GameCont.hard + (2 * curse));
-					if(array_length(_part) >= 2){
-						wep = call(scr.weapon_merge, _part[0], _part[1]);
-					}
+					wep   = call(scr.temerge_decide_weapon, 0, max(1, GameCont.hard - 1) + (2 * curse));
 				}
 			}
 		}

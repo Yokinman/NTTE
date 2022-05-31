@@ -170,10 +170,10 @@
 				w = wep_none;
 				
 			if(array_length(a) >= 2){
-				w = script_ref_call(mod_variable_get("mod", "teassets", "scr").weapon_merge, a[0], a[1]);
+				w = script_ref_call(mod_variable_get("mod", "teassets", "scr").weapon_add_temerge, a[0], a[1]);
 			}
 			else{
-				w = script_ref_call(mod_variable_get("mod", "teassets", "scr").weapon_merge, a[0], a[0]);
+				w = script_ref_call(mod_variable_get("mod", "teassets", "scr").weapon_add_temerge, a[0], a[0]);
 			}
 			
 			with(instance_create(mouse_x[_ind], mouse_y[_ind], WepPickup)){

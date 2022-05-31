@@ -64,7 +64,7 @@
 			"crowns/bonus.crown.gml",
 			"crowns/crime.crown.gml",
 			"crowns/red.crown.gml",
-			"weps/merge.wep.gml",
+		//	"weps/merge.wep.gml",
 			"weps/tewrapper.wep.gml",
 			"weps/crabbone.wep.gml",
 			"weps/scythe.wep.gml",

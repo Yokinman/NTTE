@@ -3951,7 +3951,7 @@
 		}
 	}
 	
-#define weapon_decide // minArea=0, maxArea=GameCont.hard, isGold=false, ?avoidWep
+#define weapon_decide // minArea=0, maxArea=GameCont.hard, isGold=false, ?avoidedWep
 	/*
 		Returns a random weapon that spawns within the given difficulties
 		Takes standard weapon chest spawning conditions into account
@@ -3960,7 +3960,7 @@
 			minArea/maxArea - The weapon spawn difficulty range, defaults to 0 and GameCont.hard
 			isGold          - Is only able to decide from golden weapons? Defaults to false
 			                  Use -1 to completely exclude golden weapons
-			avoidWep        - Optional, a weapon or array of weapons to exclude from spawning
+			avoidedWep      - Optional, a weapon or array of weapons to exclude from spawning
 			
 		Ex:
 			wep = weapon_decide();
@@ -3968,11 +3968,11 @@
 			wep = weapon_decide(2, GameCont.hard, false, [p.wep, p.bwep]);
 	*/
 	
-	var	_minArea   = ((argument_count > 0) ? argument[0] : 0),
-		_maxArea   = ((argument_count > 1) ? argument[1] : GameCont.hard),
-		_isGold    = ((argument_count > 2) ? argument[2] : false),
-		_avoidWep  = ((argument_count > 3) ? argument[3] : undefined),
-		_decideWep = wep_screwdriver;
+	var	_minArea    = ((argument_count > 0) ? argument[0] : 0),
+		_maxArea    = ((argument_count > 1) ? argument[1] : GameCont.hard),
+		_isGold     = ((argument_count > 2) ? argument[2] : false),
+		_avoidedWep = ((argument_count > 3) ? argument[3] : undefined),
+		_decidedWep = wep_screwdriver;
 		
 	 // Hardmode:
 	_maxArea += ceil((GameCont.hard - (UberCont.hardmode * 13)) / (1 + (UberCont.hardmode * 2))) - GameCont.hard;
@@ -3991,12 +3991,12 @@
 	
 	 // Default Weapon:
 	if("wep" in self && wep != wep_none){
-		_decideWep = wep;
+		_decidedWep = wep;
 	}
 	else if(_isGold > 0){
-		_decideWep = choose(wep_golden_wrench, wep_golden_machinegun, wep_golden_shotgun, wep_golden_crossbow, wep_golden_grenade_launcher, wep_golden_laser_pistol);
+		_decidedWep = choose(wep_golden_wrench, wep_golden_machinegun, wep_golden_shotgun, wep_golden_crossbow, wep_golden_grenade_launcher, wep_golden_laser_pistol);
 		if(GameCont.loops > 0 && random(2) < 1){
-			_decideWep = choose(wep_golden_screwdriver, wep_golden_assault_rifle, wep_golden_slugger, wep_golden_splinter_gun, wep_golden_bazooka, wep_golden_plasma_gun);
+			_decidedWep = choose(wep_golden_screwdriver, wep_golden_assault_rifle, wep_golden_slugger, wep_golden_splinter_gun, wep_golden_bazooka, wep_golden_plasma_gun);
 		}
 	}
 	
@@ -4011,7 +4011,7 @@
 			_wepCanSpawn = true;
 			
 		 // Weapon Exceptions:
-		if(_wep == _avoidWep || (is_array(_avoidWep) && array_find_index(_avoidWep, _wep) >= 0)){
+		if(_wep == _avoidedWep || (is_array(_avoidedWep) && array_find_index(_avoidedWep, _wep) >= 0)){
 			_wepCanSpawn = false;
 		}
 		
@@ -4033,14 +4033,14 @@
 		
 		 // Success:
 		if(_wepCanSpawn){
-			_decideWep = _wep;
+			_decidedWep = _wep;
 			break;
 		}
 	}
 	
 	ds_list_destroy(_wepList);
 	
-	return _decideWep;
+	return _decidedWep;
 	
 #define weapon_get(_eventName, _wep)
 	/*

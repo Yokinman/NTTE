@@ -2544,10 +2544,36 @@
 					lq_set(save_data, lq_get_key(_save, i), lq_get_value(_save, i));
 				}
 				
-				 // Shader Override:
-				if(!save_get("shaders_option_reset", false)){
-					save_set("shaders_option_reset", true);
-					option_set("shaders", true);
+				 // Update Legacy Merged Weapons:
+				if(fork()){
+					while(mod_exists("mod", "teloader")){
+						wait 0;
+					}
+					var _saveUnlockLoadoutInfo = save_get("unlock:loadout:wep", undefined);
+					if(_saveUnlockLoadoutInfo != undefined){
+						for(var _saveUnlockLoadoutIndex = lq_size(_saveUnlockLoadoutInfo) - 1; _saveUnlockLoadoutIndex >= 0; _saveUnlockLoadoutIndex--){
+							var	_saveUnlockLoadoutWepInfoKey = lq_get_key(_saveUnlockLoadoutInfo, _saveUnlockLoadoutIndex),
+								_saveUnlockLoadoutWepInfo    = lq_get_value(_saveUnlockLoadoutInfo, _saveUnlockLoadoutIndex);
+								
+							for(var _saveUnlockLoadoutWepIndex = lq_size(_saveUnlockLoadoutWepInfo) - 1; _saveUnlockLoadoutWepIndex >= 0; _saveUnlockLoadoutWepIndex--){
+								var	_saveUnlockLoadoutWepKey = lq_get_key(_saveUnlockLoadoutWepInfo, _saveUnlockLoadoutWepIndex),
+									_saveUnlockLoadoutWep    = lq_get_value(_saveUnlockLoadoutWepInfo, _saveUnlockLoadoutWepIndex);
+									
+								if(
+									call(scr.wep_raw, _saveUnlockLoadoutWep) == "merge"
+									&& "base"  in _saveUnlockLoadoutWep
+									&& "stock" in _saveUnlockLoadoutWep.base
+									&& "front" in _saveUnlockLoadoutWep.base
+								){
+									save_set(
+										`unlock:loadout:wep:${_saveUnlockLoadoutWepInfoKey}:${_saveUnlockLoadoutWepKey}`,
+										call(scr.weapon_add_temerge, _saveUnlockLoadoutWep.base.stock, _saveUnlockLoadoutWep.base.front)
+									);
+								}
+							}
+						}
+					}
+					exit;
 				}
 			}
 			

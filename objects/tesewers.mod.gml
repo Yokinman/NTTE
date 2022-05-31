@@ -4469,12 +4469,12 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 		}
 		
 		 // Weapon:
-		var _part = call(scr.weapon_merge_decide_raw, 0, GameCont.hard, -1, _wepAvoid, false);
-		if(array_length(_part) >= 2){
-			with(instance_create(x + orandom(4), y + orandom(4), WepPickup)){
-				ammo = true;
-				wep  = call(scr.weapon_merge, _part[0], _part[1]);
-			}
+		with(instance_create(x + orandom(4), y + orandom(4), WepPickup)){
+			ammo = true;
+			wep  = call(scr.weapon_add_temerge,
+				call(scr.weapon_decide, 0, max(1, GameCont.hard - 1)),
+				call(scr.weapon_decide, 0, max(1, GameCont.hard - 1), false, _wepAvoid)
+			);
 		}
 	}
 	

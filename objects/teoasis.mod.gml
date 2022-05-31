@@ -1463,7 +1463,7 @@
 		
 		 // Vars:
 		num   = 2;
-		wep   = "merge";
+		wep   = wep_none;
 		skeal = false;
 		if(GameCont.area == "coast"){
 			wep = { wep: "trident", gold: true };
@@ -1552,11 +1552,8 @@
 		var _wep = wep;
 		
 		 // Golden Merged Weapon:
-		if(_wep == "merge"){
-			var _part = call(scr.weapon_merge_decide_raw, 0, GameCont.hard, -1, -1, true);
-			if(array_length(_part) >= 2){
-				_wep = call(scr.weapon_merge, _part[0], _part[1]);
-			}
+		if(_wep == wep_none){
+			_wep = call(scr.temerge_decide_weapon, 0, max(1, GameCont.hard - 1), true);
 		}
 		
 		 // Create:

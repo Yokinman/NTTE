@@ -1972,7 +1972,7 @@
 					wep_black_sword,
 					wep_golden_frog_pistol,
 					"crabbone",
-					"merge",
+				//	"merge",
 					"super teleport gun"
 				];
 				

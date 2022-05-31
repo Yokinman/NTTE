@@ -132,16 +132,16 @@
 			 // Give Ammo:
 			var _type = weapon_get_type(wep);
 			if(_type != type_melee){
-				if(call(scr.wep_raw, wep) == "merge"){
-					ammo[_type] += round(clamp(
-						weapon_get_cost(wep) * 2,
-						typ_ammo[_type] * 1.25,
-						typ_ammo[_type] * 3
-					));
-				}
-				else{
+			//	if(call(scr.wep_raw, wep) == "merge"){
+			//		ammo[_type] += round(clamp(
+			//			weapon_get_cost(wep) * 2,
+			//			typ_ammo[_type] * 1.25,
+			//			typ_ammo[_type] * 3
+			//		));
+			//	}
+			//	else{
 					ammo[_type] += round(typ_ammo[_type] * 3);
-				}
+			//	}
 			}
 		}
 		
@@ -2570,7 +2570,11 @@
 		for(var i = 0; i < 2; i++){
 			var _wep = ((i == 0) ? wep : bwep);
 			if(weapon_get_gold(_wep) != 0){
-				if(array_find_index(ntte.mods.weapon, call(scr.wep_raw, _wep)) >= 0){
+				if(
+					is_string(call(scr.wep_raw, _wep))
+					? (array_find_index(ntte.mods.weapon, call(scr.wep_raw, _wep)) >= 0)
+					: call(scr.weapon_has_temerge, _wep)
+				){
 					var	_path = `loadout:wep:${race}`,
 						_name = "main";
 						
@@ -4038,30 +4042,30 @@
 		 // Call Scripts:
 		ntte_call("draw_bloom");
 		
-		 // GunCont (Merged Laser Cannon):
-		if(array_length(obj.GunCont)){
-			var _inst = instances_matching_gt(obj.GunCont, "bloom", 0);
-			if(array_length(_inst)){
-				with(_inst){
-					var _scr = on_draw;
-					if(array_length(_scr) >= 3){
-						var	_xsc = 2,
-							_ysc = 2,
-							_alp = 0.1 * bloom;
-							
-						image_xscale *= _xsc;
-						image_yscale *= _ysc;
-						image_alpha  *= _alp;
-						
-						call(scr.pass, self, _scr);
-						
-						image_xscale /= _xsc;
-						image_yscale /= _ysc;
-						image_alpha  /= _alp;
-					}
-				}
-			}
-		}
+	//	 // GunCont (Merged Laser Cannon):
+	//	if(array_length(obj.GunCont)){
+	//		var _inst = instances_matching_gt(obj.GunCont, "bloom", 0);
+	//		if(array_length(_inst)){
+	//			with(_inst){
+	//				var _scr = on_draw;
+	//				if(array_length(_scr) >= 3){
+	//					var	_xsc = 2,
+	//						_ysc = 2,
+	//						_alp = 0.1 * bloom;
+	//						
+	//					image_xscale *= _xsc;
+	//					image_yscale *= _ysc;
+	//					image_alpha  *= _alp;
+	//					
+	//					call(scr.pass, self, _scr);
+	//					
+	//					image_xscale /= _xsc;
+	//					image_yscale /= _ysc;
+	//					image_alpha  /= _alp;
+	//				}
+	//			}
+	//		}
+	//	}
 		
 		if(lag) trace_time("ntte_draw_bloom");
 	}

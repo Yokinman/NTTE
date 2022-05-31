@@ -496,14 +496,11 @@
 					}
 					
 					 // Pickups:
-					/*var _part = mod_script_call("weapon", "merge", "weapon_merge_decide_raw", 0, 1 + GameCont.hard, -1, wep_frog_pistol, false);
-					if(array_length(_part) >= 2){
-						with(call(scr.obj_create, x, y, "WepPickupGrounded")){
-							target = instance_create(x, y, WepPickup);
-							with(target){
-								ammo = true;
-								wep  = call(scr.weapon_merge, _part[0], _part[1]);
-							}
+					/*with(call(scr.obj_create, x, y, "WepPickupGrounded")){
+						target = instance_create(x, y, WepPickup);
+						with(target){
+							ammo = true;
+							wep  = call(scr.weapon_add_temerge, call(scr.weapon_decide, 0, GameCont.hard), wep_frog_pistol);
 						}
 					}*/
 					with(call(scr.rad_drop, x, y, 50, 0, 0)){
@@ -2512,341 +2509,341 @@
 	}
 	
 	
-#define MergeFlak_create(_x, _y)
-	/*
-		A projectile that groups a bunch of other projectiles into a flak ball
-		Used for merged weapon flak cannons
-	*/
-	
-	with(instance_create(_x, _y, CustomProjectile)){
-		 // Visual:
-		sprite_index = -1;
-		image_speed = 0;
-		
-		 // Vars:
-		mask_index = mskFlakBullet;
-		friction   = 0.4;
-		damage     = 0;
-		force      = 6;
-		rotation   = 0;
-		rotspeed   = random_range(12, 16) * choose(-1, 1);
-		inst       = [];
-		inst_vars  = ds_map_create();
-		flag       = [];
-		
-		return self;
-	}
-	
-#define MergeFlak_step
-	image_index += speed_raw / 12;
-	
-	 // Create Sprite:
-	if(!sprite_exists(sprite_index)){
-		var _instMergeFlak = instances_matching_ne(obj.MergeFlak, "id", id);
-		if(!array_length(instances_matching(instances_matching(_instMergeFlak, "sprite_width", 16), "sprite_height", 16))){
-			var	_inst = instances_matching_ne(inst, "id"),
-				_size = 24,
-				_num  = 2;
-				
-			with(_inst){
-				_size = max(_size, 2 * max(sprite_width, sprite_height));
-			}
-			
-			with(call(scr.surface_setup, "MergeFlak", _size * _num, _size, 1)){
-				surface_set_target(surf);
-				draw_clear_alpha(c_black, 0);
-				d3d_set_projection_ortho(x, y, w, h, 0);
-				
-				with(other){
-					for(var i = 0; i < _num; i++){
-						with(_inst){
-							var	_spr   = sprite_index,
-								_img   = image_index,
-								_xsc   = image_xscale,
-								_ysc   = image_yscale,
-								_ang   = image_angle,
-								_col   = image_blend,
-								_alp   = abs(image_alpha),
-								_dis   = sprite_xoffset - (sprite_width / 2),
-								_x     = (_size / 2) + lengthdir_x(_dis, _ang) + (i * _size),
-								_y     = (_size / 2) + lengthdir_y(_dis, _ang),
-								_pulse = 1 + min(4 / sprite_get_width(_spr), i * (sprite_get_height(_spr) / 64));
-								
-							if(array_find_index(_instMergeFlak, self) >= 0){
-								_img   = i;
-								_pulse = 1;
-							}
-							
-							else switch(_spr){
-								case sprGrenade:
-								case sprStickyGrenade:
-								case sprBloodGrenade:
-								case sprFlare:
-								case sprPopoNade:
-								case sprToxicGrenade:
-								case sprClusterNade:
-								case sprUltraGrenade:
-									_spr = sprClusterGrenadeBlink;
-									_img = i;
-									break;
-									
-								case sprMininade:
-								case sprConfettiBall:
-									_spr = sprGrenadeBlink;
-									_img = i;
-									break;
-									
-								case sprHeavyNade:
-									_spr = sprHeavyGrenadeBlink;
-									_img = i;
-									break;
-									
-								case sprDisc:
-								case sprGoldDisc:
-									if(i) _spr = sprDiscTrail;
-									_xsc *= 1.25;
-									_ysc *= 1.25;
-									_ang = 0;
-									break;
-									
-								case sprLaser:
-									_spr = sprPlasmaBall;
-									_ysc /= 3;
-									_xsc = _ysc;
-									break;
-									
-								case sprPlasmaBall:
-								case sprPlasmaBallBig:
-								case sprPlasmaBallHuge:
-								case sprUltraBullet:
-								case sprUltraShell:
-									_xsc *= 0.8;
-									_ysc *= 0.8;
-									break;
-									
-								case sprLightning:
-									_spr = sprLightningBall;
-									_img = (i * 3);
-									_ang = other.image_angle;
-									_xsc /= 2;
-									_ysc /= 2;
-									break;
-									
-								case sprTrapFire:
-								case sprWeaponFire:
-									_img = irandom(3);
-									break;
-									
-								case sprLightningBall:
-								case sprFlameBall:
-								case sprBloodBall:
-									_img = irandom(image_number - 1);
-									break;
-									
-								case sprFireShell:
-									_spr = sprFireBall;
-									_img = 1;
-									break;
-									
-								case sprBolt:
-								case sprBoltGold:
-								case sprToxicBolt:
-								case sprHeavyBolt:
-								case sprSplinter:
-								case sprUltraBolt:
-								case sprSeeker:
-									_img = image_number - 1;
-									break;
-									
-								case sprScorpionBullet:
-									_ysc *= 2;
-									break;
-							}
-							
-							_xsc *= _pulse;
-							_ysc *= _pulse;
-							
-							draw_sprite_ext(_spr, _img, _x, _y, _xsc, _ysc, _ang, _col, _alp);
-						}
-					}
-				}
-				
-				d3d_set_projection_ortho(view_xview_nonsync, view_yview_nonsync, game_width, game_height, 0);
-				surface_reset_target();
-				
-				 // Add Sprite:
-				surface_save(surf, `spr${name}.png`);
-				other.sprite_index = sprite_add(`spr${name}.png`, _num, (_size * scale) / 2, (_size * scale) / 2);
-			}
-		}
-	}
-	
-	 // Hold Instances:
-	if(!ds_map_valid(inst_vars)){
-		inst_vars = ds_map_create();
-	}
-	var _vars = inst_vars;
-	with(inst){
-		if(instance_exists(self) && speed > 0){
-			 // Store Vars:
-			if(!ds_map_exists(_vars, self)){
-				var _v = {
-					mask_index	: mask_index,
-					image_index	: image_index,
-					speed		: speed,
-					alarm		: []
-				};
-				for(var i = 0; i < 12; i++){
-					var _a = alarm_get(i);
-					if(_a > 0){
-						array_push(_v.alarm, [i, _a + 1]);
-					}
-				}
-				_vars[? self] = _v;
-			}
-			
-			 // Hold Vars:
-			var _v = _vars[? self];
-			image_index = _v.image_index;
-			speed = _v.speed;
-			var _a = _v.alarm;
-			for(var i = 0; i < array_length(_a); i++){
-				alarm_set(_a[i, 0], _a[i, 1]);
-			}
-			
-			 // Freeze Movement:
-			x = other.x - hspeed_raw;
-			y = other.y - vspeed_raw;
-			
-			 // Object-Specific:
-			switch(object_index){
-				
-				case Laser:
-					
-					xstart = x;
-					ystart = y;
-					image_yscale += 0.3 * current_time_scale;
-					
-					break;
-					
-				case Bolt:
-				case ToxicBolt:
-				case Splinter:
-				case HeavyBolt:
-				case UltraBolt:
-					
-					x += lengthdir_x(sprite_height / 4, image_angle + other.rotation);
-					y += lengthdir_y(sprite_height / 4, image_angle + other.rotation);
-					
-					break;
-					
-				default:
-					
-					if(array_find_index(obj.MergeFlak, self) >= 0){
-						rotation    = other.rotation;
-						image_index = other.image_index;
-					}
-					
-			}
-			
-			 // Disable:
-			if(mask_index != mskNone){
-				_v.mask_index = mask_index;
-				mask_index = mskNone;
-			}
-			image_alpha = -abs(image_alpha);
-		}
-		else other.speed = 0;
-	}
-	
-	 // Spin:
-	rotation += rotspeed * current_time_scale;
-	rotspeed -= clamp(rotspeed, -friction, friction) * current_time_scale;
-	
-	 // Effects:
-	if(chance_ct(1, 3)){
-		instance_create(x, y, Smoke);
-	}
-	
-	 // Explode:
-	if(speed == 0 || place_meeting(x + hspeed_raw, y + vspeed_raw, Wall)){
-		instance_destroy();
-	}
-	
-#define MergeFlak_draw
-	draw_sprite_ext(sprite_index, image_index, x, y, image_xscale, image_yscale, rotation, image_blend, image_alpha);
-	
-#define MergeFlak_hit
-	with(other){
-		var _hit = 4;
-		with(other.inst){
-			if(instance_exists(self) && other.my_health > 0){
-				if(_hit > 0 || array_find_index(obj.MergeFlak, self) >= 0){
-					event_perform(ev_collision, hitme);
-					if(instance_exists(other)){
-						_hit = 0;
-					}
-					else{
-						_hit--;
-					}
-				}
-			}
-		}
-	}
-	
-	 // Slow:
-	x -= hspeed_raw / 2;
-	y -= vspeed_raw / 2;
-	
-#define MergeFlak_destroy
-	 // Activate Projectiles:
-	var _vars = inst_vars;
-	with(inst) if(instance_exists(self)){
-		image_alpha = abs(image_alpha);
-		direction += other.rotation;
-		image_angle = direction;
-		x = other.x;
-		y = other.y;
-		
-		if(ds_map_valid(_vars) && ds_map_exists(_vars, self)){
-			mask_index = _vars[? self].mask_index;
-		}
-		
-		 // Activate Lasers, Lightning, etc.
-		mod_script_call("weapon", "merge", "proj_post", other.flag);
-		
-		 // Object Specific:
-		switch(object_index){
-			
-			case Laser:
-				
-				sound_play_pitch((skill_get(mut_laser_brain) ? sndLaserUpg : sndLaser), 1 + orandom(0.2));
-				
-				break;
-				
-			default:
-				
-				if(array_find_index(obj.MergeFlak, self) >= 0){
-					rotspeed += random_range(12, 16) * choose(-1, 1);
-				}
-				
-		}
-	}
-	if(ds_map_valid(inst_vars)){
-		ds_map_destroy(inst_vars);
-	}
-	
-	 // Effects:
-	sleep(20);
-	view_shake_at(x, y, (array_length(inst) / 2));
-	sound_play(sndFlakExplode);
-	repeat(6) with(instance_create(x, y, Smoke)){
-		motion_add(random(360), random(3));
-	}
-	with(instance_create(x, y, BulletHit)){
-		sprite_index = sprFlakHit;
-	}
-	
+//#define MergeFlak_create(_x, _y)
+//	/*
+//		A projectile that groups a bunch of other projectiles into a flak ball
+//		Used for merged weapon flak cannons
+//	*/
+//	
+//	with(instance_create(_x, _y, CustomProjectile)){
+//		 // Visual:
+//		sprite_index = -1;
+//		image_speed = 0;
+//		
+//		 // Vars:
+//		mask_index = mskFlakBullet;
+//		friction   = 0.4;
+//		damage     = 0;
+//		force      = 6;
+//		rotation   = 0;
+//		rotspeed   = random_range(12, 16) * choose(-1, 1);
+//		inst       = [];
+//		inst_vars  = ds_map_create();
+//		flag       = [];
+//		
+//		return self;
+//	}
+//	
+//#define MergeFlak_step
+//	image_index += speed_raw / 12;
+//	
+//	 // Create Sprite:
+//	if(!sprite_exists(sprite_index)){
+//		var _instMergeFlak = instances_matching_ne(obj.MergeFlak, "id", id);
+//		if(!array_length(instances_matching(instances_matching(_instMergeFlak, "sprite_width", 16), "sprite_height", 16))){
+//			var	_inst = instances_matching_ne(inst, "id"),
+//				_size = 24,
+//				_num  = 2;
+//				
+//			with(_inst){
+//				_size = max(_size, 2 * max(sprite_width, sprite_height));
+//			}
+//			
+//			with(call(scr.surface_setup, "MergeFlak", _size * _num, _size, 1)){
+//				surface_set_target(surf);
+//				draw_clear_alpha(c_black, 0);
+//				d3d_set_projection_ortho(x, y, w, h, 0);
+//				
+//				with(other){
+//					for(var i = 0; i < _num; i++){
+//						with(_inst){
+//							var	_spr   = sprite_index,
+//								_img   = image_index,
+//								_xsc   = image_xscale,
+//								_ysc   = image_yscale,
+//								_ang   = image_angle,
+//								_col   = image_blend,
+//								_alp   = abs(image_alpha),
+//								_dis   = sprite_xoffset - (sprite_width / 2),
+//								_x     = (_size / 2) + lengthdir_x(_dis, _ang) + (i * _size),
+//								_y     = (_size / 2) + lengthdir_y(_dis, _ang),
+//								_pulse = 1 + min(4 / sprite_get_width(_spr), i * (sprite_get_height(_spr) / 64));
+//								
+//							if(array_find_index(_instMergeFlak, self) >= 0){
+//								_img   = i;
+//								_pulse = 1;
+//							}
+//							
+//							else switch(_spr){
+//								case sprGrenade:
+//								case sprStickyGrenade:
+//								case sprBloodGrenade:
+//								case sprFlare:
+//								case sprPopoNade:
+//								case sprToxicGrenade:
+//								case sprClusterNade:
+//								case sprUltraGrenade:
+//									_spr = sprClusterGrenadeBlink;
+//									_img = i;
+//									break;
+//									
+//								case sprMininade:
+//								case sprConfettiBall:
+//									_spr = sprGrenadeBlink;
+//									_img = i;
+//									break;
+//									
+//								case sprHeavyNade:
+//									_spr = sprHeavyGrenadeBlink;
+//									_img = i;
+//									break;
+//									
+//								case sprDisc:
+//								case sprGoldDisc:
+//									if(i) _spr = sprDiscTrail;
+//									_xsc *= 1.25;
+//									_ysc *= 1.25;
+//									_ang = 0;
+//									break;
+//									
+//								case sprLaser:
+//									_spr = sprPlasmaBall;
+//									_ysc /= 3;
+//									_xsc = _ysc;
+//									break;
+//									
+//								case sprPlasmaBall:
+//								case sprPlasmaBallBig:
+//								case sprPlasmaBallHuge:
+//								case sprUltraBullet:
+//								case sprUltraShell:
+//									_xsc *= 0.8;
+//									_ysc *= 0.8;
+//									break;
+//									
+//								case sprLightning:
+//									_spr = sprLightningBall;
+//									_img = (i * 3);
+//									_ang = other.image_angle;
+//									_xsc /= 2;
+//									_ysc /= 2;
+//									break;
+//									
+//								case sprTrapFire:
+//								case sprWeaponFire:
+//									_img = irandom(3);
+//									break;
+//									
+//								case sprLightningBall:
+//								case sprFlameBall:
+//								case sprBloodBall:
+//									_img = irandom(image_number - 1);
+//									break;
+//									
+//								case sprFireShell:
+//									_spr = sprFireBall;
+//									_img = 1;
+//									break;
+//									
+//								case sprBolt:
+//								case sprBoltGold:
+//								case sprToxicBolt:
+//								case sprHeavyBolt:
+//								case sprSplinter:
+//								case sprUltraBolt:
+//								case sprSeeker:
+//									_img = image_number - 1;
+//									break;
+//									
+//								case sprScorpionBullet:
+//									_ysc *= 2;
+//									break;
+//							}
+//							
+//							_xsc *= _pulse;
+//							_ysc *= _pulse;
+//							
+//							draw_sprite_ext(_spr, _img, _x, _y, _xsc, _ysc, _ang, _col, _alp);
+//						}
+//					}
+//				}
+//				
+//				d3d_set_projection_ortho(view_xview_nonsync, view_yview_nonsync, game_width, game_height, 0);
+//				surface_reset_target();
+//				
+//				 // Add Sprite:
+//				surface_save(surf, `spr${name}.png`);
+//				other.sprite_index = sprite_add(`spr${name}.png`, _num, (_size * scale) / 2, (_size * scale) / 2);
+//			}
+//		}
+//	}
+//	
+//	 // Hold Instances:
+//	if(!ds_map_valid(inst_vars)){
+//		inst_vars = ds_map_create();
+//	}
+//	var _vars = inst_vars;
+//	with(inst){
+//		if(instance_exists(self) && speed > 0){
+//			 // Store Vars:
+//			if(!ds_map_exists(_vars, self)){
+//				var _v = {
+//					mask_index	: mask_index,
+//					image_index	: image_index,
+//					speed		: speed,
+//					alarm		: []
+//				};
+//				for(var i = 0; i < 12; i++){
+//					var _a = alarm_get(i);
+//					if(_a > 0){
+//						array_push(_v.alarm, [i, _a + 1]);
+//					}
+//				}
+//				_vars[? self] = _v;
+//			}
+//			
+//			 // Hold Vars:
+//			var _v = _vars[? self];
+//			image_index = _v.image_index;
+//			speed = _v.speed;
+//			var _a = _v.alarm;
+//			for(var i = 0; i < array_length(_a); i++){
+//				alarm_set(_a[i, 0], _a[i, 1]);
+//			}
+//			
+//			 // Freeze Movement:
+//			x = other.x - hspeed_raw;
+//			y = other.y - vspeed_raw;
+//			
+//			 // Object-Specific:
+//			switch(object_index){
+//				
+//				case Laser:
+//					
+//					xstart = x;
+//					ystart = y;
+//					image_yscale += 0.3 * current_time_scale;
+//					
+//					break;
+//					
+//				case Bolt:
+//				case ToxicBolt:
+//				case Splinter:
+//				case HeavyBolt:
+//				case UltraBolt:
+//					
+//					x += lengthdir_x(sprite_height / 4, image_angle + other.rotation);
+//					y += lengthdir_y(sprite_height / 4, image_angle + other.rotation);
+//					
+//					break;
+//					
+//				default:
+//					
+//					if(array_find_index(obj.MergeFlak, self) >= 0){
+//						rotation    = other.rotation;
+//						image_index = other.image_index;
+//					}
+//					
+//			}
+//			
+//			 // Disable:
+//			if(mask_index != mskNone){
+//				_v.mask_index = mask_index;
+//				mask_index = mskNone;
+//			}
+//			image_alpha = -abs(image_alpha);
+//		}
+//		else other.speed = 0;
+//	}
+//	
+//	 // Spin:
+//	rotation += rotspeed * current_time_scale;
+//	rotspeed -= clamp(rotspeed, -friction, friction) * current_time_scale;
+//	
+//	 // Effects:
+//	if(chance_ct(1, 3)){
+//		instance_create(x, y, Smoke);
+//	}
+//	
+//	 // Explode:
+//	if(speed == 0 || place_meeting(x + hspeed_raw, y + vspeed_raw, Wall)){
+//		instance_destroy();
+//	}
+//	
+//#define MergeFlak_draw
+//	draw_sprite_ext(sprite_index, image_index, x, y, image_xscale, image_yscale, rotation, image_blend, image_alpha);
+//	
+//#define MergeFlak_hit
+//	with(other){
+//		var _hit = 4;
+//		with(other.inst){
+//			if(instance_exists(self) && other.my_health > 0){
+//				if(_hit > 0 || array_find_index(obj.MergeFlak, self) >= 0){
+//					event_perform(ev_collision, hitme);
+//					if(instance_exists(other)){
+//						_hit = 0;
+//					}
+//					else{
+//						_hit--;
+//					}
+//				}
+//			}
+//		}
+//	}
+//	
+//	 // Slow:
+//	x -= hspeed_raw / 2;
+//	y -= vspeed_raw / 2;
+//	
+//#define MergeFlak_destroy
+//	 // Activate Projectiles:
+//	var _vars = inst_vars;
+//	with(inst) if(instance_exists(self)){
+//		image_alpha = abs(image_alpha);
+//		direction += other.rotation;
+//		image_angle = direction;
+//		x = other.x;
+//		y = other.y;
+//		
+//		if(ds_map_valid(_vars) && ds_map_exists(_vars, self)){
+//			mask_index = _vars[? self].mask_index;
+//		}
+//		
+//		 // Activate Lasers, Lightning, etc.
+//		mod_script_call("weapon", "merge", "proj_post", other.flag);
+//		
+//		 // Object Specific:
+//		switch(object_index){
+//			
+//			case Laser:
+//				
+//				sound_play_pitch((skill_get(mut_laser_brain) ? sndLaserUpg : sndLaser), 1 + orandom(0.2));
+//				
+//				break;
+//				
+//			default:
+//				
+//				if(array_find_index(obj.MergeFlak, self) >= 0){
+//					rotspeed += random_range(12, 16) * choose(-1, 1);
+//				}
+//				
+//		}
+//	}
+//	if(ds_map_valid(inst_vars)){
+//		ds_map_destroy(inst_vars);
+//	}
+//	
+//	 // Effects:
+//	sleep(20);
+//	view_shake_at(x, y, (array_length(inst) / 2));
+//	sound_play(sndFlakExplode);
+//	repeat(6) with(instance_create(x, y, Smoke)){
+//		motion_add(random(360), random(3));
+//	}
+//	with(instance_create(x, y, BulletHit)){
+//		sprite_index = sprFlakHit;
+//	}
+//	
 	
 #define Pet_create(_x, _y)
 	/*
@@ -6052,22 +6049,22 @@
 		}
 	}
 	
-	 // Merged Flak Ball:
-	if(array_length(obj.MergeFlak)){
-		with(instances_matching_ne(obj.MergeFlak, "id")){
-			var	_scale = 1.5,
-				_alpha = 0.1 * clamp(array_length(inst) / 12, 1, 2);
-				
-			with(inst){
-				if(array_find_index(obj.MergeFlak, self) >= 0){
-					_alpha *= 1.5;
-					break;
-				}
-			}
-			
-			draw_sprite_ext(sprite_index, image_index, x, y, image_xscale * _scale, image_yscale * _scale, rotation, image_blend, image_alpha * _alpha);
-		}
-	}
+//	 // Merged Flak Ball:
+//	if(array_length(obj.MergeFlak)){
+//		with(instances_matching_ne(obj.MergeFlak, "id")){
+//			var	_scale = 1.5,
+//				_alpha = 0.1 * clamp(array_length(inst) / 12, 1, 2);
+//				
+//			with(inst){
+//				if(array_find_index(obj.MergeFlak, self) >= 0){
+//					_alpha *= 1.5;
+//					break;
+//				}
+//			}
+//			
+//			draw_sprite_ext(sprite_index, image_index, x, y, image_xscale * _scale, image_yscale * _scale, rotation, image_blend, image_alpha * _alpha);
+//		}
+//	}
 	
 #define ntte_draw_shadows
 	 // Top Objects:

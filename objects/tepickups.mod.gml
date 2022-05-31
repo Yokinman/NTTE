@@ -140,10 +140,7 @@
 			
 			 // Merged Weapon:
 			else{
-				var _part = call(scr.weapon_merge_decide, 0, (2 * curse) + GameCont.hard);
-				if(array_length(_part) >= 2){
-					_wep = call(scr.weapon_merge, _part[0], _part[1]);
-				}
+				_wep = call(scr.temerge_decide_weapon, 0, max(1, GameCont.hard - 1) + (2 * curse));
 				
 				 // Parts:
 				repeat(_wepNum){
@@ -606,20 +603,23 @@
 	}
 	
 	 // Determine Weapons:
-	var	_hardMin = 0,
-		_hardMax = (2 * curse) + GameCont.hard,
-		_part    = call(scr.weapon_merge_decide, _hardMin, _hardMax);
+	var	_minHard        = 0,
+		_maxHard        = max(1, GameCont.hard - 1) + (2 * curse),
+		_avoidedWepList = [],
+		_wep            = call(scr.weapon_decide, _minHard, _maxHard, false, _avoidedWepList);
 		
 	for(var i = 0; i < array_length(_shop); i += 2){
-		if(array_length(_part) >= 2){
-			_shop[i].drop = ((_part[1].weap == -1) ? _part[1] : _part[1].weap);
-			if(i + 1 < array_length(_shop)){
-				_shop[i + 1].drop = call(scr.weapon_merge, _part[0], _part[1]);
-			}
-			
-			 // Next Merged Weapon Uses the Current Stock as its Front:
-			_part = call(scr.weapon_merge_decide_raw, _hardMin, _hardMax, -1, _part[0], false);
+		_shop[i].drop = _wep;
+		
+		array_push(_avoidedWepList, _wep);
+		
+		var _stockWep = call(scr.weapon_decide, _minHard, _maxHard, false, _avoidedWepList);
+		
+		if(i + 1 < array_length(_shop)){
+			_shop[i + 1].drop = call(scr.weapon_add_temerge, _stockWep, _wep);
 		}
+		
+		_wep = _stockWep;
 	}
 	
 	
@@ -1463,8 +1463,7 @@
 					 // Cool Wep:
 					if(wep == wep_rusty_revolver){
 						sprite_index = spr.ProtoChestMerge;
-						var _part = call(scr.weapon_merge_decide, 0, 4 + GameCont.hard);
-						wep = call(scr.weapon_merge, _part[0], _part[1]);
+						wep = call(scr.temerge_decide_weapon, 0, 3 + GameCont.hard);
 					}
 					break;
 					
@@ -2058,7 +2057,7 @@
 			
 		case ChestShop_wep:
 			
-			var _merged = (call(scr.wep_raw, drop) == "merge");
+			var _merged = call(scr.weapon_has_temerge, drop);
 			
 			 // Text:
 			text = call(scr.loc_format,
@@ -2072,13 +2071,14 @@
 			 // Visual:
 			sprite_index = weapon_get_sprt(drop);
 			var _hue = [0, 40, 120, 0, 160, 80];
-			if(
-				call(scr.wep_raw, drop) == "merge"
-				&& "stock" in lq_get(drop, "base")
-				&& "front" in lq_get(drop, "base")
-			){
-				var	_hueA = _hue[clamp(weapon_get_type(drop.base.stock), 0, array_length(_hue) - 1)],
-					_hueB = _hue[clamp(weapon_get_type(drop.base.front), 0, array_length(_hue) - 1)],
+			if(_merged){
+				call(scr.weapon_deactivate_temerge, drop);
+				var _stockType = weapon_get_type(drop);
+				call(scr.weapon_activate_temerge, drop);
+				var _frontType = weapon_get_type(call(scr.weapon_get_temerge_weapon, drop));
+				
+				var	_hueA = _hue[clamp(_stockType, 0, array_length(_hue) - 1)],
+					_hueB = _hue[clamp(_frontType, 0, array_length(_hue) - 1)],
 					_diff = abs(_hueA - _hueB) % 256;
 					
 				if(_diff > 128){

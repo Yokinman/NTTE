@@ -1217,11 +1217,7 @@
 		
 	switch(type){
 		case "MergedWep":
-			wep = wep_revolver;
-			var _part = call(scr.weapon_merge_decide, 0, GameCont.hard);
-			if(array_length(_part) >= 2){
-				wep = call(scr.weapon_merge, _part[0], _part[1]);
-			}
+			wep = call(scr.temerge_decide_weapon, 0, max(1, GameCont.hard - 1));
 			spr_dude = weapon_get_sprite(wep);
 			break;
 			
@@ -2915,24 +2911,21 @@
 			if(place_meeting(x, y, WepPickup)){
 				with(call(scr.instances_meeting_instance, self, WepPickup)){
 					if(point_distance(x, y, other.x, other.y - 2) < (other.sprite_width * 0.4)){
-						if(weapon_get_area(wep) >= 0 && call(scr.wep_raw, wep) != "merge"){
-							var _part = call(scr.weapon_merge_decide, 0, GameCont.hard + (2 * curse));
-							if(array_length(_part) >= 2){
-								wep = call(scr.weapon_merge, _part[0], _part[1]);
-								mergewep_indicator = null;
-								
-								 // FX:
-								sound_play_pitchvol(sndGunGun,  0.5 + orandom(0.1), 0.5);
-								sound_play_pitchvol(sprEPickup, 0.5 + orandom(0.1), 0.5);
-								call(scr.sound_play_at, x, y, sndNecromancerRevive, 1,                  1.8);
-								call(scr.sound_play_at, x, y, sndNecromancerDead,   1.5 + orandom(0.1), 1.2);
-								with(instance_create(x, y + 2, ReviveFX)){
-									sprite_index = spr.PickupRevive; // sprPopoRevive;
-									image_xscale = 0.8;
-									image_yscale = image_xscale;
-									// image_blend = make_color_rgb(100, 255, 50);
-									depth = -2;
-								}
+						if(weapon_get_area(wep) >= 0 && !call(scr.weapon_has_temerge, wep)){
+							wep = call(scr.temerge_decide_weapon, 0, max(1, GameCont.hard - 1) + (2 * curse));
+							mergewep_indicator = null;
+							
+							 // FX:
+							sound_play_pitchvol(sndGunGun,  0.5 + orandom(0.1), 0.5);
+							sound_play_pitchvol(sprEPickup, 0.5 + orandom(0.1), 0.5);
+							call(scr.sound_play_at, x, y, sndNecromancerRevive, 1,                  1.8);
+							call(scr.sound_play_at, x, y, sndNecromancerDead,   1.5 + orandom(0.1), 1.2);
+							with(instance_create(x, y + 2, ReviveFX)){
+								sprite_index = spr.PickupRevive; // sprPopoRevive;
+								image_xscale = 0.8;
+								image_yscale = image_xscale;
+								// image_blend = make_color_rgb(100, 255, 50);
+								depth = -2;
 							}
 						}
 					}
