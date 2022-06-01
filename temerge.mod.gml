@@ -6,7 +6,7 @@
 	
 	 // Store Script References:
 	with([
-		weapon_set_temerge, weapon_deactivate_temerge, weapon_activate_temerge, weapon_add_temerge, weapon_delete_temerge, weapon_has_temerge, weapon_has_temerge_with_weapon, weapon_is_temerge_part, weapon_get_temerge_weapon, weapon_set_temerge_weapon, weapon_add_temerge_weapon, temerge_decide_weapon, temerge_weapon_event_set_script,
+		weapon_set_temerge, weapon_deactivate_temerge, weapon_activate_temerge, weapon_add_temerge, weapon_delete_temerge, weapon_has_temerge, weapon_has_temerge_weapon, weapon_is_temerge_part, weapon_get_temerge_weapon, weapon_set_temerge_weapon, weapon_add_temerge_weapon, temerge_decide_weapon, temerge_weapon_event_set_script,
 		projectile_add_temerge_event, projectile_add_temerge_effect, projectile_has_temerge_effect, projectile_add_temerge_scale, projectile_add_temerge_bloom, projectile_add_temerge_damage, projectile_add_temerge_force, projectile_can_temerge_hit, projectile_temerge_wall_bounce, projectile_temerge_destroy
 	]){
 		lq_set(scr, script_get_name(self), script_ref_create(self));
@@ -156,7 +156,7 @@
 #macro _wepXmerge_last_rads       _wepXmerge.last_rads
 #macro _wepXmerge_last_stock_cost _wepXmerge.last_stock_cost
 
-#define weapon_set_temerge(_wep, _withWep)
+#define weapon_set_temerge(_wep, _mergeWep)
 	/*
 		Sets the given weapon's merge to one with the given weapon
 		Returns the weapon, inside a lightweight object if it wasn't already
@@ -189,21 +189,21 @@
 	_wepXmerge_last_stock_cost = 0;
 	
 	 // Set Weapon:
-	weapon_set_temerge_weapon(_wep, _withWep);
+	weapon_set_temerge_weapon(_wep, _mergeWep);
 	
 	return _wep;
 	
-#define weapon_add_temerge(_wep, _withWep)
+#define weapon_add_temerge(_wep, _mergeWep)
 	/*
 		Sets the given weapon's merge to one with the given weapon, or adds it to the front of the given weapon's active merge if it has one
 		Returns the weapon, inside a lightweight object if it wasn't already
 	*/
 	
 	if(_wepXhas_merge){
-		weapon_add_temerge_weapon(_wep, _withWep);
+		weapon_add_temerge_weapon(_wep, _mergeWep);
 	}
 	else{
-		_wep = weapon_set_temerge(_wep, _withWep);
+		_wep = weapon_set_temerge(_wep, _mergeWep);
 	}
 	
 	return _wep;
@@ -215,19 +215,19 @@
 	
 	return _wepXhas_merge;
 	
-#define weapon_has_temerge_with_weapon(_wep, _withWep)
+#define weapon_has_temerge_weapon(_wep, _mergeWep)
 	/*
 		Returns whether the given weapon has an active merge, or -1 if it has an inactive merge, that contains the given weapon
 	*/
 	
-	var _withWepIsLWO = is_object(_withWep);
+	var _mergeWepIsLWO = is_object(_mergeWep);
 	
 	while(_wepXhas_merge != false){
-		var _mergeWep = _wepXmerge_wep;
-		if(_withWep == (_withWepIsLWO ? _mergeWep : call(scr.wep_raw, _mergeWep))){
+		var _wepMergeWep = _wepXmerge_wep;
+		if(_mergeWep == (_mergeWepIsLWO ? _wepMergeWep : call(scr.wep_raw, _wepMergeWep))){
 			return (_wepXmerge_is_active ? true : -1);
 		}
-		_wep = _mergeWep;
+		_wep = _wepMergeWep;
 	}
 	
 	return false;
@@ -260,27 +260,27 @@
 	
 	return _wepXmerge_wep;
 	
-#define weapon_set_temerge_weapon(_wep, _withWep)
+#define weapon_set_temerge_weapon(_wep, _mergeWep)
 	/*
 		Sets the given weapon's merge weapon with the given weapon
 	*/
 	
-	_wepXmerge_wep     = _withWep;
-	_wepXmerge_is_part = (call(scr.wep_raw, _wep) == wep_none || weapon_has_temerge_with_weapon(_wep, wep_none));
+	_wepXmerge_wep     = _mergeWep;
+	_wepXmerge_is_part = (call(scr.wep_raw, _wep) == wep_none || weapon_has_temerge_weapon(_wep, wep_none));
 	
-#define weapon_add_temerge_weapon(_wep, _withWep)
+#define weapon_add_temerge_weapon(_wep, _mergeWep)
 	/*
 		Adds to the front of given weapon's active merge with the given weapon
 	*/
 	
-	var _mergeWep = _wepXmerge_wep;
+	var _wepMergeWep = _wepXmerge_wep;
 	
-	if(weapon_has_temerge(_mergeWep)){
-		weapon_add_temerge_weapon(_mergeWep, _withWep);
-		_wepXmerge_is_part = (call(scr.wep_raw, _wep) == wep_none || weapon_has_temerge_with_weapon(_wep, wep_none));
+	if(weapon_has_temerge(_wepMergeWep)){
+		weapon_add_temerge_weapon(_wepMergeWep, _mergeWep);
+		_wepXmerge_is_part = (call(scr.wep_raw, _wep) == wep_none || weapon_has_temerge_weapon(_wep, wep_none));
 	}
 	else{
-		weapon_set_temerge_weapon(_wep, weapon_set_temerge(_mergeWep, _withWep));
+		weapon_set_temerge_weapon(_wep, weapon_set_temerge(_wepMergeWep, _mergeWep));
 	}
 	
 #define weapon_is_temerge_part(_wep)
@@ -1202,7 +1202,7 @@
 		 // Update Part State:
 		if(frame_active(30) && _wepXhas_merge){
 			if(_wepXmerge_is_part){
-				if(call(scr.wep_raw, _wep) != wep_none && !weapon_has_temerge_with_weapon(_wep, wep_none)){
+				if(call(scr.wep_raw, _wep) != wep_none && !weapon_has_temerge_weapon(_wep, wep_none)){
 					do{
 						_wepXmerge_is_part = false;
 						_wep = _wepXmerge_wep;
@@ -2096,7 +2096,7 @@
 			var _gunInstanceList = instances_matching(_instanceList, "object_index", ThrownWep);
 			if(array_length(_gunInstanceList)){
 				var _rawWep = call(scr.wep_raw, _wep);
-				if(_rawWep == wep_gun_gun || weapon_has_temerge_with_weapon(_wep, wep_gun_gun)){
+				if(_rawWep == wep_gun_gun || weapon_has_temerge_weapon(_wep, wep_gun_gun)){
 					with(_gunInstanceList){
 						wep          = weapon_set_temerge(_rawWep, wep);
 						sprite_index = weapon_get_sprt(wep);

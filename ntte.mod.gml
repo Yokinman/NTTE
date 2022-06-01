@@ -132,16 +132,7 @@
 			 // Give Ammo:
 			var _type = weapon_get_type(wep);
 			if(_type != type_melee){
-			//	if(call(scr.wep_raw, wep) == "merge"){
-			//		ammo[_type] += round(clamp(
-			//			weapon_get_cost(wep) * 2,
-			//			typ_ammo[_type] * 1.25,
-			//			typ_ammo[_type] * 3
-			//		));
-			//	}
-			//	else{
-					ammo[_type] += round(typ_ammo[_type] * 3);
-			//	}
+				ammo[_type] += round(typ_ammo[_type] * 3);
 			}
 		}
 		

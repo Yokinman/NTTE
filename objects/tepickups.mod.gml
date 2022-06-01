@@ -247,7 +247,7 @@
 					switch(object_index){
 						
 						case AmmoPickup:
-							
+						
 							 // Health:
 							if(_ally){
 								instance_create(x, y, HPPickup);
@@ -277,7 +277,7 @@
 							break;
 							
 						case AmmoChest:
-							
+						
 							 // Health:
 							if(_ally){
 								instance_create(x, y, HealthChest);
@@ -609,7 +609,11 @@
 		_wep            = call(scr.weapon_decide, _minHard, _maxHard, false, _avoidedWepList);
 		
 	for(var i = 0; i < array_length(_shop); i += 2){
-		_shop[i].drop = _wep;
+		_shop[i].drop = (
+			((i == array_length(_shop) - 1) ? false : (i == 0 || chance(1, 2)))
+			? call(scr.weapon_add_temerge, wep_none, _wep)
+			: call(scr.weapon_add_temerge, _wep, wep_none)
+		);
 		
 		array_push(_avoidedWepList, _wep);
 		
@@ -1741,7 +1745,7 @@
 	switch(type){
 		
 		case ChestShop_basic:
-			
+		
 			 // Loop:
 			if(GameCont.loops > 0){
 				switch(drop){
@@ -1755,7 +1759,7 @@
 			switch(crown_current){
 				
 				case crwn_love:
-					
+				
 					switch(drop){
 						case "health"             :
 						case "rads"               :
@@ -1771,7 +1775,7 @@
 					break;
 					
 				case crwn_life:
-					
+				
 					if(drop == "health"){
 						drop = "ammo";
 					}
@@ -1779,7 +1783,7 @@
 					break;
 					
 				case crwn_guns:
-					
+				
 					if(drop == "ammo"){
 						drop = "health";
 					}
@@ -1787,7 +1791,7 @@
 					break;
 					
 				case "bonus":
-					
+				
 					switch(drop){
 						case "ammo"         : drop = "bonus_ammo";         break;
 						case "ammo_chest"   : drop = "bonus_ammo_chest";   break;
@@ -1803,7 +1807,7 @@
 			switch(drop){
 				
 				case "ammo":
-					
+				
 					num *= 2;
 					text = call(scr.loc_format, "NTTE:ChestShop:Ammo:Name", "AMMO");
 					desc = call(scr.loc_format, "NTTE:ChestShop:Ammo:Text", "% PICKUPS", num);
@@ -1815,7 +1819,7 @@
 					break;
 					
 				case "health":
-					
+				
 					num *= 2;
 					text = call(scr.loc_format, "NTTE:ChestShop:Health:Name", "HEALTH");
 					desc = call(scr.loc_format, "NTTE:ChestShop:Health:Text", "% PICKUPS", num);
@@ -1827,7 +1831,7 @@
 					break;
 					
 				case "rads":
-					
+				
 					num *= 25;
 					text = call(scr.loc_format, "NTTE:ChestShop:Rads:Name", "RADS");
 					desc = call(scr.loc_format, "NTTE:ChestShop:Rads:Text", `% ${text}`, num);
@@ -1839,7 +1843,7 @@
 					break;
 					
 				case "ammo_chest":
-					
+				
 					text = call(scr.loc_format, "NTTE:ChestShop:AmmoChest:Name", loc("NTTE:ChestShop:Ammo:Name", "AMMO"));
 					desc = call(scr.loc_format, "NTTE:ChestShop:AmmoChest:Text", "% CHEST", num);
 					
@@ -1850,7 +1854,7 @@
 					break;
 					
 				case "health_chest":
-					
+				
 					text = call(scr.loc_format, "NTTE:ChestShop:HealthChest:Name", loc("NTTE:ChestShop:Health:Name", "HEALTH"));
 					desc = call(scr.loc_format, "NTTE:ChestShop:HealthChest:Text", "% CHEST", num);
 					
@@ -1861,7 +1865,7 @@
 					break;
 					
 				case "rads_chest":
-					
+				
 					text = call(scr.loc_format, "NTTE:ChestShop:RadsChest:Name", loc("NTTE:ChestShop:Rads:Name", "RADS"));
 					desc = call(scr.loc_format, "NTTE:ChestShop:RadsChest:Text", `% ${text}`, 45 * num);
 					
@@ -1872,7 +1876,7 @@
 					break;
 					
 				case "bonus_ammo":
-					
+				
 					text = call(scr.loc_format, "NTTE:ChestShop:BonusAmmo:Name", "OVERSTOCK");
 					desc = call(scr.loc_format, "NTTE:ChestShop:BonusAmmo:Text", `@5(${spr.BonusText}:0) AMMO`, num);
 					
@@ -1883,7 +1887,7 @@
 					break;
 					
 				case "bonus_ammo_chest":
-					
+				
 					text = call(scr.loc_format, "NTTE:ChestShop:BonusAmmoChest:Name", loc("NTTE:ChestShop:BonusAmmo:Name", "OVERSTOCK"));
 					desc = call(scr.loc_format, "NTTE:ChestShop:BonusAmmoChest:Text", "% CHEST", num);
 					
@@ -1894,7 +1898,7 @@
 					break;
 					
 				case "bonus_health":
-					
+				
 					text = call(scr.loc_format, "NTTE:ChestShop:BonusHealth:Name", "OVERHEAL");
 					desc = call(scr.loc_format, "NTTE:ChestShop:BonusHealth:Text", `@5(${spr.BonusText}:0) HEALTH`, num);
 					
@@ -1905,7 +1909,7 @@
 					break;
 					
 				case "bonus_health_chest":
-					
+				
 					text = call(scr.loc_format, "NTTE:ChestShop:BonusHealthChest:Name", loc("NTTE:ChestShop:BonusHealth:Name", "OVERHEAL"));
 					desc = call(scr.loc_format, "NTTE:ChestShop:BonusHealthChest:Text", "% CHEST", num);
 					
@@ -1916,7 +1920,7 @@
 					break;
 					
 				case "rogue":
-					
+				
 					text = call(scr.loc_format, "NTTE:ChestShop:Rogue:Name", call(scr.string_delete_nt, loc("Races:12:Active", "PORTAL STRIKE")));
 					desc = call(scr.loc_format, "NTTE:ChestShop:Rogue:Text", `% PICKUP`, num);
 					
@@ -1927,7 +1931,7 @@
 					break;
 					
 				case "parrot":
-					
+				
 					num *= 6;
 					text = call(scr.loc_format, "NTTE:ChestShop:Parrot:Name", "FEATHERS");
 					desc = call(scr.loc_format, "NTTE:ChestShop:Parrot:Text", `% ${text}`, num);
@@ -1949,7 +1953,7 @@
 					break;
 					
 				case "infammo":
-					
+				
 					num *= 90;
 					text = call(scr.loc_format, "NTTE:ChestShop:InfAmmo:Name", "INFINITE AMMO");
 					desc = call(scr.loc_format, "NTTE:ChestShop:InfAmmo:Text", "FOR A MOMENT", num);
@@ -1961,7 +1965,7 @@
 					break;
 					
 				case "hammerhead":
-					
+				
 					text = call(scr.loc_format, "NTTE:ChestShop:HammerHead:Name", `BONUS @(color:${c_yellow})` + loc(`Skills:${mut_hammerhead}:Name`, "HAMMERHEAD"));
 					desc = call(scr.loc_format, "NTTE:ChestShop:HammerHead:Text", `+% TILES`, num * 10);
 					
@@ -1972,7 +1976,7 @@
 					break;
 					
 				case "spirit":
-					
+				
 					text = call(scr.loc_format, "NTTE:ChestShop:Spirit:Name", "BONUS SPIRIT");
 					desc = call(scr.loc_format, "NTTE:ChestShop:Spirit:Text", "LIVE FOREVER", num);
 					
@@ -1983,7 +1987,7 @@
 					break;
 					
 				case "bone":
-					
+				
 					text = call(scr.loc_format, "NTTE:ChestShop:Bone:Name", loc("NTTE:Bone", "BONE"));
 					desc = call(scr.loc_format, "NTTE:ChestShop:Bone:Text", text, num);
 					
@@ -1994,7 +1998,7 @@
 					break;
 					
 				case "bones":
-					
+				
 					num *= 30;
 					text = call(scr.loc_format, "NTTE:ChestShop:Bones:Name", "BONES");
 					desc = call(scr.loc_format, "NTTE:ChestShop:Bones:Text", `% ${text}`, num);
@@ -2006,7 +2010,7 @@
 					break;
 					
 				case "red":
-					
+				
 					text = call(scr.loc_format, "NTTE:ChestShop:Red:Name", RedAmmo_text);
 					desc = call(scr.loc_format, "NTTE:ChestShop:Red:Text", `% PICKUP`, num);
 					
@@ -2017,7 +2021,7 @@
 					break;
 					
 				case "soda":
-					
+				
 					 // Decide Brand:
 					var _list = ["lightning blue lifting drink(tm)", "extra double triple coffee", "expresso", "saltshake", "munitions mist", "vinegar", "guardian juice"];
 					if(skill_get(mut_boiling_veins) > 0){
@@ -2039,7 +2043,7 @@
 					break;
 					
 				case "turret":
-					
+				
 					text = call(scr.loc_format, "NTTE:ChestShop:Turret:Name", loc("CauseOfDeath:32", "TURRET"));
 					desc = call(scr.loc_format, "NTTE:ChestShop:Turret:Text", "EXTRA OFFENSE", num);
 					
@@ -2056,7 +2060,7 @@
 			break;
 			
 		case ChestShop_wep:
-			
+		
 			var _merged = call(scr.weapon_has_temerge, drop);
 			
 			 // Text:
@@ -2076,6 +2080,13 @@
 				var _stockType = weapon_get_type(drop);
 				call(scr.weapon_activate_temerge, drop);
 				var _frontType = weapon_get_type(call(scr.weapon_get_temerge_weapon, drop));
+				
+				if(call(scr.wep_raw, drop) == wep_none){
+					_stockType = _frontType;
+				}
+				else if(call(scr.weapon_has_temerge_weapon, drop, wep_none)){
+					_frontType = _stockType;
+				}
 				
 				var	_hueA = _hue[clamp(_stockType, 0, array_length(_hue) - 1)],
 					_hueB = _hue[clamp(_frontType, 0, array_length(_hue) - 1)],
@@ -2115,7 +2126,7 @@
 			break;
 			
 		case ChestShop_skill:
-			
+		
 			 // Text:
 			text = skill_get_name(drop);
 			desc = skill_get_text(drop);
@@ -2270,23 +2281,23 @@
 				switch(type){
 					
 					case ChestShop_basic:
-						
+					
 						switch(drop){
 							
 							case "ammo":
-								
+							
 								instance_create(_x + orandom(2), _y + orandom(2), AmmoPickup);
 								
 								break;
 								
 							case "health":
-								
+							
 								instance_create(_x + orandom(2), _y + orandom(2), HPPickup);
 								
 								break;
 								
 							case "rads":
-								
+							
 								_numDec = _num;
 								with(call(scr.rad_drop, _x, _y, _num, random(360), 4)){
 									depth--;
@@ -2295,7 +2306,7 @@
 								break;
 								
 							case "ammo_chest":
-								
+							
 								instance_create(_x, _y - 2, AmmoChest);
 								repeat(3) call(scr.fx, _x, _y, [90 + orandom(60), 4], Dust);
 								instance_create(_x, _y, FXChestOpen);
@@ -2304,7 +2315,7 @@
 								break;
 								
 							case "health_chest":
-								
+							
 								instance_create(_x, _y - 2, HealthChest);
 								repeat(3) call(scr.fx, _x, _y, [90 + orandom(60), 4], Dust);
 								instance_create(_x, _y, FXChestOpen);
@@ -2313,7 +2324,7 @@
 								break;
 								
 							case "rads_chest":
-								
+							
 								with(instance_create(_x, _y - 6, RadChest)){
 									spr_idle = sprRadChestBig;
 									spr_hurt = sprRadChestBigHurt;
@@ -2325,14 +2336,14 @@
 								break;
 								
 							case "bonus_ammo":
-								
+							
 								with(call(scr.obj_create, _x, _y, "BonusAmmoPickup")) pull_delay = 0;
 								instance_create(_x, _y, GunWarrantEmpty);
 								
 								break;
 								
 							case "bonus_ammo_chest":
-								
+							
 								call(scr.obj_create, _x, _y - 2, "BonusAmmoChest");
 								repeat(3) call(scr.fx, _x, _y, [90 + orandom(60), 4], Dust);
 								instance_create(_x, _y, GunWarrantEmpty);
@@ -2341,14 +2352,14 @@
 								break;
 								
 							case "bonus_health":
-								
+							
 								with(call(scr.obj_create, _x, _y, "BonusHealthPickup")) pull_delay = 0;
 								instance_create(_x, _y, GunWarrantEmpty);
 								
 								break;
 								
 							case "bonus_health_chest":
-								
+							
 								call(scr.obj_create, _x, _y - 2, "BonusHealthChest");
 								repeat(3) call(scr.fx, _x, _y, [90 + orandom(60), 4], Dust);
 								instance_create(_x, _y, GunWarrantEmpty);
@@ -2357,7 +2368,7 @@
 								break;
 								
 							case "rogue":
-								
+							
 								with(instance_create(_x + orandom(2), _y + orandom(2), RoguePickup)){
 									motion_add(point_direction(x, y, _p.x, _p.y), 3);
 								}
@@ -2365,7 +2376,7 @@
 								break;
 								
 							case "parrot":
-								
+							
 								_numDec = _num;
 								with(call(scr.obj_create, _x, _y, "ParrotChester")){
 									num = _num;
@@ -2374,7 +2385,7 @@
 								break;
 								
 							case "infammo":
-								
+							
 								_numDec = _num;
 								with(_p){
 									infammo = _num;
@@ -2384,21 +2395,21 @@
 								break;
 								
 							case "hammerhead":
-								
+							
 								call(scr.obj_create, _x, _y, "HammerHeadPickup");
 								instance_create(_x, _y, Hammerhead);
 								
 								break;
 								
 							case "spirit":
-								
+							
 								call(scr.obj_create, _x, _y, "SpiritPickup");
 								instance_create(_x, _y, ImpactWrists);
 								
 								break;
 								
 							case "bone":
-								
+							
 								with(instance_create(_x, _y, WepPickup)){
 									motion_set(point_direction(x, y, _p.x, _p.y) + orandom(8), 4);
 									ammo = true;
@@ -2410,7 +2421,7 @@
 								break;
 								
 							case "bones":
-								
+							
 								_numDec = ((_num > 10) ? 10 : 1);
 								with(call(scr.obj_create, _x, _y, ((_num > 10) ? "BoneBigPickup" : "BonePickup"))){
 									motion_set(random(360), 3 + random(1));
@@ -2419,14 +2430,14 @@
 								break;
 								
 							case "red":
-								
+							
 								call(scr.obj_create, _x, _y, "RedAmmoPickup");
 								call(scr.obj_create, _x, _y, "CrystalBrainEffect");
 								
 								break;
 								
 							case "soda":
-								
+							
 								with(instance_create(_x, _y, WepPickup)){
 									motion_set(point_direction(x, y, _p.x, _p.y) + orandom(8), 5);
 									ammo = true;
@@ -2444,7 +2455,7 @@
 								break;
 								
 							case "turret":
-								
+							
 								with(instance_create(_x, _y - 4, Turret)){
 									x          = xstart;
 									y          = ystart;
@@ -2470,17 +2481,37 @@
 						break;
 						
 					case ChestShop_wep:
+					
+						var	_wep  = undefined,
+							_drop = drop;
+							
+						 // Generate Merged Weapon:
+						while(true){
+							var _dropWep = call(scr.wep_raw, _drop);
+							if(_dropWep == wep_none){
+								_dropWep = call(scr.wep_raw, _p.wep);
+							}
+							_wep = (
+								(_wep == undefined)
+								? _dropWep
+								: call(scr.weapon_add_temerge, _wep, _dropWep)
+							);
+							if(call(scr.weapon_has_temerge, _drop)){
+								_drop = call(scr.weapon_get_temerge_weapon, _drop);
+							}
+							else break;
+						}
 						
 						 // Weapon:
 						with(instance_create(_x, _y, WepPickup)){
 							motion_set(point_direction(x, y, _p.x, _p.y) + orandom(8), 5);
 							ammo  = true;
 							curse = other.curse;
-							wep   = other.drop;
+							wep   = _wep;
 						}
 						
 						 // Effects:
-						sound_play(weapon_get_swap(drop));
+						sound_play(weapon_get_swap(_wep));
 						sound_play_pitchvol(sndGunGun,           0.8 + random(0.4), 0.6);
 						sound_play_pitchvol(sndPlasmaBigExplode, 0.6 + random(0.2), 0.8);
 						if(curse > 0){
@@ -2491,7 +2522,7 @@
 						break;
 						
 					case ChestShop_skill:
-						
+					
 						_numDec = _num;
 						
 						 // Mutation:
@@ -3296,7 +3327,7 @@
 	switch(type){
 		
 		case "portal":
-			
+		
 			if(sprite_index == -1) sprite_index = spr.RadSkillBall;
 			if(spr_sparkle  == -1) spr_sparkle  = sprEatBigRadPlut;
 		//	if(trail_col    == -1) trail_col    = make_color_rgb(68, 197, 22);
@@ -3304,7 +3335,7 @@
 			break;
 			
 		case "red":
-			
+		
 			if(sprite_index ==  -1) sprite_index = spr.RedSkillBall;
 			if(spr_sparkle  ==  -1) spr_sparkle  = sprLaserCharge;
 			if(friction     == 0.6) friction     = 0.3;
@@ -3312,7 +3343,7 @@
 			break;
 			
 		default: // Basic
-			
+		
 			if(sprite_index == -1) sprite_index = spr.PetOrchidBall;
 			if(spr_sparkle  == -1) spr_sparkle  = spr.VaultFlowerSparkle;
 			if(trail_col    == -1) trail_col    = make_color_rgb(128, 104, 34); // make_color_rgb(84, 58, 24);
@@ -3825,7 +3856,7 @@
 	switch(type){
 		
 		case "basic":
-			
+		
 			 // Colors:
 			if(color1 == -1) color1 = make_color_rgb(255, 255, 80);
 			if(color2 == -1) color2 = make_color_rgb( 84,  58, 24);
@@ -3841,7 +3872,7 @@
 			break;
 			
 		case "portal":
-			
+		
 			 // Colors:
 			if(color1 == -1) color1 = make_color_rgb(72, 253,  8);
 			if(color2 == -1) color2 = make_color_rgb(50,  72, 40);
@@ -3872,7 +3903,7 @@
 		switch(skill){
 			
 			case mut_scarier_face:
-				
+			
 				 // Manually Reduce Enemy HP:
 				with(instances_matching_lt(enemy, "id", id)){
 					maxhealth = round(maxhealth * power(0.8, other.num));
@@ -3889,7 +3920,7 @@
 				break;
 				
 			case mut_patience:
-				
+			
 				 // Remove Patience Mutation:
 				if(_lastPat != undefined){
 					if(_lastPat == mut_none){
@@ -3905,7 +3936,7 @@
 				break;
 				
 			case mut_hammerhead:
-				
+			
 				 // Give Hammerhead Points:
 				with(instances_matching_lt(Player, "id", id)){
 					hammerhead += 20 * other.num;
@@ -3914,7 +3945,7 @@
 				break;
 				
 			case mut_strong_spirit:
-				
+			
 				with(Player){
 					var _num = other.num;
 					if(_num > 0){
@@ -3949,7 +3980,7 @@
 				break;
 				
 			case mut_open_mind:
-				
+			
 				if(num > 0){
 					 // Duplicate Chest:
 					with(call(scr.instance_random, instances_matching_ne([chestprop, RadChest], "mask_index", mskNone))){
@@ -3984,7 +4015,7 @@
 				break;
 				
 			case mut_heavy_heart:
-				
+			
 				 // Don't Appear on Mutation Screen:
 				if(GameCont.wepmuted == false || GameCont.wepmuted == true){
 					GameCont.wepmuted = (skill_get(skill) == 0);
@@ -4103,7 +4134,7 @@
 	switch(skill){
 		
 		case mut_throne_butt:
-			
+		
 			 // Fix Sound Looping:
 			if(skill_get(skill) <= 0){
 				if(array_length(instances_matching_ne(Player, "roll", 0))){
@@ -4114,7 +4145,7 @@
 			break;
 			
 		case mut_scarier_face:
-			
+		
 			 // Restore Enemy HP:
 			if(num != 0){
 				with(instances_matching_lt(enemy, "id", id)){
@@ -4135,7 +4166,7 @@
 			break;
 			
 		case mut_patience:
-			
+		
 			 // Remove Patience Mutation:
 			if(_lastPat != undefined){
 				if(_lastPat == mut_none){
@@ -4151,7 +4182,7 @@
 			break;
 			
 		case mut_hammerhead:
-			
+		
 			 // Remove Hammerhead Points:
 			with(instances_matching_gt(instances_matching_lt(Player, "id", id), "hammerhead", 0)){
 				hammerhead = max(0, hammerhead - (20 * other.num));
@@ -4160,7 +4191,7 @@
 			break;
 			
 		case mut_strong_spirit:
-			
+		
 			 // Remove Bonus Spirit:
 			with(spirit) if(lq_defget(self, "active", true)){
 				active       = false;
@@ -4185,7 +4216,7 @@
 			break;
 			
 		case mut_heavy_heart:
-			
+		
 			 // Can Appear Mutation Screen:
 			if(GameCont.wepmuted == false || GameCont.wepmuted == true){
 				GameCont.wepmuted = (skill_get(skill) == 0);
@@ -6450,7 +6481,7 @@
 		
 		case "normal":
 		case "end":
-			
+		
 			var _gray = (_type == "normal");
 			
 			 // Shops:
@@ -6600,17 +6631,17 @@
 		switch(_type){
 			
 			case "add": // +# TEXT
-				
+			
 				switch(_text){
 					
 					case "HP":
-						
+					
 						text = call(scr.loc_format, "Pickups:AddHealth", "+% HP", _num);
 						
 						break;
 						
 					case "PORTAL STRIKES":
-						
+					
 						text = loc(
 							`Pickups:AddStrikes:${_num}`,
 							call(scr.loc_format, "Pickups:AddStrikes", "+% PORTAL STRIKES", _num)
@@ -6619,7 +6650,7 @@
 						break;
 						
 					default:
-						
+					
 						 // Ammo Types:
 						if(_ammoType >= 0){
 							text = call(scr.loc_format,
@@ -6642,23 +6673,23 @@
 				break;
 				
 			case "max": // MAX TEXT
-				
+			
 				switch(_text){
 					
 					case "HP":
-						
+					
 						text = loc("Pickups:MaxHealth", "MAX HP");
 						
 						break;
 						
 					case "PORTAL STRIKES":
-						
+					
 						text = loc("Pickups:MaxStrikes", "MAX PORTAL STRIKES");
 						
 						break;
 						
 					default:
-						
+					
 						text = call(scr.loc_format, "Pickups:MaxAmmo", "MAX %", _text);
 						
 						 // Ammo Types:
@@ -6671,17 +6702,17 @@
 				break;
 				
 			case "low": // LOW TEXT
-				
+			
 				switch(_text){
 					
 					case "HP":
-						
+					
 						text = loc("HUD:LowHealth", "LOW HP");
 						
 						break;
 						
 					default:
-						
+					
 						text = call(scr.loc_format, "HUD:LowAmmo", "LOW %", _text);
 						
 						 // Ammo Types:
@@ -6694,17 +6725,17 @@
 				break;
 				
 			case "ins": // NOT ENOUGH TEXT
-				
+			
 				switch(_text){
 					
 					case "RADS":
-						
+					
 						text = loc("HUD:InsRads", "NOT ENOUGH RADS");
 						
 						break;
 						
 					default:
-						
+					
 						text = call(scr.loc_format, "HUD:InsAmmo", "NOT ENOUGH %", _text);
 						
 						 // Ammo Types:
@@ -6717,7 +6748,7 @@
 				break;
 				
 			case "out": // EMPTY
-				
+			
 				text = call(scr.loc_format, "HUD:NoAmmo", "EMPTY", _text);
 				
 				 // Ammo Types:
@@ -6728,13 +6759,13 @@
 				break;
 				
 			case "got": // TEXT!
-				
+			
 				text = call(scr.loc_format, "HUD:GotWeapon", "%!", _text);
 				
 				break;
 				
 			default: // TEXT
-				
+			
 				text = _text;
 				
 		}
