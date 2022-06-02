@@ -647,6 +647,526 @@
 	}
 	
 	
+#define HugeQuestChest_create(_x, _y)
+	/*
+		Used for the ultimate quest
+	*/
+	
+	with(call(scr.obj_create, _x, _y, "HugeWeaponChest")){
+		 // Visual:
+		sprite_index = spr.HugeQuestChest;
+		spr_dead	 = spr.HugeQuestChestOpen;
+		spr_shadow   = shd64;//shd32;
+		spr_shadow_y = 6;//8;
+		
+		return self;
+	}
+	
+	
+#define LockedHugeQuestChest_create(_x, _y)
+	/*
+		Used for the ultimate quest
+	*/
+	
+	with(call(scr.obj_create, _x, _y, chestprop)){
+		 // Visual:
+		sprite_index = spr.HugeQuestChest;
+		spr_shadow   = shd64;//shd32;
+		spr_shadow_y = 6;//8;
+		depth        = -1;
+		
+		 // Vars:
+		max_merge_delay  = 120;
+		merge_delay      = max_merge_delay;
+		is_unlockable    = false;
+		is_playing_music = false;
+		prompt           = call(scr.prompt_create, self, "UNLOCK", mskShield, 0, 0);
+		with(prompt){
+			on_meet = script_ref_create(LockedHugeQuestChest_prompt_meet);
+		}
+		
+		return self;
+	}
+	
+#define LockedHugeQuestChest_step
+	/*
+		Big quest chests sparkle & push players away
+	*/
+	
+	 // Sparkles:
+	if(chance_ct(1, 30)){
+		with(call(scr.obj_create,
+			random_range(bbox_left, bbox_right  + 1),
+			random_range(bbox_top,  bbox_bottom + 1),
+			"VaultFlowerSparkle"
+		)){
+			sprite_index = spr.QuestSparkle;
+			depth		 = other.depth - 1;
+		}
+	}
+	
+	 // Push:
+	if(place_meeting(x, y, Player)){
+		with(call(scr.instances_meeting_instance, self, Player)){
+			if(place_meeting(x, y, other)){
+				motion_add(point_direction(other.x, other.y, x, y), 1);
+			}
+		}
+	}
+	
+	 // Combining Artifacts:
+	if(instance_exists(enemy) || array_length(instances_matching_ne(obj.CrystalHeartBullet, "id"))){
+		 // Disable Boss Win Music:
+		if(is_playing_music){
+			with(MusCont){
+				if(alarm_get(1) > 0){
+					alarm_set(1, -1);
+				}
+			}
+		}
+	}
+	else{
+		 // Stop Playing Music:
+		if(is_playing_music){
+			is_playing_music = false;
+			with(MusCont){
+				alarm_set(1, 1);
+			}
+		}
+		
+		 // Combining Artifacts:
+		if(distance_to_object(Player) < 128 || merge_delay < max_merge_delay){
+			var	_questFloorContInst       = instances_matching_ne(obj.QuestFloorCont, "id"),
+				_partWeaponPickupListList = [];
+				
+			 // Collect Artifacts:
+			with(instances_matching(WepPickup, "visible", true)){
+				var _wep = wep;
+				while(true){
+					if(call(scr.wep_raw, _wep) == "crabbone"){
+						var _partIndex = lq_defget(_wep, "type_index", 0) - 1;
+						if(_partIndex >= 0 && array_length(instances_matching(_questFloorContInst, "part_index", _partIndex))){
+							while(array_length(_partWeaponPickupListList) <= _partIndex){
+								array_push(_partWeaponPickupListList, []);
+							}
+							array_push(_partWeaponPickupListList[_partIndex], self);
+						}
+					}
+					if(call(scr.weapon_has_temerge, _wep)){
+						_wep = call(scr.weapon_get_temerge_weapon, _wep);
+					}
+					else break;
+				}
+			}
+			
+			 // Move Artifacts to Tiles:
+			var	_partIndex                      = 0,
+				_questFloorContWeaponPickupList = array_create(array_length(_questFloorContInst), noone);
+				
+			with(_partWeaponPickupListList){
+				var _partWeaponPickupList = self;
+				if(array_length(_partWeaponPickupList)){
+					with(instances_matching(_questFloorContInst, "part_index", _partIndex)){
+						var	_questFloorContIndex    = array_find_index(_questFloorContInst, self),
+							_targetPartWeaponPickup = noone;
+							
+						 // Check for Artifact Over Tile:
+						var _maxDis = 8;
+						with(_partWeaponPickupList){
+							var _dis = point_distance(x, y, other.x, other.y);
+							if(_dis < _maxDis){
+								_maxDis                 = _dis;
+								_targetPartWeaponPickup = self;
+							}
+						}
+						if(instance_exists(_targetPartWeaponPickup)){
+							var _partInd = 0;
+							with(_partWeaponPickupListList){
+								if(array_find_index(self, _targetPartWeaponPickup) >= 0){
+									with(instances_matching(_questFloorContInst, "part_index", _partInd)){
+										_questFloorContWeaponPickupList[array_find_index(_questFloorContInst, self)] = _targetPartWeaponPickup;
+									}
+								}
+								_partInd++;
+							}
+						}
+						
+						 // Move Artifacts to Tile:
+						else with(_partWeaponPickupList){
+							if(!collision_line(x, y, other.x, other.y, Wall, false, false)){
+								var _canMove = true;
+								
+								 // Move Merged Artifacts to Middlest Tile:
+								var	_partInd  = 0,
+									_midIndex = (4 - 1) / 2;
+									
+								with(_partWeaponPickupListList){
+									if(array_find_index(self, other) >= 0){
+										if(_partInd != _partIndex && abs(_partInd - _midIndex) <= abs(_partIndex - _midIndex)){
+											_canMove = false;
+											break;
+										}
+									}
+									_partInd++;
+								}
+								
+								 // Move:
+								if(_canMove){
+									var	_moveLen       = random_range(2, 3),
+										_moveDirOffset = 20 * sin(((current_frame + (_questFloorContIndex * 75)) / 300) * 2 * pi),
+										_moveDir       = point_direction(x, y, other.x, other.y) + _moveDirOffset,
+										_moveHSpeed    = lengthdir_x(_moveLen, _moveDir),
+										_moveVSpeed    = lengthdir_y(_moveLen, _moveDir);
+										
+									if(place_free(x + _moveHSpeed, y)) hspeed = _moveHSpeed;
+									if(place_free(x, y + _moveVSpeed)) vspeed = _moveVSpeed;
+									
+									 // Rotate:
+									rotation += _moveDirOffset / 10;
+									
+									 // Dust:
+									if(frame_active(2) && chance(1, 5)){
+										with(instance_create(x, y, Dust)){
+											depth = other.depth + 1;
+										}
+									}
+								}
+							}
+						}
+					}
+				}
+				_partIndex++;
+			}
+			
+			 // Merge Artifacts:
+			if(array_find_index(_questFloorContWeaponPickupList, noone) < 0){
+				var	_isUnlockable = false,
+					_canPlayMusic = false;
+					
+				if(merge_delay > 0){
+					merge_delay -= current_time_scale;
+				}
+				with([
+					[0, 1],
+					[2, 3],
+					[1, 2]
+				]){
+					var	_mergeIndex1 = self[0],
+						_mergeIndex2 = self[1];
+						
+					if(_questFloorContWeaponPickupList[_mergeIndex1] != _questFloorContWeaponPickupList[_mergeIndex2]){
+						 // Charge Effects:
+						var	_min   = other.max_merge_delay * 1/3,
+							_max   = 3,
+							_scale = 1 - clamp((other.merge_delay - _max) / (other.max_merge_delay - (_max + _min)), 0, 1);
+							
+						if(_scale > 0){
+							script_bind_draw(
+								LockedHugeQuestChest_merging_draw,
+								-3,
+								[_questFloorContInst[_mergeIndex1], _questFloorContInst[_mergeIndex2]],
+								_scale
+							);
+							if(_scale < 1){
+								audio_sound_set_track_position(
+									sound_play_pitchvol(sndCrownGuardianAppear, lerp(0.8, 1.8, _scale), 1),
+									0.2 * _scale
+								);
+								audio_sound_set_track_position(
+									sound_play_pitchvol(sndHover, lerp(2, 1.2, _scale), 0.5),
+									0.15 * _scale
+								);
+							}
+						}
+						
+						 // Merge Weapons:
+						if(other.merge_delay <= 0){
+							other.merge_delay = other.max_merge_delay;
+							
+							var	_x = other.x,
+								_y = other.y;
+								
+							 // Disappear Effects:
+							with([
+								_questFloorContWeaponPickupList[_mergeIndex2],
+								_questFloorContWeaponPickupList[_mergeIndex1]
+							]){
+								instance_create(x, y, ChickenB);
+								with(instance_create(x, y, BoltTrail)){
+									sprite_index = other.sprite_index;
+									image_index  = 1;
+									image_speed  = 0;
+									image_angle  = other.rotation;
+								}
+							}
+							
+							 // Merged Weapon:
+							with(_questFloorContWeaponPickupList[_mergeIndex2]){
+								with(_questFloorContWeaponPickupList[_mergeIndex1]){
+									var	_ammo     = max(ammo,  other.ammo),
+										_curse    = max(curse, other.curse),
+										_stockWep = wep,
+										_frontWep = other.wep;
+										
+									with(instance_create(
+										lerp(x, other.x, 0.5),
+										lerp(y, other.y, 0.5),
+										WepPickup
+									)){
+										ammo     = _ammo;
+										curse    = _curse;
+										wep      = call(scr.weapon_add_temerge, _stockWep, _frontWep);
+										rotation = point_direction(x, y, _x, _y + 32) + orandom(5);
+										
+										 // Shine:
+										image_index = 1;
+										with(instance_create(x, y, BoltTrail)){
+											sprite_index = other.sprite_index;
+											image_index  = 1;
+											image_speed  = 0;
+											image_angle  = other.rotation;
+										}
+										
+										 // Sound:
+										sound_play_pitchvol(sndCrystalRicochet,     1.5, 1.5);
+										sound_play_pitchvol(sndCrownGuardianAppear, 0.8, 1.5);
+										_canPlayMusic = true;
+										
+										 // Area Balls:
+										var	_wep           = wep,
+											_partIndexList = [];
+											
+										while(true){
+											if(call(scr.wep_raw, _wep) == "crabbone"){
+												var _partInd = lq_defget(_wep, "type_index", 0) - 1;
+												if(_partInd >= 0 && array_find_index(_partIndexList, _partInd) < 0){
+													array_push(_partIndexList, _partInd);
+												}
+											}
+											if(call(scr.weapon_has_temerge, _wep)){
+												_wep = call(scr.weapon_get_temerge_weapon, _wep);
+											}
+											else break;
+										}
+										for(var _partIndexIndex = 0; _partIndexIndex < array_length(_partIndexList); _partIndexIndex++){
+											var _dir = rotation + 180 + (360 * (_partIndexIndex / array_length(_partIndexList)));
+											with(call(scr.obj_create, x, y, "CrystalHeartBullet")){
+												direction = _dir;
+												depth     = -3;
+												switch(_partIndexList[_partIndexIndex]){
+													case 0 : area = area_vault;  area_goal = 2;  area_chest = [RadChest];    break;
+													case 1 : area = area_palace; area_goal = 12; area_chest = [AmmoChest];   break;
+													case 2 : area = area_hq;     area_goal = 8;  area_chest = [IDPDChest];   break;
+													case 3 : area = "red";       area_goal = 10; area_chest = [HealthChest]; break;
+												}
+											}
+											repeat(4){
+												with(call(scr.fx, x, y, [_dir, 3], Smoke)){
+													depth = -4;
+												}
+												with(call(scr.obj_create, x + orandom(6), y + orandom(6), "VaultFlowerSparkle")){
+													sprite_index = spr.QuestSparkle;
+													depth        = -3;
+													motion_add(_dir + orandom(5), random_range(2, 3));
+													switch(_partIndexList[_partIndexIndex]){
+														case 0 : sprite_index = spr.AllyLaserCharge;    break;
+														case 1 : sprite_index = spr.ElectroPlasmaTrail; break;
+														case 2 : sprite_index = sprIDPDPortalCharge;    break;
+														case 3 : sprite_index = sprLaserCharge;         break;
+													}
+												}
+											}
+										}
+										if(array_length(_partIndexList) >= 4){
+											_isUnlockable = true;
+										}
+									}
+									
+									instance_destroy();
+								}
+								instance_destroy();
+							}
+						}
+						
+						break;
+					}
+				}
+				
+				 // Play Music:
+				if(_canPlayMusic && !is_playing_music){
+					is_playing_music = true;
+					with(MusCont){
+						alarm_set(4, 1);
+						alarm_set(3, -1);
+					}
+				}
+				
+				 // Become Unlockable:
+				if(_isUnlockable){
+					is_unlockable = true;
+				}
+			}
+			else merge_delay = max_merge_delay;
+		}
+	}
+	
+	 // Unlock Chest:
+	if(instance_exists(prompt)){
+		prompt.visible = is_unlockable;
+		with(player_find(prompt.pick)){
+			with(other.prompt){
+				if(LockedHugeQuestChest_prompt_meet()){
+					with(creator){
+						call(scr.obj_create, x, y, "HugeQuestChest");
+						
+						 // Sound:
+						sound_play_pitch(sndHammerHeadEnd, 0.7);
+						sound_play_pitch(sndStatueCharge,  0.7);
+						
+						 // Effects:
+						for(var _dir = 0; _dir < 360; _dir += (360 / 16)){
+							with(call(scr.fx,
+								clamp(x + lengthdir_x(bbox_width,  _dir), bbox_left, bbox_right  + 1),
+								clamp(y + lengthdir_y(bbox_height, _dir), bbox_top,  bbox_bottom + 1),
+								[_dir, 1],
+								Dust
+							)){
+								depth = other.depth - sign(y - other.y);
+							}
+						}
+						
+						 // Bye:
+						instance_delete(self);
+					}
+					
+					 // Explode Artifact:
+					with(other){
+						var	_ang     = random(360),
+							_wep     = wep,
+							_wepList = [_wep];
+							
+						 // Deconstruct Merged Weapon:
+						while(call(scr.weapon_has_temerge, _wep)){
+							var _frontWep = call(scr.weapon_get_temerge_weapon, _wep);
+							call(scr.weapon_delete_temerge, _wep);
+							array_push(_wepList, _frontWep);
+							_wep = _frontWep;
+						}
+						
+						 // Fire Off Weapon Parts:
+						for(var _wepIndex = array_length(_wepList) - 1; _wepIndex >= 0; _wepIndex--){
+							var _dir = _ang + (360 * (_wepIndex / array_length(_wepList)));
+							with(call(scr.projectile_create, x, y, "Bone", _dir, 16)){
+								wep          = _wepList[_wepIndex];
+								curse        = other.curse;
+								broken       = true;
+								sprite_index = weapon_get_sprt(wep);
+								
+								 // Effects:
+								view_shake_at(x, y, 4);
+								with(instance_create(x, y, MeleeHitWall)){
+									motion_add(other.direction, 1);
+									image_angle = direction + 180;
+								}
+							}
+						}
+						wep = wep_none;
+						call(scr.player_swap, self);
+						clicked   = false;
+						swapmove  = true;
+						drawempty = 30;
+					}
+				}
+			}
+		}
+	}
+	
+#define LockedHugeQuestChest_merging_draw(_inst, _alpha)
+	/*
+		Animation for the artifact merging event
+	*/
+	
+	if(_alpha != 0){
+		var	_x = 0,
+			_y = 0,
+			_n = 0;
+			
+		 // Glow:
+		draw_set_blend_mode(bm_add);
+		with(instances_matching_ne(_inst, "id")){
+			with(target){
+				image_alpha *= _alpha;
+				draw_self();
+				image_alpha /= _alpha;
+			}
+			_x += x;
+			_y += y;
+			_n++;
+		}
+		draw_set_blend_mode(bm_normal);
+		
+		 // Orb:
+		if(_n > 0){
+			_x /= _n;
+			_y /= _n;
+			
+			var _sparkleDepth = depth + 1;
+			with(instances_matching_ne(_inst, "id")){
+				if(chance_ct(1, 3)){
+					with(call(scr.obj_create, x + orandom(16), y + orandom(16), "VaultFlowerSparkle")){
+						sprite_index = spr.QuestSparkle;
+						depth		 = _sparkleDepth;
+						motion_add(point_direction(x, y, _x, _y), random_range(0.5, 1));
+						switch(other.part_index){
+							case 0 : sprite_index = spr.AllyLaserCharge;    break;
+							case 1 : sprite_index = spr.ElectroPlasmaTrail; break;
+							case 2 : sprite_index = sprIDPDPortalCharge;    break;
+							case 3 : sprite_index = sprLaserCharge;         break;
+						}
+					}
+				}
+			}
+			
+			var _scale = (1 + random(0.2)) * _alpha;
+			draw_sprite_ext(spr.CrystalHeartBullet, 0, _x, _y, _scale, _scale, current_frame, c_white, 1);
+			draw_set_blend_mode(bm_add);
+			draw_sprite_ext(spr.CrystalHeartBullet, 0, _x, _y, _scale * 2, _scale * 2, current_frame, c_white, 0.1 * _alpha);
+			draw_set_blend_mode(bm_normal);
+		}
+	}
+	
+	instance_destroy();
+	
+#define LockedHugeQuestChest_prompt_meet
+	/*
+		The big quest chest is unlockable using the fully merged artifact
+	*/
+	
+	if(instance_exists(creator) && creator.is_unlockable && !instance_exists(enemy)){
+		var	_wep           = other.wep,
+			_partIndexList = [];
+			
+		while(true){
+			if(call(scr.wep_raw, _wep) == "crabbone"){
+				var _partIndex = lq_defget(_wep, "type_index", 0) - 1;
+				if(_partIndex >= 0 && array_find_index(_partIndexList, _partIndex) < 0){
+					array_push(_partIndexList, _partIndex);
+				}
+			}
+			if(call(scr.weapon_has_temerge, _wep)){
+				_wep = call(scr.weapon_get_temerge_weapon, _wep);
+			}
+			else break;
+		}
+		
+		if(array_length(_partIndexList) >= 4){
+			return true;
+		}
+	}
+	
+	return false;
+	
+	
 #define QuestChest_create(_x, _y)
 	/*
 		Used for the ultimate quest
@@ -751,7 +1271,7 @@
 					}
 				}
 				if(_canSparkle){
-					var _chestInst = instances_matching(obj.LockedBigQuestChest, "is_unlockable", true);
+					var _chestInst = instances_matching(obj.LockedHugeQuestChest, "is_unlockable", true);
 					with(array_length(_chestInst) ? _chestInst : self){
 						with(call(scr.obj_create,
 							random_range(bbox_left, bbox_right  + 1),
@@ -1058,550 +1578,6 @@
 	}
 	
 	y = _y;
-	
-	
-#define LockedBigQuestChest_create(_x, _y)
-	/*
-		Used for the ultimate quest
-	*/
-	
-	with(call(scr.obj_create, _x, _y, chestprop)){
-		 // Visual:
-		sprite_index = spr.BigQuestChest;
-		spr_shadow   = shd64;//shd32;
-		spr_shadow_y = 6;//8;
-		depth        = -1;
-		
-		 // Vars:
-		max_merge_delay  = 120;
-		merge_delay      = max_merge_delay;
-		is_unlockable    = false;
-		is_playing_music = false;
-		prompt           = call(scr.prompt_create, self, "UNLOCK", mskShield, 0, 0);
-		with(prompt){
-			on_meet = script_ref_create(LockedBigQuestChest_prompt_meet);
-		}
-		
-		return self;
-	}
-	
-#define LockedBigQuestChest_step
-	/*
-		Big quest chests sparkle & push players away
-	*/
-	
-	if(fork()){
-	
-	 // Sparkles:
-	if(chance_ct(1, 30)){
-		with(call(scr.obj_create,
-			random_range(bbox_left, bbox_right  + 1),
-			random_range(bbox_top,  bbox_bottom + 1),
-			"VaultFlowerSparkle"
-		)){
-			sprite_index = spr.QuestSparkle;
-			depth		 = other.depth - 1;
-		}
-	}
-	
-	 // Push:
-	if(place_meeting(x, y, Player)){
-		with(call(scr.instances_meeting_instance, self, Player)){
-			if(place_meeting(x, y, other)){
-				motion_add(point_direction(other.x, other.y, x, y), 1);
-			}
-		}
-	}
-	
-	 // Combining Artifacts:
-	if(instance_exists(enemy) || array_length(instances_matching_ne(obj.CrystalHeartBullet, "id"))){
-		 // Disable Boss Win Music:
-		if(is_playing_music){
-			with(MusCont){
-				if(alarm_get(1) > 0){
-					alarm_set(1, -1);
-				}
-			}
-		}
-	}
-	else{
-		 // Stop Playing Music:
-		if(is_playing_music){
-			is_playing_music = false;
-			with(MusCont){
-				alarm_set(1, 1);
-			}
-		}
-		
-		 // Combining Artifacts:
-		if(distance_to_object(Player) < 128 || merge_delay < max_merge_delay){
-			var	_questFloorContInst       = instances_matching_ne(obj.QuestFloorCont, "id"),
-				_partWeaponPickupListList = [];
-				
-			 // Collect Artifacts:
-			with(instances_matching(WepPickup, "visible", true)){
-				var _wep = wep;
-				while(true){
-					if(call(scr.wep_raw, _wep) == "crabbone"){
-						var _partIndex = lq_defget(_wep, "type_index", 0) - 1;
-						if(_partIndex >= 0 && array_length(instances_matching(_questFloorContInst, "part_index", _partIndex))){
-							while(array_length(_partWeaponPickupListList) <= _partIndex){
-								array_push(_partWeaponPickupListList, []);
-							}
-							array_push(_partWeaponPickupListList[_partIndex], self);
-						}
-					}
-					if(call(scr.weapon_has_temerge, _wep)){
-						_wep = call(scr.weapon_get_temerge_weapon, _wep);
-					}
-					else break;
-				}
-			}
-			
-			 // Move Artifacts to Tiles:
-			var	_partIndex                      = 0,
-				_questFloorContWeaponPickupList = array_create(array_length(_questFloorContInst), noone);
-				
-			with(_partWeaponPickupListList){
-				var _partWeaponPickupList = self;
-				if(array_length(_partWeaponPickupList)){
-					with(instances_matching(_questFloorContInst, "part_index", _partIndex)){
-						var	_questFloorContIndex    = array_find_index(_questFloorContInst, self),
-							_targetPartWeaponPickup = noone;
-							
-						 // Check for Artifact Over Tile:
-						var _maxDis = 8;
-						with(_partWeaponPickupList){
-							var _dis = point_distance(x, y, other.x, other.y);
-							if(_dis < _maxDis){
-								_maxDis                 = _dis;
-								_targetPartWeaponPickup = self;
-							}
-						}
-						if(instance_exists(_targetPartWeaponPickup)){
-							var _partInd = 0;
-							with(_partWeaponPickupListList){
-								if(array_find_index(self, _targetPartWeaponPickup) >= 0){
-									with(instances_matching(_questFloorContInst, "part_index", _partInd)){
-										_questFloorContWeaponPickupList[array_find_index(_questFloorContInst, self)] = _targetPartWeaponPickup;
-									}
-								}
-								_partInd++;
-							}
-						}
-						
-						 // Move Artifacts to Tile:
-						else with(_partWeaponPickupList){
-							if(!collision_line(x, y, other.x, other.y, Wall, false, false)){
-								var _canMove = true;
-								
-								 // Move Merged Artifacts to Middlest Tile:
-								var	_partInd  = 0,
-									_midIndex = (4 - 1) / 2;
-									
-								with(_partWeaponPickupListList){
-									if(array_find_index(self, other) >= 0){
-										if(_partInd != _partIndex && abs(_partInd - _midIndex) <= abs(_partIndex - _midIndex)){
-											_canMove = false;
-											break;
-										}
-									}
-									_partInd++;
-								}
-								
-								 // Move:
-								if(_canMove){
-									var	_moveLen       = random_range(2, 3),
-										_moveDirOffset = 20 * sin(((current_frame + (_questFloorContIndex * 75)) / 300) * 2 * pi),
-										_moveDir       = point_direction(x, y, other.x, other.y) + _moveDirOffset,
-										_moveHSpeed    = lengthdir_x(_moveLen, _moveDir),
-										_moveVSpeed    = lengthdir_y(_moveLen, _moveDir);
-										
-									if(place_free(x + _moveHSpeed, y)) hspeed = _moveHSpeed;
-									if(place_free(x, y + _moveVSpeed)) vspeed = _moveVSpeed;
-									
-									 // Rotate:
-									rotation += _moveDirOffset / 10;
-									
-									 // Dust:
-									if(frame_active(2) && chance(1, 5)){
-										with(instance_create(x, y, Dust)){
-											depth = other.depth + 1;
-										}
-									}
-								}
-							}
-						}
-					}
-				}
-				_partIndex++;
-			}
-			
-			 // Merge Artifacts:
-			if(array_find_index(_questFloorContWeaponPickupList, noone) < 0){
-				var	_isUnlockable = false,
-					_canPlayMusic = false;
-					
-				if(merge_delay > 0){
-					merge_delay -= current_time_scale;
-				}
-				with([
-					[0, 1],
-					[2, 3],
-					[1, 2]
-				]){
-					var	_mergeIndex1 = self[0],
-						_mergeIndex2 = self[1];
-						
-					if(_questFloorContWeaponPickupList[_mergeIndex1] != _questFloorContWeaponPickupList[_mergeIndex2]){
-						 // Charge Effects:
-						var	_min   = other.max_merge_delay * 1/3,
-							_max   = 3,
-							_scale = 1 - clamp((other.merge_delay - _max) / (other.max_merge_delay - (_max + _min)), 0, 1);
-							
-						if(_scale > 0){
-							script_bind_draw(
-								LockedBigQuestChest_merging_draw,
-								-3,
-								[_questFloorContInst[_mergeIndex1], _questFloorContInst[_mergeIndex2]],
-								_scale
-							);
-							if(_scale < 1){
-								audio_sound_set_track_position(
-									sound_play_pitchvol(sndCrownGuardianAppear, lerp(0.8, 1.8, _scale), 1),
-									0.2 * _scale
-								);
-								audio_sound_set_track_position(
-									sound_play_pitchvol(sndHover, lerp(2, 1.2, _scale), 0.5),
-									0.15 * _scale
-								);
-							}
-						}
-						
-						 // Merge Weapons:
-						if(other.merge_delay <= 0){
-							other.merge_delay = other.max_merge_delay;
-							
-							var	_x = other.x,
-								_y = other.y;
-								
-							 // Disappear Effects:
-							with([
-								_questFloorContWeaponPickupList[_mergeIndex2],
-								_questFloorContWeaponPickupList[_mergeIndex1]
-							]){
-								instance_create(x, y, ChickenB);
-								with(instance_create(x, y, BoltTrail)){
-									sprite_index = other.sprite_index;
-									image_index  = 1;
-									image_speed  = 0;
-									image_angle  = other.rotation;
-								}
-							}
-							
-							 // Merged Weapon:
-							with(_questFloorContWeaponPickupList[_mergeIndex2]){
-								with(_questFloorContWeaponPickupList[_mergeIndex1]){
-									var	_ammo     = max(ammo,  other.ammo),
-										_curse    = max(curse, other.curse),
-										_stockWep = wep,
-										_frontWep = other.wep;
-										
-									with(instance_create(
-										lerp(x, other.x, 0.5),
-										lerp(y, other.y, 0.5),
-										WepPickup
-									)){
-										ammo     = _ammo;
-										curse    = _curse;
-										wep      = call(scr.weapon_add_temerge, _stockWep, _frontWep);
-										rotation = point_direction(x, y, _x, _y + 32) + orandom(5);
-										
-										 // Shine:
-										image_index = 1;
-										with(instance_create(x, y, BoltTrail)){
-											sprite_index = other.sprite_index;
-											image_index  = 1;
-											image_speed  = 0;
-											image_angle  = other.rotation;
-										}
-										
-										 // Sound:
-										sound_play_pitchvol(sndCrystalRicochet,     1.5, 1.5);
-										sound_play_pitchvol(sndCrownGuardianAppear, 0.8, 1.5);
-										_canPlayMusic = true;
-										
-										 // Area Balls:
-										var	_wep           = wep,
-											_partIndexList = [];
-											
-										while(true){
-											if(call(scr.wep_raw, _wep) == "crabbone"){
-												var _partInd = lq_defget(_wep, "type_index", 0) - 1;
-												if(_partInd >= 0 && array_find_index(_partIndexList, _partInd) < 0){
-													array_push(_partIndexList, _partInd);
-												}
-											}
-											if(call(scr.weapon_has_temerge, _wep)){
-												_wep = call(scr.weapon_get_temerge_weapon, _wep);
-											}
-											else break;
-										}
-										for(var _partIndexIndex = 0; _partIndexIndex < array_length(_partIndexList); _partIndexIndex++){
-											var _dir = rotation + 180 + (360 * (_partIndexIndex / array_length(_partIndexList)));
-											with(call(scr.obj_create, x, y, "CrystalHeartBullet")){
-												direction = _dir;
-												depth     = -3;
-												switch(_partIndexList[_partIndexIndex]){
-													case 0 : area = area_vault;  area_goal = 2;  area_chest = [RadChest];    break;
-													case 1 : area = area_palace; area_goal = 12; area_chest = [AmmoChest];   break;
-													case 2 : area = area_hq;     area_goal = 8;  area_chest = [IDPDChest];   break;
-													case 3 : area = "red";       area_goal = 10; area_chest = [HealthChest]; break;
-												}
-											}
-											repeat(4){
-												with(call(scr.fx, x, y, [_dir, 3], Smoke)){
-													depth = -4;
-												}
-												with(call(scr.obj_create, x + orandom(6), y + orandom(6), "VaultFlowerSparkle")){
-													sprite_index = spr.QuestSparkle;
-													depth        = -3;
-													motion_add(_dir + orandom(5), random_range(2, 3));
-													switch(_partIndexList[_partIndexIndex]){
-														case 0 : sprite_index = spr.AllyLaserCharge;    break;
-														case 1 : sprite_index = spr.ElectroPlasmaTrail; break;
-														case 2 : sprite_index = sprIDPDPortalCharge;    break;
-														case 3 : sprite_index = sprLaserCharge;         break;
-													}
-												}
-											}
-										}
-										if(array_length(_partIndexList) >= 4){
-											_isUnlockable = true;
-										}
-									}
-									
-									instance_destroy();
-								}
-								instance_destroy();
-							}
-						}
-						
-						break;
-					}
-				}
-				
-				 // Play Music:
-				if(_canPlayMusic && !is_playing_music){
-					is_playing_music = true;
-					with(MusCont){
-						alarm_set(4, 1);
-						alarm_set(3, -1);
-					}
-				}
-				
-				 // Become Unlockable:
-				if(_isUnlockable){
-					is_unlockable = true;
-				}
-			}
-			else merge_delay = max_merge_delay;
-		}
-	}
-	
-	 // Unlock Chest:
-	if(instance_exists(prompt)){
-		prompt.visible = is_unlockable;
-		with(player_find(prompt.pick)){
-			with(other.prompt){
-				if(LockedBigQuestChest_prompt_meet()){
-					with(creator){
-						call(scr.obj_create, x, y, "BigQuestChest");
-						
-						 // Sound:
-						sound_play_pitch(sndHammerHeadEnd, 0.7);
-						sound_play_pitch(sndStatueCharge,  0.7);
-						
-						 // Effects:
-						for(var _dir = 0; _dir < 360; _dir += (360 / 16)){
-							with(call(scr.fx,
-								clamp(x + lengthdir_x(bbox_width,  _dir), bbox_left, bbox_right  + 1),
-								clamp(y + lengthdir_y(bbox_height, _dir), bbox_top,  bbox_bottom + 1),
-								[_dir, 1],
-								Dust
-							)){
-								depth = other.depth - sign(y - other.y);
-							}
-						}
-						
-						 // Bye:
-						instance_delete(self);
-					}
-					
-					 // Explode Artifact:
-					with(other){
-						var	_ang     = random(360),
-							_wep     = wep,
-							_wepList = [_wep];
-							
-						 // Deconstruct Merged Weapon:
-						while(call(scr.weapon_has_temerge, _wep)){
-							var _frontWep = call(scr.weapon_get_temerge_weapon, _wep);
-							call(scr.weapon_delete_temerge, _wep);
-							array_push(_wepList, _frontWep);
-							_wep = _frontWep;
-						}
-						
-						 // Fire Off Weapon Parts:
-						for(var _wepIndex = array_length(_wepList) - 1; _wepIndex >= 0; _wepIndex--){
-							var _dir = _ang + (360 * (_wepIndex / array_length(_wepList)));
-							with(call(scr.projectile_create, x, y, "Bone", _dir, 16)){
-								wep          = _wepList[_wepIndex];
-								curse        = other.curse;
-								broken       = true;
-								sprite_index = weapon_get_sprt(wep);
-								
-								 // Effects:
-								view_shake_at(x, y, 4);
-								with(instance_create(x, y, MeleeHitWall)){
-									motion_add(other.direction, 1);
-									image_angle = direction + 180;
-								}
-							}
-						}
-						wep = wep_none;
-						call(scr.player_swap, self);
-						clicked   = false;
-						swapmove  = true;
-						drawempty = 30;
-					}
-				}
-			}
-		}
-	}
-	
-	exit;
-	}
-	
-#define LockedBigQuestChest_merging_draw(_inst, _alpha)
-	/*
-		Animation for the artifact merging event
-	*/
-	
-	if(_alpha != 0){
-		var	_x = 0,
-			_y = 0,
-			_n = 0;
-			
-		 // Glow:
-		draw_set_blend_mode(bm_add);
-		with(instances_matching_ne(_inst, "id")){
-			with(target){
-				image_alpha *= _alpha;
-				draw_self();
-				image_alpha /= _alpha;
-			}
-			_x += x;
-			_y += y;
-			_n++;
-		}
-		draw_set_blend_mode(bm_normal);
-		
-		 // Orb:
-		if(_n > 0){
-			_x /= _n;
-			_y /= _n;
-			
-			var _sparkleDepth = depth + 1;
-			with(instances_matching_ne(_inst, "id")){
-				if(chance_ct(1, 3)){
-					with(call(scr.obj_create, x + orandom(16), y + orandom(16), "VaultFlowerSparkle")){
-						sprite_index = spr.QuestSparkle;
-						depth		 = _sparkleDepth;
-						motion_add(point_direction(x, y, _x, _y), random_range(0.5, 1));
-						switch(other.part_index){
-							case 0 : sprite_index = spr.AllyLaserCharge;    break;
-							case 1 : sprite_index = spr.ElectroPlasmaTrail; break;
-							case 2 : sprite_index = sprIDPDPortalCharge;    break;
-							case 3 : sprite_index = sprLaserCharge;         break;
-						}
-					}
-				}
-			}
-			
-			var _scale = (1 + random(0.2)) * _alpha;
-			draw_sprite_ext(spr.CrystalHeartBullet, 0, _x, _y, _scale, _scale, current_frame, c_white, 1);
-			draw_set_blend_mode(bm_add);
-			draw_sprite_ext(spr.CrystalHeartBullet, 0, _x, _y, _scale * 2, _scale * 2, current_frame, c_white, 0.1 * _alpha);
-			draw_set_blend_mode(bm_normal);
-		}
-	}
-	
-	instance_destroy();
-	
-#define LockedBigQuestChest_prompt_meet
-	/*
-		The big quest chest is unlockable using the fully merged artifact
-	*/
-	
-	if(instance_exists(creator) && creator.is_unlockable && !instance_exists(enemy)){
-		var	_wep           = other.wep,
-			_partIndexList = [];
-			
-		while(true){
-			if(call(scr.wep_raw, _wep) == "crabbone"){
-				var _partIndex = lq_defget(_wep, "type_index", 0) - 1;
-				if(_partIndex >= 0 && array_find_index(_partIndexList, _partIndex) < 0){
-					array_push(_partIndexList, _partIndex);
-				}
-			}
-			if(call(scr.weapon_has_temerge, _wep)){
-				_wep = call(scr.weapon_get_temerge_weapon, _wep);
-			}
-			else break;
-		}
-		
-		if(array_length(_partIndexList) >= 4){
-			return true;
-		}
-	}
-	
-	return false;
-	
-	
-#define BigQuestChest_create(_x, _y)
-	/*
-		Used for the ultimate quest
-	*/
-	
-	with(call(scr.obj_create, _x, _y, "CustomChest")){
-		 // Visual:
-		sprite_index = spr.BigQuestChest;
-		spr_dead	 = spr.BigQuestChestOpen;
-		spr_shadow   = shd64;//shd32;
-		spr_shadow_y = 6;//8;
-		
-		 // Sounds:
-		snd_open = sndBigWeaponChest;
-		
-		 // Events:
-		on_open = script_ref_create(BigQuestChest_open);
-		
-		return self;
-	}
-	
-#define BigQuestChest_open
-	/*
-		...
-	*/
-	
-	with(instance_create(x, y, WepPickup)){
-		ammo = true;
-		wep  = "ultra quasar rifle";
-	}
-	
-	 // Dusty Filthy Chest:
-	call(scr.unlock_set, "race:beetle", true);
 	
 	
 #define QuestPillar_create(_x, _y)

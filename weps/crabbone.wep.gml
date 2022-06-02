@@ -39,8 +39,6 @@
 		: 0
 	]
 	
-// for(var i = 0; i < 4; i++) w cm(WepPickup) wep = { wep:"crabbone", type_index:i+1 }
-
 #define weapon_name(_wep)    return _wepXinfo.name;
 #define weapon_text(_wep)    return _wepXinfo.text;
 #define weapon_sprt(_wep)    return _wepXinfo.sprt;

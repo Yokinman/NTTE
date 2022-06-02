@@ -4237,16 +4237,23 @@
 		direction = _lastDir;
 		
 		 // Death Effect:
-		if(ultra && other.my_health <= 0) {
+		if(ultra && instance_exists(other) && other.my_health <= 0){
 			with(other){
 				if(size >= 2){
-					instance_create(x, y, GreenExplosion);
-					repeat(3) instance_create(x, y, SmallExplosion);
+					with(instance_create(x, y, GreenExplosion)){
+						hitid = 99;
+					}
+					repeat(3){
+						with(instance_create(x, y, SmallExplosion)){
+							hitid = 56;
+						}
+					}
 				}
-				else{
-					instance_create(x, y, SmallExplosion); // kinda looks better orange i think
+				else with(instance_create(x, y, SmallExplosion)){ // kinda looks better orange i think
+					hitid = 56;
 					// call(scr.obj_create, x, y, "SmallGreenExplosion");
 				}
+				sound_play_hit_big(sndExplosionS, 0.3);
 			}
 		}
 	}
@@ -4782,8 +4789,8 @@
 		
 		 // Vars:
 		mask_index   = msk.UltraQuasarBeam;
-		turn_factor  = 1/30;
-		bend_fric	 = 0.3;
+		turn_factor  = 1/50;
+	//	bend_fric	 = 0.3;
 		ultra        = true;
 		damage		 = 24; // 2x
 		

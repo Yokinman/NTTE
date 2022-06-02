@@ -1755,10 +1755,6 @@
 			BatChestBigOpen       = spr_add("sprBatChestBigOpen",       1, 12, 12);
 			BatChestBigCursedOpen = spr_add("sprBatChestBigCursedOpen", 1, 12, 12);
 			
-			 // Biggest Weapon Chest:
-			BiggestWeaponChest     = spr_add("sprBiggestWeaponChest",     1, 32, 32, shn64);
-			BiggestWeaponChestOpen = spr_add("sprBiggestWeaponChestOpen", 1, 32, 32);
-			
 			 // Bone:
 			BonePickup    = array_create(4, -1);
 			BonePickupBig = array_create(2, -1);
@@ -1890,17 +1886,23 @@
 			HammerHeadChestEffect       = spr_add("sprHammerHeadChestEffect",       3, 16,  8);
 			HammerHeadChestEffectSpawn  = spr_add("sprHammerHeadChestEffectSpawn",  9, 16,  8);
 			
+			 // Huge Weapon Chest:
+			HugeWeaponChest     = spr_add("sprHugeWeaponChest",     1, 32, 32, shn64);
+			HugeWeaponChestOpen = spr_add("sprHugeWeaponChestOpen", 1, 32, 32);
+			HugeCursedChest     = spr_add("sprHugeCursedChest",     1, 32, 32, shn64);
+			HugeCursedChestOpen = spr_add("sprHugeCursedChestOpen", 1, 32, 32);
+			
 			 // Lead Ribs Upgraded Rads:
 			RadUpg    = spr_add("sprRadUpg",    1, 5, 5, shn10);
 			BigRadUpg = spr_add("sprBigRadUpg", 1, 8, 8, shn16);
 			
 			 // Quest Chest:
-			QuestChest		  = spr_add("sprQuestChest",        1, 12, 12, shn24);
-			QuestChestOpen    = spr_add("sprQuestChestOpen",    1, 12, 12);
-			BigQuestChest	  = spr_add("sprBigQuestChest",     1, 32, 32, shn64);
-			BigQuestChestOpen = spr_add("sprBigQuestChestOpen", 1, 32, 32);
-			QuestSparkle	  = spr_add("sprQuestSparkle",      4,  6,  6);
-			ProtoChestFire    = spr_add("sprProtoChestFire",    8, 12, 12);
+			QuestChest		   = spr_add("sprQuestChest",         1, 12, 12, shn24);
+			QuestChestOpen     = spr_add("sprQuestChestOpen",     1, 12, 12);
+			HugeQuestChest	   = spr_add("sprHugeQuestChest",     1, 32, 32, shn64);
+			HugeQuestChestOpen = spr_add("sprHugeQuestChestOpen", 1, 32, 32);
+			QuestSparkle	   = spr_add("sprQuestSparkle",       4,  6,  6);
+			ProtoChestFire     = spr_add("sprProtoChestFire",     8, 12, 12);
 			
 		//#endregion
 		

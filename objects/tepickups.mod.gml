@@ -603,24 +603,26 @@
 	}
 	
 	 // Determine Weapons:
-	var	_minHard        = 0,
-		_maxHard        = max(1, GameCont.hard - 1) + (2 * curse),
+	var	_maxHard        = max(1, GameCont.hard - 1) + (2 * curse),
 		_avoidedWepList = [],
-		_wep            = call(scr.weapon_decide, _minHard, _maxHard, false, _avoidedWepList);
+		_wep            = call(scr.weapon_decide, 0, _maxHard),
+		_shopSize       = array_length(_shop);
 		
-	for(var i = 0; i < array_length(_shop); i += 2){
-		_shop[i].drop = (
-			((i == array_length(_shop) - 1) ? false : (i == 0 || chance(1, 2)))
+	for(var _index = 0; _index < _shopSize; _index += 2){
+		var _nextIndex = _index + 1;
+		
+		_shop[_index].drop = (
+			(_nextIndex != _shopSize && (_index == 0 || chance(1, 2)))
 			? call(scr.weapon_add_temerge, wep_none, _wep)
 			: call(scr.weapon_add_temerge, _wep, wep_none)
 		);
 		
 		array_push(_avoidedWepList, _wep);
 		
-		var _stockWep = call(scr.weapon_decide, _minHard, _maxHard, false, _avoidedWepList);
+		var _stockWep = call(scr.weapon_decide, 0, _maxHard, false, _avoidedWepList);
 		
-		if(i + 1 < array_length(_shop)){
-			_shop[i + 1].drop = call(scr.weapon_add_temerge, _stockWep, _wep);
+		if(_nextIndex < _shopSize){
+			_shop[_nextIndex].drop = call(scr.weapon_add_temerge, _stockWep, _wep);
 		}
 		
 		_wep = _stockWep;
@@ -676,94 +678,6 @@
 //#define BloodLustPickup_fade
 //	 // Effects:
 //	instance_create(x, y, BloodLust);
-	
-	
-#define BiggestWeaponChest_create(_x, _y)
-	/*
-		A larger than usual weapon chest. Contains golden and ultra weapons. The only way to acquire the ultra quasar rifle.
-	*/
-	with(call(scr.obj_create, _x, _y, "CustomChest")){
-		 // Visual:
-		sprite_index = spr.BiggestWeaponChest;
-		spr_dead     = spr.BiggestWeaponChestOpen;
-		spr_shadow   = shd64;
-		spr_shadow_y = 4;
-		depth        = -1;
-		
-		 // Sounds:
-		snd_open = sndBigWeaponChest;
-		
-		 // Vars:
-		nochest = 4;
-		
-		 // Events:
-		on_open = script_ref_create(BiggestWeaponChest_open);
-		
-		 // Clear Walls:
-		call(scr.wall_clear, self);
-		
-		return self;
-	}
-	
-#define BiggestWeaponChest_open
-	 // Clear Big Chest Chance:
-	GameCont.nochest = 0;
-	
-	 // Effects:
-	with(instance_create(x, y - 12, FXChestOpen)){
-		sprite_index = sprMutant6Dead;
-		image_index  = 11;
-	}
-	with(instance_create(x, y, PortalClear)){
-		image_xscale = 2;
-		image_yscale = 2;
-	}
-	view_shake_at(x, y, 30);
-	sleep(30);
-	
-	 // Sounds:
-	if(instance_is(other, Player)){
-		sound_play(other.snd_chst);
-	}
-	
-	 // The Definitive Gun:
-		with(instance_create(x, y, WepPickup)){
-			ammo = true;
-			wep  = "ultra quasar rifle";
-		}
-	
-	/*
-	weapon_get_list(_list, 0, GameCont.hard);
-	var	_size = ds_list_size(_list),
-		_num  = (_unlock ? 3 : 5),
-		_egg  = !_unlock;
-		
-	 // Extras:
-	if(_size > 0){
-		ds_list_shuffle(_list);
-		
-		for(var i = 0; i < _size; i++){
-			var w = ds_list_find_value(_list, i);
-			if(weapon_get_gold(w) != 0 || weapon_get_rads(w) > 0){
-				with(instance_create(x, y, WepPickup)){
-					wep = w;
-				}
-				
-				_egg = false;
-				if(--_num <= 0) break;
-			}
-		}
-	}
-		
-	 // Consolation Prize
-	if(_egg){
-		with(instance_create(x, y, WepPickup)){
-			wep = wep_eggplant;
-		}
-	}
-	
-	ds_list_destroy(_list);
-	*/
 	
 	
 #define BoneBigPickup_create(_x, _y)
@@ -3271,6 +3185,105 @@
 		call(scr.fx, x, y, random(2), Smoke);
 	}
 	sound_play_hit(sndBurn, 0.4);
+	
+	
+#define HugeWeaponChest_create(_x, _y)
+	/*
+		A larger than usual weapon chest
+		The only way to acquire the ultra quasar rifle
+	*/
+	
+	with(call(scr.obj_create, _x, _y, "CustomChest")){
+		 // Visual:
+		sprite_index = spr.HugeWeaponChest;
+		spr_dead     = spr.HugeWeaponChestOpen;
+		spr_shadow   = shd64;
+		spr_shadow_y = 4;
+		depth        = -1;
+		
+		 // Sounds:
+		snd_open = sndBigWeaponChest;
+		
+		 // Vars:
+		wep     = "ultra quasar rifle";
+		curse   = false;
+		nochest = 2;
+		
+		 // Events:
+		on_open = script_ref_create(HugeWeaponChest_open);
+		
+		 // Clear Walls:
+		instance_create(x, y, PortalClear);
+		
+		return self;
+	}
+	
+#define HugeWeaponChest_open
+	 // Clear Big Chest Chance:
+	GameCont.nochest = 0;
+	
+	 // Effects:
+	with(instance_create(x, y - 12, FXChestOpen)){
+		sprite_index = sprMutant6Dead;
+		image_index  = 11;
+	}
+	view_shake_at(x, y, 30);
+	sleep(30);
+	
+	 // Clear Walls:
+	with(instance_create(x, y, PortalClear)){
+		image_xscale = 1.5;
+		image_yscale = image_xscale;
+	}
+	
+	 // Sounds:
+	if(instance_is(other, Player)){
+		sound_play(other.snd_chst);
+	}
+	
+	 // Dusty Filthy Chest:
+	call(scr.unlock_set, "race:beetle", true);
+	
+	 // The Definitive Gun:
+	var _y = y;
+	repeat(1 + ultra_get("steroids", 1)){
+		with(instance_create(x, _y--, WepPickup)){
+			ammo  = true;
+			curse = other.curse;
+			wep   = other.wep;
+		}
+	}
+	
+//	weapon_get_list(_list, 0, GameCont.hard);
+//	var	_size = ds_list_size(_list),
+//		_num  = (_unlock ? 3 : 5),
+//		_egg  = !_unlock;
+//		
+//	 // Extras:
+//	if(_size > 0){
+//		ds_list_shuffle(_list);
+//		
+//		for(var i = 0; i < _size; i++){
+//			var w = ds_list_find_value(_list, i);
+//			if(weapon_get_gold(w) != 0 || weapon_get_rads(w) > 0){
+//				with(instance_create(x, y, WepPickup)){
+//					wep = w;
+//				}
+//				
+//				_egg = false;
+//				if(--_num <= 0) break;
+//			}
+//		}
+//	}
+//		
+//	 // Consolation Prize
+//	if(_egg){
+//		with(instance_create(x, y, WepPickup)){
+//			wep = wep_eggplant;
+//		}
+//	}
+//	
+//	ds_list_destroy(_list);
 	
 	
 #define OrchidBall_create(_x, _y)
@@ -6211,7 +6224,7 @@
 	}
 	
 #define ntte_end_step
-	if(instance_exists(Player)){
+	//if(instance_exists(Player)){
 		 // HammerHead Pickup Persistence:
 		if(instance_exists(GenCont)){
 			var	_hammerMin = 20 * skill_get(mut_hammerhead),
@@ -6398,7 +6411,7 @@
 				}
 			}
 		}
-	}
+	//}
 	
 	 // Portal Mutation Update:
 	if(instance_exists(Portal) && array_length(instances_matching_le(Portal, "endgame", 0))){
@@ -6537,7 +6550,7 @@
 	}
 	
 #define draw_bonus_spirit
-	if(instance_exists(Player)){
+	//if(instance_exists(Player)){
 		var _inst = instances_matching(instances_matching_ne(Player, "bonus_spirit", null), "visible", true);
 		if(array_length(_inst)){
 			var _lag = false;
@@ -6572,7 +6585,7 @@
 			
 			if(_lag && lag) trace_time(script[2]);
 		}
-	}
+	//}
 	
 #define pickup_alarm(_time, _loopDecay)
 	/*

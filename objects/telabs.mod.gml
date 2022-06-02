@@ -821,7 +821,11 @@
 													xstart    = x;
 													ystart    = y;
 													if(_obj == "QuestChest"){
-														wep.quest_part_index_list = [2];
+														var _partIndex = 2;
+														wep = {
+															"wep"        : "crabbone",
+															"type_index" : _partIndex + 1
+														};
 													}
 												}
 												

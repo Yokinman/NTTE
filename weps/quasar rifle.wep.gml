@@ -62,7 +62,7 @@
 				_m = 1 + (_a * (1 + (0.4 * skill_get(mut_laser_brain))));
 				
 			if(scale_goal < _m){
-				scale_goal = min((floor(image_yscale / _a) * _a) + _a, _m);
+				scale_goal  = min((floor((image_yscale / power(1.2, skill_get(mut_laser_brain))) / _a) + global.epsilon + 1) * _a, _m);
 				flash_frame = max(flash_frame, current_frame + 2);
 			}
 		}

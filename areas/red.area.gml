@@ -480,7 +480,10 @@
 									
 									 // Missing Artifact:
 									with(call(scr.chest_create, x, y1 + 16, "QuestChest", true)){
-										wep.quest_part_index_list = [_partIndex];
+										wep = {
+											"wep"        : "crabbone",
+											"type_index" : _partIndex + 1
+										};
 									}
 								}
 							}

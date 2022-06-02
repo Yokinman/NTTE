@@ -1686,13 +1686,15 @@
 									}
 									
 									 // Chest:
-									var _floorIndex = 0;
-									with(call(scr.floor_fill, _chestFillX, _chestFillY, _chestFillW, _chestFillH)){
-										sprite_index = spr.VaultFlowerFloor;
-										image_index  = _floorIndex++;
-										depth        = 7;
+									if(!call(scr.unlock_get, "race:beetle")){
+										var _floorIndex = 0;
+										with(call(scr.floor_fill, _chestFillX, _chestFillY, _chestFillW, _chestFillH)){
+											sprite_index = spr.VaultFlowerFloor;
+											image_index  = _floorIndex++;
+											depth        = 7;
+										}
+										call(scr.obj_create, _chestFillX, _chestFillY, "LockedHugeQuestChest");
 									}
-									call(scr.obj_create, _chestFillX, _chestFillY, "LockedBigQuestChest");
 								}
 								
 								 // Remember Last Position:
@@ -2392,20 +2394,54 @@
 	}
 	
 	 // Biggest Weapon Chest:
-	if(chance(1, 10) && call(scr.weapon_get, "avail", "ultra quasar rifle")){
-		if("ntte_huge_weapon_chest" not in GameCont || GameCont.ntte_huge_weapon_chest){
-			with(Player){
-				if(weapon_get_rads(wep) > 0 || weapon_get_rads(bwep) > 0){
-					with(call(scr.instance_random, instances_matching(WeaponChest, "object_index", WeaponChest, BigWeaponChest))){
-						call(scr.chest_create, x, y, "BiggestWeaponChest", true);
-						GameCont.ntte_huge_weapon_chest = false;
-						instance_delete(self);
+	var	_lastSeed     = random_get_seed(),
+		_lastWepDrops = GameCont.wepdrops;
+		
+	GameCont.ntte_can_spawn_ultra_quasar_rifle = true;
+	
+	with(instances_matching(WeaponChest, "object_index", WeaponChest, BigWeaponChest)){
+		var _hasUltraQuasarRifle = false;
+		
+		 // Check if Weapon Chest Spawns Ultra Quasar Rifle:
+		with(instance_copy(false)){
+			var	_minObjectInstanceID = id,
+				_minSoundInstanceID  = sound_play_pitchvol(0, 0, 0);
+				
+			event_perform(ev_collision, PortalShock);
+			
+			 // Delete New Instances:
+			for(var _objectInstanceID = instance_max; _objectInstanceID >= _minObjectInstanceID; _objectInstanceID--){
+				with(_objectInstanceID){
+					if(instance_is(self, WepPickup) && wep == "ultra quasar rifle"){
+						_hasUltraQuasarRifle = true;
 					}
-					break;
+					instance_delete(self);
 				}
 			}
+			for(var _soundInstanceID = sound_play_pitchvol(0, 0, 0); _soundInstanceID >= _minSoundInstanceID; _soundInstanceID--){
+				sound_stop(_soundInstanceID);
+			}
+		}
+		
+		 // Spawn Ultra Quasar Rifle Chest:
+		if(_hasUltraQuasarRifle){
+			_lastWepDrops++;
+			with(call(scr.chest_create, x, y, "HugeWeaponChest", true)){
+				curse = other.curse;
+				if(curse > 0){
+					sprite_index = spr.HugeCursedChest;
+					spr_dead     = spr.HugeCursedChestOpen;
+					snd_open     = sndBigCursedChest;
+				}
+			}
+			instance_delete(self);
+			break;
 		}
 	}
+	
+	random_set_seed(_lastSeed);
+	GameCont.wepdrops = _lastWepDrops;
+	GameCont.ntte_can_spawn_ultra_quasar_rifle = false;
 	
 	 // Flies:
 	with(MaggotSpawn){
