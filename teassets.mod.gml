@@ -2458,10 +2458,11 @@
 			PetGuardianIcon            = spr_add("sprPetGuardianIcon",            1,  6,  7);
 			PetGuardianIdle            = spr_add("sprPetGuardianIdle",            4, 16, 16);
 			PetGuardianHurt            = spr_add("sprPetGuardianHurt",            3, 16, 16);
-			PetGuardianDashStart       = spr_add("sprPetGuardianDashStart",       2, 16, 16);
+			PetGuardianDashStart       = spr_add("sprPetGuardianDashStart",       3, 16, 16);
+			PetGuardianDashCharge      = spr_add("sprPetGuardianDashCharge",      2, 16, 16);
 			PetGuardianDash            = spr_add("sprPetGuardianDash",            2, 16, 16);
 			PetGuardianDashEnd         = spr_add("sprPetGuardianDashEnd",         3, 16, 16);
-			PetGuardianAppear          = spr_add("sprPetGuardianAppear",          6, 16, 16);
+			PetGuardianAppear          = spr_add("sprPetGuardianAppear",          7, 16, 16);
 			PetGuardianDisappear       = spr_add("sprPetGuardianDisappear",       6, 16, 16);
 			PetGuardianShield          = spr_add("sprPetGuardianShield",          6, 16, 16);
 			PetGuardianShieldDisappear = spr_add("sprPetGuardianShieldDisappear", 6, 16, 16);

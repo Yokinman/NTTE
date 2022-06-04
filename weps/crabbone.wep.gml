@@ -216,7 +216,7 @@
 			
 			 // Throw Bone:
 			if(_fire.wepheld){
-				if("ammo_wep" in _wep){
+				if("ammo_wep" in _wep && infammo == 0){
 					wep   = _wep.ammo_wep;
 					wkick = 0;
 					

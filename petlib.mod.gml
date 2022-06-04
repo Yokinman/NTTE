@@ -2162,7 +2162,7 @@
 #define Mimic_hurt(_damage, _force, _direction)
 	if(sprite_index != spr_open){
 		sprite_index = spr_hurt;
-		image_index = 0;
+		image_index  = 0;
 	}
 	
 	
@@ -3483,7 +3483,15 @@
 		
 		 // Fire:
 		if(
-			((weapon_get_auto(leader.wep) || leader.race == "steroids") && leader.can_shoot && leader.canfire && (leader.ammo[weapon_get_type(leader.wep)] >= weapon_get_cost(leader.wep) || leader.infammo != 0))
+			(
+				leader.can_shoot
+				&& leader.canfire
+				&& ((leader.race == "steroids") ? (weapon_get_auto(leader.wep) >= 0) : weapon_get_auto(leader.wep))
+				&& (
+					(leader.ammo[weapon_get_type(leader.wep)] >= weapon_get_cost(leader.wep) && GameCont.rad >= weapon_get_rads(leader.wep))
+					|| leader.infammo != 0
+				)
+			)
 			? button_check(leader.index, "fire")
 			: button_pressed(leader.index, "fire")
 		){
@@ -4306,19 +4314,27 @@
 /// GENERAL
 #define Guardian_create
 	 // Visual:
-	spr_dash_start = Guardian_sprite(0, "dash_start");
-	spr_dash	   = Guardian_sprite(0, "dash");
-	spr_dash_end   = Guardian_sprite(0, "dash_end");
-	spr_appear	   = Guardian_sprite(0, "appear");
-	spr_disappear  = Guardian_sprite(0, "disappear");
-	hitid[1]	   = "POPO GUARDIAN";
-	spr_shadow_y   = 3;
+	spr_appear	    = Guardian_sprite(0, "appear");
+	spr_disappear   = Guardian_sprite(0, "disappear");
+	spr_dash_start  = Guardian_sprite(0, "dash_start");
+	spr_dash	    = Guardian_sprite(0, "dash");
+	spr_dash_charge = Guardian_sprite(0, "dash_charge");
+	spr_dash_end    = Guardian_sprite(0, "dash_end");
+	hitid[1]	    = "POPO GUARDIAN";
+	spr_shadow_y    = 3;
 	
 	 // Vars:
-	maxhealth	  = 300; // i dunno
-	can_escape	  = (GameCont.area == area_hq);
-	prompt_escape = noone;
-	corpse		  = false;	
+	maxhealth	     = 300; // !!! Adjust as needed
+	path_wall        = [Wall];
+	can_escape	     = false;
+	escape_prompt    = noone;
+	corpse		     = false;
+	follow_delay     = 0;
+	dash_charge      = 0;
+	dash_charge_side = choose(-1, 1);
+	dash_max_charge  = 10;
+	dash_add_charge  = 0.5;
+	dash_direction   = 0;
 	
 #define Guardian_ttip(_skin)
 	return [
@@ -4329,16 +4345,17 @@
 	
 #define Guardian_sprite(_skin, _name)
 	switch(_name){
-		case "icon" 	  : return spr.PetGuardianIcon;
-		case "idle" 	  : return spr.PetGuardianIdle;
-		case "walk" 	  :
-		case "hurt" 	  : return spr.PetGuardianHurt;
-		case "dead" 	  :
-		case "dash_start" : return spr.PetGuardianDashStart;
-		case "dash" 	  : return spr.PetGuardianDash;
-		case "dash_end"   : return spr.PetGuardianDashEnd;
-		case "appear"	  : return spr.PetGuardianAppear;
-		case "disappear"  : return spr.PetGuardianDisappear;
+		case "icon" 	   : return spr.PetGuardianIcon;
+		case "idle" 	   : return spr.PetGuardianIdle;
+		case "walk" 	   : return spr.PetGuardianIdle;
+		case "hurt" 	   : return spr.PetGuardianHurt;
+		case "dead" 	   : return spr.PetGuardianDisappear;
+		case "appear"	   : return spr.PetGuardianAppear;
+		case "disappear"   : return spr.PetGuardianDisappear;
+		case "dash_start"  : return spr.PetGuardianDashStart;
+		case "dash" 	   : return spr.PetGuardianDash;
+		case "dash_charge" : return spr.PetGuardianDashCharge;
+		case "dash_end"    : return spr.PetGuardianDashEnd;
 	}
 	
 #define Guardian_sound(_skin, _name)
@@ -4347,81 +4364,385 @@
 		case "dead" : return sndCrownGuardianDead;
 	}
 	
-#define Guardian_anim
-	if(anim_end){
-		sprite_index = spr_idle;
-	}
-	
 #define Guardian_stat(_name, _value)
+	// !!! Do stat
 	
-#define Guardian_step
-	if(instance_exists(leader)){
-		 // behavior goes here:
-	}
-	else{
-		
-		 // Escape:
-		if(can_escape){
-			
-			 // Prompt Setup:
-			if(!instance_exists(prompt_escape)){
-				can_take = false;
-				
-				var _text = variable_instance_get(prompt, "text", "");
-				prompt_escape = call(scr.prompt_create, self, loc("NTTE:PetGuardian:Prompt", `${_text}#@(color:${make_color_rgb(0, 255, 255)})ESCAPE`));
+#define Guardian_anim
+	if(array_find_index([spr_hurt, spr_appear, spr_disappear, spr_dash_start, spr_dash_end], sprite_index) < 0 || anim_end){
+		if(array_find_index([spr_dash_start, spr_dash, spr_dash_charge], sprite_index) < 0){
+			if(dash_charge == 0){
+				sprite_index = enemy_sprite;
 			}
 			
-			with(prompt_escape) if(player_is_active(pick)){
+			 // Start Dashing:
+			else{
+				sprite_index = spr_dash_start;
+				image_index  = 0;
+			}
+		}
+		
+		 // Stop Dashing:
+		else if(dash_charge == 0){
+			sprite_index = spr_dash_end;
+			image_index  = 0;
+		}
+		
+		 // Dashing:
+		else sprite_index = (
+			(follow_delay == 0)
+			? spr_dash_charge
+			: spr_dash
+		);
+	}
+	
+#define Guardian_step
+	var _canFollow = true;
+	
+	 // Follow Delay:
+	if(follow_delay > 0){
+		follow_delay -= min(follow_delay, current_time_scale);
+		_canFollow = false;
+	}
+	
+	 // Follow Leader:
+	if(_canFollow && instance_exists(leader)){
+		var	_xOffset = -8 * leader.right,
+			_yOffset =  8 * leader.back;
+			
+		 // Dash Charging Position:
+		if(dash_charge != 0){
+			for(var _tryIndex = 0; _tryIndex < 3; _tryIndex++){
+				var	_offsetLength    = point_distance(0, 0, _xOffset, _yOffset),
+					_offsetDirection = dash_direction + (90 * dash_charge_side);
+					
+				_xOffset = lengthdir_x(_offsetLength, _offsetDirection);
+				_yOffset = lengthdir_y(_offsetLength, _offsetDirection);
+				
+				 // Avoid Walls in Immediate Path:
+				if(
+					_tryIndex < 2
+					&& place_meeting(
+						leader.x + _xOffset + lengthdir_x(16, dash_direction),
+						leader.y + _yOffset + lengthdir_y(16, dash_direction),
+						Wall
+					)
+				){
+					dash_charge_side *= -1;
+				}
+				else break;
+			}
+		}
+		
+		 // Move to Position:
+		var	_moveX = lerp_ct(x, leader.x + _xOffset, 1/3),
+			_moveY = lerp_ct(y, leader.y + _yOffset, 1/5);
+			
+		if(
+			!collision_line(x, y, _moveX, _moveY, Wall, false, false)
+			&& point_distance(_moveX, _moveY, leader.x, leader.y) < 32 + leader.speed
+		){
+			if(!place_meeting(_moveX, _moveY, Wall)){
+				x         = _moveX;
+				y         = _moveY;
+				xprevious = x;
+				yprevious = y;
+			}
+			else if(!place_meeting(_moveX, y, Wall)){
+				x         = _moveX;
+				xprevious = x;
+			}
+			else if(!place_meeting(x, _moveY, Wall)){
+				y         = _moveY;
+				yprevious = y;
+			}
+		}
+		
+		 // Teleport Closer:
+		else if(sprite_index != spr_appear){
+			 // Disappear:
+			with(instance_create(x, y, Wind)){
+				sprite_index = other.spr_disappear;
+				image_index  = 0;
+				image_xscale = other.image_xscale;
+				image_yscale = other.image_yscale * other.right;
+				image_angle  = other.image_angle;
+				image_blend  = other.image_blend;
+				image_alpha  = other.image_alpha;
+				depth        = other.depth;
+			}
+			
+			 // Move:
+			x         = leader.x;
+			y         = leader.y;
+			xprevious = x;
+			yprevious = y;
+			
+			 // Reappear:
+			sprite_index = spr_appear;
+			image_index  = 0;
+			
+			 // Sound:
+			call(scr.sound_play_at, x, y, sndGuardianAppear, 1.2 + orandom(0.1), 0.5);
+		}
+		
+		 // Depth:
+		depth = leader.depth - sign(_yOffset);
+	}
+	
+	 // Fist Dash Charging:
+	if(
+		_canFollow
+		&& (
+			(dash_charge > 0 && dash_charge < dash_max_charge)
+			|| (
+				instance_exists(leader)
+				&& button_check(leader.index, "fire")
+				&& (
+					dash_charge == 0
+					|| !(
+						leader.canfire
+						&& leader.can_shoot == true
+						&& ((leader.ammo[weapon_get_type(leader.wep)] >= weapon_get_cost(leader.wep) && GameCont.rad >= weapon_get_rads(leader.wep)) || leader.infammo != 0) // hello
+						&& ((leader.race == "steroids") ? (weapon_get_auto(leader.wep) >= 0) : weapon_get_auto(leader.wep))
+						&& leader.visible
+						&& !instance_exists(PlayerSit)
+						&& !array_length(instances_matching(CrystalShield, "creator", leader))
+					)
+				)
+			)
+		)
+	){
+		if(dash_charge < dash_max_charge){
+			 // Start Charging Sound:
+			if(dash_charge == 0){
+				call(scr.sound_play_at, x, y, sndDogGuardianBounce, 0.7 + orandom(0.2));
+			}
+			
+			 // Charge:
+			dash_charge += dash_add_charge * current_time_scale;
+			
+			 // Fully Charged Effects:
+			if(dash_charge >= dash_max_charge){
+				dash_charge = dash_max_charge;
+				with(instance_create(x, y, BulletHit)){
+					sprite_index = sprImpactWrists;
+					image_blend  = c_aqua;
+					depth        = other.depth - 1;
+				}
+				call(scr.sound_play_at, x, y, sndDogGuardianLand, 1.5 + orandom(0.1), 1/3);
+			}
+		}
+		
+		 // Aiming:
+		if(instance_exists(leader)){
+			dash_direction = leader.gunangle;
+			enemy_look(dash_direction);
+		}
+		
+		 // Wind-up Offset:
+		var	_dashPrimedCharge     = 9,
+			_dashOffsetLength     = 2 * clamp((dash_charge - _dashPrimedCharge) / (dash_max_charge - _dashPrimedCharge), 0, 1) * current_time_scale,
+			_dashOffsetDirection  = dash_direction + 180,
+			_dashWindingLength    = _dashOffsetLength / 2,
+			_dashWindingDirection = -10 * wave * dash_charge_side;
+			
+		x += lengthdir_x(_dashOffsetLength, _dashOffsetDirection) + lengthdir_x(_dashWindingLength, _dashWindingDirection);
+		y += lengthdir_y(_dashOffsetLength, _dashOffsetDirection) + lengthdir_y(_dashWindingLength, _dashWindingDirection);
+	}
+	
+	 // Fist Dash:
+	else if(dash_charge != 0){
+		follow_delay = max(follow_delay, 30);
+		
+		 // Moving:
+		direction = dash_direction;
+		speed     = max(speed, lerp(maxspeed, 24, clamp(dash_charge / dash_max_charge, 0, 1)));
+		enemy_look(direction);
+		
+		 // Start Dashing Effects:
+		if(dash_charge == dash_max_charge){
+			view_shake_at(x, y, 8);
+			with(leader){
+				motion_add(other.direction, other.speed / 6);
+			}
+			if(audio_is_playing(sndDogGuardianLand)){
+				call(scr.sound_play_at, x, y, sndJockFire, 1.2 + orandom(0.2), 0.5);
+			}
+			audio_sound_set_track_position(
+				call(scr.sound_play_at, x, y, sndIDPDNadeExplo, 1.5 + orandom(0.3), 0.75),
+				0.065
+			);
+		}
+		
+		 // Shift Screen:
+		with(leader){
+			var _lastGunAngle = gunangle;
+			gunangle = other.direction;
+			weapon_post(wkick, other.speed_raw / 4, 0);
+			gunangle = _lastGunAngle;
+		}
+		
+		 // Turn Towards Mouse:
+		if(instance_exists(leader)){
+			dash_direction = angle_lerp_ct(
+				dash_direction,
+				point_direction(x, y, mouse_x[leader.index], mouse_y[leader.index]),
+				1/4
+			);
+		}
+		
+		 // Dust Trail:
+		if(current_frame_active){
+			instance_create(x + orandom(4), y + 4 + random(4), Dust);
+		}
+		
+		 // Hurt Enemies:
+		var _extraScale = 2;
+		image_xscale *= _extraScale;
+		image_yscale *= _extraScale;
+		if(place_meeting(x, y, hitme)){
+			with(call(scr.instances_meeting_instance, self, instances_matching_ne(hitme, "team", team))){
 				with(other){
-					can_escape = false;
-					can_take   = true;
-					
-					 // Portal Out:
-					sound_play(sndPortalOpen);
-					instance_create(x, y, Portal);
-					
-					 // Return:
-					with(GameCont){
-						area    = lastarea;
-						subarea = lastsubarea;
+					if(projectile_canhit_melee(other)){
+						var	_damage = 15,
+							_force  = (instance_is(other, prop) ? 0 : 12);
+							
+						projectile_hit(other, _damage, _force);
+						view_shake_at(x, y, 10);
+						
+						 // Big Hit, Stop Dashing:
+						if(instance_exists(other) && other.size > 0 && other.my_health > -_damage / 3){
+							dash_charge = 0;
+							direction   = point_direction(other.x, other.y, x, y);
+							speed      *= 0.5;
+							
+							 // Effects:
+							sound_play_hit_big(sndDogGuardianMelee, 0.1);
+							sleep(100);
+						}
 					}
-					
-					 // Just in Case:
-					with(LastChair){
-						alarm_set(0, -1);
+				}
+				if(other.dash_charge == 0){
+					break;
+				}
+			}
+		}
+		image_xscale /= _extraScale;
+		image_yscale /= _extraScale;
+		
+		 // Stop Dashing:
+		if(dash_charge > 0){
+			dash_charge -= min(dash_charge, current_time_scale);
+		}
+	}
+	
+	 // Escape Prompt:
+	if(can_escape){
+		if(instance_exists(LastDie) || instance_exists(LastExecute)){
+			can_take = false;
+			if(!instance_exists(escape_prompt) && instance_exists(prompt) && instance_exists(LastExecute)){
+				escape_prompt = call(scr.prompt_create,
+					self,
+					loc("NTTE:PetGuardian:EscapePrompt", `${prompt.text}#@(color:${c_aqua})ESCAPE`),
+					mskReviveArea
+				);
+			}
+			if(instance_exists(escape_prompt) && player_is_active(escape_prompt.pick)){
+				can_escape = false;
+				can_take   = true;
+				
+				 // Portal Out:
+				with(instance_create(x, y, Portal)){
+					with(instance_nearest(x, y, FloorMiddle)){
+						if(point_distance(x, y, other.x, other.y) < 32){
+							with(other){
+								x         = other.x;
+								y         = other.y;
+								xprevious = x;
+								yprevious = y;
+							}
+						}
 					}
-					with(SitDown){
-						instance_destroy();
+				}
+				call(scr.area_set, GameCont.lastarea, GameCont.lastsubarea, GameCont.loops);
+				
+				 // Help Arrives:
+				with(LastExecute){
+					repeat(6){
+						instance_create(x, y, IDPDSpawn);
 					}
-					with(PlayerSit){
-						instance_destroy();
-					}
-					with(TopCont){
-						fadeout = 0;
-						fade	= -0.45;
-					}
+					mask_index = mskNone;
+					my_health  = 999999;
+					alarm_set(0, -1);
+					sound_play_pitchvol(sndLastGrowl, 1, 1.8);
 				}
 				
 				 // Goodbye, Prompt:
-				instance_destroy();
+				with(escape_prompt){
+					instance_destroy();
+				}
 			}
+		}
+		
+		 // Escape Rejected:
+		else{
+			call(scr.corpse_drop, self);
+			instance_delete(self);
 		}
 	}
 	
 #define Guardian_draw(_spr, _img, _x, _y, _xsc, _ysc, _ang, _col, _alp)
-	var h = (nexthurt >= current_frame + 4);
-	if(h) draw_set_fog(true, image_blend, 0, 0);
+	var _canFlash = (sprite_index != spr_hurt && nexthurt >= current_frame + 4);
+	
+	if(_canFlash){
+		draw_set_fog(true, image_blend, 0, 0);
+	}
 	
 	draw_sprite_ext(_spr, _img, _x, _y, _xsc, _ysc, _ang, _col, _alp);
 	
-	if(h) draw_set_fog(false, c_white, 0, 0);
-
+	if(_canFlash){
+		draw_set_fog(false, c_white, 0, 0);
+	}
+	
+#define Guardian_alrm0(_leaderDir, _leaderDis)
+	if(follow_delay == 0 && dash_charge == 0){
+		 // Move to Middle of Room:
+		if(can_escape && !instance_exists(leader) && instance_exists(FloorMiddle)){
+			var _nearestFloorMiddle = call(scr.instance_nearest_array, x, y, instances_matching(FloorMiddle, "sprite_index", sprFloorMiddle));
+			if(
+				instance_exists(_nearestFloorMiddle)
+				&& !collision_line(x, y, _nearestFloorMiddle.x, _nearestFloorMiddle.y, Wall, false, false)
+				&& point_distance(x, y, _nearestFloorMiddle.x, _nearestFloorMiddle.y) > 16
+			){
+				enemy_walk(point_direction(x, y, _nearestFloorMiddle.x, _nearestFloorMiddle.y), 6);
+				enemy_look(direction);
+				return walk;
+			}
+		}
+		
+		 // Face Player:
+		var _nearestPlayer = instance_nearest(x, y, Player);
+		enemy_look(
+			instance_exists(_nearestPlayer)
+			? point_direction(x, y, _nearestPlayer.x, _nearestPlayer.y)
+			: (90 + (90 * -right) + orandom(120))
+		);
+	}
+	
+	return 60;
+	
 #define Guardian_hurt(_damage, _force, _direction)
 	my_health -= _damage;
-	nexthurt = current_frame + 6;
+	nexthurt   = current_frame + 6;
 	motion_add(_direction, _force);
 	
-	 // Sounds:
+	 // Visual:
+	if(array_find_index([spr_appear, spr_disappear, spr_dash_start, spr_dash_charge, spr_dash, spr_dash_end], sprite_index) < 0){
+		sprite_index = spr_hurt;
+		image_index  = 0;
+	}
+	
+	 // Sound:
 	if(snd_hurt == sndCrownGuardianHurt){
 		call(scr.sound_play_at, x, y, sndCrownGuardianHurt, random_range(1.1, 1.3), 1.0);
 		call(scr.sound_play_at, x, y, sndHitFlesh,			random_range(0.8, 1.0), 1.2);
@@ -4429,7 +4750,7 @@
 	else sound_play_hit(snd_hurt, 0.2);
 	
 #define Guardian_death
-	with(call(scr.projectile_create, x, y, PopoExplosion, 0, 0)){
+	with(call(scr.projectile_create, x, y, PopoExplosion)){
 		image_xscale /= 3;
 		image_yscale /= 3;
 	}
@@ -4468,6 +4789,11 @@
 	with(_inst){
 		with(call(scr.pet_create, x, y, "Guardian")){
 			sprite_index = spr_appear;
+			team         = other.team;
+			alarm0       = 30;
+			can_escape   = true;
+			enemy_walk(point_direction(0, 0, -other.image_xscale, -other.image_yscale), 15);
+			enemy_look(direction + 180);
 		}
 	}
 	
