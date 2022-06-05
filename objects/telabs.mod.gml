@@ -1496,6 +1496,49 @@
 	*/
 	
 	
+#define PetGuardianShield_create(_x, _y)
+	/*
+		Used for the popo guardian pet's active ability for Crystal
+	*/
+	
+	with(instance_create(_x, _y, PopoShield)){
+		 // Visual:
+		sprite_index  = spr.PetGuardianShield;
+		spr_disappear = spr.PetGuardianShieldDisappear;
+		
+		 // Vars:
+		mask       = mskWepPickup;
+		mask_index = mask;
+		
+		return self;
+	}
+	
+#define PetGuardianShield_step
+	 // Hitbox:
+	if(mask_index == mskShield){
+		mask_index = mask;
+	}
+	
+	 // Push Players:
+	if(place_meeting(x, y, Player)){
+		with(call(scr.instances_meeting_instance, self, instances_matching(Player, "team", team))){
+			if(place_meeting(x, y, other)){
+				motion_add_ct(point_direction(other.x, other.y, x, y), 1);
+			}
+		}
+	}
+	
+	 // Disappear:
+	if(sprite_index == sprShielderShieldDisappear){
+		with(instance_create(x, y, CrystalShieldDisappear)){
+			sprite_index = other.spr_disappear;
+			image_index  = other.image_index;
+			creator      = other.creator;
+		}
+		instance_destroy();
+	}
+	
+	
 #define PickupReviveArea_create(_x, _y)
 	with(instance_create(_x, _y, CustomObject)){
 		 // Visual:
@@ -2938,6 +2981,503 @@
 		}
 	}
 	
+	 // Popo Guardian Pet Active Abilities (petlib.mod is FAT AS HELL):
+	if(array_length(obj.Pet)){
+		var _guardianPetInst = instances_matching(instances_matching(obj.Pet, "pet", "Guardian"), "visible", true);
+		if(array_length(_guardianPetInst)){
+			with(_guardianPetInst){
+				with(leader){
+					if(player_active){
+						var	_specIsHeld    = false,
+							_specIsPressed = false;
+							
+						if(canspec && button_check(index, "spec")){
+							_specIsHeld    = true;
+							_specIsPressed = button_pressed(index, "spec");
+						}
+						
+						switch(race){
+							
+							case "fish":
+							
+								 // Push:
+								if(roll != 0 && point_distance(x, y, other.x, other.y) < 32){
+									with(other){
+										if(dash_charge == 0){
+											with(other){
+												var	_len = 1.5,
+													_dir = direction,
+													_x   = x + lengthdir_x(_len, _dir),
+													_y   = y + lengthdir_y(_len, _dir);
+													
+												if(place_free(_x, _y)){
+													x         = _x;
+													y         = _y;
+													xprevious = x;
+													yprevious = y;
+												}
+												else if(place_free(_x, y)){
+													x         = _x;
+													xprevious = x;
+												}
+												else if(place_free(x, _y)){
+													y         = _y;
+													yprevious = y;
+												}
+											}
+											
+											 // Follow Closely:
+											x = lerp_ct(x, other.x, 2/3);
+											y = lerp_ct(y, other.y, 2/3);
+											enemy_look(other.direction);
+											
+											 // Visual:
+											if(sprite_index == spr_dash_end){
+												image_index = 0;
+											}
+											else if(sprite_index == spr_idle){
+												sprite_index = spr_dash_start;
+												image_index  = 0;
+											}
+										}
+									}
+								}
+								
+								break;
+								
+							case "crystal":
+							
+								 // Shield:
+								if(_specIsHeld && array_length(instances_matching(CrystalShield, "creator", self))){
+									with(other){
+										if(
+											follow_delay == 0
+											&& dash_charge == 0
+											&& !array_length(instances_matching(obj.PetGuardianShield, "creator", self))
+										){
+											var	_moveX = x,
+												_moveY = y;
+												
+											 // Move to Mouse (Stay Within Level):
+											var	_mouseX   = mouse_x[other.index],
+												_mouseY   = mouse_y[other.index],
+												_lastMask = mask_index;
+												
+											mask_index = mskWepPickup;
+											
+											if(place_meeting(_mouseX, _mouseY, Floor) && place_free(_mouseX, _mouseY)){
+												_moveX = _mouseX;
+												_moveY = _mouseY;
+											}
+											else{
+												var _maxDis = infinity;
+												with(Floor){
+													var _dis = distance_to_point(_mouseX, _mouseY);
+													if(_dis < _maxDis){
+														var	_centerX = bbox_center_x,
+															_centerY = bbox_center_y;
+															
+														with(other){
+															if(place_free(_centerX, _centerY)){
+																_maxDis = _dis;
+																_moveX  = _centerX;
+																_moveY  = _centerY - 2;
+																if(place_meeting(_mouseX, _centerY, Floor) && place_free(_mouseX, _centerY)){
+																	_moveX = _mouseX;
+																}
+																else if(place_meeting(_centerX, _mouseY, Floor) && place_free(_centerX, _mouseY)){
+																	_moveY = _mouseY;
+																}
+															}
+														}
+													}
+												}
+											}
+											
+											mask_index = _lastMask;
+											
+											 // Teleport to Floor:
+											if(x != _moveX || y != _moveY){
+												 // Disappear:
+												with(instance_create(x, y, Wind)){
+													sprite_index = other.spr_disappear;
+													image_index  = 0;
+													image_xscale = other.image_xscale;
+													image_yscale = other.image_yscale * other.right;
+													image_angle  = other.image_angle;
+													image_blend  = other.image_blend;
+													image_alpha  = other.image_alpha;
+													depth        = other.depth;
+												}
+												
+												 // Move:
+												x         = _moveX;
+												y         = _moveY;
+												xprevious = x;
+												yprevious = y;
+												
+												 // Reappear:
+												sprite_index = spr_hurt;
+												image_index  = 0;
+												
+												 // Sound:
+												audio_sound_set_track_position(
+													sound_play_hit(sndEliteShielderTeleport, 0.1),
+													0.1
+												);
+											}
+											
+											 // Shield:
+											with(call(scr.obj_create, x, y, "PetGuardianShield")){
+												alarm0  = max(1, 120);
+												team    = other.team;
+												creator = other;
+												with(other){
+													follow_delay = max(follow_delay, other.alarm0 + 10);
+												}
+											}
+										}
+									}
+								}
+								
+								break;
+								
+							case "eyes":
+							
+								 // Retrieve Enemy/Chest:
+								with(other){
+									if(_specIsPressed && dash_charge == 0 && follow_delay == 0){
+										dash_charge    = dash_max_charge;
+										dash_direction = other.gunangle;
+										dash_is_grab   = true;
+										
+										 // Aim at Nearest Enemy/Chest to Mouse:
+										with(call(scr.instance_nearest_array,
+											mouse_x[other.index],
+											mouse_y[other.index],
+											call(scr.array_combine,
+												instances_matching_ne(hitme, "team", team),
+												instances_matching_ne(chestprop, "id")
+											)
+										)){
+											if(!collision_line(x, y, other.x, other.y, Wall, false, false)){
+												other.dash_direction = point_direction(other.x, other.y, x, y);
+											}
+										}
+										
+										 // Visual:
+										sprite_index = spr_dash_start;
+										image_index  = 0;
+									}
+									
+									 // Retrieving Grabbed Instance:
+									if(instance_exists(grabbed_instance)){
+										if(_specIsHeld){
+											if(point_distance(x, y, other.x, other.y) > 32){
+												var _pullDirection = point_direction(x, y, other.x, other.y);
+												enemy_look(_pullDirection + 180);
+												motion_add_ct(_pullDirection, 2);
+												with(grabbed_instance){
+													motion_add_ct(_pullDirection, 1);
+												}
+											}
+										}
+										else if(dash_charge == 0){
+											grabbed_instance = noone;
+										}
+									}
+								}
+								
+								break;
+								
+							case "melting":
+							
+								 // Explosive Blast:
+								with(other){
+									 // Charging Blast:
+									if(_specIsPressed && (instance_number(enemy) - instance_number(Van) > 0 || instance_exists(Portal))){
+										var _explodableInstanceList = instances_matching_ne(instances_matching(Corpse, "image_speed", 0), "sprite_index", mskNone);
+										
+										 // Get Explodable Enemies:
+										if(ultra_get("melting", 1)){
+											_explodableInstanceList = call(scr.array_combine, _explodableInstanceList, instances_matching_lt(enemy, "my_health", 6));
+										}
+										
+										 // Get On-Screen Explodables:
+										if(array_length(_explodableInstanceList)){
+											var	_viewX = view_xview[other.index],
+												_viewY = view_yview[other.index];
+												
+											_explodableInstanceList = (
+												instances_matching_lt(
+												instances_matching_lt(
+												instances_matching_gt(
+												instances_matching_gt(
+												_explodableInstanceList,
+												"x", _viewX),
+												"y", _viewY),
+												"x", _viewX + game_width),
+												"y", _viewY + game_height)
+											);
+										}
+										
+										 // Add Explodables to Charge:
+										var _explodableCount = array_length(_explodableInstanceList);
+										if(_explodableCount > 0){
+											if("melting_explosion_size" not in self){
+												melting_explosion_size = 0;
+											}
+											if(melting_explosion_size < 2){
+												_explodableCount += array_length(instances_matching_gt(_explodableInstanceList, "size", 1));
+												melting_explosion_size = min(melting_explosion_size + (_explodableCount / 8), 2);
+											}
+											
+											 // Visual:
+											if(dash_charge == 0){
+												sprite_index = spr_dash_end;
+												image_index  = 1;
+											}
+											nexthurt = current_frame + 9; // White flash
+											
+											 // Sound:
+											var _soundInstance = audio_play_sound(sndFreakPopoReviveArea, 0, false);
+											sound_pitch(_soundInstance,  lerp(3,   1.75, melting_explosion_size / 2));
+											sound_volume(_soundInstance, lerp(2/3, 1.75, melting_explosion_size / 2));
+										}
+									}
+									
+									 // Release Blast:
+									if("melting_explosion_size" in self && melting_explosion_size > 0){
+										var _explosionSize = melting_explosion_size;
+										
+										 // Particles:
+										if(_specIsHeld){
+											if(frame_active(2 / _explosionSize)){
+												var	_len = 6,
+													_dir = wave * 50;
+													
+												with(instance_create(
+													x + lengthdir_x(_len, _dir),
+													y + lengthdir_y(_len, _dir),
+													PlasmaTrail
+												)){
+													sprite_index = sprPopoPlasmaTrail;
+													image_angle  = random(360);
+													depth        = other.depth + 1;
+													vspeed       = -random(_explosionSize);
+												}
+											}
+										}
+										
+										 // Explosion:
+										else{
+											melting_explosion_size = 0;
+											with(call(scr.pass, self, scr.projectile_create, x, y, PopoExplosion)){
+												if(_explosionSize <= 1){
+													sprite_index = sprRogueExplosion;
+													mask_index   = mskExplosion;
+													
+													 // No Scorchmark:
+													if(_explosionSize < 1){
+														alarm0 = -1;
+													}
+												}
+												if(_explosionSize % 1 != 0){
+													image_xscale = lerp(0.5, 1, _explosionSize % 1);
+													image_yscale = image_xscale;
+												}
+												
+												 // Flames:
+												var _flameCount = floor(3 * _explosionSize);
+												if(_flameCount > 0){
+													var _offsetAmount = 12 * _explosionSize;
+													repeat(_flameCount){
+														instance_create(x + orandom(_offsetAmount), y + orandom(_offsetAmount), BlueFlame);
+													}
+												}
+											}
+											
+											 // Visual:
+											if(dash_charge == 0){
+												sprite_index = spr_appear;
+												image_index  = 1;
+											}
+											nexthurt = current_frame + 6; // White flash
+											
+											 // Sound:
+											sound_play_hit_big(sndIDPDNadeExplo, 0.2);
+										}
+									}
+								}
+								
+								break;
+								
+							case "plant":
+							
+								 // Hold Enemy in Place:
+								with(other){
+									if(_specIsPressed && dash_charge == 0 && follow_delay == 0){
+										dash_charge    = dash_max_charge;
+										dash_direction = other.gunangle;
+										dash_is_grab   = true;
+										
+										 // Visual:
+										sprite_index = spr_dash_start;
+										image_index  = 0;
+									}
+									
+									 // Holding Grabbed Instance:
+									if(instance_exists(grabbed_instance)){
+										if(_specIsHeld){
+											speed = 0;
+										}
+										else if(dash_charge == 0){
+											grabbed_instance = noone;
+										}
+									}
+								}
+								
+								break;
+								
+							case "venuz":
+							
+								 // Extra Shot:
+								if(
+									_specIsPressed
+									&& can_shoot == true
+									&& !weapon_is_melee(wep)
+									&& other.dash_charge == 0
+								){
+									var _shotCount = 2 + (2 * skill_get(mut_throne_butt));
+									if(
+										ammo[weapon_get_type(wep)] >= weapon_get_cost(wep) * _shotCount
+										&& GameCont.rad >= weapon_get_rads(wep) * _shotCount
+									){
+										var _direction = gunangle;
+										with(other){
+											 // Aim at Random Enemy in Line of Sight:
+											with(call(scr.array_shuffle, instances_matching_ne(enemy, "team", team))){
+												if(!collision_line(x, y, other.x, other.y, Wall, false, false)){
+													_direction = point_direction(other.x, other.y, x, y);
+													break;
+												}
+											}
+											
+											 // Fire:
+											script_bind_step(
+												player_firing_step,
+												0,
+												[x, y],
+												_direction,
+												other.accuracy * 4,
+												other.wep,
+												team,
+												other,
+												true,
+												self
+											);
+											
+											 // Visual:
+											enemy_look(_direction);
+											sprite_index = spr_dash_end;
+											image_index  = 1;
+											
+											 // Sound:
+											with((follow_delay == 0) ? other : self){
+												sound_play_hit(sndRogueRifle, 0.1);
+											}
+										}
+									}
+								}
+								
+								break;
+								
+							case "steroids":
+							
+								 // Turret Mode:
+								if("ntte_guardian_pet_last_ammo" in self && !array_equals(ntte_guardian_pet_last_ammo, ammo)){
+									if(current_frame_active){
+										for(var _ammoIndex = min(array_length(ammo), array_length(ntte_guardian_pet_last_ammo)) - 1; _ammoIndex >= 0; _ammoIndex--){
+											var _ammoDifference = ammo[_ammoIndex] - ntte_guardian_pet_last_ammo[_ammoIndex];
+											if(_ammoDifference < 0 && (_specIsHeld || bcan_shoot == false)){
+												with(other){
+													var	_direction       = point_direction(x, y, mouse_x[other.index], mouse_y[other.index]),
+														_directionOffset = 5 + (5 * -_ammoDifference);
+														
+													 // Stay Still:
+													if(dash_charge == 0){
+														follow_delay = max(follow_delay, 10);
+														
+														 // Visual:
+														enemy_look(_direction);
+														sprite_index = spr_dash_end;
+														image_index  = 2;
+													}
+													
+													 // Fire Bullets:
+													_ammoDifference = max(-2, _ammoDifference);
+													repeat(-_ammoDifference){
+														call(scr.pass, self, scr.projectile_create,
+															x,
+															y,
+															IDPDBullet,
+															_direction + orandom(_directionOffset),
+															16
+														);
+														
+														 // Sound:
+														sound_play_hit(sndGruntFire, 0.1);
+													}
+												}
+											}
+											ntte_guardian_pet_last_ammo[_ammoIndex] += _ammoDifference;
+										}
+									}
+								}
+								else ntte_guardian_pet_last_ammo = array_clone(ammo);
+								
+								break;
+								
+							case "robot":
+							
+								 // Import Chest:
+								if(_specIsPressed && bwep != wep_none){
+									with(other){
+										var _dir = point_direction(other.x, other.y, x, y);
+										
+										 // Chest:
+										with(call(scr.chest_create, x, y, choose(IDPDChest, HealthChest), false)){
+											call(scr.instance_budge, self, Wall);
+											with(call(scr.obj_create, x, y, "BackpackPickup")){
+												direction = _dir;
+												target    = other;
+												with(self){
+													event_perform(ev_step, ev_step_end);
+												}
+											}
+											with(instance_create(x, y, FishA)){
+												depth = min(depth, other.depth - 1);
+											}
+										}
+										
+										 // Visual:
+										sprite_index = spr_appear;
+										image_index  = 3;
+										
+										 // Sound:
+										sound_play_hit(sndGuardianFire, 0.1);
+									}
+								}
+								
+								break;
+								
+						}
+					}
+				}
+			}
+		}
+	}
+	
 #define ntte_draw_bloom
 	 // Popo Lasers:
 	if(array_length(obj.PopoLaser)){
@@ -2979,6 +3519,22 @@
 			break;
 			
 	}
+	
+#define player_firing_step(_position, _direction, _accuracy, _wep, _team, _creator, _isBasic, _followInst)
+	script_bind_step(
+		player_firing_follow_step,
+		0,
+		call(scr.player_fire_at, _position, _direction, _accuracy, _wep, _team, _creator, _isBasic),
+		_followInst
+	);
+	instance_destroy();
+	
+#define player_firing_follow_step(_fireAt, _followInst)
+	if(instance_exists(_followInst) && array_length(instances_matching_ne(_fireAt.instance_list, "id"))){
+		_fireAt.x = _followInst.x;
+		_fireAt.y = _followInst.y;
+	}
+	else instance_destroy();
 	
 #define portal_poof()
 	/*

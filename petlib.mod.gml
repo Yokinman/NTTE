@@ -4324,17 +4324,22 @@
 	spr_shadow_y    = 3;
 	
 	 // Vars:
-	maxhealth	     = 300; // !!! Adjust as needed
+	maxhealth	     = 80; // !!! Adjust as needed
 	path_wall        = [Wall];
 	can_escape	     = false;
 	escape_prompt    = noone;
 	corpse		     = false;
+	push             = 0;
 	follow_delay     = 0;
 	dash_charge      = 0;
 	dash_charge_side = choose(-1, 1);
 	dash_max_charge  = 10;
 	dash_add_charge  = 0.5;
 	dash_direction   = 0;
+	dash_is_grab     = false;
+	grabbed_instance = noone;
+	
+	// See telabs.mod's ntte_begin_step script for active ability code
 	
 #define Guardian_ttip(_skin)
 	return [
@@ -4369,9 +4374,18 @@
 	
 #define Guardian_anim
 	if(array_find_index([spr_hurt, spr_appear, spr_disappear, spr_dash_start, spr_dash_end], sprite_index) < 0 || anim_end){
+		var _canBeNormal = (dash_charge == 0 && !instance_exists(grabbed_instance));
+		
+		 // Not Dashing:
 		if(array_find_index([spr_dash_start, spr_dash, spr_dash_charge], sprite_index) < 0){
-			if(dash_charge == 0){
-				sprite_index = enemy_sprite;
+			if(_canBeNormal){
+				if(sprite_index == spr_disappear){
+					sprite_index = spr_appear;
+					image_index  = 0;
+				}
+				else{
+					sprite_index = enemy_sprite;
+				}
 			}
 			
 			 // Start Dashing:
@@ -4382,14 +4396,20 @@
 		}
 		
 		 // Stop Dashing:
-		else if(dash_charge == 0){
+		else if(_canBeNormal){
 			sprite_index = spr_dash_end;
 			image_index  = 0;
 		}
 		
+		 // Grabbing:
+		else if(dash_is_grab && !instance_exists(grabbed_instance)){
+			sprite_index = spr_dash_start;
+			image_index  = image_number - 1;
+		}
+		
 		 // Dashing:
 		else sprite_index = (
-			(follow_delay == 0)
+			(follow_delay == 0 || instance_exists(grabbed_instance))
 			? spr_dash_charge
 			: spr_dash
 		);
@@ -4486,10 +4506,18 @@
 		}
 		
 		 // Depth:
-		depth = leader.depth - sign(_yOffset);
+		depth = leader.depth + ((_yOffset > 0) ? -1 : 0);
 	}
 	
 	 // Fist Dash Charging:
+	var	_soundX = x,
+		_soundY = y;
+		
+	if(instance_exists(leader)){
+		_soundX = leader.x;
+		_soundY = leader.y;
+	}
+	
 	if(
 		_canFollow
 		&& (
@@ -4515,7 +4543,7 @@
 		if(dash_charge < dash_max_charge){
 			 // Start Charging Sound:
 			if(dash_charge == 0){
-				call(scr.sound_play_at, x, y, sndDogGuardianBounce, 0.7 + orandom(0.2));
+				call(scr.sound_play_at, _soundX, _soundY, sndDogGuardianBounce, 0.7 + orandom(0.2));
 			}
 			
 			 // Charge:
@@ -4529,7 +4557,7 @@
 					image_blend  = c_aqua;
 					depth        = other.depth - 1;
 				}
-				call(scr.sound_play_at, x, y, sndDogGuardianLand, 1.5 + orandom(0.1), 1/3);
+				call(scr.sound_play_at, _soundX, _soundY, sndDogGuardianLand, 1.5 + orandom(0.1), 1/3);
 			}
 		}
 		
@@ -4552,26 +4580,33 @@
 	
 	 // Fist Dash:
 	else if(dash_charge != 0){
-		follow_delay = max(follow_delay, 30);
 		
 		 // Moving:
 		direction = dash_direction;
 		speed     = max(speed, lerp(maxspeed, 24, clamp(dash_charge / dash_max_charge, 0, 1)));
 		enemy_look(direction);
 		
-		 // Start Dashing Effects:
+		 // Start Dashing:
 		if(dash_charge == dash_max_charge){
+			 // Screenshake:
 			view_shake_at(x, y, 8);
+			
+			 // Push:
 			with(leader){
 				motion_add(other.direction, other.speed / 6);
 			}
+			
+			 // Sound:
 			if(audio_is_playing(sndDogGuardianLand)){
-				call(scr.sound_play_at, x, y, sndJockFire, 1.2 + orandom(0.2), 0.5);
+				call(scr.sound_play_at, _soundX, _soundY, sndJockFire, 1.2 + orandom(0.2), 0.5);
 			}
 			audio_sound_set_track_position(
-				call(scr.sound_play_at, x, y, sndIDPDNadeExplo, 1.5 + orandom(0.3), 0.75),
-				0.065
+				call(scr.sound_play_at, _soundX, _soundY, sndIDPDNadeExplo, 1.5 + orandom(0.3), 0.75),
+				0.3
 			);
+			
+			 // Cooldown:
+			follow_delay = max(follow_delay, dash_charge + 30);
 		}
 		
 		 // Shift Screen:
@@ -4597,43 +4632,132 @@
 		}
 		
 		 // Hurt Enemies:
-		var _extraScale = 2;
-		image_xscale *= _extraScale;
-		image_yscale *= _extraScale;
-		if(place_meeting(x, y, hitme)){
-			with(call(scr.instances_meeting_instance, self, instances_matching_ne(hitme, "team", team))){
-				with(other){
-					if(projectile_canhit_melee(other)){
-						var	_damage = 15,
-							_force  = (instance_is(other, prop) ? 0 : 12);
+		if(!dash_is_grab || !instance_exists(grabbed_instance)){
+			var _extraScale = 2;
+			image_xscale *= _extraScale;
+			image_yscale *= _extraScale;
+			if(place_meeting(x, y, hitme)){
+				with(call(scr.instances_meeting_instance, self, instances_matching_ne(hitme, "team", team))){
+					with(other){
+						if(dash_is_grab){
+							if(
+								(!instance_is(other, prop) && "team" in other && other.team != 0)
+								|| instance_is(other, RadChest)
+								|| instance_is(other, Car)
+								|| instance_is(other, CarVenus)
+								|| instance_is(other, CarVenusFixed)
+							){
+								grabbed_instance = other;
+							}
+						}
+						else if(projectile_canhit_melee(other)){
+							var	_damage = 15,
+								_force  = (instance_is(other, prop) ? 0 : 12);
+								
+							projectile_hit(other, _damage, _force);
 							
-						projectile_hit(other, _damage, _force);
-						view_shake_at(x, y, 10);
-						
-						 // Big Hit, Stop Dashing:
-						if(instance_exists(other) && other.size > 0 && other.my_health > -_damage / 3){
-							dash_charge = 0;
-							direction   = point_direction(other.x, other.y, x, y);
-							speed      *= 0.5;
+							 // Impact Effects:
+							sound_play_hit(sndGuardianHurt, 0.2);
+							view_shake_at(x, y, 10);
 							
-							 // Effects:
-							sound_play_hit_big(sndDogGuardianMelee, 0.1);
-							sleep(100);
+							 // Big Hit, Stop Dashing:
+							if(instance_exists(other) && other.my_health > -_damage / 3){
+								dash_charge = 0;
+								direction   = point_direction(other.x, other.y, x, y);
+								speed      *= 0.5;
+								
+								 // Big Impact Effects:
+								sound_play_hit_big(sndDogGuardianMelee, 0.1);
+								sleep(100);
+							}
+						}
+					}
+					if(other.dash_charge == 0){
+						break;
+					}
+				}
+			}
+			image_xscale /= _extraScale;
+			image_yscale /= _extraScale;
+			
+			 // Extra Grabbing:
+			if(dash_is_grab){
+				 // Grabbing Chests:
+				if(!instance_exists(grabbed_instance)){
+					if(place_meeting(x, y, chestprop)){
+						with(call(scr.instances_meeting_instance, self, chestprop)){
+							if(place_meeting(x, y, other)){
+								other.grabbed_instance = self;
+								break;
+							}
 						}
 					}
 				}
-				if(other.dash_charge == 0){
-					break;
+				
+				 // Grabbing Sound:
+				if(instance_exists(grabbed_instance)){
+					call(scr.sound_play_at, x, y, sndDogGuardianLand, 1.7 + orandom(0.2), 0.7);
 				}
 			}
 		}
-		image_xscale /= _extraScale;
-		image_yscale /= _extraScale;
 		
 		 // Stop Dashing:
 		if(dash_charge > 0){
 			dash_charge -= min(dash_charge, current_time_scale);
 		}
+		if(dash_charge == 0){
+			dash_is_grab = false;
+		}
+	}
+	
+	 // Grabbing:
+	if(instance_exists(grabbed_instance)){
+		follow_delay = max(follow_delay, 10);
+		
+		 // Hold Still:
+		with(grabbed_instance){
+			if("size" not in self || size < 3){
+				 // Position:
+				if(!place_meeting(other.x, other.y, Wall)){
+					x         = other.x;
+					y         = other.y;
+					xprevious = x;
+					yprevious = y;
+				}
+				else if(!place_meeting(other.x, y, Wall)){
+					x         = other.x;
+					xprevious = x;
+				}
+				else if(!place_meeting(x, other.y, Wall)){
+					y         = other.y;
+					yprevious = y;
+				}
+				
+				 // Speed:
+				if(!place_meeting(x + other.hspeed_raw, y + other.vspeed_raw, Wall)){
+					hspeed_raw = other.hspeed_raw;
+					vspeed_raw = other.vspeed_raw;
+				}
+				else if(!place_meeting(x + other.hspeed_raw, y, Wall)){
+					hspeed_raw = other.hspeed_raw;
+					vspeed_raw = 0;
+				}
+				else if(!place_meeting(x, y + other.vspeed_raw, Wall)){
+					hspeed_raw = 0;
+					vspeed_raw = other.vspeed_raw;
+				}
+			}
+			
+			 // Slow Down Big Guys:
+			else speed *= power(0.9, current_time_scale);
+		}
+		
+		 // Follow Grabbed Instance:
+		depth     = min(depth, grabbed_instance.depth - 1);
+		x         = lerp_ct(x, grabbed_instance.x, 1/3);
+		y         = lerp_ct(y, grabbed_instance.y, 1/3);
+		xprevious = x;
+		yprevious = y;
 	}
 	
 	 // Escape Prompt:
@@ -4751,8 +4875,10 @@
 	
 #define Guardian_death
 	with(call(scr.projectile_create, x, y, PopoExplosion)){
-		image_xscale /= 3;
-		image_yscale /= 3;
+		sprite_index = sprRogueExplosion;
+		mask_index   = mskExplosion;
+		image_xscale = 2/3;
+		image_yscale = image_xscale;
 	}
 	
 	 // Sounds:	
@@ -4848,9 +4974,9 @@
 #define ntte_step
 	 // Octo Lightning:
 	if(array_length(obj.Pet)){
-		var _instOcto = instances_matching(obj.Pet, "pet", "Octo");
-		if(array_length(_instOcto)){
-			with(_instOcto){
+		var _octoPetInst = instances_matching(obj.Pet, "pet", "Octo");
+		if(array_length(_octoPetInst)){
+			with(_octoPetInst){
 				var	_arcX   = x,
 					_arcY   = y,
 					_arcID  = self,
@@ -5010,7 +5136,7 @@
 								if(_dis < _disMax){
 									if(distance_to_object(_arcID) <= _arcDis){
 										if(!collision_line(_x, _y, _arcX, _arcY, Wall, false, false)){
-											if("creator" not in self || array_find_index(_instOcto, creator) < 0){
+											if("creator" not in self || array_find_index(_octoPetInst, creator) < 0){
 												_disMax   = _dis;
 												_nearest  = self;
 												_nearestX = _x;
@@ -5143,13 +5269,13 @@
 	 // Spider Webbing:
 	var _webVisible = false;
 	if(array_length(obj.Pet)){
-		var _instSpider = instances_matching(obj.Pet, "pet", "Spider");
-		if(array_length(_instSpider)){
+		var _spiderPetInst = instances_matching(obj.Pet, "pet", "Spider");
+		if(array_length(_spiderPetInst)){
 			_webVisible = true;
 			
 			 // Reset Webs:
 			if(instance_exists(GenCont)){
-				with(_instSpider){
+				with(_spiderPetInst){
 					web_list    = [];
 					web_timer   = web_timer_max;
 					web_list_x1 = +infinity;
@@ -5170,11 +5296,11 @@
 				
 				draw_set_color(c_black);
 				
-				with(_instSpider){
+				with(_spiderPetInst){
 					web_frame += current_time_scale;
 					
-					var	_instWeb    = call(scr.instances_meeting_rectangle, web_list_x1, web_list_y1, web_list_x2, web_list_y2, pet_target_inst),
-						_instSlow   = [],
+					var	_webbedInst = call(scr.instances_meeting_rectangle, web_list_x1, web_list_y1, web_list_x2, web_list_y2, pet_target_inst),
+						_slowedInst = [],
 						_vertexNum  = 0,
 						_sprWeb     = spr_web,
 						_sprWebBits = spr_web_bits,
@@ -5197,7 +5323,7 @@
 						
 						 // Slow Enemies:
 						if(_vertexNum++ >= 2){
-							var _inst = _instWeb;
+							var _inst = _webbedInst;
 							if(array_length(_inst)){
 								_inst = instances_matching_ge(_inst, "bbox_right", min(_x1, _x2, _x3));
 								if(array_length(_inst)){
@@ -5210,9 +5336,9 @@
 												with(_inst){
 													//if(point_in_triangle(x, bbox_bottom, _x1, _y1, _x2, _y2, _x3, _y3)){
 														if(!collision_line(x, y, xprevious, yprevious, Wall, false, false)){
-															array_push(_instSlow, self);
+															array_push(_slowedInst, self);
 														}
-														_instWeb = call(scr.array_delete_value, _instWeb, self);
+														_webbedInst = call(scr.array_delete_value, _webbedInst, self);
 													//}
 												}
 											}
@@ -5299,13 +5425,13 @@
 					if(curse != 0 && !ds_map_valid(web_hit_list)){
 						web_hit_list = ds_map_create();
 					}
-					if(array_length(_instSlow)){
+					if(array_length(_slowedInst)){
 						var	_slow    = 2/3 * current_time_scale,
 							_damage  = 10 * curse,
 							_hitList = web_hit_list,
 							_hitTime = web_frame;
 							
-						with(_instSlow){
+						with(_slowedInst){
 							x = lerp(x, xprevious, _slow);
 							y = lerp(y, yprevious, _slow);
 							
