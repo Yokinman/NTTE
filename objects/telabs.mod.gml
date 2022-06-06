@@ -2996,11 +2996,11 @@
 							_specIsPressed = button_pressed(index, "spec");
 						}
 						
-						switch(race){
+						switch(race_get_name(race_id)){
 							
 							case "fish":
 							
-								 // Push:
+								 // Roll Boost:
 								if(roll != 0 && point_distance(x, y, other.x, other.y) < 32){
 									with(other){
 										if(dash_charge == 0){
@@ -3394,7 +3394,7 @@
 								
 							case "steroids":
 							
-								 // Turret Mode:
+								 // Turret:
 								if("ntte_guardian_pet_last_ammo" in self && !array_equals(ntte_guardian_pet_last_ammo, ammo)){
 									if(current_frame_active){
 										for(var _ammoIndex = min(array_length(ammo), array_length(ntte_guardian_pet_last_ammo)) - 1; _ammoIndex >= 0; _ammoIndex--){
@@ -3470,6 +3470,302 @@
 								}
 								
 								break;
+								
+							case "chicken":
+							
+								 // Fling Slap:
+								if(
+									_specIsPressed
+									&& wep != wep_none
+									&& curse <= 0
+									&& other.dash_charge == 0
+									&& (other.follow_delay == 0 || point_distance(x, y, other.x, other.y) < 96)
+								){
+									var	_direction = gunangle,
+										_throwSide = sign(angle_difference(_direction, point_direction(x, y, other.x, other.y)));
+										
+									with(other){
+										 // Visual:
+										sprite_index = spr_dash_start;
+										image_index  = image_number - 1;
+										repeat(3){
+											call(scr.fx, x, y, [_direction, 3], Dust);
+										}
+										if(follow_delay != 0){
+											with(instance_create(x, y, ThrowHit)){
+												image_speed = 0.5;
+											}
+										}
+										
+										 // Move:
+										var _offsetLength = 10 * skill_get(mut_long_arms);
+										x         = other.x + lengthdir_x(_offsetLength, _direction);
+										y         = other.y + lengthdir_y(_offsetLength, _direction);
+										xprevious = other.x;
+										yprevious = other.y;
+										
+										 // Slash:
+										with(call(scr.pass, self, scr.projectile_create,
+											x,
+											y,
+											Slash,
+											_direction,
+											2 + (1.5 * skill_get(mut_long_arms))
+										)){
+											sprite_index = sprPopoSlash;
+											damage       = 24;
+											walled       = true;
+										}
+										
+										 // Motion:
+										move_contact_solid(_direction + (50 * _throwSide), 20);
+										enemy_look(_direction + (90 * _throwSide));
+										enemy_walk(_direction + 180, 3);
+										motion_add(_direction + 180, 3);
+										follow_delay = max(follow_delay, 10);
+									}
+									
+									 // Sound:
+									sound_play_hit(sndDogGuardianBounce, 0.2);
+									audio_sound_set_track_position(
+										sound_play_hit(sndHammer, 0.2),
+										0.035
+									);
+								}
+								
+								break;
+								
+							case "rebel":
+							
+								 // Healing Zone:
+								with(other){
+									var	_maxRadius = 96,
+										_wasActive = (("rebel_healing_is_active" in self) ? rebel_healing_is_active : false);
+										
+									 // Toggle Healing Zone:
+									if(_specIsPressed){
+										var _canSpawnAlly = (other.my_health > ((instance_exists(Ally) || ultra_get("rebel", 2) > 0) ? 2 : 1));
+										
+										 // Deactivate:
+										if("rebel_healing_is_active" in self && rebel_healing_is_active){
+											if(!_canSpawnAlly){
+												rebel_healing_is_active = false;
+											}
+										}
+										
+										 // Activate:
+										else if(
+											point_distance(x, y, other.x, other.y) <= _maxRadius
+											&& (_canSpawnAlly || array_length(instances_matching(Ally, "creator", other)))
+										){
+											rebel_healing_is_active = true;
+											rebel_healing_delay     = 0;
+											rebel_healing_radius    = 0;
+										}
+									}
+									
+									 // Active Healing Zone:
+									if("rebel_healing_is_active" in self && rebel_healing_is_active){
+										var	_canHealAlly      = false,
+											_allyInstanceList = instances_matching(Ally, "creator", other);
+											
+										 // Stay:
+										speed        = 0;
+										follow_delay = max(follow_delay, 3);
+										
+										 // Grow Healing Zone:
+										if(rebel_healing_radius < _maxRadius){
+											rebel_healing_radius = min(rebel_healing_radius + ((_maxRadius / 10) * current_time_scale), _maxRadius);
+										}
+										
+										 // Healing Timer:
+										if(rebel_healing_delay > 0){
+											rebel_healing_delay -= min(current_time_scale, rebel_healing_delay);
+										}
+										else if(rebel_healing_delay == 0){
+											rebel_healing_delay = 20;
+											_canHealAlly        = true;
+										}
+										
+										 // Heal Allies:
+										var _healCount = 0;
+										with(call(scr.instances_in_rectangle,
+											x - rebel_healing_radius,
+											y - rebel_healing_radius,
+											x + rebel_healing_radius,
+											y + rebel_healing_radius,
+											_allyInstanceList
+										)){
+											if(point_distance(x, y, other.x, other.y) <= other.rebel_healing_radius){
+												 // Particles:
+												if(chance_ct(1, 4)){
+													with(instance_create(x, y, PlasmaTrail)){
+														sprite_index = sprPopoPlasmaTrail;
+														motion_add(random(360), 1);
+														depth = other.depth - 1;
+													}
+												}
+												
+												 // Heal:
+												if(_canHealAlly && my_health < maxhealth){
+													my_health = min(my_health + 1, maxhealth);
+													_healCount++;
+													
+													 // Visual:
+													with(instance_create(x, y, HealFX)){
+														sprite_index = ((other.my_health < other.maxhealth) ? spr.BonusHealFX : spr.BonusHealBigFX);
+														vspeed       = -random(2);
+														depth        = other.depth - 1;
+													}
+												}
+											}
+										}
+										if(_healCount > 0){
+											projectile_hit(self, min(_healCount, 2));
+											
+											 // Visual:
+											with(instance_create(x, y, AllyDamage)){
+												sprite_index = spr.BonusHealFX;
+											}
+										}
+										
+										 // Projectile Speed Buff:
+										with(call(scr.instances_in_rectangle,
+											x - rebel_healing_radius,
+											y - rebel_healing_radius,
+											x + rebel_healing_radius,
+											y + rebel_healing_radius,
+											instances_matching(AllyBullet, "team", team)
+										)){
+											instance_change(IDPDBullet, false);
+											sprite_index = sprIDPDBullet;
+											speed       *= 2;
+											with(instance_create(x, y, ThrowHit)){
+												image_blend = c_aqua;
+											}
+											sound_play_hit(sndGruntFire, 0.1);
+										}
+										
+										 // Particles:
+										var	_particleNum = 3,
+											_angle       = 360 * ((wave / 20) / _particleNum);
+											
+										for(var _direction = _angle; _direction < _angle + 360; _direction += 360 / _particleNum){
+											var	_x = x + lengthdir_x(rebel_healing_radius, _direction),
+												_y = y + lengthdir_y(rebel_healing_radius, _direction);
+												
+											with(instance_create(x, y, PlasmaTrail)){
+												sprite_index = sprPopoPlasmaTrail;
+												if(position_meeting(_x, _y, Floor) || !collision_line(x, y, _x, _y, Wall, false, false)){
+													x           = _x;
+													y           = _y;
+													image_angle = _direction;
+													if(_canHealAlly){
+														with(instance_create(x, y, HealFX)){
+															sprite_index = spr.BonusHealFX;
+															depth        = -8;
+														}
+													}
+													if(other.rebel_healing_radius >= _maxRadius){
+														image_angle  = _direction;
+														image_xscale = 2/3;
+														image_yscale = 3;
+													}
+												}
+												
+												 // Wall in Path:
+												else{
+													move_contact_solid(_direction, other.rebel_healing_radius);
+													x += lengthdir_x(5, _direction);
+													y += lengthdir_y(8, _direction);
+												}
+											}
+										}
+										
+										 // Deactivate Healing Zone:
+										if(point_distance(x, y, other.x, other.y) > _maxRadius || (rebel_healing_radius >= _maxRadius && !array_length(_allyInstanceList))){
+											rebel_healing_is_active = false;
+										}
+									}
+									
+									 // Healing Zone Toggle Effects:
+									if("rebel_healing_is_active" in self && rebel_healing_is_active != _wasActive){
+										 // Activated:
+										if(rebel_healing_is_active){
+											 // Visual:
+											if(sprite_index == spr_idle){
+												sprite_index = spr_hurt;
+												image_index  = 0;
+											}
+											nexthurt = current_frame + 6;
+											
+											 // Sound:
+											call(scr.sound_play_at, x, y, sndFreakPopoReviveArea, 1.5, 2);
+										}
+										
+										 // Deactivated:
+										else{
+											 // Visual:
+											sprite_index = spr_appear;
+											image_index  = 4;
+											for(var _dir = 0; _dir < 360; _dir += 360 / 8){
+												with(instance_create(x, y, AllyDamage)){
+													sprite_index = sprPopoPlasmaTrail;
+													direction    = _dir + orandom(45);
+													x           += 3 * hspeed;
+													y           += 3 * vspeed;
+													speed       *= random_range(0.5, 1.5);
+												}
+											}
+											
+											 // Sound:
+											call(scr.sound_play_at, x, y, sndFreakPopoReviveArea, 3 + orandom(0.1), 2);
+										}
+									}
+								}
+								
+								break;
+								
+							case "horror":
+							
+								
+								
+								
+								break;
+								
+							case "rogue":
+							
+								
+								
+								break;
+								
+							case "bigdog":
+							
+								
+								
+								break;
+								
+							case "skeleton":
+							
+								
+								
+								break;
+								
+							case "frog":
+							
+								
+								
+								break;
+								
+							case "cuz":
+							
+								
+								
+								break;
+								
+							default:
+							
+								
 								
 						}
 					}

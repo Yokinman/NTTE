@@ -1457,11 +1457,9 @@
 			if(infammo == 0){
 				if(instance_is(self, Player)){
 					ammo[_wepType] += _wepCost;
+					_fire.ammo = array_clone(ammo);
 				}
 				GameCont.rad += _wepRads;
-				
-				 // Update Stored Values:
-				_fire.ammo = array_clone(ammo);
 				_fire.rads = GameCont.rad;
 			}
 		}
@@ -1833,6 +1831,14 @@
 									
 									 // Fire Weapon:
 									if(_canFire){
+										var	_lastFireContReload   = 0,
+											_lastFireContCanShoot = true;
+											
+										if(!_fireCreatorIsPlayer && instance_exists(FireCont)){
+											_lastFireContReload   = FireCont.reload;
+											_lastFireContCanShoot = FireCont.can_shoot;
+										}
+										
 										with(
 											_fireCreatorIsPlayer
 											? _fireCreator
@@ -1853,8 +1859,16 @@
 											_wep = _lastWep;
 											
 											 // Store Player Speed:
-											if(_fireCreatorIsPlayer && !ds_map_exists(_playerSpeedMap, self)){
-												_playerSpeedMap[? self] = speed;
+											if(_fireCreatorIsPlayer){
+												if(!ds_map_exists(_playerSpeedMap, self)){
+													_playerSpeedMap[? self] = speed;
+												}
+											}
+											
+											 // Restore FireCont Vars:
+											else{
+												reload    = _lastFireContReload;
+												can_shoot = _lastFireContCanShoot;
 											}
 											
 											 // Store Variable Container:

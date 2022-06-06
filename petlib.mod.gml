@@ -4513,7 +4513,7 @@
 	var	_soundX = x,
 		_soundY = y;
 		
-	if(instance_exists(leader)){
+	if(_canFollow && instance_exists(leader)){
 		_soundX = leader.x;
 		_soundY = leader.y;
 	}
@@ -4522,22 +4522,7 @@
 		_canFollow
 		&& (
 			(dash_charge > 0 && dash_charge < dash_max_charge)
-			|| (
-				instance_exists(leader)
-				&& button_check(leader.index, "fire")
-				&& (
-					dash_charge == 0
-					|| !(
-						leader.canfire
-						&& leader.can_shoot == true
-						&& ((leader.ammo[weapon_get_type(leader.wep)] >= weapon_get_cost(leader.wep) && GameCont.rad >= weapon_get_rads(leader.wep)) || leader.infammo != 0) // hello
-						&& ((leader.race == "steroids") ? (weapon_get_auto(leader.wep) >= 0) : weapon_get_auto(leader.wep))
-						&& leader.visible
-						&& !instance_exists(PlayerSit)
-						&& !array_length(instances_matching(CrystalShield, "creator", leader))
-					)
-				)
-			)
+			|| (instance_exists(leader) && button_check(leader.index, "fire"))
 		)
 	){
 		if(dash_charge < dash_max_charge){

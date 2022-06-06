@@ -2736,23 +2736,29 @@
 		projectile_hit_push(other, damage, force);
 		
 		 // Mega Smak:
-		if(instance_is(other, Player) || other.size <= 1){
-			var p = other;
-			with(call(scr.obj_create, p.x, p.y, "PalankingToss")){
-				direction    = angle_lerp(other.direction, point_direction(other.x, other.y, p.x, p.y), 1/3);
+		if(
+			instance_exists(other)
+			&& other.my_health > 0
+			&& !instance_is(other, prop)
+			&& (instance_is(other, Player) || other.size <= 1)
+		){
+			var _inst = other;
+			with(call(scr.obj_create, _inst.x, _inst.y, "PalankingToss")){
+				direction    = angle_lerp(other.direction, point_direction(other.x, other.y, _inst.x, _inst.y), 1/3);
 				speed        = 4;
-				creator      = p;
-				depth        = p.depth;
-				mask_index   = p.mask_index;
-				spr_shadow_y = p.spr_shadow_y;
+				creator      = _inst;
+				depth        = _inst.depth;
+				mask_index   = _inst.mask_index;
+				spr_shadow_y = _inst.spr_shadow_y;
 			}
 			with(other){
-				if(instance_is(self, Player)) smoke = 6 + random(6);
+				if(instance_is(self, Player)){
+					smoke = 6 + random(6);
+				}
 				mask_index = mskNone;
 			}
+			sound_play_pitchvol(sndHammerHeadEnd, 0.8, 0.5);
 		}
-		
-		sound_play_pitchvol(sndHammerHeadEnd, 0.8, 0.5);
 	}
 	
 #define PalankingSlash_projectile

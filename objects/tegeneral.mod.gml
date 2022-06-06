@@ -2425,10 +2425,10 @@
 						if(
 							sprite_get_width(_spr)       != 16 ||
 							sprite_get_height(_spr)      != 16 ||
-							sprite_get_bbox_left(_spr)   !=  0 ||
-							sprite_get_bbox_top(_spr)    !=  0 ||
-							sprite_get_bbox_right(_spr)  != 15 ||
-							sprite_get_bbox_bottom(_spr) != 15 ||
+							sprite_get_bbox_left(_spr)   != 15 ||
+							sprite_get_bbox_top(_spr)    != 15 ||
+							sprite_get_bbox_right(_spr)  !=  0 ||
+							sprite_get_bbox_bottom(_spr) !=  0 ||
 							sprite_get_number(_spr)      <=  1
 						){
 							if(!ds_map_exists(global.gunspr_fix, _spr)){

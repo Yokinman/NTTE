@@ -386,12 +386,17 @@
 	return noone;
 	
 #define ntte_setup_obj_search(_name, _object, _inst)
-	var _nameInst = instances_matching(_inst, "ntte_name", _name);
-	
+	var	_nameInst       = instances_matching(_inst, "ntte_name", _name),
+		_gameIsUnpaused = !(instance_exists(PauseButton) || instance_exists(BackMainMenu) || UberCont.alarm2 > 0);
+		
 	 // Manage Object Instance Lists:
 	for(var _objName = _name; _objName != undefined; _objName = ds_map_find_value(obj_parent_map, _objName)){
 		 // Prune Destroyed Instances:
-		var _objList = instances_matching_ne(lq_get(obj, _objName), "id");
+		var _objList = (
+			_gameIsUnpaused
+			? instances_matching_ne(lq_get(obj, _objName), "id")
+			: lq_get(obj, _objName)
+		);
 		lq_set(obj, _objName, _objList);
 		
 		 // Store New Instances, 'instance_copy()' Fix:
@@ -2941,10 +2946,11 @@
 			}
 			
 			 // Delete Loading Spirals:
-			with(SpiralCont  ) instance_destroy();
-			with(Spiral      ) instance_destroy();
-			with(SpiralStar  ) instance_destroy();
-			with(SpiralDebris) instance_destroy(); // *might play a 0.1 pitched sound
+			with([SpiralCont, Spiral, SpiralStar, SpiralDebris]){
+				with(self){
+					instance_destroy(); // *SpiralDebris might play a 0.1 pitched sound
+				}
+			}
 			
 			 // Custom Code:
 			if(is_array(_scrSetup)){
@@ -3570,14 +3576,11 @@
 	*/
 	
 	with(instance_create(_x1, _y1, PortalClear)){
-		var	_dis = point_distance(x, y, _x2, _y2),
-			_dir = point_direction(x, y, _x2, _y2);
-			
 		sprite_index = sprBoltTrail;
-		image_speed  = 16 / _dis;
-		image_xscale = _dis;
+		image_xscale = point_distance(x, y, _x2, _y2);
 		image_yscale = 16;
-		image_angle  = _dir;
+		image_angle  = point_direction(x, y, _x2, _y2);
+		image_speed  = 16 / image_xscale;
 		
 		 // Ensure Tunnel:
 		if(instance_exists(Wall) && !place_meeting(x, y, Wall) && !place_meeting(x, y, Floor)){
@@ -4094,16 +4097,16 @@
 		case "fire":
 		
 			var	_minID        = instance_max,
-				_lastLoad     = reload,
 				_lastRads     = GameCont.rad,
+				_lastLoad     = reload,
 				_lastCanShoot = can_shoot,
 				_fireInst     = self;
 				
 			 // Fire:
 			if(instance_is(self, Player)){
-				var	_lastAmmo = array_clone(ammo),
-					_lastDraw = drawempty,
-					_lastWep  = wep;
+				var	_lastAmmo     = array_clone(ammo),
+					_lastDraw     = drawempty,
+					_lastWep      = wep;
 					
 				wep = _wep;
 				player_fire();
@@ -4124,8 +4127,8 @@
 			);
 			
 			 // Revert Values:
-			reload       = _lastLoad;
 			GameCont.rad = _lastRads;
+			reload       = _lastLoad;
 			can_shoot    = _lastCanShoot;
 			
 			 // Delete Effects:
@@ -4867,11 +4870,25 @@
 		_atDirection += _at.direction_rotation;
 		
 		 // Fire Weapon:
+		var	_lastReload   = 0,
+			_lastCanShoot = true;
+			
+		if(instance_exists(FireCont)){
+			_lastReload   = FireCont.reload;
+			_lastCanShoot = FireCont.can_shoot;
+		}
+		
+		var _fireCont = player_fire_ext(_atDirection, wep_none, _atX, _atY, _atTeam, _creator, _atAccuracy);
+		with(_fireCont){
+			reload    = _lastReload;
+			can_shoot = _lastReload;
+		}
+		
 		player_fire_at_call(
 			_at,
 			script_ref_create(
 				player_fire_at_call_player_fire,
-				player_fire_ext(_atDirection, wep_none, _atX, _atY, _atTeam, _creator, _atAccuracy),
+				_fireCont,
 				_isBasic,
 				(is_array(_atWep) ? _atWep[0] : _atWep)
 			),
@@ -4967,14 +4984,16 @@
 			switch(_atWep){
 				case undefined: break;
 				default:
-					var	_atCreatorWep = _at.creator_wep,
-						_atWepIsRef   = is_array(_atWep),
-						_setWep       = (_atWepIsRef ? _atWep[0] : _atWep),
-						_lastWep      = (("wep"  in self) ? wep  : undefined),
-						_lastBWep     = (("bwep" in self) ? bwep : undefined);
-						
-					if(_lastWep  == _atCreatorWep) wep  = _setWep;
-					if(_lastBWep == _atCreatorWep) bwep = _setWep;
+					var _atCreatorWep = _at.creator_wep;
+					if(_atCreatorWep != undefined){
+						var	_atWepIsRef = is_array(_atWep),
+							_setWep     = (_atWepIsRef ? _atWep[0] : _atWep),
+							_lastWep    = (("wep"  in self) ? wep  : undefined),
+							_lastBWep   = (("bwep" in self) ? bwep : undefined);
+							
+						if(_lastWep  == _atCreatorWep) wep  = _setWep;
+						if(_lastBWep == _atCreatorWep) bwep = _setWep;
+					}
 			}
 		}
 		
@@ -4992,22 +5011,24 @@
 			switch(_atWep){
 				case undefined: break;
 				default:
-					if(_lastWep == _atCreatorWep || _lastBWep == _atCreatorWep){
-						 // Swapped Weapons:
-						if(_lastWep != undefined && _lastBWep != undefined){
-							if(
-								   (wep  == _lastBWep && bwep != _lastBWep)
-								|| (bwep == _lastWep  && wep  != _lastWep)
-							){
-								var _tempLastWep = _lastWep;
-								_lastWep  = _lastBWep;
-								_lastBWep = _tempLastWep;
+					if(_atCreatorWep != undefined){
+						if(_lastWep == _atCreatorWep || _lastBWep == _atCreatorWep){
+							 // Swapped Weapons:
+							if(_lastWep != undefined && _lastBWep != undefined){
+								if(
+									   (wep  == _lastBWep && bwep != _lastBWep)
+									|| (bwep == _lastWep  && wep  != _lastWep)
+								){
+									var _tempLastWep = _lastWep;
+									_lastWep  = _lastBWep;
+									_lastBWep = _tempLastWep;
+								}
 							}
+							
+							 // Revert Weapons:
+							if(_lastBWep == _atCreatorWep){ if(bwep != _setWep && _atWepIsRef){ _atWep[0] = bwep; } bwep = _lastBWep; }
+							if(_lastWep  == _atCreatorWep){ if(wep  != _setWep && _atWepIsRef){ _atWep[0] = wep;  } wep  = _lastWep;  }
 						}
-						
-						 // Revert Weapons:
-						if(_lastBWep == _atCreatorWep){ if(bwep != _setWep && _atWepIsRef){ _atWep[0] = bwep; } bwep = _lastBWep; }
-						if(_lastWep  == _atCreatorWep){ if(wep  != _setWep && _atWepIsRef){ _atWep[0] = wep;  } wep  = _lastWep;  }
 					}
 			}
 			
@@ -5761,7 +5782,7 @@
 			}
 			
 			 // Cause of Death Name:
-			if(is_array(hitid) && array_length(hitid) && hitid[1] == ""){
+			if(array_length(hitid) && hitid[1] == ""){
 				hitid[1] = call(scr.pet_get_name, pet, mod_type, mod_name, 0);
 			}
 			
@@ -6387,16 +6408,14 @@
 		_listenY    = view_yview_nonsync + (game_height / 2);
 		
 	 // Determine Listener Position:
-	if(instance_exists(Player)){
-		var _disMax = infinity;
-		with(Player){
-			var _dis = point_distance(x, y, _x, _y);
-			if(_dis < _disMax){
-				if(player_is_local_nonsync(index)){
-					_disMax  = _dis;
-					_listenX = x;
-					_listenY = y;
-				}
+	var _disMax = infinity;
+	with(Player){
+		var _dis = point_distance(x, y, _x, _y);
+		if(_dis < _disMax){
+			if(player_is_local_nonsync(index)){
+				_disMax  = _dis;
+				_listenX = x;
+				_listenY = y;
 			}
 		}
 	}
@@ -6872,13 +6891,13 @@
 	
 	
 /// LEGACY
-#define pet_spawn      return call(scr.pet_create,     argument0, argument1, argument2);
+#define pet_spawn      return pet_create(argument0, argument1, argument2);
 #define pet_get_name   return call(scr.pet_get_name,   argument0, argument1, argument2, argument3);
 #define pet_get_ttip   return call(scr.pet_get_ttip,   argument0, argument1, argument2, argument3);
 #define pet_get_sprite return call(scr.pet_get_sprite, argument0, argument1, argument2, argument3, argument4);
 #define pet_get_sound  return call(scr.pet_get_sound,  argument0, argument1, argument2, argument3, argument4);
 #define pet_set_skin   return call(scr.pet_set_skin,   argument0);
-#define pet_get_icon   return { "spr":call(scr.pet_get_sprite, argument2, argument0, argument1, 0, "icon"), "img":0.4*current_frame, "x":0, "y":0, "xsc":1, "ysc":1, "ang":0, "col":c_white, "alp":1 };
+#define pet_get_icon   return { "spr":pet_get_sprite(argument2, argument0, argument1, 0, "icon"), "img":0.4*current_frame, "x":0, "y":0, "xsc":1, "ysc":1, "ang":0, "col":c_white, "alp":1 };
 
 
 /// SCRIPTS

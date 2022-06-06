@@ -2669,7 +2669,7 @@
 					_gml += _new + `				}`
 					_gml += _new + `				`
 					                				 // Setup Weapon for FireCont:
-					_gml += _new + `				if(_at.wep == undefined && "wep" not in self){`
+					_gml += _new + `				if(_at.wep == undefined && !instance_is(self, Player)){`
 					_gml += _new + `					_at.wep = _wep;`
 					_gml += _new + `				}`
 					_gml += _new + `				`
