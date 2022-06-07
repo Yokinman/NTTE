@@ -2748,6 +2748,144 @@
 	call(scr.motion_step, self, -1);
 	
 	
+#define RogueMissile_create(_x, _y)
+	/*
+		Used for the popo guardian pet's Rogue active ability
+	*/
+	
+	with(instance_create(_x, _y, CustomObject)){
+		 // Visual:
+		sprite_index = spr.SparkleBullet;
+		image_angle  = random(360);
+		image_speed  = 0.4;
+		depth        = -9;
+		hitid        = 72;
+		
+		 // Vars:
+		mask_index   = mskPlasma;
+		target       = instance_nearest(x, y, enemy);
+		target_x     = x;
+		target_y     = y;
+		wobble_angle = random(360);
+		team         = -1;
+		creator      = noone;
+		
+		return self;
+	}
+	
+#define RogueMissile_step
+	 // Follow Target:
+	if(instance_exists(target)){
+		target_x = target.x;
+		target_y = target.y;
+	}
+	
+	 // Motion:
+	var _targetDistance = point_distance(x, y, target_x, target_y);
+	speed     = lerp_ct(speed, clamp(_targetDistance / 8, 8, 16), 0.1);
+	direction = angle_lerp_ct(direction, point_direction(x, y, target_x, target_y), 0.15);
+	
+	 // Direction Wobble:
+	var _wobbleOffset = 5 * dsin(wobble_angle) * current_time_scale;
+	direction    += _wobbleOffset;
+	image_angle  += _wobbleOffset;
+	wobble_angle += 12 * current_time_scale;
+	
+	 // Trail:
+	if(current_frame_active){
+		with(instance_create(x, y, PlasmaTrail)){
+			sprite_index = sprPopoPlasmaTrail;
+			image_speed *= 1.5;
+			image_xscale = other.speed / 3;
+			image_yscale = 0.5;
+			image_angle  = other.direction;
+			depth        = other.depth + 1;
+		}
+	}
+	
+	 // Explode:
+	if(_targetDistance < 24){
+		instance_destroy();
+	}
+	
+#define RogueMissile_draw
+	 // Self:
+	draw_self();
+	
+	 // Bloom:
+	draw_set_blend_mode(bm_add);
+	image_xscale *= 2;
+	image_yscale *= 2;
+	image_alpha  *= 0.1;
+	draw_self();
+	image_xscale /= 2;
+	image_yscale /= 2;
+	image_alpha  /= 0.1;
+	draw_set_blend_mode(bm_normal);
+	
+#define RogueMissile_destroy
+	 // Explosion:
+	with(call(scr.projectile_create, x, y, PopoExplosion, direction, speed / 2)){
+		sprite_index = sprRogueExplosion;
+		mask_index   = mskExplosion;
+		friction     = 0.4;
+		hitid        = other.hitid;
+	}
+	
+	 // Sound:
+	sound_play_hit_big(sndExplosion, 0.2);
+	
+	
+#define SmallLastBall_create(_x, _y)
+	/*
+		Used for the popo guardian pet's Horror active ability
+	*/
+	
+	with(instance_create(_x, _y, CustomProjectile)){
+		 // Visual:
+		sprite_index = spr.SmallLastBall;
+		image_speed  = 0.4;
+		depth        = -4;
+		ntte_bloom   = 0.1;
+		
+		 // Vars:
+		mask_index = mskPlasma;
+		damage     = 12;
+		typ        = 1;
+		force      = 8;
+		
+		return self;
+	}
+	
+#define SmallLastBall_destroy
+	 // Sound:
+	sound_play_hit_big(sndBigBallExplo, 0.1);
+	
+	 // Clear Walls:
+	instance_create(x, y, PortalClear);
+	
+	 // Projectiles:
+	var _ang = random(360);
+	for(var _dir = _ang; _dir < _ang + 360; _dir += 360 / 8){
+		for(var _num = 0; _num < 3; _num++){
+			with(call(scr.projectile_create, x, y, HorrorBullet, _dir, 4 + (0.8 * _num))){
+				sprite_index = spr.IDPDHorrorBullet;
+				bskin        = "cool frog";
+			}
+		}
+	}
+	
+	 // Impact Effect:
+	with(instance_create(x, y, BulletHit)){
+		sprite_index = spr.CrystalHeartBulletHit;
+		instance_copy(false);
+		image_blend  = c_aqua;
+		depth        = 0;
+		image_xscale = 1.25;
+		image_yscale = image_xscale;
+	}
+	
+	
 #define WallSlide_create(_x, _y)
 	/*
 		A controller that slides Walls around
@@ -2991,11 +3129,16 @@
 						var	_specIsHeld    = false,
 							_specIsPressed = false;
 							
-						if(canspec && button_check(index, "spec")){
-							_specIsHeld    = true;
-							_specIsPressed = button_pressed(index, "spec");
+						 // Check Active State:
+						if(canspec && (button_check(index, "spec") || usespec > 0)){
+							_specIsHeld = true;
+							if(button_pressed(index, "spec") || (usespec > 0 && ("ntte_guardian_last_usespec" not in self || ntte_guardian_last_usespec <= 0))){
+								_specIsPressed = true;
+							}
 						}
+						ntte_guardian_last_usespec = usespec;
 						
+						 // Character Abilities:
 						switch(race_get_name(race_id)){
 							
 							case "fish":
@@ -3048,93 +3191,93 @@
 							case "crystal":
 							
 								 // Shield:
-								if(_specIsHeld && array_length(instances_matching(CrystalShield, "creator", self))){
+								if(
+									_specIsHeld
+									&& other.dash_charge == 0
+									&& array_length(instances_matching(CrystalShield, "creator", self))
+									&& !array_length(instances_matching(obj.PetGuardianShield,  "creator", other))
+									&& !array_length(instances_matching(CrystalShieldDisappear, "creator", other))
+								){
 									with(other){
-										if(
-											follow_delay == 0
-											&& dash_charge == 0
-											&& !array_length(instances_matching(obj.PetGuardianShield, "creator", self))
-										){
-											var	_moveX = x,
-												_moveY = y;
-												
-											 // Move to Mouse (Stay Within Level):
-											var	_mouseX   = mouse_x[other.index],
-												_mouseY   = mouse_y[other.index],
-												_lastMask = mask_index;
-												
-											mask_index = mskWepPickup;
+										var	_moveX = x,
+											_moveY = y;
 											
-											if(place_meeting(_mouseX, _mouseY, Floor) && place_free(_mouseX, _mouseY)){
-												_moveX = _mouseX;
-												_moveY = _mouseY;
-											}
-											else{
-												var _maxDis = infinity;
-												with(Floor){
-													var _dis = distance_to_point(_mouseX, _mouseY);
-													if(_dis < _maxDis){
-														var	_centerX = bbox_center_x,
-															_centerY = bbox_center_y;
-															
-														with(other){
-															if(place_free(_centerX, _centerY)){
-																_maxDis = _dis;
-																_moveX  = _centerX;
-																_moveY  = _centerY - 2;
-																if(place_meeting(_mouseX, _centerY, Floor) && place_free(_mouseX, _centerY)){
-																	_moveX = _mouseX;
-																}
-																else if(place_meeting(_centerX, _mouseY, Floor) && place_free(_centerX, _mouseY)){
-																	_moveY = _mouseY;
-																}
+										 // Move to Mouse (Stay Within Level):
+										var	_mouseX   = mouse_x[other.index],
+											_mouseY   = mouse_y[other.index],
+											_lastMask = mask_index;
+											
+										mask_index = mskWepPickup;
+										
+										if(place_meeting(_mouseX, _mouseY, Floor) && place_free(_mouseX, _mouseY)){
+											_moveX = _mouseX;
+											_moveY = _mouseY;
+										}
+										else{
+											var _maxDis = infinity;
+											with(Floor){
+												var _dis = distance_to_point(_mouseX, _mouseY);
+												if(_dis < _maxDis){
+													var	_centerX = bbox_center_x,
+														_centerY = bbox_center_y;
+														
+													with(other){
+														if(place_free(_centerX, _centerY)){
+															_maxDis = _dis;
+															_moveX  = _centerX;
+															_moveY  = _centerY - 2;
+															if(place_meeting(_mouseX, _centerY, Floor) && place_free(_mouseX, _centerY)){
+																_moveX = _mouseX;
+															}
+															else if(place_meeting(_centerX, _mouseY, Floor) && place_free(_centerX, _mouseY)){
+																_moveY = _mouseY;
 															}
 														}
 													}
 												}
 											}
-											
-											mask_index = _lastMask;
-											
-											 // Teleport to Floor:
-											if(x != _moveX || y != _moveY){
-												 // Disappear:
-												with(instance_create(x, y, Wind)){
-													sprite_index = other.spr_disappear;
-													image_index  = 0;
-													image_xscale = other.image_xscale;
-													image_yscale = other.image_yscale * other.right;
-													image_angle  = other.image_angle;
-													image_blend  = other.image_blend;
-													image_alpha  = other.image_alpha;
-													depth        = other.depth;
-												}
-												
-												 // Move:
-												x         = _moveX;
-												y         = _moveY;
-												xprevious = x;
-												yprevious = y;
-												
-												 // Reappear:
-												sprite_index = spr_hurt;
+										}
+										
+										mask_index = _lastMask;
+										
+										 // Teleport to Floor:
+										if(x != _moveX || y != _moveY){
+											 // Disappear:
+											with(instance_create(x, y, Wind)){
+												sprite_index = other.spr_disappear;
 												image_index  = 0;
-												
-												 // Sound:
-												audio_sound_set_track_position(
-													sound_play_hit(sndEliteShielderTeleport, 0.1),
-													0.1
-												);
+												image_xscale = other.image_xscale;
+												image_yscale = other.image_yscale * other.right;
+												image_angle  = other.image_angle;
+												image_blend  = other.image_blend;
+												image_alpha  = other.image_alpha;
+												depth        = other.depth;
 											}
 											
-											 // Shield:
-											with(call(scr.obj_create, x, y, "PetGuardianShield")){
-												alarm0  = max(1, 120);
-												team    = other.team;
-												creator = other;
-												with(other){
-													follow_delay = max(follow_delay, other.alarm0 + 10);
-												}
+											 // Move:
+											x         = _moveX;
+											y         = _moveY;
+											xprevious = x;
+											yprevious = y;
+											
+											 // Reappear:
+											sprite_index = spr_hurt;
+											image_index  = 0;
+											
+											 // Sound:
+											audio_sound_set_track_position(
+												sound_play_hit(sndEliteShielderTeleport, 0.1),
+												0.1
+											);
+										}
+										
+										 // Shield:
+										with(call(scr.obj_create, x, y, "PetGuardianShield")){
+											alarm0  = 120;
+											team    = other.team;
+											creator = other;
+											with(other){
+												follow_delay = max(follow_delay, other.alarm0 + 10);
 											}
 										}
 									}
@@ -3395,8 +3538,12 @@
 							case "steroids":
 							
 								 // Turret:
-								if("ntte_guardian_pet_last_ammo" in self && !array_equals(ntte_guardian_pet_last_ammo, ammo)){
-									if(current_frame_active){
+								if("ntte_guardian_pet_last_ammo" in self){
+									if(
+										!array_equals(ntte_guardian_pet_last_ammo, ammo)
+										&& current_frame_active
+										&& other.dash_charge == 0
+									){
 										for(var _ammoIndex = min(array_length(ammo), array_length(ntte_guardian_pet_last_ammo)) - 1; _ammoIndex >= 0; _ammoIndex--){
 											var _ammoDifference = ammo[_ammoIndex] - ntte_guardian_pet_last_ammo[_ammoIndex];
 											if(_ammoDifference < 0 && (_specIsHeld || bcan_shoot == false)){
@@ -3405,25 +3552,26 @@
 														_directionOffset = 5 + (5 * -_ammoDifference);
 														
 													 // Stay Still:
-													if(dash_charge == 0){
-														follow_delay = max(follow_delay, 10);
-														
-														 // Visual:
-														enemy_look(_direction);
-														sprite_index = spr_dash_end;
-														image_index  = 2;
-													}
+													follow_delay = max(follow_delay, 10);
+													
+													 // Visual:
+													enemy_look(_direction);
+													sprite_index = spr_dash_end;
+													image_index  = 2;
 													
 													 // Fire Bullets:
 													_ammoDifference = max(-2, _ammoDifference);
 													repeat(-_ammoDifference){
-														call(scr.pass, self, scr.projectile_create,
+														with(call(scr.pass, self, scr.projectile_create,
 															x,
 															y,
-															IDPDBullet,
+															Bullet1,
 															_direction + orandom(_directionOffset),
 															16
-														);
+														)){
+															sprite_index = sprIDPDBullet;
+															spr_dead     = sprIDPDBulletHit;
+														}
 														
 														 // Sound:
 														sound_play_hit(sndGruntFire, 0.1);
@@ -3513,12 +3661,12 @@
 											2 + (1.5 * skill_get(mut_long_arms))
 										)){
 											sprite_index = sprPopoSlash;
-											damage       = 24;
+											damage       = 8;
 											walled       = true;
 										}
 										
 										 // Motion:
-										move_contact_solid(_direction + (50 * _throwSide), 20);
+										move_contact_solid(_direction + (45 * _throwSide), 20);
 										enemy_look(_direction + (90 * _throwSide));
 										enemy_walk(_direction + 180, 3);
 										motion_add(_direction + 180, 3);
@@ -3556,7 +3704,7 @@
 										 // Activate:
 										else if(
 											point_distance(x, y, other.x, other.y) <= _maxRadius
-											&& (_canSpawnAlly || array_length(instances_matching(Ally, "creator", other)))
+											&& (_canSpawnAlly || array_length(instances_matching(Ally, "team", team)))
 										){
 											rebel_healing_is_active = true;
 											rebel_healing_delay     = 0;
@@ -3567,7 +3715,7 @@
 									 // Active Healing Zone:
 									if("rebel_healing_is_active" in self && rebel_healing_is_active){
 										var	_canHealAlly      = false,
-											_allyInstanceList = instances_matching(Ally, "creator", other);
+											_allyInstanceList = instances_matching(Ally, "team", team);
 											
 										 // Stay:
 										speed        = 0;
@@ -3637,8 +3785,9 @@
 											y + rebel_healing_radius,
 											instances_matching(AllyBullet, "team", team)
 										)){
-											instance_change(IDPDBullet, false);
+											instance_change(Bullet1, false);
 											sprite_index = sprIDPDBullet;
+											spr_dead     = sprIDPDBulletHit;
 											speed       *= 2;
 											with(instance_create(x, y, ThrowHit)){
 												image_blend = c_aqua;
@@ -3728,44 +3877,212 @@
 								
 							case "horror":
 							
-								
-								
+								 // Cannon:
+								if(
+									horrorcharge > 0
+									&& frame_active(30)
+									&& other.dash_charge == 0
+								){
+									with(other){
+										var _direction = point_direction(x, y, mouse_x[other.index], mouse_y[other.index]) + orandom(10);
+										with(call(scr.pass, self, scr.projectile_create, x, y, "SmallLastBall", _direction, random_range(5, 6))){
+											with(instance_create(x + hspeed, y + vspeed, BulletHit)){
+												sprite_index = sprThrowHit;
+												image_speed  = 0.5;
+												image_blend  = c_aqua;
+												depth        = other.depth - 1;
+											}
+										}
+										
+										 // Visual:
+										sprite_index = spr_dash_start;
+										image_index  = image_number - 1;
+										enemy_look(_direction);
+										
+										 // Sound:
+										sound_play_hit(sndGruntFire, 0.2);
+										call(scr.sound_play_at, x, y, sndBigBallFire, 1 + orandom(0.1), 0.5);
+									}
+								}
 								
 								break;
 								
 							case "rogue":
 							
-								
+								 // Aerial Missiles:
+								with(other){
+									var _rogueStrikeInst = (
+										instance_exists(RogueStrike)
+										? instances_matching(RogueStrike, "index", other.index)
+										: []
+									);
+									
+									 // Enemy Targeting:
+									if(array_length(_rogueStrikeInst)){
+										var _targetInfoList = [];
+										with(_rogueStrikeInst){
+											if(place_meeting(x, y, enemy)){
+												var	_targetCount  = 0,
+													_spriteHeight = (sprite_get_bbox_bottom(sprite_index) + 1) - sprite_get_bbox_top(sprite_index);
+													
+												with(call(scr.array_shuffle, call(scr.instances_meeting_instance, self, enemy))){
+													var	_x                  = clamp(other.x, bbox_left, bbox_right  + 1),
+														_y                  = clamp(other.y, bbox_top,  bbox_bottom + 1),
+														_distance           = point_distance (other.x, other.y, _x, _y),
+														_direction          = point_direction(other.x, other.y, _x, _y),
+														_distanceFromCenter = abs(lengthdir_x(lengthdir_x(_distance, _direction), other.image_angle - 90) + lengthdir_y(lengthdir_y(_distance, _direction), other.image_angle - 90));
+														
+													if(_distanceFromCenter <= _spriteHeight / 2){
+														array_push(_targetInfoList, {
+															"id" : self,
+															"x"  : x,
+															"y"  : y
+														});
+														
+														 // Visual:
+														if(frame_active(10)){
+															with(instance_create(x, y, BloodLust)){
+																sprite_index = sprImpactWrists;
+																image_index  = 2;
+																image_blend  = (((current_frame % 20) < 10) ? c_white : c_aqua);
+																creator      = other;
+															}
+														}
+														
+														 // Reached Max Targets:
+														_targetCount++;
+														if(_targetCount >= 8){
+															break;
+														}
+													}
+												}
+											}
+										}
+										rogue_target_info_list = _targetInfoList;
+									}
+									else if("rogue_target_info_list" in self && array_length(rogue_target_info_list)){
+										rogue_missile_target_info_list = (
+											("rogue_missile_target_info_list" in self)
+											? call(scr.array_combine, rogue_missile_target_info_list, rogue_target_info_list)
+											: rogue_target_info_list
+										);
+										rogue_target_info_list = [];
+									}
+									
+									 // Release Missiles:
+									if(
+										"rogue_missile_target_info_list" in self
+										&& array_length(rogue_missile_target_info_list)
+										&& frame_active(3)
+										&& dash_charge == 0
+									){
+										var _targetInfo = rogue_missile_target_info_list[0];
+										with(call(scr.pass, self, scr.projectile_create, x, y, "RogueMissile", random(360), 4)){
+											target   = _targetInfo.id;
+											target_x = _targetInfo.x;
+											target_y = _targetInfo.y;
+											with(instance_create(target_x, target_y, ImpactWrists)){
+												image_angle = 0;
+												image_blend = (((current_frame % 6) < 3) ? c_white : c_aqua);
+												depth       = -4;
+											}
+										}
+										rogue_missile_target_info_list = call(scr.array_delete, rogue_missile_target_info_list, 0);
+										
+										 // Visual:
+										sprite_index = spr_dash_end;
+										image_index  = 0;
+										
+										 // Sound:
+										sound_play_hit(sndEliteGruntRocketFire, 0.1);
+									}
+								}
 								
 								break;
 								
 							case "bigdog":
 							
-								
+								 // Rocket:
+								if(_specIsPressed && ammo[type_explosive] >= 3){
+									with(other){
+										call(scr.pass, self, scr.projectile_create, x, y, PopoRocket, random(360));
+										
+										 // Sound:
+										sound_play_hit(sndEliteGruntRocketFire, 0.1);
+									}
+								}
 								
 								break;
 								
 							case "skeleton":
 							
-								
+								 // Safety Blast:
+								if(lasthit == 90 && sprite_index == spr_hurt && nexthurt > current_frame){
+									with(other){
+										if("skeleton_has_exploded" not in self || skeleton_has_exploded){
+											skeleton_has_exploded = false;
+											with(call(scr.pass, self, scr.projectile_create, x, y, PopoExplosion, other.gunangle, 1)){
+												image_speed = 1/3;
+												
+												 // Flames:
+												repeat(6){
+													instance_create(x + orandom(24), y + orandom(24), BlueFlame);
+												}
+											}
+											
+											 // Visual:
+											if(dash_charge == 0){
+												sprite_index = spr_appear;
+												image_index  = 1;
+											}
+											nexthurt = current_frame + 6; // White flash
+											
+											 // Sound:
+											sound_play_hit(sndIDPDNadeExplo,  0.2);
+											sound_play_hit_big(sndExplosionL, 0.2);
+										}
+									}
+								}
+								else if("skeleton_has_exploded" in other && !other.skeleton_has_exploded){
+									other.skeleton_has_exploded = true;
+								}
 								
 								break;
 								
 							case "frog":
 							
-								
-								
-								break;
-								
-							case "cuz":
-							
-								
+								 // Propel Gas:
+								with(other){
+									if((dash_charge == 0 || follow_delay != 0) && place_meeting(x, y, ToxicGas)){
+										with(call(scr.instances_meeting_instance, self, instances_matching_lt(ToxicGas, "speed", 2))){
+											motion_add(point_direction(other.x, other.y, x, y), 2);
+											if(other.dash_charge != 0){
+												motion_add(other.direction, 2);
+											}
+										}
+										
+										 // Visual:
+										if(sprite_index != spr_appear){
+											sprite_index = spr_appear;
+											image_index  = 2;
+										}
+										
+										 // Sound:
+										audio_sound_set_track_position(
+											call(scr.sound_play_at, x, y, sndCrownGuardianDisappear, 1 + orandom(0.1), 1.5),
+											0.4
+										);
+									}
+								}
 								
 								break;
 								
 							default:
 							
-								
+								 // Custom:
+								if(is_string(race)){
+									mod_script_call("race", race, "race_ntte_guardian_step");
+								}
 								
 						}
 					}

@@ -4458,8 +4458,8 @@
 			_moveY = lerp_ct(y, leader.y + _yOffset, 1/5);
 			
 		if(
-			!collision_line(x, y, _moveX, _moveY, Wall, false, false)
-			&& point_distance(_moveX, _moveY, leader.x, leader.y) < 32 + leader.speed
+			point_distance(x, y, _moveX, _moveY) < 16
+			&& !collision_line(x, y, _moveX, _moveY, Wall, false, false)
 		){
 			if(!place_meeting(_moveX, _moveY, Wall)){
 				x         = _moveX;
@@ -4502,7 +4502,7 @@
 			image_index  = 0;
 			
 			 // Sound:
-			call(scr.sound_play_at, x, y, sndGuardianAppear, 1.2 + orandom(0.1), 0.5);
+			call(scr.sound_play_at, x, y, sndGuardianAppear, 1.2 + orandom(0.1), 2/3);
 		}
 		
 		 // Depth:
@@ -4522,7 +4522,14 @@
 		_canFollow
 		&& (
 			(dash_charge > 0 && dash_charge < dash_max_charge)
-			|| (instance_exists(leader) && button_check(leader.index, "fire"))
+			|| (
+				instance_exists(leader)
+				&& (
+					button_check(leader.index, "fire")
+					|| (leader.race == "cuz" && button_check(leader.index, "spec"))
+					|| array_length(instances_matching(instances_matching(instances_matching(obj.Pet, "pet", "Salamander"), "leader", leader), "dash_charging", true))
+				)
+			)
 		)
 	){
 		if(dash_charge < dash_max_charge){
@@ -4542,7 +4549,7 @@
 					image_blend  = c_aqua;
 					depth        = other.depth - 1;
 				}
-				call(scr.sound_play_at, _soundX, _soundY, sndDogGuardianLand, 1.5 + orandom(0.1), 1/3);
+				call(scr.sound_play_at, _soundX, _soundY, sndDogGuardianLand, 1.5 + orandom(0.1), 0.4);
 			}
 		}
 		
@@ -4565,8 +4572,6 @@
 	
 	 // Fist Dash:
 	else if(dash_charge != 0){
-		
-		 // Moving:
 		direction = dash_direction;
 		speed     = max(speed, lerp(maxspeed, 24, clamp(dash_charge / dash_max_charge, 0, 1)));
 		enemy_look(direction);
@@ -4583,10 +4588,10 @@
 			
 			 // Sound:
 			if(audio_is_playing(sndDogGuardianLand)){
-				call(scr.sound_play_at, _soundX, _soundY, sndJockFire, 1.2 + orandom(0.2), 0.5);
+				call(scr.sound_play_at, _soundX, _soundY, sndJockFire, 1.2 + orandom(0.2));
 			}
 			audio_sound_set_track_position(
-				call(scr.sound_play_at, _soundX, _soundY, sndIDPDNadeExplo, 1.5 + orandom(0.3), 0.75),
+				call(scr.sound_play_at, _soundX, _soundY, sndIDPDNadeExplo, 1.5 + orandom(0.3)),
 				0.3
 			);
 			
@@ -4611,9 +4616,16 @@
 			);
 		}
 		
-		 // Dust Trail:
+		 // Trail:
 		if(current_frame_active){
-			instance_create(x + orandom(4), y + 4 + random(4), Dust);
+			if(array_length(instances_matching(instances_matching(instances_matching(instances_matching(obj.Pet, "pet", "Salamander"), "leader", leader), "mount", true), "dash", true))){
+				with(call(scr.projectile_create, x, y, Flame, direction + orandom(20), random_range(3, 4))){
+					sprite_index = sprFireLilHunter;
+				}
+			}
+			else{
+				instance_create(x + orandom(4), y + 4 + random(4), Dust);
+			}
 		}
 		
 		 // Hurt Enemies:
@@ -4681,7 +4693,7 @@
 				
 				 // Grabbing Sound:
 				if(instance_exists(grabbed_instance)){
-					call(scr.sound_play_at, x, y, sndDogGuardianLand, 1.7 + orandom(0.2), 0.7);
+					call(scr.sound_play_at, x, y, sndDogGuardianLand, 1.7 + orandom(0.2), 2/3);
 				}
 			}
 		}
@@ -4697,9 +4709,10 @@
 	
 	 // Grabbing:
 	if(instance_exists(grabbed_instance)){
-		follow_delay = max(follow_delay, 10);
-		
 		 // Hold Still:
+		if(follow_delay > 0){
+			follow_delay = max(follow_delay, 10);
+		}
 		with(grabbed_instance){
 			if("size" not in self || size < 3){
 				 // Position:

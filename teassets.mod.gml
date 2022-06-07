@@ -271,6 +271,9 @@
 			 // Small Green Explo:
 			SmallGreenExplosion = spr_add("sprSmallGreenExplosion", 7, 12, 12);
 			
+			 // Sparkle Bullet:
+			SparkleBullet = spr_add("sprSparkleBullet", 2, 10, 10);
+			
 			 // Energy Bat Slash:
 			EnergyBatSlash       = spr_add("sprEnergyBatSlash",       3,  0, 24);
 			EnemyEnergyBatSlash  = spr_add("sprEnemyEnergyBatSlash",  3,  0, 24);
@@ -314,9 +317,11 @@
 			AllyLaserCharge         = spr_add("sprAllyLaserCharge",         4,  3,  3);
 			IDPDHeavyBullet         = spr_add("sprIDPDHeavyBullet",         2, 12, 12);
 			IDPDHeavyBulletHit      = spr_add("sprIDPDHeavyBulletHit",      4, 12, 12);
+			IDPDHorrorBullet        = spr_add("sprIDPDHorrorBullet",        2, 10,  8);
 			PopoLaser               = spr_add("sprPopoLaser",               1,  2,  3);
 			PopoLaserStart          = spr_add("sprPopoLaserStart",          8,  8,  6);
 			PopoLaserEnd            = spr_add("sprPopoLaserEnd",            8, 10,  8);
+			SmallLastBall           = spr_add("sprSmallLastBall",           4, 10, 10);
 			
 		//#endregion
 		

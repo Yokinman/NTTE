@@ -48,15 +48,18 @@
 	
 #define skin_sprite(_spr)
 	switch(_spr){
-		case sprMutant15Idle  : return spr.FrogCoolIdle;
-		case sprMutant15Walk  : return spr.FrogCoolWalk;
-		case sprMutant15Hurt  : return spr.FrogCoolHurt;
-		case sprMutant15Dead  : return spr.FrogCoolDead;
-		case sprMutant15GoSit : return spr.FrogCoolGoSit;
-		case sprMutant15Sit   : return spr.FrogCoolSit;
-		case sprBigPortrait   : return spr.FrogCoolPortrait;
-		case sprLoadoutSkin   : return spr.FrogCoolLoadout;
-		case sprMapIcon       : return spr.FrogCoolMapIcon;
+		case sprMutant15Idle    : return spr.FrogCoolIdle;
+		case sprMutant15Walk    : return spr.FrogCoolWalk;
+		case sprMutant15Hurt    : return spr.FrogCoolHurt;
+		case sprMutant15Dead    : return spr.FrogCoolDead;
+		case sprMutant15GoSit   : return spr.FrogCoolGoSit;
+		case sprMutant15Sit     : return spr.FrogCoolSit;
+		case sprBigPortrait     : return spr.FrogCoolPortrait;
+		case sprLoadoutSkin     : return spr.FrogCoolLoadout;
+		case sprMapIcon         : return spr.FrogCoolMapIcon;
+		case sprHorrorBullet    : return spr.IDPDHorrorBullet;
+		case sprHorrorBulletHit : return sprIDPDBulletHit;
+		case sprHorrorHit       : return sprIDPDBulletHit;
 	}
 	
 #define skin_weapon_sprite(_wep, _spr)

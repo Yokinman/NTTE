@@ -206,6 +206,34 @@
 	}
 	
 	
+#define race_ntte_guardian_step
+	/*
+		Popo Guardian pet shields when beetle is merging weapons
+	*/
+	
+	if(beetle_menu_info.is_open && other.dash_charge == 0){
+		with(other){
+			var _shieldInstanceList = instances_matching(obj.PetGuardianShield, "creator", self);
+			if(
+				!array_length(_shieldInstanceList)
+				&& !array_length(instances_matching(CrystalShieldDisappear, "creator", self))
+			){
+				with(call(scr.obj_create, x, y, "PetGuardianShield")){
+					team    = other.team;
+					creator = other;
+					array_push(_shieldInstanceList, self);
+				}
+			}
+			with(_shieldInstanceList){
+				alarm0 = max(alarm0, 3);
+				with(other){
+					follow_delay = max(follow_delay, other.alarm0 + 10);
+				}
+			}
+		}
+	}
+	
+	
 #define race_swep
 	return "beetle pistol";
 	
@@ -458,7 +486,10 @@
 							}
 							
 							 // Play Swap Sound(s):
-							sound_play_pitchvol(_menuSelectionWepSwap, 1, 2/3);
+							audio_sound_set_track_position(
+								sound_play_pitchvol(_menuSelectionWepSwap, 1, 2/3),
+								0.03
+							);
 							if(weapon_get_gold(_menuSelectedWep) != 0){
 								sound_play_pitchvol(sndSwapGold, 1, 2/3);
 							}
@@ -466,10 +497,13 @@
 								sound_play_pitchvol(sndSwapCursed, 1, 2/3);
 							}
 						}
-						sound_play_pitchvol(
-							(_menu.selection_state ? sndPlantPower : sndPlantFire),
-							lerp(1.25, 2, _menuSelectionEffectScale),
-							2
+						audio_sound_set_track_position(
+							sound_play_pitchvol(
+								(_menu.selection_state ? sndPlantFire : sndPlantPower),
+								lerp(1.25, 2, _menuSelectionEffectScale),
+								2
+							),
+							0.04
 						);
 						
 						 // Reset Indicator Animation:

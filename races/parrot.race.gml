@@ -432,6 +432,126 @@
 	}
 	
 	
+#define race_ntte_guardian_step
+	/*
+		Popo Guardian pet holds uncharmed enemies in place
+	*/
+	
+	if(canspec && (button_check(index, "spec") || usespec > 0)){
+		with(other){
+			var _charmIndex = other.index;
+			
+			 // Ungrab:
+			if(
+				instance_exists(grabbed_instance)
+				&& "ntte_parrot_charm_target" in self
+				&& grabbed_instance = ntte_parrot_charm_target
+			){
+				grabbed_instance = noone;
+			}
+			
+			 // Find Charmed Enemy:
+			if(
+				"ntte_parrot_charm_target" not in self
+				|| !instance_exists(ntte_parrot_charm_target)
+				|| "ntte_charm" not in ntte_parrot_charm_target
+				|| !ntte_parrot_charm_target.ntte_charm.charmed
+				|| ntte_parrot_charm_target.ntte_charm.index != _charmIndex
+			){
+				var	_maxDis = infinity,
+					_target = noone;
+					
+				if(charm_instance_number){
+					with(instances_matching_ne(charm_instance_list, "id")){
+						var _dis = point_distance(x, y, mouse_x[_charmIndex], mouse_y[_charmIndex]);
+						if(_dis < _maxDis){
+							if(ntte_charm.charmed && ntte_charm.index == _charmIndex){
+								_maxDis = _dis;
+								_target = self;
+							}
+						}
+					}
+				}
+				
+				ntte_parrot_charm_target = _target;
+			}
+			
+			 // Follow Charmed Enemy:
+			if(instance_exists(ntte_parrot_charm_target)){
+				follow_delay     = max(follow_delay, 10);
+				grabbed_instance = noone;
+				
+				 // Move to Position:
+				var	_offsetLen = 12,
+					_offsetDir = point_direction(ntte_parrot_charm_target.x, ntte_parrot_charm_target.y, x, y),
+					_moveX     = lerp_ct(x, ntte_parrot_charm_target.x + lengthdir_x(_offsetLen, _offsetDir), 1/3),
+					_moveY     = lerp_ct(y, ntte_parrot_charm_target.y + lengthdir_y(_offsetLen, _offsetDir), 1/5);
+					
+				if(
+					point_distance(x, y, _moveX, _moveY) < 16
+					&& !collision_line(x, y, _moveX, _moveY, Wall, false, false)
+				){
+					x         = _moveX;
+					y         = _moveY;
+					xprevious = x;
+					yprevious = y;
+					enemy_look(_offsetDir + 180);
+				}
+				
+				 // Teleport Closer:
+				else if(sprite_index != spr_appear){
+					 // Disappear:
+					with(instance_create(x, y, Wind)){
+						sprite_index = other.spr_disappear;
+						image_index  = 0;
+						image_xscale = other.image_xscale;
+						image_yscale = other.image_yscale * other.right;
+						image_angle  = other.image_angle;
+						image_blend  = other.image_blend;
+						image_alpha  = other.image_alpha;
+						depth        = other.depth;
+					}
+					
+					 // Move:
+					x         = ntte_parrot_charm_target.x;
+					y         = ntte_parrot_charm_target.y;
+					xprevious = x;
+					yprevious = y;
+					
+					 // Reappear:
+					sprite_index = spr_appear;
+					image_index  = 0;
+					
+					 // Sound:
+					call(scr.sound_play_at, x, y, sndGuardianAppear, 1.2 + orandom(0.1), 2/3);
+				}
+				
+				 // Depth:
+				depth = ntte_parrot_charm_target.depth;
+			}
+		}
+	}
+	
+	 // Grab:
+	else with(other){
+		if(
+			"ntte_parrot_charm_target" in self
+			&& instance_exists(ntte_parrot_charm_target)
+			&& !instance_exists(grabbed_instance)
+		){
+			if(point_distance(x, y, ntte_parrot_charm_target.x, ntte_parrot_charm_target.y) < 32){
+				grabbed_instance = ntte_parrot_charm_target;
+				motion_add(point_direction(x, y, grabbed_instance.x, grabbed_instance.y), 3);
+				x = lerp(x, grabbed_instance.x, 0.5);
+				y = lerp(y, grabbed_instance.y, 0.5);
+			}
+			else{
+				ntte_parrot_charm_target = noone;
+			}
+		}
+	}
+	
+	
 #define create
 	 // Random lets you play locked characters: (Can remove once 9941+ gets stable build)
 	if(!race_avail()){
