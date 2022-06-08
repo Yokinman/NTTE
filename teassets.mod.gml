@@ -1503,6 +1503,7 @@
 				BigPipeBottomHurt = spr_add("sprBigPipeBottom", 1, 24, 32, shnHurt);
 				BigPipeTop        = spr_add("sprBigPipeTop",    1, 24, 32);
 				BigPipeTopHurt    = spr_add("sprBigPipeTop",    1, 24, 32, shnHurt);
+				BigPipeDead       = spr_add("sprBigPipeDead",   3, 24, 32);
 				BigPipeHole       = spr_add("sprBigPipeHole",   1, 24, 32);
 				msk.BigPipe       = spr_add("sprBigPipeTop",    1, 24, 24);
 				with([BigPipeHole, msk.BigPipe]){

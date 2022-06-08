@@ -1127,7 +1127,7 @@
 	
 	
 #define GatorAmbush_text    return `${event_tip}???`;
-#define GatorAmbush_chance  return 0;
+#define GatorAmbush_chance  return ("ntte_crime_bounty" in GameCont && GameCont.ntte_crime_bounty >= 3);
 
 #define GatorAmbush_setup
 	 // Smaller Level:
@@ -1147,7 +1147,7 @@
 		_spawnFloor = FloorNormal;
 		
 	call(scr.floor_set_align, 32, 32);
-	call(scr.floor_set_style, 0, area_sewers);
+	//call(scr.floor_set_style, 0, area_sewers);
 	
 	with(floor_room(_spawnX, _spawnY, _spawnDis, _spawnFloor, _w, _h, _type, _dirOff, _floorDis)){
 		 // Temporary decoration
@@ -1160,11 +1160,11 @@
 		// }
 		
 		 // Cool Floors:
-		with(floors){
-			sprite_index = spr.FloorSewerDirt; // spr.FloorSewerLightDirt
-			material     = 1;
-			depth        = 9;
-		}
+	//	with(floors){
+	//		sprite_index = spr.FloorSewerDirt; // spr.FloorSewerLightDirt
+	//		material     = 1;
+	//		depth        = 9;
+	//	}
 		// with(call(scr.obj_create, x, y, "SludgePool")){
 		// 	sprite_index = msk.SewerPoolBig;
 		// 	spr_floor    = spr.SewerPoolBig;
@@ -1224,16 +1224,16 @@
 							}
 						}
 						
-						 // :
-						else if(chance(1, 1)){
-							// if(_crateX > other.x) _crateX -= 16;
-							// if(_crateY > other.y) _crateY -= 16;
-							// var _lastArea = GameCont.area;
-							// //GameCont.area = area_sewers;
-							// instance_create(_crateX, _crateY, Wall);
-							// GameCont.area = _lastArea;
-							//instance_create(_crateX + orandom(4), _crateY + orandom(4), choose(Pipe, MoneyPile));
-						}
+						//  // :
+						// else if(chance(1, 1)){
+						// 	// if(_crateX > other.x) _crateX -= 16;
+						// 	// if(_crateY > other.y) _crateY -= 16;
+						// 	// var _lastArea = GameCont.area;
+						// 	// //GameCont.area = area_sewers;
+						// 	// instance_create(_crateX, _crateY, Wall);
+						// 	// GameCont.area = _lastArea;
+						// 	//instance_create(_crateX + orandom(4), _crateY + orandom(4), choose(Pipe, MoneyPile));
+						// }
 					}
 				}
 			// }
@@ -1269,12 +1269,22 @@
 					depth        = choose(8, 9);
 				}
 			}
-			else{
-				call(scr.obj_create, 
-					other.x + lengthdir_x(_lenX - random_range(16, 40), self),
-					other.y + lengthdir_y(_lenY - random_range(16, 40), self),
-					(array_length(call(scr.instances_in_rectangle, other.x1, other.y1, other.x2, other.y2, Barrel)) ? Pipe : Barrel)
-				);
+			else with(call(scr.obj_create, 
+				other.x + lengthdir_x(_lenX - random_range(16, 40), self),
+				other.y + lengthdir_y(_lenY - random_range(16, 40), self),
+				(array_length(call(scr.instances_in_rectangle, other.x1, other.y1, other.x2, other.y2, Barrel)) ? Pipe : Barrel)
+			)){
+				 // Cool Floors:
+				with(call(scr.instances_meeting_instance, self, Floor)){
+					sprite_index = (
+						(color_get_value(background_color) < 170 || array_length(instances_matching(TopCont, "darkness", true)))
+						? spr.FloorSewerDirt
+						: spr.FloorSewerLightDirt
+					);
+					depth    = 9;
+					material = 1;
+					traction = 0.45;
+				}
 			}
 		}
 		// with(call(scr.array_shuffle, _spawnDirList)){
@@ -1302,35 +1312,39 @@
 		// 	else break;
 		// }
 		
-		 // Enemies:
-		var	_smallNum = 2,
-			_bigNum   = 2;
+		//  // Enemies:
+		// var	_smallNum = 2,
+		// 	_bigNum   = 2;
 			
-		repeat(_smallNum){
-			if(chance(1, 3)){
-				repeat(2){
-					call(scr.obj_create, x, y, "BabyGator");
-				}
-			}
-			else{
-				call(scr.obj_create, x, y, Gator);
-			}
-		}
-		repeat(_bigNum){
-			call(scr.obj_create, x, y, call(scr.pool, [
-				[BuffGator,     3],
-				["BoneGator",   3 * (GameCont.hard >= 6)],
-				["AlbinoGator", 2 * (GameCont.hard >= 8)]
-			]));
-		}
+		// repeat(_smallNum){
+		// 	if(chance(1, 3)){
+		// 		repeat(2){
+		// 			call(scr.obj_create, x, y, "BabyGator");
+		// 		}
+		// 	}
+		// 	else{
+		// 		call(scr.obj_create, x, y, Gator);
+		// 	}
+		// }
+		// repeat(_bigNum){
+		// 	call(scr.obj_create, x, y, call(scr.pool, [
+		// 		[BuffGator,     3],
+		// 		["BoneGator",   3 * (GameCont.hard >= 6)],
+		// 		["AlbinoGator", 2 * (GameCont.hard >= 8)]
+		// 	]));
+		// }
 	}
 	
 	floor_reset_align();
-	floor_reset_style();
+	//floor_reset_style();
+	
+	 // Sound:
+	sound_play_pitchvol(sndSkillPick, 0.75, 1.2);
+	sound_play_pitch(sndIDPDNadeLoad, 1.15);
 	
 #define GatorDen_text    return `${event_tip}DISTANT CHATTER`;
 #define GatorDen_area    return area_sewers;
-#define GatorDen_chance  return ((crown_current == "crime") ? 1 : (call(scr.unlock_get, "crown:crime") ? 1/10 : 0));
+#define GatorDen_chance  return (call(scr.unlock_get, "crown:crime") ? 1/10 : 0);
 
 #define GatorDen_setup
 	inst = [];

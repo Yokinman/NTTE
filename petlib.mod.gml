@@ -2727,7 +2727,7 @@
 	depth        = -3;
 	
 	 // Vars:
-	mask_index  = mskExploder;
+	mask_index  = mskBandit;
 	friction    = 0.1;
 	minspeed    = 0.2;
 	maxspeed    = 3;
@@ -2944,7 +2944,7 @@
 					
 					if(instance_exists(_inst)){
 						with(other){
-							orbit_pull = 0;
+							orbit_pull = -1;
 							
 							 // Effects:
 							flash = 6;
@@ -4932,6 +4932,27 @@
 		with(ntte_cuz){
 			cuz = other;
 		}
+	}
+	
+	 // Yung Cuz Sprite Fix:
+	with(instances_matching(instances_matching(_inst, "spr_to", sprCuzInteractTo), "spr_from", sprCuzInteractFrom)){
+		var	_lastSpr = sprite_index,
+			_lastImg = image_index,
+			_looking = (distance_to_object(Player) <= 64);
+			
+		sprite_index = (_looking ? spr_idle : spr_heya);
+		
+		with(self){
+			event_perform(ev_other, ev_animation_end);
+		}
+		
+		if(sprite_index == (_looking ? spr_from : spr_to)){
+			spr_from = sprCuzInteractTo;
+			spr_to   = sprCuzInteractFrom;
+		}
+		
+		sprite_index = _lastSpr;
+		image_index  = _lastImg;
 	}
 	
 #define ntte_setup_Orchid_Rad(_inst)

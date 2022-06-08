@@ -86,7 +86,7 @@
 		 // Visual:
 		spr_idle     = spr.BigPipeBottom;
 		spr_hurt     = spr.BigPipeBottomHurt;
-		spr_dead     = sprSmallGeneratorDead;
+		spr_dead     = spr.BigPipeDead;
 		spr_top_idle = spr.BigPipeTop;
 		spr_top_hurt = spr.BigPipeTopHurt;
 		spr_shadow   = msk.BigPipe;
@@ -100,11 +100,13 @@
 		snd_dead = sndGeneratorBreak;
 		
 		 // Vars:
-		mask_index = msk.BigPipe;
-		friction   = 1000;
-		maxhealth  = 60;
-		size       = 4;
-		team       = 0;
+		mask_index  = msk.BigPipe;
+		friction    = 1000;
+		maxhealth   = 110;
+		size        = 4;
+		team        = 0;
+		spawn_count = 3;
+		spawn_delay = random_range(300, 600);
 		
 		 // Hole:
 		hole_inst = call(scr.obj_create, x, y + 8, "ManholeOpen");
@@ -149,17 +151,63 @@
 	}
 	
 	 // Spawn Gators:
-	if(button_pressed(0, "horn")){
-		with(call(scr.obj_create, x, y - 8, choose(Gator, BuffGator, "BabyGator", "BoneGator", "AlbinoGator"))){
-			with(call(scr.obj_create, x, y, "PalankingToss")){
-				direction    = point_direction(x, y, mouse_x, mouse_y) + random_range(-60, 60);
-				speed        = random_range(2, 4);
-				zspeed       = 6;
-				creator      = other;
-				depth        = other.depth;
-				mask_index   = other.mask_index;
-				spr_shadow_y = other.spr_shadow_y;
+	if(!instance_exists(Portal)){
+		if(spawn_delay > 0){
+			spawn_delay -= current_time_scale;
+		}
+		else if(spawn_count > 0){
+			spawn_count--;
+			spawn_delay = 600 + orandom(60);
+			
+			var _spawnDirection = random(360);
+			
+			 // Determine Spawn Direction:
+			with(call(scr.instance_random, call(scr.instances_meeting_rectangle,
+				bbox_left   - 64,
+				bbox_top    - 64,
+				bbox_right  + 64,
+				bbox_bottom + 64,
+				FloorNormal
+			))){
+				_spawnDirection = point_direction(other.x, other.y, bbox_center_x, bbox_center_y);
 			}
+			
+			 // Launch Gator:
+			var _enemy = call(scr.pool, [
+				[Gator,         5],
+				["BabyGator",   2],
+				[BuffGator,     3 * (GameCont.hard >= 4)],
+				["BoneGator",   3 * (GameCont.hard >= 6)],
+				["AlbinoGator", 2 * (GameCont.hard >= 8)]
+			]);
+			repeat((_enemy == "BabyGator") ? 2 : 1){
+				with(call(scr.obj_create, x, y - 8, _enemy)){
+					with(call(scr.obj_create, x, y, "PalankingToss")){
+						direction    = _spawnDirection + orandom(10);
+						speed        = random_range(2, 4);
+						zspeed       = 6;
+						creator      = other;
+						depth        = other.depth;
+						mask_index   = other.mask_index;
+						spr_shadow_y = other.spr_shadow_y;
+					}
+					
+					 // Sound:
+					var _soundInstance = sound_play_hit_big(snd_dead, 0);
+					sound_pitch(_soundInstance,  0.6 + orandom(0.2));
+					sound_volume(_soundInstance, 3);
+				}
+			}
+			
+			 // Effects:
+			for(var _dir = 0; _dir < 360; _dir += 360 / 12){
+				with(call(scr.fx, x, y - 12, [_dir, 4], Dust)){
+					depth = -9;
+				}
+			}
+			
+			 // Sound:
+			sound_play_hit(sndSlugger, 0.1);
 		}
 	}
 	
@@ -176,19 +224,53 @@
 #define BigPipe_destroy
 	 // Reveal Hole:
 	with(hole_inst){
-		visible = true;
-		big     = false;
-		x       = other.x;
-		y       = other.y;
+		visible      = true;
+		big          = false;
+		x            = other.x;
+		y            = other.y;
+		image_xscale = other.image_xscale;
 	}
 	
 	 // Corpse:
-	call(scr.corpse_drop, self, 0, 0);
+	with(call(scr.corpse_drop, self, 0, 0)){
+		depth = 4;
+	}
 	
 	 // Sound:
 	if(snd_dead == sndGeneratorBreak){
-		sound_play_hit(sndSewerPipeBreak, 0.3);
+		call(scr.sound_play_at, x, y, snd_dead,          0.8 + orandom(0.1));
+		call(scr.sound_play_at, x, y, sndSewerPipeBreak, 0.8 + orandom(0.1), 1.25);
+		sound_play_hit(sndWallBreakCrystal, 0.1);
+		snd_dead = -1;
 	}
+	
+	 // Debris:
+	var _lastArea = GameCont.area;
+	GameCont.area = area_scrapyards;
+	var _len = 8;
+	for(var _ang = 0; _ang < 360; _ang += 360 / 12){
+		var _dir = _ang + orandom(15);
+		with(instance_create(x + lengthdir_x(_len, _dir), y + lengthdir_y(_len, _dir), Debris)){
+			direction = _dir + orandom(15);
+			speed     = random(8);
+		}
+	}
+	GameCont.area = _lastArea;
+	
+	 // Shrapnel:
+	with(call(scr.projectile_create, x, y, EFlakBullet)){
+		hitid = [sprite_index, "FLAK"];
+	}
+	
+	//  // Explosion:
+	// with(instance_create(x, y - 4, Explosion)){
+	// 	alarm0   = -1; // No scorchmark
+	// 	hitid    = 55;
+	// 	vspeed   = -1.5;
+	// 	friction = 0.15;
+	// }
+	// sound_play_hit(sndExplosion, 0.1);
+	// instance_create(x, y, Scorch);
 	
 	 // Clear Walls:
 	instance_create(x, y, PortalClear);
