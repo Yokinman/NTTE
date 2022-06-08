@@ -1959,7 +1959,7 @@
 						["Menu",            4, 12,  12, false],
 						["MenuSelect",      4, 12,  12, false],
 						["MenuSelected",    8, 12,  12, false],
-						["MenuDeselect",   10, 12,  12, false],
+						["MenuDeselect",    8, 12,  12, false],
 						["ThroneButtIcon",  1,  5,   5, false]
 					]
 				}/*,

@@ -1474,7 +1474,7 @@
 				area           = "red";
 				subarea        = 3;
 				area_goal      = irandom_range(5, 10);
-				area_chest     = [_chestTypes[i], AmmoChest, AmmoChest, WeaponChest, WeaponChest, "Backpack"];
+				area_chest     = [_chestTypes[i], AmmoChest, AmmoChest, WeaponChest, WeaponChest, "RedChest"];
 				area_chest_pos = "random";
 			}
 			else{

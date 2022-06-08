@@ -1126,7 +1126,7 @@
 	floor_reset_align();
 	
 	
-#define GatorAmbush_text    return `${event_tip}???`;
+#define GatorAmbush_text    return choose(`${event_tip}THE WASTELAND WEAPON TRADE`, `THESE PIPES RUN ${event_tip}EVERYWHERE`);
 #define GatorAmbush_chance  return ("ntte_crime_bounty" in GameCont && GameCont.ntte_crime_bounty >= 3);
 
 #define GatorAmbush_setup

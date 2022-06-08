@@ -105,8 +105,8 @@
 		maxhealth   = 110;
 		size        = 4;
 		team        = 0;
-		spawn_count = 3;
-		spawn_delay = random_range(300, 600);
+		spawn_count = 4;
+		spawn_delay = random_range(150, 300);
 		
 		 // Hole:
 		hole_inst = call(scr.obj_create, x, y + 8, "ManholeOpen");
@@ -157,7 +157,7 @@
 		}
 		else if(spawn_count > 0){
 			spawn_count--;
-			spawn_delay = 600 + orandom(60);
+			spawn_delay = random_range(150, 600);
 			
 			var _spawnDirection = random(360);
 			
@@ -174,11 +174,9 @@
 			
 			 // Launch Gator:
 			var _enemy = call(scr.pool, [
-				[Gator,         5],
-				["BabyGator",   2],
-				[BuffGator,     3 * (GameCont.hard >= 4)],
-				["BoneGator",   3 * (GameCont.hard >= 6)],
-				["AlbinoGator", 2 * (GameCont.hard >= 8)]
+				[Gator,       1.5],
+				["BabyGator", 1.0],
+				[BuffGator,   0.5]
 			]);
 			repeat((_enemy == "BabyGator") ? 2 : 1){
 				with(call(scr.obj_create, x, y - 8, _enemy)){
@@ -194,8 +192,7 @@
 					
 					 // Sound:
 					var _soundInstance = sound_play_hit_big(snd_dead, 0);
-					sound_pitch(_soundInstance,  0.6 + orandom(0.2));
-					sound_volume(_soundInstance, 3);
+					sound_pitch(_soundInstance, 0.6 + orandom(0.2));
 				}
 			}
 			
@@ -260,6 +257,7 @@
 	 // Shrapnel:
 	with(call(scr.projectile_create, x, y, EFlakBullet)){
 		hitid = [sprite_index, "FLAK"];
+		team  = -1;
 	}
 	
 	//  // Explosion:

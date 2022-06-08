@@ -17,7 +17,7 @@
 
 #define crown_name        return "CROWN OF CRIME";
 #define crown_text        return "FIND @wSMUGGLED GOODS#@sA @rPRICE @sON YOUR HEAD";
-#define crown_tip         return choose("THE @wFAMILY@s DOESN'T FORGIVE", "THE @rBAT'S@s EXPERIMENTS", "THE @rCAT'S@s RESOURCES", "THE WASTELAND WEAPON TRADE");
+#define crown_tip         return choose("THE @wFAMILY@s DOESN'T FORGIVE", "THE @rBAT'S@s EXPERIMENTS", "THE @rCAT'S@s RESOURCES");
 #define crown_unlock      return "STOLEN FROM THIEVES";
 #define crown_avail       return (call(scr.unlock_get, `crown:${mod_current}`) && GameCont.loops <= 0);
 #define crown_menu_avail  return call(scr.unlock_get, `loadout:crown:${mod_current}`);
@@ -214,7 +214,7 @@
 				with(instance_create(_spawnX, _spawnY, PortalClear)){
 					image_xscale = 1/3;
 					image_yscale = image_xscale;
-					motion_add(_spawnDir + 180, 2);
+					motion_add(_spawnDir + 180, 2.5);
 				}
 			}
 		}

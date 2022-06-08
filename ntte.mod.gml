@@ -387,7 +387,7 @@
 	
 	 // Backpack Setpieces:
 	if(GameCont.hard > 4 && GameCont.area != area_hq){
-		if(GameCont.area == area_campfire || (chance(1 + (2 * skill_get(mut_last_wish)), 12) && _normalArea)){
+		if(GameCont.area == area_campfire || (chance(1/* + (2 * skill_get(mut_last_wish))*/, 12) && _normalArea)){
 			with(call(scr.array_shuffle, FloorNormal)){
 				if(
 					distance_to_object(Player) > 80
@@ -3363,12 +3363,12 @@
 		 // NTTE Music / Ambience:
 		ntte_music();
 		
-		 // Goodbye, stupid mechanic:
-		if(GameCont.junglevisits > 0){
-			skill_set(mut_last_wish, 1);
-			GameCont.junglevisits--;
-			GameCont.skillpoints--;
-		}
+		//  // Goodbye, stupid mechanic:
+		// if(GameCont.junglevisits > 0){
+		// 	skill_set(mut_last_wish, 1);
+		// 	GameCont.junglevisits--;
+		// 	GameCont.skillpoints--;
+		// }
 		
 		 // Last Wish:
 		var _inst = instances_matching_ne(GameCont, "ntte_lastwish", skill_get(mut_last_wish));

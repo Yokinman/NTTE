@@ -2525,20 +2525,18 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 			}
 			
 			 // Sittin:
-			if(instance_exists(sit)){
+			if(instance_exists(sit) && !position_meeting(sit.x, sit.y, Wall)){
+				x         = sit.x;
+				y         = sit.y;
+				xprevious = x;
+				yprevious = y;
 				if(instance_is(sit, enemy)){
-					x = sit.x;
-					y = sit.y;
-					xprevious = x;
-					yprevious = y;
 					sit.alarm1 = max(sit.alarm1, 30);
 				}
 				else{
-					x = sit.x;
-					y = sit.y - 5;
-					xprevious = x;
-					yprevious = y + 6;
-					right = -sit.image_xscale;
+					y         -= 5;
+					yprevious += 1;
+					right     = -sit.image_xscale;
 				}
 			}
 			else if(sit >= 100000){

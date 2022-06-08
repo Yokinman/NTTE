@@ -1968,6 +1968,9 @@
 								team              = round(team);
 								temerge_can_setup = false;
 								
+								 // Prevent Modded Weapon Insanity:
+								creator = noone;
+								
 								 // Offset Direction:
 								if(object_index == Laser || object_index == EnemyLaser){
 									x            = xstart;
