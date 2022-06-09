@@ -4324,7 +4324,7 @@
 	spr_shadow_y    = 3;
 	
 	 // Vars:
-	maxhealth	     = 80; // !!! Adjust as needed
+	maxhealth	     = 80;
 	path_wall        = [Wall];
 	can_escape	     = false;
 	escape_prompt    = noone;
@@ -4338,6 +4338,11 @@
 	dash_direction   = 0;
 	dash_is_grab     = false;
 	grabbed_instance = noone;
+	
+	 // Stat:
+	if("punches" not in stat){
+		stat.punches = 0;
+	}
 	
 	// See telabs.mod's ntte_begin_step script for active ability code
 	
@@ -4368,9 +4373,6 @@
 		case "hurt" : return sndCrownGuardianHurt;
 		case "dead" : return sndCrownGuardianDead;
 	}
-	
-#define Guardian_stat(_name, _value)
-	// !!! Do stat
 	
 #define Guardian_anim
 	if(array_find_index([spr_hurt, spr_appear, spr_disappear, spr_dash_start, spr_dash_end], sprite_index) < 0 || anim_end){
@@ -4651,6 +4653,7 @@
 							var	_damage = 15,
 								_force  = (instance_is(other, prop) ? 0 : 12);
 								
+							stat.punches++;
 							projectile_hit(other, _damage, _force);
 							
 							 // Impact Effects:
