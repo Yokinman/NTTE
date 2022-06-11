@@ -1,5 +1,6 @@
 2.05 ~ Final Provisions
 	
+	       @(sprite:menu/banners/sprFinalMain.png:1)
 	GENERAL
 	+ New character @d(visit the Crown Vault)
 	+ New pet for @bI.D.P.D. H.Q.
@@ -26,6 +27,7 @@
 	+ NT:TE character corpses appear at loop campfire
 	+ Added a toggle option for footprints
 	
+	            @(sprite:menu/banners/sprFinalChanges.png:1)
 	CHANGES
 	~ Players riding @wSalamander @spet get a minor speed buff
 	~ @rTwins @spet has a smaller hitbox & freezes for twice as long after diverting projectiles @(sprite:pets/Red/sprPetTwinsIcon.png:1)
@@ -50,6 +52,7 @@
 	~ The big crystal prop in @yCursed Caves @sis blue & all blue crystal enemies turn orange on death
 	~ Runs can't be started while NT:TE is loading
 	
+	   @(sprite:menu/banners/sprFinalFixes.png:2:-0.01)
 	FIXES
 	* Fairly heavy optimizations to a variety of systems
 	* Going to @gJungle @snow removes @gLast Wish @slike normal
@@ -72,6 +75,8 @@
 	* Fixed some @rCrystal Heart @schunk enemies being stuck
 	* Fixed some issues with local co-op HUD order
 	* Fixed a few potential online co-op desyncs
+	
+	@dGOOD LUCK!!! @(sprite:sprHealFX:0:-0.4:-1:12)
 	
 2.04 ~ Interdimensional Terror
 	
