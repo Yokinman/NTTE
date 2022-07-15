@@ -421,10 +421,11 @@
 		zspeed -= zfriction * current_time_scale;
 		if(z > 0 || zspeed > 0){
 			with(target){
-				x = other.x;
-				y = other.y - other.z;
-				xprevious = x;
-				yprevious = y;
+				x              = other.x;
+				y              = other.y - other.z;
+				xprevious      = x;
+				yprevious      = y;
+			//	other.target   = id;
 				other.target_x = x;
 				other.target_y = y;
 				
@@ -458,7 +459,7 @@
 		with(instances_matching(instances_matching_gt(instances_matching_gt(instances_matching(instances_matching(GameObject, "xstart", target_x), "ystart", target_y), "id", id), "id", target), "backpackpickup_grab", null)){
 			backpackpickup_grab = true;
 			with(other){
-				target = other;
+				target = other.id;
 				BackpackPickup_end_step();
 			}
 			exit;
@@ -4215,7 +4216,7 @@
 			
 			 // Remove Strong Spirit:
 			if(num - array_length(spirit) > 0){
-				with(instances_matching(instances_matching_lt(Player, "id", self), "canspirit", true)){
+				with(instances_matching(instances_matching_lt(Player, "id", id), "canspirit", true)){
 					if(skill_get(mut_strong_spirit) > 0){
 						canspirit = false;
 					}

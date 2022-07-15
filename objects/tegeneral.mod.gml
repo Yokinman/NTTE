@@ -2322,7 +2322,7 @@
 		search_object = projectile;
 		search_sound  = sndEnemyFire;
 		
-		return id;
+		return self;
 	}
 	
 #define FireWeapon_step
@@ -4494,7 +4494,7 @@
 						
 					mask_index = lq_defget(other.target_save, "mask_index", mask_index);
 					
-					with(instances_matching(instances_matching_ne(call(scr.instances_in_rectangle, x - 32, y - 32, x + 32, y + 32, obj.TopObject), "id", other), "zfriction", 0)){
+					with(instances_matching(instances_matching_ne(call(scr.instances_in_rectangle, x - 32, y - 32, x + 32, y + 32, obj.TopObject), "id", other.id), "zfriction", 0)){
 						with(target) if(instance_is(self, hitme) && !instance_is(self, prop)){
 							var m = mask_index;
 							mask_index = lq_defget(other.target_save, "mask_index", mask_index);
@@ -4857,7 +4857,7 @@
 						
 					mask_index = lq_defget(other.target_save, "mask_index", mask_index);
 					
-					with(instances_matching_ne(call(scr.instances_in_rectangle, x - 32, y - 32, x + 32, y + 32, obj.TopObject), "id", other)){
+					with(instances_matching_ne(call(scr.instances_in_rectangle, x - 32, y - 32, x + 32, y + 32, obj.TopObject), "id", other.id)){
 						with(target) if(instance_is(self, hitme)){
 							var _lastMask = mask_index;
 							mask_index = lq_defget(other.target_save, "mask_index", mask_index);
@@ -5716,7 +5716,7 @@
 					
 					 // Cancel Topification:
 					if(!instance_exists(self) || top_object_wallcheck){
-						_inst = instances_matching_ne(_inst, "id", self);
+						_inst = instances_matching_ne(_inst, "id", (instance_exists(self) ? id : self));
 						if(!instance_exists(self)){
 							continue;
 						}
@@ -5743,7 +5743,7 @@
 					"ystart", search_y2),
 					"creator", null, noone, target)
 				){
-					_inst = call(scr.array_delete_value, _inst, self); // compare with instances_matching_ne(_inst, "id", self)
+					_inst = instances_matching_ne(_inst, "id", id);
 					
 					 // Effects:
 					if(instance_is(self, Effect)){

@@ -2032,7 +2032,7 @@
 		
 		 // Visual:
 		sprite_index = spr.EnergyBatSlash;
-		image_speed  = 0.4 / ((_skill > 0) ? 1 + _skill : power(2, _skill)); // idk the base game does this
+		image_speed  = 0.4 / ((_skill > 0) ? (1 + _skill) : power(2, _skill)); // idk the base game does this
 		
 		 // Vars:
 		mask_index = mskSlash;

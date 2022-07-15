@@ -2540,8 +2540,11 @@
 									}
 									
 									 // Remove From Event Instance List:
-									if(!instance_exists(self) || !array_length(_eventRefList)){
-										_instanceList = instances_matching_ne(_instanceList, "id", self);
+									if(!instance_exists(self)){
+										_instanceList = instances_matching_ne(_instanceList, "id");
+									}
+									else if(!array_length(_eventRefList)){
+										_instanceList = instances_matching_ne(_instanceList, "id", id);
 									}
 								}
 								if(!instance_exists(self)){

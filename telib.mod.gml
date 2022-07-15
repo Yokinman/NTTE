@@ -366,6 +366,8 @@
 				if(!ds_map_exists(obj_search_bind_map, _objSearchKey)){
 					obj_search_bind_map[? _objSearchKey] = call(scr.ntte_bind_setup, script_ref_create(ntte_setup_obj_search, _name, object_index), object_index);
 				}
+				
+				//return id;
 			}
 		}
 		
@@ -1686,7 +1688,7 @@
 			xoff       = ((argument_count > 3) ? argument[3] : xoff);
 			yoff       = ((argument_count > 4) ? argument[4] : yoff);
 			
-			return self;
+			return id;
 		}
 	}
 	
@@ -1736,7 +1738,7 @@
 			}
 			alert.x = (sprite_get_bbox_left(sprite_index) - sprite_get_xoffset(sprite_index));
 			
-			return self;
+			return id;
 		}
 	}
 	
@@ -1779,7 +1781,7 @@
 				}
 			}
 			
-			return self;
+			return id;
 		}
 	}
 	
@@ -1871,7 +1873,7 @@
 			image_angle = direction;
 		}
 		
-		return self;
+		return id;
 	}
 	
 	return noone;
@@ -1907,7 +1909,7 @@
 				speed /= size;
 			}
 			
-			return self;
+			return id;
 		}
 	}
 	
@@ -2164,7 +2166,7 @@
 		var _dis = point_distance(_x, _y, x, y);
 		if(_dis < _disMax){
 			_disMax  = _dis;
-			_nearest = self;
+			_nearest = id;
 		}
 	}
 	
@@ -2186,7 +2188,7 @@
 		var _dis = distance_to_point(_x, _y);
 		if(_dis < _disMax){
 			_disMax  = _dis;
-			_nearest = self;
+			_nearest = id;
 		}
 	}
 	
@@ -2215,7 +2217,7 @@
 		if(_disA < _disAMax || (_disA == _disAMax && _disB < _disBMax)){
 			_disAMax = _disA;
 			_disBMax = _disB;
-			_nearest = self;
+			_nearest = id;
 		}
 	}
 	
@@ -2246,7 +2248,7 @@
 		if(_disA < _disAMax || (_disA == _disAMax && _disB < _disBMax)){
 			_disAMax = _disA;
 			_disBMax = _disB;
-			_nearest = self;
+			_nearest = id;
 		}
 	}
 	
@@ -2339,7 +2341,7 @@
 		"bbox_bottom", _inst.bbox_top),
 		"bbox_left",   _inst.bbox_right),
 		"bbox_top",    _inst.bbox_bottom),
-		"id",          _inst)
+		"id",          _inst.id)
 	);
 	
 #define instances_seen // obj, bx=0, by=0, ?index
@@ -3589,7 +3591,7 @@
 			}
 		}
 		
-		return self;
+		return id;
 	}
 	
 	return noone;
@@ -3614,7 +3616,7 @@
 			image_yscale = other.image_yscale;
 			image_angle  = other.image_angle;
 			
-			return self;
+			return id;
 		}
 	}
 	
@@ -5788,6 +5790,8 @@
 			
 			 // Sprites:
 			call(scr.pet_set_skin, self, bskin);
+			
+			//return id;
 		}
 		
 		return self;
@@ -5999,7 +6003,7 @@
 						
 						 // No Extra Cocoons:
 						if(_obj == Cocoon){
-							with(instances_matching_gt(_obj, "id", target)){
+							with(instances_matching_gt(_obj, "id", target.id)){
 								instance_delete(self);
 							}
 						}
@@ -6294,6 +6298,10 @@
 			
 			with(self){
 				event_perform(ev_step, ev_step_end);
+				
+				// if(instance_exists(self)){
+				// 	return id;
+				// }
 			}
 			
 			return self;

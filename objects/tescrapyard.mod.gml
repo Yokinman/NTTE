@@ -2840,7 +2840,10 @@
 		var _wallExisting = instances_matching_ne(crate_wall, "id");
 		
 		 // Loot Taken:
-		if(crate_loot != noone && !instance_exists(crate_loot)){
+		if(instance_exists(crate_loot)){
+			crate_loot = crate_loot.id;
+		}
+		else if(crate_loot != noone){
 			if(array_equals(crate_wall, _wallExisting)){
 				crate_loot = call(scr.instance_nearest_array, x, y, call(scr.instances_meeting_instance, self, instances_matching_gt([chestprop, RadChest, Mimic, SuperMimic], "id", crate_loot)));
 			}

@@ -289,8 +289,8 @@
 	
 	 // Loadout Weapon System:
 	wepLoadout = [
-		{ name: "",     inst: noone, hover: false, alarm0: -1, addy: 0, overy: 0, dix: -0.00001, diy: 0 },
-		{ name: "main", inst: noone, hover: false, alarm0: -1, addy: 0, overy: 0, dix: -1,       diy: 0 }
+		{ name: "",     inst: noone, hover: false, alarm: -1, addy: 0, overy: 0, dix: -0.00001, diy: 0 },
+		{ name: "main", inst: noone, hover: false, alarm: -1, addy: 0, overy: 0, dix: -1,       diy: 0 }
 	];
 	
 	 // Mouse:
@@ -550,10 +550,10 @@
 			with(wepLoadout){
 				if(!instance_exists(inst)){
 					if(name == "" || call(scr.unlock_get, `loadout:wep:${player_get_race_fix(loadoutPlayer)}:${name}`) != wep_none){
-						inst   = instance_create(0, 0, FloorMaker);
-						alarm0 = 2;
-						overy  = 0;
-						addy   = 2;
+						inst  = instance_create(0, 0, FloorMaker);
+						alarm = 2;
+						overy = 0;
+						addy  = 2;
 						
 						 // Destroy FloorMaker Things:
 						with(instances_matching_gt(GameObject, "id", inst)){
@@ -564,7 +564,7 @@
 						with(inst){
 							dix = other.dix;
 							instance_change(LoadoutWep, true);
-							other.alarm0 = alarm_get(0);
+							other.alarm = alarm_get(0);
 							alarm_set(0, -1);
 						}
 					}
@@ -1105,7 +1105,7 @@
 						diy          : 0,
 						addy         : 2,
 						hover        : false,
-						alarm0       : -1,
+						alarm        : -1,
 						visible      : false,
 						sprite_index : sprLoadoutCrown,
 						image_index  : 0
@@ -1143,8 +1143,8 @@
 							array_push(_crown.custom.icon, self);
 						}
 						
-						if(alarm0 < 0){
-							alarm0 = max(1, 5 - diy);
+						if(alarm < 0){
+							alarm = max(1, 5 - diy);
 						}
 					}
 				}
@@ -1159,7 +1159,7 @@
 				}
 				
 				 // Appear:
-				if(alarm0 >= 0 && --alarm0 == 0){
+				if(alarm >= 0 && --alarm == 0){
 					visible = true;
 				}
 				
@@ -1223,10 +1223,10 @@
 #define draw_loadout_weapon
 	for(var i = 0; i < array_length(wepLoadout); i++){
 		with(wepLoadout[i]){
-			if(alarm0 >= 0){
-				alarm0--;
+			if(alarm >= 0){
+				alarm--;
 			}
-			if(alarm0 <= 0){
+			if(alarm <= 0){
 				var	_real     = (name != ""),
 					_savePath = `loadout:wep:${player_get_race_fix(loadoutPlayer)}`,
 					_slct     = (call(scr.save_get,   _savePath, "") == name),

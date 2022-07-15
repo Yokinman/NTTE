@@ -5132,7 +5132,7 @@
 					 // Search Targets:
 					if(array_length(_inst)){
 						with(arc_list){
-							_inst = call(scr.array_delete_value, _inst, id);
+							_inst = instances_matching_ne(_inst, "id", id);
 						}
 						if(array_length(_inst)){
 							var	_tx       = leader.x,

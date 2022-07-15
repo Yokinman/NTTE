@@ -1658,7 +1658,7 @@
 	
 #define NetNade_hit
 	if(speed > 0 && projectile_canhit(other)){
-		lasthit = other;
+		lasthit = other.id;
 		projectile_hit(other, damage, force);
 		instance_destroy();
 	}
@@ -1791,7 +1791,7 @@
 					with(call(scr.instance_nearest_array, 
 						x + lengthdir_x(3 * _spd, _dir),
 						y + lengthdir_y(3 * _spd, _dir),
-						instances_matching_ne(instances_matching_ne(enemy, "team", team), "id", _hitTarget)
+						instances_matching_ne(instances_matching_ne(enemy, "team", team), "id", _hitTarget.id)
 					)){
 						if(!collision_line(x, y, other.x, other.y, Wall, false, false)){
 							_off = angle_difference(point_direction(other.x, other.y, x, y), _dir);
@@ -4851,12 +4851,14 @@
 	
 	 // Push:
 	if(place_meeting(x, y, hitme)){
-		with(instances_matching_ne(hitme, "id", creator)) if(place_meeting(x, y, other)){
-			with(other){
-				motion_add(point_direction(other.x, other.y, x, y), other.size / 5);
-			}
-			if(!instance_is(self, prop)){
-				motion_add(point_direction(other.x, other.y, x, y), other.size / 2);
+		with(call(scr.instances_meeting_instance, self, (instance_exists(creator) ? instances_matching_ne(hitme, "id", creator.id) : hitme))){
+			if(place_meeting(x, y, other)){
+				with(other){
+					motion_add(point_direction(other.x, other.y, x, y), other.size / 5);
+				}
+				if(!instance_is(self, prop)){
+					motion_add(point_direction(other.x, other.y, x, y), other.size / 2);
+				}
 			}
 		}
 	}

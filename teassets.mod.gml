@@ -2838,7 +2838,7 @@
 	}
 	
 	 // Clear Surfaces, Shaders, Script Bindings:
-	with(ds_map_values(global.surf)) if(surf != -1) surface_destroy(surf);
+	with(ds_map_values(global.surf)) if(surface_exists(surf)) surface_destroy(surf);
 	with(ds_map_values(global.shad)) if(shad != -1) shader_destroy(shad);
 	with(ds_map_values(global.bind)) with(self) with(id) instance_destroy();
 	with(ds_map_values(global.bind_hold)) with(self) if(instance_exists(self)) instance_destroy();
@@ -3490,7 +3490,9 @@
 					 // Deactivate Unused Surfaces:
 					if((time > 0 || free) && --time <= 0){
 						time = 0;
-						surface_destroy(surf);
+						if(surface_exists(surf)){
+							surface_destroy(surf);
+						}
 						
 						 // Remove From List:
 						if(free){
@@ -3526,7 +3528,9 @@
 			|| surface_get_width(surf)  != max(1, w * scale)
 			|| surface_get_height(surf) != max(1, h * scale)
 		){
-			surface_destroy(surf);
+			if(surface_exists(surf)){
+				surface_destroy(surf);
+			}
 			surf = surface_create(max(1, w * scale), max(1, h * scale));
 			reset = true;
 		}

@@ -466,7 +466,7 @@
 							while(true){
 								var _sprLoad = mod_variable_get(_type, _name, "spr_load");
 								if(array_length(_sprLoad)){
-									global.load.num = lerp(_loadA, _loadB, _sprLoad[0, 1] / array_length(_sprLoad[0, 0]));
+									global.load.num = lerp(_loadA, _loadB, _sprLoad[0, 1] / lq_size(_sprLoad[0, 0]));
 								}
 								else break;
 								wait 0;
