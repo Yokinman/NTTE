@@ -2411,23 +2411,28 @@
 				_gml += _new + `			if(_slotWep[_primary] == _wep){`
 				_gml += _new + `				if(_primary){`
 				_gml += _new + `					if(object_index == WepPickup){`
-				_gml += _new + `						var	_lastVisible = visible,`
-				_gml += _new + `							_lastDepth   = depth,`
-				_gml += _new + `							_lastSprite  = sprite_index,`
-				_gml += _new + `							_lastMask    = mask_index,`
-				_gml += _new + `							_lastSolid   = solid,`
-				_gml += _new + `							_lastPersist = persistent;`
-				_gml += _new + `							`
-				_gml += _new + `						instance_change(Player, false);`
-				_gml += _new + `						wep = _wrap.wep;`
-				_gml += _new + `						instance_change(WepPickup, false);`
-				_gml += _new + `						`
-				_gml += _new + `						visible      = _lastVisible;`
-				_gml += _new + `						depth        = _lastDepth;`
-				_gml += _new + `						sprite_index = _lastSprite;`
-				_gml += _new + `						mask_index   = _lastMask;`
-				_gml += _new + `						solid        = _lastSolid;`
-				_gml += _new + `						persistent   = _lastPersist;`
+				_gml += _new + `						try{`
+				_gml += _new + `							if(!null){`
+				_gml += _new + `								var	_lastVisible = visible,`
+				_gml += _new + `									_lastDepth   = depth,`
+				_gml += _new + `									_lastSprite  = sprite_index,`
+				_gml += _new + `									_lastMask    = mask_index,`
+				_gml += _new + `									_lastSolid   = solid,`
+				_gml += _new + `									_lastPersist = persistent;`
+				_gml += _new + `									`
+				_gml += _new + `								instance_change(Player, false);`
+				_gml += _new + `								wep = _wrap.wep;`
+				_gml += _new + `								instance_change(WepPickup, false);`
+				_gml += _new + `								`
+				_gml += _new + `								visible      = _lastVisible;`
+				_gml += _new + `								depth        = _lastDepth;`
+				_gml += _new + `								sprite_index = _lastSprite;`
+				_gml += _new + `								mask_index   = _lastMask;`
+				_gml += _new + `								solid        = _lastSolid;`
+				_gml += _new + `								persistent   = _lastPersist;`
+				_gml += _new + `							}`
+				_gml += _new + `						}`
+				_gml += _new + `						catch(_error){}`
 				_gml += _new + `					}`
 				_gml += _new + `					else wep = _wrap.wep;`
 				_gml += _new + `				}`
@@ -2476,23 +2481,28 @@
 				_gml += _new + `			}`
 				_gml += _new + `			else if(_primary){`
 				_gml += _new + `				if(object_index == WepPickup){`
-				_gml += _new + `					var	_lastVisible = visible,`
-				_gml += _new + `						_lastDepth   = depth,`
-				_gml += _new + `						_lastSprite  = sprite_index,`
-				_gml += _new + `						_lastMask    = mask_index,`
-				_gml += _new + `						_lastSolid   = solid,`
-				_gml += _new + `						_lastPersist = persistent;`
-				_gml += _new + `						`
-				_gml += _new + `					instance_change(Player, false);`
-				_gml += _new + `					wep = _wep;`
-				_gml += _new + `					instance_change(WepPickup, false);`
-				_gml += _new + `					`
-				_gml += _new + `					visible      = _lastVisible;`
-				_gml += _new + `					depth        = _lastDepth;`
-				_gml += _new + `					sprite_index = _lastSprite;`
-				_gml += _new + `					mask_index   = _lastMask;`
-				_gml += _new + `					solid        = _lastSolid;`
-				_gml += _new + `					persistent   = _lastPersist;`
+				_gml += _new + `					try{`
+				_gml += _new + `						if(!null){`
+				_gml += _new + `							var	_lastVisible = visible,`
+				_gml += _new + `								_lastDepth   = depth,`
+				_gml += _new + `								_lastSprite  = sprite_index,`
+				_gml += _new + `								_lastMask    = mask_index,`
+				_gml += _new + `								_lastSolid   = solid,`
+				_gml += _new + `								_lastPersist = persistent;`
+				_gml += _new + `								`
+				_gml += _new + `							instance_change(Player, false);`
+				_gml += _new + `							wep = _wep;`
+				_gml += _new + `							instance_change(WepPickup, false);`
+				_gml += _new + `							`
+				_gml += _new + `							visible      = _lastVisible;`
+				_gml += _new + `							depth        = _lastDepth;`
+				_gml += _new + `							sprite_index = _lastSprite;`
+				_gml += _new + `							mask_index   = _lastMask;`
+				_gml += _new + `							solid        = _lastSolid;`
+				_gml += _new + `							persistent   = _lastPersist;`
+				_gml += _new + `						}`
+				_gml += _new + `					}`
+				_gml += _new + `					catch(_error){}`
 				_gml += _new + `				}`
 				_gml += _new + `				else wep = _wep;`
 				_gml += _new + `			}`

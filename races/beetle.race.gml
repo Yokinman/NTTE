@@ -2022,7 +2022,7 @@
 				depth = other.depth - 1;
 			}
 		}
-		call(scr.sound_play_at, x, y, sndMimicMelee, 1 + orandom(0.1), 2/3);
+		sound_play_pitchvol(sndMimicMelee, 1 + orandom(0.1), 2/3);
 	}
 	
 #define BeetleChestOpen_cleanup

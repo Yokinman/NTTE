@@ -52,7 +52,7 @@
 	~ The big crystal prop in @yCursed Caves @sis blue & all blue crystal enemies turn orange on death
 	~ Runs can't be started while NT:TE is loading
 	
-	   @(sprite:menu/banners/sprFinalFixes.png:2:-0.01)
+	                    @(sprite:menu/banners/sprFinalFixes.png:2:-0.01)
 	FIXES
 	* Fairly heavy optimizations to a variety of systems
 	* Going to @gJungle @snow removes @gLast Wish @slike normal

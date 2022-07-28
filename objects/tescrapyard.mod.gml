@@ -1528,6 +1528,12 @@
 					y         = other.teleport_y + orandom(1) - 8;
 					xprevious = x;
 					yprevious = y;
+					with(instances_matching(obj.Pet, "leader", self)){
+						x         = other.x;
+						y         = other.y;
+						xprevious = x;
+						yprevious = y;
+					}
 					
 					 // Appear Effects:
 					sprite_index = spr_hurt;
