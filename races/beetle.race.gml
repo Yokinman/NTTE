@@ -182,13 +182,13 @@
 #define race_ultra_take(_ultra, _state)
 	 // Ultra Sound:
 	if(_state != 0 && instance_exists(EGSkillIcon)){
-		sound_play(sndBasicUltra);
-		
 		switch(_ultra){
 			case ultA:
+				sound_play(sndPlantUltraB);
 				break;
 				
 			case ultB:
+				sound_play(sndFishUltraB);
 				break;
 		}
 	}
