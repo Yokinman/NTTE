@@ -176,8 +176,8 @@
 						link : [[cred_twitter, "Wilde_bee"], [cred_discord, "Wildebee\#6521"]]
 						},
 					{	name : "Special Thanks",
-						role : [[cred_yellow, "blaac"], "Bub", "Emffles", "minichibis"],
-						link : [[cred_twitter + cred_yellow, "blaac_"], [cred_twitter, "Bubonto"], [cred_twitter, "EmfflesTWO"], [cred_twitter, "minichibisart"]]
+						role : [[cred_yellow, "blaac"], "jordy", "Emffles", "minichibis"],
+						link : [[cred_twitter + cred_yellow, "blaac_"], [cred_twitter, "akimokawa"], [cred_twitter, "EmfflesTWO"], [cred_twitter, "minichibisart"]]
 						}
 				]
 			}
