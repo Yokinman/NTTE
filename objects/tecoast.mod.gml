@@ -1865,7 +1865,7 @@
 		 // Vars:
 		mask_index   = mskNone;
 		mask_hold    = msk.Palanking;
-		maxhealth    = call(scr.boss_hp, 260);
+		maxhealth    = call(scr.boss_hp, 300);
 		raddrop      = 120;
 		size         = 4;
 		walk         = 0;
@@ -2117,10 +2117,16 @@
 			 // Ground Landing:
 			else if(zspeed < 0){
 				 // Ground Smash:
-				if(zspeed < -5){
+				var _lastMask = mask_index;
+				mask_index = mask_hold;
+				if(zspeed < -5 && place_meeting(x, y, Floor)){
 					alarm2 = 1;
 					sound_play_hit_big(sndBigBanditMeleeHit, 0.3);
+					
+					 // Ouch:
+					projectile_hit_raw(self, 40, 2);
 				}
+				mask_index = _lastMask;
 				
 				zspeed *= -0.2;
 			}
@@ -2817,7 +2823,7 @@
 		
 		 // Vars:
 		mask_index = sprPortalClear;
-		maxhealth  = 260;
+		maxhealth  = 240;
 		team       = 1;
 		size       = 4;
 		phase      = _phase;

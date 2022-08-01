@@ -2511,11 +2511,13 @@
 			Red     = sound_add(p + "musRed.ogg");
 			
 			 // Bosses:
-			SealKing      = sound_add(p + "musSealKing.ogg");
-			BigShots      = sound_add(p + "musBigShots.ogg");
-			PitSquid      = sound_add(p + "musPitSquid.ogg");
-			PitSquidIntro = sound_add(p + "musPitSquidIntro.ogg");
-			Tesseract     = sound_add(p + "musTesseract.ogg");
+			SealKing       = sound_add(p + "musSealKing.ogg");
+			BigShots       = sound_add(p + "musBigShots.ogg");
+			BigShotsIntro  = sound_add(p + "musBigShotsIntro.ogg");
+			PitSquid       = sound_add(p + "musPitSquid.ogg");
+			PitSquidIntro  = sound_add(p + "musPitSquidIntro.ogg");
+			Tesseract      = sound_add(p + "musTesseract.ogg");
+			TesseractIntro = sound_add(p + "musTesseractIntro.ogg");
 		}
 	}
 	

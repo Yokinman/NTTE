@@ -49,6 +49,7 @@
 #define area_next              return [area_city, 1];
 #define area_music             return ((GameCont.proto == true) ? mus.TrenchB : mus.Trench);
 #define area_music_boss        return mus.PitSquid;
+#define area_music_boss_intro  return mus.PitSquidIntro;
 #define area_ambient           return amb101;
 #define area_background_color  return make_color_rgb(100, 114, 127);
 #define area_shadow_color      return c_black;

@@ -3949,24 +3949,25 @@
 		
 		 // Bind HUD Drawing:
 		with(global.hud_bind.id){
-			script[3] = false;
+			var _script = script;
+			_script[3] = false;
 			
 			 // Normal:
 			with(instances_matching(TopCont, "visible", true)){
-				if(!other.script[3] || depth - 1 <= other.depth){
-					other.script[3] = true;
-					other.script[4] = ((fadeout == true) ? fade : 0);
-					other.depth     = depth - 1;
+				if(!_script[3] || depth - 1 <= other.depth){
+					_script[3]  = true;
+					_script[4]  = ((fadeout == true) ? fade : 0);
+					other.depth = depth - 1;
 				}
 			}
 			
 			 // Loading / Level Up Screen:
 			if(instance_exists(GenCont) || instance_exists(LevCont)){
 				with(instances_matching(UberCont, "visible", true)){
-					if(!other.script[3] || depth - 1 <= other.depth){
-						other.script[3] = true;
-						other.script[4] = 0;
-						other.depth     = depth - 1;
+					if(!_script[3] || depth - 1 <= other.depth){
+						_script[3]  = true;
+						_script[4]  = 0;
+						other.depth = depth - 1;
 					}
 				}
 			}
@@ -4359,6 +4360,18 @@
 		
 		 // NT:TE Music / Ambience:
 		ntte_music();
+		with(instances_matching_ne(GameCont, "ntte_music_intro_index", null)){
+			if(
+				!audio_is_playing(ntte_music_intro_index)
+				|| audio_sound_get_track_position_nonsync(ntte_music_intro_index) + (1 / room_speed) >= audio_sound_length_nonsync(ntte_music_intro_index)
+				|| !audio_is_playing(ntte_music_intro_target_index)
+			){
+				audio_sound_set_track_position(ntte_music_intro_target_index, 0);
+				sound_volume(ntte_music_intro_target_index, 1);
+				sound_stop(ntte_music_intro_index);
+				ntte_music_intro_index = null;
+			}
+		}
 		
 		 // NT:TE Time Stat:
 		call(scr.stat_set, "time", call(scr.stat_get, "time") + (current_time_scale / 30));
@@ -5480,11 +5493,18 @@
 	var _area = GameCont.area;
 	
 	with(MusCont){
-		var	_mus = null,
-			_amb = null;
+		var	_mus      = null,
+			_introMus = null,
+			_amb      = null;
 			
 		 // Boss Music:
 		if(alarm_get(2) > 0 && alarm_get(2) <= ceil(current_time_scale)){
+			var _musArea = (
+				array_length(instances_matching_ne(obj.Tesseract, "id"))
+				? "red"
+				: _area
+			);
+			
 			 // Make Music Restart Next Sub-Area:
 			try{
 				if(!null){
@@ -5499,14 +5519,13 @@
 			catch(_error){}
 			
 			 // Play Custom Music:
-			if(array_length(instances_matching_ne(obj.Tesseract, "id"))){
-				alarm_set(2, -1);
-				_mus = mus.Tesseract;
-			}
-			else if(array_find_index(ntte.mods.area, _area) >= 0){
-				if(mod_script_exists("area", _area, "area_music_boss")){
+			if(array_find_index(ntte.mods.area, _musArea) >= 0){
+				if(mod_script_exists("area", _musArea, "area_music_boss")){
 					alarm_set(2, -1);
-					_mus = mod_script_call_self("area", _area, "area_music_boss");
+					_mus = mod_script_call_self("area", _musArea, "area_music_boss");
+				}
+				if(mod_script_exists("area", _musArea, "area_music_boss_intro")){
+					_introMus = mod_script_call_self("area", _musArea, "area_music_boss_intro");
 				}
 			}
 		}
@@ -5534,16 +5553,19 @@
 		 // Play:
 		if(is_real(_mus)){
 			if(sound_play_music(_mus)){
-				var _snd = sound_play_pitchvol(0, 0, 0);
-				sound_stop(_snd);
-				GameCont.ntte_music_index = _snd - 1;
+				GameCont.ntte_music_index = sound_play_pitchvol(0, 0, 0) - 1;
+				
+				 // Intro Music:
+				if(is_real(_introMus)){
+					sound_volume(GameCont.ntte_music_index, 0);
+					GameCont.ntte_music_intro_target_index = GameCont.ntte_music_index;
+					GameCont.ntte_music_intro_index        = sound_play_pitchvol(_introMus, 1, audio_sound_get_gain(_mus));
+				}
 			}
 		}
 		if(is_real(_amb)){
 			if(sound_play_ambient(_amb)){
-				var _snd = sound_play_pitchvol(0, 0, 0);
-				sound_stop(_snd);
-				GameCont.ntte_ambient_index = _snd - 1;
+				GameCont.ntte_ambient_index = sound_play_pitchvol(0, 0, 0) - 1;
 			}
 		}
 	}
@@ -5636,15 +5658,6 @@
 		}
 		
 		return self;
-	}
-	
-#define chat_message(_message, _index)
-	 // The Peas Feature (Peature):
-	if(string_upper(_message) == "LEGUME"){
-		with(instances_matching(obj.PizzaRubble, "peas", false)){
-			peas = true;
-			sound_play_hit(sndUncurse, 0);
-		}
 	}
 	
 	

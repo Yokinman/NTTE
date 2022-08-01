@@ -4063,7 +4063,7 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 	}
 	
 	 // Dim Music:
-	else if("ntte_music_index" in GameCont){
+	else if(phase < 2 && "ntte_music_index" in GameCont){
 		if(audio_is_playing(GameCont.ntte_music_index)){
 			var _vol = audio_sound_get_gain(GameCont.ntte_music_index);
 			sound_volume(GameCont.ntte_music_index, _vol + min(0, (((phase < 2) ? 0.4 : 0) - _vol) * 0.05 * current_time_scale));
@@ -4139,6 +4139,14 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 				sound_play_pitch(sndHitMetal, 0.5 + random(0.2));
 				view_shake_at(x, y, 20);
 				sleep(20);
+				
+				 // Intro Music:
+				if(phase > 1){
+					with(MusCont){
+						alarm_set(2, 1);
+						alarm_set(3, -1);
+					}
+				}
 			}
 		}
 		
@@ -6250,6 +6258,15 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 	if(array_length(obj.FlameSpark)){
 		with(instances_matching_ne(obj.FlameSpark, "id")){
 			draw_sprite_ext(sprite_index, image_index, x, y, image_xscale * 3, image_yscale * 3, image_angle, image_blend, image_alpha * 0.1);
+		}
+	}
+	
+#define chat_message(_message, _index)
+	 // The Peas Feature (Peature):
+	if(string_upper(_message) == "LEGUME"){
+		with(instances_matching(obj.PizzaRubble, "peas", false)){
+			peas = true;
+			sound_play_hit(sndUncurse, 0);
 		}
 	}
 	

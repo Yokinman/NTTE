@@ -2326,6 +2326,7 @@
 		 // Intro Dim Music:
 		if(
 			!intro
+			&& sink
 			&& "ntte_music_index" in GameCont
 			&& audio_is_playing(GameCont.ntte_music_index)
 		){
@@ -2718,7 +2719,12 @@
 							if(!intro){
 								speed /= 2;
 								rise_delay = 84;
-								sound_play_pitchvol(mus.PitSquidIntro, 1, audio_sound_get_gain(mus.Trench));
+								
+								 // Music:
+								with(MusCont){
+									alarm_set(2, 1);
+									alarm_set(3, -1);
+								}
 							}
 						}
 					}
