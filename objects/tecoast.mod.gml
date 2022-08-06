@@ -3151,6 +3151,7 @@
 		spr_walk     = spr.PelicanWalk;
 		spr_hurt     = spr.PelicanHurt;
 		spr_dead     = spr.PelicanDead;
+		spr_chrg     = spr.PelicanChrg;
 		spr_weap     = spr.PelicanHammer;
 		spr_shadow   = shd32;
 		spr_shadow_y = 6;
@@ -3200,6 +3201,9 @@
 	if(dash > 0){
 		dash -= current_time_scale;
 		motion_add_ct(direction, dash * dash_factor);
+		if(sprite_index != spr_hurt){
+			sprite_index = ((dash > 0) ? spr_chrg : spr_walk);
+		}
 		
 		 // Dusty:
 		if(current_frame_active){

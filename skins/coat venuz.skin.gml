@@ -35,6 +35,47 @@
 		case sprMapIcon      : return spr.YVCoatMapIcon;
 	}
 	
+#define skin_weapon_sprite(_wep, _spr)
+	switch(_spr){
+		case sprGoldARifle       : return spr.CoatAssaultRifle;
+		case sprGoldBazooka      : return spr.CoatBazooka;
+		case sprGoldCrossbow     : return spr.CoatCrossbow;
+		case sprGoldDiscgun      : return spr.CoatDiscGun;
+		case sprGoldNader        : return spr.CoatGrenadeLauncher;
+		case sprGoldLaserGun     : return spr.CoatLaserPistol;
+		case sprGoldMachinegun   : return spr.CoatMachinegun;
+		case sprGoldNukeLauncher : return spr.CoatNukeLauncher;
+		case sprGoldPlasmaGun    : return spr.CoatPlasmaGun;
+		case sprGoldRevolver     : return spr.CoatRevolver;
+		case sprGoldScrewdriver  : return spr.CoatScrewdriver;
+		case sprGoldShotgun      : return spr.CoatShotgun;
+		case sprGoldSlugger      : return spr.CoatSlugger;
+		case sprGoldSplinterGun  : return spr.CoatSplinterGun;
+		case sprGoldWrench       : return spr.CoatWrench;
+		
+		 // Projectiles:
+		case sprBoltGold         : return spr.CoatBolt;
+		case sprGoldDisc         : return spr.CoatDisc;
+		case sprGoldGrenade      : return spr.CoatGrenade;
+		case sprGoldNuke         : return spr.CoatNuke;
+		case sprGoldRocket       : return spr.CoatRocket;
+		
+		 // Modded:
+		default:
+			if(_spr == spr.GoldTeleportGun) return spr.CoatTeleportGun;
+			if(_spr == spr.GoldTrident    ) return spr.CoatTrident;
+			if(_spr == spr.GoldTunneller  ) return spr.CoatTunneller;
+	}
+	return _spr;
+	
+#define skin_weapon_sprite_hud(_wep, _spr)
+	if(_spr == spr.TunnellerHUD) return spr.CoatTunnellerHUD;
+	return skin_weapon_sprite(_wep, _spr);
+	
+#define skin_weapon_swap(_wep, _swap)
+	sound_play_pitchvol(choose(sndMenuASkin, sndMenuBSkin), 1, 0.8);
+	return _swap;
+	
 	
 /// SCRIPTS
 #macro  call                                                                                    script_ref_call

@@ -730,10 +730,11 @@
 			
 			 // Pelican:
 			spr_path_add("Pelican/");
-			PelicanIdle   = spr_add("sprPelicanIdle",   6, 24, 24);
-			PelicanWalk   = spr_add("sprPelicanWalk",   6, 24, 24);
+			PelicanIdle   = spr_add("sprPelicanIdle",   5, 24, 24);
+			PelicanWalk   = spr_add("sprPelicanWalk",   8, 24, 24);
 			PelicanHurt   = spr_add("sprPelicanHurt",   3, 24, 24);
 			PelicanDead   = spr_add("sprPelicanDead",   6, 24, 24);
+			PelicanChrg   = spr_add("sprPelicanChrg",   2, 24, 24);
 			PelicanHammer = spr_add("sprPelicanHammer", 1,  6,  8, shnWep);
 			spr_path_add("../");
 			
@@ -2052,62 +2053,62 @@
 			spr_path_add("../");
 			//#endregion
 			
-			////#region BAT EYES
-			//spr_path_add("EyesBat/");
-			//
-			//	 // Player:
-			//	EyesBatIdle  = spr_add("sprEyesBatIdle",  4, 12, 12);
-			//	EyesBatWalk  = spr_add("sprEyesBatWalk",  6, 12, 16);
-			//	EyesBatHurt  = spr_add("sprEyesBatHurt",  3, 12, 12);
-			//	EyesBatDead  = spr_add("sprEyesBatDead",  6, 12, 12);
-			//	EyesBatGoSit = spr_add("sprEyesBatGoSit", 3, 12, 12);
-			//	EyesBatSit   = spr_add("sprEyesBatSit",   1, 12, 12);
-			//	
-			//	 // Menu:
-			//	EyesBatPortrait = spr_add("sprEyesBatPortrait", 1, 40, 243);
-			//	EyesBatLoadout  = spr_add("sprEyesBatLoadout",  2, 16,  16);
-			//	EyesBatMapIcon  = spr_add("sprEyesBatMapIcon",  1, 10,  10);
-			//	
-			//spr_path_add("../");
-			////#endregion
-			//
-			////#region BONUS ROBOT
-			//spr_path_add("RobotBonus/");
-			//
-			//	 // Player:
-			//	RobotBonusIdle  = spr_add("sprRobotBonusIdle",  15, 12, 12);
-			//	RobotBonusWalk  = spr_add("sprRobotBonusWalk",   6, 12, 12);
-			//	RobotBonusHurt  = spr_add("sprRobotBonusHurt",   3, 12, 12);
-			//	RobotBonusDead  = spr_add("sprRobotBonusDead",   6, 12, 12);
-			//	RobotBonusGoSit = spr_add("sprRobotBonusGoSit",  3, 12, 12);
-			//	RobotBonusSit   = spr_add("sprRobotBonusSit",    1, 12, 12);
-			//	
-			//	 // Menu:
-			//	RobotBonusPortrait = spr_add("sprRobotBonusPortrait", 1, 40, 243);
-			//	RobotBonusLoadout  = spr_add("sprRobotBonusLoadout",  2, 16,  16);
-			//	RobotBonusMapIcon  = spr_add("sprRobotBonusMapIcon",  1, 10,  10);
-			//	
-			//spr_path_add("../");
-			////#endregion
-			//
-			////#region COAT Y.V.
-			//spr_path_add("YVCoat/");
-			//
-			//	 // Player:
-			//	YVCoatIdle  = spr_add("sprYVCoatIdle",  14, 12, 12);
-			//	YVCoatWalk  = spr_add("sprYVCoatWalk",   6, 12, 12);
-			//	YVCoatHurt  = spr_add("sprYVCoatHurt",   3, 12, 12);
-			//	YVCoatDead  = spr_add("sprYVCoatDead",  19, 24, 24);
-			//	YVCoatGoSit = spr_add("sprYVCoatGoSit",  3, 12, 12);
-			//	YVCoatSit   = spr_add("sprYVCoatSit",    1, 12, 12);
-			//	
-			//	 // Menu:
-			//	YVCoatPortrait = spr_add("sprYVCoatPortrait", 1, 40, 243);
-			//	YVCoatLoadout  = spr_add("sprYVCoatLoadout",  2, 16,  16);
-			//	YVCoatMapIcon  = spr_add("sprYVCoatMapIcon",  1, 10,  10);
-			//	
-			//spr_path_add("../");
-			////#endregion
+			//#region BAT EYES
+			spr_path_add("EyesBat/");
+			
+				 // Player:
+				EyesBatIdle  = spr_add("sprEyesBatIdle",  4, 12, 12);
+				EyesBatWalk  = spr_add("sprEyesBatWalk",  6, 12, 16);
+				EyesBatHurt  = spr_add("sprEyesBatHurt",  3, 12, 12);
+				EyesBatDead  = spr_add("sprEyesBatDead",  6, 12, 12);
+				EyesBatGoSit = spr_add("sprEyesBatGoSit", 3, 12, 12);
+				EyesBatSit   = spr_add("sprEyesBatSit",   1, 12, 12);
+				
+				 // Menu:
+				EyesBatPortrait = spr_add("sprEyesBatPortrait", 1, 40, 243);
+				EyesBatLoadout  = spr_add("sprEyesBatLoadout",  2, 16,  16);
+				EyesBatMapIcon  = spr_add("sprEyesBatMapIcon",  1, 10,  10);
+				
+			spr_path_add("../");
+			//#endregion
+			
+			//#region BONUS ROBOT
+			spr_path_add("RobotBonus/");
+			
+				 // Player:
+				RobotBonusIdle  = spr_add("sprRobotBonusIdle",  15, 12, 12);
+				RobotBonusWalk  = spr_add("sprRobotBonusWalk",   6, 12, 12);
+				RobotBonusHurt  = spr_add("sprRobotBonusHurt",   3, 12, 12);
+				RobotBonusDead  = spr_add("sprRobotBonusDead",   6, 12, 12);
+				RobotBonusGoSit = spr_add("sprRobotBonusGoSit",  3, 12, 12);
+				RobotBonusSit   = spr_add("sprRobotBonusSit",    1, 12, 12);
+				
+				 // Menu:
+				RobotBonusPortrait = spr_add("sprRobotBonusPortrait", 1, 40, 243);
+				RobotBonusLoadout  = spr_add("sprRobotBonusLoadout",  2, 16,  16);
+				RobotBonusMapIcon  = spr_add("sprRobotBonusMapIcon",  1, 10,  10);
+				
+			spr_path_add("../");
+			//#endregion
+			
+			//#region COAT Y.V.
+			spr_path_add("YVCoat/");
+			
+				 // Player:
+				YVCoatIdle  = spr_add("sprYVCoatIdle",  14, 12, 12);
+				YVCoatWalk  = spr_add("sprYVCoatWalk",   6, 12, 12);
+				YVCoatHurt  = spr_add("sprYVCoatHurt",   3, 12, 12);
+				YVCoatDead  = spr_add("sprYVCoatDead",  19, 24, 24);
+				YVCoatGoSit = spr_add("sprYVCoatGoSit",  3, 12, 12);
+				YVCoatSit   = spr_add("sprYVCoatSit",    1, 12, 12);
+				
+				 // Menu:
+				YVCoatPortrait = spr_add("sprYVCoatPortrait", 1, 40, 243);
+				YVCoatLoadout  = spr_add("sprYVCoatLoadout",  2, 16,  16);
+				YVCoatMapIcon  = spr_add("sprYVCoatMapIcon",  1, 10,  10);
+				
+			spr_path_add("../");
+			//#endregion
 			
 			//#region COOL FROG
 			spr_path_add("FrogCool/");
@@ -2209,6 +2210,62 @@
 				AnglerGrenade         = spr_add("sprAnglerGrenade",         1,  3,  3);
 				AnglerNuke            = spr_add("sprAnglerNuke",            1,  8,  8);
 				AnglerRocket          = spr_add("sprAnglerRocket",          1,  4,  4);
+				spr_path_add("../");
+				
+				 // Bat:
+				spr_path_add("Bat/");
+				BatAssaultRifle    = spr_add("sprBatAssaultRifle",    1,  2, 3, shnWep);
+				BatBazooka         = spr_add("sprBatBazooka",         1, 10, 5, shnWep);
+				BatCrossbow        = spr_add("sprBatCrossbow",        1,  2, 3, shnWep);
+				BatDiscGun         = spr_add("sprBatDiscGun",         1, -3, 4, shnWep);
+				BatGrenadeLauncher = spr_add("sprBatGrenadeLauncher", 1,  2, 2, shnWep);
+				BatLaserPistol     = spr_add("sprBatLaserPistol",     1, -2, 2, shnWep);
+				BatMachinegun      = spr_add("sprBatMachinegun",      1,  1, 2, shnWep);
+				BatNukeLauncher    = spr_add("sprBatNukeLauncher",    1,  7, 7, shnWep);
+				BatPlasmaGun       = spr_add("sprBatPlasmaGun",       1,  3, 4, shnWep);
+				BatRevolver        = spr_add("sprBatRevolver",        1, -3, 3, shnWep);
+				BatScrewdriver     = spr_add("sprBatScrewdriver",     1, -1, 2, shnWep);
+				BatShotgun         = spr_add("sprBatShotgun",         1,  5, 2, shnWep);
+				BatSlugger         = spr_add("sprBatSlugger",         1,  2, 3, shnWep);
+				BatSplinterGun     = spr_add("sprBatSplinterGun",     1,  2, 4, shnWep);
+				BatTeleportGun     = spr_add("sprBatTeleportGun",     1,  7, 6, shnWep);
+				BatTrident         = spr_add("sprBatTrident",         1, 12, 7, shnWep);
+				BatTunneller       = spr_add("sprBatTunneller",       1, 14, 5, shnWep);
+				BatTunnellerHUD    = spr_add("sprBatTunneller",       1, 18, 5, shnWep);
+				BatWrench          = spr_add("sprBatWrench",          1,  1, 3, shnWep);
+				BatBolt            = spr_add("sprBatBolt",            2,  4, 8);
+				BatDisk            = spr_add("sprBatDisc",            2,  7, 7);
+				BatGrenade         = spr_add("sprBatGrenade",         1,  3, 3);
+				BatNuke            = spr_add("sprBatNuke",            1,  8, 8);
+				BatRocket          = spr_add("sprBatRocket",          1,  4, 4);
+				spr_path_add("../");
+				
+				 // Coat:
+				spr_path_add("Coat/");
+				CoatAssaultRifle    = spr_add("sprCoatAssaultRifle",    1,  5,  4, shnWep);
+				CoatBazooka         = spr_add("sprCoatBazooka",         1, 11,  5, shnWep);
+				CoatCrossbow        = spr_add("sprCoatCrossbow",        1,  3,  3, shnWep);
+				CoatDiscGun         = spr_add("sprCoatDiscGun",         1, -4,  2, shnWep);
+				CoatGrenadeLauncher = spr_add("sprCoatGrenadeLauncher", 1,  1,  5, shnWep);
+				CoatLaserPistol     = spr_add("sprCoatLaserPistol",     1, -3,  2, shnWep);
+				CoatMachinegun      = spr_add("sprCoatMachinegun",      1,  1,  3, shnWep);
+				CoatNukeLauncher    = spr_add("sprCoatNukeLauncher",    1,  8,  9, shnWep);
+				CoatPlasmaGun       = spr_add("sprCoatPlasmaGun",       1,  3,  4, shnWep);
+				CoatRevolver        = spr_add("sprCoatRevolver",        1, -4,  3, shnWep);
+				CoatScrewdriver     = spr_add("sprCoatScrewdriver",     1,  0,  4, shnWep);
+				CoatShotgun         = spr_add("sprCoatShotgun",         1,  3,  3, shnWep);
+				CoatSlugger         = spr_add("sprCoatSlugger",         1,  1,  4, shnWep);
+				CoatSplinterGun     = spr_add("sprCoatSplinterGun",     1,  2,  4, shnWep);
+				CoatTeleportGun     = spr_add("sprCoatTeleportGun",     1,  6,  6, shnWep);
+				CoatTrident         = spr_add("sprCoatTrident",         1, 11,  6, shnWep);
+				CoatTunneller       = spr_add("sprCoatTunneller",       1, 16, 11, shnWep);
+				CoatTunnellerHUD    = spr_add("sprCoatTunneller",       1, 22, 11, shnWep);
+				CoatWrench          = spr_add("sprCoatWrench",          1,  1,  5, shnWep);
+				CoatBolt            = spr_add("sprCoatBolt",            2,  4,  8);
+				CoatDisc            = spr_add("sprCoatDisc",            2,  6,  6);
+				CoatGrenade         = spr_add("sprCoatGrenade",         1,  3,  3);
+				CoatNuke            = spr_add("sprCoatNuke",            1,  8,  8);
+				CoatRocket          = spr_add("sprCoatRocket",          1,  4,  4);
 				spr_path_add("../");
 				
 				 // Cool:
