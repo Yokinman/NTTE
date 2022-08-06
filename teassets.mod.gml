@@ -2480,22 +2480,46 @@
 	 // SOUNDS //
 	snd = {};
 	with(snd){
-		var	m = "sounds/enemies/",
-			p;
+		var	m, p;
+		
+		 // Enemies:
+		m = "sounds/enemies/";
+		
+			 // Palanking:
+			p = m + "Palanking/";
+			PalankingHurt  = sound_add(p + "sndPalankingHurt.ogg");
+			PalankingDead  = sound_add(p + "sndPalankingDead.ogg");
+			PalankingCall  = sound_add(p + "sndPalankingCall.ogg");
+			PalankingSwipe = sound_add(p + "sndPalankingSwipe.ogg");
+			PalankingTaunt = sound_add(p + "sndPalankingTaunt.ogg");
+			sound_volume(PalankingHurt, 0.6);
 			
-		 // Palanking:
-		p = m + "Palanking/";
-		PalankingHurt  = sound_add(p + "sndPalankingHurt.ogg");
-		PalankingDead  = sound_add(p + "sndPalankingDead.ogg");
-		PalankingCall  = sound_add(p + "sndPalankingCall.ogg");
-		PalankingSwipe = sound_add(p + "sndPalankingSwipe.ogg");
-		PalankingTaunt = sound_add(p + "sndPalankingTaunt.ogg");
-		sound_volume(PalankingHurt, 0.6);
+			 // SawTrap:
+			p = m + "SawTrap/";
+			SawTrap = sound_add(p + "sndSawTrap.ogg");
+			
+		 // Characters:
+		m = "sounds/races/";
 		
-		 // SawTrap:
-		p = m + "SawTrap/";
-		SawTrap = sound_add(p + "sndSawTrap.ogg");
-		
+			 // Beetle:
+			p = m + "Beetle/";
+			BeetleSlct   = sound_add(p + "sndBeetleSlct.ogg");
+			BeetleCnfm   = sound_add(p + "sndBeetleCnfm.ogg");
+			BeetleWrld   = sound_add(p + "sndBeetleWrld.ogg");
+			BeetleHurt   = sound_add(p + "sndBeetleHurt.ogg");
+			BeetleDead   = sound_add(p + "sndBeetleDead.ogg");
+			BeetleLowA   = sound_add(p + "sndBeetleLowA.ogg");
+			BeetleLowH   = sound_add(p + "sndBeetleLowH.ogg");
+			BeetleChst   = sound_add(p + "sndBeetleChst.ogg");
+		//	BeetleValt   = sound_add(p + "sndBeetleValt.ogg");
+			BeetleCrwn   = sound_add(p + "sndBeetleCrwn.ogg");
+			BeetleSpch   = sound_add(p + "sndBeetleSpch.ogg");
+		//	BeetleIDPD   = sound_add(p + "sndBeetleIDPD.ogg");
+		//	BeetleCptn   = sound_add(p + "sndBeetleCptn.ogg");
+		//	BeetleThrn   = sound_add(p + "sndBeetleThrn.ogg");
+			BeetleUltraA = sound_add(p + "sndBeetleUltraA.ogg");
+			BeetleUltraB = sound_add(p + "sndBeetleUltraB.ogg");
+			
 		 // Music:
 		mus = {};
 		with(mus){

@@ -4571,7 +4571,7 @@
 	with(_instanceList){
 		if(chance_ct(1, 4)){
 			with(call(scr.projectile_create, x, y, Lightning, random(360))){
-				ammo = min(irandom(other.damage), 28);
+				ammo = min(irandom(other.damage), 27);
 				event_perform(ev_alarm, 0);
 				
 				 // Spawn Effect:
@@ -4590,7 +4590,7 @@
 	
 	if(projectile_can_temerge_hit(other) && current_frame_active){
 		with(call(scr.projectile_create, x, y, Lightning, point_direction(x, y, other.x, other.y) + orandom(45))){
-			ammo = min(3 + irandom(other.damage), 28);
+			ammo = min(3 + irandom(other.damage), 27);
 			event_perform(ev_alarm, 0);
 			
 			 // Spawn Effect:
@@ -5319,7 +5319,9 @@
 	projectile_add_temerge_bloom(_instanceList, 0.2);
 	
 	 // Pierces Walls:
-	projectile_add_temerge_effect(_instanceList, "wall_piercing", [damage / 6]);
+	with(_instanceList){
+		projectile_add_temerge_effect(self, "wall_piercing", [damage / 6]);
+	}
 	
 	 // Bolt:
 	Bolt_temerge_setup(_instanceList);

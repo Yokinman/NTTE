@@ -3125,7 +3125,7 @@
 							with(_char[array_length(_char) - 1]){
 								var	_x1 = x,
 									_y1 = y,
-									_x2 = other.x,
+									_x2 = other.x - (12 * (_race == "beetle")),
 									_y2 = other.y,
 									_pan = 4;
 									
@@ -4543,12 +4543,13 @@
 					
 					 // Mutation Drawing:
 					if(array_length(_skillList)){
-						var	_sx        = _gw - 11,
-							_sy        = 12,
-							_addx      = -16,
-							_addy      = 16,
-							_minx      = 110 - (17 * (_players > 1)),
-							_canUpdate = false;
+						var	_sx            = _gw - 11,
+							_sy            = 12,
+							_addx          = -16,
+							_addy          = 16,
+							_minx          = 110 - (17 * (_players > 1)),
+							_canUpdate     = false,
+							_patienceSkill = GameCont.hud_patience;
 							
 						 // Update Mutation Info:
 						if(current_frame >= global.hud_skill_update_frame){
@@ -4557,11 +4558,11 @@
 						}
 						
 						 // Patience Fix:
-						var _skillCount = array_length(_skillList);
-						for(var _skillIndex = 0; _skillIndex < _skillCount; _skillIndex++){
-							if(_skillList[_skillIndex] == mut_patience && skill_get(GameCont.hud_patience) != 0){
-								array_push(_skillType, _skillType[_skillIndex]);
-								array_push(_skillList, GameCont.hud_patience);
+						if(skill_get(_patienceSkill) != 0){
+							var _patienceIndex = array_find_index(_skillList, mut_patience);
+							if(_patienceIndex >= 0){
+								array_push(_skillType, _skillType[_patienceIndex]);
+								array_push(_skillList, _patienceSkill);
 							}
 						}
 						
@@ -4620,7 +4621,7 @@
 							if(_skill == undefined){
 								break;
 							}
-							if(_skill != mut_patience || real(string(GameCont.hud_patience)) == mut_none){ // yes as far as i can tell the game does real(string())
+							if(_skill != mut_patience || skill_get(_patienceSkill) == 0){
 								var _skillIndex = array_find_index(_skillList, _skill);
 								if(_skillIndex >= 0){
 									while(_skillIndex >= 0){
@@ -4633,7 +4634,7 @@
 												draw_sprite(
 													spr.SkillRerollHUDSmall,
 													0,
-													_x + ((_skill == GameCont.hud_patience) ? -4 : 5),
+													_x + ((_skill == _patienceSkill) ? -4 : 5),
 													_y + 5
 												);
 												
@@ -4659,7 +4660,7 @@
 														_inst    = instances_matching(obj.OrchidSkill, "skill", _skill);
 														
 													 // Patience:
-													if(GameCont.hud_patience == _skill){
+													if(_patienceSkill == _skill){
 														_inst = call(scr.array_combine, _inst, instances_matching(obj.OrchidSkill, "skill", mut_patience));
 													}
 													
@@ -4733,7 +4734,7 @@
 													draw_sprite(_spr, _img, _x, _y);
 													
 													 // Patience Fix:
-													if(GameCont.hud_patience == _skill){
+													if(_patienceSkill == _skill){
 														draw_sprite(sprPatienceIconHUD, 0, _x, _y);
 													}
 													
@@ -5508,7 +5509,7 @@
 			 // Make Music Restart Next Sub-Area:
 			try{
 				if(!null){
-					var _lastArea = GameCont.area;
+					var _lastArea = _area;
 					GameCont.area = -1;
 					with(self){
 						event_perform(ev_alarm, 11);
