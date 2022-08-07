@@ -16,8 +16,9 @@
 	
 	 // Custom Object Event Variable Names:
 	global.event_varname_list = ["script", "on_step", "on_begin_step", "on_end_step", "on_draw", "on_destroy", "on_cleanup", "on_anim", "on_death", "on_hurt", "on_hit", "on_wall", "on_projectile", "on_grenade"];
-	for(var _alarmIndex = 0; _alarmIndex < 10; _alarmIndex++){
-		array_push(global.event_varname_list, `on_alrm${_alarmIndex}`);
+	var _alarmIndex = 0;
+	repeat(10){
+		array_push(global.event_varname_list, `on_alrm${_alarmIndex++}`);
 	}
 	with([CustomObject, CustomHitme, CustomProp, CustomProjectile, CustomSlash, CustomEnemy, CustomScript, CustomBeginStep, CustomStep, CustomEndStep, CustomDraw]){
 		var	_object         = self,
@@ -61,16 +62,19 @@
 		PromptSubtext   = ds_map_create();
 		
 		 // Shine Overlay:
-		spr_path_set("shine/");
-		Shine8    = sprite_add(spr_path + "sprShine8.png",    7,  4,  4); // Rads
-		Shine10   = sprite_add(spr_path + "sprShine10.png",   7,  5,  5); // Pickups
-		Shine12   = sprite_add(spr_path + "sprShine12.png",   7,  6,  6); // Big Rads
-		Shine16   = sprite_add(spr_path + "sprShine16.png",   7,  8,  8); // Normal Chests
-		Shine20   = sprite_add(spr_path + "sprShine20.png",   7, 10, 10); // Heavy Chests (Steroids)
-		Shine24   = sprite_add(spr_path + "sprShine24.png",   7, 12, 12); // Big Chests
-		Shine64   = sprite_add(spr_path + "sprShine64.png",   7, 32, 32); // Giant Chests (YV)
-		ShineHurt = sprite_add(spr_path + "sprShineHurt.png", 3,  0,  0); // Hurt Flash
-		ShineSnow = sprite_add(spr_path + "sprShineSnow.png", 1,  0,  0); // Snow Floors
+		with([
+			["Shine8",    7,  4], // Rads
+			["Shine10",   7,  5], // Pickups
+			["Shine12",   7,  6], // Big Rads
+			["Shine16",   7,  8], // Normal Chests
+			["Shine20",   7, 10], // Heavy Chests (Steroids)
+			["Shine24",   7, 12], // Big Chests
+			["Shine64",   7, 32], // Giant Chests (YV)
+			["ShineHurt", 3,  0], // Hurt Flash
+			["ShineSnow", 1,  0]  // Snow Floors
+		]){
+			lq_set(spr, self[0], sprite_add(spr_path + `shine/spr${self[0]}.png`, self[1], self[2], self[2]))
+		}
 		
 		//#region MENU / HUD
 		
@@ -2240,6 +2244,34 @@
 				BatRocket          = spr_add("sprBatRocket",          1,  4, 4);
 				spr_path_add("../");
 				
+				 // Bonus:
+				spr_path_add("Bonus/");
+				BonusAssaultRifle    = spr_add("sprBonusAssaultRifle",    1,  4, 3, shnWep);
+				BonusBazooka         = spr_add("sprBonusBazooka",         1, 11, 2, shnWep);
+				BonusCrossbow        = spr_add("sprBonusCrossbow",        1,  2, 4, shnWep);
+				BonusDiscGun         = spr_add("sprBonusDiscGun",         1, -4, 2, shnWep);
+				BonusGrenadeLauncher = spr_add("sprBonusGrenadeLauncher", 1,  2, 2, shnWep);
+				BonusLaserPistol     = spr_add("sprBonusLaserPistol",     1, -3, 2, shnWep);
+				BonusMachinegun      = spr_add("sprBonusMachinegun",      1,  0, 1, shnWep);
+				BonusNukeLauncher    = spr_add("sprBonusNukeLauncher",    1,  7, 6, shnWep);
+				BonusPlasmaGun       = spr_add("sprBonusPlasmaGun",       1,  3, 4, shnWep);
+				BonusRevolver        = spr_add("sprBonusRevolver",        1, -3, 2, shnWep);
+				BonusScrewdriver     = spr_add("sprBonusScrewdriver",     1, -1, 1, shnWep);
+				BonusShotgun         = spr_add("sprBonusShotgun",         1,  4, 2, shnWep);
+				BonusSlugger         = spr_add("sprBonusSlugger",         1,  0, 2, shnWep);
+				BonusSplinterGun     = spr_add("sprBonusSplinterGun",     1,  1, 3, shnWep);
+				BonusTeleportGun     = spr_add("sprBonusTeleportGun",     1,  4, 4, shnWep);
+				BonusTrident         = spr_add("sprBonusTrident",         1, 11, 7, shnWep);
+				BonusTunneller       = spr_add("sprBonusTunneller",       1, 14, 8, shnWep);
+				BonusTunnellerHUD    = spr_add("sprBonusTunneller",       1, 17, 8, shnWep);
+				BonusWrench          = spr_add("sprBonusWrench",          1,  1, 3, shnWep);
+				BonusBolt            = spr_add("sprBonusBolt",            2,  4, 8);
+				BonusDisc            = spr_add("sprBonusDisc",            2,  6, 6);
+				BonusGrenade         = spr_add("sprBonusGrenade",         1,  3, 3);
+				BonusNuke            = spr_add("sprBonusNuke",            1,  8, 8);
+				BonusRocket          = spr_add("sprBonusRocket",          1,  4, 4);
+				spr_path_add("../");
+				
 				 // Coat:
 				spr_path_add("Coat/");
 				CoatAssaultRifle    = spr_add("sprCoatAssaultRifle",    1,  5,  4, shnWep);
@@ -2537,68 +2569,64 @@
 	 // SOUNDS //
 	snd = {};
 	with(snd){
-		var	m, p;
 		
 		 // Enemies:
-		m = "sounds/enemies/";
 		
 			 // Palanking:
-			p = m + "Palanking/";
-			PalankingHurt  = sound_add(p + "sndPalankingHurt.ogg");
-			PalankingDead  = sound_add(p + "sndPalankingDead.ogg");
-			PalankingCall  = sound_add(p + "sndPalankingCall.ogg");
-			PalankingSwipe = sound_add(p + "sndPalankingSwipe.ogg");
-			PalankingTaunt = sound_add(p + "sndPalankingTaunt.ogg");
+			PalankingHurt  = sound_add("sounds/enemies/Palanking/sndPalankingHurt.ogg");
+			PalankingDead  = sound_add("sounds/enemies/Palanking/sndPalankingDead.ogg");
+			PalankingCall  = sound_add("sounds/enemies/Palanking/sndPalankingCall.ogg");
+			PalankingSwipe = sound_add("sounds/enemies/Palanking/sndPalankingSwipe.ogg");
+			PalankingTaunt = sound_add("sounds/enemies/Palanking/sndPalankingTaunt.ogg");
 			sound_volume(PalankingHurt, 0.6);
 			
 			 // SawTrap:
-			p = m + "SawTrap/";
-			SawTrap = sound_add(p + "sndSawTrap.ogg");
+			SawTrap = sound_add("sounds/enemies/SawTrap/sndSawTrap.ogg");
 			
-		 // Characters:
-		m = "sounds/races/";
+		 // Beetle:
+		with([
+			"BeetleSlct",
+			"BeetleCnfm",
+			"BeetleWrld",
+			"BeetleHurt",
+			"BeetleDead",
+			"BeetleLowA",
+			"BeetleLowH",
+			"BeetleChst",
+		//	"BeetleValt",
+			"BeetleCrwn",
+			"BeetleSpch",
+		//	"BeetleIDPD",
+		//	"BeetleCptn",
+		//	"BeetleThrn",
+			"BeetleUltraA",
+			"BeetleUltraB"
+		]){
+			lq_set(other, self, sound_add(`sounds/races/Beetle/snd${self}.ogg`));
+		}
 		
-			 // Beetle:
-			p = m + "Beetle/";
-			BeetleSlct   = sound_add(p + "sndBeetleSlct.ogg");
-			BeetleCnfm   = sound_add(p + "sndBeetleCnfm.ogg");
-			BeetleWrld   = sound_add(p + "sndBeetleWrld.ogg");
-			BeetleHurt   = sound_add(p + "sndBeetleHurt.ogg");
-			BeetleDead   = sound_add(p + "sndBeetleDead.ogg");
-			BeetleLowA   = sound_add(p + "sndBeetleLowA.ogg");
-			BeetleLowH   = sound_add(p + "sndBeetleLowH.ogg");
-			BeetleChst   = sound_add(p + "sndBeetleChst.ogg");
-		//	BeetleValt   = sound_add(p + "sndBeetleValt.ogg");
-			BeetleCrwn   = sound_add(p + "sndBeetleCrwn.ogg");
-			BeetleSpch   = sound_add(p + "sndBeetleSpch.ogg");
-		//	BeetleIDPD   = sound_add(p + "sndBeetleIDPD.ogg");
-		//	BeetleCptn   = sound_add(p + "sndBeetleCptn.ogg");
-		//	BeetleThrn   = sound_add(p + "sndBeetleThrn.ogg");
-			BeetleUltraA = sound_add(p + "sndBeetleUltraA.ogg");
-			BeetleUltraB = sound_add(p + "sndBeetleUltraB.ogg");
-			
 		 // Music:
-		mus = {};
-		with(mus){
-			var p = "sounds/music/";
-			amb = {};
-			
+		mus     = {};
+		mus.amb = {};
+		with([
 			 // Areas:
-			Coast   = sound_add(p + "musCoast.ogg");
-			CoastB  = sound_add(p + "musCoastB.ogg");
-			Trench  = sound_add(p + "musTrench.ogg");
-			TrenchB = sound_add(p + "musTrenchB.ogg");
-			Lair    = sound_add(p + "musLair.ogg");
-			Red     = sound_add(p + "musRed.ogg");
+			"Coast",
+			"CoastB",
+			"Trench",
+			"TrenchB",
+			"Lair",
+			"Red",
 			
 			 // Bosses:
-			SealKing       = sound_add(p + "musSealKing.ogg");
-			BigShots       = sound_add(p + "musBigShots.ogg");
-			BigShotsIntro  = sound_add(p + "musBigShotsIntro.ogg");
-			PitSquid       = sound_add(p + "musPitSquid.ogg");
-			PitSquidIntro  = sound_add(p + "musPitSquidIntro.ogg");
-			Tesseract      = sound_add(p + "musTesseract.ogg");
-			TesseractIntro = sound_add(p + "musTesseractIntro.ogg");
+			"SealKing",
+			"BigShots",
+			"BigShotsIntro",
+			"PitSquid",
+			"PitSquidIntro",
+			"Tesseract",
+			"TesseractIntro"
+		]){
+			lq_set(mus, self, sound_add(`sounds/music/mus${self}.ogg`));
 		}
 	}
 	
@@ -2913,7 +2941,7 @@
 #define cleanup
 	 // Reset Starting Weapons:
 	loadout_wep_reset();
-	ds_list_destroy(global.loadout_wep_clone);
+	//ds_list_destroy(global.loadout_wep_clone);
 	
 	 // Save Game:
 	if(save_auto){
@@ -3012,14 +3040,18 @@
 		_name = _ref[1];
 		
 	 // Set Global Variables:
-	mod_variable_set(_type, _name, "scr",       scr);
-	mod_variable_set(_type, _name, "obj",       obj);
-	mod_variable_set(_type, _name, "spr",       spr);
-	mod_variable_set(_type, _name, "snd",       snd);
-	mod_variable_set(_type, _name, "debug_lag", false);
-	mod_variable_set(_type, _name, "ntte_vars", ntte_vars);
-	mod_variable_set(_type, _name, "epsilon",   global.epsilon);
-	mod_variable_set(_type, _name, "mod_type",  _type);
+	with([
+		["scr",       scr],
+		["obj",       obj],
+		["spr",       spr],
+		["snd",       snd],
+		["debug_lag", false],
+		["ntte_vars", ntte_vars],
+		["epsilon",   global.epsilon],
+		["mod_type",  _type]
+	]){
+		mod_variable_set(_type, _name, self[0], self[1]);
+	}
 	
 	 // Bind Object Setup Scripts:
 	var _list = [];
@@ -3585,12 +3617,12 @@
 					}
 					
 					 // Game Paused:
-					else for(var i = 0; i < maxp; i++){
-						if(button_pressed(i, "paus")){
+					else{ var i = 0; repeat(maxp){
+						if(button_pressed(i++, "paus")){
 							reset = true;
 							break;
 						}
-					}
+					}}
 					
 					wait 0;
 				}
@@ -3845,46 +3877,46 @@
 	
 	return _bind;
 	
-#define ntte_bind_step(_scriptRef)
-	/*
-		
-	*/
-	
-	_scriptRef = array_clone(_scriptRef);
-	
-	
-	return _scriptRef;
-	
-#define ntte_bind_begin_step(_scriptRef)
-	/*
-		
-	*/
-	
-	_scriptRef = array_clone(_scriptRef);
-	
-	
-	return _scriptRef;
-	
-#define ntte_bind_end_step(_scriptRef)
-	/*
-		
-	*/
-	
-	_scriptRef = array_clone(_scriptRef);
-	
-	
-	return _scriptRef;
-	
-#define ntte_bind_draw(_scriptRef, _depth)
-	/*
-		
-	*/
-	
-	_scriptRef = array_clone(_scriptRef);
-	
-	
-	return _scriptRef;
-	
+//#define ntte_bind_step(_scriptRef)
+//	/*
+//		
+//	*/
+//	
+//	_scriptRef = array_clone(_scriptRef);
+//	
+//	
+//	return _scriptRef;
+//	
+//#define ntte_bind_begin_step(_scriptRef)
+//	/*
+//		
+//	*/
+//	
+//	_scriptRef = array_clone(_scriptRef);
+//	
+//	
+//	return _scriptRef;
+//	
+//#define ntte_bind_end_step(_scriptRef)
+//	/*
+//		
+//	*/
+//	
+//	_scriptRef = array_clone(_scriptRef);
+//	
+//	
+//	return _scriptRef;
+//	
+//#define ntte_bind_draw(_scriptRef, _depth)
+//	/*
+//		
+//	*/
+//	
+//	_scriptRef = array_clone(_scriptRef);
+//	
+//	
+//	return _scriptRef;
+//	
 #define ntte_bind_setup(_scriptRef, _obj)
 	/*
 		Binds the given script reference to a setup event for the given object
@@ -3911,11 +3943,12 @@
 	}
 	
 	 // Link Script Reference to Object(s) & Their Children:
-	var	_objectList    = (is_array(_obj) ? array_clone(_obj) : [_obj]),
+	var	_objectIndex   = 0,
+		_objectList    = (is_array(_obj) ? array_clone(_obj) : [_obj]),
 		_objectListMax = array_length(_objectList);
 		
-	for(var i = 0; i < _objectListMax; i++){
-		var	_object    = _objectList[i],
+	while(_objectIndex < _objectListMax){
+		var	_object    = _objectList[_objectIndex++],
 			_childList = _objectChildList[_object],
 			_refList   = _objectRefList[_object];
 			
@@ -3963,10 +3996,11 @@
 	spr_path_add(_path);
 	
 #define spr_path_add(_path)
-	var	_pathSplit    = string_split(_path, "/"),
+	var	_pathIndex    = 0,
+		_pathSplit    = string_split(_path, "/"),
 		_sprPathSplit = string_split(spr_path, "/");
 		
-	for(var _pathIndex = 0; _pathIndex < array_length(_pathSplit); _pathIndex++){
+	repeat(array_length(_pathSplit)){
 		var _pathItem = _pathSplit[_pathIndex];
 		if(_pathItem == ".."){
 			_sprPathSplit = array_slice(_sprPathSplit, 0, array_length(_sprPathSplit) - 1);
@@ -3978,6 +4012,7 @@
 				array_push(_sprPathSplit, "");
 			}
 		}
+		_pathIndex++;
 	}
 	
 	spr_path = array_join(_sprPathSplit, "/");
@@ -3999,8 +4034,8 @@ var _shine = argument_count > 4 ? argument[4] : shnNone;
 	};
 	
 #define trace_error(_error)
-	trace(_error);
-	trace_color(" ^ Screenshot that error and post it on NT:TE's itch.io page, thanks!", c_yellow);
+	//trace(_error);
+	//trace_color(" ^ Screenshot that error and post it on NT:TE's itch.io page, thanks!", c_yellow);
 	
 #define game_start
 	 // Autosave:
@@ -4141,7 +4176,7 @@ var _shine = argument_count > 4 ? argument[4] : shnNone;
 	}
 	
 	 // Autosave (Return to Character Select):
-	if(instance_exists(Menu) && save_auto){
+	if(save_auto){
 		with(instances_matching(Menu, "ntte_autosave", null)){
 			ntte_autosave = true;
 			ntte_save();
@@ -4153,16 +4188,11 @@ var _shine = argument_count > 4 ? argument[4] : shnNone;
 #define draw_pause
 	 // Remind Player:
 	if(option_get("reminders")){
-		var	_vx       = view_xview_nonsync,
-			_vy       = view_yview_nonsync,
-			_gw       = game_width,
-			_gh       = game_height,
-			_timeTick = 1;
-			
+		var _timeTick = 1;
 		with(global.remind){
 			if(active){
-				var	_x = (_gw / 2),
-					_y = (_gh / 2) - 40;
+				var	_x = (game_width / 2),
+					_y = (game_height / 2) - 40;
 					
 				 // Reminding:
 				if(instance_exists(object)){
@@ -4178,11 +4208,9 @@ var _shine = argument_count > 4 ? argument[4] : shnNone;
 							active = false;
 							
 							 // Text:
-							text_inst = instance_create(_x, _y, PopupText);
-							with(text_inst){
-								text     = other.text;
-								friction = 0.1;
-							}
+							text_inst          = instance_create(_x, _y, PopupText);
+							text_inst.text     = text;
+							text_inst.friction = 0.1;
 						}
 					}
 				}
@@ -4229,7 +4257,7 @@ var _shine = argument_count > 4 ? argument[4] : shnNone;
 				
 				 // Draw Icon:
 				with(other){
-					draw_sprite(sprNew, 0, _vx + _x, _vy + _y + sin(current_frame / 10));
+					draw_sprite(sprNew, 0, view_xview_nonsync + _x, view_yview_nonsync + _y + sin(current_frame / 10));
 				}
 			}
 			
@@ -4241,7 +4269,7 @@ var _shine = argument_count > 4 ? argument[4] : shnNone;
 				draw_set_halign(fa_center);
 				draw_set_valign(fa_top);
 				with(instances_matching(text_inst, "visible", true)){
-					draw_text_nt(_vx + x, _vy + y, text);
+					draw_text_nt(view_xview_nonsync + x, view_yview_nonsync + y, text);
 				}
 			}
 		}
@@ -4925,8 +4953,12 @@ var _shine = argument_count > 4 ? argument[4] : shnNone;
 		
 	with(surface_setup("sprTopTiny", (_sprW / 2) * _sprImg, (_sprH / 2), 1)){
 		free = true;
-		for(var _x = 0; _x < array_length(_sprList[0]); _x++){
-			for(var _y = 0; _y < array_length(_sprList[1]); _y++){
+		
+		var	_x = 0,
+			_y = 0;
+			
+		repeat(array_length(_sprList[0])){
+			repeat(array_length(_sprList[1])){
 				surface_set_target(surf);
 				draw_clear_alpha(c_black, 0);
 				
@@ -4955,6 +4987,9 @@ var _shine = argument_count > 4 ? argument[4] : shnNone;
 					(_sprX - 8) * _x,
 					(_sprY - 8) * _y
 				);
+				
+				_x++;
+				_y++;
 			}
 		}
 	}
@@ -4969,7 +5004,7 @@ var _shine = argument_count > 4 ? argument[4] : shnNone;
 	var _wep = unlock_get(`loadout:wep:${_race}:${_name}`);
 	
 	if(is_object(_wep)){
-		ds_list_add(global.loadout_wep_clone, [_race, _name, _wep, lq_clone(_wep)]);
+		ds_list_add(global.loadout_wep_clone, [_race, _name, _wep, call(scr.data_clone, _wep)]);
 	}
 	
 #define loadout_wep_reset()
@@ -4984,8 +5019,7 @@ var _shine = argument_count > 4 ? argument[4] : shnNone;
 			_wepSave = unlock_get(`loadout:wep:${_race}:${_name}`);
 			
 		if(_wep == _wepSave){
-			var _wepCopy = self[3];
-			save_set(`unlock:loadout:wep:${_race}:${_name}`, _wepCopy);
+			save_set(`unlock:loadout:wep:${_race}:${_name}`, self[3]);
 		}
 	}
 	

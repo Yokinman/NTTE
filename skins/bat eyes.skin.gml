@@ -13,7 +13,7 @@
 #define skin_name      return ((argument_count <= 0 || argument0) ? "BAT" : skin_lock());
 #define skin_lock      return "???";
 #define skin_unlock    return "???";
-#define skin_ttip      return "???";
+#define skin_ttip      return choose("THE DANGER", "TREAD LIGHTLY", "SAY MY NAME");
 #define skin_avail     return call(scr.unlock_get, "skin:" + mod_current) || 1;
 #define skin_portrait  return skin_sprite(sprBigPortrait);
 #define skin_mapicon   return skin_sprite(sprMapIcon);
@@ -73,7 +73,7 @@
 	return skin_weapon_sprite(_wep, _spr);
 	
 #define skin_weapon_swap(_wep, _swap)
-	sound_play_pitchvol(sndSwapHammer, 1.2, 0.5);
+	sound_play_pitchvol(sndSwapHammer, 1.2, 2/3);
 	return _swap;
 	
 	

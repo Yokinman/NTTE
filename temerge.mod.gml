@@ -7,7 +7,8 @@
 	 // Store Script References:
 	with([
 		weapon_set_temerge, weapon_deactivate_temerge, weapon_activate_temerge, weapon_add_temerge, weapon_delete_temerge, weapon_has_temerge, weapon_has_temerge_weapon, weapon_is_temerge_part, weapon_get_temerge_weapon, weapon_set_temerge_weapon, weapon_add_temerge_weapon, temerge_decide_weapon, temerge_weapon_event_set_script,
-		projectile_add_temerge_event, projectile_add_temerge_effect, projectile_has_temerge_effect, projectile_add_temerge_scale, projectile_add_temerge_bloom, projectile_add_temerge_damage, projectile_add_temerge_force, projectile_can_temerge_hit, projectile_temerge_wall_bounce, projectile_temerge_destroy
+		projectile_add_temerge_event, projectile_add_temerge_effect, projectile_has_temerge_effect, projectile_add_temerge_scale, projectile_add_temerge_bloom, projectile_add_temerge_damage, projectile_add_temerge_force, projectile_can_temerge_hit, projectile_temerge_wall_bounce, projectile_temerge_destroy,
+		temerge_effect_add_event, temerge_effect_call_event
 	]){
 		lq_set(scr, script_get_name(self), script_ref_create(self));
 	}

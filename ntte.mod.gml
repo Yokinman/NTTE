@@ -2386,9 +2386,12 @@
 	 // Bonus Chests:
 	with(instances_matching([AmmoPickup, HPPickup, AmmoChest, HealthChest, Mimic, SuperMimic], "bonus_pickup_check", null)){
 		bonus_pickup_check = (
-			chance(1, 6)
-			&& _normalArea
-			&& GameCont.hard > 8
+			(
+				chance(1, 6)
+				&& _normalArea
+				&& GameCont.hard > 8
+			)
+			|| crown_current == "bonus"
 		);
 		if(bonus_pickup_check){
 			var _chest = "";
@@ -2914,7 +2917,6 @@
 	 // IDPD Chest Alerts:
 	if(instance_exists(IDPDSpawn)){
 		with(instances_matching(_inst, "sprite_index", sprIDPDChestOpen)){
-			 // Alert:
 			var _spr = spr.PopoAlert;
 			if(array_length(instances_matching(IDPDSpawn, "elite", true))) _spr = spr.PopoEliteAlert;
 			if(array_length(instances_matching(IDPDSpawn, "freak", true))) _spr = spr.PopoFreakAlert;
@@ -2926,9 +2928,6 @@
 				flash       = 6;
 				snd_flash   = sndIDPDNadeAlmost;
 			}
-			
-			 // No Cheese:
-			call(scr.portal_poof);
 		}
 	}
 	
@@ -3546,8 +3545,20 @@
 				}
 			}
 			
-			 // Portal Out of Bounds Fix:
+			 // Portals:
 			if(instance_exists(Portal)){
+				 // IDPD Clear Portal:
+				if(
+					instance_exists(IDPDSpawn)
+					&& player_count_race(char_rogue) <= 0
+					&& instance_number(enemy) - instance_number(Van) > 0
+					&& array_length(instances_matching(IDPDSpawn, "alarm1", 1))
+					&& !array_length(instances_matching_gt(IDPDSpawn, "alarm1", 1))
+				){
+					call(scr.portal_poof);
+				}
+				
+				 // Portal Out of Bounds Fix:
 				var _inst = instances_matching(Portal, "alarm0", 1);
 				if(array_length(_inst)){
 					with(_inst){
@@ -3594,19 +3605,6 @@
 		
 		 // Instance Setup:
 		ntte_setup();
-		
-		 // Proto Statue Destroys Portal:
-		if(instance_exists(ProtoStatue) && (instance_exists(enemy) || instance_exists(IDPDSpawn))){
-			var _inst = instances_matching(ProtoStatue, "ntte_portalpoof_check", null);
-			if(array_length(_inst)){
-				with(_inst){
-					if(my_health < maxhealth * 0.7){
-						ntte_portalpoof_check = true;
-						call(scr.portal_poof);
-					}
-				}
-			}
-		}
 		
 		 // Better Inactive Throne Hitbox:
 		if(instance_exists(NothingIntroMask)){
