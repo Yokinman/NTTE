@@ -191,10 +191,10 @@
 		case sprMutant1Dead      : return race_sprite_raw("Dead",         _b);
 		case sprMutant1GoSit     : return race_sprite_raw("GoSit",        _b);
 		case sprMutant1Sit       : return race_sprite_raw("Sit",          _b);
-		case sprFishMenu         : return race_sprite_raw("Idle",         _b);
+		case sprFishMenu         : return race_sprite_raw("Menu",         _b);
 		case sprFishMenuSelected : return race_sprite_raw("MenuSelected", _b);
-		case sprFishMenuSelect   : return race_sprite_raw("Idle",         _b);
-		case sprFishMenuDeselect : return race_sprite_raw("Idle",         _b);
+		case sprFishMenuSelect   : return race_sprite_raw("MenuSelect",   _b);
+		case sprFishMenuDeselect : return race_sprite_raw("MenuDeselect", _b);
 		case sprChickenFeather   : return race_sprite_raw("Feather",      _b);
 		case sprRogueAmmoHUD     : return race_sprite_raw("FeatherHUD",   _b);
 	}

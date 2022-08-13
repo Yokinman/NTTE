@@ -5,14 +5,18 @@
 	lag = false;
 	
 	 // Custom Object Related:
-	obj                                      = {};
-	global.obj_create_event_ref_map          = ds_map_create();
-	global.obj_event_index_list_map          = ds_map_create();
-	global.obj_parent_map                    = ds_map_create();
-	global.obj_search_bind_map               = ds_map_create();
-	global.event_obj_list_map                = ds_map_create();
-	global.depth_obj_draw_event_instance_map = ds_map_create();
-	global.object_event_index_list_map       = ds_map_create();
+	obj = {};
+	with([
+		"obj_create_event_ref_map",
+		"obj_event_index_list_map",
+		"obj_parent_map",
+		"obj_search_bind_map",
+		"event_obj_list_map",
+		"depth_obj_draw_event_instance_map",
+		"object_event_index_list_map"
+	]){
+		mod_variable_set("mod", mod_current, self, ds_map_create());
+	}
 	
 	 // Custom Object Event Variable Names:
 	global.event_varname_list = ["script", "on_step", "on_begin_step", "on_end_step", "on_draw", "on_destroy", "on_cleanup", "on_anim", "on_death", "on_hurt", "on_hit", "on_wall", "on_projectile", "on_grenade"];
@@ -1926,45 +1930,48 @@
 				"parrot" : {
 					skin : 2,
 					sprt : [
-						["Loadout",       2, 16,  16, true],
-						["Map",           1, 10,  10, true],
-						["Portrait",      1, 20, 221, true],
+						["Loadout",       2, 16],
+						["Map",           1, 10],
+						["Portrait",      1, 20, 221],
 						["Select",        2,  0,   0, false],
 						["UltraIcon",     2, 12,  16, false],
 						["UltraHUDA",     1,  8,   9, false],
 						["UltraHUDB",     1,  8,   9, false],
-						["Idle",          4, 12,  12, true],
-						["Walk",          6, 12,  12, true],
-						["Hurt",          3, 12,  12, true],
-						["Dead",          6, 12,  12, true],
-						["GoSit",         3, 12,  12, true],
-						["Sit",           1, 12,  12, true],
-						["MenuSelected", 10, 16,  16, false],
-						["Feather",       1,  3,   4, true],
-						["FeatherHUD",    8,  5,   5, true]
+						["Idle",          4],
+						["Walk",          6],
+						["Hurt",          3],
+						["Dead",          6],
+						["GoSit",         3],
+						["Sit",           1],
+						["Menu",         40, 12,  12, false],
+						["MenuSelect",    3, 12,  12, false],
+						["MenuSelected", 30, 16,  16, false],
+						["MenuDeselect",  4, 12,  12, false],
+						["Feather",       1,  3,   4],
+						["FeatherHUD",    8,  5]
 					]
 				},
 				
 				"beetle" : {
 					skin : 2,
 					sprt : [
-						["Loadout",         2, 16,  16, true],
-						["Map",             1, 10,  10, true],
-						["Portrait",        1, 90, 243, true],
+						["Loadout",         2, 16],
+						["Map",             1, 10],
+						["Portrait",        1, 90, 243],
 						["Select",          2,  0,   0, false],
 						["UltraIcon",       2, 12,  16, false],
 						["UltraHUDA",       1,  8,   9, false],
 						["UltraHUDB",       1,  8,   9, false],
-						["Idle",            4, 12,  12, true],
-						["Walk",            8, 12,  12, true],
-						["Hurt",            3, 12,  12, true],
-						["Dead",           10, 12,  12, true],
-						["GoSit",           3, 12,  12, true],
-						["Sit",             1, 12,  12, true],
-						["Menu",            4, 12,  12, false],
-						["MenuSelect",      4, 12,  12, false],
-						["MenuSelected",    8, 12,  12, false],
-						["MenuDeselect",    8, 12,  12, false],
+						["Idle",            4],
+						["Walk",            8],
+						["Hurt",            3],
+						["Dead",           10],
+						["GoSit",           3],
+						["Sit",             1],
+						["Menu",           48, 12,  12, false],
+						["MenuSelect",     18, 12,  12, false],
+						["MenuSelected",   26, 12,  12, false],
+						["MenuDeselect",   18, 12,  12, false],
 						["ThroneButtIcon",  1,  5,   5, false]
 					]
 				}/*,
@@ -1972,19 +1979,19 @@
 				"???" : {
 					skin : 2,
 					sprt : [
-						["Loadout",   2, 16,  16, true],
-						["Map",       1, 10,  10, true],
-						["Portrait",  1, 40, 243, true],
+						["Loadout",   2, 16],
+						["Map",       1, 10],
+						["Portrait",  1, 40, 243],
 						["Select",    2,  0,   0, false],
 						["UltraIcon", 2, 12,  16, false],
 						["UltraHUDA", 1,  8,   9, false],
 						["UltraHUDB", 1,  8,   9, false],
-						["Idle",      8, 12,  12, true],
-						["Walk",      6, 12,  12, true],
-						["Hurt",      3, 12,  12, true],
-						["Dead",      6, 12,  12, true],
-						["GoSit",     3, 12,  12, true],
-						["Sit",       1, 12,  12, true]
+						["Idle",      8],
+						["Walk",      6],
+						["Hurt",      3],
+						["Dead",      6],
+						["GoSit",     3],
+						["Sit",       1]
 					]
 				}*/
 			};
@@ -2006,9 +2013,9 @@
 					with(_raceInfo.sprt){
 						var	_name = self[0],
 							_img  = self[1],
-							_x    = self[2],
-							_y    = self[3],
-							_hasB = self[4];
+							_x    = ((array_length(self) > 2) ? self[2] : 12),
+							_y    = ((array_length(self) > 3) ? self[3] : _x),
+							_hasB = ((array_length(self) > 4) ? self[4] : true);
 							
 						lq_set(_skinSprMap, _name, spr_add("spr" + _raceName + (_hasB ? _skinName : "") + _name, _img, _x, _y));
 					}
@@ -2021,8 +2028,9 @@
 				lq_set(Race, _race, _raceSkinSprMapList);
 			}
 			
-			 // Parrot Charm:
+			 // Parrot:
 			spr_path_add("Parrot/");
+			shd.ParrotMenu      = spr_add("shdParrotMenu",          1, 16, 16);
 			AllyReviveArea      = spr_add("sprAllyReviveArea",      4, 35, 45);
 			AllyNecroReviveArea = spr_add("sprAllyNecroReviveArea", 4, 17, 20);
 			spr_path_add("../");
@@ -2765,7 +2773,6 @@
 	global.loadout_wep_clone = ds_list_create();
 	
 	 // Math Epsilon:
-	global.epsilon = 1;
 	for(var i = 0; i <= 16; i++){
 		global.epsilon = power(10, -i);
 		if(global.epsilon == 0){
@@ -2960,7 +2967,7 @@
 			repeat(8) with(instance_create(random_range(bbox_left, bbox_right + 1), random_range(bbox_top, bbox_bottom + 1), Dust)){
 				motion_add(random(360), random(random(8)));
 			}
-			instance_delete(self);
+			instance_destroy();
 		}
 	}
 	
@@ -4170,6 +4177,16 @@ var _shine = argument_count > 4 ? argument[4] : shnNone;
 					depth      = other.depth;
 					visible    = other.visible;
 					persistent = true;
+					if(depth == object_get_depth(SubTopCont)){
+						if(fork()){
+							wait 0;
+							with(SubTopCont){
+								instance_create(0, 0, SubTopCont);
+								instance_destroy();
+							}
+							exit;
+						}
+					}
 				}
 			}
 		}
@@ -4177,7 +4194,7 @@ var _shine = argument_count > 4 ? argument[4] : shnNone;
 	
 	 // Autosave (Return to Character Select):
 	if(save_auto){
-		with(instances_matching(Menu, "ntte_autosave", null)){
+		with(instances_matching([Menu, GenCont], "ntte_autosave", null)){
 			ntte_autosave = true;
 			ntte_save();
 		}
@@ -4191,7 +4208,7 @@ var _shine = argument_count > 4 ? argument[4] : shnNone;
 		var _timeTick = 1;
 		with(global.remind){
 			if(active){
-				var	_x = (game_width / 2),
+				var	_x = (game_width  / 2),
 					_y = (game_height / 2) - 40;
 					
 				 // Reminding:
@@ -4248,7 +4265,7 @@ var _shine = argument_count > 4 ? argument[4] : shnNone;
 						}
 						if(_break) break;
 						
-						_x = game_width - 124;
+						_x = game_width  - 124;
 						_y = game_height - 78;
 					}
 					

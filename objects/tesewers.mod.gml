@@ -3492,6 +3492,9 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 						if(projectile_canhit_melee(other)){
 							if(collision_circle(_lx, _ly, _radius / 2, other, true, false)){
 								projectile_hit(other, damage, force, _dir);
+								if(!instance_exists(self)){
+									exit;
+								}
 							}
 						}
 					}

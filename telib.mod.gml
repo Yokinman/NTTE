@@ -6071,6 +6071,13 @@
 						spr_shadow_y = -1;
 						break;
 						
+					case CampChar:
+						if("race" in target && target.race == "parrot"){
+							spr_shadow = spr.shd.ParrotMenu;
+							mask_index = mskAlly;
+						}
+						break;
+						
 					default: // Custom Stuff
 						
 						 // Wall Ravens:

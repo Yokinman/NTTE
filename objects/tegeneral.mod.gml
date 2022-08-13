@@ -4949,7 +4949,7 @@
 		
 		 // Sounds:
 		if(!call(scr.area_get_underwater, GameCont.area)){
-			if(instance_is(self, hitme)){
+			if(instance_is(self, hitme) || instance_is(self, CampChar)){
 				call(scr.sound_play_at, x, y, sndAssassinHit, 1 + orandom(0.3), abs(other.zspeed) / 4);
 			}
 			else if(instance_is(self, chestprop)){
