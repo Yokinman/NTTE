@@ -68,7 +68,7 @@
 		case sndMutant1Valt : return snd.BeetleChst;
 		case sndMutant1Crwn : return snd.BeetleCrwn;
 		case sndMutant1Spch : return snd.BeetleSpch;
-		case sndMutant1IDPD : return snd.BeetleLowA;
+		case sndMutant1IDPD : return snd.BeetleIDPD;
 		case sndMutant1Cptn : return snd.BeetleSpch;
 		case sndMutant1Thrn : return snd.BeetleLowH;
 	}
@@ -183,8 +183,8 @@
 	 // Ultra Sound:
 	if(_state != 0 && instance_exists(EGSkillIcon)){
 		switch(_ultra){
-			case ultA : sound_play(snd.BeetleUltraA); break;
-			case ultB : sound_play(snd.BeetleUltraB); break;
+			case ultA : sound_play_gun(snd.BeetleUltraA, 0, 0.3); break;
+			case ultB : sound_play_gun(snd.BeetleUltraB, 0, 0.3); break;
 		}
 	}
 	

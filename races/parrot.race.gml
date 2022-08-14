@@ -205,18 +205,18 @@
 	var _sndNone = sndFootPlaSand5; // playing a sound that doesn't exist using sound_play_pitch/sound_play_pitchvol modifies sndSwapPistol's pitch/volume
 	
 	switch(_snd){
-		case sndMutant1Wrld : return _sndNone;
-		case sndMutant1Hurt : return sndRavenHit;
-		case sndMutant1Dead : return sndAllyDead;
-		case sndMutant1LowA : return _sndNone;
-		case sndMutant1LowH : return _sndNone;
-		case sndMutant1Chst : return _sndNone;
-		case sndMutant1Valt : return _sndNone;
-		case sndMutant1Crwn : return _sndNone;
-		case sndMutant1Spch : return _sndNone;
-		case sndMutant1IDPD : return _sndNone;
-		case sndMutant1Cptn : return _sndNone;
-		case sndMutant1Thrn : return _sndNone;
+		case sndMutant1Wrld : return snd.ParrotWrld;
+		case sndMutant1Hurt : return snd.ParrotHurt;
+		case sndMutant1Dead : return snd.ParrotDead;
+		case sndMutant1LowA : return snd.ParrotLowA;
+		case sndMutant1LowH : return snd.ParrotLowH;
+		case sndMutant1Chst : return snd.ParrotChst;
+		case sndMutant1Valt : return snd.ParrotChst;
+		case sndMutant1Crwn : return snd.ParrotCrwn;
+		case sndMutant1Spch : return snd.ParrotSpch;
+		case sndMutant1IDPD : return snd.ParrotIDPD;
+		case sndMutant1Cptn : return snd.ParrotSpch;
+		case sndMutant1Thrn : return snd.ParrotIDPD;
 	}
 	
 	return -1;
@@ -233,54 +233,54 @@
 
 /// Menu
 #define race_menu_select
-	if(instance_is(self, CharSelect) || instance_is(other, CharSelect)){
-		 // Yo:
-		sound_play_pitchvol(sndMutant6Slct, 2, 0.6);
-		
-		 // Kun:
-		if(fork()){
-			wait 5 * current_time_scale;
-			
-			audio_sound_set_track_position(
-				sound_play_pitchvol(sndMutant15Hurt, 2, 0.6),
-				0.2
-			);
-			
-			 // Extra singy noise:
-			audio_sound_set_track_position(
-				sound_play_pitchvol(sndMutant15Slct, 2.5, 0.2),
-				0.2
-			);
-			
-			exit;
-		}
-		
-		return -1;
-	}
+	//if(instance_is(self, CharSelect) || instance_is(other, CharSelect)){
+	//	 // Yo:
+	//	sound_play_pitchvol(sndMutant6Slct, 2, 0.6);
+	//	
+	//	 // Kun:
+	//	if(fork()){
+	//		wait 5 * current_time_scale;
+	//		
+	//		audio_sound_set_track_position(
+	//			sound_play_pitchvol(sndMutant15Hurt, 2, 0.6),
+	//			0.2
+	//		);
+	//		
+	//		 // Extra singy noise:
+	//		audio_sound_set_track_position(
+	//			sound_play_pitchvol(sndMutant15Slct, 2.5, 0.2),
+	//			0.2
+	//		);
+	//		
+	//		exit;
+	//	}
+	//	
+	//	return -1;
+	//}
 	
-	return sndRavenLift;
+	return snd.ParrotSlct;
 
 #define race_menu_confirm
-	if(instance_is(self, Menu) || instance_is(other, Menu) || instance_is(other, UberCont)){
-		 // Wah:
-		sound_play_pitchvol(sndMutant6Slct, 2.4, 0.6);
-		
-		 // Tohohoho:
-		if(fork()){
-			wait 5 * current_time_scale;
-			
-			audio_sound_set_track_position(
-				sound_play_pitchvol(sndMutant15Cnfm, 2.5, 0.5),
-				0.4
-			);
-			
-			exit;
-		}
-		
-		return -1;
-	}
+	//if(instance_is(self, Menu) || instance_is(other, Menu) || instance_is(other, UberCont)){
+	//	 // Wah:
+	//	sound_play_pitchvol(sndMutant6Slct, 2.4, 0.6);
+	//	
+	//	 // Tohohoho:
+	//	if(fork()){
+	//		wait 5 * current_time_scale;
+	//		
+	//		audio_sound_set_track_position(
+	//			sound_play_pitchvol(sndMutant15Cnfm, 2.5, 0.5),
+	//			0.4
+	//		);
+	//		
+	//		exit;
+	//	}
+	//	
+	//	return -1;
+	//}
 	
-	return sndRavenLand;
+	return snd.ParrotCnfm;
 
 #define race_menu_button
 	sprite_index = race_sprite_raw("Select", 0);
@@ -379,56 +379,60 @@
 	
 	 // Ultra Sound:
 	if(_state != 0 && instance_exists(LevCont)){
-		sound_play(sndBasicUltra);
+		//sound_play(sndBasicUltra);
 		
 		switch(_ultra){
 			
 			case ult_feather:
 				
-				 // Feathers:
-				if(fork()){
-					for(var i = 0; i < 8; i++){
-						sound_play_pitchvol(sndSharpTeeth, 4 + sin(i / 3), 0.4);
-						wait (1 + (2 * sin(i * 1.5))) * current_time_scale;
-					}
-					
-					exit;
-				}
+				// // Feathers:
+				//if(fork()){
+				//	for(var i = 0; i < 8; i++){
+				//		sound_play_pitchvol(sndSharpTeeth, 4 + sin(i / 3), 0.4);
+				//		wait (1 + (2 * sin(i * 1.5))) * current_time_scale;
+				//	}
+				//	
+				//	exit;
+				//}
+				//
+				// // Charm:
+				//if(fork()){
+				//	wait 7 * current_time_scale;
+				//	
+				//	var _snd = [sndBigBanditIntro, sndBigDogIntro, sndLilHunterAppear];
+				//	for(var i = 0; i < array_length(_snd); i++){
+				//		sound_play_pitchvol(_snd[i], 1.2, 0.8 - (i * 0.1));
+				//		sound_play_pitch(sndBanditDie, 1.2 + (i * 0.4));
+				//		wait 4 * current_time_scale;
+				//	}
+				//	
+				//	exit;
+				//}
 				
-				 // Charm:
-				if(fork()){
-					wait 7 * current_time_scale;
-					
-					var _snd = [sndBigBanditIntro, sndBigDogIntro, sndLilHunterAppear];
-					for(var i = 0; i < array_length(_snd); i++){
-						sound_play_pitchvol(_snd[i], 1.2, 0.8 - (i * 0.1));
-						sound_play_pitch(sndBanditDie, 1.2 + (i * 0.4));
-						wait 4 * current_time_scale;
-					}
-					
-					exit;
-				}
+				sound_play_gun(snd.ParrotUltraA, 0, 0.3);
 				
 				break;
 				
 			case ult_flock:
 				
-				if(fork()){
-					sound_play_pitch(sndCoopUltraA,     2.0);
-					sound_play_pitch(sndHPPickupBig,    0.8);
-					sound_play_pitch(sndHealthChestBig, 1.5);
-					
-					wait 10 * current_time_scale;
-					
-					 // They Dyin:
-					var _snd = [sndBigMaggotDie, sndScorpionDie, sndBigBanditDie];
-					for(var i = 0; i < array_length(_snd); i++){
-						sound_play_pitchvol(_snd[i], 1.3, 1.4);
-						wait 5 * current_time_scale;
-					}
-					
-					exit;
-				}
+				//if(fork()){
+				//	sound_play_pitch(sndCoopUltraA,     2.0);
+				//	sound_play_pitch(sndHPPickupBig,    0.8);
+				//	sound_play_pitch(sndHealthChestBig, 1.5);
+				//	
+				//	wait 10 * current_time_scale;
+				//	
+				//	 // They Dyin:
+				//	var _snd = [sndBigMaggotDie, sndScorpionDie, sndBigBanditDie];
+				//	for(var i = 0; i < array_length(_snd); i++){
+				//		sound_play_pitchvol(_snd[i], 1.3, 1.4);
+				//		wait 5 * current_time_scale;
+				//	}
+				//	
+				//	exit;
+				//}
+				
+				sound_play_gun(snd.ParrotUltraB, 0, 0.3);
 				
 				break;
 				
@@ -796,18 +800,18 @@
 		}
 	}
 	
-	 // Pitched snd_hurt:
-	if(sprite_index == spr_hurt && image_index == image_speed_raw){
-		var _sndMax = sound_play_pitchvol(0, 0, 0);
-		sound_stop(_sndMax);
-		for(var i = _sndMax - 1; i >= _sndMax - 10; i--){
-			if(audio_get_name(i) == audio_get_name(snd_hurt)){
-				audio_sound_pitch(i, 1.1 + random(0.4));
-				audio_sound_gain(i, 1.2 * audio_sound_get_gain(i), 0);
-				break;
-			}
-		}
-	}
+	//  // Pitched snd_hurt:
+	// if(sprite_index == spr_hurt && image_index == image_speed_raw){
+	// 	var _sndMax = sound_play_pitchvol(0, 0, 0);
+	// 	sound_stop(_sndMax);
+	// 	for(var i = _sndMax - 1; i >= _sndMax - 10; i--){
+	// 		if(audio_get_name(i) == audio_get_name(snd_hurt)){
+	// 			audio_sound_pitch(i, 1.1 + random(0.4));
+	// 			audio_sound_gain(i, 1.2 * audio_sound_get_gain(i), 0);
+	// 			break;
+	// 		}
+	// 	}
+	// }
 	
 	 // Death Feathers:
 	if(my_health <= 0 && candie && feather_ammo > 0){

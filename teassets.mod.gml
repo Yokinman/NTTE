@@ -840,7 +840,14 @@
 			SealHurt = [];
 			SealDead = [];
 			SealSpwn = [];
-			SealWeap = [];
+			SealWeap = [
+				mskNone,
+				spr_add("sprHookPole",    1, 18,  2),
+				spr_add("sprSabre",       1, -2,  1),
+				spr_add("sprBlunderbuss", 1,  7,  1),
+				spr_add("sprRepeater",    1,  6,  2),
+				sprBanditGun
+			];
 			for(var i = 0; i <= 6; i++){
 				var _num = ((i == 0) ? "" : i);
 				SealIdle[i] = spr_add(`sprSealIdle${_num}`, 6, 12, 12);
@@ -848,13 +855,7 @@
 				SealHurt[i] = spr_add(`sprSealHurt${_num}`, 3, 12, 12);
 				SealDead[i] = spr_add(`sprSealDead${_num}`, 6, 12, 12);
 				SealSpwn[i] = spr_add(`sprSealSpwn${_num}`, 6, 12, 12);
-				SealWeap[i] = mskNone;
 			}
-			SealWeap[1] = spr_add("sprHookPole",    1, 18,  2);
-			SealWeap[2] = spr_add("sprSabre",       1, -2,  1);
-			SealWeap[3] = spr_add("sprBlunderbuss", 1,  7,  1);
-			SealWeap[4] = spr_add("sprRepeater",    1,  6,  2);
-			SealWeap[6] = sprBanditGun;
 			SealDisc    = spr_add("sprSealDisc",    2,  7,  7);
 			SkealIdle   = spr_add("sprSkealIdle",   6, 12, 12);
 			SkealWalk   = spr_add("sprSkealWalk",   7, 12, 12);
@@ -2581,40 +2582,37 @@
 	 // SOUNDS //
 	snd = {};
 	with(snd){
+		 // Palanking:
+		with(["Hurt", "Dead", "Call", "Swipe", "Taunt"]){
+			lq_set(other, `Palanking${self}`, sound_add(`sounds/enemies/Palanking/sndPalanking${self}.ogg`));
+		}
+		sound_volume(PalankingHurt, 0.6);
 		
-		 // Enemies:
+		 // SawTrap:
+		SawTrap = sound_add("sounds/enemies/SawTrap/sndSawTrap.ogg");
 		
-			 // Palanking:
-			PalankingHurt  = sound_add("sounds/enemies/Palanking/sndPalankingHurt.ogg");
-			PalankingDead  = sound_add("sounds/enemies/Palanking/sndPalankingDead.ogg");
-			PalankingCall  = sound_add("sounds/enemies/Palanking/sndPalankingCall.ogg");
-			PalankingSwipe = sound_add("sounds/enemies/Palanking/sndPalankingSwipe.ogg");
-			PalankingTaunt = sound_add("sounds/enemies/Palanking/sndPalankingTaunt.ogg");
-			sound_volume(PalankingHurt, 0.6);
-			
-			 // SawTrap:
-			SawTrap = sound_add("sounds/enemies/SawTrap/sndSawTrap.ogg");
-			
-		 // Beetle:
+		 // Characters:
 		with([
-			"BeetleSlct",
-			"BeetleCnfm",
-			"BeetleWrld",
-			"BeetleHurt",
-			"BeetleDead",
-			"BeetleLowA",
-			"BeetleLowH",
-			"BeetleChst",
-		//	"BeetleValt",
-			"BeetleCrwn",
-			"BeetleSpch",
-		//	"BeetleIDPD",
-		//	"BeetleCptn",
-		//	"BeetleThrn",
-			"BeetleUltraA",
-			"BeetleUltraB"
+			"Slct",
+			"Cnfm",
+			"Wrld",
+			"Hurt",
+			"Dead",
+			"LowA",
+			"LowH",
+			"Chst",
+		//	"Valt",
+			"Crwn",
+			"Spch",
+			"IDPD",
+		//	"Cptn",
+		//	"Thrn",
+			"UltraA",
+			"UltraB"
 		]){
-			lq_set(other, self, sound_add(`sounds/races/Beetle/snd${self}.ogg`));
+			with(["Beetle", "Parrot"]){
+				lq_set(snd, self + other, sound_add(`sounds/races/${self}/snd${self + other}.ogg`));
+			}
 		}
 		
 		 // Music:
