@@ -11,10 +11,10 @@
 
 #define skin_race      return "robot";
 #define skin_name      return ((argument_count <= 0 || argument0) ? "BONUS" : skin_lock());
-#define skin_lock      return "???";
-#define skin_unlock    return "???";
+#define skin_lock      return "PLAY 8 HOURS OF NT:TE";
+#define skin_unlock    return "FOR PLAYING 8 HOURS OF NT:TE";
 #define skin_ttip      return choose("RECYCLE", "MK 600", "YOU ARE TERMINATED");
-#define skin_avail     return call(scr.unlock_get, "skin:" + mod_current) || 1;
+#define skin_avail     return call(scr.unlock_get, "skin:" + mod_current);
 #define skin_portrait  return skin_sprite(sprBigPortrait);
 #define skin_mapicon   return skin_sprite(sprMapIcon);
 

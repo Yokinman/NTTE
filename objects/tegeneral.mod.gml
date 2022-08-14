@@ -4982,7 +4982,7 @@
 				mask_index = ((mask_index < 0) ? sprite_index : mask_index);
 				
 				 // Visual:
-				sprite_index = spr.TopTiny[? sprite_index][(_x >= x + 8), (_y >= y + 8)];
+				sprite_index = spr.TopTiny[? sprite_index][_x >= x + 8][_y >= y + 8];
 				image_index  = irandom(image_number - 1);
 				
 				 // Fix Drawing Order:

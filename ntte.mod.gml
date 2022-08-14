@@ -1440,36 +1440,36 @@
 				call(scr.floor_set_align, 32, 32);
 				
 				 // Artifact:
-				if(GameCont.proto){
-					var _partIndex = 0;
-					if(!call(scr.unlock_get, `quest:part:${_partIndex}`)){
-						if("ntte_quest_spawned_part_index_list" not in GameCont){
-							GameCont.ntte_quest_spawned_part_index_list = [];
+				var _partIndex = 0;
+				if("ntte_quest_spawned_part_index_list" not in GameCont){
+					GameCont.ntte_quest_spawned_part_index_list = [];
+				}
+				if(
+					GameCont.proto
+					&& !call(scr.unlock_get, `quest:part:${_partIndex}`)
+					&& array_find_index(GameCont.ntte_quest_spawned_part_index_list, _partIndex) < 0
+				){
+					array_push(GameCont.ntte_quest_spawned_part_index_list, _partIndex);
+					
+					var _w		  = 2,
+						_h		  = 2,
+						_type	  = "",
+						_dirStart = random(360),
+						_dirOff   = 90,
+						_floorDis = 0;
+						
+					with(call(scr.floor_room_create, x, y, _w, _h, _type, _dirStart, _dirOff, _floorDis)){
+						 // Ancient Artifact:
+						with(call(scr.chest_create, x, y, "QuestChest", true)){
+							wep.type_index = _partIndex + 1;
 						}
-						if(array_find_index(GameCont.ntte_quest_spawned_part_index_list, _partIndex) < 0){
-							array_push(GameCont.ntte_quest_spawned_part_index_list, _partIndex);
-							
-							var _w		  = 2,
-								_h		  = 2,
-								_type	  = "",
-								_dirStart = random(360),
-								_dirOff   = 90,
-								_floorDis = 0;
-								
-							with(call(scr.floor_room_create, x, y, _w, _h, _type, _dirStart, _dirOff, _floorDis)){
-								 // Ancient Artifact:
-								with(call(scr.chest_create, x, y, "QuestChest", true)){
-									wep.type_index = _partIndex + 1;
-								}
-								
-								 // Floor Tiles:
-								var _img = 0;
-								with(floors){
-									sprite_index = spr.VaultFlowerFloorSmall;
-									image_index  = _img++;
-									depth		 = 7;
-								}
-							}
+						
+						 // Floor Tiles:
+						var _img = 0;
+						with(floors){
+							sprite_index = spr.VaultFlowerFloorSmall;
+							image_index  = _img++;
+							depth		 = 7;
 						}
 					}
 				}
@@ -3903,75 +3903,72 @@
 		if(lag) trace_time();
 		
 		 // Crown Found:
-		if(is_string(crown_current) && array_find_index(ntte.mods.crown, crown_current) >= 0){
-			call(scr.stat_set, "found:" + crown_current + ".crown", true);
-			call(scr.save_set, "unlock:pack:crown",                 true);
+		if(array_find_index(ntte.mods.crown, crown_current) >= 0){
+			call(scr.stat_set, `found:${crown_current}.crown`, true);
+			call(scr.save_set, "unlock:pack:crown",            true);
 		}
 		
-		 // Player-Related:
-		if(instance_exists(Player)){
-			 // Locked Weapons:
-			with(Player){
-				for(var i = 0; i < 2; i++){
-					var	_wep = ((i == 0) ? wep : bwep),
-						_raw = call(scr.wep_raw, _wep);
+		 // Locked Weapons:
+		with(Player){
+			for(var i = 0; i < 2; i++){
+				var	_wep = ((i == 0) ? wep : bwep),
+					_raw = call(scr.wep_raw, _wep);
+					
+				if(
+					is_string(_raw)
+					&& mod_script_exists("weapon", _raw, "weapon_avail")
+					&& array_find_index(ntte.mods.weapon, _raw) >= 0
+				){
+					 // No Cheaters (bro just play the mod):
+					if(!call(scr.weapon_get, "avail", _wep)){
+						var _b = ((i == 0) ? "" : "b");
 						
-					if(
-						is_string(_raw)
-						&& mod_script_exists("weapon", _raw, "weapon_avail")
-						&& array_find_index(ntte.mods.weapon, _raw) >= 0
-					){
-						 // No Cheaters (bro just play the mod):
-						if(!call(scr.weapon_get, "avail", _wep)){
-							var _b = ((i == 0) ? "" : "b");
-							
-							 // Boneify:
-							variable_instance_set(self, _b + "wep",      "crabbone");
-							variable_instance_set(self, _b + "wepangle", choose(-120, 120));
-							
-							 // Effects:
-							sound_play(sndCrownRandom);
-							view_shake_at(x, y, 20);
-							instance_create(x, y, GunWarrantEmpty);
-							repeat(2){
-								with(call(scr.fx, x, y, [gunangle + variable_instance_get(self, _b + "wepangle"), 2.5], Smoke)){
-									depth = other.depth - 1;
-								}
+						 // Boneify:
+						variable_instance_set(self, _b + "wep",      "crabbone");
+						variable_instance_set(self, _b + "wepangle", choose(-120, 120));
+						
+						 // Effects:
+						sound_play(sndCrownRandom);
+						view_shake_at(x, y, 20);
+						instance_create(x, y, GunWarrantEmpty);
+						repeat(2){
+							with(call(scr.fx, x, y, [gunangle + variable_instance_get(self, _b + "wepangle"), 2.5], Smoke)){
+								depth = other.depth - 1;
 							}
 						}
-						
-						 // Weapon Found:
-						else call(scr.stat_set, "found:" + _raw + ".wep", true);
 					}
+					
+					 // Weapon Found:
+					else call(scr.stat_set, "found:" + _raw + ".wep", true);
 				}
 			}
-			
-			 // Character Stats:
-			with(ntte.mods.race){
-				for(var i = 0; i < maxp; i++){
-					if(player_get_race(i) == self){
-						 // Time:
-						if((!array_length(instances_matching(instances_matching(Player, "race", self), "visible", false)) && !instance_exists(GenCont)) || instance_exists(LevCont)){
-							if(!instance_exists(PlayerSit)){
-								var _stat = "race:" + self + ":time";
-								call(scr.stat_set, _stat, call(scr.stat_get, _stat) + (current_time_scale / 30));
-							}
+		}
+		
+		 // Character Stats:
+		with(ntte.mods.race){
+			for(var i = 0; i < maxp; i++){
+				if(player_get_race(i) == self){
+					 // Time:
+					if((!array_length(instances_matching(instances_matching(Player, "race", self), "visible", false)) && !instance_exists(GenCont)) || instance_exists(LevCont)){
+						if(!instance_exists(PlayerSit)){
+							var _stat = "race:" + self + ":time";
+							call(scr.stat_set, _stat, call(scr.stat_get, _stat) + (current_time_scale / 30));
 						}
-						
-						 // Kills:
-						if("ntte_kills_last" in GameCont && GameCont.kills != GameCont.ntte_kills_last){
-							var _stat = "race:" + self + ":kill";
-							call(scr.stat_set, _stat, call(scr.stat_get, _stat) + (GameCont.kills - GameCont.ntte_kills_last));
-							
-							 // Best Run:
-							if(GameCont.kills >= call(scr.stat_get, "race:" + self + ":best:kill")){
-								call(scr.stat_set, "race:" + self + ":best:area", [GameCont.area, GameCont.subarea, _gameLoop]);
-								call(scr.stat_set, "race:" + self + ":best:kill", GameCont.kills);
-							}
-						}
-						
-						break;
 					}
+					
+					 // Kills:
+					if("ntte_kills_last" in GameCont && GameCont.kills != GameCont.ntte_kills_last){
+						var _stat = "race:" + self + ":kill";
+						call(scr.stat_set, _stat, call(scr.stat_get, _stat) + (GameCont.kills - GameCont.ntte_kills_last));
+						
+						 // Best Run:
+						if(GameCont.kills >= call(scr.stat_get, "race:" + self + ":best:kill")){
+							call(scr.stat_set, "race:" + self + ":best:area", [GameCont.area, GameCont.subarea, _gameLoop]);
+							call(scr.stat_set, "race:" + self + ":best:kill", GameCont.kills);
+						}
+					}
+					
+					break;
 				}
 			}
 		}
@@ -3988,22 +3985,18 @@
 			}
 			
 			 // Reset:
-			if(instance_exists(RavenFly)){
-				_inst = instances_matching(instances_matching(RavenFly, "sprite_index", sprRavenLand), "depth", -9);
-				if(array_length(_inst)){
-					with(_inst){
-						if(anim_end){
-							depth = object_get_depth(Raven);
-						}
+			_inst = instances_matching(instances_matching(RavenFly, "sprite_index", sprRavenLand), "depth", -9);
+			if(array_length(_inst)){
+				with(_inst){
+					if(anim_end){
+						depth = object_get_depth(Raven);
 					}
 				}
 			}
-			if(instance_exists(LilHunterFly)){
-				_inst = instances_matching(instances_matching_ge(instances_matching(LilHunterFly, "sprite_index", sprLilHunterLand), "z", -10 * current_time_scale), "depth", -9);
-				if(array_length(_inst)){
-					with(_inst){
-						depth = object_get_depth(LilHunter);
-					}
+			_inst = instances_matching(instances_matching_ge(instances_matching(LilHunterFly, "sprite_index", sprLilHunterLand), "z", -10 * current_time_scale), "depth", -9);
+			if(array_length(_inst)){
+				with(_inst){
+					depth = object_get_depth(LilHunter);
 				}
 			}
 		}
@@ -4456,7 +4449,11 @@
 		}
 		
 		 // NT:TE Time Stat:
-		call(scr.stat_set, "time", call(scr.stat_get, "time") + (current_time_scale / 30));
+		var _time = call(scr.stat_get, "time") + (current_time_scale / 30);
+		call(scr.stat_set, "time", _time);
+		if(_time >= 28800 && array_length(instances_matching(Player, "race", "robot"))){
+			call(scr.unlock_set, "skin:bonus robot", true);
+		}
 		
 		 // Reset Warp Zone Map Data:
 		mod_variable_set("area", "red", "mapdata_warp_draw", undefined);
@@ -4472,12 +4469,12 @@
 	var _map = [];
 	
 	 // Disable Drawing:
-	var	_lastVis = array_create(maxp, true),
+	var	_lastVis = [],
 		_lastCol = draw_get_color(),
 		_lastAlp = draw_get_alpha();
 		
 	for(var i = 0; i < maxp; i++){
-		_lastVis[i] = draw_get_visible(i);
+		array_push(_lastVis, draw_get_visible(i));
 	}
 	draw_set_visible_all(false);
 	draw_set_color(c_white);
@@ -4569,11 +4566,7 @@
 		
 		var	_hudList = call(scr.player_get_hud_index),
 			_players = 0,
-			_pause   = false,
-			_vx      = view_xview_nonsync,
-			_vy      = view_yview_nonsync,
-			_gw      = game_width,
-			_gh      = game_height;
+			_pause   = false;
 			
 		 // Players:
 		for(var i = 0; i < maxp; i++){
@@ -4590,9 +4583,9 @@
 		}
 		
 		 // Mutation HUD:
-		with(call(scr.surface_setup, "HUDSkill", _gw, _gh, game_scale_nonsync)){
-			x = _vx;
-			y = _vy;
+		with(call(scr.surface_setup, "HUDSkill", game_width, game_height, game_scale_nonsync)){
+			x = view_xview_nonsync;
+			y = view_yview_nonsync;
 			
 			var _draw = false;
 			
@@ -4625,7 +4618,7 @@
 					
 					 // Mutation Drawing:
 					if(array_length(_skillList)){
-						var	_sx            = _gw - 11,
+						var	_sx            = game_width - 11,
 							_sy            = 12,
 							_addx          = -16,
 							_addy          = 16,
@@ -4653,13 +4646,13 @@
 							if(_players >= 2){
 								_minx = 10;
 								_addy *= -1;
-								_sy = _gh - 12;
+								_sy = game_height - 12;
 								if(instance_exists(LevCont)){
 									_sy -= 34;
 								}
 								else{
 									if(_players >= 3) _minx = 100;
-									if(_players >= 4) _sx = _gw - 100;
+									if(_players >= 4) _sx = game_width - 100;
 								}
 							}
 						}
@@ -4858,7 +4851,7 @@
 				}
 			}
 			
-			d3d_set_projection_ortho(_vx, _vy, _gw, _gh, 0);
+			d3d_set_projection_ortho(view_xview_nonsync, view_yview_nonsync, game_width, game_height, 0);
 			surface_reset_target();
 			
 			 // Draw to Screen:
@@ -4876,9 +4869,9 @@
 		}
 		
 		 // Player HUD:
-		with(call(scr.surface_setup, "HUDMain", _gw, _gh, game_scale_nonsync)){
-			x = _vx;
-			y = _vy;
+		with(call(scr.surface_setup, "HUDMain", game_width, game_height, game_scale_nonsync)){
+			x = view_xview_nonsync;
+			y = view_yview_nonsync;
 			
 			surface_set_target(surf);
 			draw_clear_alpha(c_black, 0);
@@ -5307,7 +5300,7 @@
 							}
 						}
 						
-						d3d_set_projection_ortho(_vx, _vy, _gw, _gh, 0);
+						d3d_set_projection_ortho(view_xview_nonsync, view_yview_nonsync, game_width, game_height, 0);
 						surface_reset_target();
 						
 						 // Draw to Screen:
@@ -5374,10 +5367,10 @@
 								var	_spr = call(scr.race_get_sprite, race, bskin, sprRogueAmmoHUD),
 									_x1  = sprite_get_xoffset(_spr) - sprite_get_bbox_left(_spr),
 									_y1  = sprite_get_yoffset(_spr) - sprite_get_bbox_top(_spr),
-									_x2  = _x1 - sprite_get_bbox_right(_spr)  + _gw,
-									_y2  = _y1 - sprite_get_bbox_bottom(_spr) + _gh,
-									_x   = _vx + clamp(other.x - _vx, _x1 + 1, _x2 - 1);
-									_y   = _vy + clamp(other.y - _vy, _y1 + 1, _y2 - 2);
+									_x2  = _x1 - sprite_get_bbox_right(_spr)  + game_width,
+									_y2  = _y1 - sprite_get_bbox_bottom(_spr) + game_height,
+									_x   = view_xview_nonsync + clamp(other.x - view_xview_nonsync, _x1 + 1, _x2 - 1);
+									_y   = view_yview_nonsync + clamp(other.y - view_yview_nonsync, _y1 + 1, _y2 - 2);
 									
 								draw_sprite(_spr, 0, _x, _y);
 								draw_sprite(call(scr.race_get_sprite, race, bskin, sprChickenFeather), 0, _x, _y);
@@ -5427,11 +5420,11 @@
 							 // Icon:
 							var	_x1 = sprite_get_xoffset(_spr),
 								_y1 = sprite_get_yoffset(_spr),
-								_x2 = _x1 - sprite_get_width(_spr)  + _gw,
-								_y2 = _y1 - sprite_get_height(_spr) + _gh;
+								_x2 = _x1 - sprite_get_width(_spr)  + game_width,
+								_y2 = _y1 - sprite_get_height(_spr) + game_height;
 								
-							_x = _vx + clamp(_x - _vx, _x1 + 1, _x2 - 1);
-							_y = _vy + clamp(_y - _vy, _y1 + 1, _y2 - 1);
+							_x = view_xview_nonsync + clamp(_x - view_xview_nonsync, _x1 + 1, _x2 - 1);
+							_y = view_yview_nonsync + clamp(_y - view_yview_nonsync, _y1 + 1, _y2 - 1);
 							
 							draw_sprite(_spr, _img, _x, _y);
 							

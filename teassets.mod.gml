@@ -66,19 +66,20 @@
 		PromptSubtext   = ds_map_create();
 		
 		 // Shine Overlay:
+		spr_path_set("shine/");
 		with([
-			["Shine8",    7,  4], // Rads
-			["Shine10",   7,  5], // Pickups
-			["Shine12",   7,  6], // Big Rads
-			["Shine16",   7,  8], // Normal Chests
-			["Shine20",   7, 10], // Heavy Chests (Steroids)
-			["Shine24",   7, 12], // Big Chests
-			["Shine64",   7, 32], // Giant Chests (YV)
-			["ShineHurt", 3,  0], // Hurt Flash
-			["ShineSnow", 1,  0]  // Snow Floors
+			8,  // Rads
+			10, // Pickups
+			12, // Big Rads
+			16, // Normal Chests
+			20, // Heavy Chests (Steroids)
+			24, // Big Chests
+			64, // Giant Chests (YV)
 		]){
-			lq_set(spr, self[0], sprite_add(spr_path + `shine/spr${self[0]}.png`, self[1], self[2], self[2]))
+			lq_set(spr, `Shine${self}`, sprite_add(spr_path + `sprShine${self}.png`, 7, self / 2, self / 2));
 		}
+		ShineHurt = sprite_add(spr_path + "sprShineHurt.png", 3, 0, 0); // Hurt Flash
+		ShineSnow = sprite_add(spr_path + "sprShineSnow.png", 1, 0, 0); // Snow Floors
 		
 		//#region MENU / HUD
 		
@@ -2106,6 +2107,9 @@
 			//#region COAT Y.V.
 			spr_path_add("YVCoat/");
 			
+				 // Coat:
+				YVCoat = spr_add("sprYVCoat", 1, 12, 12);
+				
 				 // Player:
 				YVCoatIdle  = spr_add("sprYVCoatIdle",  14, 12, 12);
 				YVCoatWalk  = spr_add("sprYVCoatWalk",   6, 12, 12);
@@ -4971,11 +4975,8 @@ var _shine = argument_count > 4 ? argument[4] : shnNone;
 	with(surface_setup("sprTopTiny", (_sprW / 2) * _sprImg, (_sprH / 2), 1)){
 		free = true;
 		
-		var	_x = 0,
-			_y = 0;
-			
-		repeat(array_length(_sprList[0])){
-			repeat(array_length(_sprList[1])){
+		for(var _x = 0; _x < 2; _x++){
+			for(var _y = 0; _y < 2; _y++){
 				surface_set_target(surf);
 				draw_clear_alpha(c_black, 0);
 				
@@ -4998,15 +4999,12 @@ var _shine = argument_count > 4 ? argument[4] : shnNone;
 				
 				 // Add Sprite:
 				surface_save(surf, name + ".png");
-				_sprList[_x, _y] = sprite_add(
+				_sprList[@ _x][@ _y] = sprite_add(
 					name + ".png",
 					_sprImg,
 					(_sprX - 8) * _x,
 					(_sprY - 8) * _y
 				);
-				
-				_x++;
-				_y++;
 			}
 		}
 	}

@@ -1245,7 +1245,7 @@
 					 // Perform Important Code & Cover Normal LoadoutWeps:
 					if(_real || _slct){
 						// Disable drawing
-						draw_set_blend_mode_ext(bm_zero, bm_dest_alpha);
+						draw_set_blend_mode_ext(bm_zero, bm_one);
 					}
 					else if(!_real){
 						// Cover

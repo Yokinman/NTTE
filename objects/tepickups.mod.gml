@@ -1588,6 +1588,7 @@
 			"hammerhead"   : 0.3 * (_hard >= 10),
 			"spirit"       : 0.3 * (_hard >= 12),
 			"turret"       : 0.7 * (GameCont.loops > 0),
+			"coat"         : 0,
 			"rogue"        : 0,
 			"parrot"       : 0,
 			"bone"         : 0,
@@ -1598,6 +1599,7 @@
 	with(Player){
 		 // Character-Specific:
 		switch(race){
+			case "venuz"  : if(!call(scr.unlock_get, "skin:coat venuz")) _pool.coat++; break;
 			case "rogue"  : _pool.rogue++;  break;
 			case "parrot" : _pool.parrot++; break;
 		}
@@ -1867,6 +1869,17 @@
 					 // Visual:
 					sprite_index = spr.BonusHealthChest;
 					image_blend  = make_color_rgb(200, 160, 255);
+					
+					break;
+					
+				case "coat":
+				
+					text = call(scr.loc_format, "NTTE:ChestShop:Coat:Name", "COAT");
+					desc = call(scr.loc_format, "NTTE:ChestShop:Coat:Text", "STYLISH", num);
+					
+					 // Visual:
+					sprite_index = spr.YVCoat;
+					image_blend  = make_color_rgb(230, 204, 32);
 					
 					break;
 					
@@ -2318,6 +2331,31 @@
 								
 								break;
 								
+							case "coat":
+							
+								call(scr.unlock_set, "skin:coat venuz", true);
+								with(_p){
+									if(race == "venuz"){
+										bskin = "coat venuz";
+										player_set_skin(index, bskin);
+										sprite_index = spr_hurt;
+										image_index  = 0;
+										sound_play(snd_chst);
+										repeat(2){
+											with(instance_create(x + orandom(8), y + orandom(8), CaveSparkle)){
+												depth = other.depth - 1;
+											}
+										}
+									}
+								}
+								with(instance_create(_x, _y, WepPickup)){
+									wep  = call(scr.wep_skin, wep_golden_revolver, "venuz", "coat venuz");
+									ammo = true;
+								}
+								sound_play(sndMenuASkin);
+								
+								break;
+								
 							case "rogue":
 							
 								with(instance_create(_x + orandom(2), _y + orandom(2), RoguePickup)){
@@ -2549,6 +2587,9 @@
 				}
 				if(GameCont.ntte_crime_bounty < 3){
 					GameCont.ntte_crime_bounty = min(GameCont.ntte_crime_bounty + 1, 3);
+					if(GameCont.ntte_crime_bounty >= 3 && player_count_race(char_eyes) > 0){
+						call(scr.unlock_set, "skin:bat eyes", true);
+					}
 				}
 				
 				 // Display Bounty:

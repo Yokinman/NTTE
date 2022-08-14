@@ -3156,11 +3156,11 @@
 				
 			if(_obj == TopCont){
 				with(_vars){
-					if(self[0] == "fogscroll"){
+					var _varName = self[0];
+					if(_varName != "fog" && _varName != "darkness"){
 						with(_obj){
-							variable_instance_set(self, other[0], other[1]);
+							variable_instance_set(self, _varName, other[1]);
 						}
-						break;
 					}
 				}
 			}

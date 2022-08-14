@@ -1390,6 +1390,7 @@
 			"shot_replace_min"           : max(1, _wepMergeStockCost),
 			"shot_replace_base"          : power(1.5, 1 + max(0, (_wepMergeFrontCost - 1) / 9)),
 			"shot_replace_cost_interval" : ((_wepMergeStockCost == 0) ? 1 : abs(_wepMergeStockCost)),
+			"shot_is_delayed"            : false,
 			"frame"                      : current_frame,
 			"x"                          : x,
 			"y"                          : y,
@@ -1501,7 +1502,8 @@
 				var _maxInstanceID = _fire.max_instance_id;
 				for(var _instanceID = _fire.min_instance_id; _instanceID < _maxInstanceID; _instanceID++){
 					if("team" in _instanceID){
-						_fire.has_shot = true;
+						_fire.has_shot        = true;
+						_fire.shot_is_delayed = true;
 						break;
 					}
 				}
@@ -1793,6 +1795,9 @@
 										&& _mainMergeFire.infammo == 0
 									){
 										for(var _mergeFire = _lastMergeFire; _mergeFire != undefined; _mergeFire = _mergeFire.last_vars){
+											if(_mergeFire.shot_is_delayed && _mergeFire.shot_replace_count == 1){
+												break;
+											}
 											if(((_mergeFire.shot_replace_count - 1) % _mergeFire.shot_replace_cost_interval) >= 1){
 												_canCost = false;
 												break;
