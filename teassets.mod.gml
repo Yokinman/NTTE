@@ -2633,6 +2633,8 @@
 			"BigShotsIntro",
 			"PitSquid",
 			"PitSquidIntro",
+			"PitSquidIntroStart",
+			"PitSquidIntroLoop",
 			"Tesseract",
 			"TesseractIntro"
 		]){
