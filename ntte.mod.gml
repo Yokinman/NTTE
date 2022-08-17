@@ -3963,7 +3963,7 @@
 						
 						 // Best Run:
 						if(GameCont.kills >= call(scr.stat_get, "race:" + self + ":best:kill")){
-							call(scr.stat_set, "race:" + self + ":best:area", [GameCont.area, GameCont.subarea, _gameLoop]);
+							call(scr.stat_set, "race:" + self + ":best:area", [GameCont.area, GameCont.subarea, GameCont.loops]);
 							call(scr.stat_set, "race:" + self + ":best:kill", GameCont.kills);
 						}
 					}
@@ -4437,10 +4437,13 @@
 		ntte_music();
 		with(instances_matching_ne(GameCont, "ntte_music_intro_index", null)){
 			if(
-				!audio_is_playing(ntte_music_intro_index)
-				|| audio_sound_get_track_position_nonsync(ntte_music_intro_index) + (1 / room_speed) >= audio_sound_length_nonsync(ntte_music_intro_index)
-				|| !audio_is_playing(ntte_music_intro_target_index)
+				audio_is_playing(ntte_music_intro_index)
+				&& audio_is_playing(ntte_music_intro_target_index)
+				&& audio_sound_get_track_position_nonsync(ntte_music_intro_index) + (1 / room_speed) < audio_sound_length_nonsync(ntte_music_intro_index)
 			){
+				sound_volume(ntte_music_intro_index, audio_sound_get_gain(ntte_music_intro_target_music));
+			}
+			else{
 				audio_sound_set_track_position(ntte_music_intro_target_index, 0);
 				sound_volume(ntte_music_intro_target_index, 1);
 				sound_stop(ntte_music_intro_index);
@@ -5631,6 +5634,7 @@
 				 // Intro Music:
 				if(is_real(_introMus)){
 					sound_volume(GameCont.ntte_music_index, 0);
+					GameCont.ntte_music_intro_target_music = _mus;
 					GameCont.ntte_music_intro_target_index = GameCont.ntte_music_index;
 					GameCont.ntte_music_intro_index        = sound_play_pitchvol(_introMus, 1, audio_sound_get_gain(_mus));
 				}

@@ -1009,7 +1009,7 @@
 #define temerge_weapon_load(_wep, _stockLoad)
 	/*
 		Merged weapons use their front weapon's reload:
-		1. Multiplied by a reduced factor of the reload of their stock weapon(s)
+		1. (If they aren't melee, or if their front weapon is melee) Multiplied by a reduced factor of the reload of their stock weapon(s)
 		2. (If they cost no ammo) Increased by any surplus (>1) ammo cost from their stock weapon(s)
 	*/
 	
@@ -1022,7 +1022,7 @@
 			_mergeLoad = _frontLoad * lerp(1, _stockLoad / 8, 0.8);
 			
 		 // Less Reload Increase:
-		if(_mergeLoad > _frontLoad){
+		if(_mergeLoad > _frontLoad && (!weapon_is_melee(_wep) || weapon_is_melee(_wepXmerge_wep))){
 			_mergeLoad = lerp(_mergeLoad, _frontLoad, 2/3);
 		}
 		
@@ -5749,17 +5749,37 @@
 	projectile_add_temerge_effect(_instanceList, "plasma", [1]);
 	
 	
-#define Slash_temerge_fire(_at)                       temerge_can_delete = false;
-#define Shank_temerge_fire(_at)                       temerge_can_delete = false;
-#define EnergySlash_temerge_fire(_instanceList)       temerge_can_delete = false;
-#define EnergyHammerSlash_temerge_fire(_instanceList) temerge_can_delete = false;
-#define EnergyShank_temerge_fire(_instanceList)       temerge_can_delete = false;
-#define LightningSlash_temerge_fire(_instanceList)    temerge_can_delete = false;
-#define BloodSlash_temerge_fire(_instanceList)        temerge_can_delete = false;
-#define GuitarSlash_temerge_fire(_instanceList)       temerge_can_delete = false;
-#define CustomSlash_temerge_fire(_instanceList)       temerge_can_delete = false;
-
-
+#define Slash_temerge_fire(_at)
+	temerge_can_delete = false;
+	projectile_add_temerge_scale(self, -0.25);
+	
+#define EnergySlash_temerge_fire(_at)
+	Slash_temerge_fire(_at);
+	
+#define EnergyHammerSlash_temerge_fire(_at)
+	Slash_temerge_fire(_at);
+	
+#define LightningSlash_temerge_fire(_at)
+	Slash_temerge_fire(_at);
+	
+#define BloodSlash_temerge_fire(_at)
+	Slash_temerge_fire(_at);
+	
+#define GuitarSlash_temerge_fire(_at)
+	Slash_temerge_fire(_at);
+	
+#define CustomSlash_temerge_fire(_at)
+	Slash_temerge_fire(_at);
+	
+	
+#define Shank_temerge_fire(_at)
+	temerge_can_delete = false;
+	projectile_add_temerge_scale(self, -0.1);
+	
+#define EnergyShank_temerge_fire(_at)
+	Shank_temerge_fire(_at);
+	
+	
 #define ThrownWep_temerge_fire(_at)
 	 // Merge Weapon:
 	wep                = weapon_add_temerge(wep, _at.wep);

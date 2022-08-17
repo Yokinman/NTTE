@@ -25,10 +25,8 @@
 		array_push(global.event_varname_list, `on_alrm${_alarmIndex++}`);
 	}
 	with([CustomObject, CustomHitme, CustomProp, CustomProjectile, CustomSlash, CustomEnemy, CustomScript, CustomBeginStep, CustomStep, CustomEndStep, CustomDraw]){
-		var	_object         = self,
-			_eventIndexList = [];
-			
-		with(instance_create(0, 0, _object)){
+		var _eventIndexList = [];
+		with(instance_create(0, 0, self)){
 			var _eventIndex = 0;
 			with(global.event_varname_list){
 				var _eventVarName = self;
@@ -39,8 +37,7 @@
 			}
 			instance_delete(self);
 		}
-		
-		global.object_event_index_list_map[? _object] = _eventIndexList;
+		global.object_event_index_list_map[? self] = _eventIndexList;
 	}
 	
 	 // Script References:
@@ -1773,13 +1770,13 @@
 			BatChestBigCursedOpen = spr_add("sprBatChestBigCursedOpen", 1, 12, 12);
 			
 			 // Bone:
-			BonePickup    = array_create(4, -1);
-			BonePickupBig = array_create(2, -1);
-			for(var i = 0; i < array_length(BonePickup); i++){
-				BonePickup[i] = spr_add(`sprBonePickup${i}`, 1, 4, 4, shn8);
+			BonePickup    = [];
+			BonePickupBig = [];
+			for(var i = 0; i < 4; i++){
+				array_push(BonePickup, spr_add(`sprBonePickup${i}`, 1, 4, 4, shn8));
 			}
-			for(var i = 0; i < array_length(BonePickupBig); i++){
-				BonePickupBig[i] = spr_add(`sprBoneBigPickup${i}`, 1, 8, 8, shn16);
+			for(var i = 0; i < 2; i++){
+				array_push(BonePickupBig, spr_add(`sprBoneBigPickup${i}`, 1, 8, 8, shn16));
 			}
 			
 			 // Bonus Pickups:
@@ -2580,16 +2577,25 @@
 	}
 	
 	 // SOUNDS //
-	snd = {};
+	snd = { "mus": { "amb": {} } };
 	with(snd){
+		 // SawTrap:
+		SawTrap = sound_add("sounds/enemies/SawTrap/sndSawTrap.ogg");
+		
 		 // Palanking:
-		with(["Hurt", "Dead", "Call", "Swipe", "Taunt"]){
+		with(["Hurt", "Dead", "Taunt", "Call", "Swipe"]){
 			lq_set(other, `Palanking${self}`, sound_add(`sounds/enemies/Palanking/sndPalanking${self}.ogg`));
 		}
 		sound_volume(PalankingHurt, 0.6);
 		
-		 // SawTrap:
-		SawTrap = sound_add("sounds/enemies/SawTrap/sndSawTrap.ogg");
+		 // Big Shots:
+		with(["Hurt", "Dead", "Intro", "Taunt"]){
+			lq_set(other, `BigBat${self}`, sound_add(`sounds/enemies/BigShots/sndBigBat${self}.ogg`));
+			lq_set(other, `BigCat${self}`, sound_add(`sounds/enemies/BigShots/sndBigCat${self}.ogg`));
+		}
+		BigBatScreech = sound_add("sounds/enemies/BigShots/sndBigBatScreech.ogg");
+		BigCatCharge  = sound_add("sounds/enemies/BigShots/sndBigCatCharge.ogg");
+		BigShotsTaunt = sound_add("sounds/enemies/BigShots/sndBigShotsTaunt.ogg");
 		
 		 // Characters:
 		with([
@@ -2616,8 +2622,6 @@
 		}
 		
 		 // Music:
-		mus     = {};
-		mus.amb = {};
 		with([
 			 // Areas:
 			"Coast",
@@ -3281,10 +3285,9 @@
 			save_get("stat:pet:Baby.examplepet.mod:found")
 	*/
 	
-	var	_path = string_split(_name, ":"),
-		_save = save_data;
-		
-	with(_path){
+	var _save = save_data;
+	
+	with(string_split(_name, ":")){
 		if(self not in _save){
 			return _default;
 		}
@@ -3703,25 +3706,17 @@
 				 // Shader-Specific:
 				switch(name){
 					case "Charm":
-						var	_w = _args[0],
-							_h = _args[1];
-							
-						shader_set_fragment_constant_f(0, [1 / _w, 1 / _h]);
+						shader_set_fragment_constant_f(0, [1 / _args[0], 1 / _args[1]]);
 						break;
 						
 					case "SludgePool":
-						var	_w     = _args[0],
-							_h     = _args[1],
-							_color = _args[2];
-							
-						shader_set_fragment_constant_f(0, [1 / _w, 1 / _h]);
+						var _color = _args[2];
+						shader_set_fragment_constant_f(0, [1 / _args[0], 1 / _args[1]]);
 						shader_set_fragment_constant_f(1, [color_get_red(_color) / 255, color_get_green(_color) / 255, color_get_blue(_color) / 255]);
 						break;
 						
 					case "Unblend":
-						var _blendNum = _args[0];
-						
-						shader_set_fragment_constant_f(0, [1 / power(2, _blendNum)]);
+						shader_set_fragment_constant_f(0, [1 / power(2, _args[0])]);
 						break;
 				}
 				
@@ -3848,9 +3843,7 @@
 			script_bind(script_ref_create(0), CustomDraw, script_ref_create(draw_thing, true), -8, true)
 	*/
 	
-	var	_modType = _modRef[0],
-		_modName = _modRef[1],
-		_bindKey = _modName + ":" + _modType,
+	var	_bindKey = _modRef[1] + ":" + _modRef[0],
 		_bind    = {
 			"object"  : _scriptObj,
 			"script"  : _scriptRef,
@@ -4321,15 +4314,14 @@ var _shine = argument_count > 4 ? argument[4] : shnNone;
 		
 		with(UberCont){
 			for(var _img = 0; _img < _sprImg; _img++){
-				var	_x = _sprW * _img,
-					_y = 0;
-					
+				var _x = _sprW * _img;
+				
 				 // Normal Sprite:
-				draw_sprite(_spr, _img, _x + _sprX, _y + _sprY);
+				draw_sprite(_spr, _img, _x + _sprX, _sprY);
 				
 				 // Overlay Shine:
 				draw_set_color_write_enable(true, true, true, false);
-				draw_sprite_stretched(_shine, _img, _x, _y, _sprW, _sprH);
+				draw_sprite_stretched(_shine, _img, _x, 0, _sprW, _sprH);
 				draw_set_color_write_enable(true, true, true, true);
 			}
 		}
@@ -4417,23 +4409,22 @@ var _shine = argument_count > 4 ? argument[4] : shnNone;
 				_wepSpriteCount = array_length(_wepSpriteList);
 				
 			with(_wepSpriteList){
-				var	_wepSprite  = self,
-					_mergeSlice = {
-						"sprite_index"   : _wepSprite,
-						"sprite_width"   : sprite_get_width(_wepSprite),
-						"sprite_height"  : sprite_get_height(_wepSprite),
-						"sprite_xoffset" : sprite_get_xoffset(_wepSprite),
-						"sprite_yoffset" : sprite_get_yoffset(_wepSprite),
-						"sprite_bbox_y1" : sprite_get_bbox_top(_wepSprite)        - sprite_get_yoffset(_wepSprite),
-						"sprite_bbox_y2" : sprite_get_bbox_bottom(_wepSprite) + 1 - sprite_get_yoffset(_wepSprite),
-						"image_number"   : sprite_get_number(_wepSprite),
-						"x1"             : 0,
-						"x2"             : 0,
-						"next_slice"     : undefined
-					};
-					
+				var _mergeSlice = {
+					"sprite_index"   : self,
+					"sprite_width"   : sprite_get_width(self),
+					"sprite_height"  : sprite_get_height(self),
+					"sprite_xoffset" : sprite_get_xoffset(self),
+					"sprite_yoffset" : sprite_get_yoffset(self),
+					"sprite_bbox_y1" : sprite_get_bbox_top(self)        - sprite_get_yoffset(self),
+					"sprite_bbox_y2" : sprite_get_bbox_bottom(self) + 1 - sprite_get_yoffset(self),
+					"image_number"   : sprite_get_number(self),
+					"x1"             : 0,
+					"x2"             : 0,
+					"next_slice"     : undefined
+				};
+				
 				 // Manual Adjustments:
-				switch(_wepSprite){
+				switch(self){
 					case sprToxicBow:
 						_mergeSlice.sprite_yoffset += 2;
 						break;
@@ -4458,9 +4449,9 @@ var _shine = argument_count > 4 ? argument[4] : shnNone;
 				}
 				
 				 // Determine Slice Dimensions:
-				if(_wepSprite != mskNone){
-					var	_sliceX1 = sprite_get_bbox_left(_wepSprite) + 1,
-						_sliceX3 = sprite_get_bbox_right(_wepSprite),
+				if(self != mskNone){
+					var	_sliceX1 = sprite_get_bbox_left(self) + 1,
+						_sliceX3 = sprite_get_bbox_right(self),
 						_sliceX2 = round(lerp(_sliceX1, _sliceX3, 0.4));
 						
 					for(var _sliceSide = 0; _sliceSide <= 1; _sliceSide++){
@@ -4679,23 +4670,22 @@ var _shine = argument_count > 4 ? argument[4] : shnNone;
 				_wepLoadoutSpriteCount = array_length(_wepLoadoutSpriteList);
 				
 			with(_wepLoadoutSpriteList){
-				var	_wepLoadoutSprite = self,
-					_mergeSlice       = {
-						"sprite_index"   : _wepLoadoutSprite,
-						"sprite_width"   : sprite_get_width(_wepLoadoutSprite),
-						"sprite_height"  : sprite_get_height(_wepLoadoutSprite),
-						"sprite_xoffset" : sprite_get_xoffset(_wepLoadoutSprite),
-						"sprite_yoffset" : sprite_get_yoffset(_wepLoadoutSprite),
-						"image_number"   : sprite_get_number(_wepLoadoutSprite),
-						"sprite_length1" : 0,
-						"sprite_length2" : 0,
-						"length1"        : 0,
-						"length2"        : 0,
-						"next_slice"     : undefined
-					};
-					
+				var _mergeSlice = {
+					"sprite_index"   : self,
+					"sprite_width"   : sprite_get_width(self),
+					"sprite_height"  : sprite_get_height(self),
+					"sprite_xoffset" : sprite_get_xoffset(self),
+					"sprite_yoffset" : sprite_get_yoffset(self),
+					"image_number"   : sprite_get_number(self),
+					"sprite_length1" : 0,
+					"sprite_length2" : 0,
+					"length1"        : 0,
+					"length2"        : 0,
+					"next_slice"     : undefined
+				};
+				
 				 // Determine Slice Dimensions:
-				if(_wepLoadoutSprite != mskNone){
+				if(self != mskNone){
 					var	_sliceDis1 = floor(((sprite_get_bbox_left(_mergeSlice.sprite_index)  + 2) - _mergeSlice.sprite_xoffset) * _loadoutSpriteXFactor) - 4,
 						_sliceDis3 =  ceil(((sprite_get_bbox_right(_mergeSlice.sprite_index) - 1) - _mergeSlice.sprite_xoffset) * _loadoutSpriteXFactor) - 4,
 						_sliceDis2 = /*round*/(lerp(_sliceDis1, _sliceDis3, 0.4));
@@ -4934,14 +4924,9 @@ var _shine = argument_count > 4 ? argument[4] : shnNone;
 			draw_clear_alpha(c_black, 0);
 			
 				 // Background:
-				var	_x1 = -1,
-					_y1 = -1,
-					_x2 = _x1 + w,
-					_y2 = _y1 + h;
-					
 				draw_set_alpha(0.8);
 				draw_set_color(c_black);
-				draw_roundrect_ext(_x1, _y1 + _topSpace, _x2, _y2, 5, 5, false);
+				draw_roundrect_ext(-1, -1 + _topSpace, w - 1, h - 1, 5, 5, false);
 				draw_set_alpha(1);
 				
 				 // Text:

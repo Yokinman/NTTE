@@ -1012,9 +1012,9 @@
 		depth        = -2;
 		
 		 // Sound:
-		snd_hurt = sndMutant10Hurt;
-		snd_dead = sndMutant10Dead;
-		snd_lowh = sndNothing2HalfHP;
+		snd_hurt = snd.BigBatHurt;//sndMutant10Hurt;
+		snd_dead = snd.BigBatDead;//sndMutant10Dead;
+		snd_lowh = snd.BigBatScreech;//sndNothing2HalfHP;
 		
 		 // Vars:
 		mask_index  = mskBanditBoss;
@@ -1091,7 +1091,8 @@
 	if(tauntdelay > 0 && !instance_exists(Player)){
 		tauntdelay -= current_time_scale;
 		if(tauntdelay <= 0){
-			sound_play_pitchvol(sndMutant10KillBigBandit, 0.7 + orandom(0.05), 1);
+			//sound_play_pitchvol(sndMutant10KillBigBandit, 0.7 + orandom(0.05), 1);
+			sound_play(array_length(instances_matching_ne(obj.CatBoss, "id")) ? snd.BigShotsTaunt : snd.BigBatTaunt);
 		}
 	}
 	
@@ -1209,7 +1210,7 @@
 #define BatBoss_alrm0
 	intro = true;
 	call(scr.boss_intro, "CatBat");
-	sound_play(sndScorpionFireStart);
+	sound_play(snd.BigBatIntro);
 	
 	 // Disable Bros:
 	with(instances_matching_gt(call(scr.array_combine, obj.BatBoss, obj.CatBoss), "alarm0", 0)){
@@ -2828,9 +2829,9 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 		depth         = -2;
 		
 		 // Sound:
-		snd_hurt     = sndBuffGatorHit;
-		snd_dead     = sndSalamanderDead;
-		snd_lowh     = sndBallMamaAppear;
+		snd_hurt     = snd.BigCatHurt;//sndBuffGatorHit;
+		snd_dead     = snd.BigCatDead;//sndSalamanderDead;
+		snd_lowh     = snd.BigCatTaunt;//sndBallMamaAppear;
 		jetpack_loop = -1;
 		
 		 // Vars:
@@ -2877,8 +2878,11 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 	if(tauntdelay > 0 && !instance_exists(Player)){
 		tauntdelay -= current_time_scale;
 		if(tauntdelay <= 0){
-			var _snd = sound_play_pitchvol(sndBallMamaTaunt, 0.9, 3);
-			audio_sound_set_track_position(_snd, 1);
+			// var _snd = sound_play_pitchvol(sndBallMamaTaunt, 0.9, 3);
+			// audio_sound_set_track_position(_snd, 1);
+			if(!array_length(instances_matching_ne(obj.BatBoss, "id"))){
+				sound_play(snd.BigCatTaunt);
+			}
 			
 			 // Epic Fart:
 			walk = 0;
@@ -2958,15 +2962,16 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 	if(gunangle <= 180) draw_self_enemy();
 	
 #define CatBoss_alrm0
-	intro = true;
-	call(scr.boss_intro, "CatBat");
-	sound_play(sndScorpionFireStart);
-	
-	 // Disable Bros:
-	with(instances_matching_gt(call(scr.array_combine, obj.BatBoss, obj.CatBoss), "alarm0", 0)){
-		intro  = true;
-		alarm0 = -1;
+	if(!intro){
+		intro = true;
+		call(scr.boss_intro, "CatBat");
+		
+		 // Disable Bros:
+		with(instances_matching_gt(call(scr.array_combine, obj.BatBoss, obj.CatBoss), "alarm0", 0)){
+			intro = true;
+		}
 	}
+	sound_play(snd.BigCatIntro);
 
 #define CatBoss_alrm1
 	alarm1 = 20 + random(20);
@@ -3064,7 +3069,8 @@ var _extraScale = argument_count > 1 ? argument[1] : 0.5;
 						
 						 // Effects:
 						repeat(16) call(scr.fx, x, y, random(5), Dust);
-						sound_play_pitchvol(sndBigBanditMeleeStart, 0.6 + random(0.2), 1.2);
+						sound_play_pitchvol(sndBigBanditMeleeStart, 0.6 + random(0.2), 0.4);
+						sound_play(snd.BigCatCharge);
 					}
 				}
 				
