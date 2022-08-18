@@ -3200,18 +3200,20 @@
 						 // Pan Camera:
 						if(!_local){
 							var _char = instances_matching(CampChar, "num", 17);
-							with(_char[array_length(_char) - 1]){
-								var	_x1 = x,
-									_y1 = y,
-									_x2 = other.x - (12 * (_race == "beetle")),
-									_y2 = other.y,
-									_pan = 4;
-									
-								call(scr.view_shift, 
-									i,
-									point_direction(_x1, _y1, _x2, _y2),
-									point_distance(_x1, _y1, _x2, _y2) * (1 + ((2/3) / _pan)) * 0.1
-								);
+							if(array_length(_char)){
+								with(_char[array_length(_char) - 1]){
+									var	_x1 = x,
+										_y1 = y,
+										_x2 = other.x - (12 * (_race == "beetle")),
+										_y2 = other.y,
+										_pan = 4;
+										
+									call(scr.view_shift, 
+										i,
+										point_direction(_x1, _y1, _x2, _y2),
+										point_distance(_x1, _y1, _x2, _y2) * (1 + ((2/3) / _pan)) * 0.1
+									);
+								}
 							}
 						}
 						
@@ -3945,6 +3947,7 @@
 		}
 		
 		 // Character Stats:
+		var _kills = GameCont.kills;
 		with(ntte.mods.race){
 			for(var i = 0; i < maxp; i++){
 				if(player_get_race(i) == self){
@@ -3957,14 +3960,14 @@
 					}
 					
 					 // Kills:
-					if("ntte_kills_last" in GameCont && GameCont.kills != GameCont.ntte_kills_last){
+					if("ntte_kills_last" in GameCont && _kills != GameCont.ntte_kills_last){
 						var _stat = "race:" + self + ":kill";
-						call(scr.stat_set, _stat, call(scr.stat_get, _stat) + (GameCont.kills - GameCont.ntte_kills_last));
+						call(scr.stat_set, _stat, call(scr.stat_get, _stat) + (_kills - GameCont.ntte_kills_last));
 						
 						 // Best Run:
-						if(GameCont.kills >= call(scr.stat_get, "race:" + self + ":best:kill")){
+						if(_kills >= call(scr.stat_get, "race:" + self + ":best:kill")){
 							call(scr.stat_set, "race:" + self + ":best:area", [GameCont.area, GameCont.subarea, GameCont.loops]);
-							call(scr.stat_set, "race:" + self + ":best:kill", GameCont.kills);
+							call(scr.stat_set, "race:" + self + ":best:kill", _kills);
 						}
 					}
 					
@@ -3972,20 +3975,17 @@
 				}
 			}
 		}
-		GameCont.ntte_kills_last = GameCont.kills;
+		GameCont.ntte_kills_last = _kills;
 		
 		 // Make Flying Ravens/Lil Hunter Draw Themselves:
 		if(instance_exists(RavenFly) || instance_exists(LilHunterFly)){
-			var _inst = instances_matching_gt([RavenFly, LilHunterFly], "depth", object_get_depth(SubTopCont));
-			if(array_length(_inst)){
-				with(_inst){
-					depth   = -9;
-					visible = true;
-				}
+			with(instances_matching_gt([RavenFly, LilHunterFly], "depth", object_get_depth(SubTopCont))){
+				depth   = -9;
+				visible = true;
 			}
 			
 			 // Reset:
-			_inst = instances_matching(instances_matching(RavenFly, "sprite_index", sprRavenLand), "depth", -9);
+			var _inst = instances_matching(instances_matching(RavenFly, "sprite_index", sprRavenLand), "depth", -9);
 			if(array_length(_inst)){
 				with(_inst){
 					if(anim_end){
